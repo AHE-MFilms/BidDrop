@@ -507,7 +507,7 @@ tr:hover td{background:var(--card);}
         <div class="price-val" id="e-total">$0</div>
         <div class="price-sub" id="e-breakdown">Enter roof area to calculate</div>
       </div>
-      <button class="btn-primary" onclick="addToQueue()">📬 Add to Mail Queue</button>
+      <button class="btn-primary" id="add-queue-btn" onclick="addToQueue()">📬 Add to Mail Queue</button>
       <button class="btn-sec" onclick="clearEst()">Clear Form</button>
       <button class="btn-preview-toggle" onclick="toggleMailPreview()">👁 Preview Mailer</button>
     </div>
@@ -681,6 +681,26 @@ tr:hover td{background:var(--card);}
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeM('m-settings')">Cancel</button>
       <button class="btn-ok" onclick="saveSettings()">Save Settings</button>
+    </div>
+  </div>
+</div>
+ 
+<!-- MEASURE PICKER MODAL -->
+<div class="overlay" id="m-measure-pick" style="display:none;">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-title">📐 Apply Measurement</div>
+    <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:8px;padding:12px 16px;margin-bottom:16px;text-align:center;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);margin-bottom:3px;">Measured Area</div>
+      <div style="font-family:var(--font-h);font-size:32px;font-weight:700;color:#fff;" id="mpick-sqft">0</div>
+      <div style="font-size:12px;color:var(--mid);">sq ft</div>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:var(--mid);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;">Update an existing estimate:</div>
+    <div id="mpick-list"></div>
+    <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px;">
+      <button class="btn-primary" onclick="closeM('m-measure-pick');applyMeasureToEstimate(parseInt(document.getElementById('mpick-sqft').textContent.replace(/,/g,'')))">+ Start New Estimate</button>
+    </div>
+    <div class="modal-footer" style="margin-top:8px;">
+      <button class="btn-cancel" onclick="closeM('m-measure-pick')">Cancel</button>
     </div>
   </div>
 </div>
@@ -946,16 +966,57 @@ function calcPolygonSqFt(pts){
  
 function useRoofMeasurement(){
   const sqft=parseInt(document.getElementById('mhud-sqft').textContent.replace(/,/g,''));
-  if(!sqft) return;
-  goTab('estimate');
-  document.getElementById('e-sqft').value=sqft;
-  calcP();updatePreview();
-  // Keep polygon visible
+  if(!sqft){toast('Draw the roof outline first','error');return;}
+  // Stop measuring mode
   measuring=false;
   document.getElementById('btn-measure').classList.remove('active');
   document.getElementById('btn-measure').textContent='📐 Measure Roof';
   document.getElementById('the-map').classList.remove('measuring');
   document.getElementById('measure-hud').classList.remove('show');
+  // Check if there are existing pending estimates to update
+  const pending=S.queue.filter(i=>i.status==='pending');
+  if(pending.length>0){
+    showMeasurePickerModal(sqft,pending);
+  } else {
+    applyMeasureToEstimate(sqft);
+  }
+}
+ 
+function showMeasurePickerModal(sqft,pending){
+  const list=pending.map(i=>`
+    <div class="mpick-row" onclick="applyMeasureToExisting('${i.id}',${sqft})" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);">${i.owner||'Homeowner'}</div>
+        <div style="font-size:11px;color:var(--mid);margin-top:2px;">${i.addr}</div>
+      </div>
+      <div style="font-family:var(--font-m);color:var(--accent);font-weight:700;font-size:13px;">$${i.total.toLocaleString()}</div>
+    </div>
+  `).join('');
+  document.getElementById('mpick-sqft').textContent=sqft.toLocaleString();
+  document.getElementById('mpick-list').innerHTML=list;
+  openM('m-measure-pick');
+}
+ 
+function applyMeasureToExisting(id,sqft){
+  const item=S.queue.find(x=>x.id===id);
+  if(!item)return;
+  closeM('m-measure-pick');
+  // Load item into estimate form
+  document.getElementById('e-owner').value=item.owner||'';
+  document.getElementById('e-addr').value=item.addr||'';
+  document.getElementById('e-sqft').value=sqft;
+  // Store which queue item we're editing
+  window._editingQueueId=id;
+  goTab('estimate');
+  calcP();updatePreview();
+  toast(`📐 ${sqft.toLocaleString()} sq ft updated on estimate for ${item.addr}`,'success');
+}
+ 
+function applyMeasureToEstimate(sqft){
+  window._editingQueueId=null;
+  goTab('estimate');
+  document.getElementById('e-sqft').value=sqft;
+  calcP();updatePreview();
   toast(`📐 ${sqft.toLocaleString()} sq ft loaded into estimate!`,'success');
 }
  
@@ -1207,6 +1268,27 @@ function addToQueue(){
   if(!grand){toast('Enter roof area to calculate price','error');return;}
   const matEl=document.getElementById('e-mat');
   const pitchEl=document.getElementById('e-pitch');
+  // Check if editing an existing queue item
+  const editId=window._editingQueueId;
+  if(editId){
+    const existing=S.queue.find(x=>x.id===editId);
+    if(existing&&existing.status==='pending'){
+      existing.owner=document.getElementById('e-owner').value.trim()||'Homeowner';
+      existing.addr=addr;
+      existing.sqft=parseFloat(document.getElementById('e-sqft').value)||0;
+      existing.pitch=pitchEl.options[pitchEl.selectedIndex].text;
+      existing.mat=matEl.options[matEl.selectedIndex].text;
+      existing.stories=document.getElementById('e-stories').value;
+      existing.total=grand;
+      existing.updatedAt=new Date().toISOString();
+      window._editingQueueId=null;
+      addAct(`Estimate updated for <strong>${addr}</strong> — <strong>$${grand.toLocaleString()}</strong>`,'bid_sent');
+      save();renderQueue();
+      toast('✅ Estimate updated!','success');
+      document.getElementById('add-queue-btn').textContent='📬 Add to Mail Queue';
+      return;
+    }
+  }
   const item={
     id:'q'+Date.now(),
     owner:document.getElementById('e-owner').value.trim()||'Homeowner',
@@ -1261,7 +1343,8 @@ function renderQueue(){
       <td><span class="spill" style="background:${sc}22;color:${sc};border:1px solid ${sc}44;">${sl}</span></td>
       <td style="display:flex;gap:5px;align-items:center;">
         ${i.status==='pending'?`<button class="btn-xs pr" onclick="sendLob('${i.id}')">📬 Send</button>`:i.status==='sent'?`<span style="font-size:10px;color:var(--muted);">${fmtDate(i.mailedAt)}</span>`:`<button class="btn-xs" onclick="sendLob('${i.id}')">Retry</button>`}
-        <button class="btn-xs danger" onclick="rmQ('${i.id}')">✕</button>
+        ${i.status==='pending'?`<button class="btn-xs" onclick="editEstimate('${i.id}')">✏️ Edit</button>`:''}
+        <button class="btn-xs danger" onclick="rmQ('${i.id}')" title="Delete">🗑 Delete</button>
       </td>
     </tr>`;
   }).join('');
@@ -1333,7 +1416,25 @@ async function sendAllPending(){
   for(const i of pend){await sendLob(i.id);await sleep(600);}
 }
  
-function rmQ(id){S.queue=S.queue.filter(x=>x.id!==id);save();renderQueue();toast('Removed','info');}
+function rmQ(id){
+  if(!confirm('Delete this estimate?'))return;
+  S.queue=S.queue.filter(x=>x.id!==id);
+  save();renderQueue();
+  toast('🗑 Estimate deleted','info');
+}
+ 
+function editEstimate(id){
+  const item=S.queue.find(x=>x.id===id);
+  if(!item)return;
+  document.getElementById('e-owner').value=item.owner||'';
+  document.getElementById('e-addr').value=item.addr||'';
+  document.getElementById('e-sqft').value=item.sqft||'';
+  window._editingQueueId=id;
+  goTab('estimate');
+  calcP();updatePreview();
+  document.getElementById('add-queue-btn').textContent='✅ Update Estimate';
+  toast('✏️ Editing estimate — make changes and hit Update','info');
+}
  
 // ═══════════════════════════════
 //  DASHBOARD
