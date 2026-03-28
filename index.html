@@ -375,8 +375,11 @@ tr:hover td{background:var(--card);}
       <div class="mhud-sqft" id="mhud-sqft">0</div>
       <div style="font-size:11px;color:var(--mid);">sq ft</div>
       <div class="mhud-hint" id="mhud-hint">Click corners of the roof. Double-click to finish.</div>
-      <div class="mhud-actions" id="mhud-actions" style="display:none;">
+      <div style="display:flex;gap:6px;margin-top:8px;">
+        <button class="mhud-btn" onclick="undoMeasurePoint()">↩ Undo</button>
         <button class="mhud-btn" onclick="clearMeasure()">Clear</button>
+      </div>
+      <div class="mhud-actions" id="mhud-actions" style="display:none;">
         <button class="mhud-btn pr" onclick="useRoofMeasurement()">📋 Use This →</button>
       </div>
     </div>
@@ -454,6 +457,15 @@ tr:hover td{background:var(--card);}
             <option value="2.5">Metal Roofing</option>
           </select>
         </div>
+      </div>
+      <div class="fg">
+        <label class="fl">Roof Complexity</label>
+        <select class="fs" id="e-complexity" onchange="calcP();updatePreview()">
+          <option value="1.0">Simple — Gable, few angles</option>
+          <option value="1.12" selected>Moderate — Some hips/valleys</option>
+          <option value="1.25">Complex — Many angles, dormers</option>
+          <option value="1.40">Very Complex — Multiple intersections</option>
+        </select>
       </div>
       <div class="fg">
         <label class="fl">Add-ons</label>
@@ -602,36 +614,54 @@ tr:hover td{background:var(--card);}
  
 <!-- SETTINGS MODAL -->
 <div class="overlay" id="m-settings" style="display:none;">
-  <div class="modal">
-    <div class="modal-title">⚙️ Settings</div>
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-title">⚙️ Settings & Pricing</div>
+    <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">Company Info</div>
     <div class="frow">
-      <div class="fg">
-        <label class="fl">Company Name</label>
-        <input class="fi" id="s-co" placeholder="T&M Roofing">
-      </div>
-      <div class="fg">
-        <label class="fl">Phone</label>
-        <input class="fi" id="s-ph" placeholder="(313) 555-0100">
-      </div>
-    </div>
-    <div class="fg">
-      <label class="fl">Company Address</label>
-      <input class="fi" id="s-addr" placeholder="123 Business Dr, Detroit MI 48000">
+      <div class="fg"><label class="fl">Company Name</label><input class="fi" id="s-co" placeholder="T&M Roofing"></div>
+      <div class="fg"><label class="fl">Phone</label><input class="fi" id="s-ph" placeholder="(313) 555-0100"></div>
     </div>
     <div class="frow">
-      <div class="fg">
-        <label class="fl">Base Price / Square</label>
-        <input type="number" class="fi" id="s-price" placeholder="450">
-      </div>
-      <div class="fg">
-        <label class="fl">Brand Color</label>
-        <input type="color" class="fi" id="s-color" value="#F25C05" style="padding:4px;cursor:pointer;height:42px;">
-      </div>
+      <div class="fg"><label class="fl">Company Address</label><input class="fi" id="s-addr" placeholder="123 Business Dr, Detroit MI 48000"></div>
+      <div class="fg"><label class="fl">Brand Color</label><input type="color" class="fi" id="s-color" value="#F25C05" style="padding:4px;cursor:pointer;height:42px;"></div>
     </div>
-    <div class="fg">
-      <label class="fl">Lob.com API Key</label>
-      <input class="fi" id="s-lob" placeholder="live_pub_...">
+    <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:14px 0 10px;">Material Cost Per Square (labor + material)</div>
+    <div class="frow">
+      <div class="fg"><label class="fl">3-Tab Shingle ($/sq)</label><input type="number" class="fi" id="s-c3tab" placeholder="350"></div>
+      <div class="fg"><label class="fl">Architectural ($/sq)</label><input type="number" class="fi" id="s-carch" placeholder="450"></div>
     </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Designer/Premium ($/sq)</label><input type="number" class="fi" id="s-cdes" placeholder="620"></div>
+      <div class="fg"><label class="fl">Metal Roofing ($/sq)</label><input type="number" class="fi" id="s-cmetal" placeholder="950"></div>
+    </div>
+    <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:14px 0 10px;">Per-Square Line Items</div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Tear-off ($/sq)</label><input type="number" class="fi" id="s-tear" placeholder="75"></div>
+      <div class="fg"><label class="fl">Ice & Water Shield ($/sq)</label><input type="number" class="fi" id="s-ice" placeholder="42"></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Felt/Synthetic ($/sq)</label><input type="number" class="fi" id="s-felt" placeholder="22"></div>
+      <div class="fg"><label class="fl">Dumpster (flat $)</label><input type="number" class="fi" id="s-dump" placeholder="450"></div>
+    </div>
+    <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:14px 0 10px;">Add-On Pricing</div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Skylight ($/each)</label><input type="number" class="fi" id="s-sky" placeholder="375"></div>
+      <div class="fg"><label class="fl">Chimney Flashing ($)</label><input type="number" class="fi" id="s-chim" placeholder="295"></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Gutters ($/lf)</label><input type="number" class="fi" id="s-gut" placeholder="9"></div>
+      <div class="fg"></div>
+    </div>
+    <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:14px 0 10px;">Overhead & Margin</div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Overhead %</label><input type="number" class="fi" id="s-ovh" placeholder="15"></div>
+      <div class="fg"><label class="fl">Profit Margin %</label><input type="number" class="fi" id="s-mgn" placeholder="20"></div>
+    </div>
+    <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:11px;color:var(--mid);margin-top:4px;">
+      💡 Formula: (Material+Labor+Tearoff+Accessories) × (1 + Overhead%) × (1 + Margin%) = Estimate
+    </div>
+    <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:14px 0 10px;">Integrations</div>
+    <div class="fg"><label class="fl">Lob.com API Key</label><input class="fi" id="s-lob" placeholder="live_pub_..."></div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeM('m-settings')">Cancel</button>
       <button class="btn-ok" onclick="saveSettings()">Save Settings</button>
@@ -649,9 +679,17 @@ const DEFAULTS = {
   companyName:'Your Roofing Co',
   companyAddr:'123 Main St, Detroit MI 48000',
   companyPhone:'(313) 555-0100',
-  basePrice:450,
-  brandColor:'#F25C05',
-  lobKey:''
+  // Material cost per square (100 sq ft) — labor + material combined
+  costArchitectural:450, cost3Tab:350, costDesigner:620, costMetal:950,
+  // Per-square line items
+  costTearoff:75, costIceWater:42, costFelts:22,
+  // Flat costs
+  costDumpster:450,
+  // Add-ons
+  costSkylight:375, costChimney:295, costGutter:9,
+  // Overhead % and margin %
+  overhead:15, margin:20,
+  brandColor:'#F25C05', lobKey:''
 };
  
 let S = {
@@ -710,18 +748,19 @@ let tileStreet, tileSatellite, isSatellite=false;
  
 function initMap(){
   map=L.map('the-map',{zoomControl:true}).setView([42.33,-83.04],13);
-  tileStreet=L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+  tileStreet=L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{
     attribution:'© OpenStreetMap © CARTO',maxZoom:19,subdomains:'abcd'
   }).addTo(map);
   tileSatellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{
-    attribution:'© Esri',maxZoom:19
+    attribution:'© Esri',maxZoom:21
   });
+  map.options.maxZoom=21;
   map.on('click',onMapClick);
   map.on('dblclick',onMapDblClick);
   S.pins.forEach(addMarker);
   renderPinList();
   if(navigator.geolocation){
-    navigator.geolocation.getCurrentPosition(p=>{map.setView([p.coords.latitude,p.coords.longitude],16);},()=>{});
+    navigator.geolocation.getCurrentPosition(p=>{map.setView([p.coords.latitude,p.coords.longitude],18);},()=>{});
   }
 }
  
@@ -755,8 +794,14 @@ function toggleMeasure(){
     btn.textContent='✕ Cancel Measure';
     hud.classList.add('show');
     document.getElementById('the-map').classList.add('measuring');
-    // Auto-switch to satellite
+    // Close all popups so they don't block clicking
+    map.closePopup();
+    // Auto-switch to satellite and zoom in
     if(!isSatellite) toggleSatellite();
+    if(map.getZoom()<18) map.setZoom(19);
+    // Close mobile pin panel
+    const mp=document.getElementById('map-panel');
+    if(mp) mp.classList.remove('open');
     clearMeasureData();
   } else {
     btn.classList.remove('active');
@@ -782,20 +827,57 @@ function clearMeasure(){
   document.getElementById('mhud-hint').textContent='Click corners of the roof. Double-click to finish.';
 }
  
-function onMapClick(e){
-  if(measuring){
-    measurePts.push(e.latlng);
-    const dot=L.circleMarker(e.latlng,{radius:5,color:'#F25C05',fillColor:'#F25C05',fillOpacity:1,weight:2}).addTo(map);
-    measureMarkers.push(dot);
-    if(measurePoly) map.removeLayer(measurePoly);
-    if(measurePts.length>=2){
-      measurePoly=L.polygon(measurePts,{color:'#F25C05',fillColor:'#F25C05',fillOpacity:.2,weight:2,dashArray:'5,5'}).addTo(map);
-    }
+function addMeasurePoint(latlng){
+  measurePts.push(latlng);
+  const idx=measurePts.length-1;
+  // Draggable marker
+  const dot=L.marker(latlng,{
+    icon:L.divIcon({className:'',html:`<div style="width:14px;height:14px;background:#F25C05;border:2.5px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.6);cursor:grab;"></div>`,iconSize:[14,14],iconAnchor:[7,7]}),
+    draggable:true
+  }).addTo(map);
+  dot.on('drag',()=>{
+    measurePts[idx]=dot.getLatLng();
+    redrawPoly();
+  });
+  measureMarkers.push(dot);
+  redrawPoly();
+  if(measurePts.length>=3){
+    const sqft=calcPolygonSqFt(measurePts);
+    document.getElementById('mhud-sqft').textContent=sqft.toLocaleString();
+    document.getElementById('mhud-hint').textContent=`${measurePts.length} pts — drag to adjust. Dbl-click to finish.`;
+  } else {
+    document.getElementById('mhud-hint').textContent=`${measurePts.length} point${measurePts.length>1?'s':''} — keep clicking corners.`;
+  }
+}
+ 
+function redrawPoly(){
+  if(measurePoly){map.removeLayer(measurePoly);measurePoly=null;}
+  if(measurePts.length>=2){
+    measurePoly=L.polygon(measurePts,{color:'#F25C05',fillColor:'#F25C05',fillOpacity:.2,weight:2,dashArray:'5,5'}).addTo(map);
     if(measurePts.length>=3){
       const sqft=calcPolygonSqFt(measurePts);
       document.getElementById('mhud-sqft').textContent=sqft.toLocaleString();
-      document.getElementById('mhud-hint').textContent=`${measurePts.length} points. Double-click to finish.`;
     }
+  }
+}
+ 
+function undoMeasurePoint(){
+  if(!measurePts.length) return;
+  measurePts.pop();
+  const last=measureMarkers.pop();
+  if(last) map.removeLayer(last);
+  redrawPoly();
+  if(!measurePts.length){
+    document.getElementById('mhud-sqft').textContent='0';
+    document.getElementById('mhud-hint').textContent='Click corners of the roof. Double-click to finish.';
+  } else {
+    document.getElementById('mhud-hint').textContent=`${measurePts.length} pts — keep clicking corners.`;
+  }
+}
+ 
+function onMapClick(e){
+  if(measuring){
+    addMeasurePoint(e.latlng);
     return;
   }
   tempLL=e.latlng;
@@ -978,27 +1060,48 @@ function goEstFromPin(id){
 // ═══════════════════════════════
 //  ESTIMATE
 // ═══════════════════════════════
+function getMatCost(matKey){
+  const c=S.cfg;
+  return{
+    '1.0':parseFloat(c.cost3Tab)||350,
+    '1.3':parseFloat(c.costArchitectural)||450,
+    '1.8':parseFloat(c.costDesigner)||620,
+    '2.5':parseFloat(c.costMetal)||950
+  }[matKey]||450;
+}
+ 
 function calcP(){
   const sqft=parseFloat(document.getElementById('e-sqft').value)||0;
-  const pitch=parseFloat(document.getElementById('e-pitch').value)||1.31;
-  const mat=parseFloat(document.getElementById('e-mat').value)||1.3;
+  const pitchMult=parseFloat(document.getElementById('e-pitch').value)||1.31;
+  const matKey=document.getElementById('e-mat').value;
+  const complexity=parseFloat(document.getElementById('e-complexity').value)||1.0;
   const stories=parseFloat(document.getElementById('e-stories').value)||1;
-  const base=parseFloat(S.cfg.basePrice)||450;
+  const c=S.cfg;
   if(!sqft){
     document.getElementById('e-total').textContent='$0';
     document.getElementById('e-breakdown').textContent='Enter roof area to calculate';
     return 0;
   }
-  const sq=sqft/100*1.12;
+  const sq=sqft/100*1.12*pitchMult; // actual roof squares adjusted for pitch
   const stMult=stories<=1?1:stories<=1.5?1.08:stories<=2?1.16:1.25;
-  let total=sq*base*pitch*mat*stMult;
+  const matCost=getMatCost(matKey);
+  const tearoff=(parseFloat(c.costTearoff)||75)*sq;
+  const iceWater=(parseFloat(c.costIceWater)||42)*sq;
+  const felts=(parseFloat(c.costFelts)||22)*sq;
+  const dumpster=(parseFloat(c.costDumpster)||450);
+  const labor=matCost*sq*stMult*complexity;
+  let subtotal=labor+tearoff+iceWater+felts+dumpster;
+  // Add-ons
   let adds=0;
-  if(document.getElementById('a-sky').checked) adds+=350*(parseInt(document.getElementById('a-sky-q').value)||1);
-  if(document.getElementById('a-chim').checked) adds+=280;
-  if(document.getElementById('a-gut').checked) adds+=8*(parseInt(document.getElementById('a-gut-q').value)||120);
-  const grand=Math.round(total+adds);
+  if(document.getElementById('a-sky').checked) adds+=(parseFloat(c.costSkylight)||375)*(parseInt(document.getElementById('a-sky-q').value)||1);
+  if(document.getElementById('a-chim').checked) adds+=(parseFloat(c.costChimney)||295);
+  if(document.getElementById('a-gut').checked) adds+=(parseFloat(c.costGutter)||9)*(parseInt(document.getElementById('a-gut-q').value)||120);
+  subtotal+=adds;
+  const ovh=subtotal*(parseFloat(c.overhead)||15)/100;
+  const mgn=(subtotal+ovh)*(parseFloat(c.margin)||20)/100;
+  const grand=Math.round(subtotal+ovh+mgn);
   document.getElementById('e-total').textContent='$'+grand.toLocaleString();
-  document.getElementById('e-breakdown').textContent=`${sq.toFixed(1)} squares · ${PITCHLBL[document.getElementById('e-pitch').value]||''} pitch`;
+  document.getElementById('e-breakdown').textContent=`${sq.toFixed(1)} sq · ${PITCHLBL[document.getElementById('e-pitch').value]||''} · ${Math.round(sq*matCost)} mat+labor`;
   return grand;
 }
  
@@ -1295,18 +1398,36 @@ function openSettings(){
   document.getElementById('s-co').value=c.companyName||'';
   document.getElementById('s-addr').value=c.companyAddr||'';
   document.getElementById('s-ph').value=c.companyPhone||'';
-  document.getElementById('s-price').value=c.basePrice||450;
+  document.getElementById('s-c3tab').value=c.cost3Tab||350;
+  document.getElementById('s-carch').value=c.costArchitectural||450;
+  document.getElementById('s-cdes').value=c.costDesigner||620;
+  document.getElementById('s-cmetal').value=c.costMetal||950;
+  document.getElementById('s-tear').value=c.costTearoff||75;
+  document.getElementById('s-ice').value=c.costIceWater||42;
+  document.getElementById('s-felt').value=c.costFelts||22;
+  document.getElementById('s-dump').value=c.costDumpster||450;
+  document.getElementById('s-sky').value=c.costSkylight||375;
+  document.getElementById('s-chim').value=c.costChimney||295;
+  document.getElementById('s-gut').value=c.costGutter||9;
+  document.getElementById('s-ovh').value=c.overhead||15;
+  document.getElementById('s-mgn').value=c.margin||20;
   document.getElementById('s-color').value=c.brandColor||'#F25C05';
   document.getElementById('s-lob').value=c.lobKey||'';
   openM('m-settings');
 }
  
 function saveSettings(){
+  const n=v=>parseFloat(document.getElementById(v).value)||0;
   S.cfg={
     companyName:document.getElementById('s-co').value||'Your Roofing Co',
     companyAddr:document.getElementById('s-addr').value,
     companyPhone:document.getElementById('s-ph').value,
-    basePrice:parseFloat(document.getElementById('s-price').value)||450,
+    cost3Tab:n('s-c3tab')||350, costArchitectural:n('s-carch')||450,
+    costDesigner:n('s-cdes')||620, costMetal:n('s-cmetal')||950,
+    costTearoff:n('s-tear')||75, costIceWater:n('s-ice')||42,
+    costFelts:n('s-felt')||22, costDumpster:n('s-dump')||450,
+    costSkylight:n('s-sky')||375, costChimney:n('s-chim')||295, costGutter:n('s-gut')||9,
+    overhead:n('s-ovh')||15, margin:n('s-mgn')||20,
     brandColor:document.getElementById('s-color').value||'#F25C05',
     lobKey:document.getElementById('s-lob').value
   };
