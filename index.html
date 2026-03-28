@@ -11,20 +11,20 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
-  --bg:#08090D;
-  --panel:#0E1219;
-  --card:#131A24;
-  --card2:#192130;
-  --border:#1C2840;
+  --bg:#0F1623;
+  --panel:#1A2333;
+  --card:#1F2C3E;
+  --card2:#243347;
+  --border:#2E4060;
   --accent:#F25C05;
-  --accent-dim:rgba(242,92,5,0.1);
+  --accent-dim:rgba(242,92,5,0.12);
   --success:#22C55E;
   --warning:#F59E0B;
   --info:#3B82F6;
   --danger:#EF4444;
-  --text:#D8E8F0;
-  --mid:#7A96B0;
-  --muted:#3D5269;
+  --text:#F0F6FF;
+  --mid:#A8BECE;
+  --muted:#6688A8;
   --font-h:'Oswald',sans-serif;
   --font-b:'Barlow',sans-serif;
   --font-m:'DM Mono',monospace;
@@ -317,11 +317,27 @@ tr:hover td{background:var(--card);}
   /* MODALS */
   .modal{width:100%;max-width:100%;border-radius:16px 16px 0 0;position:fixed;bottom:0;left:0;right:0;max-height:88vh;overflow-y:auto;}
   .overlay{align-items:flex-end;}
-  /* Touch targets */
-  .fi,.fs{font-size:16px;}
-  .btn-xs{padding:8px 12px;font-size:11px;}
-  .pc{padding:13px;}
-  .btn-primary{padding:15px;font-size:14px;}
+  /* Touch targets & readability */
+  .fi,.fs{font-size:16px;padding:12px 14px;}
+  .fl{font-size:12px;margin-bottom:6px;}
+  .fg{margin-bottom:16px;}
+  .btn-xs{padding:9px 14px;font-size:12px;}
+  .pc{padding:14px;}
+  .pc-addr{font-size:14px;}
+  .pc-meta{font-size:12px;}
+  .pc-note{font-size:12px;}
+  .btn-primary{padding:16px;font-size:15px;}
+  .btn-sec{padding:13px;font-size:13px;}
+  .pane-title{font-size:16px;}
+  .price-val{font-size:40px;}
+  .price-lbl{font-size:12px;}
+  .price-sub{font-size:13px;}
+  .addon-row{font-size:14px;padding:8px 0;}
+  .addon-row input[type=checkbox]{width:18px;height:18px;}
+  .map-tip{font-size:12px;padding:10px 14px;}
+  .mp-title{font-size:15px;}
+  .badge{font-size:12px;padding:3px 9px;}
+  .fchip{font-size:11px;padding:5px 12px;}
 }
 @media(max-width:380px){
   .mtool-btn{font-size:9px;padding:6px 9px;}
@@ -379,8 +395,8 @@ tr:hover td{background:var(--card);}
         <button class="mhud-btn" onclick="undoMeasurePoint()">↩ Undo</button>
         <button class="mhud-btn" onclick="clearMeasure()">Clear</button>
       </div>
-      <div class="mhud-actions" id="mhud-actions" style="display:none;">
-        <button class="mhud-btn pr" onclick="useRoofMeasurement()">📋 Use This →</button>
+      <div style="margin-top:8px;">
+        <button class="mhud-btn pr" id="btn-use-measure" onclick="useRoofMeasurement()" style="width:100%;opacity:.4;pointer-events:none;">📋 Add to Estimate</button>
       </div>
     </div>
     <!-- FAB for mobile pin list -->
@@ -819,7 +835,8 @@ function clearMeasureData(){
   if(measurePoly){map.removeLayer(measurePoly);measurePoly=null;}
   document.getElementById('mhud-sqft').textContent='0';
   document.getElementById('mhud-hint').textContent='Click corners of the roof. Double-click to finish.';
-  document.getElementById('mhud-actions').style.display='none';
+  const ub=document.getElementById('btn-use-measure');
+  if(ub){ub.style.opacity='.4';ub.style.pointerEvents='none';}
 }
  
 function clearMeasure(){
@@ -845,6 +862,8 @@ function addMeasurePoint(latlng){
     const sqft=calcPolygonSqFt(measurePts);
     document.getElementById('mhud-sqft').textContent=sqft.toLocaleString();
     document.getElementById('mhud-hint').textContent=`${measurePts.length} pts — drag to adjust. Dbl-click to finish.`;
+    const ub=document.getElementById('btn-use-measure');
+    if(ub){ub.style.opacity='1';ub.style.pointerEvents='auto';}
   } else {
     document.getElementById('mhud-hint').textContent=`${measurePts.length} point${measurePts.length>1?'s':''} — keep clicking corners.`;
   }
@@ -899,7 +918,8 @@ function onMapDblClick(e){
   const sqft=calcPolygonSqFt(measurePts);
   document.getElementById('mhud-sqft').textContent=sqft.toLocaleString();
   document.getElementById('mhud-hint').textContent=`✅ ${sqft.toLocaleString()} sq ft measured`;
-  document.getElementById('mhud-actions').style.display='flex';
+  const ub=document.getElementById('btn-use-measure');
+  if(ub){ub.style.opacity='1';ub.style.pointerEvents='auto';}
   measuring=false;
   document.getElementById('btn-measure').classList.remove('active');
   document.getElementById('btn-measure').textContent='📐 Measure Roof';
