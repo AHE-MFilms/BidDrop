@@ -208,9 +208,9 @@ tr:hover td{background:var(--card);}
  
 /* Leaflet */
 .leaflet-container{background:#111827;}
-.leaflet-popup-content-wrapper{background:var(--card);border:1px solid var(--border);border-radius:9px;color:var(--text);box-shadow:0 8px 24px rgba(0,0,0,.5);}
-.leaflet-popup-tip{background:var(--card);}
-.leaflet-popup-content{font-family:var(--font-b);font-size:12px;margin:12px 14px;}
+.leaflet-popup-content-wrapper{background:#1A2333;border:2px solid #2E4060;border-radius:12px;color:#F0F6FF;box-shadow:0 12px 40px rgba(0,0,0,.7);}
+.leaflet-popup-tip{background:#1A2333;}
+.leaflet-popup-content{font-family:var(--font-b);font-size:15px;margin:16px;}
 .leaflet-popup-close-button{color:var(--mid) !important;font-size:16px !important;}
 .leaflet-control-zoom a{background:var(--card) !important;color:var(--text) !important;border-color:var(--border) !important;}
 .leaflet-control-zoom a:hover{background:var(--card2) !important;}
@@ -1021,6 +1021,7 @@ function toggleMeasure(){
     btn.textContent='📐 Measure Roof';
     hud.classList.remove('show');
     document.getElementById('the-map').classList.remove('measuring');
+    _measureForPinId=null;
     clearMeasureData();
   }
 }
@@ -1150,7 +1151,23 @@ function useRoofMeasurement(){
   document.getElementById('btn-measure').textContent='📐 Measure Roof';
   document.getElementById('the-map').classList.remove('measuring');
   document.getElementById('measure-hud').classList.remove('show');
-  // Check if there are existing pending estimates to update
+ 
+  // If we were measuring for a specific pin, go straight to estimate with that address
+  if(_measureForPinId){
+    const pin=S.pins.find(p=>p.id===_measureForPinId);
+    _measureForPinId=null;
+    if(pin){
+      window._editingQueueId=null;
+      goTab('estimate');
+      document.getElementById('e-addr').value=pin.address||'';
+      document.getElementById('e-sqft').value=sqft;
+      calcP();updatePreview();
+      toast(`📐 ${sqft.toLocaleString()} sq ft loaded for ${pin.address?pin.address.split(',')[0]:'selected pin'}!`,'success');
+      return;
+    }
+  }
+ 
+  // Otherwise show picker if there are pending estimates
   const pending=S.queue.filter(i=>i.status==='pending');
   if(pending.length>0){
     showMeasurePickerModal(sqft,pending);
@@ -1160,21 +1177,52 @@ function useRoofMeasurement(){
 }
  
 function showMeasurePickerModal(sqft,pending){
-  const list=pending.map(i=>`
-    <div class="mpick-row" onclick="applyMeasureToExisting('${i.id}',${sqft})" style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:16px;margin-bottom:10px;cursor:pointer;">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
-        <div style="flex:1;">
-          <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:5px;">${i.owner||'Homeowner'}</div>
-          <div style="font-size:14px;color:var(--mid);line-height:1.4;">${i.addr}</div>
+  // Show pending estimates AND all pinned addresses that don't have an estimate yet
+  const pendingIds=new Set(pending.map(i=>i.addr));
+  const unpinnedAddrs=S.pins.filter(p=>!pendingIds.has(p.address)&&p.status!=='not_interested');
+ 
+  let html='';
+  if(pending.length){
+    html+=`<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Update existing estimate:</div>`;
+    html+=pending.map(i=>`
+      <div onclick="applyMeasureToExisting('${i.id}',${sqft})" style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:16px;margin-bottom:8px;cursor:pointer;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;">
+          <div style="flex:1;">
+            <div style="font-size:17px;font-weight:700;color:#FFFFFF;">${i.owner||'Homeowner'}</div>
+            <div style="font-size:15px;color:#C8D8E8;margin-top:5px;line-height:1.5;">${i.addr}</div>
+          </div>
+          <div style="color:var(--accent);font-weight:700;font-size:16px;white-space:nowrap;">$${i.total.toLocaleString()}</div>
         </div>
-        <div style="font-family:var(--font-m);color:var(--accent);font-weight:700;font-size:17px;white-space:nowrap;">$${i.total.toLocaleString()}</div>
+        <div style="background:var(--accent);border-radius:6px;padding:8px;text-align:center;color:#fff;font-size:13px;font-weight:700;">Tap to update →</div>
       </div>
-      <div style="margin-top:10px;background:var(--accent);border-radius:6px;padding:8px;text-align:center;color:#fff;font-size:13px;font-weight:700;">Tap to apply measurement →</div>
-    </div>
-  `).join('');
+    `).join('');
+  }
+  if(unpinnedAddrs.length){
+    html+=`<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 8px;">Start new estimate for pinned address:</div>`;
+    html+=unpinnedAddrs.slice(0,5).map(p=>`
+      <div onclick="applyMeasureToPinAddr('${p.id}',${sqft})" style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;cursor:pointer;">
+        <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:3px;">${p.address.split(',')[0]}</div>
+        <div style="font-size:13px;color:var(--mid);">${p.address.split(',').slice(1,3).join(',').trim()}</div>
+        <div style="margin-top:8px;background:var(--card2);border:1px solid var(--accent);border-radius:6px;padding:7px;text-align:center;color:var(--accent);font-size:13px;font-weight:700;">New estimate →</div>
+      </div>
+    `).join('');
+  }
+ 
   document.getElementById('mpick-sqft').textContent=sqft.toLocaleString();
-  document.getElementById('mpick-list').innerHTML=list;
+  document.getElementById('mpick-list').innerHTML=html||'<div style="color:var(--muted);text-align:center;padding:16px;font-size:13px;">No pinned addresses yet.</div>';
   openM('m-measure-pick');
+}
+ 
+function applyMeasureToPinAddr(pinId,sqft){
+  const pin=S.pins.find(p=>p.id===pinId);
+  if(!pin)return;
+  closeM('m-measure-pick');
+  window._editingQueueId=null;
+  goTab('estimate');
+  document.getElementById('e-addr').value=pin.address||'';
+  document.getElementById('e-sqft').value=sqft;
+  calcP();updatePreview();
+  toast(`📐 ${sqft.toLocaleString()} sq ft loaded for ${pin.address.split(',')[0]}!`,'success');
 }
  
 function applyMeasureToExisting(id,sqft){
@@ -1223,14 +1271,15 @@ function mkIcon(status){
 function addMarker(pin){
   const m=L.marker([pin.lat,pin.lng],{icon:mkIcon(pin.status)}).addTo(map);
   m.bindPopup(`
-    <div style="min-width:220px;max-width:280px;">
-      <div style="font-weight:700;font-size:15px;margin-bottom:7px;color:#1E293B;line-height:1.3;">${pin.address||'Unknown'}</div>
-      <div style="display:inline-block;background:${sColor(pin.status)};color:white;font-size:12px;padding:3px 10px;border-radius:7px;font-weight:700;margin-bottom:10px;">${sLabel(pin.status)}</div>
-      ${pin.notes?`<div style="font-size:13px;color:#555;margin-bottom:10px;font-style:italic;">"${pin.notes}"</div>`:''}
-      <button onclick="goEstFromPin('${pin.id}')" style="background:#F25C05;border:none;border-radius:7px;padding:10px 14px;color:white;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:7px;">📋 Build Estimate</button>
-      <button onclick="confirmDeletePin('${pin.id}')" style="background:#fff;border:2px solid #EF4444;border-radius:7px;padding:8px 14px;color:#EF4444;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;">🗑 Delete Pin</button>
+    <div style="min-width:260px;max-width:300px;">
+      <div style="font-weight:700;font-size:16px;margin-bottom:8px;color:#FFFFFF;line-height:1.4;">${pin.address||'Unknown'}</div>
+      <div style="display:inline-block;background:${sColor(pin.status)};color:white;font-size:13px;padding:4px 12px;border-radius:7px;font-weight:700;margin-bottom:12px;">${sLabel(pin.status)}</div>
+      ${pin.notes?`<div style="font-size:13px;color:#A8BECE;margin-bottom:10px;font-style:italic;">"${pin.notes}"</div>`:''}
+      <button onclick="goEstFromPin('${pin.id}')" style="background:#F25C05;border:none;border-radius:8px;padding:13px;color:white;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:8px;display:block;">📋 Build Estimate</button>
+      <button onclick="measureForPin('${pin.id}')" style="background:transparent;border:2px solid #F25C05;border-radius:8px;padding:11px;color:#F25C05;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:8px;display:block;">📐 Measure This Roof</button>
+      <button onclick="confirmDeletePin('${pin.id}')" style="background:transparent;border:2px solid #EF4444;border-radius:8px;padding:10px;color:#EF4444;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;display:block;">🗑 Delete Pin</button>
     </div>
-  `,{maxWidth:300});
+  `,{maxWidth:320});
   markers[pin.id]=m;
 }
  
@@ -1317,6 +1366,26 @@ function doDeletePin(){
   closeM('m-delete-pin');
   renderPinList();save();
   toast('🗑 Pin deleted','info');
+}
+ 
+// Measure mode locked to a specific pin
+let _measureForPinId=null;
+ 
+function measureForPin(pinId){
+  const pin=S.pins.find(p=>p.id===pinId);
+  if(!pin)return;
+  _measureForPinId=pinId;
+  map.closePopup();
+  // Fly to pin location
+  map.flyTo([pin.lat,pin.lng],19,{duration:.6});
+  // Start measure mode
+  if(!measuring) toggleMeasure();
+  // Update HUD hint to show which address
+  setTimeout(()=>{
+    const short=pin.address?pin.address.split(',')[0]:'this property';
+    document.getElementById('mhud-hint').textContent=`📍 Measuring: ${short} — click roof corners`;
+  },400);
+  toast(`📐 Now measuring roof for ${pin.address?pin.address.split(',')[0]:'selected pin'}`,'info');
 }
  
 function cycleStatus(id){
