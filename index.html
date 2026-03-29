@@ -3230,77 +3230,100 @@ async function createUser(){
 // ═══════════════════════════════
 //  INIT
 // ═══════════════════════════════
-window.addEventListener('load',()=>{
+window.addEventListener('load', async ()=>{
   // Initialize Supabase client
   sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  (async ()=>{
-  // Check for existing session
-  const { data: { session } } = await sb.auth.getSession();
-  if(session){
-    await onSignedIn(session.user);
-  } else {
-    showLoginScreen();
-  }
-
-  // Listen for auth changes
-  })(); // end async IIFE
+  // Listen for auth state changes
   sb.auth.onAuthStateChange(async (event, session) => {
     if(event === 'SIGNED_IN' && session){
-      await onSignedIn(session.user);
+      try {
+        await onSignedIn(session.user);
+      } catch(e) {
+        console.error('Auth state change error:', e);
+        const err = document.getElementById('login-error');
+        const btn = document.getElementById('login-btn');
+        if(err) err.textContent = 'Error: '+e.message;
+        if(btn){ btn.textContent='Sign In'; btn.disabled=false; }
+        showLoginScreen();
+      }
     } else if(event === 'SIGNED_OUT'){
       onSignedOut();
     }
   });
+
+  // Check for existing session on page load
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if(session){
+      await onSignedIn(session.user);
+    } else {
+      showLoginScreen();
+    }
+  } catch(e) {
+    console.error('Session check error:', e);
+    showLoginScreen();
+  }
 });
 
 async function onSignedIn(user){
   currentUser = user;
-  // Load profile
-  const {data:profile} = await sb.from('user_profiles').select('*').eq('id', user.id).single();
-  currentProfile = profile;
+  const btn = document.getElementById('login-btn');
+  const err = document.getElementById('login-error');
+  try {
+    // Load profile
+    const {data:profile, error:profErr} = await sb.from('user_profiles').select('*').eq('id', user.id).single();
 
-  if(!profile){
-    // First time — check if super admin by email
-    if(user.email === 'john@mongoosefilms.com'){
-      const {error} = await sb.from('user_profiles').insert({
-        id: user.id, account_id: null, role: 'super_admin',
-        name: 'John Bujak', email: user.email
-      });
-      const {data:p2} = await sb.from('user_profiles').select('*').eq('id', user.id).single();
-      currentProfile = p2;
+    if(profErr || !profile){
+      // First time — check if super admin by email
+      if(user.email === 'john@mongoosefilms.com'){
+        const {error:insErr} = await sb.from('user_profiles').insert({
+          id: user.id, account_id: null, role: 'super_admin',
+          name: 'John Bujak', email: user.email
+        });
+        if(insErr) throw new Error('Could not create super_admin profile: '+insErr.message);
+        const {data:p2} = await sb.from('user_profiles').select('*').eq('id', user.id).single();
+        currentProfile = p2;
+      } else {
+        throw new Error('No profile found. Contact your administrator.');
+      }
     } else {
-      toast('No profile found. Contact your administrator.','error');
-      await sb.auth.signOut();
-      showLoginScreen();
-      return;
+      currentProfile = profile;
     }
+
+    // Load account config
+    if(currentProfile && currentProfile.account_id){
+      const {data:account, error:acctErr} = await sb.from('accounts').select('*').eq('id', currentProfile.account_id).single();
+      if(acctErr) throw new Error('Could not load account: '+acctErr.message);
+      currentAccount = account;
+      if(account) S.cfg = accountRowToCfg(account);
+    }
+
+    // Hide login, show app
+    hideLoginScreen();
+    load(); // load any local cache
+    applyBrand();
+    initMap();
+    renderStructures();
+    updatePreview();
+    applyRoleUI();
+
+    // Load data from Supabase
+    await loadPinsFromSupabase();
+    await loadQueueFromSupabase();
+
+    // Subscribe to realtime if in an account
+    if(currentAccount) subscribeRealtime();
+
+    toast('Welcome back, '+(currentProfile.name||user.email).split(' ')[0]+'! 👋','success');
+
+  } catch(e) {
+    console.error('onSignedIn error:', e);
+    if(err) err.textContent = 'Login error: '+e.message;
+    if(btn){ btn.textContent='Sign In'; btn.disabled=false; }
+    showLoginScreen();
+    await sb.auth.signOut();
   }
-
-  // Load account config
-  if(currentProfile.account_id){
-    const {data:account} = await sb.from('accounts').select('*').eq('id', currentProfile.account_id).single();
-    currentAccount = account;
-    if(account) S.cfg = accountRowToCfg(account);
-  }
-
-  // Hide login, show app
-  hideLoginScreen();
-  load(); // load any local cache
-  applyBrand();
-  initMap();
-  renderStructures();
-  updatePreview();
-  applyRoleUI();
-
-  // Load data from Supabase
-  await loadPinsFromSupabase();
-  await loadQueueFromSupabase();
-
-  // Subscribe to realtime if in an account
-  if(currentAccount) subscribeRealtime();
-
-  toast('Welcome back, '+(currentProfile.name||user.email).split(' ')[0]+'! 👋','success');
 }
 
 function onSignedOut(){
@@ -3330,9 +3353,15 @@ async function doLogin(){
   const err   = document.getElementById('login-error');
   if(!email||!pass){err.textContent='Enter email and password.';return;}
   btn.textContent='Signing in...'; btn.disabled=true; err.textContent='';
-  const {error} = await sb.auth.signInWithPassword({email, password:pass});
-  if(error){
-    err.textContent = error.message;
+  try {
+    const {error} = await sb.auth.signInWithPassword({email, password:pass});
+    if(error){
+      err.textContent = error.message;
+      btn.textContent='Sign In'; btn.disabled=false;
+    }
+    // On success: onAuthStateChange fires → onSignedIn handles the rest
+  } catch(e) {
+    err.textContent = 'Error: '+(e.message||'Check connection and try again.');
     btn.textContent='Sign In'; btn.disabled=false;
   }
 }
