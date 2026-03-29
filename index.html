@@ -216,6 +216,8 @@ tr:hover td{background:var(--card);}
 .struct-name-inp{flex:1;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:#fff;font-family:var(--font-b);font-size:15px;font-weight:600;outline:none;}
 .struct-name-inp:focus{border-color:var(--accent);}
 .struct-del-btn{background:none;border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--danger);cursor:pointer;font-size:14px;flex-shrink:0;}
+.struct-meas-btn{background:none;border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--accent);cursor:pointer;font-size:14px;flex-shrink:0;transition:all .15s;}
+.struct-meas-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
 .struct-price{font-family:var(--font-m);font-size:16px;font-weight:700;color:var(--accent);white-space:nowrap;}
 ::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
@@ -825,6 +827,7 @@ function toggleSatellite(){
 let measuring=false,measurePts=[],measurePoly=null,measureMarkers=[];
 let allPolygons=[],allPolygonPts=[],totalSqFt=0;
 let _measureForPinId=null;
+let _targetStructId=null; // when measuring for a specific structure card
 
 function toggleMeasure(){
   measuring=!measuring;
@@ -845,6 +848,7 @@ function toggleMeasure(){
     hud.classList.remove('show');
     document.getElementById('the-map').classList.remove('measuring');
     _measureForPinId=null;
+    _targetStructId=null;
     window._addingToExisting=false;
     window._baseSqft=0;
     clearMeasureData();
@@ -1004,6 +1008,20 @@ function useRoofMeasurement(){
   const banner=document.getElementById('mhud-pin-banner');
   if(banner)banner.remove();
 
+  // Route 1: measuring for a specific existing structure card
+  if(_targetStructId){
+    const sid=_targetStructId;
+    _targetStructId=null;
+    const s=structures.find(x=>x.id===sid);
+    if(s){
+      s.sqft=sqft;
+      goTab('estimate');
+      renderStructures();calcP();updatePreview();
+      toast('📐 '+sqft.toLocaleString()+' sq ft applied to '+escHtml(s.name)+'!','success');
+      return;
+    }
+  }
+
   if(window._addingToExisting){
     window._addingToExisting=false;
     goTab('estimate');
@@ -1011,7 +1029,6 @@ function useRoofMeasurement(){
     toast('📐 '+sqft.toLocaleString()+' sq ft added as new structure!','success');
     return;
   }
-  if(_measureForPinId){
     const pin=S.pins.find(p=>p.id===_measureForPinId);
     _measureForPinId=null;
     if(pin){
@@ -1025,6 +1042,41 @@ function useRoofMeasurement(){
     }
   }
   applyMeasureToEstimate(sqft);
+}
+
+function measureForStructure(sid){
+  const s=structures.find(x=>x.id===sid);
+  if(!s)return;
+  _targetStructId=sid;
+  _measureForPinId=null;
+  window._addingToExisting=false;
+  // Reset any in-progress measurement
+  allPolygons.forEach(p=>map.removeLayer(p));
+  allPolygons=[];allPolygonPts=[];totalSqFt=0;
+  measurePts=[];
+  measureMarkers.forEach(m=>map.removeLayer(m));measureMarkers=[];
+  if(measurePoly){map.removeLayer(measurePoly);measurePoly=null;}
+  goTab('map');
+  setTimeout(()=>{
+    if(!measuring)toggleMeasure();
+    // Override the generic hint with structure-specific text
+    document.getElementById('mhud-hint').textContent='Tap corners of '+s.name+'. Double-click to finish.';
+    document.getElementById('btn-measure').textContent='✕ Cancel';
+    // Show a banner in the HUD
+    const sqftEl=document.getElementById('mhud-sqft').parentNode;
+    let banner=document.getElementById('mhud-pin-banner');
+    if(!banner){
+      banner=document.createElement('div');
+      banner.id='mhud-pin-banner';
+      banner.style.cssText='background:#1A2333;border:1px solid #F25C05;border-radius:7px;padding:8px 12px;margin-bottom:10px;font-size:13px;font-weight:600;color:#F0F6FF;';
+      sqftEl.parentNode.insertBefore(banner,sqftEl);
+    }
+    banner.textContent='📐 Measuring: '+s.name;
+    // Update HUD button label
+    const ub=document.getElementById('btn-use-measure');
+    if(ub)ub.textContent='✅ Apply to '+s.name;
+  },300);
+  toast('📐 Draw the outline for '+s.name,'info');
 }
 
 function applyMeasureToEstimate(sqft){
@@ -1236,6 +1288,7 @@ function renderStructures(){
       '<span style="background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:3px 9px;border-radius:9px;flex-shrink:0;">Bldg '+(i+1)+'</span>'+
       '<input class="struct-name-inp" data-sid="'+s.id+'" value="'+escHtml(s.name)+'" placeholder="e.g. Main House" oninput="_structField(this,\'name\')">'+
       '<span class="struct-price" id="sp-'+s.id+'">$'+price.toLocaleString()+'</span>'+
+      '<button class="struct-meas-btn" data-sid="'+s.id+'" onclick="measureForStructure(this.dataset.sid)" title="Measure this structure on map">📐</button>'+
       '<button class="struct-del-btn" data-sid="'+s.id+'" onclick="removeStructure(this.dataset.sid)" title="Remove">🗑</button>'+
       '</div>'+
       '<div class="frow" style="gap:8px;margin-bottom:8px;">'+
