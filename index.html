@@ -251,6 +251,12 @@ tr:hover td{background:var(--card);}
 .mhud-btn.pr:hover{opacity:.85;}
 .leaflet-container.measuring{cursor:crosshair !important;}
 
+.struct-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;}
+.struct-card-hdr{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.struct-name-inp{flex:1;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:#fff;font-family:var(--font-b);font-size:15px;font-weight:600;outline:none;}
+.struct-name-inp:focus{border-color:var(--accent);}
+.struct-del-btn{background:none;border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--danger);cursor:pointer;font-size:14px;flex-shrink:0;}
+.struct-price{font-family:var(--font-m);font-size:16px;font-weight:700;color:var(--accent);white-space:nowrap;}
 ::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
@@ -471,84 +477,38 @@ tr:hover td{background:var(--card);}
           </div>
         </div>
       </div>
-      <div class="frow">
-        <div class="fg">
-          <label class="fl">Roof Area (sq ft)</label>
-          <input type="number" class="fi" id="e-sqft" placeholder="2400" oninput="calcP();updatePreview()">
-        </div>
-        <div class="fg" id="add-bldg-wrap" style="display:none;">
-          <button onclick="addAnotherBuilding()" style="width:100%;background:var(--card2);border:2px dashed var(--accent);border-radius:9px;padding:12px;color:var(--accent);font-family:var(--font-b);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
-            🏗 + Add Another Building / Structure
-          </button>
-          <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:5px;">Adds to the current sq footage — use for garages, barns, etc.</div>
-        </div>
-        <div class="fg">
-          <label class="fl">Stories</label>
-          <select class="fs" id="e-stories" onchange="calcP();updatePreview()">
-            <option value="1">1 Story</option>
-            <option value="1.5">1.5 Stories</option>
-            <option value="2">2 Stories</option>
-            <option value="2.5">2+ Stories</option>
-          </select>
-        </div>
+
+      <!-- STRUCTURES LIST -->
+      <div id="structures-list"></div>
+
+      <!-- ADD STRUCTURE BUTTON -->
+      <button onclick="addStructure()" style="width:100%;background:var(--card2);border:2px dashed var(--accent);border-radius:9px;padding:14px;color:var(--accent);font-family:var(--font-b);font-size:14px;font-weight:700;cursor:pointer;margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:8px;">
+        🏗 + Add Structure
+      </button>
+
+      <!-- GLOBAL ADD-ONS -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px;">
+        <div style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">Property Add-ons</div>
+        <label class="addon-row">
+          <input type="checkbox" id="a-sky" onchange="calcP();updatePreview()">
+          Skylights (+$350 ea)
+          <input type="number" class="addon-qty" id="a-sky-q" value="1" min="1" max="10" onchange="calcP()">
+        </label>
+        <label class="addon-row">
+          <input type="checkbox" id="a-chim" onchange="calcP();updatePreview()">
+          Chimney Flashing (+$280)
+        </label>
+        <label class="addon-row">
+          <input type="checkbox" id="a-gut" onchange="calcP();updatePreview()">
+          Gutters (+$8/lf)
+          <input type="number" class="addon-qty" id="a-gut-q" value="120" min="1" onchange="calcP()"> lf
+        </label>
       </div>
-      <div class="frow">
-        <div class="fg">
-          <label class="fl">Roof Pitch</label>
-          <select class="fs" id="e-pitch" onchange="calcP();updatePreview()">
-            <option value="1.0">4/12 — Low</option>
-            <option value="1.07">5/12</option>
-            <option value="1.15">6/12 — Standard</option>
-            <option value="1.23">7/12</option>
-            <option value="1.31" selected>8/12 — Moderate</option>
-            <option value="1.40">9/12</option>
-            <option value="1.50">10/12 — Steep</option>
-            <option value="1.65">11/12</option>
-            <option value="1.80">12/12 — Very Steep</option>
-          </select>
-        </div>
-        <div class="fg">
-          <label class="fl">Material</label>
-          <select class="fs" id="e-mat" onchange="calcP();updatePreview()">
-            <option value="1.0">3-Tab Shingle</option>
-            <option value="1.3" selected>Architectural</option>
-            <option value="1.8">Designer / Premium</option>
-            <option value="2.5">Metal Roofing</option>
-          </select>
-        </div>
-      </div>
-      <div class="fg">
-        <label class="fl">Roof Complexity</label>
-        <select class="fs" id="e-complexity" onchange="calcP();updatePreview()">
-          <option value="1.0">Simple — Gable, few angles</option>
-          <option value="1.12" selected>Moderate — Some hips/valleys</option>
-          <option value="1.25">Complex — Many angles, dormers</option>
-          <option value="1.40">Very Complex — Multiple intersections</option>
-        </select>
-      </div>
-      <div class="fg">
-        <label class="fl">Add-ons</label>
-        <div style="display:flex;flex-direction:column;gap:4px;">
-          <label class="addon-row">
-            <input type="checkbox" id="a-sky" onchange="calcP();updatePreview()">
-            Skylights (+$350 ea)
-            <input type="number" class="addon-qty" id="a-sky-q" value="1" min="1" max="10" onchange="calcP()">
-          </label>
-          <label class="addon-row">
-            <input type="checkbox" id="a-chim" onchange="calcP();updatePreview()">
-            Chimney Flashing (+$280)
-          </label>
-          <label class="addon-row">
-            <input type="checkbox" id="a-gut" onchange="calcP();updatePreview()">
-            Gutters (+$8/lf)
-            <input type="number" class="addon-qty" id="a-gut-q" value="120" min="1" onchange="calcP()"> lf
-          </label>
-        </div>
-      </div>
+
       <div class="price-box">
         <div class="price-lbl">Estimated Total</div>
         <div class="price-val" id="e-total">$0</div>
-        <div class="price-sub" id="e-breakdown">Enter roof area to calculate</div>
+        <div class="price-sub" id="e-breakdown">Add a structure above to calculate</div>
       </div>
       <button class="btn-primary" id="add-queue-btn" onclick="addToQueue()">📬 Add to Mail Queue</button>
       <button class="btn-sec" onclick="clearEst()">Clear Form</button>
@@ -1219,16 +1179,12 @@ function useRoofMeasurement(){
   const banner=document.getElementById('mhud-pin-banner');
   if(banner)banner.remove();
 
-  // If adding to an existing measurement, add the new sqft on top
+  // If adding to an existing estimate, create a new structure card
   if(window._addingToExisting){
     window._addingToExisting=false;
-    const base=window._baseSqft||0;
-    const combined=base+sqft;
-    window._baseSqft=0;
     goTab('estimate');
-    document.getElementById('e-sqft').value=combined;
-    calcP();updatePreview();
-    toast('📐 Added '+sqft.toLocaleString()+' sq ft — total now '+combined.toLocaleString()+' sq ft!','success');
+    addStructure(sqft,'Structure '+(structures.length+1));
+    toast('📐 '+sqft.toLocaleString()+' sq ft added as new structure!','success');
     return;
   }
   // If we were measuring for a specific pin, go straight to estimate with that address
@@ -1239,7 +1195,7 @@ function useRoofMeasurement(){
       window._editingQueueId=null;
       goTab('estimate');
       document.getElementById('e-addr').value=pin.address||'';
-      document.getElementById('e-sqft').value=sqft;
+      addStructure(sqft,'Main House');
       calcP();updatePreview();
       toast('📐 '+sqft.toLocaleString()+' sq ft loaded for '+(pin.address?pin.address.split(',')[0]:'selected pin')+'!','success');
       return;
@@ -1292,42 +1248,37 @@ function applyMeasureToPinAddr(pinId,sqft){
   window._editingQueueId=null;
   goTab('estimate');
   document.getElementById('e-addr').value=pin.address||'';
-  document.getElementById('e-sqft').value=sqft;
+  addStructure(sqft,'Main House');
   calcP();updatePreview();
-  toast(`📐 ${sqft.toLocaleString()} sq ft loaded for ${pin.address.split(',')[0]}!`,'success');
+  toast('📐 '+sqft.toLocaleString()+' sq ft loaded for '+pin.address.split(',')[0]+'!','success');
 }
 
 function applyMeasureToExisting(id,sqft){
   const item=S.queue.find(x=>x.id===id);
   if(!item)return;
   closeM('m-measure-pick');
-  // Load item into estimate form
   document.getElementById('e-owner').value=item.owner||'';
   document.getElementById('e-addr').value=item.addr||'';
-  document.getElementById('e-sqft').value=sqft;
-  // Store which queue item we're editing
   window._editingQueueId=id;
+  // Add as new structure
+  addStructure(sqft,'Main House');
   goTab('estimate');
   calcP();updatePreview();
-  toast(`📐 ${sqft.toLocaleString()} sq ft updated on estimate for ${item.addr}`,'success');
+  toast('📐 '+sqft.toLocaleString()+' sq ft added for '+item.addr,'success');
 }
 
 function applyMeasureToEstimate(sqft){
   window._editingQueueId=null;
   goTab('estimate');
-  document.getElementById('e-sqft').value=sqft;
-  calcP();updatePreview();
-  toast('📐 '+sqft.toLocaleString()+' sq ft loaded into estimate!','success');
+  // Add as a new structure
+  addStructure(sqft,'Main House');
+  toast('📐 '+sqft.toLocaleString()+' sq ft added as new structure!','success');
 }
 
 function addAnotherBuilding(){
-  // Store current sqft as base, go back to map in measure mode
-  const currentSqft=parseFloat(document.getElementById('e-sqft').value)||0;
-  window._baseSqft=currentSqft;
+  window._addingToExisting=true;
   goTab('map');
-  // Small delay then start measure mode
   setTimeout(()=>{
-    // Reset just the polygon arrays, not base sqft
     allPolygons.forEach(p=>map.removeLayer(p));
     allPolygons=[];allPolygonPts=[];totalSqFt=0;
     measurePts=[];
@@ -1335,14 +1286,10 @@ function addAnotherBuilding(){
     measureMarkers=[];
     if(measurePoly){map.removeLayer(measurePoly);measurePoly=null;}
     if(!measuring) toggleMeasure();
-    document.getElementById('mhud-hint').textContent='Tap corners of the additional structure. Dbl-click or tap Add to Estimate when done.';
-    // Show base accumulation in HUD
-    document.getElementById('mhud-bldg-count').textContent='Existing: '+currentSqft.toLocaleString()+' sq ft already in estimate';
-    document.getElementById('mhud-sqft').textContent=currentSqft.toLocaleString();
-    // Override useRoofMeasurement for this session to ADD to existing
-    window._addingToExisting=true;
+    document.getElementById('mhud-hint').textContent='Draw the next structure — it will be added as a separate line item.';
+    document.getElementById('mhud-bldg-count').textContent=structures.length+' structure'+(structures.length>1?'s':'')+' already on estimate';
   },300);
-  toast('Draw the additional structure on the map','info');
+  toast('Draw the next structure on the map','info');
 }
 
 async function revGeo(lat,lng){
@@ -1515,13 +1462,121 @@ function cycleStatus(id){
 function goEstFromPin(id){
   const p=S.pins.find(x=>x.id===id);
   if(!p)return;
+  // If no structures yet, add a blank one
+  if(!structures.length) addStructure(0,'Main House');
   goTab('estimate');
   document.getElementById('e-addr').value=p.address||'';
-  updatePreview();
+  renderStructures();
+  calcP();updatePreview();
 }
 
 // ═══════════════════════════════
 //  ESTIMATE
+// ═══════════════════════════════
+//  STRUCTURES ENGINE
+// ═══════════════════════════════
+let structures=[];
+
+const PITCH_OPTS=[
+  {v:'1.0',l:'4/12 — Low'},{v:'1.07',l:'5/12'},{v:'1.15',l:'6/12 — Standard'},
+  {v:'1.23',l:'7/12'},{v:'1.31',l:'8/12 — Moderate'},{v:'1.40',l:'9/12'},
+  {v:'1.50',l:'10/12 — Steep'},{v:'1.65',l:'11/12'},{v:'1.80',l:'12/12 — Very Steep'}
+];
+const MAT_OPTS=[
+  {v:'1.0',l:'3-Tab Shingle'},{v:'1.3',l:'Architectural Shingle'},
+  {v:'1.8',l:'Designer / Premium'},{v:'2.5',l:'Metal Roofing'}
+];
+const COMPLEX_OPTS=[
+  {v:'1.0',l:'Simple — Gable, few angles'},{v:'1.12',l:'Moderate — Some hips/valleys'},
+  {v:'1.25',l:'Complex — Many angles, dormers'},{v:'1.40',l:'Very Complex'}
+];
+const STORIES_OPTS=[
+  {v:'1',l:'1 Story'},{v:'1.5',l:'1.5 Stories'},{v:'2',l:'2 Stories'},{v:'2.5',l:'2+ Stories'}
+];
+
+function mkSelect(opts,val,onChange){
+  return '<select class="fs" style="font-size:13px;padding:8px 10px;" onchange="'+onChange+'">'
+    +opts.map(o=>'<option value="'+o.v+'"'+(o.v==val?' selected':'')+'>'+o.l+'</option>').join('')
+    +'</select>';
+}
+
+function addStructure(sqft,name){
+  const id='s'+Date.now();
+  structures.push({
+    id,
+    name:name||('Structure '+(structures.length+1)),
+    sqft:sqft||0,
+    pitch:'1.31',
+    mat:'1.3',
+    stories:'1',
+    complexity:'1.12'
+  });
+  renderStructures();
+  calcP();updatePreview();
+}
+
+function removeStructure(id){
+  structures=structures.filter(s=>s.id!==id);
+  renderStructures();
+  calcP();updatePreview();
+}
+
+function updateStruct(id,field,val){
+  const s=structures.find(x=>x.id===id);
+  if(s){s[field]=val;calcP();updatePreview();}
+}
+
+function renderStructures(){
+  const el=document.getElementById('structures-list');
+  if(!el)return;
+  if(!structures.length){
+    el.innerHTML='<div style="text-align:center;padding:18px;color:var(--muted);font-size:13px;border:2px dashed var(--border);border-radius:9px;margin-bottom:12px;">No structures yet — tap + Add Structure below</div>';
+    return;
+  }
+  el.innerHTML=structures.map((s,i)=>{
+    const price=calcStructPrice(s);
+    return '<div class="struct-card" id="sc-'+s.id+'">'
+      +'<div class="struct-card-hdr">'
+      +'<span style="background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:3px 9px;border-radius:9px;flex-shrink:0;">'+('Bldg '+(i+1))+'</span>'
+      +'<input class="struct-name-inp" value="'+s.name+'" placeholder="e.g. Main House" oninput="updateStruct(''+s.id+'','name',this.value)">'
+      +'<span class="struct-price">$'+price.toLocaleString()+'</span>'
+      +'<button class="struct-del-btn" onclick="removeStructure(''+s.id+'')" title="Remove">🗑</button>'
+      +'</div>'
+      +'<div class="frow" style="gap:8px;margin-bottom:8px;">'
+      +'<div class="fg" style="margin-bottom:0;"><label class="fl">Sq Ft</label>'
+      +'<input type="number" class="fi" style="font-size:14px;padding:9px 10px;" value="'+(s.sqft||'')+'" placeholder="2400" oninput="updateStruct(''+s.id+'','sqft',parseFloat(this.value)||0);calcP();updatePreview()"></div>'
+      +'<div class="fg" style="margin-bottom:0;"><label class="fl">Stories</label>'+mkSelect(STORIES_OPTS,s.stories,'updateStruct(''+s.id+'','stories',this.value)')+'</div>'
+      +'</div>'
+      +'<div class="frow" style="gap:8px;margin-bottom:8px;">'
+      +'<div class="fg" style="margin-bottom:0;"><label class="fl">Pitch</label>'+mkSelect(PITCH_OPTS,s.pitch,'updateStruct(''+s.id+'','pitch',this.value)')+'</div>'
+      +'<div class="fg" style="margin-bottom:0;"><label class="fl">Material</label>'+mkSelect(MAT_OPTS,s.mat,'updateStruct(''+s.id+'','mat',this.value)')+'</div>'
+      +'</div>'
+      +'<div class="fg" style="margin-bottom:0;"><label class="fl">Complexity</label>'+mkSelect(COMPLEX_OPTS,s.complexity,'updateStruct(''+s.id+'','complexity',this.value)')+'</div>'
+      +'</div>';
+  }).join('');
+}
+
+function calcStructPrice(s){
+  const c=S.cfg;
+  const sqft=parseFloat(s.sqft)||0;
+  if(!sqft)return 0;
+  const pitchMult=parseFloat(s.pitch)||1.31;
+  const complexity=parseFloat(s.complexity)||1.12;
+  const stories=parseFloat(s.stories)||1;
+  const sq=sqft/100*1.12*pitchMult;
+  const stMult=stories<=1?1:stories<=1.5?1.08:stories<=2?1.16:1.25;
+  const matCost=getMatCost(s.mat);
+  const tearoff=(parseFloat(c.costTearoff)||75)*sq;
+  const iceWater=(parseFloat(c.costIceWater)||42)*sq;
+  const felts=(parseFloat(c.costFelts)||22)*sq;
+  const dumpster=(parseFloat(c.costDumpster)||450);
+  const labor=matCost*sq*stMult*complexity;
+  const sub=labor+tearoff+iceWater+felts+dumpster;
+  const ovh=sub*(parseFloat(c.overhead)||15)/100;
+  const mgn=(sub+ovh)*(parseFloat(c.margin)||20)/100;
+  return Math.round(sub+ovh+mgn);
+}
+
 // ═══════════════════════════════
 function getMatCost(matKey){
   const c=S.cfg;
@@ -1534,40 +1589,28 @@ function getMatCost(matKey){
 }
 
 function calcP(){
-  const sqft=parseFloat(document.getElementById('e-sqft').value)||0;
-  const pitchMult=parseFloat(document.getElementById('e-pitch').value)||1.31;
-  const matKey=document.getElementById('e-mat').value;
-  const complexity=parseFloat(document.getElementById('e-complexity').value)||1.0;
-  const stories=parseFloat(document.getElementById('e-stories').value)||1;
-  const c=S.cfg;
-  if(!sqft){
+  if(!structures.length){
     document.getElementById('e-total').textContent='$0';
-    document.getElementById('e-breakdown').textContent='Enter roof area to calculate';
+    document.getElementById('e-breakdown').textContent='Add a structure above to calculate';
     return 0;
   }
-  const sq=sqft/100*1.12*pitchMult; // actual roof squares adjusted for pitch
-  const stMult=stories<=1?1:stories<=1.5?1.08:stories<=2?1.16:1.25;
-  const matCost=getMatCost(matKey);
-  const tearoff=(parseFloat(c.costTearoff)||75)*sq;
-  const iceWater=(parseFloat(c.costIceWater)||42)*sq;
-  const felts=(parseFloat(c.costFelts)||22)*sq;
-  const dumpster=(parseFloat(c.costDumpster)||450);
-  const labor=matCost*sq*stMult*complexity;
-  let subtotal=labor+tearoff+iceWater+felts+dumpster;
-  // Add-ons
-  let adds=0;
-  if(document.getElementById('a-sky').checked) adds+=(parseFloat(c.costSkylight)||375)*(parseInt(document.getElementById('a-sky-q').value)||1);
-  if(document.getElementById('a-chim').checked) adds+=(parseFloat(c.costChimney)||295);
-  if(document.getElementById('a-gut').checked) adds+=(parseFloat(c.costGutter)||9)*(parseInt(document.getElementById('a-gut-q').value)||120);
-  subtotal+=adds;
-  const ovh=subtotal*(parseFloat(c.overhead)||15)/100;
-  const mgn=(subtotal+ovh)*(parseFloat(c.margin)||20)/100;
-  const grand=Math.round(subtotal+ovh+mgn);
+  // Sum all structures
+  let grand=structures.reduce((sum,s)=>sum+calcStructPrice(s),0);
+  // Global add-ons
+  const c=S.cfg;
+  if(document.getElementById('a-sky')&&document.getElementById('a-sky').checked)
+    grand+=(parseFloat(c.costSkylight)||375)*(parseInt(document.getElementById('a-sky-q').value)||1);
+  if(document.getElementById('a-chim')&&document.getElementById('a-chim').checked)
+    grand+=(parseFloat(c.costChimney)||295);
+  if(document.getElementById('a-gut')&&document.getElementById('a-gut').checked)
+    grand+=(parseFloat(c.costGutter)||9)*(parseInt(document.getElementById('a-gut-q').value)||120);
   document.getElementById('e-total').textContent='$'+grand.toLocaleString();
-  document.getElementById('e-breakdown').textContent=`${sq.toFixed(1)} sq · ${PITCHLBL[document.getElementById('e-pitch').value]||''} · ${Math.round(sq*matCost)} mat+labor`;
-  // Show add-building button when sqft is populated
-  const addWrap=document.getElementById('add-bldg-wrap');
-  if(addWrap) addWrap.style.display=sqft?'block':'none';
+  document.getElementById('e-breakdown').textContent=structures.length+' structure'+(structures.length>1?'s':'')+' · Total: $'+grand.toLocaleString();
+  // Re-render structure prices
+  structures.forEach(s=>{
+    const el=document.querySelector('#sc-'+s.id+' .struct-price');
+    if(el)el.textContent='$'+calcStructPrice(s).toLocaleString();
+  });
   return grand;
 }
 
@@ -1596,60 +1639,92 @@ function updatePreview(){
     addRows+=`<div class="ml-row"><span class="rl">Gutters (${lf} lf)</span><span class="rv">$${(8*lf).toLocaleString()}</span></div>`;
   }
 
-  const logoImg=S.cfg.logoData?`<img src="${S.cfg.logoData}" style="max-height:52px;max-width:160px;object-fit:contain;display:block;">`:
-    `<div class="ml-co-name" style="color:${color};">${co}</div>`;
+  const logoImg=S.cfg.logoData?'<img src="'+S.cfg.logoData+'" style="max-height:52px;max-width:160px;object-fit:contain;display:block;">':
+    '<div class="ml-co-name" style="color:'+color+';">'+co+'</div>';
   const homePhotoData=window._homePhotoData||'';
-  const homePhotoHtml=homePhotoData?`<img src="${homePhotoData}" style="width:100%;max-height:220px;object-fit:cover;border-radius:8px;margin-bottom:18px;display:block;">`:'' ;
+  const homePhotoHtml=homePhotoData?'<img src="'+homePhotoData+'" style="width:100%;max-height:220px;object-fit:cover;border-radius:8px;margin-bottom:18px;display:block;">':'';
 
-  document.getElementById('mailer-preview').innerHTML=`
-    <div class="ml-hdr">
-      <div>
-        ${logoImg}
-        <div class="ml-co-info" style="margin-top:4px;">${coAddr.replace(/,/g,'<br>')}<br>${ph}</div>
-      </div>
-      <div class="ml-addr-blk">
-        <strong>${owner}</strong><br>${addr.split(',').join('<br>')}
-      </div>
-    </div>
-    <div class="ml-stripe" style="background:${color};"></div>
-    <div class="ml-body">
-      ${homePhotoHtml}
-      <div class="ml-greeting">Dear ${owner},</div>
-      <div class="ml-headline" style="color:${color};">Your Roof — Priced.<br>No Visit Required.</div>
-      <div class="ml-intro">We assessed your neighborhood and noticed your roof may need attention. We've prepared a custom estimate for your specific property — no obligation, no sales pressure, no appointment needed.</div>
-      <div class="ml-box" style="border:2px solid ${color};">
-        <div class="ml-box-hdr" style="background:${color};">CUSTOM ESTIMATE FOR YOUR PROPERTY</div>
-        <div class="ml-rows">
-          <div class="ml-row"><span class="rl">Roof Area</span><span class="rv">${sqft?sqft.toLocaleString()+' sq ft':' —'} (${sq} squares)</span></div>
-          <div class="ml-row"><span class="rl">Pitch</span><span class="rv">${PITCHLBL[pitchKey]||pitchKey}</span></div>
-          <div class="ml-row"><span class="rl">Material</span><span class="rv">${MATLBL[matKey]||matKey}</span></div>
-          <div class="ml-row"><span class="rl">Stories</span><span class="rv">${stories}</span></div>
-          <div class="ml-row"><span class="rl">Material &amp; Labor</span><span class="rv">Included</span></div>
-          <div class="ml-row"><span class="rl">Tearoff &amp; Cleanup</span><span class="rv">Included</span></div>
-          <div class="ml-row"><span class="rl">Workmanship Warranty</span><span class="rv">10 Years</span></div>
-          ${addRows}
-        </div>
-        <div class="ml-total">
-          <span class="ml-total-lbl">YOUR ESTIMATE</span>
-          <span class="ml-total-amt">${grand?'$'+grand.toLocaleString():'Enter Details'}</span>
-        </div>
-      </div>
-      <div class="ml-cta">
-        <div class="ml-qr">
-          <span style="font-size:28px;">📱</span>
-          <span>Scan to<br>Schedule</span>
-        </div>
-        <div class="ml-cta-txt">
-          <div class="ml-cta-h" style="color:${color};">Ready to Get Started?</div>
-          <div class="ml-cta-b">This estimate is locked for 30 days. Call or scan the QR code to confirm your inspection and lock in your price. Licensed, insured, and local.</div>
-          <div class="ml-phone" style="color:${color};">${ph||'(000) 000-0000'}</div>
-        </div>
-      </div>
-      <div class="ml-footer">
-        Estimate based on property assessment and market data. Final pricing confirmed at inspection. Financing available. ${co} · Licensed &amp; Insured · ${new Date().getFullYear()}
-      </div>
-    </div>
-  `;
+  // Build per-structure sections
+  const PITCHLBL_L={'1.0':'4/12 Low','1.07':'5/12','1.15':'6/12 Std','1.23':'7/12','1.31':'8/12 Mod','1.40':'9/12','1.50':'10/12 Steep','1.65':'11/12','1.80':'12/12 Steep'};
+  const MATLBL_L={'1.0':'3-Tab Shingle','1.3':'Architectural Shingle','1.8':'Designer/Premium','2.5':'Metal Roofing'};
+  let structSections='';
+  let grandTotal=0;
+  if(structures.length){
+    structures.forEach((s,i)=>{
+      const sp=calcStructPrice(s);
+      grandTotal+=sp;
+      const sq=(parseFloat(s.sqft)||0)/100*1.12*(parseFloat(s.pitch)||1.31);
+      structSections+='<div class="ml-box" style="border:2px solid '+(i===0?color:'#555');
+      structSections+=';margin-bottom:16px;">'
+        +'<div class="ml-box-hdr" style="background:'+(i===0?color:'#444')+';">'+(s.name||'Structure '+(i+1)).toUpperCase()+'</div>'
+        +'<div class="ml-rows">'
+        +'<div class="ml-row"><span class="rl">Roof Area</span><span class="rv">'+(s.sqft?Number(s.sqft).toLocaleString()+' sq ft':'—')+' ('+sq.toFixed(1)+' sq)</span></div>'
+        +'<div class="ml-row"><span class="rl">Pitch</span><span class="rv">'+(PITCHLBL_L[s.pitch]||s.pitch)+'</span></div>'
+        +'<div class="ml-row"><span class="rl">Material</span><span class="rv">'+(MATLBL_L[s.mat]||s.mat)+'</span></div>'
+        +'<div class="ml-row"><span class="rl">Stories</span><span class="rv">'+s.stories+'</span></div>'
+        +'<div class="ml-row"><span class="rl">Labor, Material &amp; Tearoff</span><span class="rv">Included</span></div>'
+        +'</div>'
+        +'<div class="ml-total" style="background:'+(i===0?'#1a1a1a':'#333')+';">'
+        +'<span class="ml-total-lbl">'+s.name.toUpperCase()+' SUBTOTAL</span>'
+        +'<span class="ml-total-amt">$'+sp.toLocaleString()+'</span>'
+        +'</div>'
+        +'</div>';
+    });
+    // Add-ons row
+    let addsTotal=0;
+    let addRows='';
+    const c2=S.cfg;
+    if(document.getElementById('a-sky')&&document.getElementById('a-sky').checked){
+      const q=parseInt(document.getElementById('a-sky-q').value)||1;
+      const amt=(parseFloat(c2.costSkylight)||375)*q;
+      addsTotal+=amt;
+      addRows+='<div class="ml-row"><span class="rl">Skylights (×'+q+')</span><span class="rv">$'+amt.toLocaleString()+'</span></div>';
+    }
+    if(document.getElementById('a-chim')&&document.getElementById('a-chim').checked){
+      addsTotal+=parseFloat(c2.costChimney)||295;
+      addRows+='<div class="ml-row"><span class="rl">Chimney Flashing</span><span class="rv">$'+(parseFloat(c2.costChimney)||295)+'</span></div>';
+    }
+    if(document.getElementById('a-gut')&&document.getElementById('a-gut').checked){
+      const lf=parseInt(document.getElementById('a-gut-q').value)||120;
+      const amt=(parseFloat(c2.costGutter)||9)*lf;
+      addsTotal+=amt;
+      addRows+='<div class="ml-row"><span class="rl">Gutters ('+lf+' lf)</span><span class="rv">$'+amt.toLocaleString()+'</span></div>';
+    }
+    if(addsTotal){
+      grandTotal+=addsTotal;
+      structSections+='<div class="ml-box" style="border:2px solid #888;margin-bottom:16px;">'
+        +'<div class="ml-box-hdr" style="background:#666;">ADD-ONS</div>'
+        +'<div class="ml-rows">'+addRows+'</div>'
+        +'<div class="ml-total" style="background:#444;"><span class="ml-total-lbl">ADD-ONS SUBTOTAL</span><span class="ml-total-amt">$'+addsTotal.toLocaleString()+'</span></div>'
+        +'</div>';
+    }
+  } else {
+    structSections='<div style="padding:20px;text-align:center;color:#999;font-style:italic;">No structures added yet.</div>';
+  }
+
+  document.getElementById('mailer-preview').innerHTML='<div class="ml-hdr">'
+    +'<div>'+logoImg+'<div class="ml-co-info" style="margin-top:4px;">'+coAddr.replace(/,/g,'<br>')+'<br>'+ph+'</div></div>'
+    +'<div class="ml-addr-blk"><strong>'+owner+'</strong><br>'+addr.split(',').join('<br>')+'</div>'
+    +'</div>'
+    +'<div class="ml-stripe" style="background:'+color+';"></div>'
+    +'<div class="ml-body">'
+    +homePhotoHtml
+    +'<div class="ml-greeting">Dear '+owner+',</div>'
+    +'<div class="ml-headline" style="color:'+color+';">Your Roof — Priced.<br>No Visit Required.</div>'
+    +'<div class="ml-intro">We assessed your neighborhood and noticed your roof may need attention. We've prepared a custom estimate for your specific property — no obligation, no sales pressure, no appointment needed.</div>'
+    +structSections
+    +'<div class="ml-total" style="background:#1a1a1a;border-radius:8px;margin-bottom:22px;">'
+    +'<span class="ml-total-lbl" style="font-size:17px;">TOTAL ESTIMATE</span>'
+    +'<span class="ml-total-amt" style="font-size:26px;">$'+(grandTotal?grandTotal.toLocaleString():'0')+'</span>'
+    +'</div>'
+    +'<div class="ml-cta">'
+    +'<div class="ml-qr"><span style="font-size:28px;">📱</span><span>Scan to<br>Schedule</span></div>'
+    +'<div class="ml-cta-txt"><div class="ml-cta-h" style="color:'+color+';">Ready to Get Started?</div>'
+    +'<div class="ml-cta-b">This estimate is locked for 30 days. Call or scan the QR code to confirm your inspection and lock in your price. Licensed, insured, and local.</div>'
+    +'<div class="ml-phone" style="color:'+color+';">'+(ph||'(000) 000-0000')+'</div>'
+    +'</div></div>'
+    +'<div class="ml-footer">Estimate based on property assessment and market data. Final pricing confirmed at inspection. Financing available. '+co+' · Licensed &amp; Insured · '+new Date().getFullYear()+'</div>'
+    +'</div>';
 }
 
 function addToQueue(){
@@ -1702,13 +1777,15 @@ function addToQueue(){
 }
 
 function clearEst(){
-  ['e-owner','e-addr','e-sqft'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('e-pitch').value='1.31';
-  document.getElementById('e-mat').value='1.3';
-  document.getElementById('e-stories').value='1';
-  ['a-sky','a-chim','a-gut'].forEach(id=>document.getElementById(id).checked=false);
+  document.getElementById('e-owner').value='';
+  document.getElementById('e-addr').value='';
+  ['a-sky','a-chim','a-gut'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
+  structures=[];
+  renderStructures();
   clearHomePhoto();
   calcP();updatePreview();
+  window._editingQueueId=null;
+  document.getElementById('add-queue-btn').textContent='📬 Add to Mail Queue';
 }
 
 // ═══════════════════════════════
@@ -1998,6 +2075,7 @@ window.addEventListener('load',()=>{
   load();
   applyBrand();
   initMap();
+  renderStructures();
   updatePreview();
 });
 </script>
