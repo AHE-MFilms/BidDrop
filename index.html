@@ -261,6 +261,19 @@ tr:hover td{background:var(--card);}
 ::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+/* ── PAGE 1 HERO BAND ─────────────────────── */
+.ml-hero-section{position:relative;overflow:hidden;margin:18px -32px 0;padding:22px 32px 0;}
+.ml-hero-left{flex:0 0 62%;max-width:62%;position:relative;z-index:1;}
+.ml-headshot-bleed{position:absolute;right:0;bottom:0;height:135%;max-width:44%;object-fit:contain;object-position:bottom right;pointer-events:none;}
+.ml-price-num{font-family:'Oswald',sans-serif;font-size:52px;font-weight:700;line-height:1;color:#fff;}
+.ml-price-label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.75);margin-bottom:6px;}
+.ml-price-fin{font-size:12px;color:rgba(255,255,255,.8);margin-top:6px;}
+.ml-cta-band{background:rgba(0,0,0,.18);padding:14px 18px;margin-top:0;}
+.ml-no-headshot-hero{border-radius:10px;padding:22px 24px;margin:18px 0;text-align:center;}
+/* ── PAGE 4 REVIEWS ───────────────────────── */
+.ml-reviews-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0 0;}
+.ml-review-img{width:100%;border-radius:8px;display:block;box-shadow:0 4px 16px rgba(0,0,0,.12);}
+.ml-review-slot{border:2px dashed #e0e0e0;border-radius:8px;padding:20px;text-align:center;color:#ccc;font-size:11px;font-style:italic;}
 .bottom-nav{display:none;}
 @media(max-width:768px){
   .tabs{display:none;}
@@ -291,6 +304,11 @@ tr:hover td{background:var(--card);}
   .ml-addr-blk{text-align:left;}
   .ml-body{padding:14px;}
   .ml-price-hero-amt{font-size:38px;}
+  .ml-hero-section{margin:14px -14px 0;padding:16px 16px 0;}
+  .ml-hero-left{max-width:58%;}
+  .ml-price-num{font-size:34px;}
+  .ml-headshot-bleed{max-width:44%;}
+  .ml-reviews-grid{grid-template-columns:1fr;}
   .ml-p3-title{font-size:20px;}
   .ml-services-grid{grid-template-columns:1fr;}
   .frow{grid-template-columns:1fr 1fr;}
@@ -637,6 +655,42 @@ tr:hover td{background:var(--card);}
         </div>
       </div>
     </div>
+
+    <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:16px 0 10px;">Owner / Rep Headshot <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— Use transparent PNG for best results</span></div>
+    <div class="fg">
+      <div style="display:flex;gap:10px;align-items:center;">
+        <div id="headshot-preview" style="width:70px;height:90px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);overflow:hidden;flex-shrink:0;text-align:center;line-height:1.4;">No photo</div>
+        <div style="flex:1;">
+          <label style="display:block;background:var(--card);border:2px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;cursor:pointer;color:var(--mid);font-size:12px;font-weight:600;">
+            🧑‍💼 Upload Headshot
+            <input type="file" accept="image/*" style="display:none;" onchange="handleHeadshotUpload(this)">
+          </label>
+          <button onclick="clearHeadshot()" style="width:100%;margin-top:5px;background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-align:center;">Remove headshot</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:16px 0 10px;">Social Proof — Review Images (Page 4) <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— Upload your review graphics</span></div>
+    <div class="frow" style="gap:10px;">
+      <div class="fg" style="margin-bottom:0;">
+        <label class="fl">Review 1</label>
+        <div id="review1-preview" style="width:100%;height:80px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);overflow:hidden;margin-bottom:5px;">No image</div>
+        <label style="display:block;background:var(--card);border:2px solid var(--border);border-radius:7px;padding:8px;text-align:center;cursor:pointer;color:var(--mid);font-size:11px;font-weight:600;">
+          ⭐ Upload Review 1
+          <input type="file" accept="image/*" style="display:none;" onchange="handleReviewUpload(this,1)">
+        </label>
+        <button onclick="clearReview(1)" style="width:100%;margin-top:4px;background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;text-align:center;">Remove</button>
+      </div>
+      <div class="fg" style="margin-bottom:0;">
+        <label class="fl">Review 2</label>
+        <div id="review2-preview" style="width:100%;height:80px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);overflow:hidden;margin-bottom:5px;">No image</div>
+        <label style="display:block;background:var(--card);border:2px solid var(--border);border-radius:7px;padding:8px;text-align:center;cursor:pointer;color:var(--mid);font-size:11px;font-weight:600;">
+          ⭐ Upload Review 2
+          <input type="file" accept="image/*" style="display:none;" onchange="handleReviewUpload(this,2)">
+        </label>
+        <button onclick="clearReview(2)" style="width:100%;margin-top:4px;background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;text-align:center;">Remove</button>
+      </div>
+    </div>
     <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:16px 0 10px;">Integrations</div>
     <div class="fg"><label class="fl">Lob.com API Key</label><input class="fi" id="s-lob" placeholder="live_pub_..."></div>
     <div class="modal-footer">
@@ -779,6 +833,62 @@ function handleLogoUpload(inp){
     save();updatePreview();toast('Logo uploaded!','success');
   };
   r.readAsDataURL(inp.files[0]);
+}
+
+function handleHeadshotUpload(inp){
+  if(!inp.files||!inp.files[0])return;
+  const r=new FileReader();
+  r.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      const MAX=600; let w=img.width,h=img.height;
+      if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      // Preserve PNG transparency
+      const data=canvas.toDataURL('image/png');
+      S.cfg.headshot=data;
+      const prev=document.getElementById('headshot-preview');
+      if(prev)prev.innerHTML='<img src="'+data+'" style="max-width:100%;max-height:100%;object-fit:contain;">';
+      save();updatePreview();toast('Headshot uploaded!','success');
+    };
+    img.src=e.target.result;
+  };
+  r.readAsDataURL(inp.files[0]);
+}
+function clearHeadshot(){
+  S.cfg.headshot=null;
+  const prev=document.getElementById('headshot-preview');
+  if(prev)prev.innerHTML='No photo';
+  save();updatePreview();
+}
+function handleReviewUpload(inp,slot){
+  if(!inp.files||!inp.files[0])return;
+  const r=new FileReader();
+  r.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      const MAX=900; let w=img.width,h=img.height;
+      if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      const data=canvas.toDataURL('image/jpeg',.88);
+      S.cfg['review'+slot]=data;
+      const prev=document.getElementById('review'+slot+'-preview');
+      if(prev)prev.innerHTML='<img src="'+data+'" style="width:100%;height:100%;object-fit:cover;border-radius:5px;">';
+      save();updatePreview();toast('Review '+slot+' uploaded!','success');
+    };
+    img.src=e.target.result;
+  };
+  r.readAsDataURL(inp.files[0]);
+}
+function clearReview(slot){
+  S.cfg['review'+slot]=null;
+  const prev=document.getElementById('review'+slot+'-preview');
+  if(prev)prev.innerHTML='No image';
+  save();updatePreview();
 }
 
 function clearLogo(){
@@ -1533,6 +1643,10 @@ function updatePreview(){
     ? '<img src="'+window._homePhotoData+'" style="width:100%;max-height:200px;object-fit:cover;border-radius:6px;margin-bottom:16px;display:block;">'
     : '';
 
+  const headshot  = cfg.headshot  || null;
+  const review1   = cfg.review1   || null;
+  const review2   = cfg.review2   || null;
+
   // ── Calc totals ──────────────────────────────
   let grandTotal = 0;
   let structSectionsP2 = '';  // page 2 detail boxes
@@ -1657,21 +1771,41 @@ function updatePreview(){
     diffs.map(d=>'<li><span class="ml-diff-check" style="color:'+color+';">✓</span><span>'+escHtml(d)+'</span></li>').join('')+
     '</ul>'+
 
-    '<div class="ml-price-hero" style="background:'+color+';">'+
-    '<div class="ml-price-hero-lbl" style="color:rgba(255,255,255,.8);">Your Total Investment</div>'+
-    '<div class="ml-price-hero-amt" style="color:#fff;">$'+(grandTotal?grandTotal.toLocaleString():'—')+'</div>'+
-    finLine+
-    '</div>'+
+    // Hero band: with headshot (floating) or without (centered box)
+    (headshot
+      ? // ── HEADSHOT VARIANT ───────────────────────
+        '<div class="ml-hero-section" style="background:'+color+';">'+
+        '<div class="ml-hero-left">'+
+        '<div class="ml-price-label">Your Total Investment</div>'+
+        '<div class="ml-price-num">$'+(grandTotal?grandTotal.toLocaleString():'—')+'</div>'+
+        (finMo?'<div class="ml-price-fin">$'+escHtml(finMo)+'/mo '+escHtml(finTrm)+'</div>':'')+
+        '<div style="height:14px;"></div>'+
+        '</div>'+
+        '<img src="'+headshot+'" class="ml-headshot-bleed" alt="'+escHtml(rep)+'">'+
+        '</div>'+
+        '<div class="ml-cta-band" style="background:'+color+';">'+
+        '<table style="width:100%;border-collapse:collapse;"><tr>'+
+        '<td style="vertical-align:middle;padding-right:16px;">'+
+        '<div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.65);margin-bottom:4px;">Ready to Get Started?</div>'+
+        '<div style="font-family:'Oswald',sans-serif;font-size:22px;font-weight:700;color:#fff;">'+escHtml(ph)+'</div>'+
+        '</td>'+
+        '<td style="font-size:10px;color:rgba(255,255,255,.75);line-height:1.6;vertical-align:middle;">This estimate is locked for 30 days. No door-knock, no pressure — call or text to schedule your free inspection.</td>'+
+        '</tr></table>'+
+        '</div>'
+      : // ── NO HEADSHOT VARIANT ─────────────────────
+        '<div class="ml-no-headshot-hero" style="background:'+color+';">'+
+        '<div class="ml-price-hero-lbl" style="color:rgba(255,255,255,.8);">Your Total Investment</div>'+
+        '<div class="ml-price-hero-amt" style="color:#fff;">$'+(grandTotal?grandTotal.toLocaleString():'—')+'</div>'+
+        (finMo?'<div class="ml-price-hero-fin">$'+escHtml(finMo)+'/mo '+escHtml(finTrm)+'</div>':'')+
+        '</div>'+
+        '<div class="ml-cta-bar">'+
+        '<div><div style="font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#999;margin-bottom:3px;">Ready to Get Started?</div>'+
+        '<div class="ml-phone-big" style="color:'+color+';">'+escHtml(ph)+'</div></div>'+
+        '<div class="ml-cta-note">This estimate is locked for 30 days. No door-knock, no pressure — just call or text to schedule your free inspection and lock in this price.</div>'+
+        '</div>'
+    )+
 
-    '<div class="ml-cta-bar">'+
-    '<div>'+
-    '<div style="font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#999;margin-bottom:3px;">Ready to Get Started?</div>'+
-    '<div class="ml-phone-big" style="color:'+color+';">'+escHtml(ph)+'</div>'+
-    '</div>'+
-    '<div class="ml-cta-note">This estimate is locked for 30 days. No door-knock, no pressure — just call or text to schedule your free inspection and lock in this price.</div>'+
-    '</div>'+
-
-    '<div class="ml-sig">Thanks,<strong>'+escHtml(rep)+'</strong></div>'+
+    '<div class="ml-sig" style="margin-top:16px;">Thanks,<strong>'+escHtml(rep)+'</strong></div>'+
     '</div>'+
     pageFooter()+
     '</div>';
@@ -1751,7 +1885,19 @@ function updatePreview(){
     (svcDefs.length>0
       ? '<div class="ml-p4-title" style="color:'+color+';">WE ALSO OFFER...</div>'+servicesHtml
       : '')+
-    '<div style="margin-top:'+(svcDefs.length?'10':'0')+'px;">'+
+    // Review images grid
+    ((review1||review2)
+      ? '<div style="margin-top:16px;">'+
+        '<div class="ml-section-hdr" style="background:#1a1a1a;margin-bottom:10px;">What Our Customers Say</div>'+
+        '<div class="ml-reviews-grid">'+
+        (review1?'<img src="'+review1+'" class="ml-review-img" alt="Customer Review">':'<div class="ml-review-slot">Review image 1</div>')+
+        (review2?'<img src="'+review2+'" class="ml-review-img" alt="Customer Review">':'<div class="ml-review-slot">Review image 2</div>')+
+        '</div>'+
+        '</div>'
+      : ''
+    )+
+
+    '<div style="margin-top:'+(svcDefs.length||review1||review2?'10':'0')+'px;">'+
     '<div class="ml-section-hdr" style="background:'+color+';">Referral Program</div>'+
     '<div class="ml-referral-box" style="background:#f8f8f8;border:2px solid '+color+'22;">'+
     '<div class="ml-ref-badge"><div class="ref-amt">$'+escHtml(refAmt)+'</div>VISA GIFT CARD</div>'+
@@ -2052,6 +2198,12 @@ function openSettings(){
   document.getElementById('s-lob').value=c.lobKey||'';
   const lp=document.getElementById('logo-preview');
   if(lp)lp.innerHTML=c.logoData?'<img src="'+c.logoData+'" style="max-width:100%;max-height:100%;object-fit:contain;">':'No logo';
+  const hp=document.getElementById('headshot-preview');
+  if(hp)hp.innerHTML=c.headshot?'<img src="'+c.headshot+'" style="max-width:100%;max-height:100%;object-fit:contain;">':'No photo';
+  const r1p=document.getElementById('review1-preview');
+  if(r1p)r1p.innerHTML=c.review1?'<img src="'+c.review1+'" style="width:100%;height:100%;object-fit:cover;border-radius:5px;">':'No image';
+  const r2p=document.getElementById('review2-preview');
+  if(r2p)r2p.innerHTML=c.review2?'<img src="'+c.review2+'" style="width:100%;height:100%;object-fit:cover;border-radius:5px;">':'No image';
   openM('m-settings');
 }
 
@@ -2085,7 +2237,10 @@ function saveSettings(){
     overhead:n('s-ovh')||15, margin:n('s-mgn')||20,
     brandColor:v('s-color')||'#F25C05',
     lobKey:v('s-lob'),
-    logoData:S.cfg.logoData||null
+    logoData:S.cfg.logoData||null,
+    headshot:S.cfg.headshot||null,
+    review1:S.cfg.review1||null,
+    review2:S.cfg.review2||null
   };
   applyBrand();save();closeM('m-settings');updatePreview();
   toast('Settings saved!','success');
