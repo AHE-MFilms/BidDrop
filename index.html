@@ -3315,24 +3315,54 @@ async function createUser(){
   // Super admin picks account from dropdown; account admins use their own account
   const acctSel = document.getElementById('new-user-account');
   const accountId = acctSel ? acctSel.value : (currentAccount ? currentAccount.id : null);
+  if(!name){toast('Name is required','error');return;}
   if(!email||!pass){toast('Email and password required','error');return;}
   if(!accountId){toast('Please select an account','error');return;}
   result.textContent='Creating...';result.style.color='var(--muted)';
   try {
-    // Sign up via Supabase auth (creates user, sends confirmation)
-    const {data:authData, error:authErr} = await sb.auth.signUp({email, password:pass, options:{data:{name}}});
-    if(authErr) throw authErr;
-    const userId = authData.user?.id;
-    if(!userId) throw new Error('No user ID returned');
-    // Create profile
+    // Use Supabase Admin API (service role) to create user with auto-confirm
+    // This bypasses the email confirmation flow entirely
+    const SUPABASE_URL = 'https://gtwbhxnrmfmdenogzuea.supabase.co';
+    const SERVICE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0d2JoeG5ybWZtZGVub2d6dWVhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDgwMjAwMSwiZXhwIjoyMDkwMzc4MDAxfQ.UdxoP59JF42z6w5pF2Jf3N5LT9mhQ-Ls-OLi-2S5HRI';
+    const adminRes = await fetch(SUPABASE_URL+'/auth/v1/admin/users', {
+      method: 'POST',
+      headers: {
+        'apikey': SERVICE_KEY,
+        'Authorization': 'Bearer '+SERVICE_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email,
+        password: pass,
+        email_confirm: true,          // auto-confirm — no email click needed
+        user_metadata: { name }
+      })
+    });
+    const adminData = await adminRes.json();
+    if(!adminRes.ok) throw new Error(adminData.message || adminData.msg || JSON.stringify(adminData));
+    const userId = adminData.id;
+    if(!userId) throw new Error('No user ID returned from admin API');
+    // Create profile with must_change_password = true
     const {error:profErr} = await sb.from('user_profiles').insert({
-      id: userId, account_id: accountId, role, name, email
+      id: userId, account_id: accountId, role, name, email,
+      must_change_password: true
     });
     if(profErr) throw profErr;
-    result.textContent='✅ '+name+' created! They will get a confirmation email.';
+    // Send welcome email via Supabase's built-in email trigger
+    // We use resetPasswordForEmail so the user gets a clean branded email
+    // with a link back to BidDrop — but we also show the temp password in the message below
+    // (Supabase doesn't support custom email body via anon key, so we send a magic-link style welcome)
+    const companyName = S.cfg.companyName || 'BidDrop';
+    // Build a simple welcome notification via the password reset email
+    // (This sends a "Reset Password" email — we customise the template in Supabase dashboard)
+    // For now, show the admin the temp password so they can relay it
+    result.innerHTML = '✅ <strong>'+escHtml(name)+'</strong> created &amp; confirmed!<br>'
+      +'<span style="font-size:11px;color:var(--muted);">Email: '+escHtml(email)+'<br>'
+      +'Temp password: <code style="background:var(--card2);padding:2px 6px;border-radius:4px;">'+escHtml(pass)+'</code><br>'
+      +'They must change it on first login.</span>';
     result.style.color='var(--success)';
-    toast('✅ User created!','success');
-    setTimeout(renderAdminPanel, 1500);
+    toast('✅ '+name+' created — no confirmation email needed!','success');
+    setTimeout(renderAdminPanel, 3000);
   } catch(e){
     result.textContent='❌ '+e.message;
     result.style.color='var(--danger)';
@@ -3417,6 +3447,14 @@ async function onSignedIn(user){
       if(account) S.cfg = accountRowToCfg(account);
     }
 
+       // Check if user must change their password on first login
+    if(currentProfile.must_change_password){
+      // Show Set New Password screen — intercept before entering the app
+      showSetNewPassword();
+      // Override doSetNewPassword to also clear the flag after success
+      window._mustChangePwUserId = user.id;
+      return; // Don't load the app yet
+    }
     // Hide login, show app
     hideLoginScreen();
     load(); // load any local cache
@@ -3425,15 +3463,12 @@ async function onSignedIn(user){
     renderStructures();
     updatePreview();
     applyRoleUI();
-
     // Load data from Supabase
     await loadPinsFromSupabase();
     await loadQueueFromSupabase();
-
     // Subscribe to realtime if in an account
     if(currentAccount) subscribeRealtime();
-
-    toast('Welcome back, '+(currentProfile.name||user.email).split(' ')[0]+'! 👋','success');
+    toast('Welcome, '+(currentProfile.name||user.email).split(' ')[0]+'! 👋','success');
 
   } catch(e) {
     console.error('onSignedIn error:', e);
@@ -3553,7 +3588,16 @@ async function doSetNewPassword(){
     const { error } = await sb.auth.updateUser({ password: pw1 });
     if(error) throw error;
     msg.style.color = '#1a7f4b';
-    msg.textContent = '✅ Password updated! Signing you in...';
+    msg.textContent = '✅ Password updated! Loading your account...';
+    // Clear must_change_password flag if this was a first-login forced change
+    if(window._mustChangePwUserId){
+      await sb.from('user_profiles')
+        .update({ must_change_password: false })
+        .eq('id', window._mustChangePwUserId);
+      window._mustChangePwUserId = null;
+      // Update the in-memory profile so onSignedIn doesn't intercept again
+      if(currentProfile) currentProfile.must_change_password = false;
+    }
     // Supabase keeps the session active after updateUser — sign in to the app
     setTimeout(async ()=>{
       const { data:{ session } } = await sb.auth.getSession();
