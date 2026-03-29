@@ -219,6 +219,21 @@ tr:hover td{background:var(--card);}
  
 /* MAP TOOLBAR */
 .map-toolbar{position:absolute;top:12px;left:12px;z-index:1000;display:flex;flex-direction:column;gap:7px;}
+.map-search-wrap{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:1000;display:flex;gap:0;width:320px;max-width:calc(100vw - 200px);}
+.map-search-inp{flex:1;background:#fff;border:2px solid #CBD5E1;border-right:none;border-radius:9px 0 0 9px;padding:9px 14px;font-family:var(--font-b);font-size:14px;color:#1E293B;outline:none;}
+.map-search-inp::placeholder{color:#94A3B8;}
+.map-search-inp:focus{border-color:var(--accent);}
+.map-search-btn{background:var(--accent);border:none;border-radius:0 9px 9px 0;padding:9px 14px;color:#fff;font-size:16px;cursor:pointer;}
+.map-search-btn:hover{opacity:.85;}
+.map-search-results{position:absolute;top:44px;left:0;right:0;background:#fff;border:1px solid #CBD5E1;border-radius:0 0 9px 9px;box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:1001;max-height:200px;overflow-y:auto;display:none;}
+.map-search-results.show{display:block;}
+.msr-item{padding:10px 14px;font-size:13px;color:#1E293B;cursor:pointer;border-bottom:1px solid #f1f5f9;line-height:1.4;}
+.msr-item:hover{background:#FFF7F0;}
+.msr-item:last-child{border-bottom:none;}
+@media(max-width:768px){
+  .map-search-wrap{width:calc(100vw - 32px);max-width:none;left:16px;transform:none;top:58px;}
+  .map-toolbar{top:112px;}
+}
 .mtool-btn{background:var(--panel);border:1px solid var(--border);color:var(--mid);padding:8px 13px;border-radius:8px;cursor:pointer;font-family:var(--font-b);font-size:11px;font-weight:700;letter-spacing:.4px;display:flex;align-items:center;gap:7px;transition:all .15s;box-shadow:0 3px 12px rgba(0,0,0,.4);white-space:nowrap;}
 .mtool-btn:hover{border-color:var(--accent);color:var(--text);}
 .mtool-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
@@ -380,6 +395,12 @@ tr:hover td{background:var(--card);}
   <!-- MAP -->
   <div class="tab-pane active" id="tab-map" style="position:relative;">
     <div id="the-map"></div>
+    <!-- Address Search -->
+    <div class="map-search-wrap" id="map-search-wrap">
+      <input class="map-search-inp" id="map-search-inp" placeholder="🔍 Search address..." oninput="onSearchInput()" onkeydown="if(event.key==='Enter')searchAddress()">
+      <button class="map-search-btn" onclick="searchAddress()">→</button>
+      <div class="map-search-results" id="map-search-results"></div>
+    </div>
     <!-- Toolbar -->
     <div class="map-toolbar">
       <button class="mtool-btn" id="btn-satellite" onclick="toggleSatellite()">🛰 Satellite</button>
@@ -601,7 +622,7 @@ tr:hover td{background:var(--card);}
   <div class="modal">
     <div class="modal-title">📍 Pin This Home</div>
     <div class="fg">
-      <label class="fl">Address</label>
+      <label class="fl">Address <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:10px;">— tap to correct if wrong</span></label>
       <input class="fi" id="p-addr" placeholder="Auto-filled from map click…">
     </div>
     <div class="fg">
@@ -776,6 +797,55 @@ function toggleMailPreview(){
   p.classList.toggle('mobile-show',!isShowing);
   document.querySelector('.btn-preview-toggle').textContent=isShowing?'👁 Preview Mailer':'✕ Hide Preview';
 }
+ 
+// ═══════════════════════════════
+//  MAP SEARCH
+// ═══════════════════════════════
+let searchTimer=null;
+ 
+function onSearchInput(){
+  clearTimeout(searchTimer);
+  const q=document.getElementById('map-search-inp').value.trim();
+  if(q.length<3){document.getElementById('map-search-results').classList.remove('show');return;}
+  searchTimer=setTimeout(()=>searchAddress(true),400);
+}
+ 
+async function searchAddress(suggest=false){
+  const q=document.getElementById('map-search-inp').value.trim();
+  if(!q)return;
+  try{
+    const res=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&addressdetails=1&limit=5&countrycodes=us`);
+    const results=await res.json();
+    if(!results.length){
+      if(!suggest) toast('Address not found','error');
+      return;
+    }
+    if(suggest){
+      // Show dropdown
+      const el=document.getElementById('map-search-results');
+      el.innerHTML=results.map(r=>`
+        <div class="msr-item" onclick="flyToResult(${r.lat},${r.lon},'${(r.display_name||'').replace(/'/g,"\'")}')">
+          ${r.display_name}
+        </div>
+      `).join('');
+      el.classList.add('show');
+    } else {
+      flyToResult(results[0].lat,results[0].lon,results[0].display_name);
+    }
+  }catch(e){toast('Search error','error');}
+}
+ 
+function flyToResult(lat,lon,name){
+  document.getElementById('map-search-results').classList.remove('show');
+  document.getElementById('map-search-inp').value=name.split(',').slice(0,2).join(',').trim();
+  map.flyTo([parseFloat(lat),parseFloat(lon)],19,{duration:.8});
+}
+ 
+// Close search results on map click
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#map-search-wrap'))
+    document.getElementById('map-search-results')&&document.getElementById('map-search-results').classList.remove('show');
+});
  
 // ═══════════════════════════════
 //  MAP
