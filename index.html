@@ -1029,6 +1029,7 @@ function useRoofMeasurement(){
     toast('📐 '+sqft.toLocaleString()+' sq ft added as new structure!','success');
     return;
   }
+  if(_measureForPinId){
     const pin=S.pins.find(p=>p.id===_measureForPinId);
     _measureForPinId=null;
     if(pin){
