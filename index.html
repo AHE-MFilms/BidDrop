@@ -569,8 +569,12 @@ tr:hover td{background:var(--card);}
       <div class="fg"><label class="fl">Brand Color</label><input type="color" class="fi" id="s-color" value="#F25C05" style="padding:4px;cursor:pointer;height:42px;"></div>
     </div>
     <div class="frow">
-      <div class="fg"><label class="fl">Rep / Salesperson Name</label><input class="fi" id="s-rep" placeholder="Taylor Root"></div>
+      <div class="fg"><label class="fl">Rep / Owner Name</label><input class="fi" id="s-rep" placeholder="Ted Smith"></div>
+      <div class="fg"><label class="fl">Rep Title</label><input class="fi" id="s-reptitle" placeholder="Owner, Sales Rep, etc."></div>
+    </div>
+    <div class="frow">
       <div class="fg"><label class="fl">License / CCB #</label><input class="fi" id="s-lic" placeholder="CCB#226995"></div>
+      <div class="fg"></div>
     </div>
     <div class="frow">
       <div class="fg"><label class="fl">Years in Business</label><input class="fi" id="s-yrs" placeholder="5+"></div>
@@ -666,6 +670,14 @@ tr:hover td{background:var(--card);}
             <input type="file" accept="image/*" style="display:none;" onchange="handleHeadshotUpload(this)">
           </label>
           <button onclick="clearHeadshot()" style="width:100%;margin-top:5px;background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-align:center;">Remove headshot</button>
+          <div style="margin-top:10px;">
+            <label class="fl" style="margin-bottom:4px;">Face Position <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);">— drag to center face in circle</span></label>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:10px;color:var(--muted);">Top</span>
+              <input type="range" id="s-hspos" min="0" max="100" value="30" style="flex:1;accent-color:var(--accent);" oninput="updatePreview()">
+              <span style="font-size:10px;color:var(--muted);">Bottom</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1627,6 +1639,8 @@ function updatePreview(){
   const ph     = cfg.companyPhone  || '(000) 000-0000';
   const color  = cfg.brandColor    || '#F25C05';
   const rep    = cfg.repName       || co;
+  const repTitle= cfg.repTitle      || '';
+  const hsPos  = cfg.headshotPos   || '30';
   const lic    = cfg.licenseNum    || '';
   const yrs    = cfg.yearsInBusiness || '5+';
   const warr   = cfg.warrantyYears || '10';
@@ -1773,15 +1787,24 @@ function updatePreview(){
 
     // Hero band: with headshot (floating) or without (centered box)
     (headshot
-      ? // ── HEADSHOT VARIANT ───────────────────────
-        '<div class="ml-hero-section" style="background:'+color+';">'+
-        '<div class="ml-hero-left">'+
+      ? // ── HEADSHOT VARIANT — circle with adjustable face position ─
+        '<div class="ml-hero-section" style="background:'+color+';display:flex;align-items:stretch;">'+
+        // Left: price
+        '<div style="flex:1;padding:20px 16px 20px 0;min-width:0;">'+
         '<div class="ml-price-label">Your Total Investment</div>'+
         '<div class="ml-price-num">$'+(grandTotal?grandTotal.toLocaleString():'—')+'</div>'+
         (finMo?'<div class="ml-price-fin">$'+escHtml(finMo)+'/mo '+escHtml(finTrm)+'</div>':'')+
-        '<div style="height:14px;"></div>'+
         '</div>'+
-        '<img src="'+headshot+'" class="ml-headshot-bleed" alt="'+escHtml(rep)+'">'+
+        // Right: circle headshot + name/title stacked
+        '<div style="flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px 0 18px 16px;gap:8px;">'+
+        '<div style="width:100px;height:100px;border-radius:50%;overflow:hidden;border:3px solid rgba(255,255,255,.85);box-shadow:0 4px 18px rgba(0,0,0,.25);flex-shrink:0;">'+
+        '<img src="'+headshot+'" style="width:100%;height:100%;object-fit:cover;object-position:center '+hsPos+'%;">'+
+        '</div>'+
+        '<div style="text-align:center;">'+
+        '<div style="font-family:Oswald,sans-serif;font-size:14px;font-weight:700;color:#fff;letter-spacing:.3px;">'+escHtml(rep)+'</div>'+
+        (repTitle?'<div style="font-size:10px;color:rgba(255,255,255,.75);letter-spacing:.5px;text-transform:uppercase;margin-top:2px;">'+escHtml(repTitle)+'</div>':'')+
+        '</div>'+
+        '</div>'+
         '</div>'+
         '<div class="ml-cta-band" style="background:'+color+';">'+
         '<table style="width:100%;border-collapse:collapse;"><tr>'+
@@ -1805,7 +1828,7 @@ function updatePreview(){
         '</div>'
     )+
 
-    '<div class="ml-sig" style="margin-top:16px;">Thanks,<strong>'+escHtml(rep)+'</strong></div>'+
+    '<div class="ml-sig" style="margin-top:16px;">Thanks,<strong>'+escHtml(rep)+'</strong>'+(repTitle?' <span style="font-size:12px;color:#666;font-weight:400;">· '+escHtml(repTitle)+'</span>':'')+' </div>'+
     '</div>'+
     pageFooter()+
     '</div>';
@@ -2198,8 +2221,10 @@ function openSettings(){
   document.getElementById('s-lob').value=c.lobKey||'';
   const lp=document.getElementById('logo-preview');
   if(lp)lp.innerHTML=c.logoData?'<img src="'+c.logoData+'" style="max-width:100%;max-height:100%;object-fit:contain;">':'No logo';
+  document.getElementById('s-reptitle').value=c.repTitle||'';
+  document.getElementById('s-hspos').value=c.headshotPos||'30';
   const hp=document.getElementById('headshot-preview');
-  if(hp)hp.innerHTML=c.headshot?'<img src="'+c.headshot+'" style="max-width:100%;max-height:100%;object-fit:contain;">':'No photo';
+  if(hp)hp.innerHTML=c.headshot?'<img src="'+c.headshot+'" style="width:100%;height:100%;object-fit:cover;object-position:center '+((c.headshotPos||'30')+'%')+'">':'No photo';
   const r1p=document.getElementById('review1-preview');
   if(r1p)r1p.innerHTML=c.review1?'<img src="'+c.review1+'" style="width:100%;height:100%;object-fit:cover;border-radius:5px;">':'No image';
   const r2p=document.getElementById('review2-preview');
@@ -2240,7 +2265,9 @@ function saveSettings(){
     logoData:S.cfg.logoData||null,
     headshot:S.cfg.headshot||null,
     review1:S.cfg.review1||null,
-    review2:S.cfg.review2||null
+    review2:S.cfg.review2||null,
+    repTitle:document.getElementById('s-reptitle').value||'',
+    headshotPos:document.getElementById('s-hspos').value||'30'
   };
   applyBrand();save();closeM('m-settings');updatePreview();
   toast('Settings saved!','success');
