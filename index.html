@@ -597,10 +597,31 @@ tr:hover td{background:var(--card);}
     <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:16px 0 10px;">Cover Letter (Page 1)</div>
     <div class="fg"><label class="fl">Hook — Opening paragraph</label><textarea class="fi" id="s-hook" rows="3" style="resize:vertical;font-size:13px;" placeholder="Most homeowners are tired of door-knockers..."></textarea></div>
     <div class="fg"><label class="fl">Why They Received This Bid</label><textarea class="fi" id="s-why" rows="3" style="resize:vertical;font-size:13px;" placeholder="We assessed your neighborhood and noticed..."></textarea></div>
-    <div class="frow">
-      <div class="fg"><label class="fl">Financing — Monthly Payment ($)</label><input class="fi" id="s-finmo" placeholder="257"></div>
-      <div class="fg"><label class="fl">Financing Term</label><input class="fi" id="s-finterm" placeholder="with $0 down OAC"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <input type="checkbox" id="s-fin-enabled" style="accent-color:var(--accent);width:16px;height:16px;" checked>
+      <label for="s-fin-enabled" style="font-size:13px;font-weight:700;color:var(--mid);cursor:pointer;">Show financing estimate on mailer <span style="font-weight:400;color:var(--muted);font-size:11px;">(auto-calculates from estimate total)</span></label>
     </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">APR %</label><input type="number" class="fi" id="s-fin-apr" placeholder="9.99" step="0.01" value="9.99"></div>
+      <div class="fg"><label class="fl">Term (months)</label>
+        <select class="fs" id="s-fin-term">
+          <option value="36">36 months (3 yr)</option>
+          <option value="60" selected>60 months (5 yr)</option>
+          <option value="84">84 months (7 yr)</option>
+          <option value="120">120 months (10 yr)</option>
+          <option value="180">180 months (15 yr)</option>
+        </select>
+      </div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Down Payment %</label><input type="number" class="fi" id="s-fin-down" placeholder="0" value="0" min="0" max="50"></div>
+      <div class="fg" style="display:flex;align-items:flex-end;padding-bottom:2px;">
+        <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:8px 12px;font-size:11px;color:var(--mid);width:100%;">
+          💡 Preview: <strong id="fin-preview-val" style="color:var(--accent);">—</strong>/mo based on current estimate
+        </div>
+      </div>
+    </div>
+    <!-- fin preview handled by updateFinPreview() in main script -->
 
     <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:16px 0 10px;">Your Differentiators (Page 3 Comparison)</div>
     <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">These become checkmarks in your column vs "Rarely / No / Hopefully" for typical contractors.</div>
@@ -775,7 +796,7 @@ const DEFAULTS = {
   repName:'', licenseNum:'', yearsInBusiness:'5+', warrantyYears:'10',
   hookLetter:'Most homeowners are tired of door-knockers, pushy salespeople, and high prices when it comes to getting a new roof. I won\'t bother you by knocking on the door — instead, I skip the hassle and lead with my price.',
   whyReceived:'We assessed your neighborhood and identified your home as a candidate for roof replacement. We look for things like missing shingles, moss, algae, buckling, granule loss, and age. The average roof lasts 18–20 years.',
-  financingMonthly:'', financingTerm:'with $0 down OAC',
+  financingEnabled:true, financingApr:9.99, financingTerm:60, financingDown:0,
   // Comparison table (company values; competitor col is hardcoded)
   diff1:'Licensed, Bonded & Insured', diff2:'Manufacturer Certified', diff3:'Itemized Pricing', diff4:'Workmanship Warranty', diff5:'Financing Available', diff6:'Local Crews',
   // Services for page 4
@@ -1659,8 +1680,19 @@ function updatePreview(){
   const warr   = cfg.warrantyYears || '10';
   const hook   = cfg.hookLetter    || 'Most homeowners are tired of door-knockers, pushy salespeople, and high prices when it comes to getting a new roof. I skip the hassle and lead with my price.';
   const why    = cfg.whyReceived   || 'We assessed your neighborhood and identified your home as a candidate for roof replacement. We look for things like missing shingles, moss, algae, buckling, and granule loss.';
-  const finMo  = cfg.financingMonthly || '';
-  const finTrm = cfg.financingTerm   || 'with $0 down OAC';
+  // Auto-calculate financing
+  const finEnabled = cfg.financingEnabled !== false;
+  const finApr  = parseFloat(cfg.financingApr)  || 9.99;
+  const finTerm = parseInt(cfg.financingTerm)   || 60;
+  const finDown = parseFloat(cfg.financingDown) || 0;
+  function calcMonthly(total){
+    const loan = total * (1 - finDown/100);
+    if(!loan) return 0;
+    const r = finApr / 100 / 12;
+    if(r === 0) return Math.round(loan / finTerm);
+    return Math.round(loan * r * Math.pow(1+r,finTerm) / (Math.pow(1+r,finTerm)-1));
+  }
+  // finMo/finTrm computed after grandTotal below
 
   const logoImg = cfg.logoData
     ? '<img src="'+cfg.logoData+'" style="max-height:46px;max-width:150px;object-fit:contain;display:block;">'
@@ -1736,9 +1768,11 @@ function updatePreview(){
     structSectionsP2='<div style="padding:20px;text-align:center;color:#999;font-style:italic;">No structures added yet.</div>';
   }
 
-  const finLine = finMo
-    ? '<div class="ml-price-hero-fin">Financing available: $'+escHtml(finMo)+'/mo '+escHtml(finTrm)+'</div>'
-    : '';
+  // Compute finMo now that grandTotal is final
+  const finMo  = (finEnabled && grandTotal) ? calcMonthly(grandTotal) : 0;
+  const finTrm = finApr+'% APR · '+finTerm+' mo · $0 down';
+  const finDisc = 'Financing estimate based on '+finApr+'% APR, '+finTerm+'-month term, subject to credit approval.';
+
 
   const pageHdr = (pageNum) =>
     '<div class="ml-hdr">'+
@@ -1858,7 +1892,7 @@ function updatePreview(){
         (finMo
           ? '<div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;background:rgba(0,0,0,.25);border-radius:20px;padding:4px 12px;">'+
             '<span style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.7);">Financing</span>'+
-            '<span style="font-family:Oswald,sans-serif;font-size:16px;font-weight:700;color:#fff;">$'+escHtml(finMo)+'/mo</span>'+
+            '<span style="font-family:Oswald,sans-serif;font-size:16px;font-weight:700;color:#fff;">$'+finMo.toLocaleString()+'/mo</span>'+
             '<span style="font-size:9px;color:rgba(255,255,255,.6);">'+escHtml(finTrm)+'</span>'+
             '</div>'
           : ''
@@ -1904,6 +1938,7 @@ function updatePreview(){
         ctaBand
     )+
     '</div>'+
+    (finMo?'<div style="padding:5px 24px 0;font-size:8px;color:#aaa;font-style:italic;">'+finDisc+'</div>':'')+
     pageFooter()+
     '</div>';
 
@@ -1921,7 +1956,7 @@ function updatePreview(){
     '<span class="ml-grand-lbl">TOTAL INVESTMENT</span>'+
     '<span class="ml-grand-amt">$'+(grandTotal?grandTotal.toLocaleString():'0')+'</span>'+
     '</div>'+
-    (finMo?'<div style="text-align:center;margin-top:7px;font-size:11px;color:#555;">Financing: <strong style="color:'+color+';">$'+escHtml(finMo)+'/mo</strong> '+escHtml(finTrm)+'</div>':'')+
+    (finMo?'<div style="text-align:center;margin-top:7px;font-size:11px;color:#555;">Est. Financing: <strong style="color:'+color+';">$'+finMo.toLocaleString()+'/mo</strong> · '+escHtml(finTrm)+'</div>':'')+
     '<div style="margin-top:10px;padding:9px 12px;background:#f8f8f8;border-radius:6px;font-size:9px;color:#888;line-height:1.65;">'+
     '<strong style="color:#555;display:block;margin-bottom:3px;">Every installation includes:</strong>'+
     'Complete tear-off &amp; disposal · Synthetic underlayment · Ice &amp; water shield · Drip edge flashing · Ridge cap shingles · Workmanship warranty · Licensed &amp; insured crews'+
@@ -2264,8 +2299,10 @@ function openSettings(){
   document.getElementById('s-warr').value=c.warrantyYears||'10';
   document.getElementById('s-hook').value=c.hookLetter||'';
   document.getElementById('s-why').value=c.whyReceived||'';
-  document.getElementById('s-finmo').value=c.financingMonthly||'';
-  document.getElementById('s-finterm').value=c.financingTerm||'with $0 down OAC';
+  document.getElementById('s-fin-enabled').checked=c.financingEnabled!==false;
+  document.getElementById('s-fin-apr').value=c.financingApr||9.99;
+  document.getElementById('s-fin-term').value=c.financingTerm||60;
+  document.getElementById('s-fin-down').value=c.financingDown||0;
   document.getElementById('s-d1').value=c.diff1||'';
   document.getElementById('s-d2').value=c.diff2||'';
   document.getElementById('s-d3').value=c.diff3||'';
@@ -2304,6 +2341,14 @@ function openSettings(){
   if(r1p)r1p.innerHTML=c.review1?'<img src="'+c.review1+'" style="width:100%;height:100%;object-fit:cover;border-radius:5px;">':'No image';
   const r2p=document.getElementById('review2-preview');
   if(r2p)r2p.innerHTML=c.review2?'<img src="'+c.review2+'" style="width:100%;height:100%;object-fit:cover;border-radius:5px;">':'No image';
+  // Attach financing preview listeners
+  ['s-fin-apr','s-fin-term','s-fin-down'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.removeEventListener('input',updateFinPreview);el.addEventListener('input',updateFinPreview);}
+  });
+  const finCk=document.getElementById('s-fin-enabled');
+  if(finCk){finCk.removeEventListener('change',updateFinPreview);finCk.addEventListener('change',updateFinPreview);}
+  updateFinPreview();
   openM('m-settings');
 }
 
@@ -2321,8 +2366,10 @@ function saveSettings(){
     warrantyYears:v('s-warr')||'10',
     hookLetter:v('s-hook'),
     whyReceived:v('s-why'),
-    financingMonthly:v('s-finmo'),
-    financingTerm:v('s-finterm')||'with $0 down OAC',
+    financingEnabled:ck('s-fin-enabled'),
+    financingApr:parseFloat(v('s-fin-apr'))||9.99,
+    financingTerm:parseInt(v('s-fin-term'))||60,
+    financingDown:parseFloat(v('s-fin-down'))||0,
     diff1:v('s-d1'), diff2:v('s-d2'), diff3:v('s-d3'),
     diff4:v('s-d4'), diff5:v('s-d5'), diff6:v('s-d6'),
     offerSiding:ck('s-off-sid'), offerWindows:ck('s-off-win'), offerGutters:ck('s-off-gut'),
@@ -2386,6 +2433,23 @@ function timeAgo(iso){
 }
 function fmtDate(iso){if(!iso)return'';return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+// ═══════════════════════════════
+//  FINANCING PREVIEW (Settings modal)
+// ═══════════════════════════════
+function updateFinPreview(){
+  const el=document.getElementById('fin-preview-val');
+  if(!el)return;
+  const apr=parseFloat(document.getElementById('s-fin-apr').value)||9.99;
+  const term=parseInt(document.getElementById('s-fin-term').value)||60;
+  const down=parseFloat(document.getElementById('s-fin-down').value)||0;
+  const total=parseInt((document.getElementById('e-total').textContent||'').replace(/[^0-9]/g,''))||0;
+  if(!total){el.textContent='—';return;}
+  const loan=total*(1-down/100);
+  const r=apr/100/12;
+  const mo=r===0?Math.round(loan/term):Math.round(loan*r*Math.pow(1+r,term)/(Math.pow(1+r,term)-1));
+  el.textContent='$'+mo.toLocaleString();
+}
 
 // ═══════════════════════════════
 //  PRINT PREVIEW
