@@ -1787,25 +1787,26 @@ function updatePreview(){
   //  PAGE 1 — Hook + Price
   // ════════════════════════════════════════════
   const ctaBand =
-        '<div class="ml-cta-band" style="background:'+color+';display:flex;align-items:center;gap:0;">'+
-        '<div style="flex:1;padding:10px 16px;border-right:1px solid rgba(255,255,255,.2);">'+
-        '<div style="font-size:8px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.65);margin-bottom:3px;">Call or Text</div>'+
-        '<div style="font-family:Oswald,sans-serif;font-size:24px;font-weight:700;color:#fff;white-space:nowrap;line-height:1.1;">'+escHtml(ph)+'</div>'+
-        '<div style="font-size:9px;color:rgba(255,255,255,.7);margin-top:4px;">Estimate locked 30 days · No pressure</div>'+
+        // Dark CTA strip with strong contrast
+        '<div style="background:#1a1a1a;display:flex;align-items:center;gap:0;">'+
+        '<div style="flex:1;padding:11px 18px;border-right:1px solid rgba(255,255,255,.1);">'+
+        '<div style="font-size:8px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:2px;">Call or Text to Schedule</div>'+
+        '<div style="font-family:Oswald,sans-serif;font-size:26px;font-weight:700;color:#fff;white-space:nowrap;line-height:1;">'+escHtml(ph)+'</div>'+
+        '<div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:3px;">Estimate locked 30 days &nbsp;·&nbsp; No door-knock &nbsp;·&nbsp; No pressure</div>'+
         '</div>'+
-        '<div style="flex:0 0 auto;padding:10px 14px;display:flex;flex-direction:column;align-items:center;gap:3px;">'+
+        '<div style="flex:0 0 auto;padding:10px 16px;display:flex;flex-direction:column;align-items:center;gap:3px;">'+
         (qrUrl
-          ? '<img src="'+qrUrl+'" style="width:72px;height:72px;border-radius:5px;background:#fff;display:block;">'+
-            '<div style="font-size:7px;color:rgba(255,255,255,.7);letter-spacing:.5px;text-transform:uppercase;">Scan to Book</div>'
-          : '<div style="width:72px;height:72px;border:2px dashed rgba(255,255,255,.3);border-radius:5px;display:flex;align-items:center;justify-content:center;">'+
-            '<div style="font-size:8px;color:rgba(255,255,255,.4);text-align:center;line-height:1.4;">Add URL<br>for QR</div>'+
+          ? '<img src="'+qrUrl+'" style="width:68px;height:68px;border-radius:5px;background:#fff;display:block;">'+
+            '<div style="font-size:7px;color:rgba(255,255,255,.45);letter-spacing:.8px;text-transform:uppercase;margin-top:2px;">Scan to Book</div>'
+          : '<div style="width:68px;height:68px;border:1px dashed rgba(255,255,255,.2);border-radius:5px;display:flex;align-items:center;justify-content:center;">'+
+            '<div style="font-size:8px;color:rgba(255,255,255,.25);text-align:center;line-height:1.4;">Add URL<br>for QR</div>'+
             '</div>'+
-            '<div style="font-size:7px;color:rgba(255,255,255,.4);letter-spacing:.5px;text-transform:uppercase;">Scan to Book</div>'
+            '<div style="font-size:7px;color:rgba(255,255,255,.25);letter-spacing:.8px;text-transform:uppercase;margin-top:2px;">Scan to Book</div>'
         )+
         '</div>'+
         '</div>';
 
-  const page1 =
+    const page1 =
     '<div class="ml-page" data-page="1">'+
     pageHdr(1)+
     '<div class="ml-body">'+
@@ -1841,27 +1842,64 @@ function updatePreview(){
 
     // Hero band
     (headshot
-      ? '<div class="ml-hero-section" style="background:'+color+';display:flex;align-items:stretch;">'+
-        '<div style="flex:1;padding:16px 12px 16px 0;min-width:0;">'+
-        '<div class="ml-price-label">Your Total Investment</div>'+
-        '<div class="ml-price-num">$'+(grandTotal?grandTotal.toLocaleString():'—')+'</div>'+
-        (finMo?'<div class="ml-price-fin">$'+escHtml(finMo)+'/mo '+escHtml(finTrm)+'</div>':'')+
+      ? // HEADSHOT: price left, circle rep right
+        '<div style="position:relative;overflow:hidden;background:'+color+';padding:18px 20px 18px 20px;">'+
+        // Subtle geometric SVG overlay
+        '<svg style="position:absolute;right:0;top:0;width:55%;height:100%;opacity:.08;" viewBox="0 0 200 120" preserveAspectRatio="xMidYMid slice">'+
+        '<polygon points="0,0 200,0 200,120" fill="#fff"/>'+
+        '<circle cx="160" cy="20" r="70" fill="none" stroke="#fff" stroke-width="18"/>'+
+        '<circle cx="160" cy="20" r="100" fill="none" stroke="#fff" stroke-width="10"/>'+
+        '</svg>'+
+        // Left: price stack
+        '<div style="position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;">'+
+        '<div>'+
+        '<div style="font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:4px;">Your Total Investment</div>'+
+        '<div style="font-family:Oswald,sans-serif;font-size:44px;font-weight:700;line-height:1;color:#fff;">$'+(grandTotal?grandTotal.toLocaleString():'—')+'</div>'+
+        (finMo
+          ? '<div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;background:rgba(0,0,0,.25);border-radius:20px;padding:4px 12px;">'+
+            '<span style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.7);">Financing</span>'+
+            '<span style="font-family:Oswald,sans-serif;font-size:16px;font-weight:700;color:#fff;">$'+escHtml(finMo)+'/mo</span>'+
+            '<span style="font-size:9px;color:rgba(255,255,255,.6);">'+escHtml(finTrm)+'</span>'+
+            '</div>'
+          : ''
+        )+
         '</div>'+
-        '<div style="flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px 0 14px 12px;gap:6px;">'+
-        '<div style="width:82px;height:82px;border-radius:50%;overflow:hidden;border:3px solid rgba(255,255,255,.85);box-shadow:0 4px 14px rgba(0,0,0,.25);flex-shrink:0;">'+
+        // Right: rep circle
+        '<div style="display:flex;flex-direction:column;align-items:center;gap:5px;">'+
+        '<div style="width:80px;height:80px;border-radius:50%;overflow:hidden;border:3px solid rgba(255,255,255,.9);box-shadow:0 0 0 4px rgba(255,255,255,.2);">'+
         '<img src="'+headshot+'" style="width:100%;height:100%;object-fit:cover;object-position:center '+hsPos+'%;">'+
         '</div>'+
         '<div style="text-align:center;">'+
         '<div style="font-family:Oswald,sans-serif;font-size:12px;font-weight:700;color:#fff;letter-spacing:.3px;">'+escHtml(rep)+'</div>'+
-        (repTitle?'<div style="font-size:9px;color:rgba(255,255,255,.75);letter-spacing:.5px;text-transform:uppercase;margin-top:1px;">'+escHtml(repTitle)+'</div>':'')+
+        (repTitle?'<div style="font-size:8px;color:rgba(255,255,255,.7);letter-spacing:.6px;text-transform:uppercase;">'+escHtml(repTitle)+'</div>':'')+
+        '</div>'+
         '</div>'+
         '</div>'+
         '</div>'+
         ctaBand
-      : '<div class="ml-no-headshot-hero" style="background:'+color+';">'+
-        '<div class="ml-price-hero-lbl" style="color:rgba(255,255,255,.8);">Your Total Investment</div>'+
-        '<div class="ml-price-hero-amt" style="color:#fff;">$'+(grandTotal?grandTotal.toLocaleString():'—')+'</div>'+
-        (finMo?'<div class="ml-price-hero-fin">$'+escHtml(finMo)+'/mo '+escHtml(finTrm)+'</div>':'')+
+      : // NO HEADSHOT: centered price
+        '<div style="position:relative;overflow:hidden;background:'+color+';padding:18px 20px 18px 20px;">'+
+        // Subtle geometric SVG overlay
+        '<svg style="position:absolute;right:0;top:0;width:55%;height:100%;opacity:.08;" viewBox="0 0 200 120" preserveAspectRatio="xMidYMid slice">'+
+        '<polygon points="0,0 200,0 200,120" fill="#fff"/>'+
+        '<circle cx="160" cy="20" r="70" fill="none" stroke="#fff" stroke-width="18"/>'+
+        '<circle cx="160" cy="20" r="100" fill="none" stroke="#fff" stroke-width="10"/>'+
+        '</svg>'+
+        // Left: price stack
+        '<div style="position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;">'+
+        '<div>'+
+        '<div style="font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:4px;">Your Total Investment</div>'+
+        '<div style="font-family:Oswald,sans-serif;font-size:44px;font-weight:700;line-height:1;color:#fff;">$'+(grandTotal?grandTotal.toLocaleString():'—')+'</div>'+
+        (finMo
+          ? '<div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;background:rgba(0,0,0,.25);border-radius:20px;padding:4px 12px;">'+
+            '<span style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.7);">Financing</span>'+
+            '<span style="font-family:Oswald,sans-serif;font-size:16px;font-weight:700;color:#fff;">$'+escHtml(finMo)+'/mo</span>'+
+            '<span style="font-size:9px;color:rgba(255,255,255,.6);">'+escHtml(finTrm)+'</span>'+
+            '</div>'
+          : ''
+        )+
+        '</div>'+
+        '</div>'+
         '</div>'+
         ctaBand
     )+
