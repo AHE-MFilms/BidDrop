@@ -3230,13 +3230,20 @@ async function createUser(){
 // ═══════════════════════════════
 //  INIT
 // ═══════════════════════════════
+let _authHandling = false; // Guard to prevent concurrent onSignedIn calls
+
 window.addEventListener('load', async ()=>{
   // Initialize Supabase client
   sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // Listen for auth state changes
+  // Show login screen immediately — onAuthStateChange handles everything
+  showLoginScreen();
+
+  // Listen for auth state changes (handles INITIAL_SESSION, SIGNED_IN, SIGNED_OUT)
   sb.auth.onAuthStateChange(async (event, session) => {
-    if(event === 'SIGNED_IN' && session){
+    if((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session){
+      if(_authHandling) return; // Prevent concurrent calls that cause the lock error
+      _authHandling = true;
       try {
         await onSignedIn(session.user);
       } catch(e) {
@@ -3246,13 +3253,14 @@ window.addEventListener('load', async ()=>{
         if(err) err.textContent = 'Error: '+e.message;
         if(btn){ btn.textContent='Sign In'; btn.disabled=false; }
         showLoginScreen();
+      } finally {
+        _authHandling = false;
       }
     } else if(event === 'SIGNED_OUT'){
+      _authHandling = false;
       onSignedOut();
     }
   });
-
-showLoginScreen();
 });
 
 async function onSignedIn(user){
