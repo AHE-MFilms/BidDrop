@@ -3252,18 +3252,7 @@ window.addEventListener('load', async ()=>{
     }
   });
 
-  // Check for existing session on page load
-  try {
-    const { data: { session } } = await sb.auth.getSession();
-    if(session){
-      await onSignedIn(session.user);
-    } else {
-      showLoginScreen();
-    }
-  } catch(e) {
-    console.error('Session check error:', e);
-    showLoginScreen();
-  }
+showLoginScreen();
 });
 
 async function onSignedIn(user){
