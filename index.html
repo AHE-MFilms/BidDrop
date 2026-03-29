@@ -3242,7 +3242,7 @@ async function createUser(){
 // ═══════════════════════════════
 //  INIT
 // ═══════════════════════════════
-let _authHandling = false; // Guard to prevent concurrent onSignedIn calls
+let _lastHandledToken = null; // Dedup by access token to prevent lock collisions
 
 window.addEventListener('load', async ()=>{
   // Initialize Supabase client
@@ -3252,25 +3252,30 @@ window.addEventListener('load', async ()=>{
   showLoginScreen();
 
   // Listen for auth state changes (handles INITIAL_SESSION, SIGNED_IN, SIGNED_OUT)
+  // Dedup by access_token: same token fires at most once, preventing the
+  // Supabase lock error: "Lock was released because another request stole it"
   sb.auth.onAuthStateChange(async (event, session) => {
     if((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session){
-      if(_authHandling) return; // Prevent concurrent calls that cause the lock error
-      _authHandling = true;
+      const token = session.access_token;
+      if(token && token === _lastHandledToken) return; // Already handled this session
+      _lastHandledToken = token;
       try {
         await onSignedIn(session.user);
       } catch(e) {
         console.error('Auth state change error:', e);
+        _lastHandledToken = null; // Reset so user can retry
         const err = document.getElementById('login-error');
         const btn = document.getElementById('login-btn');
         if(err) err.textContent = 'Error: '+e.message;
         if(btn){ btn.textContent='Sign In'; btn.disabled=false; }
         showLoginScreen();
-      } finally {
-        _authHandling = false;
       }
     } else if(event === 'SIGNED_OUT'){
-      _authHandling = false;
+      _lastHandledToken = null;
       onSignedOut();
+    } else if(event === 'TOKEN_REFRESHED' && session){
+      // Update token reference on refresh so next real login isn't blocked
+      _lastHandledToken = session.access_token;
     }
   });
 });
