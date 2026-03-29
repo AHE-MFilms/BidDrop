@@ -830,6 +830,7 @@ let measuring=false,measurePts=[],measurePoly=null,measureMarkers=[];
 let allPolygons=[],allPolygonPts=[],totalSqFt=0;
 let _measureForPinId=null;
 let _targetStructId=null; // when measuring for a specific structure card
+let _lastMeasurePts=null;  // saved polygon points from most recent finalized polygon
 
 function toggleMeasure(){
   measuring=!measuring;
@@ -961,6 +962,10 @@ function onMapDblClick(e){
   allPolygonPts.push([...measurePts]);
   const thisSqft=calcPolygonSqFt(measurePts);
   totalSqFt+=thisSqft;
+  // Save pts before clearing so any path can restore them
+  _lastMeasurePts=measurePts.map(ll=>({lat:ll.lat,lng:ll.lng}));
+  // Remove draggable vertex markers from map before clearing
+  measureMarkers.forEach(m=>map.removeLayer(m));
   measurePts=[];measureMarkers=[];measurePoly=null;
   document.getElementById('mhud-sqft').textContent=totalSqFt.toLocaleString();
   document.getElementById('mhud-bldg-count').textContent=num+' building'+(num>1?'s':'')+' · Bldg '+num+': '+thisSqft.toLocaleString()+' sq ft';
@@ -991,6 +996,8 @@ function useRoofMeasurement(){
     const fp=L.polygon(measurePts,{color:col,fillColor:col,fillOpacity:.25,weight:2}).addTo(map);
     allPolygons.push(fp);allPolygonPts.push([...measurePts]);
     totalSqFt+=calcPolygonSqFt(measurePts);
+    _lastMeasurePts=measurePts.map(ll=>({lat:ll.lat,lng:ll.lng}));
+    measureMarkers.forEach(m=>map.removeLayer(m));
     measurePts=[];measureMarkers=[];measurePoly=null;
   }
   const sqft=totalSqFt||parseInt(document.getElementById('mhud-sqft').textContent.replace(/,/g,''));
@@ -1001,6 +1008,11 @@ function useRoofMeasurement(){
   document.getElementById('btn-measure').textContent='📐 Measure Roof';
   document.getElementById('the-map').classList.remove('measuring');
   document.getElementById('measure-hud').classList.remove('show');
+  // Snapshot _lastMeasurePts from allPolygonPts BEFORE clearing (dblclick path sets it already; this covers the button path)
+  if(!_lastMeasurePts&&allPolygonPts.length>0){
+    _lastMeasurePts=allPolygonPts[allPolygonPts.length-1].map(ll=>({lat:ll.lat,lng:ll.lng}));
+  }
+  measureMarkers.forEach(m=>map.removeLayer(m));
   measurePts=[];measureMarkers=[];measurePoly=null;
   allPolygons=[];allPolygonPts=[];totalSqFt=0;
   document.getElementById('mhud-sqft').textContent='0';
@@ -1017,12 +1029,8 @@ function useRoofMeasurement(){
     const s=structures.find(x=>x.id===sid);
     if(s){
       s.sqft=sqft;
-      // Save the final polygon points so Re-measure can restore them
-      if(allPolygonPts.length>0){
-        s.pts=allPolygonPts[allPolygonPts.length-1].map(ll=>({lat:ll.lat,lng:ll.lng}));
-      } else if(measurePts.length>=3){
-        s.pts=measurePts.map(ll=>({lat:ll.lat,lng:ll.lng}));
-      }
+      if(_lastMeasurePts)s.pts=_lastMeasurePts;
+      _lastMeasurePts=null;
       goTab('estimate');
       renderStructures();calcP();updatePreview();
       toast('📐 '+sqft.toLocaleString()+' sq ft applied to '+escHtml(s.name)+'!','success');
@@ -1033,7 +1041,8 @@ function useRoofMeasurement(){
   if(window._addingToExisting){
     window._addingToExisting=false;
     goTab('estimate');
-    addStructure(sqft,'Structure '+(structures.length+1));
+    addStructure(sqft,'Structure '+(structures.length+1),_lastMeasurePts);
+    _lastMeasurePts=null;
     toast('📐 '+sqft.toLocaleString()+' sq ft added as new structure!','success');
     return;
   }
@@ -1044,7 +1053,8 @@ function useRoofMeasurement(){
       window._editingQueueId=null;
       goTab('estimate');
       document.getElementById('e-addr').value=pin.address||'';
-      addStructure(sqft,'Main House');
+      addStructure(sqft,'Main House',_lastMeasurePts);
+      _lastMeasurePts=null;
       calcP();updatePreview();
       toast('📐 '+sqft.toLocaleString()+' sq ft loaded!','success');
       return;
@@ -1123,7 +1133,8 @@ function measureForStructure(sid){
 function applyMeasureToEstimate(sqft){
   window._editingQueueId=null;
   goTab('estimate');
-  addStructure(sqft,'Main House');
+  addStructure(sqft,'Main House',_lastMeasurePts);
+  _lastMeasurePts=null;
   toast('📐 '+sqft.toLocaleString()+' sq ft added!','success');
 }
 
@@ -1284,11 +1295,12 @@ function goEstFromPin(id){
 // ═══════════════════════════════
 //  STRUCTURES ENGINE
 // ═══════════════════════════════
-function addStructure(sqft, name){
+function addStructure(sqft, name, pts){
   const id='s'+Date.now();
   structures.push({
     id, name:name||(structures.length===0?'Main House':'Structure '+(structures.length+1)),
-    sqft:sqft||0, pitch:'1.31', mat:'1.3', stories:'1', complexity:'1.12'
+    sqft:sqft||0, pitch:'1.31', mat:'1.3', stories:'1', complexity:'1.12',
+    pts:pts||null
   });
   renderStructures();calcP();updatePreview();
 }
