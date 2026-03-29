@@ -850,7 +850,7 @@ document.addEventListener('click',e=>{
 // ═══════════════════════════════
 //  MAP
 // ═══════════════════════════════
-let tileStreet, tileSatellite, isSatellite=false;
+let tileStreet, tileSatellite, tileLabels, isSatellite=false;
  
 function initMap(){
   map=L.map('the-map',{zoomControl:true}).setView([42.33,-83.04],13);
@@ -859,6 +859,9 @@ function initMap(){
   }).addTo(map);
   tileSatellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{
     attribution:'© Esri',maxZoom:21
+  });
+  tileLabels=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{
+    attribution:'',maxZoom:21,pane:'shadowPane'
   });
   map.options.maxZoom=21;
   map.on('click',onMapClick);
@@ -876,10 +879,12 @@ function toggleSatellite(){
   if(isSatellite){
     map.removeLayer(tileStreet);
     tileSatellite.addTo(map);
+    tileLabels.addTo(map);
     btn.classList.add('active');
     btn.textContent='🗺 Street View';
   } else {
     map.removeLayer(tileSatellite);
+    if(map.hasLayer(tileLabels)) map.removeLayer(tileLabels);
     tileStreet.addTo(map);
     btn.classList.remove('active');
     btn.textContent='🛰 Satellite';
