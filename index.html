@@ -1,19 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BidDrop — Roofing Canvass Platform</title>
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<style>
-*{margin:0;padding:0;box-sizing:border-box;}
-:root{
-  --bg:#0F1623;
-  --panel:#1A2333;
-  --card:#1F2C3E;
+
   --card2:#243347;
   --border:#2E4060;
   --accent:#F25C05;
@@ -404,7 +389,7 @@ tr:hover td{background:var(--card);}
     <!-- Toolbar -->
     <div class="map-toolbar">
       <button class="mtool-btn" id="btn-satellite" onclick="toggleSatellite()">🛰 Satellite</button>
-      <button class="mtool-btn" id="btn-measure" onclick="toggleMeasure()">📐 Measure Roof</button>
+      <button class="mtool-btn" id="btn-measure" onclick="toggleMeasure()" style="display:none;">📐 Measure Roof</button>
     </div>
     <!-- Measure HUD -->
     <div class="measure-hud" id="measure-hud">
@@ -438,7 +423,7 @@ tr:hover td{background:var(--card);}
           <button class="fchip" data-s="not_interested" onclick="filterPins('not_interested')">⚫ Pass</button>
         </div>
       </div>
-      <div class="map-tip">👆 Click anywhere on map to drop a pin</div>
+      <div class="map-tip">👆 Drop a pin → tap it → Measure This Roof</div>
       <div class="pin-list" id="pin-list"></div>
     </div>
   </div>
@@ -998,7 +983,7 @@ function toggleSatellite(){
 // ═══════════════════════════════
 let measuring=false, measurePts=[], measurePoly=null, measureMarkers=[];
  
-function toggleMeasure(){
+function toggleMeasure(pinId){
   measuring=!measuring;
   const btn=document.getElementById('btn-measure');
   const hud=document.getElementById('measure-hud');
@@ -1007,12 +992,9 @@ function toggleMeasure(){
     btn.textContent='✕ Cancel Measure';
     hud.classList.add('show');
     document.getElementById('the-map').classList.add('measuring');
-    // Close all popups so they don't block clicking
     map.closePopup();
-    // Auto-switch to satellite and zoom in
     if(!isSatellite) toggleSatellite();
     if(map.getZoom()<17) map.setZoom(18);
-    // Close mobile pin panel
     const mp=document.getElementById('map-panel');
     if(mp) mp.classList.remove('open');
     clearMeasureData();
@@ -1032,9 +1014,11 @@ function clearMeasureData(){
   measureMarkers=[];
   if(measurePoly){map.removeLayer(measurePoly);measurePoly=null;}
   document.getElementById('mhud-sqft').textContent='0';
-  document.getElementById('mhud-hint').textContent='Click corners of the roof. Double-click to finish.';
+  document.getElementById('mhud-hint').textContent='Tap a pin first, then use Measure This Roof.';
   const ub=document.getElementById('btn-use-measure');
   if(ub){ub.style.opacity='.4';ub.style.pointerEvents='none';}
+  const banner=document.getElementById('mhud-pin-banner');
+  if(banner)banner.remove();
 }
  
 function clearMeasure(){
@@ -1167,13 +1151,8 @@ function useRoofMeasurement(){
     }
   }
  
-  // Otherwise show picker if there are pending estimates
-  const pending=S.queue.filter(i=>i.status==='pending');
-  if(pending.length>0){
-    showMeasurePickerModal(sqft,pending);
-  } else {
-    applyMeasureToEstimate(sqft);
-  }
+  // No pin selected — just go to new estimate
+  applyMeasureToEstimate(sqft);
 }
  
 function showMeasurePickerModal(sqft,pending){
@@ -1376,16 +1355,26 @@ function measureForPin(pinId){
   if(!pin)return;
   _measureForPinId=pinId;
   map.closePopup();
-  // Fly to pin location
-  map.flyTo([pin.lat,pin.lng],19,{duration:.6});
-  // Start measure mode
-  if(!measuring) toggleMeasure();
-  // Update HUD hint to show which address
+  // Fly to pin first, then start measure
+  map.flyTo([pin.lat,pin.lng],19,{duration:.7});
   setTimeout(()=>{
+    if(!measuring) toggleMeasure();
     const short=pin.address?pin.address.split(',')[0]:'this property';
-    document.getElementById('mhud-hint').textContent=`📍 Measuring: ${short} — click roof corners`;
-  },400);
-  toast(`📐 Now measuring roof for ${pin.address?pin.address.split(',')[0]:'selected pin'}`,'info');
+    document.getElementById('mhud-hint').textContent=`📍 ${short} — tap each corner of the roof`;
+    // Update cancel button to say which address
+    document.getElementById('btn-measure').textContent=`✕ Cancel`;
+    // Show a pinned address banner in HUD
+    const sqftEl=document.getElementById('mhud-sqft').parentNode;
+    let banner=document.getElementById('mhud-pin-banner');
+    if(!banner){
+      banner=document.createElement('div');
+      banner.id='mhud-pin-banner';
+      banner.style.cssText='background:#1A2333;border:1px solid #F25C05;border-radius:7px;padding:8px 12px;margin-bottom:10px;font-size:13px;font-weight:600;color:#F0F6FF;';
+      sqftEl.parentNode.insertBefore(banner,sqftEl);
+    }
+    banner.textContent='📍 '+pin.address.split(',').slice(0,2).join(',');
+  },800);
+  toast(`📐 Tap roof corners for ${pin.address?pin.address.split(',')[0]:'selected pin'}`,'info');
 }
  
 function cycleStatus(id){
