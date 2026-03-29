@@ -11,28 +11,14 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
-  --bg:#0F1623;
-  --panel:#1A2333;
-  --card:#1F2C3E;
-  --card2:#243347;
-  --border:#2E4060;
-  --accent:#F25C05;
-  --accent-dim:rgba(242,92,5,0.12);
-  --success:#22C55E;
-  --warning:#F59E0B;
-  --info:#3B82F6;
-  --danger:#EF4444;
-  --text:#F0F6FF;
-  --mid:#A8BECE;
-  --muted:#6688A8;
-  --font-h:'Oswald',sans-serif;
-  --font-b:'Barlow',sans-serif;
-  --font-m:'DM Mono',monospace;
+  --bg:#0F1623;--panel:#1A2333;--card:#1F2C3E;--card2:#243347;
+  --border:#2E4060;--accent:#F25C05;--accent-dim:rgba(242,92,5,0.12);
+  --success:#22C55E;--warning:#F59E0B;--info:#3B82F6;--danger:#EF4444;
+  --text:#F0F6FF;--mid:#A8BECE;--muted:#6688A8;
+  --font-h:'Oswald',sans-serif;--font-b:'Barlow',sans-serif;--font-m:'DM Mono',monospace;
 }
 html,body{height:100%;overflow:hidden;}
 body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:flex;flex-direction:column;font-size:15px;}
-
-/* HEADER */
 .hdr{background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;height:54px;flex-shrink:0;gap:6px;}
 .logo{font-family:var(--font-h);font-size:20px;font-weight:700;color:var(--accent);letter-spacing:1.5px;margin-right:12px;display:flex;align-items:center;gap:8px;white-space:nowrap;}
 .logo-sub{font-size:11px;font-weight:400;color:var(--muted);letter-spacing:0;font-family:var(--font-b);}
@@ -43,13 +29,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 .hdr-actions{display:flex;align-items:center;gap:8px;margin-left:auto;}
 .icon-btn{background:var(--card);border:1px solid var(--border);color:var(--mid);width:34px;height:34px;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s;}
 .icon-btn:hover{border-color:var(--accent);color:var(--accent);}
-
-/* MAIN */
 .main{flex:1;overflow:hidden;display:flex;flex-direction:column;}
 .tab-pane{display:none;flex:1;overflow:hidden;}
 .tab-pane.active{display:flex;}
-
-/* ── MAP TAB ─────────────────────────────── */
 #tab-map{flex-direction:row;}
 #the-map{flex:1;height:100%;min-width:0;}
 .map-panel{width:310px;flex-shrink:0;background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
@@ -81,8 +63,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 .btn-xs.pr:hover{opacity:.85;}
 .btn-xs.danger{color:var(--danger);}
 .btn-xs.danger:hover{border-color:var(--danger);}
-
-/* ── ESTIMATE TAB ─────────────────────────── */
 #tab-estimate{flex-direction:row;}
 .est-form{width:360px;flex-shrink:0;background:var(--bg);border-right:1px solid var(--border);padding:22px;overflow-y:auto;}
 .est-form::-webkit-scrollbar{width:3px;}
@@ -107,8 +87,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 .btn-primary:hover{opacity:.85;}
 .btn-sec{width:100%;background:var(--card);border:2px solid var(--border);border-radius:10px;padding:14px;color:#C8D8E8;font-family:var(--font-b);font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;margin-top:8px;}
 .btn-sec:hover{border-color:var(--accent);color:var(--text);}
-
-/* BID MAILER PREVIEW */
 .mailer{background:#fff;width:100%;max-width:660px;border-radius:3px;box-shadow:0 20px 60px rgba(0,0,0,.55);overflow:hidden;font-family:'Georgia',serif;color:#1a1a1a;}
 .ml-hdr{padding:28px 36px;display:flex;justify-content:space-between;align-items:flex-start;}
 .ml-co-name{font-family:var(--font-h);font-size:26px;font-weight:700;letter-spacing:1px;}
@@ -137,8 +115,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 .ml-cta-b{font-size:12px;line-height:1.6;color:#555;}
 .ml-phone{font-size:18px;font-weight:700;margin-top:6px;}
 .ml-footer{margin-top:28px;padding-top:14px;border-top:1px solid #eee;font-size:10px;color:#999;line-height:1.6;text-align:center;}
-
-/* ── MAIL QUEUE TAB ───────────────────────── */
 #tab-mailqueue{flex-direction:column;}
 .q-hdr{background:var(--panel);border-bottom:1px solid var(--border);padding:14px 22px;display:flex;align-items:center;gap:14px;flex-shrink:0;}
 .q-title{font-family:var(--font-h);font-size:14px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--text);white-space:nowrap;}
@@ -159,8 +135,6 @@ th{font-family:var(--font-b);font-size:10px;font-weight:700;letter-spacing:.8px;
 td{padding:13px 14px;font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle;}
 tr:hover td{background:var(--card);}
 .spill{display:inline-block;font-size:10px;font-weight:700;padding:3px 9px;border-radius:9px;text-transform:uppercase;letter-spacing:.3px;}
-
-/* ── DASHBOARD TAB ───────────────────────── */
 #tab-dashboard{flex-direction:column;overflow-y:auto;padding:22px;gap:16px;}
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
 .stat-card{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:18px;transition:border-color .15s;}
@@ -188,8 +162,6 @@ tr:hover td{background:var(--card);}
 .act-txt{color:var(--mid);line-height:1.5;}
 .act-txt strong{color:var(--text);}
 .act-time{font-family:var(--font-m);font-size:9px;color:var(--muted);margin-top:2px;}
-
-/* ── MODAL ────────────────────────────────── */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(4px);}
 .modal{background:var(--panel);border:1px solid var(--border);border-radius:11px;padding:26px;width:470px;max-width:92vw;box-shadow:0 24px 60px rgba(0,0,0,.6);max-height:88vh;overflow-y:auto;display:flex;flex-direction:column;}
 .modal-title{font-family:var(--font-h);font-size:16px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;margin-bottom:18px;}
@@ -198,15 +170,11 @@ tr:hover td{background:var(--card);}
 .btn-cancel:hover{border-color:var(--mid);}
 .btn-ok{flex:1;background:var(--accent);border:none;border-radius:7px;padding:10px;color:#fff;font-family:var(--font-b);font-size:12px;font-weight:700;cursor:pointer;transition:opacity .15s;}
 .btn-ok:hover{opacity:.85;}
-
-/* TOAST */
 .toast{position:fixed;bottom:22px;right:22px;background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:12px 18px;font-size:12px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:99999;transform:translateY(70px);opacity:0;transition:all .3s;max-width:300px;}
 .toast.show{transform:translateY(0);opacity:1;}
 .toast.success{border-color:var(--success);color:var(--success);}
 .toast.error{border-color:var(--danger);color:var(--danger);}
 .toast.info{border-color:var(--info);color:var(--info);}
-
-/* Leaflet */
 .leaflet-container{background:#111827;}
 .leaflet-popup-content-wrapper{background:#1A2333;border:2px solid #2E4060;border-radius:12px;color:#F0F6FF;box-shadow:0 12px 40px rgba(0,0,0,.7);}
 .leaflet-popup-tip{background:#1A2333;}
@@ -218,8 +186,6 @@ tr:hover td{background:var(--card);}
 .leaflet-control-zoom a:hover{background:var(--card2) !important;}
 .leaflet-control-attribution{background:rgba(8,9,13,.7) !important;color:var(--muted) !important;font-size:9px !important;}
 .leaflet-control-attribution a{color:var(--muted) !important;}
-
-/* MAP TOOLBAR */
 .map-toolbar{position:absolute;top:12px;left:12px;z-index:1000;display:flex;flex-direction:column;gap:7px;}
 .map-search-wrap{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:1000;display:flex;gap:0;width:320px;max-width:calc(100vw - 200px);}
 .map-search-inp{flex:1;background:#fff;border:2px solid #CBD5E1;border-right:none;border-radius:9px 0 0 9px;padding:9px 14px;font-family:var(--font-b);font-size:14px;color:#1E293B;outline:none;}
@@ -232,10 +198,6 @@ tr:hover td{background:var(--card);}
 .msr-item{padding:10px 14px;font-size:13px;color:#1E293B;cursor:pointer;border-bottom:1px solid #f1f5f9;line-height:1.4;}
 .msr-item:hover{background:#FFF7F0;}
 .msr-item:last-child{border-bottom:none;}
-@media(max-width:768px){
-  .map-search-wrap{width:calc(100vw - 32px);max-width:none;left:16px;transform:none;top:58px;}
-  .map-toolbar{top:112px;}
-}
 .mtool-btn{background:var(--panel);border:1px solid var(--border);color:var(--mid);padding:8px 13px;border-radius:8px;cursor:pointer;font-family:var(--font-b);font-size:11px;font-weight:700;letter-spacing:.4px;display:flex;align-items:center;gap:7px;transition:all .15s;box-shadow:0 3px 12px rgba(0,0,0,.4);white-space:nowrap;}
 .mtool-btn:hover{border-color:var(--accent);color:var(--text);}
 .mtool-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
@@ -244,13 +206,11 @@ tr:hover td{background:var(--card);}
 .mhud-sqft{font-family:var(--font-h);font-size:28px;font-weight:700;color:var(--accent);}
 .mhud-lbl{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);margin-bottom:2px;}
 .mhud-hint{font-size:10px;color:var(--mid);margin-top:5px;}
-.mhud-actions{display:flex;gap:7px;margin-top:10px;}
 .mhud-btn{flex:1;padding:7px 14px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;}
 .mhud-btn:hover{border-color:var(--mid);}
 .mhud-btn.pr{background:var(--accent);border-color:var(--accent);color:#fff;}
 .mhud-btn.pr:hover{opacity:.85;}
 .leaflet-container.measuring{cursor:crosshair !important;}
-
 .struct-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;}
 .struct-card-hdr{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
 .struct-name-inp{flex:1;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:#fff;font-family:var(--font-b);font-size:15px;font-weight:600;outline:none;}
@@ -260,56 +220,26 @@ tr:hover td{background:var(--card);}
 ::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
-
-/* ── MOBILE ───────────────────────────────── */
 .bottom-nav{display:none;}
 @media(max-width:768px){
   .tabs{display:none;}
   .logo-sub{display:none;}
   .hdr{padding:0 14px;height:50px;}
-  .bottom-nav{
-    display:flex;position:fixed;bottom:0;left:0;right:0;
-    background:var(--panel);border-top:1px solid var(--border);
-    z-index:2000;height:62px;
-    padding-bottom:env(safe-area-inset-bottom);
-  }
-  .bnav-btn{
-    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:3px;background:none;border:none;color:var(--muted);cursor:pointer;
-    font-family:var(--font-b);font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
-    transition:color .15s;-webkit-tap-highlight-color:transparent;
-  }
+  .bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--panel);border-top:1px solid var(--border);z-index:2000;height:62px;padding-bottom:env(safe-area-inset-bottom);}
+  .bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;color:var(--muted);cursor:pointer;font-family:var(--font-b);font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;transition:color .15s;-webkit-tap-highlight-color:transparent;}
   .bnav-btn .bicon{font-size:22px;line-height:1;}
   .bnav-btn.active{color:var(--accent);}
   .main{padding-bottom:62px;}
-  /* MAP */
   #tab-map{flex-direction:column;position:relative;}
   #the-map{flex:1;width:100%;height:100%;}
-  .map-panel{
-    position:fixed;bottom:62px;left:0;right:0;width:100%;height:72vh;
-    border-left:none;border-top:1px solid var(--border);
-    border-radius:16px 16px 0 0;transform:translateY(100%);
-    transition:transform .3s cubic-bezier(.32,.72,0,1);z-index:1500;
-    box-shadow:0 -12px 40px rgba(0,0,0,.7);
-  }
+  .map-panel{position:fixed;bottom:62px;left:0;right:0;width:100%;height:72vh;border-left:none;border-top:1px solid var(--border);border-radius:16px 16px 0 0;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);z-index:1500;box-shadow:0 -12px 40px rgba(0,0,0,.7);}
   .map-panel.open{transform:translateY(0);}
   .map-panel-drag{width:36px;height:4px;background:var(--muted);border-radius:2px;margin:10px auto 4px;cursor:pointer;opacity:.6;}
   .map-tip{margin:4px 8px 8px;font-size:10px;}
-  .fab-pins{
-    position:absolute;bottom:14px;right:14px;z-index:1000;
-    background:var(--accent);border:none;border-radius:50%;
-    width:54px;height:54px;font-size:24px;cursor:pointer;
-    box-shadow:0 4px 20px rgba(242,92,5,.55);
-    display:flex;align-items:center;justify-content:center;
-    -webkit-tap-highlight-color:transparent;
-  }
-  .map-toolbar{
-    flex-direction:row;top:10px;left:50%;transform:translateX(-50%);
-    width:auto;gap:6px;
-  }
+  .fab-pins{position:absolute;bottom:14px;right:14px;z-index:1000;background:var(--accent);border:none;border-radius:50%;width:54px;height:54px;font-size:24px;cursor:pointer;box-shadow:0 4px 20px rgba(242,92,5,.55);display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;}
+  .map-toolbar{flex-direction:row;top:10px;left:50%;transform:translateX(-50%);width:auto;gap:6px;}
   .mtool-btn{font-size:10px;padding:7px 12px;}
   .measure-hud{left:10px;right:10px;transform:none;bottom:76px;}
-  /* ESTIMATE */
   #tab-estimate{flex-direction:column;overflow-y:auto;}
   .est-form{width:100%;border-right:none;padding:16px 16px 0;overflow-y:visible;}
   .est-preview{display:none;padding:16px;align-items:flex-start;}
@@ -319,28 +249,18 @@ tr:hover td{background:var(--card);}
   .ml-addr-blk{text-align:left;}
   .ml-body{padding:16px;}
   .frow{grid-template-columns:1fr 1fr;}
-  .btn-preview-toggle{
-    width:100%;background:var(--card2);border:1px solid var(--border);
-    border-radius:7px;padding:11px;color:var(--mid);
-    font-family:var(--font-b);font-size:12px;font-weight:600;
-    cursor:pointer;margin-top:7px;
-  }
-  /* MAIL QUEUE */
+  .btn-preview-toggle{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:11px;color:var(--mid);font-family:var(--font-b);font-size:12px;font-weight:600;cursor:pointer;margin-top:7px;}
   .q-hdr{flex-wrap:wrap;gap:8px;padding:10px 14px;}
   .lob-wrap{width:100%;order:3;}
   .lob-inp{max-width:100%;}
   th,td{padding:8px 8px;font-size:11px;}
-  th:nth-child(4),td:nth-child(4),
-  th:nth-child(5),td:nth-child(5){display:none;}
-  /* DASHBOARD */
+  th:nth-child(4),td:nth-child(4),th:nth-child(5),td:nth-child(5){display:none;}
   .stats-row{grid-template-columns:1fr 1fr;gap:10px;}
   .dash-grid{grid-template-columns:1fr;}
   #tab-dashboard{padding:12px;gap:10px;}
   .stat-val{font-size:26px;}
-  /* MODALS */
   .modal{width:100%;max-width:100%;border-radius:16px 16px 0 0;position:fixed;bottom:0;left:0;right:0;max-height:92vh;overflow-y:auto;display:flex;flex-direction:column;}
   .overlay{align-items:flex-end;}
-  /* Touch targets & readability */
   .fi,.fs{font-size:16px;padding:14px 16px;}
   .fl{font-size:13px;margin-bottom:7px;color:#BDD0E0;}
   .fg{margin-bottom:18px;}
@@ -353,14 +273,10 @@ tr:hover td{background:var(--card);}
   .btn-sec{padding:13px;font-size:13px;}
   .pane-title{font-size:16px;}
   .price-val{font-size:40px;}
-  .price-lbl{font-size:12px;}
-  .price-sub{font-size:13px;}
   .addon-row{font-size:14px;padding:8px 0;}
   .addon-row input[type=checkbox]{width:18px;height:18px;}
-  .map-tip{font-size:12px;padding:10px 14px;}
-  .mp-title{font-size:15px;}
-  .badge{font-size:12px;padding:3px 9px;}
-  .fchip{font-size:11px;padding:5px 12px;}
+  .map-search-wrap{width:calc(100vw - 32px);max-width:none;left:16px;transform:none;top:58px;}
+  .map-toolbar{top:112px;}
 }
 @media(max-width:380px){
   .mtool-btn{font-size:9px;padding:6px 9px;}
@@ -370,7 +286,6 @@ tr:hover td{background:var(--card);}
 </head>
 <body>
 
-<!-- HEADER -->
 <div class="hdr">
   <div class="logo">
     <span>📍</span>
@@ -388,7 +303,6 @@ tr:hover td{background:var(--card);}
   </div>
 </div>
 
-<!-- BOTTOM NAV (mobile) -->
 <nav class="bottom-nav">
   <button class="bnav-btn active" onclick="goTab('map')" data-tab="map"><span class="bicon">🗺</span>Map</button>
   <button class="bnav-btn" onclick="goTab('estimate')" data-tab="estimate"><span class="bicon">📋</span>Estimate</button>
@@ -397,24 +311,20 @@ tr:hover td{background:var(--card);}
   <button class="bnav-btn" onclick="openSettings()"><span class="bicon">⚙️</span>Settings</button>
 </nav>
 
-<!-- MAIN -->
 <div class="main">
 
   <!-- MAP -->
   <div class="tab-pane active" id="tab-map" style="position:relative;">
     <div id="the-map"></div>
-    <!-- Address Search -->
     <div class="map-search-wrap" id="map-search-wrap">
       <input class="map-search-inp" id="map-search-inp" placeholder="🔍 Search address..." oninput="onSearchInput()" onkeydown="if(event.key==='Enter')searchAddress()">
       <button class="map-search-btn" onclick="searchAddress()">→</button>
       <div class="map-search-results" id="map-search-results"></div>
     </div>
-    <!-- Toolbar -->
     <div class="map-toolbar">
       <button class="mtool-btn" id="btn-satellite" onclick="toggleSatellite()">🛰 Satellite</button>
-      <button class="mtool-btn" id="btn-measure" onclick="toggleMeasure()" style="display:none;">📐 Measure Roof</button>
+      <button class="mtool-btn" id="btn-measure" onclick="toggleMeasure()">📐 Measure Roof</button>
     </div>
-    <!-- Measure HUD -->
     <div class="measure-hud" id="measure-hud">
       <div class="mhud-lbl">Total Roof Area</div>
       <div class="mhud-sqft" id="mhud-sqft">0</div>
@@ -429,9 +339,7 @@ tr:hover td{background:var(--card);}
         <button class="mhud-btn pr" id="btn-use-measure" onclick="useRoofMeasurement()" style="width:100%;opacity:.4;pointer-events:none;">📋 Add to Estimate</button>
       </div>
     </div>
-    <!-- FAB for mobile pin list -->
     <button class="fab-pins" onclick="togglePinPanel()" id="fab-pins">📍</button>
-
     <div class="map-panel" id="map-panel">
       <div class="map-panel-drag" onclick="togglePinPanel()"></div>
       <div class="mp-hdr">
@@ -478,21 +386,18 @@ tr:hover td{background:var(--card);}
         </div>
       </div>
 
-      <!-- STRUCTURES LIST -->
       <div id="structures-list"></div>
 
-      <!-- ADD STRUCTURE BUTTON -->
-      <button onclick="addStructure()" style="width:100%;background:var(--card2);border:2px dashed var(--accent);border-radius:9px;padding:14px;color:var(--accent);font-family:var(--font-b);font-size:14px;font-weight:700;cursor:pointer;margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:8px;">
+      <button onclick="addStructure(0,'')" style="width:100%;background:var(--card2);border:2px dashed var(--accent);border-radius:9px;padding:14px;color:var(--accent);font-family:var(--font-b);font-size:14px;font-weight:700;cursor:pointer;margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:8px;">
         🏗 + Add Structure
       </button>
 
-      <!-- GLOBAL ADD-ONS -->
       <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px;">
         <div style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">Property Add-ons</div>
         <label class="addon-row">
           <input type="checkbox" id="a-sky" onchange="calcP();updatePreview()">
           Skylights (+$350 ea)
-          <input type="number" class="addon-qty" id="a-sky-q" value="1" min="1" max="10" onchange="calcP()">
+          <input type="number" class="addon-qty" id="a-sky-q" value="1" min="1" max="10" onchange="calcP();updatePreview()">
         </label>
         <label class="addon-row">
           <input type="checkbox" id="a-chim" onchange="calcP();updatePreview()">
@@ -501,7 +406,7 @@ tr:hover td{background:var(--card);}
         <label class="addon-row">
           <input type="checkbox" id="a-gut" onchange="calcP();updatePreview()">
           Gutters (+$8/lf)
-          <input type="number" class="addon-qty" id="a-gut-q" value="120" min="1" onchange="calcP()"> lf
+          <input type="number" class="addon-qty" id="a-gut-q" value="120" min="1" onchange="calcP();updatePreview()"> lf
         </label>
       </div>
 
@@ -538,13 +443,8 @@ tr:hover td{background:var(--card);}
       <table id="q-table" style="display:none;">
         <thead>
           <tr>
-            <th>Homeowner</th>
-            <th>Address</th>
-            <th>Estimate</th>
-            <th>Material</th>
-            <th>Created</th>
-            <th>Status</th>
-            <th>Actions</th>
+            <th>Homeowner</th><th>Address</th><th>Estimate</th>
+            <th>Material</th><th>Created</th><th>Status</th><th>Actions</th>
           </tr>
         </thead>
         <tbody id="q-tbody"></tbody>
@@ -555,60 +455,26 @@ tr:hover td{background:var(--card);}
   <!-- DASHBOARD -->
   <div class="tab-pane" id="tab-dashboard">
     <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-icon">📍</div>
-        <div class="stat-lbl">Homes Pinned</div>
-        <div class="stat-val" id="s-pins">0</div>
-        <div class="stat-sub">All canvassers</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">📋</div>
-        <div class="stat-lbl">Estimates Built</div>
-        <div class="stat-val" id="s-ests">0</div>
-        <div class="stat-sub">In mail queue</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">📬</div>
-        <div class="stat-lbl">Bids Mailed</div>
-        <div class="stat-val" id="s-mailed">0</div>
-        <div class="stat-sub">Via Lob.com</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">🏆</div>
-        <div class="stat-lbl">Conversion Rate</div>
-        <div class="stat-val" id="s-conv">—</div>
-        <div class="stat-sub">Converted / Mailed</div>
-      </div>
+      <div class="stat-card"><div class="stat-icon">📍</div><div class="stat-lbl">Homes Pinned</div><div class="stat-val" id="s-pins">0</div><div class="stat-sub">All canvassers</div></div>
+      <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-lbl">Estimates Built</div><div class="stat-val" id="s-ests">0</div><div class="stat-sub">In mail queue</div></div>
+      <div class="stat-card"><div class="stat-icon">📬</div><div class="stat-lbl">Bids Mailed</div><div class="stat-val" id="s-mailed">0</div><div class="stat-sub">Via Lob.com</div></div>
+      <div class="stat-card"><div class="stat-icon">🏆</div><div class="stat-lbl">Conversion Rate</div><div class="stat-val" id="s-conv">—</div><div class="stat-sub">Converted / Mailed</div></div>
     </div>
     <div class="dash-grid">
-      <div class="dash-card">
-        <div class="dc-title">Canvass Activity — Last 7 Days</div>
-        <canvas id="act-chart" height="80"></canvas>
-      </div>
-      <div class="dash-card">
-        <div class="dc-title">Team</div>
-        <div id="team-list"></div>
-        <button class="btn-add-team" onclick="addTeamMember()">+ Add Team Member</button>
-      </div>
+      <div class="dash-card"><div class="dc-title">Canvass Activity — Last 7 Days</div><canvas id="act-chart" height="80"></canvas></div>
+      <div class="dash-card"><div class="dc-title">Team</div><div id="team-list"></div><button class="btn-add-team" onclick="addTeamMember()">+ Add Team Member</button></div>
     </div>
-    <div class="dash-card">
-      <div class="dc-title">Recent Activity</div>
-      <div class="act-feed" id="act-feed"></div>
-    </div>
+    <div class="dash-card"><div class="dc-title">Recent Activity</div><div class="act-feed" id="act-feed"></div></div>
   </div>
 
-</div><!-- /main -->
+</div>
 
 <!-- ADD PIN MODAL -->
 <div class="overlay" id="m-pin" style="display:none;">
   <div class="modal">
     <div class="modal-title">📍 Pin This Home</div>
-    <div class="fg">
-      <label class="fl">Address <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:10px;">— tap to correct if wrong</span></label>
-      <input class="fi" id="p-addr" placeholder="Auto-filled from map click…">
-    </div>
-    <div class="fg">
-      <label class="fl">Status</label>
+    <div class="fg"><label class="fl">Address</label><input class="fi" id="p-addr" placeholder="Auto-filled from map click…"></div>
+    <div class="fg"><label class="fl">Status</label>
       <select class="fs" id="p-status">
         <option value="needs_roof">🟠 Needs Roof</option>
         <option value="bid_sent">🔵 Bid Sent</option>
@@ -616,14 +482,8 @@ tr:hover td{background:var(--card);}
         <option value="not_interested">⚫ Not Interested</option>
       </select>
     </div>
-    <div class="fg">
-      <label class="fl">Notes</label>
-      <input class="fi" id="p-notes" placeholder="e.g. Missing shingles, storm damage visible…">
-    </div>
-    <div class="fg">
-      <label class="fl">Canvasser Name</label>
-      <input class="fi" id="p-rep" placeholder="Your name">
-    </div>
+    <div class="fg"><label class="fl">Notes</label><input class="fi" id="p-notes" placeholder="e.g. Missing shingles, storm damage visible…"></div>
+    <div class="fg"><label class="fl">Canvasser Name</label><input class="fi" id="p-rep" placeholder="Your name"></div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeM('m-pin')">Cancel</button>
       <button class="btn-ok" onclick="savePin()">Save Pin</button>
@@ -681,11 +541,11 @@ tr:hover td{background:var(--card);}
     </div>
     <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:14px 0 10px;">Company Logo</div>
     <div class="fg">
-      <label class="fl">Logo Image <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:10px;">— shows on mailer header</span></label>
+      <label class="fl">Logo Image</label>
       <div style="display:flex;gap:10px;align-items:center;">
         <div id="logo-preview" style="width:80px;height:50px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);overflow:hidden;flex-shrink:0;">No logo</div>
         <div style="flex:1;">
-          <label style="display:block;background:var(--card);border:2px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;cursor:pointer;color:var(--mid);font-size:12px;font-weight:600;transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <label style="display:block;background:var(--card);border:2px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;cursor:pointer;color:var(--mid);font-size:12px;font-weight:600;">
             📁 Upload Logo
             <input type="file" accept="image/*" style="display:none;" onchange="handleLogoUpload(this)">
           </label>
@@ -702,7 +562,7 @@ tr:hover td{background:var(--card);}
   </div>
 </div>
 
-<!-- DELETE PIN CONFIRM MODAL -->
+<!-- DELETE PIN MODAL -->
 <div class="overlay" id="m-delete-pin" style="display:none;">
   <div class="modal" style="max-width:420px;">
     <div class="modal-title" style="color:var(--danger);">🗑 Delete Pin?</div>
@@ -726,7 +586,6 @@ tr:hover td{background:var(--card);}
       <div style="font-family:var(--font-h);font-size:32px;font-weight:700;color:#fff;" id="mpick-sqft">0</div>
       <div style="font-size:12px;color:var(--mid);">sq ft</div>
     </div>
-    <div style="font-size:14px;font-weight:700;color:var(--mid);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px;">Update an existing estimate:</div>
     <div id="mpick-list"></div>
     <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px;">
       <button class="btn-primary" onclick="closeM('m-measure-pick');applyMeasureToEstimate(parseInt(document.getElementById('mpick-sqft').textContent.replace(/,/g,'')))">+ Start New Estimate</button>
@@ -744,35 +603,38 @@ tr:hover td{background:var(--card);}
 //  STATE
 // ═══════════════════════════════
 const DEFAULTS = {
-  companyName:'Your Roofing Co',
-  companyAddr:'123 Main St, Detroit MI 48000',
-  companyPhone:'(313) 555-0100',
-  // Material cost per square (100 sq ft) — labor + material combined
+  companyName:'Your Roofing Co', companyAddr:'123 Main St, Detroit MI 48000', companyPhone:'(313) 555-0100',
   costArchitectural:450, cost3Tab:350, costDesigner:620, costMetal:950,
-  // Per-square line items
-  costTearoff:75, costIceWater:42, costFelts:22,
-  // Flat costs
-  costDumpster:450,
-  // Add-ons
+  costTearoff:75, costIceWater:42, costFelts:22, costDumpster:450,
   costSkylight:375, costChimney:295, costGutter:9,
-  // Overhead % and margin %
-  overhead:15, margin:20,
-  brandColor:'#F25C05', lobKey:''
+  overhead:15, margin:20, brandColor:'#F25C05', lobKey:''
 };
 
-let S = {
-  pins:[],
-  queue:[],
-  estimates:[],
-  team:[],
-  activity:[],
-  cfg:{...DEFAULTS}
-};
-
+let S = { pins:[], queue:[], estimates:[], team:[], activity:[], cfg:{...DEFAULTS} };
 let map, markers={}, tempLL=null, curFilter='all', actChart=null;
 
-const MATLBL = {'1.0':'3-Tab Shingle','1.3':'Architectural Shingle','1.8':'Designer/Premium','2.5':'Metal Roofing'};
-const PITCHLBL = {'1.0':'4/12 (Low)','1.07':'5/12','1.15':'6/12 (Standard)','1.23':'7/12','1.31':'8/12 (Moderate)','1.40':'9/12','1.50':'10/12 (Steep)','1.65':'11/12','1.80':'12/12 (Very Steep)'};
+// ─── Structure engine ───
+let structures = [];
+
+const PITCH_OPTS = [
+  {v:'1.0',l:'4/12 — Low'},{v:'1.07',l:'5/12'},{v:'1.15',l:'6/12 — Standard'},
+  {v:'1.23',l:'7/12'},{v:'1.31',l:'8/12 — Moderate'},{v:'1.40',l:'9/12'},
+  {v:'1.50',l:'10/12 — Steep'},{v:'1.65',l:'11/12'},{v:'1.80',l:'12/12 — Very Steep'}
+];
+const MAT_OPTS = [
+  {v:'1.0',l:'3-Tab Shingle'},{v:'1.3',l:'Architectural Shingle'},
+  {v:'1.8',l:'Designer / Premium'},{v:'2.5',l:'Metal Roofing'}
+];
+const COMPLEX_OPTS = [
+  {v:'1.0',l:'Simple — Gable, few angles'},{v:'1.12',l:'Moderate — Some hips/valleys'},
+  {v:'1.25',l:'Complex — Many angles, dormers'},{v:'1.40',l:'Very Complex'}
+];
+const STORIES_OPTS = [
+  {v:'1',l:'1 Story'},{v:'1.5',l:'1.5 Stories'},{v:'2',l:'2 Stories'},{v:'2.5',l:'2+ Stories'}
+];
+
+const PITCHLBL = {'1.0':'4/12 Low','1.07':'5/12','1.15':'6/12 Std','1.23':'7/12','1.31':'8/12 Mod','1.40':'9/12','1.50':'10/12 Steep','1.65':'11/12','1.80':'12/12 Steep'};
+const MATLBL  = {'1.0':'3-Tab Shingle','1.3':'Architectural Shingle','1.8':'Designer/Premium','2.5':'Metal Roofing'};
 
 function sColor(s){return{needs_roof:'#F25C05',bid_sent:'#3B82F6',converted:'#22C55E',not_interested:'#3D5269'}[s]||'#3D5269';}
 function sLabel(s){return{needs_roof:'Needs Roof',bid_sent:'Bid Sent',converted:'Converted',not_interested:'Not Interested'}[s]||s;}
@@ -787,8 +649,7 @@ function save(){try{localStorage.setItem('bd_v1',JSON.stringify(S));}catch(e){}}
 //  TABS
 // ═══════════════════════════════
 function goTab(t){
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
-  document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
+  document.querySelectorAll('.tab-btn,.bnav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
   document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active',p.id==='tab-'+t));
   if(t==='map'){setTimeout(()=>map&&map.invalidateSize(),80);}
   if(t==='dashboard')renderDash();
@@ -804,68 +665,64 @@ function togglePinPanel(){
 
 function toggleMailPreview(){
   const p=document.getElementById('est-preview');
-  const isShowing=p.classList.contains('mobile-show');
-  p.classList.toggle('mobile-show',!isShowing);
-  document.querySelector('.btn-preview-toggle').textContent=isShowing?'👁 Preview Mailer':'✕ Hide Preview';
-  if(!isShowing){
-    setTimeout(()=>p.scrollIntoView({behavior:'smooth',block:'start'}),80);
-  }
+  const showing=p.classList.contains('mobile-show');
+  p.classList.toggle('mobile-show',!showing);
+  document.querySelector('.btn-preview-toggle').textContent=showing?'👁 Preview Mailer':'✕ Hide Preview';
+  if(!showing) setTimeout(()=>p.scrollIntoView({behavior:'smooth',block:'start'}),80);
 }
 
 // ═══════════════════════════════
-//  LOGO & PHOTO HANDLERS
+//  LOGO / PHOTO
 // ═══════════════════════════════
 function handleLogoUpload(inp){
   if(!inp.files||!inp.files[0])return;
-  const reader=new FileReader();
-  reader.onload=e=>{
+  const r=new FileReader();
+  r.onload=e=>{
     S.cfg.logoData=e.target.result;
     const prev=document.getElementById('logo-preview');
-    if(prev) prev.innerHTML=`<img src="${e.target.result}" style="max-width:100%;max-height:100%;object-fit:contain;">`;
+    if(prev)prev.innerHTML='<img src="'+e.target.result+'" style="max-width:100%;max-height:100%;object-fit:contain;">';
     save();updatePreview();toast('Logo uploaded!','success');
   };
-  reader.readAsDataURL(inp.files[0]);
+  r.readAsDataURL(inp.files[0]);
 }
 
 function clearLogo(){
   S.cfg.logoData=null;
   const prev=document.getElementById('logo-preview');
-  if(prev) prev.innerHTML='No logo';
+  if(prev)prev.innerHTML='No logo';
   save();updatePreview();
 }
 
 function handleHomePhoto(inp){
   if(!inp.files||!inp.files[0])return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    // Resize to keep file size reasonable
+  const r=new FileReader();
+  r.onload=e=>{
     const img=new Image();
     img.onload=()=>{
       const canvas=document.createElement('canvas');
-      const MAX=800;
-      let w=img.width,h=img.height;
+      const MAX=800; let w=img.width,h=img.height;
       if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
       canvas.width=w;canvas.height=h;
       canvas.getContext('2d').drawImage(img,0,0,w,h);
       const data=canvas.toDataURL('image/jpeg',.82);
       window._homePhotoData=data;
       const prev=document.getElementById('home-photo-preview');
-      if(prev) prev.innerHTML=`<img src="${data}" style="width:100%;height:100%;object-fit:cover;">`;
+      if(prev)prev.innerHTML='<img src="'+data+'" style="width:100%;height:100%;object-fit:cover;">';
       const clr=document.getElementById('clear-photo-btn');
-      if(clr) clr.style.display='block';
+      if(clr)clr.style.display='block';
       updatePreview();toast('📷 Photo added to mailer!','success');
     };
     img.src=e.target.result;
   };
-  reader.readAsDataURL(inp.files[0]);
+  r.readAsDataURL(inp.files[0]);
 }
 
 function clearHomePhoto(){
   window._homePhotoData=null;
   const prev=document.getElementById('home-photo-preview');
-  if(prev) prev.innerHTML='No photo';
+  if(prev)prev.innerHTML='No photo';
   const clr=document.getElementById('clear-photo-btn');
-  if(clr) clr.style.display='none';
+  if(clr)clr.style.display='none';
   updatePreview();
 }
 
@@ -873,6 +730,8 @@ function clearHomePhoto(){
 //  MAP SEARCH
 // ═══════════════════════════════
 let searchTimer=null;
+// Store search results for safe onclick reference
+window._srResults = [];
 
 function onSearchInput(){
   clearTimeout(searchTimer);
@@ -885,20 +744,13 @@ async function searchAddress(suggest=false){
   const q=document.getElementById('map-search-inp').value.trim();
   if(!q)return;
   try{
-    const res=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&addressdetails=1&limit=5&countrycodes=us`);
+    const res=await fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q)+'&format=json&addressdetails=1&limit=5&countrycodes=us');
     const results=await res.json();
-    if(!results.length){
-      if(!suggest) toast('Address not found','error');
-      return;
-    }
+    if(!results.length){if(!suggest)toast('Address not found','error');return;}
     if(suggest){
-      // Show dropdown
+      window._srResults=results;
       const el=document.getElementById('map-search-results');
-      el.innerHTML=results.map(r=>`
-        <div class="msr-item" onclick="flyToResult(${r.lat},${r.lon},'${(r.display_name||'').replace(/'/g,"\'")}')">
-          ${r.display_name}
-        </div>
-      `).join('');
+      el.innerHTML=results.map((r,i)=>'<div class="msr-item" onclick="flyToResultIdx('+i+')">'+escHtml(r.display_name)+'</div>').join('');
       el.classList.add('show');
     } else {
       flyToResult(results[0].lat,results[0].lon,results[0].display_name);
@@ -906,13 +758,20 @@ async function searchAddress(suggest=false){
   }catch(e){toast('Search error','error');}
 }
 
+function flyToResultIdx(i){
+  const r=window._srResults[i];
+  if(!r)return;
+  flyToResult(r.lat,r.lon,r.display_name);
+}
+
 function flyToResult(lat,lon,name){
   document.getElementById('map-search-results').classList.remove('show');
-  document.getElementById('map-search-inp').value=name.split(',').slice(0,2).join(',').trim();
+  document.getElementById('map-search-inp').value=(name||'').split(',').slice(0,2).join(',').trim();
   map.flyTo([parseFloat(lat),parseFloat(lon)],19,{duration:.8});
 }
 
-// Close search results on map click
+function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
 document.addEventListener('click',e=>{
   if(!e.target.closest('#map-search-wrap'))
     document.getElementById('map-search-results')&&document.getElementById('map-search-results').classList.remove('show');
@@ -921,7 +780,7 @@ document.addEventListener('click',e=>{
 // ═══════════════════════════════
 //  MAP
 // ═══════════════════════════════
-let tileStreet, tileSatellite, tileLabels, isSatellite=false;
+let tileStreet,tileSatellite,tileLabels,isSatellite=false;
 
 function initMap(){
   map=L.map('the-map',{zoomControl:false}).setView([42.33,-83.04],13);
@@ -941,7 +800,7 @@ function initMap(){
   S.pins.forEach(addMarker);
   renderPinList();
   if(navigator.geolocation){
-    navigator.geolocation.getCurrentPosition(p=>{map.setView([p.coords.latitude,p.coords.longitude],18);},()=>{});
+    navigator.geolocation.getCurrentPosition(p=>map.setView([p.coords.latitude,p.coords.longitude],18),()=>{});
   }
 }
 
@@ -950,43 +809,39 @@ function toggleSatellite(){
   const btn=document.getElementById('btn-satellite');
   if(isSatellite){
     map.removeLayer(tileStreet);
-    tileSatellite.addTo(map);
-    tileLabels.addTo(map);
-    btn.classList.add('active');
-    btn.textContent='🗺 Street View';
+    tileSatellite.addTo(map);tileLabels.addTo(map);
+    btn.classList.add('active');btn.textContent='🗺 Street View';
   } else {
     map.removeLayer(tileSatellite);
-    if(map.hasLayer(tileLabels)) map.removeLayer(tileLabels);
+    if(map.hasLayer(tileLabels))map.removeLayer(tileLabels);
     tileStreet.addTo(map);
-    btn.classList.remove('active');
-    btn.textContent='🛰 Satellite';
+    btn.classList.remove('active');btn.textContent='🛰 Satellite';
   }
 }
 
 // ═══════════════════════════════
 //  ROOF MEASUREMENT
 // ═══════════════════════════════
-let measuring=false, measurePts=[], measurePoly=null, measureMarkers=[];
-let allPolygons=[], allPolygonPts=[], totalSqFt=0; // multi-building support
+let measuring=false,measurePts=[],measurePoly=null,measureMarkers=[];
+let allPolygons=[],allPolygonPts=[],totalSqFt=0;
+let _measureForPinId=null;
 
-function toggleMeasure(pinId){
+function toggleMeasure(){
   measuring=!measuring;
   const btn=document.getElementById('btn-measure');
   const hud=document.getElementById('measure-hud');
   if(measuring){
-    btn.classList.add('active');
-    btn.textContent='✕ Cancel Measure';
+    btn.classList.add('active');btn.textContent='✕ Cancel Measure';
     hud.classList.add('show');
     document.getElementById('the-map').classList.add('measuring');
     map.closePopup();
-    if(!isSatellite) toggleSatellite();
-    if(map.getZoom()<17) map.setZoom(18);
-    const mp=document.getElementById('map-panel');
-    if(mp) mp.classList.remove('open');
+    if(!isSatellite)toggleSatellite();
+    if(map.getZoom()<17)map.setZoom(18);
+    document.getElementById('map-panel').classList.remove('open');
     clearMeasureData();
+    document.getElementById('mhud-hint').textContent='Click corners of the roof. Double-click to finish.';
   } else {
-    btn.classList.remove('active');
-    btn.textContent='📐 Measure Roof';
+    btn.classList.remove('active');btn.textContent='📐 Measure Roof';
     hud.classList.remove('show');
     document.getElementById('the-map').classList.remove('measuring');
     _measureForPinId=null;
@@ -998,14 +853,11 @@ function toggleMeasure(pinId){
 
 function clearMeasureData(){
   measurePts=[];
-  measureMarkers.forEach(m=>map.removeLayer(m));
-  measureMarkers=[];
+  measureMarkers.forEach(m=>map.removeLayer(m));measureMarkers=[];
   if(measurePoly){map.removeLayer(measurePoly);measurePoly=null;}
-  // Clear all completed polygons too
   allPolygons.forEach(p=>map.removeLayer(p));
   allPolygons=[];allPolygonPts=[];totalSqFt=0;
   document.getElementById('mhud-sqft').textContent='0';
-  document.getElementById('mhud-hint').textContent='Tap a pin first, then use Measure This Roof.';
   document.getElementById('mhud-bldg-count').textContent='';
   const ub=document.getElementById('btn-use-measure');
   if(ub){ub.style.opacity='.4';ub.style.pointerEvents='none';}
@@ -1021,26 +873,22 @@ function clearMeasure(){
 function addMeasurePoint(latlng){
   measurePts.push(latlng);
   const idx=measurePts.length-1;
-  // Draggable marker
   const dot=L.marker(latlng,{
-    icon:L.divIcon({className:'',html:`<div style="width:14px;height:14px;background:#F25C05;border:2.5px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.6);cursor:grab;"></div>`,iconSize:[14,14],iconAnchor:[7,7]}),
+    icon:L.divIcon({className:'',html:'<div style="width:14px;height:14px;background:#F25C05;border:2.5px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.6);cursor:grab;"></div>',iconSize:[14,14],iconAnchor:[7,7]}),
     draggable:true
   }).addTo(map);
-  dot.on('drag',()=>{
-    measurePts[idx]=dot.getLatLng();
-    redrawPoly();
-  });
+  dot.on('drag',()=>{measurePts[idx]=dot.getLatLng();redrawPoly();});
   measureMarkers.push(dot);
   redrawPoly();
   if(measurePts.length>=3){
     const sqft=calcPolygonSqFt(measurePts);
     document.getElementById('mhud-sqft').textContent=sqft.toLocaleString();
     const bldgNum=allPolygons.length+1;
-    document.getElementById('mhud-hint').textContent='Bldg '+bldgNum+': '+measurePts.length+' pts — drag to adjust. Dbl-click to finish this building.';
+    document.getElementById('mhud-hint').textContent='Bldg '+bldgNum+': '+measurePts.length+' pts — drag to adjust. Dbl-click to finish.';
     const ub=document.getElementById('btn-use-measure');
     if(ub){ub.style.opacity='1';ub.style.pointerEvents='auto';}
   } else {
-    document.getElementById('mhud-hint').textContent=`${measurePts.length} point${measurePts.length>1?'s':''} — keep clicking corners.`;
+    document.getElementById('mhud-hint').textContent=measurePts.length+' point'+(measurePts.length>1?'s':'')+' — keep clicking corners.';
   }
 }
 
@@ -1050,50 +898,39 @@ function redrawPoly(){
     measurePoly=L.polygon(measurePts,{color:'#F25C05',fillColor:'#F25C05',fillOpacity:.2,weight:2,dashArray:'5,5'}).addTo(map);
     if(measurePts.length>=3){
       const thisSqft=calcPolygonSqFt(measurePts);
-      const running=totalSqFt+thisSqft;
-      document.getElementById('mhud-sqft').textContent=running.toLocaleString();
-      if(allPolygons.length>0){
-        document.getElementById('mhud-bldg-count').textContent=`${allPolygons.length} done + this: ${thisSqft.toLocaleString()} sq ft`;
-      }
+      document.getElementById('mhud-sqft').textContent=(totalSqFt+thisSqft).toLocaleString();
+      if(allPolygons.length>0)
+        document.getElementById('mhud-bldg-count').textContent=allPolygons.length+' done + this: '+thisSqft.toLocaleString()+' sq ft';
     }
   }
 }
 
 function undoMeasurePoint(){
   if(!measurePts.length){
-    // Undo last completed building
-    if(!allPolygons.length) return;
+    if(!allPolygons.length)return;
     const lastPoly=allPolygons.pop();
     const lastPts=allPolygonPts.pop();
     map.removeLayer(lastPoly);
-    totalSqFt-=calcPolygonSqFt(lastPts);
-    totalSqFt=Math.max(0,totalSqFt);
+    totalSqFt=Math.max(0,totalSqFt-calcPolygonSqFt(lastPts));
     document.getElementById('mhud-sqft').textContent=totalSqFt.toLocaleString();
-    document.getElementById('mhud-bldg-count').textContent=allPolygons.length?`${allPolygons.length} building${allPolygons.length>1?'s':''}`:'' ;
-    if(!totalSqFt){
-      const ub=document.getElementById('btn-use-measure');
-      if(ub){ub.style.opacity='.4';ub.style.pointerEvents='none';}
-    }
-    toast('Last building removed','info');
-    return;
+    document.getElementById('mhud-bldg-count').textContent=allPolygons.length?allPolygons.length+' building'+(allPolygons.length>1?'s':''):'';
+    if(!totalSqFt){const ub=document.getElementById('btn-use-measure');if(ub){ub.style.opacity='.4';ub.style.pointerEvents='none';}}
+    toast('Last building removed','info');return;
   }
   measurePts.pop();
   const last=measureMarkers.pop();
-  if(last) map.removeLayer(last);
+  if(last)map.removeLayer(last);
   redrawPoly();
   if(!measurePts.length){
     document.getElementById('mhud-sqft').textContent=totalSqFt.toLocaleString()||'0';
     document.getElementById('mhud-hint').textContent=allPolygons.length?'✅ Add another building or tap Add to Estimate.':'Tap roof corners. Double-click to finish a building.';
   } else {
-    document.getElementById('mhud-hint').textContent=`${measurePts.length} pts — keep clicking corners.`;
+    document.getElementById('mhud-hint').textContent=measurePts.length+' pts — keep clicking corners.';
   }
 }
 
 function onMapClick(e){
-  if(measuring){
-    addMeasurePoint(e.latlng);
-    return;
-  }
+  if(measuring){addMeasurePoint(e.latlng);return;}
   tempLL=e.latlng;
   document.getElementById('p-addr').value='';
   document.getElementById('p-notes').value='';
@@ -1103,13 +940,13 @@ function onMapClick(e){
 }
 
 function onMapDblClick(e){
-  if(!measuring || measurePts.length<3) return;
+  if(!measuring||measurePts.length<3)return;
   L.DomEvent.stop(e);
   measurePts.pop();
-  measureMarkers[measureMarkers.length-1] && map.removeLayer(measureMarkers.pop());
-  if(measurePoly) map.removeLayer(measurePoly);
+  if(measureMarkers.length)map.removeLayer(measureMarkers.pop());
+  if(measurePoly)map.removeLayer(measurePoly);
   const colors=['#F25C05','#3B82F6','#22C55E','#F59E0B','#A855F7'];
-  const col=colors[allPolygons.length % colors.length];
+  const col=colors[allPolygons.length%colors.length];
   const finishedPoly=L.polygon(measurePts,{color:col,fillColor:col,fillOpacity:.25,weight:2}).addTo(map);
   const center=finishedPoly.getBounds().getCenter();
   const num=allPolygons.length+1;
@@ -1121,57 +958,45 @@ function onMapDblClick(e){
   measurePts=[];measureMarkers=[];measurePoly=null;
   document.getElementById('mhud-sqft').textContent=totalSqFt.toLocaleString();
   document.getElementById('mhud-bldg-count').textContent=num+' building'+(num>1?'s':'')+' · Bldg '+num+': '+thisSqft.toLocaleString()+' sq ft';
-  document.getElementById('mhud-hint').textContent='✅ Bldg '+num+' done! Tap corners to add another building, or tap Add to Estimate.';
+  document.getElementById('mhud-hint').textContent='✅ Bldg '+num+' done! Tap corners to add another, or tap Add to Estimate.';
   const ub=document.getElementById('btn-use-measure');
   if(ub){ub.style.opacity='1';ub.style.pointerEvents='auto';}
 }
 
 function calcPolygonSqFt(pts){
-  if(pts.length<3) return 0;
-  // Shoelace on projected coords (meters)
+  if(pts.length<3)return 0;
   const toM=ll=>{
     const R=6371000;
     return{x:R*ll.lng*(Math.PI/180)*Math.cos(ll.lat*Math.PI/180),y:R*ll.lat*(Math.PI/180)};
   };
-  const mp=pts.map(toM);
-  let area=0;
+  const mp=pts.map(toM);let area=0;
   for(let i=0;i<mp.length;i++){
     const j=(i+1)%mp.length;
-    area+=mp[i].x*mp[j].y;
-    area-=mp[j].x*mp[i].y;
+    area+=mp[i].x*mp[j].y;area-=mp[j].x*mp[i].y;
   }
-  const sqMeters=Math.abs(area)/2;
-  return Math.round(sqMeters*10.7639); // m² to ft²
+  return Math.round(Math.abs(area)/2*10.7639);
 }
 
 function useRoofMeasurement(){
-  // If there's an in-progress polygon with 3+ points, finalize it first
   if(measurePts.length>=3){
     const colors=['#F25C05','#3B82F6','#22C55E','#F59E0B','#A855F7'];
-    const col=colors[allPolygons.length % colors.length];
-    if(measurePoly) map.removeLayer(measurePoly);
-    const finishedPoly=L.polygon(measurePts,{color:col,fillColor:col,fillOpacity:.25,weight:2}).addTo(map);
-    allPolygons.push(finishedPoly);
-    allPolygonPts.push([...measurePts]);
+    const col=colors[allPolygons.length%colors.length];
+    if(measurePoly)map.removeLayer(measurePoly);
+    const fp=L.polygon(measurePts,{color:col,fillColor:col,fillOpacity:.25,weight:2}).addTo(map);
+    allPolygons.push(fp);allPolygonPts.push([...measurePts]);
     totalSqFt+=calcPolygonSqFt(measurePts);
     measurePts=[];measureMarkers=[];measurePoly=null;
   }
   const sqft=totalSqFt||parseInt(document.getElementById('mhud-sqft').textContent.replace(/,/g,''));
   if(!sqft){toast('Draw the roof outline first','error');return;}
-
-  // Stop measuring mode and fully reset state for next session
+  // Stop measuring
   measuring=false;
   document.getElementById('btn-measure').classList.remove('active');
   document.getElementById('btn-measure').textContent='📐 Measure Roof';
   document.getElementById('the-map').classList.remove('measuring');
   document.getElementById('measure-hud').classList.remove('show');
-  // Reset all multi-polygon state (keep polygons visible on map as reference)
-  measurePts=[];
-  measureMarkers=[];
-  measurePoly=null;
-  allPolygons=[];
-  allPolygonPts=[];
-  totalSqFt=0;
+  measurePts=[];measureMarkers=[];measurePoly=null;
+  allPolygons=[];allPolygonPts=[];totalSqFt=0;
   document.getElementById('mhud-sqft').textContent='0';
   document.getElementById('mhud-bldg-count').textContent='';
   const ub=document.getElementById('btn-use-measure');
@@ -1179,7 +1004,6 @@ function useRoofMeasurement(){
   const banner=document.getElementById('mhud-pin-banner');
   if(banner)banner.remove();
 
-  // If adding to an existing estimate, create a new structure card
   if(window._addingToExisting){
     window._addingToExisting=false;
     goTab('estimate');
@@ -1187,7 +1011,6 @@ function useRoofMeasurement(){
     toast('📐 '+sqft.toLocaleString()+' sq ft added as new structure!','success');
     return;
   }
-  // If we were measuring for a specific pin, go straight to estimate with that address
   if(_measureForPinId){
     const pin=S.pins.find(p=>p.id===_measureForPinId);
     _measureForPinId=null;
@@ -1197,134 +1020,82 @@ function useRoofMeasurement(){
       document.getElementById('e-addr').value=pin.address||'';
       addStructure(sqft,'Main House');
       calcP();updatePreview();
-      toast('📐 '+sqft.toLocaleString()+' sq ft loaded for '+(pin.address?pin.address.split(',')[0]:'selected pin')+'!','success');
+      toast('📐 '+sqft.toLocaleString()+' sq ft loaded!','success');
       return;
     }
   }
   applyMeasureToEstimate(sqft);
 }
 
-function showMeasurePickerModal(sqft,pending){
-  // Show pending estimates AND all pinned addresses that don't have an estimate yet
-  const pendingIds=new Set(pending.map(i=>i.addr));
-  const unpinnedAddrs=S.pins.filter(p=>!pendingIds.has(p.address)&&p.status!=='not_interested');
-
-  let html='';
-  if(pending.length){
-    html+=`<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Update existing estimate:</div>`;
-    html+=pending.map(i=>`
-      <div onclick="applyMeasureToExisting('${i.id}',${sqft})" style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:16px;margin-bottom:8px;cursor:pointer;">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;">
-          <div style="flex:1;">
-            <div style="font-size:17px;font-weight:700;color:#FFFFFF;">${i.owner||'Homeowner'}</div>
-            <div style="font-size:15px;color:#C8D8E8;margin-top:5px;line-height:1.5;">${i.addr}</div>
-          </div>
-          <div style="color:var(--accent);font-weight:700;font-size:16px;white-space:nowrap;">$${i.total.toLocaleString()}</div>
-        </div>
-        <div style="background:var(--accent);border-radius:6px;padding:8px;text-align:center;color:#fff;font-size:13px;font-weight:700;">Tap to update →</div>
-      </div>
-    `).join('');
-  }
-  if(unpinnedAddrs.length){
-    html+=`<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 8px;">Start new estimate for pinned address:</div>`;
-    html+=unpinnedAddrs.slice(0,5).map(p=>`
-      <div onclick="applyMeasureToPinAddr('${p.id}',${sqft})" style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;cursor:pointer;">
-        <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:3px;">${p.address.split(',')[0]}</div>
-        <div style="font-size:13px;color:var(--mid);">${p.address.split(',').slice(1,3).join(',').trim()}</div>
-        <div style="margin-top:8px;background:var(--card2);border:1px solid var(--accent);border-radius:6px;padding:7px;text-align:center;color:var(--accent);font-size:13px;font-weight:700;">New estimate →</div>
-      </div>
-    `).join('');
-  }
-
-  document.getElementById('mpick-sqft').textContent=sqft.toLocaleString();
-  document.getElementById('mpick-list').innerHTML=html||'<div style="color:var(--muted);text-align:center;padding:16px;font-size:13px;">No pinned addresses yet.</div>';
-  openM('m-measure-pick');
-}
-
-function applyMeasureToPinAddr(pinId,sqft){
-  const pin=S.pins.find(p=>p.id===pinId);
-  if(!pin)return;
-  closeM('m-measure-pick');
-  window._editingQueueId=null;
-  goTab('estimate');
-  document.getElementById('e-addr').value=pin.address||'';
-  addStructure(sqft,'Main House');
-  calcP();updatePreview();
-  toast('📐 '+sqft.toLocaleString()+' sq ft loaded for '+pin.address.split(',')[0]+'!','success');
-}
-
-function applyMeasureToExisting(id,sqft){
-  const item=S.queue.find(x=>x.id===id);
-  if(!item)return;
-  closeM('m-measure-pick');
-  document.getElementById('e-owner').value=item.owner||'';
-  document.getElementById('e-addr').value=item.addr||'';
-  window._editingQueueId=id;
-  // Add as new structure
-  addStructure(sqft,'Main House');
-  goTab('estimate');
-  calcP();updatePreview();
-  toast('📐 '+sqft.toLocaleString()+' sq ft added for '+item.addr,'success');
-}
-
 function applyMeasureToEstimate(sqft){
   window._editingQueueId=null;
   goTab('estimate');
-  // Add as a new structure
   addStructure(sqft,'Main House');
-  toast('📐 '+sqft.toLocaleString()+' sq ft added as new structure!','success');
+  toast('📐 '+sqft.toLocaleString()+' sq ft added!','success');
 }
 
-function addAnotherBuilding(){
-  window._addingToExisting=true;
-  goTab('map');
+function measureForPin(pinId){
+  const pin=S.pins.find(p=>p.id===pinId);
+  if(!pin)return;
+  _measureForPinId=pinId;
+  map.closePopup();
+  // Reset measure state
+  allPolygons.forEach(p=>map.removeLayer(p));
+  allPolygons=[];allPolygonPts=[];totalSqFt=0;
+  measurePts=[];
+  measureMarkers.forEach(m=>map.removeLayer(m));measureMarkers=[];
+  if(measurePoly){map.removeLayer(measurePoly);measurePoly=null;}
+  map.flyTo([pin.lat,pin.lng],19,{duration:.7});
   setTimeout(()=>{
-    allPolygons.forEach(p=>map.removeLayer(p));
-    allPolygons=[];allPolygonPts=[];totalSqFt=0;
-    measurePts=[];
-    measureMarkers.forEach(m=>map.removeLayer(m));
-    measureMarkers=[];
-    if(measurePoly){map.removeLayer(measurePoly);measurePoly=null;}
-    if(!measuring) toggleMeasure();
-    document.getElementById('mhud-hint').textContent='Draw the next structure — it will be added as a separate line item.';
-    document.getElementById('mhud-bldg-count').textContent=structures.length+' structure'+(structures.length>1?'s':'')+' already on estimate';
-  },300);
-  toast('Draw the next structure on the map','info');
+    if(!measuring)toggleMeasure();
+    const short=pin.address?pin.address.split(',')[0]:'this property';
+    document.getElementById('mhud-hint').textContent='📍 '+short+' — tap each corner of the roof';
+    document.getElementById('btn-measure').textContent='✕ Cancel';
+    const sqftEl=document.getElementById('mhud-sqft').parentNode;
+    let banner=document.getElementById('mhud-pin-banner');
+    if(!banner){
+      banner=document.createElement('div');
+      banner.id='mhud-pin-banner';
+      banner.style.cssText='background:#1A2333;border:1px solid #F25C05;border-radius:7px;padding:8px 12px;margin-bottom:10px;font-size:13px;font-weight:600;color:#F0F6FF;';
+      sqftEl.parentNode.insertBefore(banner,sqftEl);
+    }
+    banner.textContent='📍 '+pin.address.split(',').slice(0,2).join(',');
+  },800);
+  toast('📐 Tap roof corners for '+(pin.address?pin.address.split(',')[0]:'selected pin'),'info');
 }
 
 async function revGeo(lat,lng){
   try{
-    const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`);
+    const r=await fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lng+'&format=json&addressdetails=1');
     const d=await r.json();
     if(d&&d.address){
       const a=d.address;
       const st=[a.house_number,a.road].filter(Boolean).join(' ');
       const city=a.city||a.town||a.village||a.county||'';
-      const state=a.state||'';
-      const zip=a.postcode||'';
-      document.getElementById('p-addr').value=[st,city,state,zip].filter(Boolean).join(', ');
+      document.getElementById('p-addr').value=[st,city,a.state||'',a.postcode||''].filter(Boolean).join(', ');
     }
   }catch(e){}
 }
 
 function mkIcon(status){
   const c=sColor(status);
-  return L.divIcon({className:'',html:`<div style="width:16px;height:16px;background:${c};border:2.5px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.6);"></div>`,iconSize:[16,16],iconAnchor:[8,8]});
+  return L.divIcon({className:'',html:'<div style="width:16px;height:16px;background:'+c+';border:2.5px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.6);"></div>',iconSize:[16,16],iconAnchor:[8,8]});
 }
 
 function addMarker(pin){
+  const pid=pin.id;
   const m=L.marker([pin.lat,pin.lng],{icon:mkIcon(pin.status)}).addTo(map);
   m.bindPopup(`
     <div style="min-width:260px;max-width:300px;">
-      <div style="font-weight:700;font-size:16px;margin-bottom:8px;color:#FFFFFF;line-height:1.4;">${pin.address||'Unknown'}</div>
+      <div style="font-weight:700;font-size:16px;margin-bottom:8px;color:#FFFFFF;line-height:1.4;">${escHtml(pin.address||'Unknown')}</div>
       <div style="display:inline-block;background:${sColor(pin.status)};color:white;font-size:13px;padding:4px 12px;border-radius:7px;font-weight:700;margin-bottom:12px;">${sLabel(pin.status)}</div>
-      ${pin.notes?`<div style="font-size:13px;color:#A8BECE;margin-bottom:10px;font-style:italic;">"${pin.notes}"</div>`:''}
-      <button onclick="goEstFromPin('${pin.id}')" style="background:#F25C05;border:none;border-radius:8px;padding:13px;color:white;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:8px;display:block;">📋 Build Estimate</button>
-      <button onclick="measureForPin('${pin.id}')" style="background:transparent;border:2px solid #F25C05;border-radius:8px;padding:11px;color:#F25C05;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:8px;display:block;">📐 Measure This Roof</button>
-      <button onclick="confirmDeletePin('${pin.id}')" style="background:transparent;border:2px solid #EF4444;border-radius:8px;padding:10px;color:#EF4444;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;display:block;">🗑 Delete Pin</button>
+      ${pin.notes?`<div style="font-size:13px;color:#A8BECE;margin-bottom:10px;font-style:italic;">"${escHtml(pin.notes)}"</div>`:''}
+      <button onclick="goEstFromPin('${pid}')" style="background:#F25C05;border:none;border-radius:8px;padding:13px;color:white;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:8px;display:block;">📋 Build Estimate</button>
+      <button onclick="measureForPin('${pid}')" style="background:transparent;border:2px solid #F25C05;border-radius:8px;padding:11px;color:#F25C05;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:8px;display:block;">📐 Measure This Roof</button>
+      <button onclick="confirmDeletePin('${pid}')" style="background:transparent;border:2px solid #EF4444;border-radius:8px;padding:10px;color:#EF4444;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;display:block;">🗑 Delete Pin</button>
     </div>
   `,{maxWidth:320});
-  markers[pin.id]=m;
+  markers[pid]=m;
 }
 
 function savePin(){
@@ -1332,7 +1103,7 @@ function savePin(){
   const pin={
     id:'p'+Date.now(),
     lat:tempLL.lat,lng:tempLL.lng,
-    address:document.getElementById('p-addr').value.trim()||`${tempLL.lat.toFixed(4)}, ${tempLL.lng.toFixed(4)}`,
+    address:document.getElementById('p-addr').value.trim()||tempLL.lat.toFixed(4)+', '+tempLL.lng.toFixed(4),
     status:document.getElementById('p-status').value,
     notes:document.getElementById('p-notes').value.trim(),
     rep:document.getElementById('p-rep').value.trim()||'Unknown',
@@ -1341,11 +1112,8 @@ function savePin(){
   S.pins.unshift(pin);
   addMarker(pin);
   bumpTeam(pin.rep,'pins');
-  addAct(`<strong>${pin.rep}</strong> pinned <strong>${pin.address}</strong> — ${sLabel(pin.status)}`,pin.status);
-  renderPinList();
-  save();
-  closeM('m-pin');
-  toast('📍 Pin saved','success');
+  addAct('<strong>'+escHtml(pin.rep)+'</strong> pinned <strong>'+escHtml(pin.address)+'</strong> — '+sLabel(pin.status),pin.status);
+  renderPinList();save();closeM('m-pin');toast('📍 Pin saved','success');
 }
 
 function filterPins(s){
@@ -1359,27 +1127,21 @@ function renderPinList(){
   const list=curFilter==='all'?S.pins:S.pins.filter(p=>p.status===curFilter);
   document.getElementById('pin-count').textContent=S.pins.length;
   if(!list.length){
-    el.innerHTML=`<div style="text-align:center;padding:30px 14px;color:var(--muted);font-size:12px;">${curFilter==='all'?'No homes pinned yet. Click the map.':'No homes with this status.'}</div>`;
+    el.innerHTML='<div style="text-align:center;padding:30px 14px;color:var(--muted);font-size:12px;">'+(curFilter==='all'?'No homes pinned yet. Click the map.':'No homes with this status.')+'</div>';
     return;
   }
-  el.innerHTML=list.map(p=>`
-    <div class="pc" onclick="flyTo('${p.id}')">
-      <div class="pc-top">
-        <div class="pc-addr">${p.address}</div>
-        <div class="sdot" style="background:${sColor(p.status)};"></div>
-      </div>
-      <div class="pc-meta">
-        <span>${timeAgo(p.at)}</span>
-        ${p.rep?`<span>· ${p.rep}</span>`:''}
-      </div>
-      ${p.notes?`<div class="pc-note">"${p.notes}"</div>`:''}
-      <div class="pc-acts">
-        <button class="btn-xs pr" onclick="event.stopPropagation();goEstFromPin('${p.id}')">📋 Estimate</button>
-        <button class="btn-xs" onclick="event.stopPropagation();cycleStatus('${p.id}')">Edit</button>
-        <button class="btn-xs danger" onclick="event.stopPropagation();rmPin('${p.id}')">✕</button>
-      </div>
-    </div>
-  `).join('');
+  el.innerHTML=list.map(p=>{
+    const pid=p.id;
+    return '<div class="pc" onclick="flyTo(\''+pid+'\')">'+
+      '<div class="pc-top"><div class="pc-addr">'+escHtml(p.address)+'</div><div class="sdot" style="background:'+sColor(p.status)+';"></div></div>'+
+      '<div class="pc-meta"><span>'+timeAgo(p.at)+'</span>'+(p.rep?'<span>· '+escHtml(p.rep)+'</span>':'')+'</div>'+
+      (p.notes?'<div class="pc-note">"'+escHtml(p.notes)+'"</div>':'')+
+      '<div class="pc-acts">'+
+      '<button class="btn-xs pr" onclick="event.stopPropagation();goEstFromPin(\''+pid+'\')">📋 Estimate</button>'+
+      '<button class="btn-xs" onclick="event.stopPropagation();cycleStatus(\''+pid+'\')">Edit</button>'+
+      '<button class="btn-xs danger" onclick="event.stopPropagation();rmPin(\''+pid+'\')">✕</button>'+
+      '</div></div>';
+  }).join('');
 }
 
 function flyTo(id){
@@ -1395,8 +1157,7 @@ function rmPin(id){
 }
 
 function confirmDeletePin(id){
-  const pin=S.pins.find(p=>p.id===id);
-  if(!pin)return;
+  const pin=S.pins.find(p=>p.id===id);if(!pin)return;
   map.closePopup();
   document.getElementById('dpin-addr').textContent=pin.address||'this pin';
   document.getElementById('dpin-id').value=id;
@@ -1407,123 +1168,57 @@ function doDeletePin(){
   const id=document.getElementById('dpin-id').value;
   S.pins=S.pins.filter(p=>p.id!==id);
   if(markers[id]){map.removeLayer(markers[id]);delete markers[id];}
-  closeM('m-delete-pin');
-  renderPinList();save();
-  toast('🗑 Pin deleted','info');
-}
-
-// Measure mode locked to a specific pin
-let _measureForPinId=null;
-
-function measureForPin(pinId){
-  const pin=S.pins.find(p=>p.id===pinId);
-  if(!pin)return;
-  _measureForPinId=pinId;
-  map.closePopup();
-  // Reset any leftover state from previous session
-  allPolygons.forEach(p=>map.removeLayer(p));
-  allPolygons=[];allPolygonPts=[];totalSqFt=0;
-  measurePts=[];
-  measureMarkers.forEach(m=>map.removeLayer(m));
-  measureMarkers=[];
-  if(measurePoly){map.removeLayer(measurePoly);measurePoly=null;}
-  // Fly to pin first, then start measure
-  map.flyTo([pin.lat,pin.lng],19,{duration:.7});
-  setTimeout(()=>{
-    if(!measuring) toggleMeasure();
-    const short=pin.address?pin.address.split(',')[0]:'this property';
-    document.getElementById('mhud-hint').textContent=`📍 ${short} — tap each corner of the roof`;
-    // Update cancel button to say which address
-    document.getElementById('btn-measure').textContent=`✕ Cancel`;
-    // Show a pinned address banner in HUD
-    const sqftEl=document.getElementById('mhud-sqft').parentNode;
-    let banner=document.getElementById('mhud-pin-banner');
-    if(!banner){
-      banner=document.createElement('div');
-      banner.id='mhud-pin-banner';
-      banner.style.cssText='background:#1A2333;border:1px solid #F25C05;border-radius:7px;padding:8px 12px;margin-bottom:10px;font-size:13px;font-weight:600;color:#F0F6FF;';
-      sqftEl.parentNode.insertBefore(banner,sqftEl);
-    }
-    banner.textContent='📍 '+pin.address.split(',').slice(0,2).join(',');
-  },800);
-  toast(`📐 Tap roof corners for ${pin.address?pin.address.split(',')[0]:'selected pin'}`,'info');
+  closeM('m-delete-pin');renderPinList();save();toast('🗑 Pin deleted','info');
 }
 
 function cycleStatus(id){
   const p=S.pins.find(x=>x.id===id);if(!p)return;
   const opts=['needs_roof','bid_sent','converted','not_interested'];
-  const idx=opts.indexOf(p.status);
-  p.status=opts[(idx+1)%opts.length];
+  p.status=opts[(opts.indexOf(p.status)+1)%opts.length];
   if(markers[id]){map.removeLayer(markers[id]);delete markers[id];}
   addMarker(p);renderPinList();save();
-  toast(`Status → ${sLabel(p.status)}`,'info');
+  toast('Status → '+sLabel(p.status),'info');
 }
 
 function goEstFromPin(id){
-  const p=S.pins.find(x=>x.id===id);
-  if(!p)return;
-  // If no structures yet, add a blank one
-  if(!structures.length) addStructure(0,'Main House');
+  const p=S.pins.find(x=>x.id===id);if(!p)return;
+  if(!structures.length)addStructure(0,'Main House');
   goTab('estimate');
   document.getElementById('e-addr').value=p.address||'';
-  renderStructures();
-  calcP();updatePreview();
+  renderStructures();calcP();updatePreview();
 }
 
-// ═══════════════════════════════
-//  ESTIMATE
 // ═══════════════════════════════
 //  STRUCTURES ENGINE
 // ═══════════════════════════════
-let structures=[];
-
-const PITCH_OPTS=[
-  {v:'1.0',l:'4/12 — Low'},{v:'1.07',l:'5/12'},{v:'1.15',l:'6/12 — Standard'},
-  {v:'1.23',l:'7/12'},{v:'1.31',l:'8/12 — Moderate'},{v:'1.40',l:'9/12'},
-  {v:'1.50',l:'10/12 — Steep'},{v:'1.65',l:'11/12'},{v:'1.80',l:'12/12 — Very Steep'}
-];
-const MAT_OPTS=[
-  {v:'1.0',l:'3-Tab Shingle'},{v:'1.3',l:'Architectural Shingle'},
-  {v:'1.8',l:'Designer / Premium'},{v:'2.5',l:'Metal Roofing'}
-];
-const COMPLEX_OPTS=[
-  {v:'1.0',l:'Simple — Gable, few angles'},{v:'1.12',l:'Moderate — Some hips/valleys'},
-  {v:'1.25',l:'Complex — Many angles, dormers'},{v:'1.40',l:'Very Complex'}
-];
-const STORIES_OPTS=[
-  {v:'1',l:'1 Story'},{v:'1.5',l:'1.5 Stories'},{v:'2',l:'2 Stories'},{v:'2.5',l:'2+ Stories'}
-];
-
-function mkSelect(opts,val,onChange){
-  return '<select class="fs" style="font-size:13px;padding:8px 10px;" onchange="'+onChange+'">'
-    +opts.map(o=>'<option value="'+o.v+'"'+(o.v==val?' selected':'')+'>'+o.l+'</option>').join('')
-    +'</select>';
-}
-
-function addStructure(sqft,name){
+function addStructure(sqft, name){
   const id='s'+Date.now();
   structures.push({
-    id,
-    name:name||('Structure '+(structures.length+1)),
-    sqft:sqft||0,
-    pitch:'1.31',
-    mat:'1.3',
-    stories:'1',
-    complexity:'1.12'
+    id, name:name||(structures.length===0?'Main House':'Structure '+(structures.length+1)),
+    sqft:sqft||0, pitch:'1.31', mat:'1.3', stories:'1', complexity:'1.12'
   });
-  renderStructures();
-  calcP();updatePreview();
+  renderStructures();calcP();updatePreview();
 }
 
 function removeStructure(id){
   structures=structures.filter(s=>s.id!==id);
-  renderStructures();
+  renderStructures();calcP();updatePreview();
+}
+
+// Called from oninput/onchange handlers via data-sid attribute
+function _structField(el,field){
+  const sid=el.dataset.sid;
+  const s=structures.find(x=>x.id===sid);
+  if(!s)return;
+  s[field]=field==='sqft'?(parseFloat(el.value)||0):el.value;
   calcP();updatePreview();
 }
 
-function updateStruct(id,field,val){
-  const s=structures.find(x=>x.id===id);
-  if(s){s[field]=val;calcP();updatePreview();}
+function mkSel(opts, val, field){
+  // Renders a <select> that calls _structField(this, field) on change
+  // The data-sid attribute is set after insertion via renderStructures
+  const inner=opts.map(o=>'<option value="'+o.v+'"'+(o.v==val?' selected':'')+'>'+o.l+'</option>').join('');
+  return '<select class="fs" style="font-size:13px;padding:8px 10px;" data-field="'+field+'" onchange="_structField(this,\''+field+'\')">' +inner+'</select>';
 }
 
 function renderStructures(){
@@ -1533,33 +1228,39 @@ function renderStructures(){
     el.innerHTML='<div style="text-align:center;padding:18px;color:var(--muted);font-size:13px;border:2px dashed var(--border);border-radius:9px;margin-bottom:12px;">No structures yet — tap + Add Structure below</div>';
     return;
   }
-  el.innerHTML=structures.map((s,i)=>{
+  let html='';
+  structures.forEach(function(s,i){
     const price=calcStructPrice(s);
-    return '<div class="struct-card" id="sc-'+s.id+'">'
-      +'<div class="struct-card-hdr">'
-      +'<span style="background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:3px 9px;border-radius:9px;flex-shrink:0;">'+('Bldg '+(i+1))+'</span>'
-      +'<input class="struct-name-inp" value="'+s.name+'" placeholder="e.g. Main House" oninput="updateStruct(''+s.id+'','name',this.value)">'
-      +'<span class="struct-price">$'+price.toLocaleString()+'</span>'
-      +'<button class="struct-del-btn" onclick="removeStructure(''+s.id+'')" title="Remove">🗑</button>'
-      +'</div>'
-      +'<div class="frow" style="gap:8px;margin-bottom:8px;">'
-      +'<div class="fg" style="margin-bottom:0;"><label class="fl">Sq Ft</label>'
-      +'<input type="number" class="fi" style="font-size:14px;padding:9px 10px;" value="'+(s.sqft||'')+'" placeholder="2400" oninput="updateStruct(''+s.id+'','sqft',parseFloat(this.value)||0);calcP();updatePreview()"></div>'
-      +'<div class="fg" style="margin-bottom:0;"><label class="fl">Stories</label>'+mkSelect(STORIES_OPTS,s.stories,'updateStruct(''+s.id+'','stories',this.value)')+'</div>'
-      +'</div>'
-      +'<div class="frow" style="gap:8px;margin-bottom:8px;">'
-      +'<div class="fg" style="margin-bottom:0;"><label class="fl">Pitch</label>'+mkSelect(PITCH_OPTS,s.pitch,'updateStruct(''+s.id+'','pitch',this.value)')+'</div>'
-      +'<div class="fg" style="margin-bottom:0;"><label class="fl">Material</label>'+mkSelect(MAT_OPTS,s.mat,'updateStruct(''+s.id+'','mat',this.value)')+'</div>'
-      +'</div>'
-      +'<div class="fg" style="margin-bottom:0;"><label class="fl">Complexity</label>'+mkSelect(COMPLEX_OPTS,s.complexity,'updateStruct(''+s.id+'','complexity',this.value)')+'</div>'
-      +'</div>';
-  }).join('');
+    html+='<div class="struct-card" id="sc-'+s.id+'">'+
+      '<div class="struct-card-hdr">'+
+      '<span style="background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:3px 9px;border-radius:9px;flex-shrink:0;">Bldg '+(i+1)+'</span>'+
+      '<input class="struct-name-inp" data-sid="'+s.id+'" value="'+escHtml(s.name)+'" placeholder="e.g. Main House" oninput="_structField(this,\'name\')">'+
+      '<span class="struct-price" id="sp-'+s.id+'">$'+price.toLocaleString()+'</span>'+
+      '<button class="struct-del-btn" data-sid="'+s.id+'" onclick="removeStructure(this.dataset.sid)" title="Remove">🗑</button>'+
+      '</div>'+
+      '<div class="frow" style="gap:8px;margin-bottom:8px;">'+
+      '<div class="fg" style="margin-bottom:0;"><label class="fl">Sq Ft</label>'+
+      '<input type="number" class="fi" style="font-size:14px;padding:9px 10px;" data-sid="'+s.id+'" value="'+(s.sqft||'')+'" placeholder="2400" oninput="_structField(this,\'sqft\')"></div>'+
+      '<div class="fg" style="margin-bottom:0;"><label class="fl">Stories</label>'+applyDataSid(mkSel(STORIES_OPTS,s.stories,'stories'),s.id)+'</div>'+
+      '</div>'+
+      '<div class="frow" style="gap:8px;margin-bottom:8px;">'+
+      '<div class="fg" style="margin-bottom:0;"><label class="fl">Pitch</label>'+applyDataSid(mkSel(PITCH_OPTS,s.pitch,'pitch'),s.id)+'</div>'+
+      '<div class="fg" style="margin-bottom:0;"><label class="fl">Material</label>'+applyDataSid(mkSel(MAT_OPTS,s.mat,'mat'),s.id)+'</div>'+
+      '</div>'+
+      '<div class="fg" style="margin-bottom:0;"><label class="fl">Complexity</label>'+applyDataSid(mkSel(COMPLEX_OPTS,s.complexity,'complexity'),s.id)+'</div>'+
+      '</div>';
+  });
+  el.innerHTML=html;
+}
+
+// Inject data-sid into a <select> string
+function applyDataSid(selectHtml,sid){
+  return selectHtml.replace('<select ','<select data-sid="'+sid+'" ');
 }
 
 function calcStructPrice(s){
   const c=S.cfg;
-  const sqft=parseFloat(s.sqft)||0;
-  if(!sqft)return 0;
+  const sqft=parseFloat(s.sqft)||0;if(!sqft)return 0;
   const pitchMult=parseFloat(s.pitch)||1.31;
   const complexity=parseFloat(s.complexity)||1.12;
   const stories=parseFloat(s.stories)||1;
@@ -1577,15 +1278,9 @@ function calcStructPrice(s){
   return Math.round(sub+ovh+mgn);
 }
 
-// ═══════════════════════════════
 function getMatCost(matKey){
   const c=S.cfg;
-  return{
-    '1.0':parseFloat(c.cost3Tab)||350,
-    '1.3':parseFloat(c.costArchitectural)||450,
-    '1.8':parseFloat(c.costDesigner)||620,
-    '2.5':parseFloat(c.costMetal)||950
-  }[matKey]||450;
+  return{'1.0':parseFloat(c.cost3Tab)||350,'1.3':parseFloat(c.costArchitectural)||450,'1.8':parseFloat(c.costDesigner)||620,'2.5':parseFloat(c.costMetal)||950}[matKey]||450;
 }
 
 function calcP(){
@@ -1594,9 +1289,7 @@ function calcP(){
     document.getElementById('e-breakdown').textContent='Add a structure above to calculate';
     return 0;
   }
-  // Sum all structures
   let grand=structures.reduce((sum,s)=>sum+calcStructPrice(s),0);
-  // Global add-ons
   const c=S.cfg;
   if(document.getElementById('a-sky')&&document.getElementById('a-sky').checked)
     grand+=(parseFloat(c.costSkylight)||375)*(parseInt(document.getElementById('a-sky-q').value)||1);
@@ -1606,73 +1299,52 @@ function calcP(){
     grand+=(parseFloat(c.costGutter)||9)*(parseInt(document.getElementById('a-gut-q').value)||120);
   document.getElementById('e-total').textContent='$'+grand.toLocaleString();
   document.getElementById('e-breakdown').textContent=structures.length+' structure'+(structures.length>1?'s':'')+' · Total: $'+grand.toLocaleString();
-  // Re-render structure prices
   structures.forEach(s=>{
-    const el=document.querySelector('#sc-'+s.id+' .struct-price');
+    const el=document.getElementById('sp-'+s.id);
     if(el)el.textContent='$'+calcStructPrice(s).toLocaleString();
   });
   return grand;
 }
 
+// ═══════════════════════════════
+//  MAILER PREVIEW
+// ═══════════════════════════════
 function updatePreview(){
   const owner=document.getElementById('e-owner').value||'Homeowner';
   const addr=document.getElementById('e-addr').value||'—';
-  const sqft=parseFloat(document.getElementById('e-sqft').value)||0;
-  const pitchKey=document.getElementById('e-pitch').value;
-  const matKey=document.getElementById('e-mat').value;
-  const stories=document.getElementById('e-stories').value;
-  const grand=calcP();
-  const sq=sqft?(sqft/100*1.12).toFixed(1):'—';
   const co=S.cfg.companyName||'Your Roofing Co';
   const coAddr=S.cfg.companyAddr||'';
   const ph=S.cfg.companyPhone||'';
   const color=S.cfg.brandColor||'#F25C05';
+  const logoImg=S.cfg.logoData?'<img src="'+S.cfg.logoData+'" style="max-height:52px;max-width:160px;object-fit:contain;display:block;">':'<div class="ml-co-name" style="color:'+color+';">'+escHtml(co)+'</div>';
+  const homePhotoHtml=window._homePhotoData?'<img src="'+window._homePhotoData+'" style="width:100%;max-height:220px;object-fit:cover;border-radius:8px;margin-bottom:18px;display:block;">':'';
 
-  let addRows='';
-  if(document.getElementById('a-sky').checked){
-    const q=parseInt(document.getElementById('a-sky-q').value)||1;
-    addRows+=`<div class="ml-row"><span class="rl">Skylight Flashing (×${q})</span><span class="rv">$${(350*q).toLocaleString()}</span></div>`;
-  }
-  if(document.getElementById('a-chim').checked) addRows+=`<div class="ml-row"><span class="rl">Chimney Flashing</span><span class="rv">$280</span></div>`;
-  if(document.getElementById('a-gut').checked){
-    const lf=parseInt(document.getElementById('a-gut-q').value)||120;
-    addRows+=`<div class="ml-row"><span class="rl">Gutters (${lf} lf)</span><span class="rv">$${(8*lf).toLocaleString()}</span></div>`;
-  }
-
-  const logoImg=S.cfg.logoData?'<img src="'+S.cfg.logoData+'" style="max-height:52px;max-width:160px;object-fit:contain;display:block;">':
-    '<div class="ml-co-name" style="color:'+color+';">'+co+'</div>';
-  const homePhotoData=window._homePhotoData||'';
-  const homePhotoHtml=homePhotoData?'<img src="'+homePhotoData+'" style="width:100%;max-height:220px;object-fit:cover;border-radius:8px;margin-bottom:18px;display:block;">':'';
-
-  // Build per-structure sections
-  const PITCHLBL_L={'1.0':'4/12 Low','1.07':'5/12','1.15':'6/12 Std','1.23':'7/12','1.31':'8/12 Mod','1.40':'9/12','1.50':'10/12 Steep','1.65':'11/12','1.80':'12/12 Steep'};
-  const MATLBL_L={'1.0':'3-Tab Shingle','1.3':'Architectural Shingle','1.8':'Designer/Premium','2.5':'Metal Roofing'};
   let structSections='';
   let grandTotal=0;
+
   if(structures.length){
     structures.forEach((s,i)=>{
       const sp=calcStructPrice(s);
       grandTotal+=sp;
-      const sq=(parseFloat(s.sqft)||0)/100*1.12*(parseFloat(s.pitch)||1.31);
-      structSections+='<div class="ml-box" style="border:2px solid '+(i===0?color:'#555');
-      structSections+=';margin-bottom:16px;">'
-        +'<div class="ml-box-hdr" style="background:'+(i===0?color:'#444')+';">'+(s.name||'Structure '+(i+1)).toUpperCase()+'</div>'
-        +'<div class="ml-rows">'
-        +'<div class="ml-row"><span class="rl">Roof Area</span><span class="rv">'+(s.sqft?Number(s.sqft).toLocaleString()+' sq ft':'—')+' ('+sq.toFixed(1)+' sq)</span></div>'
-        +'<div class="ml-row"><span class="rl">Pitch</span><span class="rv">'+(PITCHLBL_L[s.pitch]||s.pitch)+'</span></div>'
-        +'<div class="ml-row"><span class="rl">Material</span><span class="rv">'+(MATLBL_L[s.mat]||s.mat)+'</span></div>'
-        +'<div class="ml-row"><span class="rl">Stories</span><span class="rv">'+s.stories+'</span></div>'
-        +'<div class="ml-row"><span class="rl">Labor, Material &amp; Tearoff</span><span class="rv">Included</span></div>'
-        +'</div>'
-        +'<div class="ml-total" style="background:'+(i===0?'#1a1a1a':'#333')+';">'
-        +'<span class="ml-total-lbl">'+s.name.toUpperCase()+' SUBTOTAL</span>'
-        +'<span class="ml-total-amt">$'+sp.toLocaleString()+'</span>'
-        +'</div>'
-        +'</div>';
+      const sq=((parseFloat(s.sqft)||0)/100*1.12*(parseFloat(s.pitch)||1.31)).toFixed(1);
+      const accentColor=i===0?color:'#555';
+      structSections+=
+        '<div class="ml-box" style="border:2px solid '+accentColor+';margin-bottom:16px;">'+
+        '<div class="ml-box-hdr" style="background:'+(i===0?color:'#444')+';">'+escHtml((s.name||'Structure '+(i+1)).toUpperCase())+'</div>'+
+        '<div class="ml-rows">'+
+        '<div class="ml-row"><span class="rl">Roof Area</span><span class="rv">'+(s.sqft?Number(s.sqft).toLocaleString()+' sq ft':'—')+' ('+sq+' sq)</span></div>'+
+        '<div class="ml-row"><span class="rl">Pitch</span><span class="rv">'+(PITCHLBL[s.pitch]||s.pitch)+'</span></div>'+
+        '<div class="ml-row"><span class="rl">Material</span><span class="rv">'+(MATLBL[s.mat]||s.mat)+'</span></div>'+
+        '<div class="ml-row"><span class="rl">Stories</span><span class="rv">'+s.stories+'</span></div>'+
+        '<div class="ml-row"><span class="rl">Labor, Material &amp; Tearoff</span><span class="rv">Included</span></div>'+
+        '</div>'+
+        '<div class="ml-total" style="background:'+(i===0?'#1a1a1a':'#333')+';">'+
+        '<span class="ml-total-lbl">'+escHtml(s.name.toUpperCase())+' SUBTOTAL</span>'+
+        '<span class="ml-total-amt">$'+sp.toLocaleString()+'</span>'+
+        '</div></div>';
     });
-    // Add-ons row
-    let addsTotal=0;
-    let addRows='';
+    // Add-ons
+    let addsTotal=0;let addRows='';
     const c2=S.cfg;
     if(document.getElementById('a-sky')&&document.getElementById('a-sky').checked){
       const q=parseInt(document.getElementById('a-sky-q').value)||1;
@@ -1681,76 +1353,78 @@ function updatePreview(){
       addRows+='<div class="ml-row"><span class="rl">Skylights (×'+q+')</span><span class="rv">$'+amt.toLocaleString()+'</span></div>';
     }
     if(document.getElementById('a-chim')&&document.getElementById('a-chim').checked){
-      addsTotal+=parseFloat(c2.costChimney)||295;
-      addRows+='<div class="ml-row"><span class="rl">Chimney Flashing</span><span class="rv">$'+(parseFloat(c2.costChimney)||295)+'</span></div>';
+      const amt=parseFloat(c2.costChimney)||295;addsTotal+=amt;
+      addRows+='<div class="ml-row"><span class="rl">Chimney Flashing</span><span class="rv">$'+amt+'</span></div>';
     }
     if(document.getElementById('a-gut')&&document.getElementById('a-gut').checked){
       const lf=parseInt(document.getElementById('a-gut-q').value)||120;
-      const amt=(parseFloat(c2.costGutter)||9)*lf;
-      addsTotal+=amt;
+      const amt=(parseFloat(c2.costGutter)||9)*lf;addsTotal+=amt;
       addRows+='<div class="ml-row"><span class="rl">Gutters ('+lf+' lf)</span><span class="rv">$'+amt.toLocaleString()+'</span></div>';
     }
     if(addsTotal){
       grandTotal+=addsTotal;
-      structSections+='<div class="ml-box" style="border:2px solid #888;margin-bottom:16px;">'
-        +'<div class="ml-box-hdr" style="background:#666;">ADD-ONS</div>'
-        +'<div class="ml-rows">'+addRows+'</div>'
-        +'<div class="ml-total" style="background:#444;"><span class="ml-total-lbl">ADD-ONS SUBTOTAL</span><span class="ml-total-amt">$'+addsTotal.toLocaleString()+'</span></div>'
-        +'</div>';
+      structSections+='<div class="ml-box" style="border:2px solid #888;margin-bottom:16px;">'+
+        '<div class="ml-box-hdr" style="background:#666;">ADD-ONS</div>'+
+        '<div class="ml-rows">'+addRows+'</div>'+
+        '<div class="ml-total" style="background:#444;"><span class="ml-total-lbl">ADD-ONS SUBTOTAL</span><span class="ml-total-amt">$'+addsTotal.toLocaleString()+'</span></div>'+
+        '</div>';
     }
   } else {
     structSections='<div style="padding:20px;text-align:center;color:#999;font-style:italic;">No structures added yet.</div>';
   }
 
-  document.getElementById('mailer-preview').innerHTML='<div class="ml-hdr">'
-    +'<div>'+logoImg+'<div class="ml-co-info" style="margin-top:4px;">'+coAddr.replace(/,/g,'<br>')+'<br>'+ph+'</div></div>'
-    +'<div class="ml-addr-blk"><strong>'+owner+'</strong><br>'+addr.split(',').join('<br>')+'</div>'
-    +'</div>'
-    +'<div class="ml-stripe" style="background:'+color+';"></div>'
-    +'<div class="ml-body">'
-    +homePhotoHtml
-    +'<div class="ml-greeting">Dear '+owner+',</div>'
-    +'<div class="ml-headline" style="color:'+color+';">Your Roof — Priced.<br>No Visit Required.</div>'
-    +'<div class="ml-intro">We assessed your neighborhood and noticed your roof may need attention. We've prepared a custom estimate for your specific property — no obligation, no sales pressure, no appointment needed.</div>'
-    +structSections
-    +'<div class="ml-total" style="background:#1a1a1a;border-radius:8px;margin-bottom:22px;">'
-    +'<span class="ml-total-lbl" style="font-size:17px;">TOTAL ESTIMATE</span>'
-    +'<span class="ml-total-amt" style="font-size:26px;">$'+(grandTotal?grandTotal.toLocaleString():'0')+'</span>'
-    +'</div>'
-    +'<div class="ml-cta">'
-    +'<div class="ml-qr"><span style="font-size:28px;">📱</span><span>Scan to<br>Schedule</span></div>'
-    +'<div class="ml-cta-txt"><div class="ml-cta-h" style="color:'+color+';">Ready to Get Started?</div>'
-    +'<div class="ml-cta-b">This estimate is locked for 30 days. Call or scan the QR code to confirm your inspection and lock in your price. Licensed, insured, and local.</div>'
-    +'<div class="ml-phone" style="color:'+color+';">'+(ph||'(000) 000-0000')+'</div>'
-    +'</div></div>'
-    +'<div class="ml-footer">Estimate based on property assessment and market data. Final pricing confirmed at inspection. Financing available. '+co+' · Licensed &amp; Insured · '+new Date().getFullYear()+'</div>'
-    +'</div>';
+  document.getElementById('mailer-preview').innerHTML=
+    '<div class="ml-hdr">'+
+    '<div>'+logoImg+'<div class="ml-co-info" style="margin-top:4px;">'+coAddr.replace(/,/g,'<br>')+'<br>'+escHtml(ph)+'</div></div>'+
+    '<div class="ml-addr-blk"><strong>'+escHtml(owner)+'</strong><br>'+escHtml(addr).split(',').join('<br>')+'</div>'+
+    '</div>'+
+    '<div class="ml-stripe" style="background:'+color+';"></div>'+
+    '<div class="ml-body">'+
+    homePhotoHtml+
+    '<div class="ml-greeting">Dear '+escHtml(owner)+',</div>'+
+    '<div class="ml-headline" style="color:'+color+';">Your Roof — Priced.<br>No Visit Required.</div>'+
+    '<div class="ml-intro">We assessed your neighborhood and noticed your roof may need attention. We\'ve prepared a custom estimate for your specific property — no obligation, no sales pressure, no appointment needed.</div>'+
+    structSections+
+    '<div class="ml-total" style="background:#1a1a1a;border-radius:8px;margin-bottom:22px;">'+
+    '<span class="ml-total-lbl" style="font-size:17px;">TOTAL ESTIMATE</span>'+
+    '<span class="ml-total-amt" style="font-size:26px;">$'+(grandTotal?grandTotal.toLocaleString():'0')+'</span>'+
+    '</div>'+
+    '<div class="ml-cta">'+
+    '<div class="ml-qr"><span style="font-size:28px;">📱</span><span>Scan to<br>Schedule</span></div>'+
+    '<div class="ml-cta-txt"><div class="ml-cta-h" style="color:'+color+';">Ready to Get Started?</div>'+
+    '<div class="ml-cta-b">This estimate is locked for 30 days. Call or scan the QR code to confirm your inspection and lock in your price. Licensed, insured, and local.</div>'+
+    '<div class="ml-phone" style="color:'+color+';">'+(ph||'(000) 000-0000')+'</div>'+
+    '</div></div>'+
+    '<div class="ml-footer">Estimate based on property assessment and market data. Final pricing confirmed at inspection. Financing available. '+escHtml(co)+' · Licensed &amp; Insured · '+new Date().getFullYear()+'</div>'+
+    '</div>';
 }
 
+// ═══════════════════════════════
+//  MAIL QUEUE
+// ═══════════════════════════════
 function addToQueue(){
   const addr=document.getElementById('e-addr').value.trim();
   if(!addr){toast('Enter a property address','error');return;}
   const grand=calcP();
   if(!grand){toast('Enter roof area to calculate price','error');return;}
-  const matEl=document.getElementById('e-mat');
-  const pitchEl=document.getElementById('e-pitch');
-  // Check if editing an existing queue item
+
+  // Get primary structure info for queue row display
+  const firstS=structures[0];
+  const matLabel=firstS?MATLBL[firstS.mat]||firstS.mat:'—';
+  const pitchLabel=firstS?PITCHLBL[firstS.pitch]||firstS.pitch:'—';
+  const totalSqft=structures.reduce((s,x)=>s+(parseFloat(x.sqft)||0),0);
+
   const editId=window._editingQueueId;
   if(editId){
     const existing=S.queue.find(x=>x.id===editId);
     if(existing&&existing.status==='pending'){
       existing.owner=document.getElementById('e-owner').value.trim()||'Homeowner';
-      existing.addr=addr;
-      existing.sqft=parseFloat(document.getElementById('e-sqft').value)||0;
-      existing.pitch=pitchEl.options[pitchEl.selectedIndex].text;
-      existing.mat=matEl.options[matEl.selectedIndex].text;
-      existing.stories=document.getElementById('e-stories').value;
-      existing.total=grand;
-      existing.updatedAt=new Date().toISOString();
+      existing.addr=addr;existing.sqft=totalSqft;
+      existing.pitch=pitchLabel;existing.mat=matLabel;
+      existing.total=grand;existing.updatedAt=new Date().toISOString();
       window._editingQueueId=null;
-      addAct(`Estimate updated for <strong>${addr}</strong> — <strong>$${grand.toLocaleString()}</strong>`,'bid_sent');
-      save();renderQueue();
-      toast('✅ Estimate updated!','success');
+      addAct('Estimate updated for <strong>'+escHtml(addr)+'</strong> — <strong>$'+grand.toLocaleString()+'</strong>','bid_sent');
+      save();renderQueue();toast('✅ Estimate updated!','success');
       document.getElementById('add-queue-btn').textContent='📬 Add to Mail Queue';
       return;
     }
@@ -1758,22 +1432,15 @@ function addToQueue(){
   const item={
     id:'q'+Date.now(),
     owner:document.getElementById('e-owner').value.trim()||'Homeowner',
-    addr,
-    sqft:parseFloat(document.getElementById('e-sqft').value)||0,
-    pitch:pitchEl.options[pitchEl.selectedIndex].text,
-    mat:matEl.options[matEl.selectedIndex].text,
-    stories:document.getElementById('e-stories').value,
-    total:grand,
-    status:'pending',
-    at:new Date().toISOString(),
-    mailedAt:null,lobId:null
+    addr, sqft:totalSqft, pitch:pitchLabel, mat:matLabel,
+    structures:JSON.parse(JSON.stringify(structures)),
+    total:grand, status:'pending',
+    at:new Date().toISOString(), mailedAt:null, lobId:null
   };
   S.queue.unshift(item);
   S.estimates.push(item);
-  addAct(`Estimate for <strong>${addr}</strong> queued — <strong>$${grand.toLocaleString()}</strong>`,'bid_sent');
-  save();
-  toast('📬 Added to mail queue!','success');
-  renderQueue();
+  addAct('Estimate for <strong>'+escHtml(addr)+'</strong> queued — <strong>$'+grand.toLocaleString()+'</strong>','bid_sent');
+  save();toast('📬 Added to mail queue!','success');renderQueue();
 }
 
 function clearEst(){
@@ -1781,20 +1448,15 @@ function clearEst(){
   document.getElementById('e-addr').value='';
   ['a-sky','a-chim','a-gut'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
   structures=[];
-  renderStructures();
-  clearHomePhoto();
-  calcP();updatePreview();
+  renderStructures();clearHomePhoto();calcP();updatePreview();
   window._editingQueueId=null;
   document.getElementById('add-queue-btn').textContent='📬 Add to Mail Queue';
 }
 
-// ═══════════════════════════════
-//  MAIL QUEUE
-// ═══════════════════════════════
 function saveLobKey(){S.cfg.lobKey=document.getElementById('lob-key').value;save();}
 
 function renderQueue(){
-  if(S.cfg.lobKey) document.getElementById('lob-key').value=S.cfg.lobKey;
+  if(S.cfg.lobKey)document.getElementById('lob-key').value=S.cfg.lobKey;
   const tbody=document.getElementById('q-tbody');
   const tbl=document.getElementById('q-table');
   const empty=document.getElementById('q-empty');
@@ -1803,19 +1465,20 @@ function renderQueue(){
   tbody.innerHTML=S.queue.map(i=>{
     const sc={pending:'#F59E0B',sent:'#22C55E',failed:'#EF4444'}[i.status]||'#3D5269';
     const sl={pending:'Pending',sent:'Mailed ✓',failed:'Failed'}[i.status]||i.status;
-    return`<tr>
-      <td style="font-weight:600;">${i.owner}</td>
-      <td style="color:var(--mid);font-size:11px;">${i.addr}</td>
-      <td style="font-family:var(--font-m);color:var(--accent);font-weight:600;">$${i.total.toLocaleString()}</td>
-      <td style="font-size:11px;color:var(--mid);">${i.mat}</td>
-      <td style="font-family:var(--font-m);font-size:10px;color:var(--muted);">${fmtDate(i.at)}</td>
-      <td><span class="spill" style="background:${sc}22;color:${sc};border:1px solid ${sc}44;">${sl}</span></td>
-      <td style="display:flex;gap:5px;align-items:center;">
-        ${i.status==='pending'?`<button class="btn-xs pr" onclick="sendLob('${i.id}')">📬 Send</button>`:i.status==='sent'?`<span style="font-size:10px;color:var(--muted);">${fmtDate(i.mailedAt)}</span>`:`<button class="btn-xs" onclick="sendLob('${i.id}')">Retry</button>`}
-        ${i.status==='pending'?`<button class="btn-xs" onclick="editEstimate('${i.id}')">✏️ Edit</button>`:''}
-        <button class="btn-xs danger" onclick="rmQ('${i.id}')" title="Delete">🗑 Delete</button>
-      </td>
-    </tr>`;
+    return '<tr>'+
+      '<td style="font-weight:600;">'+escHtml(i.owner)+'</td>'+
+      '<td style="color:var(--mid);font-size:11px;">'+escHtml(i.addr)+'</td>'+
+      '<td style="font-family:var(--font-m);color:var(--accent);font-weight:600;">$'+i.total.toLocaleString()+'</td>'+
+      '<td style="font-size:11px;color:var(--mid);">'+escHtml(i.mat)+'</td>'+
+      '<td style="font-family:var(--font-m);font-size:10px;color:var(--muted);">'+fmtDate(i.at)+'</td>'+
+      '<td><span class="spill" style="background:'+sc+'22;color:'+sc+';border:1px solid '+sc+'44;">'+sl+'</span></td>'+
+      '<td style="display:flex;gap:5px;align-items:center;">'+
+      (i.status==='pending'?'<button class="btn-xs pr" onclick="sendLob(\''+i.id+'\')">📬 Send</button>':
+       i.status==='sent'?'<span style="font-size:10px;color:var(--muted);">'+fmtDate(i.mailedAt)+'</span>':
+       '<button class="btn-xs" onclick="sendLob(\''+i.id+'\')">Retry</button>')+
+      (i.status==='pending'?'<button class="btn-xs" onclick="editEstimate(\''+i.id+'\')">✏️ Edit</button>':'')+
+      '<button class="btn-xs danger" onclick="rmQ(\''+i.id+'\')" title="Delete">🗑 Delete</button>'+
+      '</td></tr>';
   }).join('');
 }
 
@@ -1826,8 +1489,7 @@ async function sendLob(id){
   const co=S.cfg.companyName||'Your Roofing Co';
   const fromRaw=S.cfg.companyAddr||'123 Main St, Detroit, MI, 48000';
   const fp=fromRaw.split(',').map(s=>s.trim());
-  const toRaw=item.addr;
-  const tp=toRaw.split(',').map(s=>s.trim());
+  const tp=item.addr.split(',').map(s=>s.trim());
   const html=genLobHtml(item);
   toast('Sending to Lob.com…','info');
   try{
@@ -1835,72 +1497,69 @@ async function sendLob(id){
       method:'POST',
       headers:{'Authorization':'Basic '+btoa(key+':'),'Content-Type':'application/json'},
       body:JSON.stringify({
-        description:`Roof Bid — ${item.addr}`,
+        description:'Roof Bid — '+item.addr,
         to:{name:item.owner,address_line1:tp[0]||'',address_city:tp[1]||'',address_state:tp[2]||'MI',address_zip:tp[3]||'00000',address_country:'US'},
         from:{name:co,address_line1:fp[0]||'123 Main St',address_city:fp[1]||'Detroit',address_state:fp[2]||'MI',address_zip:fp[3]||'48000',address_country:'US'},
-        file:'<html><head><meta charset="utf-8"><style>body{font-family:Arial,sans-serif;font-size:12pt;margin:40px;} h1{color:#F25C05;} table{width:100%;border-collapse:collapse;} td{padding:8px;border:1px solid #ddd;} .total{background:#222;color:white;font-size:14pt;font-weight:bold;}</style></head><body>'+html+'</body></html>',
+        file:'<html><head><meta charset="utf-8"><style>body{font-family:Arial,sans-serif;font-size:12pt;margin:40px;}h1{color:#F25C05;}table{width:100%;border-collapse:collapse;}td{padding:8px;border:1px solid #ddd;}.total{background:#222;color:white;font-size:14pt;font-weight:bold;}</style></head><body>'+html+'</body></html>',
         color:false,double_sided:false
       })
     });
     const d=await res.json();
     if(res.ok){
       item.status='sent';item.mailedAt=new Date().toISOString();item.lobId=d.id;
-      addAct(`Bid letter mailed to <strong>${item.addr}</strong> via Lob.com`,'converted');
+      addAct('Bid letter mailed to <strong>'+escHtml(item.addr)+'</strong> via Lob.com','converted');
       save();renderQueue();toast('✅ Letter queued for mailing!','success');
     } else {
-      item.status='failed';
-      save();renderQueue();toast('Lob error: '+(d.error?.message||'Check API key & address'),'error');
+      item.status='failed';save();renderQueue();toast('Lob error: '+(d.error?.message||'Check API key & address'),'error');
     }
-  } catch(e){
-    item.status='failed';save();renderQueue();toast('Network error — check API key','error');
-  }
+  } catch(e){item.status='failed';save();renderQueue();toast('Network error — check API key','error');}
 }
 
 function genLobHtml(i){
   const co=S.cfg.companyName||'Your Roofing Co';
   const ph=S.cfg.companyPhone||'';
-  return `<h1>${co}</h1>
-  <p><strong>Custom Roof Estimate · ${i.addr}</strong></p>
-  <p>Dear ${i.owner},</p>
-  <p>We prepared a custom estimate for your property — no obligation, no appointment needed.</p>
-  <table>
-    <tr style="background:#F25C05;color:white;"><td colspan="2"><strong>YOUR ESTIMATE</strong></td></tr>
-    <tr><td>Roof Area</td><td>${i.sqft.toLocaleString()} sq ft</td></tr>
-    <tr><td>Material</td><td>${i.mat}</td></tr>
-    <tr><td>Pitch</td><td>${i.pitch}</td></tr>
-    <tr><td>Stories</td><td>${i.stories}</td></tr>
-    <tr><td>Material, Labor &amp; Cleanup</td><td>Included</td></tr>
-    <tr><td>Workmanship Warranty</td><td>10 Years</td></tr>
-    <tr class="total"><td>TOTAL ESTIMATE</td><td>$${i.total.toLocaleString()}</td></tr>
-  </table>
-  <p>Price locked for 30 days. Call to schedule your free inspection:</p>
-  <p><strong style="font-size:16pt;">${ph}</strong></p>
-  <p>${co} · Licensed &amp; Insured</p>`;
+  return '<h1>'+escHtml(co)+'</h1>'+
+    '<p><strong>Custom Roof Estimate · '+escHtml(i.addr)+'</strong></p>'+
+    '<p>Dear '+escHtml(i.owner)+',</p>'+
+    '<p>We prepared a custom estimate for your property — no obligation, no appointment needed.</p>'+
+    '<table><tr style="background:#F25C05;color:white;"><td colspan="2"><strong>YOUR ESTIMATE</strong></td></tr>'+
+    '<tr><td>Roof Area</td><td>'+i.sqft.toLocaleString()+' sq ft</td></tr>'+
+    '<tr><td>Material</td><td>'+escHtml(i.mat)+'</td></tr>'+
+    '<tr><td>Pitch</td><td>'+escHtml(i.pitch)+'</td></tr>'+
+    '<tr><td>Labor, Material &amp; Cleanup</td><td>Included</td></tr>'+
+    '<tr><td>Workmanship Warranty</td><td>10 Years</td></tr>'+
+    '<tr class="total"><td>TOTAL ESTIMATE</td><td>$'+i.total.toLocaleString()+'</td></tr>'+
+    '</table>'+
+    '<p>Price locked for 30 days. Call to schedule your free inspection:</p>'+
+    '<p><strong style="font-size:16pt;">'+escHtml(ph)+'</strong></p>'+
+    '<p>'+escHtml(co)+' · Licensed &amp; Insured</p>';
 }
 
 async function sendAllPending(){
   const pend=S.queue.filter(i=>i.status==='pending');
   if(!pend.length){toast('No pending items','info');return;}
-  toast(`Sending ${pend.length} letters…`,'info');
+  toast('Sending '+pend.length+' letters…','info');
   for(const i of pend){await sendLob(i.id);await sleep(600);}
 }
 
 function rmQ(id){
   if(!confirm('Delete this estimate?'))return;
   S.queue=S.queue.filter(x=>x.id!==id);
-  save();renderQueue();
-  toast('🗑 Estimate deleted','info');
+  save();renderQueue();toast('🗑 Estimate deleted','info');
 }
 
 function editEstimate(id){
-  const item=S.queue.find(x=>x.id===id);
-  if(!item)return;
+  const item=S.queue.find(x=>x.id===id);if(!item)return;
   document.getElementById('e-owner').value=item.owner||'';
   document.getElementById('e-addr').value=item.addr||'';
-  document.getElementById('e-sqft').value=item.sqft||'';
+  // Restore structures if saved, otherwise create one with sqft
+  if(item.structures&&item.structures.length){
+    structures=JSON.parse(JSON.stringify(item.structures));
+  } else {
+    structures=[{id:'s'+Date.now(),name:'Main House',sqft:item.sqft||0,pitch:'1.31',mat:'1.3',stories:'1',complexity:'1.12'}];
+  }
   window._editingQueueId=id;
-  goTab('estimate');
-  calcP();updatePreview();
+  renderStructures();goTab('estimate');calcP();updatePreview();
   document.getElementById('add-queue-btn').textContent='✅ Update Estimate';
   toast('✏️ Editing estimate — make changes and hit Update','info');
 }
@@ -1940,13 +1599,13 @@ function renderActChart(){
 function renderTeam(){
   const el=document.getElementById('team-list');
   if(!S.team.length){el.innerHTML='<div style="text-align:center;padding:18px;color:var(--muted);font-size:11px;">Pin homes to auto-add canvassers.</div>';return;}
-  el.innerHTML=S.team.map(m=>`
-    <div class="team-row">
-      <div class="t-avatar">${m.name.charAt(0).toUpperCase()}</div>
-      <div class="t-name">${m.name}</div>
-      <div class="t-stats"><b>${m.pins||0}</b> pins · <b>${m.ests||0}</b> est.</div>
-    </div>
-  `).join('');
+  el.innerHTML=S.team.map(m=>
+    '<div class="team-row">'+
+    '<div class="t-avatar">'+m.name.charAt(0).toUpperCase()+'</div>'+
+    '<div class="t-name">'+escHtml(m.name)+'</div>'+
+    '<div class="t-stats"><b>'+(m.pins||0)+'</b> pins · <b>'+(m.ests||0)+'</b> est.</div>'+
+    '</div>'
+  ).join('');
 }
 
 function addTeamMember(){
@@ -1954,7 +1613,7 @@ function addTeamMember(){
   if(!n||!n.trim())return;
   if(S.team.find(m=>m.name.toLowerCase()===n.toLowerCase())){toast('Already exists','info');return;}
   S.team.push({name:n.trim(),pins:0,ests:0});
-  save();renderTeam();toast(`Added ${n.trim()}`,'success');
+  save();renderTeam();toast('Added '+n.trim(),'success');
 }
 
 function bumpTeam(name,field){
@@ -1967,12 +1626,12 @@ function bumpTeam(name,field){
 function renderActFeed(){
   const el=document.getElementById('act-feed');
   if(!S.activity.length){el.innerHTML='<div style="text-align:center;padding:18px;color:var(--muted);font-size:11px;">No activity yet.</div>';return;}
-  el.innerHTML=S.activity.slice(0,25).map(a=>`
-    <div class="act-item">
-      <div class="act-dot" style="background:${sColor(a.ref||'not_interested')};"></div>
-      <div><div class="act-txt">${a.txt}</div><div class="act-time">${timeAgo(a.at)}</div></div>
-    </div>
-  `).join('');
+  el.innerHTML=S.activity.slice(0,25).map(a=>
+    '<div class="act-item">'+
+    '<div class="act-dot" style="background:'+sColor(a.ref||'not_interested')+';"></div>'+
+    '<div><div class="act-txt">'+a.txt+'</div><div class="act-time">'+timeAgo(a.at)+'</div></div>'+
+    '</div>'
+  ).join('');
 }
 
 function addAct(txt,ref){
@@ -2004,12 +1663,12 @@ function openSettings(){
   document.getElementById('s-color').value=c.brandColor||'#F25C05';
   document.getElementById('s-lob').value=c.lobKey||'';
   const lp=document.getElementById('logo-preview');
-  if(lp) lp.innerHTML=c.logoData?`<img src="${c.logoData}" style="max-width:100%;max-height:100%;object-fit:contain;">`:'No logo';
+  if(lp)lp.innerHTML=c.logoData?'<img src="'+c.logoData+'" style="max-width:100%;max-height:100%;object-fit:contain;">':'No logo';
   openM('m-settings');
 }
 
 function saveSettings(){
-  const n=v=>parseFloat(document.getElementById(v).value)||0;
+  const n=id=>parseFloat(document.getElementById(id).value)||0;
   S.cfg={
     companyName:document.getElementById('s-co').value||'Your Roofing Co',
     companyAddr:document.getElementById('s-addr').value,
@@ -2024,9 +1683,7 @@ function saveSettings(){
     lobKey:document.getElementById('s-lob').value,
     logoData:S.cfg.logoData||null
   };
-  applyBrand();
-  save();closeM('m-settings');
-  updatePreview();
+  applyBrand();save();closeM('m-settings');updatePreview();
   toast('Settings saved!','success');
 }
 
@@ -2039,7 +1696,7 @@ function applyBrand(){
 
 function hexToRgba(hex,a){
   const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
-  return`rgba(${r},${g},${b},${a})`;
+  return 'rgba('+r+','+g+','+b+','+a+')';
 }
 
 // ═══════════════════════════════
@@ -2055,7 +1712,7 @@ document.querySelectorAll('.overlay').forEach(o=>{
 let toastT;
 function toast(msg,type='info'){
   const el=document.getElementById('toast');
-  el.className=`toast ${type}`;el.textContent=msg;el.classList.add('show');
+  el.className='toast '+type;el.textContent=msg;el.classList.add('show');
   clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3200);
 }
 
