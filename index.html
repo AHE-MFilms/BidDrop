@@ -757,7 +757,7 @@ tr:hover td{background:var(--card);}
       <div style="font-family:var(--font-h);font-size:32px;font-weight:700;color:#fff;" id="mpick-sqft">0</div>
       <div style="font-size:12px;color:var(--mid);">sq ft</div>
     </div>
-    <div style="font-size:12px;font-weight:700;color:var(--mid);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;">Update an existing estimate:</div>
+    <div style="font-size:14px;font-weight:700;color:var(--mid);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px;">Update an existing estimate:</div>
     <div id="mpick-list"></div>
     <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px;">
       <button class="btn-primary" onclick="closeM('m-measure-pick');applyMeasureToEstimate(parseInt(document.getElementById('mpick-sqft').textContent.replace(/,/g,'')))">+ Start New Estimate</button>
@@ -1161,12 +1161,15 @@ function useRoofMeasurement(){
  
 function showMeasurePickerModal(sqft,pending){
   const list=pending.map(i=>`
-    <div class="mpick-row" onclick="applyMeasureToExisting('${i.id}',${sqft})" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
-      <div>
-        <div style="font-size:13px;font-weight:700;color:var(--text);">${i.owner||'Homeowner'}</div>
-        <div style="font-size:11px;color:var(--mid);margin-top:2px;">${i.addr}</div>
+    <div class="mpick-row" onclick="applyMeasureToExisting('${i.id}',${sqft})" style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:16px;margin-bottom:10px;cursor:pointer;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+        <div style="flex:1;">
+          <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:5px;">${i.owner||'Homeowner'}</div>
+          <div style="font-size:14px;color:var(--mid);line-height:1.4;">${i.addr}</div>
+        </div>
+        <div style="font-family:var(--font-m);color:var(--accent);font-weight:700;font-size:17px;white-space:nowrap;">$${i.total.toLocaleString()}</div>
       </div>
-      <div style="font-family:var(--font-m);color:var(--accent);font-weight:700;font-size:13px;">$${i.total.toLocaleString()}</div>
+      <div style="margin-top:10px;background:var(--accent);border-radius:6px;padding:8px;text-align:center;color:#fff;font-size:13px;font-weight:700;">Tap to apply measurement →</div>
     </div>
   `).join('');
   document.getElementById('mpick-sqft').textContent=sqft.toLocaleString();
