@@ -1661,6 +1661,8 @@ function savePin(){
   renderPinList();
   sbSavePin(pin).catch(e=>console.error('Pin save:',e));
   sbAddActivity('<strong>'+escHtml(pin.rep)+'</strong> pinned <strong>'+escHtml(pin.address)+'</strong>',pin.status);
+  // Auto-push to GHL (fire-and-forget — never blocks the UI)
+  ghlAutoPushPin(pin).catch(e=>console.warn('GHL push:',e));
   save();closeM('m-pin');toast('📍 Pin saved','success');
 }
 
@@ -1721,6 +1723,8 @@ function cycleStatus(id){
   if(markers[id]){map.removeLayer(markers[id]);delete markers[id];}
   addMarker(p);renderPinList();
   sbUpdatePinStatus(id,p.status).catch(e=>console.error('Status:',e));
+  // Sync status change to GHL (fire-and-forget)
+  ghlSyncPinStatus(p).catch(e=>console.warn('GHL sync:',e));
   save();toast('Status → '+sLabel(p.status),'info');
 }
 
@@ -2737,7 +2741,7 @@ async function ghlCreateOpportunity(contactId, name, address, total){
     console.warn('BidDrop: No GHL Pipeline ID set — skipping opportunity');
     return null;
   }
-  return ghlRequest('/opportunities/', 'POST', {
+  const res = await ghlRequest('/opportunities/', 'POST', {
     locationId,
     pipelineId,
     pipelineStageId: stageId||undefined,
@@ -2747,6 +2751,56 @@ async function ghlCreateOpportunity(contactId, name, address, total){
     status:  'open',
     source:  'BidDrop by AHE'
   });
+  return res.opportunity?.id || res.id || null;
+}
+
+async function ghlUpdateOpportunityStage(opportunityId, stageId, wonLost){
+  if(!opportunityId) return;
+  const body = {};
+  if(stageId) body.pipelineStageId = stageId;
+  if(wonLost) body.status = wonLost; // 'won' or 'lost'
+  return ghlRequest('/opportunities/'+opportunityId, 'PUT', body).catch(e=>console.warn('GHL stage update:',e));
+}
+
+// Auto-push a new pin to GHL as a contact + opportunity (fire-and-forget)
+async function ghlAutoPushPin(pin){
+  if(!S.cfg.ghlApiKey && !S.cfg.ghlLocationId) return; // GHL not configured
+  if(!S.cfg.ghlPipelineId) return;
+  try {
+    const contactId = await ghlUpsertContact(pin.rep||'Homeowner', pin.address, null);
+    if(!contactId) return;
+    const oppId = await ghlCreateOpportunity(contactId, pin.rep, pin.address, 0);
+    // Store GHL IDs on the pin for future stage updates
+    pin.ghlContactId = contactId;
+    pin.ghlOpportunityId = oppId;
+    // Persist GHL IDs to Supabase
+    if(currentAccount){
+      sb.from('pins').update({
+        ghl_contact_id: contactId,
+        ghl_opportunity_id: oppId
+      }).eq('id', pin.id).then(({error})=>{ if(error) console.warn('GHL ID save:', error); });
+    }
+    console.log('BidDrop: GHL contact+opportunity created for', pin.address);
+  } catch(e){
+    console.warn('BidDrop: GHL auto-push failed (non-blocking):', e.message);
+  }
+}
+
+// Update GHL opportunity stage when pin status changes
+async function ghlSyncPinStatus(pin){
+  if(!pin.ghlOpportunityId) return;
+  if(!S.cfg.ghlApiKey && !S.cfg.ghlLocationId) return;
+  try {
+    let wonLost = null;
+    if(pin.status === 'converted') wonLost = 'won';
+    if(pin.status === 'not_interested') wonLost = 'lost';
+    // Use the configured stage for bid_sent, otherwise just update won/lost
+    const stageId = (pin.status === 'bid_sent') ? (S.cfg.ghlStageId||null) : null;
+    await ghlUpdateOpportunityStage(pin.ghlOpportunityId, stageId, wonLost);
+    console.log('BidDrop: GHL opportunity updated for', pin.address, '->', pin.status);
+  } catch(e){
+    console.warn('BidDrop: GHL status sync failed (non-blocking):', e.message);
+  }
 }
 
 async function ghlSendEmail(contactId, toEmail, toName, subject, htmlBody){
@@ -3042,7 +3096,9 @@ async function loadPinsFromSupabase(){
     address: row.address||'', status: row.status||'needs_roof',
     notes: row.notes||'', rep: row.rep_name||'Unknown',
     pts: row.pts||null, at: row.created_at,
-    photo_url: row.photo_url||null
+    photo_url: row.photo_url||null,
+    ghlContactId: row.ghl_contact_id||null,
+    ghlOpportunityId: row.ghl_opportunity_id||null
   }));
   // Clear and re-add all markers
   Object.values(markers).forEach(m=>map&&map.removeLayer(m));
