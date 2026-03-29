@@ -3143,8 +3143,8 @@ function renderSuperAdminPanel(accounts, allProfiles){
     '<div class="fg"><label class="fl">Admin Temp Password</label><input class="fi" id="new-acct-pass" placeholder="min 6 chars" type="password"></div>' +
     '<button onclick="createAccount()" class="btn-primary">Create Account + Admin User</button>' +
     '</div>' +
-    '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:14px 0 10px;">Add Rep to '+currentAccount?.name+'</div>' +
-    renderAddUserForm();
+    '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:14px 0 10px;">Add User to Account</div>' +
+    renderAddUserForm(accounts);
 }
 
 function renderAccountAdminPanel(profiles){
@@ -3161,9 +3161,17 @@ function renderAccountAdminPanel(profiles){
     renderAddUserForm();
 }
 
-function renderAddUserForm(){
+function renderAddUserForm(accounts){
+  // Build account selector only for super_admin (accounts array passed in)
+  const acctSelector = (accounts && accounts.length)
+    ? '<div class="fg"><label class="fl">Account</label>' +
+      '<select class="fs" id="new-user-account">' +
+      accounts.map(a=>'<option value="'+a.id+'">'+(a.company_name||a.name)+'</option>').join('') +
+      '</select></div>'
+    : '';
   return '<div style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:16px;">' +
     '<div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:10px;">ADD TEAM MEMBER</div>' +
+    acctSelector +
     '<div class="fg"><label class="fl">Name</label><input class="fi" id="new-user-name" placeholder="Mike Johnson"></div>' +
     '<div class="fg"><label class="fl">Email</label><input class="fi" id="new-user-email" placeholder="mike@tmroofing.com" type="email"></div>' +
     '<div class="fg"><label class="fl">Temp Password</label><input class="fi" id="new-user-pass" placeholder="min 6 chars" type="password"></div>' +
@@ -3203,7 +3211,11 @@ async function createUser(){
   const pass  = document.getElementById('new-user-pass').value.trim();
   const role  = document.getElementById('new-user-role').value;
   const result= document.getElementById('new-user-result');
+  // Super admin picks account from dropdown; account admins use their own account
+  const acctSel = document.getElementById('new-user-account');
+  const accountId = acctSel ? acctSel.value : (currentAccount ? currentAccount.id : null);
   if(!email||!pass){toast('Email and password required','error');return;}
+  if(!accountId){toast('Please select an account','error');return;}
   result.textContent='Creating...';result.style.color='var(--muted)';
   try {
     // Sign up via Supabase auth (creates user, sends confirmation)
@@ -3213,7 +3225,7 @@ async function createUser(){
     if(!userId) throw new Error('No user ID returned');
     // Create profile
     const {error:profErr} = await sb.from('user_profiles').insert({
-      id: userId, account_id: currentAccount.id, role, name, email
+      id: userId, account_id: accountId, role, name, email
     });
     if(profErr) throw profErr;
     result.textContent='✅ '+name+' created! They will get a confirmation email.';
