@@ -212,13 +212,15 @@ tr:hover td{background:var(--card);}
 .mhud-btn.pr:hover{opacity:.85;}
 .leaflet-container.measuring{cursor:crosshair !important;}
 .struct-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;}
-.struct-card-hdr{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
-.struct-name-inp{flex:1;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:#fff;font-family:var(--font-b);font-size:15px;font-weight:600;outline:none;}
+.struct-card-hdr{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.struct-card-actions{display:flex;align-items:center;gap:6px;margin-bottom:12px;}
+.struct-name-inp{flex:1;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:#fff;font-family:var(--font-b);font-size:15px;font-weight:600;outline:none;min-width:0;}
 .struct-name-inp:focus{border-color:var(--accent);}
-.struct-del-btn{background:none;border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--danger);cursor:pointer;font-size:14px;flex-shrink:0;}
-.struct-meas-btn{background:none;border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--accent);cursor:pointer;font-size:14px;flex-shrink:0;transition:all .15s;}
+.struct-del-btn{background:none;border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--danger);cursor:pointer;font-size:13px;flex-shrink:0;transition:all .15s;}
+.struct-del-btn:hover{border-color:var(--danger);background:rgba(239,68,68,.1);}
+.struct-meas-btn{background:var(--accent-dim);border:1px solid rgba(242,92,5,.35);border-radius:7px;padding:6px 12px;color:var(--accent);cursor:pointer;font-size:12px;font-weight:700;font-family:var(--font-b);flex:1;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px;}
 .struct-meas-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
-.struct-price{font-family:var(--font-m);font-size:16px;font-weight:700;color:var(--accent);white-space:nowrap;}
+.struct-price{font-family:var(--font-m);font-size:15px;font-weight:700;color:var(--accent);white-space:nowrap;margin-left:auto;}
 ::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
@@ -1289,8 +1291,10 @@ function renderStructures(){
       '<span style="background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:3px 9px;border-radius:9px;flex-shrink:0;">Bldg '+(i+1)+'</span>'+
       '<input class="struct-name-inp" data-sid="'+s.id+'" value="'+escHtml(s.name)+'" placeholder="e.g. Main House" oninput="_structField(this,\'name\')">'+
       '<span class="struct-price" id="sp-'+s.id+'">$'+price.toLocaleString()+'</span>'+
-      '<button class="struct-meas-btn" data-sid="'+s.id+'" onclick="measureForStructure(this.dataset.sid)" title="Measure this structure on map">📐</button>'+
-      '<button class="struct-del-btn" data-sid="'+s.id+'" onclick="removeStructure(this.dataset.sid)" title="Remove">🗑</button>'+
+      '</div>'+
+      '<div class="struct-card-actions">'+
+      '<button class="struct-meas-btn" data-sid="'+s.id+'" onclick="measureForStructure(this.dataset.sid)">📐 Re-measure on Map</button>'+
+      '<button class="struct-del-btn" data-sid="'+s.id+'" onclick="removeStructure(this.dataset.sid)" title="Remove structure">🗑</button>'+
       '</div>'+
       '<div class="frow" style="gap:8px;margin-bottom:8px;">'+
       '<div class="fg" style="margin-bottom:0;"><label class="fl">Sq Ft</label>'+
