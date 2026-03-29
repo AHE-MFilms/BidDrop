@@ -30,7 +30,7 @@
   --font-m:'DM Mono',monospace;
 }
 html,body{height:100%;overflow:hidden;}
-body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:flex;flex-direction:column;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:flex;flex-direction:column;font-size:15px;}
  
 /* HEADER */
 .hdr{background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;height:54px;flex-shrink:0;gap:6px;}
@@ -57,23 +57,23 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 .mp-title{font-family:var(--font-h);font-size:13px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;}
 .badge{background:var(--accent);color:#fff;font-family:var(--font-m);font-size:10px;padding:2px 7px;border-radius:9px;}
 .filters{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;}
-.fchip{font-family:var(--font-b);font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;border:1px solid var(--border);cursor:pointer;background:none;color:var(--muted);transition:all .15s;}
+.fchip{font-family:var(--font-b);font-size:12px;font-weight:700;padding:5px 11px;border-radius:10px;border:1px solid var(--border);cursor:pointer;background:none;color:var(--muted);transition:all .15s;}
 .fchip.active[data-s="all"]{background:var(--card2);border-color:var(--mid);color:var(--text);}
 .fchip.active[data-s="needs_roof"]{background:rgba(242,92,5,.15);border-color:var(--accent);color:var(--accent);}
 .fchip.active[data-s="bid_sent"]{background:rgba(59,130,246,.15);border-color:var(--info);color:var(--info);}
 .fchip.active[data-s="converted"]{background:rgba(34,197,94,.15);border-color:var(--success);color:var(--success);}
 .fchip.active[data-s="not_interested"]{background:rgba(61,82,105,.2);border-color:var(--muted);color:var(--mid);}
-.map-tip{background:var(--accent-dim);border:1px solid rgba(242,92,5,.2);border-radius:7px;padding:8px 12px;margin:8px;font-size:11px;color:var(--accent);font-weight:600;text-align:center;}
+.map-tip{background:var(--accent-dim);border:1px solid rgba(242,92,5,.2);border-radius:7px;padding:10px 14px;margin:8px;font-size:13px;color:var(--accent);font-weight:600;text-align:center;}
 .pin-list{flex:1;overflow-y:auto;padding:6px;}
 .pin-list::-webkit-scrollbar{width:3px;}
 .pin-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
 .pc{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:11px;margin-bottom:7px;cursor:pointer;transition:all .15s;}
 .pc:hover{border-color:var(--accent);background:var(--card2);}
 .pc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px;}
-.pc-addr{font-size:12px;font-weight:600;color:var(--text);line-height:1.35;flex:1;margin-right:7px;}
+.pc-addr{font-size:14px;font-weight:600;color:var(--text);line-height:1.35;flex:1;margin-right:7px;}
 .sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px;}
-.pc-meta{display:flex;gap:8px;font-size:10px;color:var(--muted);font-family:var(--font-m);}
-.pc-note{font-size:11px;color:var(--mid);margin-top:4px;font-style:italic;}
+.pc-meta{display:flex;gap:8px;font-size:12px;color:var(--muted);font-family:var(--font-m);}
+.pc-note{font-size:13px;color:var(--mid);margin-top:4px;font-style:italic;}
 .pc-acts{display:flex;gap:5px;margin-top:8px;}
 .btn-xs{font-family:var(--font-b);font-size:10px;font-weight:700;padding:4px 9px;border-radius:5px;border:1px solid var(--border);cursor:pointer;background:var(--card2);color:var(--mid);transition:all .15s;letter-spacing:.3px;text-transform:uppercase;}
 .btn-xs:hover{border-color:var(--accent);color:var(--accent);}
@@ -303,9 +303,9 @@ tr:hover td{background:var(--card);}
   .measure-hud{left:10px;right:10px;transform:none;bottom:76px;}
   /* ESTIMATE */
   #tab-estimate{flex-direction:column;overflow-y:auto;}
-  .est-form{width:100%;border-right:none;padding:14px;overflow-y:visible;}
-  .est-preview{display:none;padding:14px;align-items:flex-start;}
-  .est-preview.mobile-show{display:flex;}
+  .est-form{width:100%;border-right:none;padding:16px 16px 0;overflow-y:visible;}
+  .est-preview{display:none;padding:16px;align-items:flex-start;}
+  .est-preview.mobile-show{display:flex;min-height:600px;}
   .mailer{width:100%;min-width:0;}
   .ml-hdr{flex-direction:column;gap:8px;padding:16px;}
   .ml-addr-blk{text-align:left;}
@@ -733,6 +733,21 @@ tr:hover td{background:var(--card);}
   </div>
 </div>
  
+<!-- DELETE PIN CONFIRM MODAL -->
+<div class="overlay" id="m-delete-pin" style="display:none;">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-title" style="color:var(--danger);">🗑 Delete Pin?</div>
+    <div style="font-size:14px;color:var(--mid);margin-bottom:8px;">You are about to permanently delete the pin for:</div>
+    <div style="font-size:16px;font-weight:700;color:var(--text);background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:18px;" id="dpin-addr"></div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:4px;">This cannot be undone.</div>
+    <input type="hidden" id="dpin-id">
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeM('m-delete-pin')" style="flex:1.2;">Cancel — Keep Pin</button>
+      <button style="flex:1;background:#EF4444;border:none;border-radius:7px;padding:10px;color:#fff;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;" onclick="doDeletePin()">Yes, Delete</button>
+    </div>
+  </div>
+</div>
+ 
 <!-- MEASURE PICKER MODAL -->
 <div class="overlay" id="m-measure-pick" style="display:none;">
   <div class="modal" style="max-width:480px;">
@@ -823,6 +838,9 @@ function toggleMailPreview(){
   const isShowing=p.classList.contains('mobile-show');
   p.classList.toggle('mobile-show',!isShowing);
   document.querySelector('.btn-preview-toggle').textContent=isShowing?'👁 Preview Mailer':'✕ Hide Preview';
+  if(!isShowing){
+    setTimeout(()=>p.scrollIntoView({behavior:'smooth',block:'start'}),80);
+  }
 }
  
 // ═══════════════════════════════
@@ -1202,13 +1220,14 @@ function mkIcon(status){
 function addMarker(pin){
   const m=L.marker([pin.lat,pin.lng],{icon:mkIcon(pin.status)}).addTo(map);
   m.bindPopup(`
-    <div style="min-width:170px;">
-      <div style="font-weight:700;font-size:13px;margin-bottom:5px;color:var(--text);">${pin.address||'Unknown'}</div>
-      <div style="display:inline-block;background:${sColor(pin.status)};color:white;font-size:10px;padding:2px 8px;border-radius:7px;font-weight:700;margin-bottom:8px;">${sLabel(pin.status)}</div>
-      ${pin.notes?`<div style="font-size:11px;color:#aaa;margin-bottom:8px;">${pin.notes}</div>`:''}
-      <button onclick="goEstFromPin('${pin.id}')" style="background:#F25C05;border:none;border-radius:5px;padding:5px 12px;color:white;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;">📋 Build Estimate</button>
+    <div style="min-width:220px;max-width:280px;">
+      <div style="font-weight:700;font-size:15px;margin-bottom:7px;color:#1E293B;line-height:1.3;">${pin.address||'Unknown'}</div>
+      <div style="display:inline-block;background:${sColor(pin.status)};color:white;font-size:12px;padding:3px 10px;border-radius:7px;font-weight:700;margin-bottom:10px;">${sLabel(pin.status)}</div>
+      ${pin.notes?`<div style="font-size:13px;color:#555;margin-bottom:10px;font-style:italic;">"${pin.notes}"</div>`:''}
+      <button onclick="goEstFromPin('${pin.id}')" style="background:#F25C05;border:none;border-radius:7px;padding:10px 14px;color:white;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:7px;">📋 Build Estimate</button>
+      <button onclick="confirmDeletePin('${pin.id}')" style="background:#fff;border:2px solid #EF4444;border-radius:7px;padding:8px 14px;color:#EF4444;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;">🗑 Delete Pin</button>
     </div>
-  `);
+  `,{maxWidth:300});
   markers[pin.id]=m;
 }
  
@@ -1277,6 +1296,24 @@ function rmPin(id){
   S.pins=S.pins.filter(p=>p.id!==id);
   if(markers[id]){map.removeLayer(markers[id]);delete markers[id];}
   renderPinList();save();toast('Pin removed','info');
+}
+ 
+function confirmDeletePin(id){
+  const pin=S.pins.find(p=>p.id===id);
+  if(!pin)return;
+  map.closePopup();
+  document.getElementById('dpin-addr').textContent=pin.address||'this pin';
+  document.getElementById('dpin-id').value=id;
+  openM('m-delete-pin');
+}
+ 
+function doDeletePin(){
+  const id=document.getElementById('dpin-id').value;
+  S.pins=S.pins.filter(p=>p.id!==id);
+  if(markers[id]){map.removeLayer(markers[id]);delete markers[id];}
+  closeM('m-delete-pin');
+  renderPinList();save();
+  toast('🗑 Pin deleted','info');
 }
  
 function cycleStatus(id){
