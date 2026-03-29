@@ -3242,7 +3242,7 @@ async function createUser(){
 // ═══════════════════════════════
 //  INIT
 // ═══════════════════════════════
-let _lastHandledToken = null; // Dedup by access token to prevent lock collisions
+let _signingIn = false; // True only while doLogin() is in progress
 
 window.addEventListener('load', async ()=>{
   // Initialize Supabase client
@@ -3252,18 +3252,21 @@ window.addEventListener('load', async ()=>{
   showLoginScreen();
 
   // Listen for auth state changes (handles INITIAL_SESSION, SIGNED_IN, SIGNED_OUT)
-  // Dedup by access_token: same token fires at most once, preventing the
-  // Supabase lock error: "Lock was released because another request stole it"
+  // Only act on INITIAL_SESSION if user is already on the app (auto-resume).
+  // For manual logins, doLogin() sets _signingIn=true so we know to proceed.
   sb.auth.onAuthStateChange(async (event, session) => {
-    if((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session){
-      const token = session.access_token;
-      if(token && token === _lastHandledToken) return; // Already handled this session
-      _lastHandledToken = token;
-      try {
-        await onSignedIn(session.user);
-      } catch(e) {
-        console.error('Auth state change error:', e);
-        _lastHandledToken = null; // Reset so user can retry
+    if(event === 'INITIAL_SESSION' && session && !_signingIn){
+      // Stale cached session on page load — auto-resume into the app
+      try { await onSignedIn(session.user); } catch(e) {
+        console.error('Auto-resume error:', e);
+        showLoginScreen();
+      }
+    } else if(event === 'SIGNED_IN' && session && _signingIn){
+      // This is the response to an explicit doLogin() call
+      _signingIn = false;
+      try { await onSignedIn(session.user); } catch(e) {
+        console.error('Sign-in error:', e);
+        _signingIn = false;
         const err = document.getElementById('login-error');
         const btn = document.getElementById('login-btn');
         if(err) err.textContent = 'Error: '+e.message;
@@ -3271,11 +3274,8 @@ window.addEventListener('load', async ()=>{
         showLoginScreen();
       }
     } else if(event === 'SIGNED_OUT'){
-      _lastHandledToken = null;
+      _signingIn = false;
       onSignedOut();
-    } else if(event === 'TOKEN_REFRESHED' && session){
-      // Update token reference on refresh so next real login isn't blocked
-      _lastHandledToken = session.access_token;
     }
   });
 });
@@ -3368,13 +3368,20 @@ async function doLogin(){
   if(!email||!pass){err.textContent='Enter email and password.';return;}
   btn.textContent='Signing in...'; btn.disabled=true; err.textContent='';
   try {
+    // Sign out any stale session first so Supabase always issues a fresh token
+    // This prevents the lock collision caused by INITIAL_SESSION + SIGNED_IN
+    // firing with the same cached access_token
+    await sb.auth.signOut();
+    _signingIn = true; // Tell onAuthStateChange to handle the upcoming SIGNED_IN
     const {error} = await sb.auth.signInWithPassword({email, password:pass});
     if(error){
+      _signingIn = false;
       err.textContent = error.message;
       btn.textContent='Sign In'; btn.disabled=false;
     }
-    // On success: onAuthStateChange fires → onSignedIn handles the rest
+    // On success: onAuthStateChange SIGNED_IN fires → onSignedIn handles the rest
   } catch(e) {
+    _signingIn = false;
     err.textContent = 'Error: '+(e.message||'Check connection and try again.');
     btn.textContent='Sign In'; btn.disabled=false;
   }
