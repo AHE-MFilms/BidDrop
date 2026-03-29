@@ -858,12 +858,12 @@ function initMap(){
     attribution:'© OpenStreetMap © CARTO',maxZoom:19,subdomains:'abcd'
   }).addTo(map);
   tileSatellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{
-    attribution:'© Esri',maxZoom:21
+    attribution:'© Esri',maxZoom:19
   });
   tileLabels=L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png',{
-    attribution:'',maxZoom:21,subdomains:'abcd',opacity:1,zIndex:10
+    attribution:'',maxZoom:19,subdomains:'abcd',opacity:1,zIndex:10
   });
-  map.options.maxZoom=21;
+  map.options.maxZoom=19;
   map.on('click',onMapClick);
   map.on('dblclick',onMapDblClick);
   S.pins.forEach(addMarker);
@@ -909,7 +909,7 @@ function toggleMeasure(){
     map.closePopup();
     // Auto-switch to satellite and zoom in
     if(!isSatellite) toggleSatellite();
-    if(map.getZoom()<18) map.setZoom(19);
+    if(map.getZoom()<17) map.setZoom(18);
     // Close mobile pin panel
     const mp=document.getElementById('map-panel');
     if(mp) mp.classList.remove('open');
