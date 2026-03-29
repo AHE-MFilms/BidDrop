@@ -455,6 +455,19 @@ tr:hover td{background:var(--card);}
         <label class="fl">Property Address</label>
         <input class="fi" id="e-addr" placeholder="123 Oak St, Detroit MI 48000" oninput="updatePreview()">
       </div>
+      <div class="fg">
+        <label class="fl">Home Photo <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:10px;">— appears on mailer</span></label>
+        <div style="display:flex;gap:9px;align-items:center;">
+          <div id="home-photo-preview" style="width:80px;height:60px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);overflow:hidden;flex-shrink:0;cursor:pointer;" onclick="document.getElementById('home-photo-inp').click()">No photo</div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+            <label style="display:block;background:var(--accent);border:none;border-radius:8px;padding:11px 14px;text-align:center;cursor:pointer;color:#fff;font-size:13px;font-weight:700;">
+              📷 Take / Upload Photo
+              <input type="file" id="home-photo-inp" accept="image/*" capture="environment" style="display:none;" onchange="handleHomePhoto(this)">
+            </label>
+            <button onclick="clearHomePhoto()" id="clear-photo-btn" style="display:none;background:none;border:1px solid var(--border);border-radius:6px;padding:6px;color:var(--muted);font-size:11px;cursor:pointer;">✕ Remove photo</button>
+          </div>
+        </div>
+      </div>
       <div class="frow">
         <div class="fg">
           <label class="fl">Roof Area (sq ft)</label>
@@ -697,6 +710,20 @@ tr:hover td{background:var(--card);}
     <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:11px;color:var(--mid);margin-top:4px;">
       💡 Formula: (Material+Labor+Tearoff+Accessories) × (1 + Overhead%) × (1 + Margin%) = Estimate
     </div>
+    <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:14px 0 10px;">Company Logo</div>
+    <div class="fg">
+      <label class="fl">Logo Image <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:10px;">— shows on mailer header</span></label>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <div id="logo-preview" style="width:80px;height:50px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);overflow:hidden;flex-shrink:0;">No logo</div>
+        <div style="flex:1;">
+          <label style="display:block;background:var(--card);border:2px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;cursor:pointer;color:var(--mid);font-size:12px;font-weight:600;transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+            📁 Upload Logo
+            <input type="file" accept="image/*" style="display:none;" onchange="handleLogoUpload(this)">
+          </label>
+          <button onclick="clearLogo()" style="width:100%;margin-top:5px;background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-align:center;">Remove logo</button>
+        </div>
+      </div>
+    </div>
     <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:14px 0 10px;">Integrations</div>
     <div class="fg"><label class="fl">Lob.com API Key</label><input class="fi" id="s-lob" placeholder="live_pub_..."></div>
     <div class="modal-footer">
@@ -796,6 +823,63 @@ function toggleMailPreview(){
   const isShowing=p.classList.contains('mobile-show');
   p.classList.toggle('mobile-show',!isShowing);
   document.querySelector('.btn-preview-toggle').textContent=isShowing?'👁 Preview Mailer':'✕ Hide Preview';
+}
+ 
+// ═══════════════════════════════
+//  LOGO & PHOTO HANDLERS
+// ═══════════════════════════════
+function handleLogoUpload(inp){
+  if(!inp.files||!inp.files[0])return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    S.cfg.logoData=e.target.result;
+    const prev=document.getElementById('logo-preview');
+    if(prev) prev.innerHTML=`<img src="${e.target.result}" style="max-width:100%;max-height:100%;object-fit:contain;">`;
+    save();updatePreview();toast('Logo uploaded!','success');
+  };
+  reader.readAsDataURL(inp.files[0]);
+}
+ 
+function clearLogo(){
+  S.cfg.logoData=null;
+  const prev=document.getElementById('logo-preview');
+  if(prev) prev.innerHTML='No logo';
+  save();updatePreview();
+}
+ 
+function handleHomePhoto(inp){
+  if(!inp.files||!inp.files[0])return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    // Resize to keep file size reasonable
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      const MAX=800;
+      let w=img.width,h=img.height;
+      if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      const data=canvas.toDataURL('image/jpeg',.82);
+      window._homePhotoData=data;
+      const prev=document.getElementById('home-photo-preview');
+      if(prev) prev.innerHTML=`<img src="${data}" style="width:100%;height:100%;object-fit:cover;">`;
+      const clr=document.getElementById('clear-photo-btn');
+      if(clr) clr.style.display='block';
+      updatePreview();toast('📷 Photo added to mailer!','success');
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(inp.files[0]);
+}
+ 
+function clearHomePhoto(){
+  window._homePhotoData=null;
+  const prev=document.getElementById('home-photo-preview');
+  if(prev) prev.innerHTML='No photo';
+  const clr=document.getElementById('clear-photo-btn');
+  if(clr) clr.style.display='none';
+  updatePreview();
 }
  
 // ═══════════════════════════════
@@ -1286,11 +1370,16 @@ function updatePreview(){
     addRows+=`<div class="ml-row"><span class="rl">Gutters (${lf} lf)</span><span class="rv">$${(8*lf).toLocaleString()}</span></div>`;
   }
  
+  const logoImg=S.cfg.logoData?`<img src="${S.cfg.logoData}" style="max-height:52px;max-width:160px;object-fit:contain;display:block;">`:
+    `<div class="ml-co-name" style="color:${color};">${co}</div>`;
+  const homePhotoData=window._homePhotoData||'';
+  const homePhotoHtml=homePhotoData?`<img src="${homePhotoData}" style="width:100%;max-height:220px;object-fit:cover;border-radius:8px;margin-bottom:18px;display:block;">`:'' ;
+ 
   document.getElementById('mailer-preview').innerHTML=`
     <div class="ml-hdr">
       <div>
-        <div class="ml-co-name" style="color:${color};">${co}</div>
-        <div class="ml-co-info">${coAddr.replace(/,/g,'<br>')}<br>${ph}</div>
+        ${logoImg}
+        <div class="ml-co-info" style="margin-top:4px;">${coAddr.replace(/,/g,'<br>')}<br>${ph}</div>
       </div>
       <div class="ml-addr-blk">
         <strong>${owner}</strong><br>${addr.split(',').join('<br>')}
@@ -1298,6 +1387,7 @@ function updatePreview(){
     </div>
     <div class="ml-stripe" style="background:${color};"></div>
     <div class="ml-body">
+      ${homePhotoHtml}
       <div class="ml-greeting">Dear ${owner},</div>
       <div class="ml-headline" style="color:${color};">Your Roof — Priced.<br>No Visit Required.</div>
       <div class="ml-intro">We assessed your neighborhood and noticed your roof may need attention. We've prepared a custom estimate for your specific property — no obligation, no sales pressure, no appointment needed.</div>
@@ -1391,6 +1481,7 @@ function clearEst(){
   document.getElementById('e-mat').value='1.3';
   document.getElementById('e-stories').value='1';
   ['a-sky','a-chim','a-gut'].forEach(id=>document.getElementById(id).checked=false);
+  clearHomePhoto();
   calcP();updatePreview();
 }
  
@@ -1609,6 +1700,8 @@ function openSettings(){
   document.getElementById('s-mgn').value=c.margin||20;
   document.getElementById('s-color').value=c.brandColor||'#F25C05';
   document.getElementById('s-lob').value=c.lobKey||'';
+  const lp=document.getElementById('logo-preview');
+  if(lp) lp.innerHTML=c.logoData?`<img src="${c.logoData}" style="max-width:100%;max-height:100%;object-fit:contain;">`:'No logo';
   openM('m-settings');
 }
  
@@ -1625,7 +1718,8 @@ function saveSettings(){
     costSkylight:n('s-sky')||375, costChimney:n('s-chim')||295, costGutter:n('s-gut')||9,
     overhead:n('s-ovh')||15, margin:n('s-mgn')||20,
     brandColor:document.getElementById('s-color').value||'#F25C05',
-    lobKey:document.getElementById('s-lob').value
+    lobKey:document.getElementById('s-lob').value,
+    logoData:S.cfg.logoData||null
   };
   applyBrand();
   save();closeM('m-settings');
