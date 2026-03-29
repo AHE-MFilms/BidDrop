@@ -1017,6 +1017,12 @@ function useRoofMeasurement(){
     const s=structures.find(x=>x.id===sid);
     if(s){
       s.sqft=sqft;
+      // Save the final polygon points so Re-measure can restore them
+      if(allPolygonPts.length>0){
+        s.pts=allPolygonPts[allPolygonPts.length-1].map(ll=>({lat:ll.lat,lng:ll.lng}));
+      } else if(measurePts.length>=3){
+        s.pts=measurePts.map(ll=>({lat:ll.lat,lng:ll.lng}));
+      }
       goTab('estimate');
       renderStructures();calcP();updatePreview();
       toast('📐 '+sqft.toLocaleString()+' sq ft applied to '+escHtml(s.name)+'!','success');
@@ -1053,19 +1059,50 @@ function measureForStructure(sid){
   _targetStructId=sid;
   _measureForPinId=null;
   window._addingToExisting=false;
-  // Reset any in-progress measurement
+
+  // Clear any in-progress measurement state
   allPolygons.forEach(p=>map.removeLayer(p));
   allPolygons=[];allPolygonPts=[];totalSqFt=0;
   measurePts=[];
   measureMarkers.forEach(m=>map.removeLayer(m));measureMarkers=[];
   if(measurePoly){map.removeLayer(measurePoly);measurePoly=null;}
+
+  const hasSavedPts=s.pts&&s.pts.length>=3;
+
   goTab('map');
   setTimeout(()=>{
+    // Enter measure mode (sets up click/dblclick handlers, satellite, etc.)
     if(!measuring)toggleMeasure();
-    // Override the generic hint with structure-specific text
-    document.getElementById('mhud-hint').textContent='Tap corners of '+s.name+'. Double-click to finish.';
+
+    // If we have saved points, restore them as draggable vertices
+    if(hasSavedPts){
+      s.pts.forEach((pt,idx)=>{
+        const latlng=L.latLng(pt.lat,pt.lng);
+        measurePts.push(latlng);
+        const dot=L.marker(latlng,{
+          icon:L.divIcon({className:'',html:'<div style="width:14px;height:14px;background:#F25C05;border:2.5px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.6);cursor:grab;"></div>',iconSize:[14,14],iconAnchor:[7,7]}),
+          draggable:true
+        }).addTo(map);
+        dot.on('drag',()=>{measurePts[idx]=dot.getLatLng();redrawPoly();});
+        measureMarkers.push(dot);
+      });
+      redrawPoly();
+      // Fit map to the polygon
+      const bounds=L.latLngBounds(measurePts);
+      map.fitBounds(bounds,{padding:[60,60],maxZoom:20});
+      // Update HUD with current area
+      const sqft=calcPolygonSqFt(measurePts);
+      document.getElementById('mhud-sqft').textContent=sqft.toLocaleString();
+      const ub=document.getElementById('btn-use-measure');
+      if(ub){ub.style.opacity='1';ub.style.pointerEvents='auto';}
+      document.getElementById('mhud-hint').textContent='Drag any vertex to adjust. Double-click to finish & save.';
+    } else {
+      document.getElementById('mhud-hint').textContent='Tap corners of '+s.name+'. Double-click to finish.';
+    }
+
     document.getElementById('btn-measure').textContent='✕ Cancel';
-    // Show a banner in the HUD
+
+    // Banner in HUD
     const sqftEl=document.getElementById('mhud-sqft').parentNode;
     let banner=document.getElementById('mhud-pin-banner');
     if(!banner){
@@ -1074,12 +1111,13 @@ function measureForStructure(sid){
       banner.style.cssText='background:#1A2333;border:1px solid #F25C05;border-radius:7px;padding:8px 12px;margin-bottom:10px;font-size:13px;font-weight:600;color:#F0F6FF;';
       sqftEl.parentNode.insertBefore(banner,sqftEl);
     }
-    banner.textContent='📐 Measuring: '+s.name;
-    // Update HUD button label
+    banner.textContent=(hasSavedPts?'✏️ Adjusting: ':'📐 Measuring: ')+s.name;
+
     const ub=document.getElementById('btn-use-measure');
     if(ub)ub.textContent='✅ Apply to '+s.name;
   },300);
-  toast('📐 Draw the outline for '+s.name,'info');
+
+  toast(hasSavedPts?'✏️ Drag vertices to adjust '+s.name:'📐 Draw the outline for '+s.name,'info');
 }
 
 function applyMeasureToEstimate(sqft){
