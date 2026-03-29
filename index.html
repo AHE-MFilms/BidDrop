@@ -1809,9 +1809,21 @@ function updatePreview(){
     '<div class="ml-page" data-page="1">'+
     pageHdr(1)+
     '<div class="ml-body">'+
-    homePhoto+
+    // Photo + greeting side by side
+    '<div style="display:table;width:100%;border-collapse:separate;border-spacing:12px 0;margin:0 -12px 10px;">'+
+    '<div style="display:table-cell;width:160px;vertical-align:top;">'+
+    (window._homePhotoData
+      ? '<div style="width:160px;height:130px;border-radius:6px;overflow:hidden;border:1px solid #e8e8e8;">'+
+        '<img src="'+window._homePhotoData+'" style="width:100%;height:100%;object-fit:cover;display:block;">'+
+        '</div>'
+      : '<div style="width:160px;height:130px;border-radius:6px;border:1px dashed #ddd;"></div>'
+    )+
+    '</div>'+
+    '<div style="display:table-cell;vertical-align:top;">'+
     '<div class="ml-greeting">Dear '+escHtml(owner)+',</div>'+
-    '<p style="font-size:11px;line-height:1.6;color:#333;margin:6px 0 10px;">'+escHtml(hook)+'</p>'+
+    '<p style="font-size:11px;line-height:1.6;color:#333;margin:5px 0 0;">'+escHtml(hook)+'</p>'+
+    '</div>'+
+    '</div>'+
 
     // Two-column: Why Received (left) + How We Stand Out (right)
     '<div style="display:table;width:100%;border-collapse:separate;border-spacing:10px 0;margin:0 -10px;">'+
