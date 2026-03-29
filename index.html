@@ -368,13 +368,38 @@ tr:hover td{background:var(--card);}
       <div style="font-size:12px;color:var(--muted);letter-spacing:.5px;">by America's Home Experts</div>
     </div>
     <!-- Card -->
-    <div style="background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px;box-shadow:0 24px 60px rgba(0,0,0,.5);">
+    <div id="login-card" style="background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px;box-shadow:0 24px 60px rgba(0,0,0,.5);">
       <div style="font-family:var(--font-h);font-size:16px;font-weight:600;letter-spacing:.5px;color:var(--text);margin-bottom:20px;">Sign In to Your Account</div>
       <div class="fg"><label class="fl">Email</label><input class="fi" id="login-email" type="email" placeholder="you@company.com" onkeydown="if(event.key==='Enter')doLogin()"></div>
       <div class="fg"><label class="fl">Password</label><input class="fi" id="login-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
       <div id="login-error" style="color:var(--danger);font-size:12px;margin-bottom:10px;min-height:16px;"></div>
       <button id="login-btn" class="btn-primary" onclick="doLogin()">Sign In</button>
-      <div style="text-align:center;margin-top:14px;font-size:11px;color:var(--muted);">Contact your administrator for login credentials.</div>
+      <div style="text-align:center;margin-top:12px;">
+        <button onclick="showForgotPassword()" style="background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;font-family:var(--font-b);text-decoration:underline;padding:0;">Forgot Password?</button>
+      </div>
+      <div style="text-align:center;margin-top:8px;font-size:11px;color:var(--muted);">Contact your administrator for login credentials.</div>
+    </div>
+
+    <!-- FORGOT PASSWORD VIEW (hidden by default) -->
+    <div id="forgot-pw-view" style="display:none;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px;box-shadow:0 24px 60px rgba(0,0,0,.5);">
+      <div style="font-family:var(--font-h);font-size:16px;font-weight:600;letter-spacing:.5px;color:var(--text);margin-bottom:8px;">Reset Your Password</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:18px;">Enter your email and we'll send you a reset link.</div>
+      <div class="fg"><label class="fl">Email</label><input class="fi" id="forgot-email" type="email" placeholder="you@company.com" onkeydown="if(event.key==='Enter')doForgotPassword()"></div>
+      <div id="forgot-msg" style="font-size:12px;margin-bottom:10px;min-height:16px;"></div>
+      <button id="forgot-btn" class="btn-primary" onclick="doForgotPassword()">Send Reset Link</button>
+      <div style="text-align:center;margin-top:12px;">
+        <button onclick="showSignIn()" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;font-family:var(--font-b);padding:0;">← Back to Sign In</button>
+      </div>
+    </div>
+
+    <!-- SET NEW PASSWORD VIEW (shown after clicking reset link in email) -->
+    <div id="set-pw-view" style="display:none;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px;box-shadow:0 24px 60px rgba(0,0,0,.5);">
+      <div style="font-family:var(--font-h);font-size:16px;font-weight:600;letter-spacing:.5px;color:var(--text);margin-bottom:8px;">Set New Password</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:18px;">Choose a strong new password for your account.</div>
+      <div class="fg"><label class="fl">New Password</label><input class="fi" id="new-pw" type="password" placeholder="Min 8 characters" onkeydown="if(event.key==='Enter')doSetNewPassword()"></div>
+      <div class="fg"><label class="fl">Confirm Password</label><input class="fi" id="new-pw-confirm" type="password" placeholder="Repeat password" onkeydown="if(event.key==='Enter')doSetNewPassword()"></div>
+      <div id="set-pw-msg" style="font-size:12px;margin-bottom:10px;min-height:16px;"></div>
+      <button id="set-pw-btn" class="btn-primary" onclick="doSetNewPassword()">Update Password</button>
     </div>
     <div style="text-align:center;margin-top:16px;">
       <img src="" id="ahe-login-logo" style="height:28px;opacity:.5;object-fit:contain;">
@@ -3352,6 +3377,9 @@ window.addEventListener('load', async ()=>{
     } else if(event === 'SIGNED_OUT'){
       _signingIn = false;
       onSignedOut();
+    } else if(event === 'PASSWORD_RECOVERY'){
+      // User clicked the reset link in their email — show the Set New Password screen
+      showSetNewPassword();
     }
   });
 });
@@ -3460,6 +3488,82 @@ async function doLogin(){
     _signingIn = false;
     err.textContent = 'Error: '+(e.message||'Check connection and try again.');
     btn.textContent='Sign In'; btn.disabled=false;
+  }
+}
+
+// ─── FORGOT PASSWORD FLOW ───────────────────────────────────────────────────
+
+function showForgotPassword(){
+  document.getElementById('login-card').style.display = 'none';
+  document.getElementById('forgot-pw-view').style.display = 'block';
+  document.getElementById('set-pw-view').style.display = 'none';
+  document.getElementById('forgot-msg').textContent = '';
+  document.getElementById('forgot-email').value = document.getElementById('login-email').value || '';
+  document.getElementById('forgot-email').focus();
+}
+
+function showSignIn(){
+  document.getElementById('login-card').style.display = 'block';
+  document.getElementById('forgot-pw-view').style.display = 'none';
+  document.getElementById('set-pw-view').style.display = 'none';
+}
+
+function showSetNewPassword(){
+  // Called when Supabase fires PASSWORD_RECOVERY event (user clicked reset link)
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('main-app').style.display = 'none';
+  document.getElementById('login-card').style.display = 'none';
+  document.getElementById('forgot-pw-view').style.display = 'none';
+  document.getElementById('set-pw-view').style.display = 'block';
+  document.getElementById('set-pw-msg').textContent = '';
+  setTimeout(()=>document.getElementById('new-pw').focus(), 100);
+}
+
+async function doForgotPassword(){
+  const email = document.getElementById('forgot-email').value.trim();
+  const btn   = document.getElementById('forgot-btn');
+  const msg   = document.getElementById('forgot-msg');
+  if(!email){ msg.style.color='var(--danger)'; msg.textContent='Please enter your email address.'; return; }
+  btn.textContent = 'Sending...'; btn.disabled = true; msg.textContent = '';
+  try {
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://biddrop.americashomeexperts.com'
+    });
+    if(error) throw error;
+    msg.style.color = '#1a7f4b';
+    msg.textContent = '✅ Reset link sent! Check your email.';
+    btn.textContent = 'Sent!';
+    // Don't re-enable — prevent double sends
+  } catch(e){
+    msg.style.color = 'var(--danger)';
+    msg.textContent = 'Error: '+(e.message||'Could not send reset email.');
+    btn.textContent = 'Send Reset Link'; btn.disabled = false;
+  }
+}
+
+async function doSetNewPassword(){
+  const pw1  = document.getElementById('new-pw').value;
+  const pw2  = document.getElementById('new-pw-confirm').value;
+  const btn  = document.getElementById('set-pw-btn');
+  const msg  = document.getElementById('set-pw-msg');
+  if(!pw1 || pw1.length < 8){ msg.style.color='var(--danger)'; msg.textContent='Password must be at least 8 characters.'; return; }
+  if(pw1 !== pw2){ msg.style.color='var(--danger)'; msg.textContent='Passwords do not match.'; return; }
+  btn.textContent = 'Updating...'; btn.disabled = true; msg.textContent = '';
+  try {
+    const { error } = await sb.auth.updateUser({ password: pw1 });
+    if(error) throw error;
+    msg.style.color = '#1a7f4b';
+    msg.textContent = '✅ Password updated! Signing you in...';
+    // Supabase keeps the session active after updateUser — sign in to the app
+    setTimeout(async ()=>{
+      const { data:{ session } } = await sb.auth.getSession();
+      if(session) await onSignedIn(session.user);
+      else showSignIn();
+    }, 1200);
+  } catch(e){
+    msg.style.color = 'var(--danger)';
+    msg.textContent = 'Error: '+(e.message||'Could not update password.');
+    btn.textContent = 'Update Password'; btn.disabled = false;
   }
 }
 
