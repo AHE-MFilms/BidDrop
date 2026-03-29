@@ -31,7 +31,7 @@
 }
 html,body{height:100%;overflow:hidden;}
 body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:flex;flex-direction:column;font-size:15px;}
-
+ 
 /* HEADER */
 .hdr{background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;height:54px;flex-shrink:0;gap:6px;}
 .logo{font-family:var(--font-h);font-size:20px;font-weight:700;color:var(--accent);letter-spacing:1.5px;margin-right:12px;display:flex;align-items:center;gap:8px;white-space:nowrap;}
@@ -43,12 +43,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 .hdr-actions{display:flex;align-items:center;gap:8px;margin-left:auto;}
 .icon-btn{background:var(--card);border:1px solid var(--border);color:var(--mid);width:34px;height:34px;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s;}
 .icon-btn:hover{border-color:var(--accent);color:var(--accent);}
-
+ 
 /* MAIN */
 .main{flex:1;overflow:hidden;display:flex;flex-direction:column;}
 .tab-pane{display:none;flex:1;overflow:hidden;}
 .tab-pane.active{display:flex;}
-
+ 
 /* ── MAP TAB ─────────────────────────────── */
 #tab-map{flex-direction:row;}
 #the-map{flex:1;height:100%;min-width:0;}
@@ -81,7 +81,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 .btn-xs.pr:hover{opacity:.85;}
 .btn-xs.danger{color:var(--danger);}
 .btn-xs.danger:hover{border-color:var(--danger);}
-
+ 
 /* ── ESTIMATE TAB ─────────────────────────── */
 #tab-estimate{flex-direction:row;}
 .est-form{width:360px;flex-shrink:0;background:var(--bg);border-right:1px solid var(--border);padding:22px;overflow-y:auto;}
@@ -107,7 +107,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 .btn-primary:hover{opacity:.85;}
 .btn-sec{width:100%;background:var(--card);border:2px solid var(--border);border-radius:10px;padding:14px;color:#C8D8E8;font-family:var(--font-b);font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;margin-top:8px;}
 .btn-sec:hover{border-color:var(--accent);color:var(--text);}
-
+ 
 /* BID MAILER PREVIEW */
 .mailer{background:#fff;width:100%;max-width:660px;border-radius:3px;box-shadow:0 20px 60px rgba(0,0,0,.55);overflow:hidden;font-family:'Georgia',serif;color:#1a1a1a;}
 .ml-hdr{padding:28px 36px;display:flex;justify-content:space-between;align-items:flex-start;}
@@ -137,7 +137,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 .ml-cta-b{font-size:12px;line-height:1.6;color:#555;}
 .ml-phone{font-size:18px;font-weight:700;margin-top:6px;}
 .ml-footer{margin-top:28px;padding-top:14px;border-top:1px solid #eee;font-size:10px;color:#999;line-height:1.6;text-align:center;}
-
+ 
 /* ── MAIL QUEUE TAB ───────────────────────── */
 #tab-mailqueue{flex-direction:column;}
 .q-hdr{background:var(--panel);border-bottom:1px solid var(--border);padding:14px 22px;display:flex;align-items:center;gap:14px;flex-shrink:0;}
@@ -159,7 +159,7 @@ th{font-family:var(--font-b);font-size:10px;font-weight:700;letter-spacing:.8px;
 td{padding:13px 14px;font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle;}
 tr:hover td{background:var(--card);}
 .spill{display:inline-block;font-size:10px;font-weight:700;padding:3px 9px;border-radius:9px;text-transform:uppercase;letter-spacing:.3px;}
-
+ 
 /* ── DASHBOARD TAB ───────────────────────── */
 #tab-dashboard{flex-direction:column;overflow-y:auto;padding:22px;gap:16px;}
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
@@ -188,7 +188,7 @@ tr:hover td{background:var(--card);}
 .act-txt{color:var(--mid);line-height:1.5;}
 .act-txt strong{color:var(--text);}
 .act-time{font-family:var(--font-m);font-size:9px;color:var(--muted);margin-top:2px;}
-
+ 
 /* ── MODAL ────────────────────────────────── */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(4px);}
 .modal{background:var(--panel);border:1px solid var(--border);border-radius:11px;padding:26px;width:470px;max-width:92vw;box-shadow:0 24px 60px rgba(0,0,0,.6);max-height:88vh;overflow-y:auto;display:flex;flex-direction:column;}
@@ -198,14 +198,14 @@ tr:hover td{background:var(--card);}
 .btn-cancel:hover{border-color:var(--mid);}
 .btn-ok{flex:1;background:var(--accent);border:none;border-radius:7px;padding:10px;color:#fff;font-family:var(--font-b);font-size:12px;font-weight:700;cursor:pointer;transition:opacity .15s;}
 .btn-ok:hover{opacity:.85;}
-
+ 
 /* TOAST */
 .toast{position:fixed;bottom:22px;right:22px;background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:12px 18px;font-size:12px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:99999;transform:translateY(70px);opacity:0;transition:all .3s;max-width:300px;}
 .toast.show{transform:translateY(0);opacity:1;}
 .toast.success{border-color:var(--success);color:var(--success);}
 .toast.error{border-color:var(--danger);color:var(--danger);}
 .toast.info{border-color:var(--info);color:var(--info);}
-
+ 
 /* Leaflet */
 .leaflet-container{background:#111827;}
 .leaflet-popup-content-wrapper{background:#1A2333;border:2px solid #2E4060;border-radius:12px;color:#F0F6FF;box-shadow:0 12px 40px rgba(0,0,0,.7);}
@@ -218,7 +218,7 @@ tr:hover td{background:var(--card);}
 .leaflet-control-zoom a:hover{background:var(--card2) !important;}
 .leaflet-control-attribution{background:rgba(8,9,13,.7) !important;color:var(--muted) !important;font-size:9px !important;}
 .leaflet-control-attribution a{color:var(--muted) !important;}
-
+ 
 /* MAP TOOLBAR */
 .map-toolbar{position:absolute;top:12px;left:12px;z-index:1000;display:flex;flex-direction:column;gap:7px;}
 .map-search-wrap{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:1000;display:flex;gap:0;width:320px;max-width:calc(100vw - 200px);}
@@ -250,11 +250,11 @@ tr:hover td{background:var(--card);}
 .mhud-btn.pr{background:var(--accent);border-color:var(--accent);color:#fff;}
 .mhud-btn.pr:hover{opacity:.85;}
 .leaflet-container.measuring{cursor:crosshair !important;}
-
+ 
 ::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
-
+ 
 /* ── MOBILE ───────────────────────────────── */
 .bottom-nav{display:none;}
 @media(max-width:768px){
@@ -363,7 +363,7 @@ tr:hover td{background:var(--card);}
 </style>
 </head>
 <body>
-
+ 
 <!-- HEADER -->
 <div class="hdr">
   <div class="logo">
@@ -381,7 +381,7 @@ tr:hover td{background:var(--card);}
     <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
   </div>
 </div>
-
+ 
 <!-- BOTTOM NAV (mobile) -->
 <nav class="bottom-nav">
   <button class="bnav-btn active" onclick="goTab('map')" data-tab="map"><span class="bicon">🗺</span>Map</button>
@@ -390,10 +390,10 @@ tr:hover td{background:var(--card);}
   <button class="bnav-btn" onclick="goTab('dashboard')" data-tab="dashboard"><span class="bicon">📊</span>Stats</button>
   <button class="bnav-btn" onclick="openSettings()"><span class="bicon">⚙️</span>Settings</button>
 </nav>
-
+ 
 <!-- MAIN -->
 <div class="main">
-
+ 
   <!-- MAP -->
   <div class="tab-pane active" id="tab-map" style="position:relative;">
     <div id="the-map"></div>
@@ -425,7 +425,7 @@ tr:hover td{background:var(--card);}
     </div>
     <!-- FAB for mobile pin list -->
     <button class="fab-pins" onclick="togglePinPanel()" id="fab-pins">📍</button>
-
+ 
     <div class="map-panel" id="map-panel">
       <div class="map-panel-drag" onclick="togglePinPanel()"></div>
       <div class="mp-hdr">
@@ -445,7 +445,7 @@ tr:hover td{background:var(--card);}
       <div class="pin-list" id="pin-list"></div>
     </div>
   </div>
-
+ 
   <!-- ESTIMATE -->
   <div class="tab-pane" id="tab-estimate">
     <div class="est-form">
@@ -552,7 +552,7 @@ tr:hover td{background:var(--card);}
       <div class="mailer" id="mailer-preview"></div>
     </div>
   </div>
-
+ 
   <!-- MAIL QUEUE -->
   <div class="tab-pane" id="tab-mailqueue">
     <div class="q-hdr">
@@ -585,7 +585,7 @@ tr:hover td{background:var(--card);}
       </table>
     </div>
   </div>
-
+ 
   <!-- DASHBOARD -->
   <div class="tab-pane" id="tab-dashboard">
     <div class="stats-row">
@@ -630,9 +630,9 @@ tr:hover td{background:var(--card);}
       <div class="act-feed" id="act-feed"></div>
     </div>
   </div>
-
+ 
 </div><!-- /main -->
-
+ 
 <!-- ADD PIN MODAL -->
 <div class="overlay" id="m-pin" style="display:none;">
   <div class="modal">
@@ -664,7 +664,7 @@ tr:hover td{background:var(--card);}
     </div>
   </div>
 </div>
-
+ 
 <!-- SETTINGS MODAL -->
 <div class="overlay" id="m-settings" style="display:none;">
   <div class="modal" style="max-width:560px;">
@@ -735,7 +735,7 @@ tr:hover td{background:var(--card);}
     </div>
   </div>
 </div>
-
+ 
 <!-- DELETE PIN CONFIRM MODAL -->
 <div class="overlay" id="m-delete-pin" style="display:none;">
   <div class="modal" style="max-width:420px;">
@@ -750,7 +750,7 @@ tr:hover td{background:var(--card);}
     </div>
   </div>
 </div>
-
+ 
 <!-- MEASURE PICKER MODAL -->
 <div class="overlay" id="m-measure-pick" style="display:none;">
   <div class="modal" style="max-width:480px;">
@@ -770,9 +770,9 @@ tr:hover td{background:var(--card);}
     </div>
   </div>
 </div>
-
+ 
 <div class="toast" id="toast"></div>
-
+ 
 <script>
 // ═══════════════════════════════
 //  STATE
@@ -793,7 +793,7 @@ const DEFAULTS = {
   overhead:15, margin:20,
   brandColor:'#F25C05', lobKey:''
 };
-
+ 
 let S = {
   pins:[],
   queue:[],
@@ -802,21 +802,21 @@ let S = {
   activity:[],
   cfg:{...DEFAULTS}
 };
-
+ 
 let map, markers={}, tempLL=null, curFilter='all', actChart=null;
-
+ 
 const MATLBL = {'1.0':'3-Tab Shingle','1.3':'Architectural Shingle','1.8':'Designer/Premium','2.5':'Metal Roofing'};
 const PITCHLBL = {'1.0':'4/12 (Low)','1.07':'5/12','1.15':'6/12 (Standard)','1.23':'7/12','1.31':'8/12 (Moderate)','1.40':'9/12','1.50':'10/12 (Steep)','1.65':'11/12','1.80':'12/12 (Very Steep)'};
-
+ 
 function sColor(s){return{needs_roof:'#F25C05',bid_sent:'#3B82F6',converted:'#22C55E',not_interested:'#3D5269'}[s]||'#3D5269';}
 function sLabel(s){return{needs_roof:'Needs Roof',bid_sent:'Bid Sent',converted:'Converted',not_interested:'Not Interested'}[s]||s;}
-
+ 
 // ═══════════════════════════════
 //  PERSIST
 // ═══════════════════════════════
 function load(){try{const d=localStorage.getItem('bd_v1');if(d)S={...S,...JSON.parse(d)};}catch(e){}}
 function save(){try{localStorage.setItem('bd_v1',JSON.stringify(S));}catch(e){}}
-
+ 
 // ═══════════════════════════════
 //  TABS
 // ═══════════════════════════════
@@ -829,13 +829,13 @@ function goTab(t){
   if(t==='mailqueue')renderQueue();
   if(t==='estimate')updatePreview();
 }
-
+ 
 function togglePinPanel(){
   const p=document.getElementById('map-panel');
   p.classList.toggle('open');
   document.getElementById('fab-pins').textContent=p.classList.contains('open')?'✕':'📍';
 }
-
+ 
 function toggleMailPreview(){
   const p=document.getElementById('est-preview');
   const isShowing=p.classList.contains('mobile-show');
@@ -845,7 +845,7 @@ function toggleMailPreview(){
     setTimeout(()=>p.scrollIntoView({behavior:'smooth',block:'start'}),80);
   }
 }
-
+ 
 // ═══════════════════════════════
 //  LOGO & PHOTO HANDLERS
 // ═══════════════════════════════
@@ -860,14 +860,14 @@ function handleLogoUpload(inp){
   };
   reader.readAsDataURL(inp.files[0]);
 }
-
+ 
 function clearLogo(){
   S.cfg.logoData=null;
   const prev=document.getElementById('logo-preview');
   if(prev) prev.innerHTML='No logo';
   save();updatePreview();
 }
-
+ 
 function handleHomePhoto(inp){
   if(!inp.files||!inp.files[0])return;
   const reader=new FileReader();
@@ -893,7 +893,7 @@ function handleHomePhoto(inp){
   };
   reader.readAsDataURL(inp.files[0]);
 }
-
+ 
 function clearHomePhoto(){
   window._homePhotoData=null;
   const prev=document.getElementById('home-photo-preview');
@@ -902,19 +902,19 @@ function clearHomePhoto(){
   if(clr) clr.style.display='none';
   updatePreview();
 }
-
+ 
 // ═══════════════════════════════
 //  MAP SEARCH
 // ═══════════════════════════════
 let searchTimer=null;
-
+ 
 function onSearchInput(){
   clearTimeout(searchTimer);
   const q=document.getElementById('map-search-inp').value.trim();
   if(q.length<3){document.getElementById('map-search-results').classList.remove('show');return;}
   searchTimer=setTimeout(()=>searchAddress(true),400);
 }
-
+ 
 async function searchAddress(suggest=false){
   const q=document.getElementById('map-search-inp').value.trim();
   if(!q)return;
@@ -939,24 +939,24 @@ async function searchAddress(suggest=false){
     }
   }catch(e){toast('Search error','error');}
 }
-
+ 
 function flyToResult(lat,lon,name){
   document.getElementById('map-search-results').classList.remove('show');
   document.getElementById('map-search-inp').value=name.split(',').slice(0,2).join(',').trim();
   map.flyTo([parseFloat(lat),parseFloat(lon)],19,{duration:.8});
 }
-
+ 
 // Close search results on map click
 document.addEventListener('click',e=>{
   if(!e.target.closest('#map-search-wrap'))
     document.getElementById('map-search-results')&&document.getElementById('map-search-results').classList.remove('show');
 });
-
+ 
 // ═══════════════════════════════
 //  MAP
 // ═══════════════════════════════
 let tileStreet, tileSatellite, tileLabels, isSatellite=false;
-
+ 
 function initMap(){
   map=L.map('the-map',{zoomControl:false}).setView([42.33,-83.04],13);
   L.control.zoom({position:'bottomleft'}).addTo(map);
@@ -978,7 +978,7 @@ function initMap(){
     navigator.geolocation.getCurrentPosition(p=>{map.setView([p.coords.latitude,p.coords.longitude],18);},()=>{});
   }
 }
-
+ 
 function toggleSatellite(){
   isSatellite=!isSatellite;
   const btn=document.getElementById('btn-satellite');
@@ -996,13 +996,13 @@ function toggleSatellite(){
     btn.textContent='🛰 Satellite';
   }
 }
-
+ 
 // ═══════════════════════════════
 //  ROOF MEASUREMENT
 // ═══════════════════════════════
 let measuring=false, measurePts=[], measurePoly=null, measureMarkers=[];
 let allPolygons=[], allPolygonPts=[], totalSqFt=0; // multi-building support
-
+ 
 function toggleMeasure(pinId){
   measuring=!measuring;
   const btn=document.getElementById('btn-measure');
@@ -1027,7 +1027,7 @@ function toggleMeasure(pinId){
     clearMeasureData();
   }
 }
-
+ 
 function clearMeasureData(){
   measurePts=[];
   measureMarkers.forEach(m=>map.removeLayer(m));
@@ -1044,12 +1044,12 @@ function clearMeasureData(){
   const banner=document.getElementById('mhud-pin-banner');
   if(banner)banner.remove();
 }
-
+ 
 function clearMeasure(){
   clearMeasureData();
   document.getElementById('mhud-hint').textContent='Click corners of the roof. Double-click to finish.';
 }
-
+ 
 function addMeasurePoint(latlng){
   measurePts.push(latlng);
   const idx=measurePts.length-1;
@@ -1068,12 +1068,14 @@ function addMeasurePoint(latlng){
     const sqft=calcPolygonSqFt(measurePts);
     document.getElementById('mhud-sqft').textContent=sqft.toLocaleString();
     const bldgNum=allPolygons.length+1;
-    document.getElementById('mhud-hint').textContent=`Bldg ${bldgNum}: ${measurePts.length} pts — drag to adjust. Dbl-click to finish this building.`;
+    document.getElementById('mhud-hint').textContent='Bldg '+bldgNum+': '+measurePts.length+' pts — drag to adjust. Dbl-click to finish this building.';
+    const ub=document.getElementById('btn-use-measure');
+    if(ub){ub.style.opacity='1';ub.style.pointerEvents='auto';}
   } else {
     document.getElementById('mhud-hint').textContent=`${measurePts.length} point${measurePts.length>1?'s':''} — keep clicking corners.`;
   }
 }
-
+ 
 function redrawPoly(){
   if(measurePoly){map.removeLayer(measurePoly);measurePoly=null;}
   if(measurePts.length>=2){
@@ -1088,7 +1090,7 @@ function redrawPoly(){
     }
   }
 }
-
+ 
 function undoMeasurePoint(){
   if(!measurePts.length){
     // Undo last completed building
@@ -1118,7 +1120,7 @@ function undoMeasurePoint(){
     document.getElementById('mhud-hint').textContent=`${measurePts.length} pts — keep clicking corners.`;
   }
 }
-
+ 
 function onMapClick(e){
   if(measuring){
     addMeasurePoint(e.latlng);
@@ -1131,7 +1133,7 @@ function onMapClick(e){
   openM('m-pin');
   revGeo(e.latlng.lat,e.latlng.lng);
 }
-
+ 
 function onMapDblClick(e){
   if(!measuring || measurePts.length<3) return;
   L.DomEvent.stop(e);
@@ -1155,7 +1157,7 @@ function onMapDblClick(e){
   const ub=document.getElementById('btn-use-measure');
   if(ub){ub.style.opacity='1';ub.style.pointerEvents='auto';}
 }
-
+ 
 function calcPolygonSqFt(pts){
   if(pts.length<3) return 0;
   // Shoelace on projected coords (meters)
@@ -1173,8 +1175,19 @@ function calcPolygonSqFt(pts){
   const sqMeters=Math.abs(area)/2;
   return Math.round(sqMeters*10.7639); // m² to ft²
 }
-
+ 
 function useRoofMeasurement(){
+  // If there's an in-progress polygon with 3+ points, finalize it first
+  if(measurePts.length>=3){
+    const colors=['#F25C05','#3B82F6','#22C55E','#F59E0B','#A855F7'];
+    const col=colors[allPolygons.length % colors.length];
+    if(measurePoly) map.removeLayer(measurePoly);
+    const finishedPoly=L.polygon(measurePts,{color:col,fillColor:col,fillOpacity:.25,weight:2}).addTo(map);
+    allPolygons.push(finishedPoly);
+    allPolygonPts.push([...measurePts]);
+    totalSqFt+=calcPolygonSqFt(measurePts);
+    measurePts=[];measureMarkers=[];measurePoly=null;
+  }
   const sqft=totalSqFt||parseInt(document.getElementById('mhud-sqft').textContent.replace(/,/g,''));
   if(!sqft){toast('Draw the roof outline first','error');return;}
   // Stop measuring mode
@@ -1183,7 +1196,7 @@ function useRoofMeasurement(){
   document.getElementById('btn-measure').textContent='📐 Measure Roof';
   document.getElementById('the-map').classList.remove('measuring');
   document.getElementById('measure-hud').classList.remove('show');
-
+ 
   // If we were measuring for a specific pin, go straight to estimate with that address
   if(_measureForPinId){
     const pin=S.pins.find(p=>p.id===_measureForPinId);
@@ -1198,16 +1211,16 @@ function useRoofMeasurement(){
       return;
     }
   }
-
+ 
   // No pin selected — just go to new estimate
   applyMeasureToEstimate(sqft);
 }
-
+ 
 function showMeasurePickerModal(sqft,pending){
   // Show pending estimates AND all pinned addresses that don't have an estimate yet
   const pendingIds=new Set(pending.map(i=>i.addr));
   const unpinnedAddrs=S.pins.filter(p=>!pendingIds.has(p.address)&&p.status!=='not_interested');
-
+ 
   let html='';
   if(pending.length){
     html+=`<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Update existing estimate:</div>`;
@@ -1234,12 +1247,12 @@ function showMeasurePickerModal(sqft,pending){
       </div>
     `).join('');
   }
-
+ 
   document.getElementById('mpick-sqft').textContent=sqft.toLocaleString();
   document.getElementById('mpick-list').innerHTML=html||'<div style="color:var(--muted);text-align:center;padding:16px;font-size:13px;">No pinned addresses yet.</div>';
   openM('m-measure-pick');
 }
-
+ 
 function applyMeasureToPinAddr(pinId,sqft){
   const pin=S.pins.find(p=>p.id===pinId);
   if(!pin)return;
@@ -1251,7 +1264,7 @@ function applyMeasureToPinAddr(pinId,sqft){
   calcP();updatePreview();
   toast(`📐 ${sqft.toLocaleString()} sq ft loaded for ${pin.address.split(',')[0]}!`,'success');
 }
-
+ 
 function applyMeasureToExisting(id,sqft){
   const item=S.queue.find(x=>x.id===id);
   if(!item)return;
@@ -1266,7 +1279,7 @@ function applyMeasureToExisting(id,sqft){
   calcP();updatePreview();
   toast(`📐 ${sqft.toLocaleString()} sq ft updated on estimate for ${item.addr}`,'success');
 }
-
+ 
 function applyMeasureToEstimate(sqft){
   window._editingQueueId=null;
   goTab('estimate');
@@ -1274,7 +1287,7 @@ function applyMeasureToEstimate(sqft){
   calcP();updatePreview();
   toast(`📐 ${sqft.toLocaleString()} sq ft loaded into estimate!`,'success');
 }
-
+ 
 async function revGeo(lat,lng){
   try{
     const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`);
@@ -1289,12 +1302,12 @@ async function revGeo(lat,lng){
     }
   }catch(e){}
 }
-
+ 
 function mkIcon(status){
   const c=sColor(status);
   return L.divIcon({className:'',html:`<div style="width:16px;height:16px;background:${c};border:2.5px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.6);"></div>`,iconSize:[16,16],iconAnchor:[8,8]});
 }
-
+ 
 function addMarker(pin){
   const m=L.marker([pin.lat,pin.lng],{icon:mkIcon(pin.status)}).addTo(map);
   m.bindPopup(`
@@ -1309,7 +1322,7 @@ function addMarker(pin){
   `,{maxWidth:320});
   markers[pin.id]=m;
 }
-
+ 
 function savePin(){
   if(!tempLL)return;
   const pin={
@@ -1330,13 +1343,13 @@ function savePin(){
   closeM('m-pin');
   toast('📍 Pin saved','success');
 }
-
+ 
 function filterPins(s){
   curFilter=s;
   document.querySelectorAll('.fchip').forEach(c=>c.classList.toggle('active',c.dataset.s===s));
   renderPinList();
 }
-
+ 
 function renderPinList(){
   const el=document.getElementById('pin-list');
   const list=curFilter==='all'?S.pins:S.pins.filter(p=>p.status===curFilter);
@@ -1364,19 +1377,19 @@ function renderPinList(){
     </div>
   `).join('');
 }
-
+ 
 function flyTo(id){
   const p=S.pins.find(x=>x.id===id);
   if(p&&map){map.flyTo([p.lat,p.lng],17,{duration:.7});markers[id]&&markers[id].openPopup();}
 }
-
+ 
 function rmPin(id){
   if(!confirm('Remove this pin?'))return;
   S.pins=S.pins.filter(p=>p.id!==id);
   if(markers[id]){map.removeLayer(markers[id]);delete markers[id];}
   renderPinList();save();toast('Pin removed','info');
 }
-
+ 
 function confirmDeletePin(id){
   const pin=S.pins.find(p=>p.id===id);
   if(!pin)return;
@@ -1385,7 +1398,7 @@ function confirmDeletePin(id){
   document.getElementById('dpin-id').value=id;
   openM('m-delete-pin');
 }
-
+ 
 function doDeletePin(){
   const id=document.getElementById('dpin-id').value;
   S.pins=S.pins.filter(p=>p.id!==id);
@@ -1394,10 +1407,10 @@ function doDeletePin(){
   renderPinList();save();
   toast('🗑 Pin deleted','info');
 }
-
+ 
 // Measure mode locked to a specific pin
 let _measureForPinId=null;
-
+ 
 function measureForPin(pinId){
   const pin=S.pins.find(p=>p.id===pinId);
   if(!pin)return;
@@ -1424,7 +1437,7 @@ function measureForPin(pinId){
   },800);
   toast(`📐 Tap roof corners for ${pin.address?pin.address.split(',')[0]:'selected pin'}`,'info');
 }
-
+ 
 function cycleStatus(id){
   const p=S.pins.find(x=>x.id===id);if(!p)return;
   const opts=['needs_roof','bid_sent','converted','not_interested'];
@@ -1434,7 +1447,7 @@ function cycleStatus(id){
   addMarker(p);renderPinList();save();
   toast(`Status → ${sLabel(p.status)}`,'info');
 }
-
+ 
 function goEstFromPin(id){
   const p=S.pins.find(x=>x.id===id);
   if(!p)return;
@@ -1442,7 +1455,7 @@ function goEstFromPin(id){
   document.getElementById('e-addr').value=p.address||'';
   updatePreview();
 }
-
+ 
 // ═══════════════════════════════
 //  ESTIMATE
 // ═══════════════════════════════
@@ -1455,7 +1468,7 @@ function getMatCost(matKey){
     '2.5':parseFloat(c.costMetal)||950
   }[matKey]||450;
 }
-
+ 
 function calcP(){
   const sqft=parseFloat(document.getElementById('e-sqft').value)||0;
   const pitchMult=parseFloat(document.getElementById('e-pitch').value)||1.31;
@@ -1490,7 +1503,7 @@ function calcP(){
   document.getElementById('e-breakdown').textContent=`${sq.toFixed(1)} sq · ${PITCHLBL[document.getElementById('e-pitch').value]||''} · ${Math.round(sq*matCost)} mat+labor`;
   return grand;
 }
-
+ 
 function updatePreview(){
   const owner=document.getElementById('e-owner').value||'Homeowner';
   const addr=document.getElementById('e-addr').value||'—';
@@ -1504,7 +1517,7 @@ function updatePreview(){
   const coAddr=S.cfg.companyAddr||'';
   const ph=S.cfg.companyPhone||'';
   const color=S.cfg.brandColor||'#F25C05';
-
+ 
   let addRows='';
   if(document.getElementById('a-sky').checked){
     const q=parseInt(document.getElementById('a-sky-q').value)||1;
@@ -1515,12 +1528,12 @@ function updatePreview(){
     const lf=parseInt(document.getElementById('a-gut-q').value)||120;
     addRows+=`<div class="ml-row"><span class="rl">Gutters (${lf} lf)</span><span class="rv">$${(8*lf).toLocaleString()}</span></div>`;
   }
-
+ 
   const logoImg=S.cfg.logoData?`<img src="${S.cfg.logoData}" style="max-height:52px;max-width:160px;object-fit:contain;display:block;">`:
     `<div class="ml-co-name" style="color:${color};">${co}</div>`;
   const homePhotoData=window._homePhotoData||'';
   const homePhotoHtml=homePhotoData?`<img src="${homePhotoData}" style="width:100%;max-height:220px;object-fit:cover;border-radius:8px;margin-bottom:18px;display:block;">`:'' ;
-
+ 
   document.getElementById('mailer-preview').innerHTML=`
     <div class="ml-hdr">
       <div>
@@ -1571,7 +1584,7 @@ function updatePreview(){
     </div>
   `;
 }
-
+ 
 function addToQueue(){
   const addr=document.getElementById('e-addr').value.trim();
   if(!addr){toast('Enter a property address','error');return;}
@@ -1620,7 +1633,7 @@ function addToQueue(){
   toast('📬 Added to mail queue!','success');
   renderQueue();
 }
-
+ 
 function clearEst(){
   ['e-owner','e-addr','e-sqft'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('e-pitch').value='1.31';
@@ -1630,12 +1643,12 @@ function clearEst(){
   clearHomePhoto();
   calcP();updatePreview();
 }
-
+ 
 // ═══════════════════════════════
 //  MAIL QUEUE
 // ═══════════════════════════════
 function saveLobKey(){S.cfg.lobKey=document.getElementById('lob-key').value;save();}
-
+ 
 function renderQueue(){
   if(S.cfg.lobKey) document.getElementById('lob-key').value=S.cfg.lobKey;
   const tbody=document.getElementById('q-tbody');
@@ -1661,7 +1674,7 @@ function renderQueue(){
     </tr>`;
   }).join('');
 }
-
+ 
 async function sendLob(id){
   const item=S.queue.find(x=>x.id===id);if(!item)return;
   const key=S.cfg.lobKey||document.getElementById('lob-key').value;
@@ -1698,7 +1711,7 @@ async function sendLob(id){
     item.status='failed';save();renderQueue();toast('Network error — check API key','error');
   }
 }
-
+ 
 function genLobHtml(i){
   const co=S.cfg.companyName||'Your Roofing Co';
   const ph=S.cfg.companyPhone||'';
@@ -1720,21 +1733,21 @@ function genLobHtml(i){
   <p><strong style="font-size:16pt;">${ph}</strong></p>
   <p>${co} · Licensed &amp; Insured</p>`;
 }
-
+ 
 async function sendAllPending(){
   const pend=S.queue.filter(i=>i.status==='pending');
   if(!pend.length){toast('No pending items','info');return;}
   toast(`Sending ${pend.length} letters…`,'info');
   for(const i of pend){await sendLob(i.id);await sleep(600);}
 }
-
+ 
 function rmQ(id){
   if(!confirm('Delete this estimate?'))return;
   S.queue=S.queue.filter(x=>x.id!==id);
   save();renderQueue();
   toast('🗑 Estimate deleted','info');
 }
-
+ 
 function editEstimate(id){
   const item=S.queue.find(x=>x.id===id);
   if(!item)return;
@@ -1747,7 +1760,7 @@ function editEstimate(id){
   document.getElementById('add-queue-btn').textContent='✅ Update Estimate';
   toast('✏️ Editing estimate — make changes and hit Update','info');
 }
-
+ 
 // ═══════════════════════════════
 //  DASHBOARD
 // ═══════════════════════════════
@@ -1760,7 +1773,7 @@ function renderDash(){
   document.getElementById('s-conv').textContent=mailed?Math.round(conv/mailed*100)+'%':'—';
   renderActChart();renderTeam();renderActFeed();
 }
-
+ 
 function renderActChart(){
   const ctx=document.getElementById('act-chart').getContext('2d');
   const days=[],pins=[],mails=[];
@@ -1779,7 +1792,7 @@ function renderActChart(){
     scales:{x:{ticks:{color:'#3D5269',font:{size:10}},grid:{color:'#1C2840'}},
             y:{ticks:{color:'#3D5269',stepSize:1,font:{size:10}},grid:{color:'#1C2840'},beginAtZero:true}}}});
 }
-
+ 
 function renderTeam(){
   const el=document.getElementById('team-list');
   if(!S.team.length){el.innerHTML='<div style="text-align:center;padding:18px;color:var(--muted);font-size:11px;">Pin homes to auto-add canvassers.</div>';return;}
@@ -1791,7 +1804,7 @@ function renderTeam(){
     </div>
   `).join('');
 }
-
+ 
 function addTeamMember(){
   const n=prompt('Team member name:');
   if(!n||!n.trim())return;
@@ -1799,14 +1812,14 @@ function addTeamMember(){
   S.team.push({name:n.trim(),pins:0,ests:0});
   save();renderTeam();toast(`Added ${n.trim()}`,'success');
 }
-
+ 
 function bumpTeam(name,field){
   if(!name||name==='Unknown')return;
   let m=S.team.find(x=>x.name.toLowerCase()===name.toLowerCase());
   if(!m){m={name,pins:0,ests:0};S.team.push(m);}
   m[field]=(m[field]||0)+1;
 }
-
+ 
 function renderActFeed(){
   const el=document.getElementById('act-feed');
   if(!S.activity.length){el.innerHTML='<div style="text-align:center;padding:18px;color:var(--muted);font-size:11px;">No activity yet.</div>';return;}
@@ -1817,12 +1830,12 @@ function renderActFeed(){
     </div>
   `).join('');
 }
-
+ 
 function addAct(txt,ref){
   S.activity.unshift({txt,ref,at:new Date().toISOString()});
   if(S.activity.length>100)S.activity=S.activity.slice(0,100);
 }
-
+ 
 // ═══════════════════════════════
 //  SETTINGS
 // ═══════════════════════════════
@@ -1850,7 +1863,7 @@ function openSettings(){
   if(lp) lp.innerHTML=c.logoData?`<img src="${c.logoData}" style="max-width:100%;max-height:100%;object-fit:contain;">`:'No logo';
   openM('m-settings');
 }
-
+ 
 function saveSettings(){
   const n=v=>parseFloat(document.getElementById(v).value)||0;
   S.cfg={
@@ -1872,36 +1885,36 @@ function saveSettings(){
   updatePreview();
   toast('Settings saved!','success');
 }
-
+ 
 function applyBrand(){
   const c=S.cfg.brandColor||'#F25C05';
   document.documentElement.style.setProperty('--accent',c);
   document.documentElement.style.setProperty('--accent-dim',hexToRgba(c,.1));
   document.getElementById('co-sub').textContent=S.cfg.companyName?'· '+S.cfg.companyName:'';
 }
-
+ 
 function hexToRgba(hex,a){
   const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
   return`rgba(${r},${g},${b},${a})`;
 }
-
+ 
 // ═══════════════════════════════
 //  MODAL / TOAST / UTILS
 // ═══════════════════════════════
 function openM(id){document.getElementById(id).style.display='flex';}
 function closeM(id){document.getElementById(id).style.display='none';}
-
+ 
 document.querySelectorAll('.overlay').forEach(o=>{
   o.addEventListener('click',e=>{if(e.target===o)closeM(o.id);});
 });
-
+ 
 let toastT;
 function toast(msg,type='info'){
   const el=document.getElementById('toast');
   el.className=`toast ${type}`;el.textContent=msg;el.classList.add('show');
   clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3200);
 }
-
+ 
 function timeAgo(iso){
   if(!iso)return'';
   const d=Date.now()-new Date(iso).getTime();
@@ -1910,7 +1923,7 @@ function timeAgo(iso){
 }
 function fmtDate(iso){if(!iso)return'';return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
-
+ 
 // ═══════════════════════════════
 //  INIT
 // ═══════════════════════════════
