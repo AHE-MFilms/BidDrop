@@ -2957,11 +2957,8 @@ function renderTeam(){
 }
 
 function addTeamMember(){
-  const n=prompt('Team member name:');
-  if(!n||!n.trim())return;
-  if(S.team.find(m=>m.name.toLowerCase()===n.toLowerCase())){toast('Already exists','info');return;}
-  S.team.push({name:n.trim(),pins:0,ests:0});
-  save();renderTeam();toast('Added '+n.trim(),'success');
+  // Open the Admin Panel — team members are managed there via Supabase
+  openAdminPanel();
 }
 
 function bumpTeam(name,field){
@@ -3815,8 +3812,12 @@ async function createUser(){
   const accountId = acctSel ? acctSel.value : (currentAccount ? currentAccount.id : null);
   if(!name){toast('Name is required','error');return;}
   if(!email||!pass){toast('Email and password required','error');return;}
-  if(!accountId){toast('Please select an account','error');return;}
+  if(pass.length < 6){toast('Password must be at least 6 characters','error');return;}
+  if(!accountId){toast('No account found — contact your super admin','error');return;}
   result.textContent='Creating...';result.style.color='var(--muted)';
+  // Disable button to prevent double-submit
+  const createBtn = document.querySelector('#admin-panel-body .btn-primary:last-of-type');
+  if(createBtn){ createBtn.disabled=true; createBtn.textContent='Creating...'; }
   try {
     // Use Supabase Admin API (service role) to create user with auto-confirm
     // This bypasses the email confirmation flow entirely
@@ -3862,9 +3863,11 @@ async function createUser(){
     toast('✅ '+name+' created — no confirmation email needed!','success');
     setTimeout(renderAdminPanel, 3000);
   } catch(e){
-    result.textContent='❌ '+e.message;
+    result.innerHTML='❌ <strong>'+escHtml(e.message)+'</strong>';
     result.style.color='var(--danger)';
-    toast('Error: '+e.message,'error');
+    toast('❌ '+e.message,'error');
+    // Re-enable button so admin can try again
+    if(createBtn){ createBtn.disabled=false; createBtn.textContent='Create Login'; }
   }
 }
 
