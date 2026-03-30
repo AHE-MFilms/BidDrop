@@ -3876,32 +3876,50 @@ window.addEventListener('load', async ()=>{
   sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   // Show login screen immediately
   showLoginScreen();
-  // Auth handler — event-driven, no flags
-  // Duplicate SIGNED_IN events are blocked by checking if the app is already visible.
-  // This is more reliable than a flag which can get stuck if onSignedIn throws.
+
+  // ── Auth state handler ───────────────────────────────────────────────
+  // onAuthStateChange handles SIGNED_IN events fired AFTER the listener
+  // is registered (e.g. manual login, token refresh).
+  // We guard against duplicate calls by checking if the app is already visible.
   sb.auth.onAuthStateChange(async (event, session) => {
     console.log('[Auth]', event, session ? session.user?.email : 'no-session');
+    if(event === 'SIGNED_OUT'){
+      onSignedOut();
+      return;
+    }
+    if(event === 'PASSWORD_RECOVERY'){
+      showSetNewPassword();
+      return;
+    }
     if((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session){
-      // If the main app is already visible, this is a duplicate event — ignore it
-      const appVisible = document.getElementById('main-app').style.display !== 'none';
-      if(appVisible) return;
+      // Guard: if app is already loaded, ignore duplicate events
+      if(document.getElementById('main-app').style.display !== 'none') return;
       try {
         await onSignedIn(session.user);
       } catch(e) {
-        console.error('onSignedIn error:', e);
+        console.error('[Auth] onSignedIn error:', e);
         const err = document.getElementById('login-error');
         const btn = document.getElementById('login-btn');
         if(err) err.textContent = 'Login error: '+e.message;
         if(btn){ btn.textContent='Sign In'; btn.disabled=false; }
         showLoginScreen();
-        await sb.auth.signOut();
+        try { await sb.auth.signOut(); } catch(_){}
       }
-    } else if(event === 'SIGNED_OUT'){
-      onSignedOut();
-    } else if(event === 'PASSWORD_RECOVERY'){
-      showSetNewPassword();
     }
   });
+
+  // ── Handle cached session (regular Chrome with stored session) ────────
+  // In Supabase v2, INITIAL_SESSION can fire synchronously during createClient()
+  // — before onAuthStateChange is registered — so we must also check explicitly.
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if(session && document.getElementById('main-app').style.display === 'none'){
+      console.log('[Auth] Restored cached session for', session.user?.email);
+      await onSignedIn(session.user);
+    }
+  } catch(e) {
+    console.error('[Auth] getSession error:', e);
+  }
 });
 
 async function onSignedIn(user){
