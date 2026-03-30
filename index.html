@@ -3889,16 +3889,18 @@ window.addEventListener('load', async ()=>{
     if((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session){
       if(_authBusy) return; // Already loading the app, ignore duplicate events
       _authBusy = true;
+      // NOTE: _authBusy stays true until SIGNED_OUT — this blocks any duplicate
+      // SIGNED_IN events that Supabase v2 fires after the initial login completes.
+      // Only reset it on error (so the user can try again) or on SIGNED_OUT.
       try { await onSignedIn(session.user); } catch(e) {
         console.error('onSignedIn error:', e);
+        _authBusy = false; // Allow retry on error
         const err = document.getElementById('login-error');
         const btn = document.getElementById('login-btn');
         if(err) err.textContent = 'Login error: '+e.message;
         if(btn){ btn.textContent='Sign In'; btn.disabled=false; }
         showLoginScreen();
         await sb.auth.signOut();
-      } finally {
-        _authBusy = false;
       }
     } else if(event === 'SIGNED_OUT'){
       _authBusy = false;
