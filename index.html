@@ -1192,7 +1192,7 @@ function saveEstimateNow(){
   if(!pin){ toast('Pin not found','error'); return; }
   const owner = (document.getElementById('e-owner')||{}).value.trim()||'Homeowner';
   const email = (document.getElementById('e-email')||{}).value.trim()||'';
-  const total = (structures||[]).reduce((sum,s)=>sum+(calcStructurePrice?calcStructurePrice(s):0),0);
+  const total = (structures||[]).reduce((sum,s)=>sum+(calcStructPrice?calcStructPrice(s):0),0);
   const photoUrl = pin.photo_url || null;
   const estRecord = {
     id: window._editingEstimateId || ('est_' + Date.now()),
@@ -1235,7 +1235,7 @@ function autoSaveEstimateToPin(pinId){
     if(!pin) return;
     const owner = (document.getElementById('e-owner')||{}).value||'';
     const email = (document.getElementById('e-email')||{}).value||'';
-    const total = (structures||[]).reduce((sum,s)=>sum+(calcStructurePrice?calcStructurePrice(s):0),0);
+    const total = (structures||[]).reduce((sum,s)=>sum+(calcStructPrice?calcStructPrice(s):0),0);
     pin.estimate = { owner, email, total, structures: (structures||[]).map(s=>({...s})) };
     pin.at_est = new Date().toISOString();
     sb.from('pins').update({ estimate: pin.estimate }).eq('id', pinId).then(({error})=>{
@@ -3526,10 +3526,11 @@ async function sbSaveQueueItem(item){
 
 async function sbAddActivity(txt, ref){
   if(!currentAccount) return;
-  await sb.from('activity').insert({
+  const {error: actErr} = await sb.from('activity').insert({
     account_id: currentAccount.id, user_id: currentUser?.id,
     txt, ref
-  }).catch(e=>console.warn('Activity error:',e));
+  });
+  if(actErr) console.warn('Activity error:', actErr);
 }
 
 function subscribeRealtime(){
