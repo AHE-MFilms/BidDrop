@@ -639,9 +639,15 @@ tr:hover td{background:var(--card);}
         <div class="q-empty-title">Mail Queue is Empty</div>
         <div class="q-empty-sub">Build an estimate and click "Add to Mail Queue" to get started.</div>
       </div>
+      <div id="q-bulk-bar" style="display:none;align-items:center;gap:10px;margin-bottom:10px;padding:8px 12px;background:var(--card2);border-radius:8px;border:1px solid var(--border);">
+        <span id="q-selected-count" style="font-size:13px;font-weight:600;color:var(--text);">0 selected</span>
+        <button onclick="bulkDeleteQueue()" style="background:#EF4444;border:none;border-radius:6px;padding:6px 14px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">🗑 Delete Selected</button>
+        <button onclick="clearQueueSelection()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 14px;color:var(--muted);font-size:12px;cursor:pointer;">Clear</button>
+      </div>
       <table id="q-table" style="display:none;">
         <thead>
           <tr>
+            <th style="width:36px;"><input type="checkbox" id="q-select-all" onchange="toggleAllQueueSelect(this.checked)" style="cursor:pointer;width:16px;height:16px;accent-color:var(--accent);"></th>
             <th>Homeowner</th><th>Address</th><th>Estimate</th>
             <th>Material</th><th>Created</th><th>Status</th><th>Actions</th>
           </tr>
@@ -1136,24 +1142,27 @@ function loadEstFromPicker(){
   const p = S.pins.find(x=>x.id===sel.value);
   if(!p) return;
   currentEstPinId = p.id;
-  // Always fully reset the form first — no bleed from previous pin
+  // Reset form fields
   document.getElementById('e-owner').value = '';
   document.getElementById('e-email').value = '';
   document.getElementById('e-addr').value = p.address || '';
   clearHomePhoto();
-  ['a-sky','a-chim','a-gut'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
-  structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'6/12',material:'arch_shingle',complexity:'moderate',pts:null}];
-  // Now load this pin's saved estimate if it has one
+  ['a-sky','a-chim','a-gut'].forEach(function(id){var el=document.getElementById(id);if(el)el.checked=false;});
+  // Load this pin's saved estimate if it has one — otherwise keep current structures
   if(p.estimate){
     const est = typeof p.estimate === 'string' ? JSON.parse(p.estimate) : p.estimate;
     if(est.owner) document.getElementById('e-owner').value = est.owner;
     if(est.email) document.getElementById('e-email').value = est.email;
-    if(est.structures && est.structures.length) structures = est.structures.map(s=>({...s}));
+    if(est.structures && est.structures.length) structures = est.structures.map(function(s){return Object.assign({},s);});
+    else structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'6/12',material:'arch_shingle',complexity:'moderate',pts:null}];
+  } else {
+    // No saved estimate — reset to blank Main House (don't bleed from previous pin)
+    structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'6/12',material:'arch_shingle',complexity:'moderate',pts:null}];
   }
   // Load pin's photo if it has one
   if(p.photo_url){
     const prev = document.getElementById('home-photo-preview');
-    if(prev) prev.innerHTML = '<img src="'+p.photo_url+'" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML=\"No photo\"">';
+    if(prev) prev.innerHTML = '<img src="'+p.photo_url+'" style="width:100%;height:100%;object-fit:cover;">';
     const clr = document.getElementById('clear-photo-btn');
     if(clr) clr.style.display = 'block';
   }
@@ -1696,12 +1705,25 @@ function useRoofMeasurement(){
     _measureForPinId=null;
     if(pin){
       window._editingQueueId=null;
-      goTab('estimate');
+      // Auto-select this pin in the estimator
+      currentEstPinId = pin.id;
       document.getElementById('e-addr').value=pin.address||'';
+      // Load saved owner/email if available
+      if(pin.estimate){
+        const est = typeof pin.estimate === 'string' ? JSON.parse(pin.estimate) : pin.estimate;
+        if(est.owner) document.getElementById('e-owner').value = est.owner;
+        if(est.email) document.getElementById('e-email').value = est.email;
+      }
+      // Reset structures and apply measurement
+      structures = [];
       addStructure(sqft,'Main House',_lastMeasurePts);
       _lastMeasurePts=null;
+      goTab('estimate');
+      // Update picker dropdown to show this pin
+      const sel = document.getElementById('est-pin-picker');
+      if(sel) sel.value = pin.id;
       calcP();updatePreview();
-      toast('📐 '+sqft.toLocaleString()+' sq ft loaded!','success');
+      toast('📐 '+sqft.toLocaleString()+' sq ft loaded for '+escHtml(pin.address.split(',')[0])+'!','success');
       return;
     }
   }
@@ -2631,7 +2653,9 @@ function renderQueue(){
   tbody.innerHTML=S.queue.map(i=>{
     const sc={pending:'#F59E0B',sent:'#22C55E',failed:'#EF4444'}[i.status]||'#3D5269';
     const sl={pending:'Pending',sent:'Mailed ✓',failed:'Failed'}[i.status]||i.status;
+    const qid = i.id;
     return '<tr>'+
+      '<td style="text-align:center;"><input type="checkbox" class="q-row-cb" data-id="'+escHtml(qid)+'" onchange="updateQueueBulkBar()" style="cursor:pointer;width:16px;height:16px;accent-color:var(--accent);"></td>'+
       '<td style="font-weight:600;">'+escHtml(i.owner)+'</td>'+
       '<td style="color:var(--mid);font-size:11px;">'+escHtml(i.addr)+'</td>'+
       '<td style="font-family:var(--font-m);color:var(--accent);font-weight:600;">$'+i.total.toLocaleString()+'</td>'+
@@ -2639,11 +2663,11 @@ function renderQueue(){
       '<td style="font-family:var(--font-m);font-size:10px;color:var(--muted);">'+fmtDate(i.at)+'</td>'+
       '<td><span class="spill" style="background:'+sc+'22;color:'+sc+';border:1px solid '+sc+'44;">'+sl+'</span></td>'+
       '<td style="display:flex;gap:5px;align-items:center;">'+
-      (i.status==='pending'?'<button class="btn-xs pr" onclick="sendLob(\''+i.id+'\')">📬 Send</button>':
+      (i.status==='pending'?'<button class="btn-xs pr" onclick="sendLob(\''+qid+'\')">📬 Send</button>':
        i.status==='sent'?'<span style="font-size:10px;color:var(--muted);">'+fmtDate(i.mailedAt)+'</span>':
-       '<button class="btn-xs" onclick="sendLob(\''+i.id+'\')">Retry</button>')+
-      (i.status==='pending'?'<button class="btn-xs" onclick="editEstimate(\''+i.id+'\')">✏️ Edit</button>':'')+
-      '<button class="btn-xs danger" onclick="rmQ(\''+i.id+'\')" title="Delete">🗑 Delete</button>'+
+       '<button class="btn-xs" onclick="sendLob(\''+qid+'\')">' + 'Retry</button>')+
+      (i.status==='pending'?'<button class="btn-xs" onclick="editEstimate(\''+qid+'\')">✏️ Edit</button>':'')+
+      '<button class="btn-xs danger" onclick="rmQ(\''+qid+'\')" title="Delete">🗑 Delete</button>'+
       '</td></tr>';
   }).join('');
 }
@@ -2712,6 +2736,34 @@ function rmQ(id){
   if(!confirm('Delete this estimate?'))return;
   S.queue=S.queue.filter(x=>x.id!==id);
   save();renderQueue();toast('🗑 Estimate deleted','info');
+}
+function toggleAllQueueSelect(checked){
+  document.querySelectorAll('.q-row-cb').forEach(function(cb){cb.checked=checked;});
+  updateQueueBulkBar();
+}
+function updateQueueBulkBar(){
+  const cbs = document.querySelectorAll('.q-row-cb:checked');
+  const bar = document.getElementById('q-bulk-bar');
+  const cnt = document.getElementById('q-selected-count');
+  const all = document.getElementById('q-select-all');
+  const total = document.querySelectorAll('.q-row-cb').length;
+  if(bar) bar.style.display = cbs.length ? 'flex' : 'none';
+  if(cnt) cnt.textContent = cbs.length + ' selected';
+  if(all) all.indeterminate = cbs.length > 0 && cbs.length < total;
+  if(all && cbs.length === total && total > 0) all.checked = true;
+}
+function clearQueueSelection(){
+  document.querySelectorAll('.q-row-cb').forEach(function(cb){cb.checked=false;});
+  const all = document.getElementById('q-select-all');
+  if(all){all.checked=false;all.indeterminate=false;}
+  updateQueueBulkBar();
+}
+function bulkDeleteQueue(){
+  const ids = Array.from(document.querySelectorAll('.q-row-cb:checked')).map(function(cb){return cb.dataset.id;});
+  if(!ids.length) return;
+  if(!confirm('Delete ' + ids.length + ' selected item' + (ids.length>1?'s':'') + '?')) return;
+  S.queue = S.queue.filter(function(x){return !ids.includes(x.id);});
+  save(); renderQueue(); toast('🗑 Deleted ' + ids.length + ' item' + (ids.length>1?'s':''), 'info');
 }
 
 function editEstimate(id){
@@ -3415,9 +3467,31 @@ async function loadPinsFromSupabase(){
     notes: row.notes||'', rep: row.rep_name||'Unknown',
     pts: row.pts||null, at: row.created_at,
     photo_url: row.photo_url||null,
+    estimate: row.estimate||null,
     ghlContactId: row.ghl_contact_id||null,
     ghlOpportunityId: row.ghl_opportunity_id||null
   }));
+  // Rebuild S.estimates from pin.estimate data loaded from DB
+  S.estimates = [];
+  S.pins.forEach(function(pin){
+    if(pin.estimate){
+      var est = typeof pin.estimate === 'string' ? JSON.parse(pin.estimate) : pin.estimate;
+      if(est && est.structures){
+        S.estimates.push({
+          id: est.id || ('est_' + pin.id),
+          pinId: pin.id,
+          addr: pin.address || '',
+          owner: est.owner || '',
+          email: est.email || '',
+          total: est.total || 0,
+          structures: est.structures || [],
+          photo_url: pin.photo_url || null,
+          savedAt: pin.at_est || pin.at || new Date().toISOString(),
+          sentAt: null, status: 'saved'
+        });
+      }
+    }
+  });
   // Clear and re-add all markers
   Object.values(markers).forEach(m=>map&&map.removeLayer(m));
   markers={};
