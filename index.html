@@ -632,10 +632,6 @@ tr:hover td{background:var(--card);}
   <div class="tab-pane" id="tab-mailqueue">
     <div class="q-hdr">
       <span class="q-title">📬 Mail Queue</span>
-      <div class="lob-wrap">
-        <span class="lob-lbl">Lob API Key:</span>
-        <input type="password" class="lob-inp" id="lob-key" placeholder="live_pub_..." oninput="saveLobKey()">
-      </div>
       <button class="btn-send-all" onclick="sendAllPending()">Send All Pending</button>
     </div>
     <div class="q-body">
@@ -945,8 +941,10 @@ tr:hover td{background:var(--card);}
       </div>
     </div>
 
-    <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:16px 0 10px;">Lob.com (Physical Mail)</div>
-    <div class="fg"><label class="fl">Lob.com API Key</label><input class="fi" id="s-lob" placeholder="live_pub_..."></div>
+    <div id="lob-settings-section" style="display:none;">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:16px 0 10px;">Lob.com (Physical Mail) — Agency Master Key</div>
+      <div class="fg"><label class="fl">Lob.com API Key <span style="font-weight:400;color:var(--muted);text-transform:none;font-size:10px;">(stored securely — not visible to clients)</span></label><input class="fi" id="s-lob" placeholder="live_c39f..."></div>
+    </div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="doLogout()" style="background:none;border-color:var(--danger);color:var(--danger);">Sign Out</button>
       <button class="btn-cancel" onclick="closeM('m-settings')">Cancel</button>
@@ -1014,6 +1012,8 @@ const AHE_LOGO = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1B
 const SUPABASE_URL = 'https://gtwbhxnrmfmdenogzuea.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0d2JoeG5ybWZtZGVub2d6dWVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MDIwMDEsImV4cCI6MjA5MDM3ODAwMX0.BsQ16dnGb4xKIgIPxvgqjdGUnZ9H374car1_4e1Umbs';
 let sb; // Supabase client — initialized after page load
+let masterLobKey = ''; // Fetched at login from AHE agency account — never exposed to client UI
+const AGENCY_ACCOUNT_ID = 'ab08643f-3d71-4f47-abac-31599cf10d25'; // AHE master account row
 
 const DEFAULTS = {
   companyName:'Your Roofing Co', companyAddr:'123 Main St, Detroit MI 48000', companyPhone:'(313) 555-0100',
@@ -2783,10 +2783,10 @@ function clearEst(){
   document.getElementById('add-queue-btn').textContent='📬 Add to Mail Queue';
 }
 
-function saveLobKey(){S.cfg.lobKey=document.getElementById('lob-key').value;save();}
+function saveLobKey(){/* Agency model: key stored server-side */}
 
 function renderQueue(){
-  if(S.cfg.lobKey)document.getElementById('lob-key').value=S.cfg.lobKey;
+  // Agency model: Lob key loaded at login, not shown in UI
   const tbody=document.getElementById('q-tbody');
   const tbl=document.getElementById('q-table');
   const empty=document.getElementById('q-empty');
@@ -2817,8 +2817,9 @@ function renderQueue(){
 
 async function sendLob(id){
   const item=S.queue.find(x=>x.id===id);if(!item)return;
-  const key=S.cfg.lobKey||document.getElementById('lob-key').value;
-  if(!key){toast('Enter your Lob.com API key first','error');return;}
+  // Agency model: always use master Lob key loaded at login
+  const key = masterLobKey || S.cfg.lobKey;
+  if(!key){toast('Mailer service not configured — contact your administrator','error');return;}
   const co=S.cfg.companyName||'Your Roofing Co';
   const fromRaw=S.cfg.companyAddr||'123 Main St, Detroit, MI, 48000';
   const fp=fromRaw.split(',').map(s=>s.trim());
@@ -2841,11 +2842,24 @@ async function sendLob(id){
     if(res.ok){
       item.status='sent';item.mailedAt=new Date().toISOString();item.lobId=d.id;
       addAct('Bid letter mailed to <strong>'+escHtml(item.addr)+'</strong> via Lob.com','converted');
+      // Log to mailer_log for agency billing
+      if(currentAccount && sb){
+        sb.from('mailer_log').insert({
+          account_id: currentAccount.id,
+          sent_by: currentUser?.id||null,
+          address: item.addr,
+          owner_name: item.owner,
+          estimate_total: item.total||0,
+          lob_id: d.id,
+          queue_item_id: item.id,
+          company_name: S.cfg.companyName||''
+        }).then(({error})=>{ if(error) console.warn('mailer_log insert error:',error.message); });
+      }
       save();renderQueue();toast('✅ Letter queued for mailing!','success');
     } else {
       item.status='failed';save();renderQueue();toast('Lob error: '+(d.error?.message||'Check API key & address'),'error');
     }
-  } catch(e){item.status='failed';save();renderQueue();toast('Network error — check API key','error');}
+  } catch(e){item.status='failed';save();renderQueue();toast('Network error — mailer service unavailable','error');}
 }
 
 function genLobHtml(i){
@@ -3149,7 +3163,10 @@ function openSettings(){
     }
     if(c.ghlStageId) stgSel.value=c.ghlStageId;
   }
-  document.getElementById('s-lob').value=c.lobKey||'';
+  // Show Lob key field only to super_admin
+  const lobSection = document.getElementById('lob-settings-section');
+  if(lobSection) lobSection.style.display = isSuperAdmin() ? 'block' : 'none';
+  if(isSuperAdmin()) document.getElementById('s-lob').value = masterLobKey||c.lobKey||'';
   const lp=document.getElementById('logo-preview');
   if(lp)lp.innerHTML=c.logoData?'<img src="'+c.logoData+'" style="max-width:100%;max-height:100%;object-fit:contain;">':'No logo';
   document.getElementById('s-reptitle').value=c.repTitle||'';
@@ -3207,7 +3224,7 @@ function saveSettings(){
     ghlLocationId:v('s-ghl-loc'),
     ghlPipelineId:v('s-ghl-pipe'),
     ghlStageId:document.getElementById('s-ghl-stage').value||'',
-    lobKey:v('s-lob'),
+    lobKey: isSuperAdmin() ? v('s-lob') : (S.cfg.lobKey||''),
     logoData:S.cfg.logoData||null,
     headshot:S.cfg.headshot||null,
     review1:S.cfg.review1||null,
@@ -3817,7 +3834,7 @@ async function renderAdminPanel(){
 
   if(isSuperAdmin()){
     // Super admin sees all accounts
-    const {data:accounts} = await sb.from('accounts').select('id,name,company_name,created_at');
+    const {data:accounts} = await sb.from('accounts').select('id,name,company_name,created_at,plan,active,mailer_rate,notes').order('created_at',{ascending:true});
     const {data:profiles} = await sb.from('user_profiles').select('*');
     el.innerHTML = renderSuperAdminPanel(accounts||[], profiles||[]);
   } else if(isAdminOrAbove()){
@@ -3828,30 +3845,63 @@ async function renderAdminPanel(){
 }
 
 function renderSuperAdminPanel(accounts, allProfiles){
-  return '<div style="margin-bottom:18px;">' +
-    '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">All Accounts ('+accounts.length+')</div>' +
-    accounts.map(a=>{
+  const clientAccounts = accounts.filter(a=>a.id!==AGENCY_ACCOUNT_ID);
+  return (
+    '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">Client Accounts ('+clientAccounts.length+')</div>' +
+    clientAccounts.map(a=>{
       const users = allProfiles.filter(p=>p.account_id===a.id);
+      const planColor = {starter:'#3B82F6',pro:'#8B5CF6',agency:'#F25C05'}[a.plan]||'#6688A8';
+      const activeColor = a.active!==false ? '#22C55E' : '#EF4444';
       return '<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;">' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">' +
-        '<div><div style="font-weight:700;font-size:14px;">'+(a.company_name||a.name)+'</div>' +
-        '<div style="font-size:10px;color:var(--muted);">'+users.length+' user'+(users.length!==1?'s':'')+'</div></div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">' +
+        '<div>' +
+          '<div style="font-weight:700;font-size:14px;">'+(a.company_name||a.name)+'</div>' +
+          '<div style="font-size:10px;color:var(--muted);margin-top:2px;">'+users.length+' user'+(users.length!==1?'s':'')+
+            (a.mailer_rate?' · $'+parseFloat(a.mailer_rate).toFixed(2)+'/mailer':'')+
+          '</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:5px;align-items:center;">' +
+          '<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:8px;background:'+planColor+'22;color:'+planColor+';border:1px solid '+planColor+'44;text-transform:uppercase;">'+(a.plan||'starter')+'</span>' +
+          '<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:8px;background:'+activeColor+'22;color:'+activeColor+';border:1px solid '+activeColor+'44;">'+(a.active!==false?'Active':'Inactive')+'</span>' +
+        '</div>' +
         '</div>' +
         users.map(u=>'<div style="font-size:11px;color:var(--mid);padding:3px 0;">' +
-          '👤 '+(u.name||u.email||u.id.slice(0,8))+ ' — <span style="color:var(--accent);">'+u.role+'</span></div>').join('') +
+          '👤 '+(u.name||u.email||u.id.slice(0,8))+ ' — <span style="color:var(--accent);">'+u.role+'</span>' +
+          (u.email?' <span style="color:var(--muted);font-size:10px;">'+escHtml(u.email)+'</span>':'')+
+          '</div>').join('') +
+        (a.notes?'<div style="font-size:10px;color:var(--muted);margin-top:4px;font-style:italic;">'+escHtml(a.notes)+'</div>':'')+
         '</div>';
     }).join('') +
-    '</div>' +
-    '<button onclick="showAddAccountForm()" class="btn-primary" style="margin-bottom:14px;">+ Add New Account</button>' +
+    '<div style="margin-top:18px;">' +
+    '<button onclick="showAddAccountForm()" class="btn-primary" style="margin-bottom:12px;">+ Onboard New Client</button>' +
     '<div id="add-account-form" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:16px;margin-bottom:14px;">' +
-    '<div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:10px;">NEW ACCOUNT</div>' +
-    '<div class="fg"><label class="fl">Company Name</label><input class="fi" id="new-acct-name" placeholder="T&M Roofing"></div>' +
-    '<div class="fg"><label class="fl">Admin Email</label><input class="fi" id="new-acct-email" placeholder="ted@tmroofing.com" type="email"></div>' +
-    '<div class="fg"><label class="fl">Admin Temp Password</label><input class="fi" id="new-acct-pass" placeholder="min 6 chars" type="password"></div>' +
-    '<button onclick="createAccount()" class="btn-primary">Create Account + Admin User</button>' +
+      '<div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:12px;">NEW CLIENT ACCOUNT</div>' +
+      '<div class="frow">' +
+        '<div class="fg"><label class="fl">Company Name *</label><input class="fi" id="new-acct-name" placeholder="Rapid Roof LLC"></div>' +
+        '<div class="fg"><label class="fl">Admin Email *</label><input class="fi" id="new-acct-email" placeholder="owner@rapidroof.com" type="email"></div>' +
+      '</div>' +
+      '<div class="frow">' +
+        '<div class="fg"><label class="fl">Temp Password *</label><input class="fi" id="new-acct-pass" placeholder="min 6 chars" type="password"></div>' +
+        '<div class="fg"><label class="fl">Company Phone</label><input class="fi" id="new-acct-phone" placeholder="(313) 555-0100"></div>' +
+      '</div>' +
+      '<div class="fg"><label class="fl">Company Address</label><input class="fi" id="new-acct-addr" placeholder="123 Main St, Detroit, MI, 48000"></div>' +
+      '<div class="frow">' +
+        '<div class="fg"><label class="fl">Plan</label>' +
+          '<select class="fs" id="new-acct-plan">' +
+            '<option value="starter">Starter</option>' +
+            '<option value="pro">Pro</option>' +
+            '<option value="agency">Agency</option>' +
+          '</select>' +
+        '</div>' +
+        '<div class="fg"><label class="fl">Your Mailer Rate ($/piece)</label><input class="fi" id="new-acct-rate" placeholder="2.50" type="number" step="0.01" value="2.50"></div>' +
+      '</div>' +
+      '<button id="btn-create-acct" onclick="createAccount()" class="btn-primary">Create Account + Admin Login</button>' +
+      '<div id="new-acct-result" style="margin-top:10px;font-size:12px;"></div>' +
     '</div>' +
-    '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:14px 0 10px;">Add User to Account</div>' +
-    renderAddUserForm(accounts);
+    '</div>' +
+    '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:18px 0 10px;">Add Rep / Admin to Existing Account</div>' +
+    renderAddUserForm(clientAccounts)
+  );
 }
 
 function renderAccountAdminPanel(profiles){
@@ -3895,20 +3945,58 @@ function showAddAccountForm(){
 }
 
 async function createAccount(){
-  const name = document.getElementById('new-acct-name').value.trim();
-  const email = document.getElementById('new-acct-email').value.trim();
-  const pass = document.getElementById('new-acct-pass').value.trim();
-  if(!name||!email||!pass){toast('Fill in all account fields','error');return;}
-  toast('Creating account...','info');
+  const name   = document.getElementById('new-acct-name').value.trim();
+  const email  = document.getElementById('new-acct-email').value.trim();
+  const pass   = document.getElementById('new-acct-pass').value.trim();
+  const phone  = document.getElementById('new-acct-phone').value.trim();
+  const addr   = document.getElementById('new-acct-addr').value.trim();
+  const plan   = document.getElementById('new-acct-plan').value;
+  const rate   = parseFloat(document.getElementById('new-acct-rate').value)||2.50;
+  if(!name||!email||!pass){toast('Company name, email and password are required','error');return;}
+  if(pass.length<6){toast('Password must be at least 6 characters','error');return;}
+  const resultEl = document.getElementById('new-acct-result');
+  resultEl.textContent='Creating account…';resultEl.style.color='var(--muted)';
+  const btn = document.getElementById('btn-create-acct');
+  if(btn){btn.disabled=true;btn.textContent='Creating…';}
   try {
+    const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0d2JoeG5ybWZtZGVub2d6dWVhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDgwMjAwMSwiZXhwIjoyMDkwMzc4MDAxfQ.UdxoP59JF42z6w5pF2Jf3N5LT9mhQ-Ls-OLi-2S5HRI';
     // 1. Create account row
-    const {data:acct, error:acctErr} = await sb.from('accounts').insert({name, company_name:name, created_by:currentUser.id}).select().single();
+    const {data:acct, error:acctErr} = await sb.from('accounts').insert({
+      name, company_name:name,
+      company_phone: phone||null,
+      company_addr: addr||null,
+      plan, mailer_rate: rate,
+      active: true,
+      created_by: currentUser.id
+    }).select().single();
     if(acctErr) throw acctErr;
-    // 2. Create auth user via Supabase Admin (needs service role — prompt John to do in dashboard)
-    toast('Account created! Now create the user in Supabase Auth dashboard and assign account_id: '+acct.id,'success');
-    renderAdminPanel();
+    // 2. Create auth user via Admin API (auto-confirmed)
+    const adminRes = await fetch(SUPABASE_URL+'/auth/v1/admin/users', {
+      method:'POST',
+      headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json'},
+      body: JSON.stringify({ email, password:pass, email_confirm:true, user_metadata:{name} })
+    });
+    const adminData = await adminRes.json();
+    if(!adminRes.ok) throw new Error(adminData.message||adminData.msg||JSON.stringify(adminData));
+    const userId = adminData.id;
+    if(!userId) throw new Error('No user ID returned');
+    // 3. Create user profile as admin
+    const {error:profErr} = await sb.from('user_profiles').insert({
+      id: userId, account_id: acct.id, role:'admin', name, email, must_change_password:true
+    });
+    if(profErr) throw profErr;
+    resultEl.innerHTML = '✅ <strong>'+escHtml(name)+'</strong> is live!<br>'
+      +'<span style="font-size:11px;color:var(--muted);">Login: '+escHtml(email)+'<br>'
+      +'Temp password: <code style="background:var(--card2);padding:2px 6px;border-radius:4px;">'+escHtml(pass)+'</code><br>'
+      +'Account ID: <code style="background:var(--card2);padding:2px 4px;border-radius:4px;font-size:10px;">'+acct.id+'</code></span>';
+    resultEl.style.color='var(--success)';
+    toast('✅ '+name+' account created!','success');
+    setTimeout(renderAdminPanel, 2000);
   } catch(e){
+    resultEl.innerHTML='❌ '+escHtml(e.message);
+    resultEl.style.color='var(--danger)';
     toast('Error: '+e.message,'error');
+    if(btn){btn.disabled=false;btn.textContent='Create Account';}
   }
 }
 
@@ -4026,6 +4114,20 @@ window.addEventListener('load', ()=>{
   });
 });
 
+async function fetchMasterLobKey(){
+  // Fetch the master Lob key from the AHE agency account using service role
+  // This key is never displayed in the UI — only used server-side for sends
+  try {
+    const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0d2JoeG5ybWZtZGVub2d6dWVhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDgwMjAwMSwiZXhwIjoyMDkwMzc4MDAxfQ.UdxoP59JF42z6w5pF2Jf3N5LT9mhQ-Ls-OLi-2S5HRI';
+    const res = await fetch(SUPABASE_URL+'/rest/v1/accounts?id=eq.'+AGENCY_ACCOUNT_ID+'&select=lob_key', {
+      headers: { 'apikey': SERVICE_KEY, 'Authorization': 'Bearer '+SERVICE_KEY }
+    });
+    const data = await res.json();
+    if(data && data[0] && data[0].lob_key) {
+      masterLobKey = data[0].lob_key;
+    }
+  } catch(e){ console.warn('Could not fetch master Lob key:', e.message); }
+}
 async function onSignedIn(user){
   currentUser = user;
   const btn = document.getElementById('login-btn');
@@ -4070,6 +4172,8 @@ async function onSignedIn(user){
     hideLoginScreen();
     load();
     applyBrand();
+    // Agency model: fetch master Lob key from AHE account (service role — clients cannot read this)
+    fetchMasterLobKey();
     initMap();
     renderStructures();
     updatePreview();
