@@ -505,7 +505,17 @@ tr:hover td{background:var(--card);}
   <!-- ESTIMATE -->
   <div class="tab-pane" id="tab-estimate">
     <div class="est-form">
-      <div class="pane-title">Build Estimate</div>
+      <div class="pane-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>Build Estimate</span>
+        <button onclick="newEstimate()" style="background:none;border:1px solid var(--border);border-radius:7px;padding:5px 12px;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.4px;text-transform:uppercase;">✕ New</button>
+      </div>
+      <!-- Pin picker: load a saved pin into the estimate -->
+      <div class="fg" id="est-pin-picker-wrap">
+        <label class="fl">Load from Pinned Home</label>
+        <select class="fs" id="est-pin-picker" onchange="loadEstFromPicker()">
+          <option value="">— Select a pinned address —</option>
+        </select>
+      </div>
       <div class="fg">
         <label class="fl">Homeowner Name</label>
         <input class="fi" id="e-owner" placeholder="Jane Smith" oninput="updatePreview()">
@@ -1059,13 +1069,82 @@ function accountRowToCfg(row){
 // ═══════════════════════════════
 //  TABS
 // ═══════════════════════════════
+// Track which pin the current estimate belongs to
+let currentEstPinId = null;
+
 function goTab(t){
+  const prev = document.querySelector('.tab-pane.active');
+  const prevId = prev ? prev.id : '';
+  // Auto-save estimate to pin when leaving the estimate tab
+  if(prevId === 'tab-estimate' && t !== 'estimate' && currentEstPinId){
+    autoSaveEstimateToPin(currentEstPinId);
+  }
   document.querySelectorAll('.tab-btn,.bnav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
   document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active',p.id==='tab-'+t));
   if(t==='map'){setTimeout(()=>map&&map.invalidateSize(),80);}
   if(t==='dashboard')renderDash();
   if(t==='mailqueue')renderQueue();
-  if(t==='estimate')updatePreview();
+  if(t==='estimate'){populateEstPinPicker();updatePreview();}
+}
+
+function populateEstPinPicker(){
+  const sel = document.getElementById('est-pin-picker');
+  if(!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— Select a pinned address —</option>';
+  (S.pins||[]).forEach(p=>{
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.address || (p.lat.toFixed(4)+', '+p.lng.toFixed(4));
+    if(p.id === currentEstPinId) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  if(cur && !currentEstPinId) sel.value = cur;
+}
+
+function loadEstFromPicker(){
+  const sel = document.getElementById('est-pin-picker');
+  if(!sel || !sel.value) return;
+  const p = S.pins.find(x=>x.id===sel.value);
+  if(!p) return;
+  currentEstPinId = p.id;
+  document.getElementById('e-addr').value = p.address || '';
+  // Load saved estimate data if it exists on the pin
+  if(p.estimate){
+    const est = typeof p.estimate === 'string' ? JSON.parse(p.estimate) : p.estimate;
+    if(est.owner) document.getElementById('e-owner').value = est.owner;
+    if(est.email) document.getElementById('e-email').value = est.email;
+  }
+  renderStructures(); calcP(); updatePreview();
+  toast('📋 Loaded: '+p.address.split(',')[0],'info');
+}
+
+function newEstimate(){
+  currentEstPinId = null;
+  document.getElementById('e-owner').value = '';
+  document.getElementById('e-addr').value = '';
+  document.getElementById('e-email').value = '';
+  structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'6/12',material:'arch_shingle',complexity:'moderate',pts:null}];
+  renderStructures(); calcP(); updatePreview();
+  const sel = document.getElementById('est-pin-picker');
+  if(sel) sel.value = '';
+  toast('🗒 New estimate started','info');
+}
+
+function autoSaveEstimateToPin(pinId){
+  const pin = S.pins.find(p=>p.id===pinId);
+  if(!pin) return;
+  const owner = (document.getElementById('e-owner')||{}).value||'';
+  const email = (document.getElementById('e-email')||{}).value||'';
+  const total = structures.reduce((sum,s)=>sum+calcStructurePrice(s),0);
+  // Save lightweight estimate snapshot to pin
+  pin.estimate = { owner, email, total, structures: structures.map(s=>({...s})) };
+  pin.at_est = new Date().toISOString();
+  // Persist to Supabase
+  sb.from('pins').update({ estimate: pin.estimate }).eq('id', pinId).then(({error})=>{
+    if(error) console.warn('Auto-save estimate:', error);
+  });
+  save();
 }
 
 function togglePinPanel(){
@@ -1409,7 +1488,15 @@ function onMapClick(e){
   const repInp = document.getElementById('p-rep');
   if(repInp && currentProfile) repInp.value = currentProfile.name || '';
   openM('m-pin');
-  revGeo(e.latlng.lat,e.latlng.lng);
+  // Disable Save and show loading until reverse geocode completes
+  const saveBtn = document.querySelector('#m-pin .btn-ok');
+  const addrInp = document.getElementById('p-addr');
+  if(saveBtn){ saveBtn.disabled = true; saveBtn.textContent = 'Locating...'; }
+  if(addrInp){ addrInp.placeholder = 'Fetching address...'; }
+  revGeo(e.latlng.lat, e.latlng.lng).then(()=>{
+    if(saveBtn){ saveBtn.disabled = false; saveBtn.textContent = 'Save Pin'; }
+    if(addrInp){ addrInp.placeholder = ''; }
+  });
 }
 
 function onMapDblClick(e){
@@ -1642,9 +1729,14 @@ async function revGeo(lat,lng){
       const a=d.address;
       const st=[a.house_number,a.road].filter(Boolean).join(' ');
       const city=a.city||a.town||a.village||a.county||'';
-      document.getElementById('p-addr').value=[st,city,a.state||'',a.postcode||''].filter(Boolean).join(', ');
+      const addr=[st,city,a.state||'',a.postcode||''].filter(Boolean).join(', ');
+      document.getElementById('p-addr').value=addr;
     }
-  }catch(e){}
+  }catch(e){
+    // If geocoding fails, leave field blank so user can type manually
+    console.warn('revGeo failed:',e);
+  }
+  // Always resolves (even on error) so the Save button re-enables
 }
 
 function mkIcon(status){
@@ -1755,10 +1847,24 @@ function cycleStatus(id){
 
 function goEstFromPin(id){
   const p=S.pins.find(x=>x.id===id);if(!p)return;
+  currentEstPinId = id;
   if(!structures.length)addStructure(0,'Main House');
+  // Load saved estimate data if available
+  if(p.estimate){
+    const est = typeof p.estimate === 'string' ? JSON.parse(p.estimate) : p.estimate;
+    if(est.owner) document.getElementById('e-owner').value = est.owner;
+    if(est.email) document.getElementById('e-email').value = est.email;
+    if(est.structures && est.structures.length){
+      structures = est.structures;
+    }
+  }
   goTab('estimate');
   document.getElementById('e-addr').value=p.address||'';
+  // Update picker to show this pin as selected
+  const sel = document.getElementById('est-pin-picker');
+  if(sel) sel.value = id;
   renderStructures();calcP();updatePreview();
+  toast('📋 '+p.address.split(',')[0],'info');
 }
 
 // ═══════════════════════════════
