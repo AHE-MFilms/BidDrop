@@ -3493,6 +3493,7 @@ async function createUser(){
 //  INIT
 // ═══════════════════════════════
 let _signingIn = false; // True only while doLogin() is in progress
+let _preSigningOut = false; // True when doLogin() is doing a pre-signout to clear stale session
 
 window.addEventListener('load', async ()=>{
   // Initialize Supabase client
@@ -3524,8 +3525,14 @@ window.addEventListener('load', async ()=>{
         showLoginScreen();
       }
     } else if(event === 'SIGNED_OUT'){
-      _signingIn = false;
-      onSignedOut();
+      if(_preSigningOut){
+        // This SIGNED_OUT was triggered by doLogin()'s pre-signout — ignore it, login is still in progress
+        _preSigningOut = false;
+      } else {
+        // Real sign-out by user
+        _signingIn = false;
+        onSignedOut();
+      }
     } else if(event === 'PASSWORD_RECOVERY'){
       // User clicked the reset link in their email — show the Set New Password screen
       showSetNewPassword();
@@ -3629,7 +3636,12 @@ async function doLogin(){
     // Sign out any stale session first so Supabase always issues a fresh token
     // This prevents the lock collision caused by INITIAL_SESSION + SIGNED_IN
     // firing with the same cached access_token
-    await sb.auth.signOut();
+    // Check if there's an active session before signing out to avoid spurious SIGNED_OUT events
+    const { data: { session: existingSession } } = await sb.auth.getSession();
+    if(existingSession){
+      _preSigningOut = true; // Tell SIGNED_OUT handler to ignore this
+      await sb.auth.signOut();
+    }
     _signingIn = true; // Tell onAuthStateChange to handle the upcoming SIGNED_IN
     const {error} = await sb.auth.signInWithPassword({email, password:pass});
     if(error){
