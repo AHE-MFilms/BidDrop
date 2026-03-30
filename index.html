@@ -3871,30 +3871,24 @@ async function createUser(){
 // ═══════════════════════════════
 //  INIT
 // ═══════════════════════════════
-// ── Auth state: purely event-driven, no flags needed ──────────────
-let _authBusy = false; // Prevents concurrent onSignedIn calls
-
 window.addEventListener('load', async ()=>{
   // Initialize Supabase client
   sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
   // Show login screen immediately
   showLoginScreen();
-
-  // Simple, reliable auth handler — no flags, no pre-signout hacks
-  // SIGNED_IN fires for both manual login and auto-resume on page load
-  // SIGNED_OUT fires when user signs out or session expires
+  // Auth handler — event-driven, no flags
+  // Duplicate SIGNED_IN events are blocked by checking if the app is already visible.
+  // This is more reliable than a flag which can get stuck if onSignedIn throws.
   sb.auth.onAuthStateChange(async (event, session) => {
     console.log('[Auth]', event, session ? session.user?.email : 'no-session');
     if((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session){
-      if(_authBusy) return; // Already loading the app, ignore duplicate events
-      _authBusy = true;
-      // NOTE: _authBusy stays true until SIGNED_OUT — this blocks any duplicate
-      // SIGNED_IN events that Supabase v2 fires after the initial login completes.
-      // Only reset it on error (so the user can try again) or on SIGNED_OUT.
-      try { await onSignedIn(session.user); } catch(e) {
+      // If the main app is already visible, this is a duplicate event — ignore it
+      const appVisible = document.getElementById('main-app').style.display !== 'none';
+      if(appVisible) return;
+      try {
+        await onSignedIn(session.user);
+      } catch(e) {
         console.error('onSignedIn error:', e);
-        _authBusy = false; // Allow retry on error
         const err = document.getElementById('login-error');
         const btn = document.getElementById('login-btn');
         if(err) err.textContent = 'Login error: '+e.message;
@@ -3903,10 +3897,8 @@ window.addEventListener('load', async ()=>{
         await sb.auth.signOut();
       }
     } else if(event === 'SIGNED_OUT'){
-      _authBusy = false;
       onSignedOut();
     } else if(event === 'PASSWORD_RECOVERY'){
-      // User clicked the reset link in their email — show the Set New Password screen
       showSetNewPassword();
     }
   });
