@@ -2729,6 +2729,7 @@ function renderQueue(){
        i.status==='sent'?'<span style="font-size:10px;color:var(--muted);">'+fmtDate(i.mailedAt)+'</span>':
        '<button class="btn-xs" onclick="sendLob(\''+qid+'\')">' + 'Retry</button>')+
       (i.status==='pending'?'<button class="btn-xs" onclick="editEstimate(\''+qid+'\')">✏️ Edit</button>':'')+
+      '<button class="btn-xs" onclick="previewQueueItem(\''+qid+'\')">&#128065; Preview</button>'+
       '<button class="btn-xs danger" onclick="rmQ(\''+qid+'\')" title="Delete">🗑 Delete</button>'+
       '</td></tr>';
   }).join('');
@@ -2828,6 +2829,35 @@ function bulkDeleteQueue(){
   save(); renderQueue(); toast('🗑 Deleted ' + ids.length + ' item' + (ids.length>1?'s':''), 'info');
 }
 
+function previewQueueItem(id){
+  const item=S.queue.find(x=>x.id===id);if(!item)return;
+  // Temporarily load the queue item into the preview state without switching tabs
+  const savedOwner=document.getElementById('e-owner').value;
+  const savedAddr=document.getElementById('e-addr').value;
+  const savedPhoto=window._homePhotoData;
+  const savedStructures=JSON.parse(JSON.stringify(structures));
+  // Load queue item data
+  document.getElementById('e-owner').value=item.owner||'';
+  document.getElementById('e-addr').value=item.addr||'';
+  if(item.structures&&item.structures.length){structures=JSON.parse(JSON.stringify(item.structures));}
+  window._homePhotoData=item.photo_data||null;
+  calcP();updatePreview();
+  // Open print preview modal/window
+  const w=window.open('','_blank','width=900,height=700,scrollbars=yes');
+  const previewEl=document.getElementById('preview-pane');
+  if(w&&previewEl){
+    w.document.write('<html><head><title>Preview - '+item.addr+'</title>'+
+      '<style>body{margin:0;padding:20px;background:#f5f5f5;}@media print{body{margin:0;padding:0;}}</style></head><body>'+
+      previewEl.innerHTML+'</body></html>');
+    w.document.close();
+  }
+  // Restore previous state
+  document.getElementById('e-owner').value=savedOwner;
+  document.getElementById('e-addr').value=savedAddr;
+  window._homePhotoData=savedPhoto;
+  structures=savedStructures;
+  calcP();updatePreview();
+}
 function editEstimate(id){
   const item=S.queue.find(x=>x.id===id);if(!item)return;
   document.getElementById('e-owner').value=item.owner||'';
@@ -2837,6 +2867,18 @@ function editEstimate(id){
     structures=JSON.parse(JSON.stringify(item.structures));
   } else {
     structures=[{id:'s'+Date.now(),name:'Main House',sqft:item.sqft||0,pitch:'1.31',mat:'1.3',stories:'1',complexity:'1.12'}];
+  }
+  // Restore photo
+  if(item.photo_data){
+    window._homePhotoData=item.photo_data;
+    const prev=document.getElementById('photo-preview');
+    const btn=document.getElementById('photo-remove-btn');
+    if(prev){prev.innerHTML='<img src="'+item.photo_data+'" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">';}
+    if(btn){btn.style.display='';}
+  } else {
+    window._homePhotoData=null;
+    const prev=document.getElementById('photo-preview');
+    if(prev){prev.innerHTML='<span style="color:var(--muted);font-size:11px;">No photo</span>';}
   }
   window._editingQueueId=id;
   renderStructures();goTab('estimate');calcP();updatePreview();
