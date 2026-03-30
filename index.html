@@ -699,7 +699,10 @@ tr:hover td{background:var(--card);}
         <div id="zpd-address" style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;"></div>
         <div id="zpd-meta" style="font-size:12px;color:var(--muted);margin-bottom:10px;"></div>
         <div id="zpd-estimate" style="font-size:13px;color:var(--accent);font-weight:700;margin-bottom:12px;"></div>
-        <button id="zpd-edit-btn" onclick="openPinInEstimator()" class="btn-ok" style="width:100%;font-size:12px;padding:9px;">Edit in Estimator</button>
+        <div style="display:flex;gap:8px;">
+          <button id="zpd-preview-btn" onclick="previewZonePin()" class="btn-sec" style="flex:1;font-size:12px;padding:9px;background:var(--card2);border-color:var(--border);color:var(--mid);">&#128065; Preview</button>
+          <button id="zpd-edit-btn" onclick="openPinInEstimator()" class="btn-ok" style="flex:1;font-size:12px;padding:9px;">&#9998; Edit</button>
+        </div>
       </div>
     </div>
   </div>
@@ -4498,6 +4501,35 @@ function openPinInEstimator(){
       picker.dispatchEvent(new Event('change'));
     }
   }, 150);
+}
+
+function previewZonePin(){
+  if(!currentZonePin) return;
+  const pin = currentZonePin;
+  if(!pin.estimate){ toast('No estimate built for this pin yet.','info'); return; }
+  const est = typeof pin.estimate==='string' ? JSON.parse(pin.estimate) : pin.estimate;
+  if(!est || !est.structures){ toast('No estimate data found.','info'); return; }
+  // Save current estimator state so we can restore it
+  const savedOwner = document.getElementById('e-owner').value;
+  const savedEmail = document.getElementById('e-email').value;
+  const savedAddr  = document.getElementById('e-addr').value;
+  // Temporarily load pin data into estimator fields
+  document.getElementById('e-owner').value = est.owner || pin.address.split(',')[0] || 'Homeowner';
+  document.getElementById('e-email').value = est.email || '';
+  document.getElementById('e-addr').value  = pin.address || '';
+  // Load structures into estimator state and re-render preview
+  S.structures = est.structures || [];
+  if(typeof updatePreview === 'function') updatePreview();
+  // Copy rendered mailer into the preview modal
+  const mailerEl = document.getElementById('mailer-preview');
+  const modalContent = document.getElementById('queue-preview-content');
+  if(mailerEl && modalContent){ modalContent.innerHTML = mailerEl.innerHTML; }
+  // Restore estimator state
+  document.getElementById('e-owner').value = savedOwner;
+  document.getElementById('e-email').value = savedEmail;
+  document.getElementById('e-addr').value  = savedAddr;
+  if(typeof updatePreview === 'function') updatePreview();
+  openM('m-queue-preview');
 }
 
 function getRepName(repId){
