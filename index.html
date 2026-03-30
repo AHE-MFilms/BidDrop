@@ -197,6 +197,22 @@ tr:hover td{background:var(--card);}
 .btn-add-team:hover{border-color:var(--accent);color:var(--accent);}
 .act-feed{max-height:220px;overflow-y:auto;}
 .act-feed::-webkit-scrollbar{width:3px;}
+.ag-acct-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;transition:border-color .15s;}
+.ag-acct-card:hover{border-color:var(--accent);}
+.ag-acct-name{font-family:var(--font-h);font-size:15px;font-weight:700;letter-spacing:.5px;margin-bottom:4px;}
+.ag-acct-meta{font-size:10px;color:var(--muted);margin-bottom:10px;}
+.ag-stat-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+.ag-stat{background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;text-align:center;flex:1;min-width:60px;}
+.ag-stat-val{font-family:var(--font-h);font-size:18px;font-weight:700;color:var(--text);}
+.ag-stat-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:1px;}
+.ag-bill-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-top:1px solid var(--border);margin-top:8px;}
+.ag-bill-lbl{font-size:11px;color:var(--muted);}
+.ag-bill-val{font-family:var(--font-h);font-size:16px;font-weight:700;color:var(--success);}
+.ag-log-table{width:100%;border-collapse:collapse;font-size:11px;}
+.ag-log-table th{text-align:left;padding:7px 10px;font-size:9px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap;}
+.ag-log-table td{padding:7px 10px;border-bottom:1px solid rgba(46,64,96,.5);color:var(--mid);vertical-align:middle;}
+.ag-log-table tr:last-child td{border-bottom:none;}
+.ag-log-table tr:hover td{background:var(--card2);}
 .act-item{display:flex;gap:9px;padding:7px 0;border-bottom:1px solid var(--border);font-size:11px;}
 .act-item:last-child{border-bottom:none;}
 .act-dot{width:6px;height:6px;border-radius:50%;margin-top:4px;flex-shrink:0;}
@@ -437,6 +453,7 @@ tr:hover td{background:var(--card);}
     <button class="tab-btn" onclick="goTab('estimates')" data-tab="estimates">🗂 Estimates</button>
     <button class="tab-btn" onclick="goTab('mailqueue')" data-tab="mailqueue">📬 Mail Queue</button>
     <button class="tab-btn" onclick="goTab('dashboard')" data-tab="dashboard">📊 Dashboard</button>
+    <button class="tab-btn" id="agency-tab-btn" onclick="goTab('agency')" data-tab="agency" style="display:none;">🏢 Agency</button>
     <button class="tab-btn" id="zones-tab-btn" onclick="goTab('zones')" data-tab="zones">🗂 Canvass Areas</button>
   </div>
   <div style="margin-left:auto;margin-right:8px;display:flex;align-items:center;">
@@ -673,6 +690,41 @@ tr:hover td{background:var(--card);}
     <div class="dash-card"><div class="dc-title">Recent Activity</div><div class="act-feed" id="act-feed"></div></div>
   </div>
 
+  <!-- AGENCY VIEW — super_admin only -->
+  <div class="tab-pane" id="tab-agency" style="flex-direction:column;overflow-y:auto;padding:20px;gap:16px;">
+    <!-- Top KPI bar -->
+    <div class="stats-row" id="agency-kpi-row" style="margin-bottom:4px;">
+      <div class="stat-card"><div class="stat-icon">🏢</div><div class="stat-lbl">Active Clients</div><div class="stat-val" id="ag-clients">—</div><div class="stat-sub">Accounts</div></div>
+      <div class="stat-card"><div class="stat-icon">📬</div><div class="stat-lbl">Mailers This Month</div><div class="stat-val" id="ag-mailers-mo">—</div><div class="stat-sub">All clients</div></div>
+      <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-lbl">Revenue This Month</div><div class="stat-val" id="ag-rev-mo">—</div><div class="stat-sub">Mailer billing</div></div>
+      <div class="stat-card"><div class="stat-icon">📍</div><div class="stat-lbl">Total Pins</div><div class="stat-val" id="ag-pins">—</div><div class="stat-sub">All accounts</div></div>
+    </div>
+    <!-- Per-account cards -->
+    <div>
+      <div class="dc-title" style="margin-bottom:10px;">Client Accounts</div>
+      <div id="agency-accounts-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;"></div>
+    </div>
+    <!-- Mailer log table -->
+    <div class="dash-card" style="overflow:hidden;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="dc-title" style="margin-bottom:0;">Mailer Log</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select id="ag-log-filter" class="fs" style="padding:5px 10px;font-size:11px;width:auto;" onchange="renderAgencyMailerLog()">
+            <option value="all">All Clients</option>
+          </select>
+          <select id="ag-log-period" class="fs" style="padding:5px 10px;font-size:11px;width:auto;" onchange="renderAgencyMailerLog()">
+            <option value="30">Last 30 days</option>
+            <option value="60">Last 60 days</option>
+            <option value="90">Last 90 days</option>
+            <option value="0">All time</option>
+          </select>
+        </div>
+      </div>
+      <div id="agency-mailer-log" style="overflow-x:auto;">
+        <div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">Loading mailer log…</div>
+      </div>
+    </div>
+  </div>
   <!-- CANVASS AREAS -->
   <div class="tab-pane" id="tab-zones" style="flex-direction:row;">
     <div id="zones-map" style="flex:1;height:100%;min-width:0;"></div>
@@ -1188,6 +1240,7 @@ function goTab(t){
   if(t==='estimates')renderEstimatesTab();
   if(t==='estimate'){populateEstPinPicker();updatePreview();}
   if(t==='zones')initZonesTab();
+  if(t==='agency')renderAgencyView();
 }
 
 function populateEstPinPicker(){
@@ -3005,6 +3058,191 @@ function editEstimate(id){
 // ═══════════════════════════════
 //  DASHBOARD
 // ═══════════════════════════════
+// ═══════════════════════════════
+//  AGENCY VIEW (super_admin only)
+// ═══════════════════════════════
+let _agencyData = null; // cached {accounts, profiles, pins, mailerLog}
+
+async function renderAgencyView(){
+  if(!isSuperAdmin()) return;
+  const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0d2JoeG5ybWZtZGVub2d6dWVhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDgwMjAwMSwiZXhwIjoyMDkwMzc4MDAxfQ.UdxoP59JF42z6w5pF2Jf3N5LT9mhQ-Ls-OLi-2S5HRI';
+  const headers = {'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY};
+  const BASE = SUPABASE_URL+'/rest/v1/';
+
+  // Show loading state
+  document.getElementById('agency-accounts-grid').innerHTML =
+    '<div style="color:var(--muted);font-size:12px;padding:10px;">Loading client data…</div>';
+  document.getElementById('agency-mailer-log').innerHTML =
+    '<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">Loading…</div>';
+
+  try {
+    // Fetch all data in parallel
+    const [acctRes, profRes, pinsRes, logRes] = await Promise.all([
+      fetch(BASE+'accounts?select=id,name,company_name,plan,active,mailer_rate,created_at&order=created_at.asc', {headers}),
+      fetch(BASE+'user_profiles?select=id,account_id,name,email,role', {headers}),
+      fetch(BASE+'pins?select=id,account_id,status,created_at,rep_name', {headers}),
+      fetch(BASE+'mailer_log?select=*&order=sent_at.desc&limit=500', {headers})
+    ]);
+    const [accounts, profiles, pins, mailerLog] = await Promise.all([
+      acctRes.json(), profRes.json(), pinsRes.json(), logRes.json()
+    ]);
+
+    // Filter out AHE agency account from client list
+    const clientAccounts = (accounts||[]).filter(a=>a.id!==AGENCY_ACCOUNT_ID);
+
+    _agencyData = { accounts: clientAccounts, profiles: profiles||[], pins: pins||[], mailerLog: mailerLog||[] };
+
+    // Populate filter dropdown
+    const filterSel = document.getElementById('ag-log-filter');
+    if(filterSel){
+      filterSel.innerHTML = '<option value="all">All Clients</option>' +
+        clientAccounts.map(a=>'<option value="'+a.id+'">'+(a.company_name||a.name)+'</option>').join('');
+    }
+
+    renderAgencyKPIs();
+    renderAgencyAccounts();
+    renderAgencyMailerLog();
+  } catch(e){
+    console.error('Agency view error:', e);
+    document.getElementById('agency-accounts-grid').innerHTML =
+      '<div style="color:var(--danger);font-size:12px;">Error loading data: '+escHtml(e.message)+'</div>';
+  }
+}
+
+function renderAgencyKPIs(){
+  if(!_agencyData) return;
+  const {accounts, pins, mailerLog} = _agencyData;
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+  const activeClients = accounts.filter(a=>a.active!==false).length;
+  const mailersThisMonth = mailerLog.filter(m=>m.sent_at>=monthStart).length;
+
+  // Revenue = sum of (mailer_rate * count) per account this month
+  let revThisMonth = 0;
+  accounts.forEach(a=>{
+    const rate = parseFloat(a.mailer_rate)||2.50;
+    const count = mailerLog.filter(m=>m.account_id===a.id && m.sent_at>=monthStart).length;
+    revThisMonth += rate * count;
+  });
+
+  const totalPins = pins.length;
+
+  document.getElementById('ag-clients').textContent = activeClients;
+  document.getElementById('ag-mailers-mo').textContent = mailersThisMonth.toLocaleString();
+  document.getElementById('ag-rev-mo').textContent = '$'+revThisMonth.toFixed(2);
+  document.getElementById('ag-pins').textContent = totalPins.toLocaleString();
+}
+
+function renderAgencyAccounts(){
+  if(!_agencyData) return;
+  const {accounts, profiles, pins, mailerLog} = _agencyData;
+  const el = document.getElementById('agency-accounts-grid');
+  if(!el) return;
+
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  const allTimeStart = '2000-01-01T00:00:00Z';
+
+  if(!accounts.length){
+    el.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:10px;">No client accounts yet. Use Admin Panel to onboard clients.</div>';
+    return;
+  }
+
+  el.innerHTML = accounts.map(a=>{
+    const users = profiles.filter(p=>p.account_id===a.id);
+    const acctPins = pins.filter(p=>p.account_id===a.id);
+    const acctMailers = mailerLog.filter(m=>m.account_id===a.id);
+    const mailersThisMonth = acctMailers.filter(m=>m.sent_at>=monthStart).length;
+    const mailersAllTime = acctMailers.length;
+    const rate = parseFloat(a.mailer_rate)||2.50;
+    const revThisMonth = (rate * mailersThisMonth).toFixed(2);
+    const revAllTime = (rate * mailersAllTime).toFixed(2);
+    const converted = acctPins.filter(p=>p.status==='converted').length;
+    const planColor = {starter:'#3B82F6',pro:'#8B5CF6',agency:'#F25C05'}[a.plan]||'#6688A8';
+    const activeColor = a.active!==false ? '#22C55E' : '#EF4444';
+
+    // Last activity
+    const lastPin = acctPins.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))[0];
+    const lastMailer = acctMailers.sort((a,b)=>new Date(b.sent_at)-new Date(a.sent_at))[0];
+    const lastActivity = lastPin || lastMailer;
+    const lastDate = lastActivity
+      ? new Date(lastPin?.created_at||lastMailer?.sent_at).toLocaleDateString('en-US',{month:'short',day:'numeric'})
+      : 'No activity';
+
+    return '<div class="ag-acct-card">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">' +
+        '<div class="ag-acct-name">'+(a.company_name||a.name)+'</div>' +
+        '<div style="display:flex;gap:4px;">' +
+          '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;background:'+planColor+'22;color:'+planColor+';border:1px solid '+planColor+'44;text-transform:uppercase;">'+(a.plan||'starter')+'</span>' +
+          '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;background:'+activeColor+'22;color:'+activeColor+';border:1px solid '+activeColor+'44;">'+(a.active!==false?'Active':'Inactive')+'</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="ag-acct-meta">'+users.length+' user'+(users.length!==1?'s':'')+' · Last activity: '+lastDate+'</div>' +
+      '<div class="ag-stat-row">' +
+        '<div class="ag-stat"><div class="ag-stat-val">'+acctPins.length+'</div><div class="ag-stat-lbl">Pins</div></div>' +
+        '<div class="ag-stat"><div class="ag-stat-val">'+converted+'</div><div class="ag-stat-lbl">Converted</div></div>' +
+        '<div class="ag-stat"><div class="ag-stat-val">'+mailersThisMonth+'</div><div class="ag-stat-lbl">Mailers Mo.</div></div>' +
+        '<div class="ag-stat"><div class="ag-stat-val">'+mailersAllTime+'</div><div class="ag-stat-lbl">Total Mail</div></div>' +
+      '</div>' +
+      '<div class="ag-bill-row">' +
+        '<div>' +
+          '<div class="ag-bill-lbl">This month @ $'+rate.toFixed(2)+'/piece</div>' +
+          '<div style="font-size:10px;color:var(--muted);">All time: $'+revAllTime+'</div>' +
+        '</div>' +
+        '<div class="ag-bill-val">$'+revThisMonth+'</div>' +
+      '</div>' +
+      '</div>';
+  }).join('');
+}
+
+function renderAgencyMailerLog(){
+  if(!_agencyData) return;
+  const {accounts, mailerLog} = _agencyData;
+  const el = document.getElementById('agency-mailer-log');
+  if(!el) return;
+
+  const filterAcct = document.getElementById('ag-log-filter')?.value||'all';
+  const periodDays = parseInt(document.getElementById('ag-log-period')?.value||'30');
+  const cutoff = periodDays > 0
+    ? new Date(Date.now() - periodDays*24*60*60*1000).toISOString()
+    : '2000-01-01T00:00:00Z';
+
+  let rows = mailerLog.filter(m=>m.sent_at>=cutoff);
+  if(filterAcct!=='all') rows = rows.filter(m=>m.account_id===filterAcct);
+
+  if(!rows.length){
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">No mailers found for this filter.</div>';
+    return;
+  }
+
+  const acctMap = {};
+  accounts.forEach(a=>{ acctMap[a.id]=a.company_name||a.name; });
+
+  el.innerHTML = '<table class="ag-log-table">' +
+    '<thead><tr>' +
+      '<th>Date</th><th>Client</th><th>Address</th><th>Owner</th><th>Estimate</th><th>Lob ID</th>' +
+    '</tr></thead>' +
+    '<tbody>' +
+    rows.map(m=>{
+      const d = new Date(m.sent_at);
+      const dateStr = d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      const timeStr = d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+      const clientName = acctMap[m.account_id]||'Unknown';
+      const est = m.estimate_total ? '$'+parseFloat(m.estimate_total).toLocaleString() : '—';
+      const lobId = m.lob_id ? '<span style="font-family:var(--font-m);font-size:9px;color:var(--muted);">'+escHtml(m.lob_id.slice(0,16))+'…</span>' : '—';
+      return '<tr>' +
+        '<td><div>'+dateStr+'</div><div style="font-size:9px;color:var(--muted);">'+timeStr+'</div></td>' +
+        '<td style="font-weight:600;color:var(--text);">'+escHtml(clientName)+'</td>' +
+        '<td>'+escHtml(m.address||'—')+'</td>' +
+        '<td>'+escHtml(m.owner_name||'—')+'</td>' +
+        '<td style="color:var(--success);font-weight:600;">'+est+'</td>' +
+        '<td>'+lobId+'</td>' +
+        '</tr>';
+    }).join('') +
+    '</tbody></table>';
+}
+
 function renderDash(){
   const mailed=S.queue.filter(i=>i.status==='sent').length;
   const conv=S.pins.filter(p=>p.status==='converted').length;
@@ -3651,6 +3889,9 @@ function applyRoleUI(){
   if(gearNav) gearNav.style.display = isAdminOrAbove() ? 'flex' : 'none';
   // Show admin panel button for admins
   document.getElementById('admin-panel-btn') && (document.getElementById('admin-panel-btn').style.display = isAdminOrAbove()?'flex':'none');
+  // Show Agency tab only for super_admin
+  const agencyTabBtn = document.getElementById('agency-tab-btn');
+  if(agencyTabBtn) agencyTabBtn.style.display = isSuperAdmin() ? 'flex' : 'none';
   // Update user badge
   const badge = document.getElementById('user-badge');
   if(badge && currentProfile){
