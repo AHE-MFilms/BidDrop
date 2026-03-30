@@ -1960,11 +1960,16 @@ function flyTo(id){
   if(p&&map){map.flyTo([p.lat,p.lng],17,{duration:.7});markers[id]&&markers[id].openPopup();}
 }
 
-function rmPin(id){
+async function rmPin(id){
   if(!confirm('Remove this pin?'))return;
+  try{
+    await sbDeletePin(id);
+  }catch(e){
+    toast('Delete failed: '+e.message,'error');
+    return;
+  }
   S.pins=S.pins.filter(p=>p.id!==id);
   if(markers[id]){map.removeLayer(markers[id]);delete markers[id];}
-  sbDeletePin(id).catch(e=>console.error('Delete:',e));
   renderPinList();save();toast('Pin removed','info');
 }
 
@@ -1976,11 +1981,16 @@ function confirmDeletePin(id){
   openM('m-delete-pin');
 }
 
-function doDeletePin(){
+async function doDeletePin(){
   const id=document.getElementById('dpin-id').value;
+  try{
+    await sbDeletePin(id);
+  }catch(e){
+    toast('Delete failed: '+e.message,'error');
+    return;
+  }
   S.pins=S.pins.filter(p=>p.id!==id);
   if(markers[id]){map.removeLayer(markers[id]);delete markers[id];}
-  sbDeletePin(id).catch(e=>console.error('Delete:',e));
   closeM('m-delete-pin');renderPinList();save();toast('🗑 Pin deleted','info');
 }
 
@@ -3617,7 +3627,8 @@ async function sbSavePin(pin){
 
 async function sbDeletePin(pinId){
   if(!currentAccount) return;
-  await sb.from('pins').delete().eq('id', pinId);
+  const {error} = await sb.from('pins').delete().eq('id', pinId);
+  if(error) throw new Error(error.message);
 }
 
 async function sbUpdatePinStatus(pinId, status){
