@@ -431,7 +431,8 @@ tr:hover td{background:var(--card);}
   </div>
   <div class="tabs">
     <button class="tab-btn active" onclick="goTab('map')" data-tab="map">🗺 Canvass Map</button>
-    <button class="tab-btn" onclick="goTab('estimate')" data-tab="estimate">📋 Estimate</button>
+    <button class="tab-btn" onclick="goTab('estimate')" data-tab="estimate">📋 Estimator</button>
+    <button class="tab-btn" onclick="goTab('estimates')" data-tab="estimates">🗂 Estimates</button>
     <button class="tab-btn" onclick="goTab('mailqueue')" data-tab="mailqueue">📬 Mail Queue</button>
     <button class="tab-btn" onclick="goTab('dashboard')" data-tab="dashboard">📊 Dashboard</button>
   </div>
@@ -447,7 +448,8 @@ tr:hover td{background:var(--card);}
 
 <nav class="bottom-nav">
   <button class="bnav-btn active" onclick="goTab('map')" data-tab="map"><span class="bicon">🗺</span>Map</button>
-  <button class="bnav-btn" onclick="goTab('estimate')" data-tab="estimate"><span class="bicon">📋</span>Estimate</button>
+  <button class="bnav-btn" onclick="goTab('estimate')" data-tab="estimate"><span class="bicon">📋</span>Estimator</button>
+  <button class="bnav-btn" onclick="goTab('estimates')" data-tab="estimates"><span class="bicon">🗂</span>Estimates</button>
   <button class="bnav-btn" onclick="goTab('mailqueue')" data-tab="mailqueue"><span class="bicon">📬</span>Mail</button>
   <button class="bnav-btn" onclick="goTab('dashboard')" data-tab="dashboard"><span class="bicon">📊</span>Stats</button>
   <button class="bnav-btn" onclick="openSettings()"><span class="bicon">⚙️</span>Settings</button>
@@ -595,7 +597,33 @@ tr:hover td{background:var(--card);}
     </div>
   </div>
 
-  <!-- MAIL QUEUE -->
+  <!-- ESTIMATES HISTORY -->
+  <div class="tab-pane" id="tab-estimates">
+    <div style="width:100%;padding:22px;overflow-y:auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;padding-bottom:12px;border-bottom:2px solid var(--border);">
+        <div class="pane-title" style="margin:0;padding:0;border:none;">🗂 Saved Estimates</div>
+        <button onclick="goTab('estimate')" style="background:var(--accent);border:none;border-radius:8px;padding:9px 16px;color:#fff;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;">+ New Estimate</button>
+      </div>
+      <div id="estimates-empty" style="text-align:center;padding:60px 20px;color:var(--muted);">
+        <div style="font-size:40px;margin-bottom:12px;">🗂</div>
+        <div style="font-size:16px;font-weight:600;margin-bottom:6px;">No saved estimates yet</div>
+        <div style="font-size:13px;">Build and save an estimate in the Estimator tab — it will appear here.</div>
+      </div>
+      <table id="estimates-table" style="display:none;width:100%;border-collapse:collapse;">
+        <thead>
+          <tr style="border-bottom:2px solid var(--border);">
+            <th style="text-align:left;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">Address</th>
+            <th style="text-align:left;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">Homeowner</th>
+            <th style="text-align:right;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">Total</th>
+            <th style="text-align:left;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">Saved</th>
+            <th style="text-align:center;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="estimates-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+    <!-- MAIL QUEUE -->
   <div class="tab-pane" id="tab-mailqueue">
     <div class="q-hdr">
       <span class="q-title">📬 Mail Queue</span>
@@ -1078,19 +1106,13 @@ function accountRowToCfg(row){
 let currentEstPinId = null;
 
 function goTab(t){
-  const prev = document.querySelector('.tab-pane.active');
-  const prevId = prev ? prev.id : '';
-  // Switch tabs immediately — never block on save
   document.querySelectorAll('.tab-btn,.bnav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
   document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active',p.id==='tab-'+t));
   if(t==='map'){setTimeout(()=>map&&map.invalidateSize(),80);}
   if(t==='dashboard')renderDash();
   if(t==='mailqueue')renderQueue();
+  if(t==='estimates')renderEstimatesTab();
   if(t==='estimate'){populateEstPinPicker();updatePreview();}
-  // Fire-and-forget auto-save AFTER tab switch completes
-  if(prevId === 'tab-estimate' && t !== 'estimate' && currentEstPinId){
-    setTimeout(()=>{ try{ autoSaveEstimateToPin(currentEstPinId); }catch(e){} }, 0);
-  }
 }
 
 function populateEstPinPicker(){
@@ -1114,22 +1136,26 @@ function loadEstFromPicker(){
   const p = S.pins.find(x=>x.id===sel.value);
   if(!p) return;
   currentEstPinId = p.id;
+  // Always fully reset the form first — no bleed from previous pin
+  document.getElementById('e-owner').value = '';
+  document.getElementById('e-email').value = '';
   document.getElementById('e-addr').value = p.address || '';
-  // Always clear photo first, then load this pin's photo if it has one
   clearHomePhoto();
-  if(p.photo_url){
-    window._homePhotoData = null; // pin photo is a URL, not base64
-    const prev = document.getElementById('home-photo-preview');
-    if(prev) prev.innerHTML = '<img src="'+p.photo_url+'" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML=\"No photo\"">';
-    const clr = document.getElementById('clear-photo-btn');
-    if(clr) clr.style.display = 'block';
-  }
-  // Load saved estimate data if it exists on the pin
+  ['a-sky','a-chim','a-gut'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
+  structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'6/12',material:'arch_shingle',complexity:'moderate',pts:null}];
+  // Now load this pin's saved estimate if it has one
   if(p.estimate){
     const est = typeof p.estimate === 'string' ? JSON.parse(p.estimate) : p.estimate;
     if(est.owner) document.getElementById('e-owner').value = est.owner;
     if(est.email) document.getElementById('e-email').value = est.email;
     if(est.structures && est.structures.length) structures = est.structures.map(s=>({...s}));
+  }
+  // Load pin's photo if it has one
+  if(p.photo_url){
+    const prev = document.getElementById('home-photo-preview');
+    if(prev) prev.innerHTML = '<img src="'+p.photo_url+'" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML=\"No photo\"">';
+    const clr = document.getElementById('clear-photo-btn');
+    if(clr) clr.style.display = 'block';
   }
   renderStructures(); calcP(); updatePreview();
   toast('📋 Loaded: '+p.address.split(',')[0],'info');
@@ -1153,10 +1179,47 @@ function saveEstimateNow(){
     toast('⚠️ No pin linked — select a pinned home from the dropdown first','warn');
     return;
   }
-  autoSaveEstimateToPin(currentEstPinId);
-  toast('✅ Estimate saved to pin','success');
+  const pin = (S.pins||[]).find(p=>p.id===currentEstPinId);
+  if(!pin){ toast('Pin not found','error'); return; }
+  const owner = (document.getElementById('e-owner')||{}).value.trim()||'Homeowner';
+  const email = (document.getElementById('e-email')||{}).value.trim()||'';
+  const total = (structures||[]).reduce((sum,s)=>sum+(calcStructurePrice?calcStructurePrice(s):0),0);
+  const photoUrl = pin.photo_url || null;
+  const estRecord = {
+    id: window._editingEstimateId || ('est_' + Date.now()),
+    pinId: currentEstPinId,
+    addr: pin.address || '',
+    owner, email, total,
+    structures: (structures||[]).map(s=>({...s})),
+    photo_url: photoUrl,
+    skylight: (document.getElementById('a-sky')||{}).checked||false,
+    skylightQty: parseInt((document.getElementById('a-sky-q')||{}).value||1),
+    chimney: (document.getElementById('a-chim')||{}).checked||false,
+    gutters: (document.getElementById('a-gut')||{}).checked||false,
+    gutterLf: parseInt((document.getElementById('a-gut-q')||{}).value||120),
+    savedAt: new Date().toISOString(),
+    sentAt: null, status: 'saved'
+  };
+  const editingId = window._editingEstimateId || null;
+  window._editingEstimateId = null;
+  if(editingId){
+    const idx = (S.estimates||[]).findIndex(e=>e.id===editingId);
+    if(idx>=0){ S.estimates[idx] = estRecord; }
+    else { S.estimates.unshift(estRecord); }
+  } else {
+    S.estimates = (S.estimates||[]).filter(e=>e.pinId !== currentEstPinId);
+    S.estimates.unshift(estRecord);
+  }
+  pin.estimate = { owner, email, total, structures: estRecord.structures };
+  pin.at_est = estRecord.savedAt;
+  sb.from('pins').update({ estimate: pin.estimate }).eq('id', currentEstPinId).then(({error})=>{
+    if(error) console.warn('Save estimate to pin:', error);
+  });
+  save();
+  addAct('Estimate saved for <strong>'+escHtml(pin.address||'')+'</strong> — <strong>$'+total.toLocaleString()+'</strong>','bid_sent');
+  toast('✅ Estimate saved!','success');
+  setTimeout(()=>{ newEstimate(); goTab('estimates'); }, 600);
 }
-
 function autoSaveEstimateToPin(pinId){
   try{
     const pin = (S.pins||[]).find(p=>p.id===pinId);
@@ -2451,6 +2514,98 @@ function addToQueue(){
   save();toast('📬 Added to mail queue!','success');renderQueue();
 }
 
+function renderEstimatesTab(){
+  const list = S.estimates || [];
+  const empty = document.getElementById('estimates-empty');
+  const table = document.getElementById('estimates-table');
+  const tbody = document.getElementById('estimates-tbody');
+  if(!empty || !table || !tbody) return;
+  if(!list.length){
+    empty.style.display='block'; table.style.display='none'; return;
+  }
+  empty.style.display='none'; table.style.display='table';
+  tbody.innerHTML = list.map((est,i)=>{
+    const date = est.savedAt ? new Date(est.savedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
+    const addr = est.addr || '—';
+    const shortAddr = addr.split(',')[0];
+    const owner = est.owner || 'Homeowner';
+    const total = '$'+(est.total||0).toLocaleString();
+    const sentBadge = est.sentAt
+      ? '<span style="background:rgba(34,197,94,.15);color:var(--success);border:1px solid var(--success);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;">SENT</span>'
+      : '<span style="background:rgba(59,130,246,.1);color:var(--info);border:1px solid var(--info);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;">SAVED</span>';
+    return '<tr style="border-bottom:1px solid var(--border);transition:background .15s;" onmouseover="this.style.background='var(--card2)'" onmouseout="this.style.background=''">'
+      +'<td style="padding:12px;font-size:14px;font-weight:600;color:var(--text);">'+escHtml(shortAddr)+'<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+escHtml(addr.split(',').slice(1).join(',').trim())+'</div></td>'
+      +'<td style="padding:12px;font-size:13px;color:var(--mid);">'+escHtml(owner)+'</td>'
+      +'<td style="padding:12px;text-align:right;font-family:var(--font-h);font-size:16px;font-weight:700;color:var(--accent);">'+total+'</td>'
+      +'<td style="padding:12px;font-size:12px;color:var(--muted);">'+date+'<div style="margin-top:4px;">'+sentBadge+'</div></td>'
+      +'<td style="padding:12px;text-align:center;">'
+        +'<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">'
+          +'<button onclick="loadEstimateIntoEstimator(''+est.id+'')" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">✏️ Edit</button>'
+          +'<button onclick="sendEstimateViaGHL(''+est.id+'')" style="background:#1a7f4b;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">⚡ GHL</button>'
+          +'<button onclick="printEstimate(''+est.id+'')" style="background:#1f3d68;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🖨 Print</button>'
+          +'<button onclick="deleteEstimate(''+est.id+'')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;" onmouseover="this.style.borderColor='var(--danger)'" onmouseout="this.style.borderColor='var(--border)'">✕</button>'
+        +'</div>'
+      +'</td>'
+      +'</tr>';
+  }).join('');
+}
+function loadEstimateIntoEstimator(estId){
+  const est = (S.estimates||[]).find(e=>e.id===estId);
+  if(!est){ toast('Estimate not found','error'); return; }
+  // Load all fields into the estimator
+  currentEstPinId = est.pinId || null;
+  document.getElementById('e-addr').value = est.addr || '';
+  document.getElementById('e-owner').value = est.owner || '';
+  document.getElementById('e-email').value = est.email || '';
+  clearHomePhoto();
+  if(est.photo_url){
+    const prev = document.getElementById('home-photo-preview');
+    if(prev) prev.innerHTML = '<img src="'+est.photo_url+'" style="width:100%;height:100%;object-fit:cover;">';
+    const clr = document.getElementById('clear-photo-btn');
+    if(clr) clr.style.display = 'block';
+  }
+  structures = (est.structures||[]).map(s=>({...s}));
+  // Restore add-ons
+  const sky = document.getElementById('a-sky'); if(sky) sky.checked = !!est.skylight;
+  const skyQ = document.getElementById('a-sky-q'); if(skyQ) skyQ.value = est.skylightQty||1;
+  const chim = document.getElementById('a-chim'); if(chim) chim.checked = !!est.chimney;
+  const gut = document.getElementById('a-gut'); if(gut) gut.checked = !!est.gutters;
+  const gutQ = document.getElementById('a-gut-q'); if(gutQ) gutQ.value = est.gutterLf||120;
+  // Set the pin picker
+  const sel = document.getElementById('est-pin-picker');
+  if(sel && est.pinId) sel.value = est.pinId;
+  // Mark this as editing the existing record so Save updates it
+  window._editingEstimateId = estId;
+  renderStructures(); calcP(); updatePreview();
+  goTab('estimate');
+  toast('📋 Loaded into Estimator — edit and save to update','info');
+}
+function deleteEstimate(estId){
+  if(!confirm('Delete this estimate?')) return;
+  S.estimates = (S.estimates||[]).filter(e=>e.id!==estId);
+  save();
+  renderEstimatesTab();
+  toast('Estimate deleted','info');
+}
+async function sendEstimateViaGHL(estId){
+  const est = (S.estimates||[]).find(e=>e.id===estId);
+  if(!est){ toast('Estimate not found','error'); return; }
+  // Load into estimator silently, send, then come back
+  loadEstimateIntoEstimator(estId);
+  setTimeout(async ()=>{
+    await sendViaGHL();
+    est.sentAt = new Date().toISOString();
+    est.status = 'sent';
+    save();
+    renderEstimatesTab();
+  }, 300);
+}
+function printEstimate(estId){
+  const est = (S.estimates||[]).find(e=>e.id===estId);
+  if(!est){ toast('Estimate not found','error'); return; }
+  loadEstimateIntoEstimator(estId);
+  setTimeout(()=>{ printNow(); }, 300);
+}
 function clearEst(){
   document.getElementById('e-owner').value='';
   document.getElementById('e-addr').value='';
@@ -2458,6 +2613,7 @@ function clearEst(){
   structures=[];
   renderStructures();clearHomePhoto();calcP();updatePreview();
   window._editingQueueId=null;
+  window._editingEstimateId=null;
   document.getElementById('add-queue-btn').textContent='📬 Add to Mail Queue';
 }
 
