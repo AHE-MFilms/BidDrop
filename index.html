@@ -3636,7 +3636,9 @@ async function doLogin(){
   const err   = document.getElementById('login-error');
   if(!email||!pass){err.textContent='Enter email and password.';return;}
   btn.textContent='Signing in...'; btn.disabled=true; err.textContent='';
-  // Just sign in — onAuthStateChange SIGNED_IN will fire and load the app
+  // Ensure we have a fresh client (recreated after sign-out)
+  if(!sb) sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // Sign in — onAuthStateChange SIGNED_IN will fire and load the app
   const {error} = await sb.auth.signInWithPassword({email, password:pass});
   if(error){
     err.textContent = error.message;
@@ -3731,7 +3733,13 @@ async function doSetNewPassword(){
 }
 
 async function doLogout(){
-  await sb.auth.signOut();
+  // Sign out via Supabase, then nuke all sb- localStorage keys to clear
+  // any stale locks or cached tokens that would block the next sign-in
+  try { await sb.auth.signOut(); } catch(e) { console.warn('signOut error:', e); }
+  // Wipe every Supabase-related localStorage entry
+  Object.keys(localStorage).filter(k => k.startsWith('sb-')).forEach(k => localStorage.removeItem(k));
+  // Recreate the client so it has zero internal state for the next login
+  sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   toast('Signed out','info');
 }
 </script>
