@@ -4577,6 +4577,9 @@ function drawZonesOnMainMap(){
 function refreshZoneOverlays(){
   if(zonesMap) renderZoneOverlays();
   if(mainMapZonesVisible) drawZonesOnMainMap();
+  // Always re-render sidebar zone cards so pin counts stay current
+  const zonesList = document.getElementById('zones-list');
+  if(zonesList) renderZonesList();
 }
 </script>
 </body>
