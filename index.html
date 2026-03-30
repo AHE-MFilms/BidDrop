@@ -3871,17 +3871,19 @@ async function createUser(){
 // ═══════════════════════════════
 //  INIT
 // ═══════════════════════════════
-window.addEventListener('load', async ()=>{
+window.addEventListener('load', ()=>{
   // Initialize Supabase client
   sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   // Show login screen immediately
   showLoginScreen();
 
   // ── Auth state handler ───────────────────────────────────────────────
-  // onAuthStateChange handles SIGNED_IN events fired AFTER the listener
-  // is registered (e.g. manual login, token refresh).
-  // We guard against duplicate calls by checking if the app is already visible.
-  sb.auth.onAuthStateChange(async (event, session) => {
+  // CRITICAL: Never call getUser() or any sb.from() inside onAuthStateChange.
+  // Supabase v2 holds an internal auth mutex during the callback; any auth
+  // or DB call made inside it will deadlock. Instead, use the session object
+  // passed directly to the callback (it already has a valid access_token)
+  // and defer all work with setTimeout to release the mutex first.
+  sb.auth.onAuthStateChange((event, session) => {
     console.log('[Auth]', event, session ? session.user?.email : 'no-session');
     if(event === 'SIGNED_OUT'){
       onSignedOut();
@@ -3892,34 +3894,22 @@ window.addEventListener('load', async ()=>{
       return;
     }
     if((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session){
-      // Guard: if app is already loaded, ignore duplicate events
-      if(document.getElementById('main-app').style.display !== 'none') return;
-      try {
-        await onSignedIn(session.user);
-      } catch(e) {
-        console.error('[Auth] onSignedIn error:', e);
-        const err = document.getElementById('login-error');
-        const btn = document.getElementById('login-btn');
-        if(err) err.textContent = 'Login error: '+e.message;
-        if(btn){ btn.textContent='Sign In'; btn.disabled=false; }
-        showLoginScreen();
-        try { await sb.auth.signOut(); } catch(_){}
-      }
+      // Defer to next tick so Supabase releases its internal mutex before
+      // we make any DB queries. Without this, all .from() calls hang.
+      setTimeout(() => {
+        if(document.getElementById('main-app').style.display !== 'none') return;
+        onSignedIn(session.user).catch(e => {
+          console.error('[Auth] onSignedIn error:', e);
+          const errEl = document.getElementById('login-error');
+          const btnEl = document.getElementById('login-btn');
+          if(errEl) errEl.textContent = 'Login error: '+e.message;
+          if(btnEl){ btnEl.textContent='Sign In'; btnEl.disabled=false; }
+          showLoginScreen();
+          sb.auth.signOut().catch(()=>{});
+        });
+      }, 0);
     }
   });
-
-  // ── Handle cached session (regular Chrome with stored session) ────────
-  // In Supabase v2, INITIAL_SESSION can fire synchronously during createClient()
-  // — before onAuthStateChange is registered — so we must also check explicitly.
-  try {
-    const { data: { session } } = await sb.auth.getSession();
-    if(session && document.getElementById('main-app').style.display === 'none'){
-      console.log('[Auth] Restored cached session for', session.user?.email);
-      await onSignedIn(session.user);
-    }
-  } catch(e) {
-    console.error('[Auth] getSession error:', e);
-  }
 });
 
 async function onSignedIn(user){
@@ -3927,17 +3917,9 @@ async function onSignedIn(user){
   const btn = document.getElementById('login-btn');
   const err = document.getElementById('login-error');
   try {
-    // Force a token refresh before any DB queries.
-    // When restoring a cached session, the JWT may be stale and Supabase's
-    // auto-refresh hasn't completed yet — causing the first .from() query to
-    // hang indefinitely. getUser() waits for the refresh to finish.
-    const { data: { user: freshUser }, error: userErr } = await sb.auth.getUser();
-    if(userErr) throw new Error('Session refresh failed: '+userErr.message);
-    // Use the refreshed user object so all subsequent calls have a valid token
-    currentUser = freshUser || user;
-
-    // Load profile
-    const {data:profile, error:profErr} = await sb.from('user_profiles').select('*').eq('id', currentUser.id).single();
+    // Load profile — session.user is already valid because we deferred
+    // this call outside the onAuthStateChange mutex via setTimeout
+    const {data:profile, error:profErr} = await sb.from('user_profiles').select('*').eq('id', user.id).single();
 
     if(profErr || !profile){
       // First time — check if super admin by email
