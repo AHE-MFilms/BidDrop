@@ -572,21 +572,23 @@ tr:hover td{background:var(--card);}
         <div class="price-sub" id="e-breakdown">Add a structure above to calculate</div>
       </div>
       <!-- Primary action row -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
-        <button style="background:#1a7f4b;border:none;border-radius:10px;padding:14px;color:#fff;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;" onclick="sendViaGHL()">
-          <span style="font-size:16px;">⚡</span> Send via GHL
-        </button>
-        <button style="background:#1f3d68;border:none;border-radius:10px;padding:14px;color:#fff;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;" onclick="printNow()">
-          <span style="font-size:16px;">🖨</span> Print Now
-        </button>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button style="background:#1a7f4b;border:none;border-radius:10px;padding:14px;color:#fff;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;" onclick="sendViaGHL()">
+            <span style="font-size:16px;">⚡</span> Send via GHL
+          </button>
+          <button style="background:#1f3d68;border:none;border-radius:10px;padding:14px;color:#fff;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;" onclick="printNow()">
+            <span style="font-size:16px;">🖨</span> Print Now
+          </button>
+        </div>
+        <button class="btn-primary" id="add-queue-btn" onclick="addToQueue()">📬 Add to Mail Queue (Lob)</button>
+        <div style="display:grid;grid-template-columns:1fr 2fr;gap:8px;">
+          <button class="btn-sec" onclick="clearEst()">Clear Form</button>
+          <button onclick="saveEstimateNow()" style="background:var(--accent);border:none;border-radius:10px;padding:13px 18px;color:#fff;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.5px;">&#128190; Save Estimate</button>
+        </div>
+        <button class="btn-preview-toggle" onclick="toggleMailPreview()">👁 Preview Mailer</button>
+        <button class="btn-sec" onclick="printPreview()" style="background:var(--card2);border-color:var(--info);color:var(--info);">🖨 Print Preview (8.5×11)</button>
       </div>
-      <button class="btn-primary" id="add-queue-btn" onclick="addToQueue()">📬 Add to Mail Queue (Lob)</button>
-      <div style="display:flex;gap:10px;margin-bottom:4px;">
-        <button class="btn-sec" onclick="clearEst()" style="flex:1;">Clear Form</button>
-        <button onclick="saveEstimateNow()" style="flex:2;background:var(--accent);border:none;border-radius:10px;padding:13px 18px;color:#fff;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.5px;">&#128190; Save Estimate</button>
-      </div>
-      <button class="btn-preview-toggle" onclick="toggleMailPreview()">👁 Preview Mailer</button>
-      <button class="btn-sec" onclick="printPreview()" style="margin-top:6px;background:var(--card2);border-color:var(--info);color:var(--info);">🖨 Print Preview (8.5×11)</button>
     </div>
     <div class="est-preview" id="est-preview">
       <div class="mailer" id="mailer-preview"></div>
@@ -1113,11 +1115,21 @@ function loadEstFromPicker(){
   if(!p) return;
   currentEstPinId = p.id;
   document.getElementById('e-addr').value = p.address || '';
+  // Always clear photo first, then load this pin's photo if it has one
+  clearHomePhoto();
+  if(p.photo_url){
+    window._homePhotoData = null; // pin photo is a URL, not base64
+    const prev = document.getElementById('home-photo-preview');
+    if(prev) prev.innerHTML = '<img src="'+p.photo_url+'" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='No photo'">';
+    const clr = document.getElementById('clear-photo-btn');
+    if(clr) clr.style.display = 'block';
+  }
   // Load saved estimate data if it exists on the pin
   if(p.estimate){
     const est = typeof p.estimate === 'string' ? JSON.parse(p.estimate) : p.estimate;
     if(est.owner) document.getElementById('e-owner').value = est.owner;
     if(est.email) document.getElementById('e-email').value = est.email;
+    if(est.structures && est.structures.length) structures = est.structures.map(s=>({...s}));
   }
   renderStructures(); calcP(); updatePreview();
   toast('📋 Loaded: '+p.address.split(',')[0],'info');
@@ -1128,6 +1140,7 @@ function newEstimate(){
   document.getElementById('e-owner').value = '';
   document.getElementById('e-addr').value = '';
   document.getElementById('e-email').value = '';
+  clearHomePhoto(); // always wipe photo when starting fresh
   structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'6/12',material:'arch_shingle',complexity:'moderate',pts:null}];
   renderStructures(); calcP(); updatePreview();
   const sel = document.getElementById('est-pin-picker');
