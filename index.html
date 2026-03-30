@@ -3492,47 +3492,38 @@ async function createUser(){
 // ═══════════════════════════════
 //  INIT
 // ═══════════════════════════════
-let _signingIn = false; // True only while doLogin() is in progress
-let _preSigningOut = false; // True when doLogin() is doing a pre-signout to clear stale session
+// ── Auth state: purely event-driven, no flags needed ──────────────
+let _authBusy = false; // Prevents concurrent onSignedIn calls
 
 window.addEventListener('load', async ()=>{
   // Initialize Supabase client
   sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // Show login screen immediately — onAuthStateChange handles everything
+  // Show login screen immediately
   showLoginScreen();
 
-  // Listen for auth state changes (handles INITIAL_SESSION, SIGNED_IN, SIGNED_OUT)
-  // Only act on INITIAL_SESSION if user is already on the app (auto-resume).
-  // For manual logins, doLogin() sets _signingIn=true so we know to proceed.
+  // Simple, reliable auth handler — no flags, no pre-signout hacks
+  // SIGNED_IN fires for both manual login and auto-resume on page load
+  // SIGNED_OUT fires when user signs out or session expires
   sb.auth.onAuthStateChange(async (event, session) => {
-    if(event === 'INITIAL_SESSION' && session && !_signingIn){
-      // Stale cached session on page load — auto-resume into the app
+    console.log('[Auth]', event, session ? session.user?.email : 'no-session');
+    if((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session){
+      if(_authBusy) return; // Already loading the app, ignore duplicate events
+      _authBusy = true;
       try { await onSignedIn(session.user); } catch(e) {
-        console.error('Auto-resume error:', e);
-        showLoginScreen();
-      }
-    } else if(event === 'SIGNED_IN' && session && _signingIn){
-      // This is the response to an explicit doLogin() call
-      _signingIn = false;
-      try { await onSignedIn(session.user); } catch(e) {
-        console.error('Sign-in error:', e);
-        _signingIn = false;
+        console.error('onSignedIn error:', e);
         const err = document.getElementById('login-error');
         const btn = document.getElementById('login-btn');
-        if(err) err.textContent = 'Error: '+e.message;
+        if(err) err.textContent = 'Login error: '+e.message;
         if(btn){ btn.textContent='Sign In'; btn.disabled=false; }
         showLoginScreen();
+        await sb.auth.signOut();
+      } finally {
+        _authBusy = false;
       }
     } else if(event === 'SIGNED_OUT'){
-      if(_preSigningOut){
-        // This SIGNED_OUT was triggered by doLogin()'s pre-signout — ignore it, login is still in progress
-        _preSigningOut = false;
-      } else {
-        // Real sign-out by user
-        _signingIn = false;
-        onSignedOut();
-      }
+      _authBusy = false;
+      onSignedOut();
     } else if(event === 'PASSWORD_RECOVERY'){
       // User clicked the reset link in their email — show the Set New Password screen
       showSetNewPassword();
@@ -3645,29 +3636,13 @@ async function doLogin(){
   const err   = document.getElementById('login-error');
   if(!email||!pass){err.textContent='Enter email and password.';return;}
   btn.textContent='Signing in...'; btn.disabled=true; err.textContent='';
-  try {
-    // Sign out any stale session first so Supabase always issues a fresh token
-    // This prevents the lock collision caused by INITIAL_SESSION + SIGNED_IN
-    // firing with the same cached access_token
-    // Check if there's an active session before signing out to avoid spurious SIGNED_OUT events
-    const { data: { session: existingSession } } = await sb.auth.getSession();
-    if(existingSession){
-      _preSigningOut = true; // Tell SIGNED_OUT handler to ignore this
-      await sb.auth.signOut();
-    }
-    _signingIn = true; // Tell onAuthStateChange to handle the upcoming SIGNED_IN
-    const {error} = await sb.auth.signInWithPassword({email, password:pass});
-    if(error){
-      _signingIn = false;
-      err.textContent = error.message;
-      btn.textContent='Sign In'; btn.disabled=false;
-    }
-    // On success: onAuthStateChange SIGNED_IN fires → onSignedIn handles the rest
-  } catch(e) {
-    _signingIn = false;
-    err.textContent = 'Error: '+(e.message||'Check connection and try again.');
+  // Just sign in — onAuthStateChange SIGNED_IN will fire and load the app
+  const {error} = await sb.auth.signInWithPassword({email, password:pass});
+  if(error){
+    err.textContent = error.message;
     btn.textContent='Sign In'; btn.disabled=false;
   }
+  // On success: onAuthStateChange SIGNED_IN fires → onSignedIn handles the rest
 }
 
 // ─── FORGOT PASSWORD FLOW ───────────────────────────────────────────────────
