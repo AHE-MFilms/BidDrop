@@ -7,7 +7,9 @@
 <title>BidDrop — Roofing Canvass Platform</title>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -435,6 +437,7 @@ tr:hover td{background:var(--card);}
     <button class="tab-btn" onclick="goTab('estimates')" data-tab="estimates">🗂 Estimates</button>
     <button class="tab-btn" onclick="goTab('mailqueue')" data-tab="mailqueue">📬 Mail Queue</button>
     <button class="tab-btn" onclick="goTab('dashboard')" data-tab="dashboard">📊 Dashboard</button>
+    <button class="tab-btn" id="zones-tab-btn" onclick="goTab('zones')" data-tab="zones">🗂 Canvass Areas</button>
   </div>
   <div style="margin-left:auto;margin-right:8px;display:flex;align-items:center;">
     <img id="ahe-hdr-logo" class="ahe-header-logo" alt="America's Home Experts">
@@ -452,6 +455,7 @@ tr:hover td{background:var(--card);}
   <button class="bnav-btn" onclick="goTab('estimates')" data-tab="estimates"><span class="bicon">🗂</span>Estimates</button>
   <button class="bnav-btn" onclick="goTab('mailqueue')" data-tab="mailqueue"><span class="bicon">📬</span>Mail</button>
   <button class="bnav-btn" onclick="goTab('dashboard')" data-tab="dashboard"><span class="bicon">📊</span>Stats</button>
+  <button class="bnav-btn" id="zones-bnav-btn" onclick="goTab('zones')" data-tab="zones"><span class="bicon">🗂</span>Zones</button>
   <button class="bnav-btn" onclick="openSettings()"><span class="bicon">⚙️</span>Settings</button>
 </nav>
 
@@ -672,6 +676,41 @@ tr:hover td{background:var(--card);}
     <div class="dash-card"><div class="dc-title">Recent Activity</div><div class="act-feed" id="act-feed"></div></div>
   </div>
 
+  <!-- CANVASS AREAS -->
+  <div class="tab-pane" id="tab-zones" style="flex-direction:row;">
+    <div id="zones-map" style="flex:1;height:100%;min-width:0;"></div>
+    <div class="map-panel" id="zones-panel">
+      <div class="mp-hdr">
+        <div class="mp-title">Canvass Areas <span class="badge" id="zones-count">0</span></div>
+        <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">
+          <button id="btn-draw-zone" class="btn-xs pr" onclick="startDrawZone()" style="display:none;">+ Draw Zone</button>
+          <button id="btn-cancel-draw" class="btn-xs danger" onclick="cancelDrawZone()" style="display:none;">✕ Cancel Draw</button>
+        </div>
+        <div id="zones-draw-tip" style="display:none;margin-top:8px;font-size:12px;color:var(--accent);background:var(--accent-dim);border:1px solid rgba(242,92,5,.2);border-radius:6px;padding:8px 10px;">Click on the map to draw your zone. Click the first point to close the polygon.</div>
+      </div>
+      <div class="pin-list" id="zones-list" style="padding:10px;"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- SAVE ZONE MODAL -->
+<div class="overlay" id="m-save-zone" style="display:none;">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-title">🗂 Save Canvass Zone</div>
+    <div class="fg"><label class="fl">Zone Name</label><input class="fi" id="zone-name" placeholder="e.g. North Canton Block A"></div>
+    <div class="fg"><label class="fl">Assign to Rep</label>
+      <select class="fs" id="zone-rep-select"><option value="">— Select a rep —</option></select>
+    </div>
+    <div class="fg" style="display:flex;align-items:center;gap:12px;">
+      <label class="fl" style="margin:0;">Zone Color</label>
+      <input type="color" id="zone-color" value="#F25C05" style="width:44px;height:34px;border-radius:6px;border:2px solid var(--border);cursor:pointer;background:none;padding:2px;">
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="cancelDrawZone();closeM('m-save-zone');">Cancel</button>
+      <button class="btn-ok" onclick="saveZone()">Save Zone</button>
+    </div>
+  </div>
 </div>
 
 <!-- ADD PIN MODAL -->
@@ -1133,6 +1172,7 @@ function goTab(t){
   if(t==='mailqueue')renderQueue();
   if(t==='estimates')renderEstimatesTab();
   if(t==='estimate'){populateEstPinPicker();updatePreview();}
+  if(t==='zones')initZonesTab();
 }
 
 function populateEstPinPicker(){
@@ -4037,6 +4077,7 @@ function onSignedOut(){
   S.pins = [];
   S.queue = [];
   if(realtimeChannel){ sb.removeChannel(realtimeChannel); realtimeChannel=null; }
+  clearZonesState();
   showLoginScreen();
 }
 
@@ -4171,6 +4212,255 @@ async function doLogout(){
   Object.keys(localStorage).filter(k => k.startsWith('sb-')).forEach(k => localStorage.removeItem(k));
   try { await sb.auth.signOut(); } catch(e) { console.warn('signOut error:', e); }
   // onAuthStateChange SIGNED_OUT fires → onSignedOut() → showLoginScreen()
+}
+
+// ── CANVASS AREAS ─────────────────────────────────────────────────────────────
+let zonesMap = null;
+let zonesDrawControl = null;
+let zonesDrawLayer = null;   // FeatureGroup holding drawn polygons
+let pendingPolygon = null;   // latlngs of the polygon being saved
+let zoneOverlays = {};       // id → Leaflet polygon layer
+let S_zones = [];            // in-memory zone array
+
+// Distinct rep colors (cycles if more reps than colors)
+const ZONE_COLORS = [
+  '#F25C05','#3B82F6','#22C55E','#A855F7','#F59E0B',
+  '#EC4899','#14B8A6','#EF4444','#6366F1','#84CC16'
+];
+
+function initZonesMap(){
+  if(zonesMap) return;
+  zonesMap = L.map('zones-map').setView([42.3314, -83.0458], 12);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+    attribution:'© OpenStreetMap © CARTO', maxZoom:19
+  }).addTo(zonesMap);
+  zonesDrawLayer = new L.FeatureGroup().addTo(zonesMap);
+  zonesMap.on('draw:created', function(e){
+    pendingPolygon = e.layer.getLatLngs()[0].map(ll=>({lat:ll.lat,lng:ll.lng}));
+    zonesDrawLayer.addLayer(e.layer);
+    stopDrawMode();
+    populateZoneRepSelect();
+    // Auto-assign a color based on rep count
+    document.getElementById('zone-color').value = ZONE_COLORS[S_zones.length % ZONE_COLORS.length];
+    openM('m-save-zone');
+  });
+}
+
+function startDrawZone(){
+  if(!zonesMap) return;
+  const drawControl = new L.Draw.Polygon(zonesMap, {
+    shapeOptions:{ color: document.getElementById('zone-color')?.value || '#F25C05', fillOpacity:0.25, weight:2 }
+  });
+  drawControl.enable();
+  document.getElementById('btn-draw-zone').style.display = 'none';
+  document.getElementById('btn-cancel-draw').style.display = 'inline-flex';
+  document.getElementById('zones-draw-tip').style.display = 'block';
+  zonesDrawControl = drawControl;
+}
+
+function stopDrawMode(){
+  if(zonesDrawControl){ zonesDrawControl.disable(); zonesDrawControl = null; }
+  document.getElementById('btn-draw-zone').style.display = 'inline-flex';
+  document.getElementById('btn-cancel-draw').style.display = 'none';
+  document.getElementById('zones-draw-tip').style.display = 'none';
+}
+
+function cancelDrawZone(){
+  stopDrawMode();
+  if(pendingPolygon){ zonesDrawLayer.clearLayers(); pendingPolygon = null; }
+}
+
+async function populateZoneRepSelect(){
+  const sel = document.getElementById('zone-rep-select');
+  sel.innerHTML = '<option value="">— Select a rep —</option>';
+  if(!currentAccount) return;
+  const {data} = await sb.from('user_profiles').select('id,name,email').eq('account_id', currentAccount.id);
+  (data||[]).forEach(p=>{
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.name || p.email || 'Unnamed';
+    sel.appendChild(opt);
+  });
+}
+
+async function saveZone(){
+  const name = document.getElementById('zone-name').value.trim();
+  const repId = document.getElementById('zone-rep-select').value;
+  const color = document.getElementById('zone-color').value;
+  if(!name){ toast('Please enter a zone name','error'); return; }
+  if(!pendingPolygon){ toast('No polygon drawn','error'); return; }
+  if(!currentAccount){ toast('Not logged in','error'); return; }
+  const row = {
+    account_id: currentAccount.id,
+    rep_id: repId || null,
+    name,
+    color,
+    polygon: pendingPolygon
+  };
+  const {data, error} = await sb.from('canvass_zones').insert(row).select().single();
+  if(error){ toast('Save failed: '+error.message,'error'); return; }
+  S_zones.push(data);
+  pendingPolygon = null;
+  zonesDrawLayer.clearLayers();
+  document.getElementById('zone-name').value = '';
+  closeM('m-save-zone');
+  renderZoneOverlays();
+  renderZonesList();
+  toast('Zone saved!','success');
+}
+
+async function loadZonesFromSupabase(){
+  if(!currentAccount) return;
+  const {data, error} = await sb.from('canvass_zones').select('*').eq('account_id', currentAccount.id);
+  if(error){ console.error('Load zones error:', error); return; }
+  S_zones = data || [];
+  renderZoneOverlays();
+  renderZonesList();
+}
+
+function renderZoneOverlays(){
+  if(!zonesMap) return;
+  // Remove old overlays
+  Object.values(zoneOverlays).forEach(l=>zonesMap.removeLayer(l));
+  zoneOverlays = {};
+  const isAdmin = currentProfile && (currentProfile.role === 'admin' || currentProfile.role === 'super_admin');
+  S_zones.forEach(zone=>{
+    const latlngs = (zone.polygon||[]).map(p=>[p.lat, p.lng]);
+    if(!latlngs.length) return;
+    const isMyZone = currentProfile && zone.rep_id === currentProfile.id;
+    const opacity = isAdmin ? 0.28 : (isMyZone ? 0.35 : 0.08);
+    const poly = L.polygon(latlngs, {
+      color: zone.color || '#F25C05',
+      fillColor: zone.color || '#F25C05',
+      fillOpacity: opacity,
+      weight: isMyZone || isAdmin ? 2.5 : 1,
+      dashArray: isAdmin ? null : (isMyZone ? null : '6,4')
+    }).addTo(zonesMap);
+    // Zone label
+    const center = poly.getBounds().getCenter();
+    const label = L.divIcon({
+      className:'',
+      html:'<div style="background:rgba(15,22,35,0.82);color:'+zone.color+';border:1px solid '+zone.color+';border-radius:5px;padding:3px 8px;font-size:11px;font-weight:700;font-family:Oswald,sans-serif;letter-spacing:.5px;white-space:nowrap;">'+escHtml(zone.name)+'</div>',
+      iconAnchor:[0,0]
+    });
+    L.marker(center, {icon:label, interactive:false}).addTo(zonesMap);
+    // Click to show stats (admin only)
+    if(isAdmin){
+      poly.on('click', ()=>showZoneStats(zone));
+      poly.bindTooltip('<b>'+escHtml(zone.name)+'</b><br><span style="font-size:11px;color:#aaa;">Click for stats</span>', {sticky:true});
+    }
+    zoneOverlays[zone.id] = poly;
+  });
+  // Overlay existing pins as small colored dots
+  (S.pins||[]).forEach(pin=>{
+    const color = pin.status==='needs_roof'?'#F25C05':pin.status==='bid_sent'?'#3B82F6':pin.status==='converted'?'#22C55E':'#6688A8';
+    L.circleMarker([pin.lat, pin.lng],{
+      radius:5, color:'#0F1623', weight:1, fillColor:color, fillOpacity:0.9
+    }).addTo(zonesMap).bindTooltip(escHtml(pin.address||'Pin'), {sticky:true});
+  });
+  document.getElementById('zones-count').textContent = S_zones.length;
+}
+
+function renderZonesList(){
+  const el = document.getElementById('zones-list');
+  const isAdmin = currentProfile && (currentProfile.role === 'admin' || currentProfile.role === 'super_admin');
+  if(!S_zones.length){
+    el.innerHTML = '<div style="text-align:center;padding:30px 14px;color:var(--muted);font-size:12px;">No zones yet.'+(isAdmin?' Click <b style="color:var(--accent);">+ Draw Zone</b> to create one.':'')+'</div>';
+    return;
+  }
+  el.innerHTML = S_zones.map(zone=>{
+    const pinCount = (S.pins||[]).filter(p=>isPointInPolygon(p, zone)).length;
+    const outcomes = getZoneOutcomes(zone);
+    const deleteBtn = isAdmin
+      ? '<button onclick="deleteZone(\''+zone.id+'\')" title="Delete zone" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:0 4px;" onmouseover="this.style.color=\'var(--danger)\'" onmouseout="this.style.color=\'var(--muted)\'">×</button>'
+      : '';
+    return '<div class="pc" onclick="flyToZone(\''+zone.id+'\')" style="border-left:3px solid '+zone.color+';cursor:pointer;">'+
+      '<div class="pc-top">'+
+        '<div class="pc-addr" style="font-size:13px;">'+escHtml(zone.name)+'</div>'+
+        deleteBtn+
+      '</div>'+
+      '<div class="pc-meta">'+pinCount+' pins · '+outcomes.interested+' interested · '+outcomes.converted+' converted</div>'+
+    '</div>';
+  }).join('');
+}
+
+function flyToZone(id){
+  const zone = S_zones.find(z=>z.id===id);
+  if(!zone||!zonesMap) return;
+  const latlngs = zone.polygon.map(p=>[p.lat,p.lng]);
+  zonesMap.fitBounds(L.polygon(latlngs).getBounds(), {padding:[30,30]});
+}
+
+function showZoneStats(zone){
+  const pins = (S.pins||[]).filter(p=>isPointInPolygon(p, zone));
+  const outcomes = getZoneOutcomes(zone);
+  const repName = getRepName(zone.rep_id);
+  const msg = '📍 '+pins.length+' total pins\n'
+    +'🟠 Needs Roof: '+outcomes.needs_roof+'\n'
+    +'🔵 Bid Sent: '+outcomes.bid_sent+'\n'
+    +'🟢 Converted: '+outcomes.converted+'\n'
+    +'⚫ Not Interested: '+outcomes.not_interested+'\n'
+    +'👤 Assigned to: '+(repName||'Unassigned');
+  toast('Zone: '+zone.name+'\n'+msg, 'info', 6000);
+}
+
+async function deleteZone(id){
+  if(!confirm('Delete this zone? This cannot be undone.')) return;
+  const {error} = await sb.from('canvass_zones').delete().eq('id', id);
+  if(error){ toast('Delete failed: '+error.message,'error'); return; }
+  S_zones = S_zones.filter(z=>z.id!==id);
+  if(zoneOverlays[id]){ zonesMap.removeLayer(zoneOverlays[id]); delete zoneOverlays[id]; }
+  renderZoneOverlays();
+  renderZonesList();
+  toast('Zone deleted','info');
+}
+
+function getZoneOutcomes(zone){
+  const pins = (S.pins||[]).filter(p=>isPointInPolygon(p, zone));
+  return {
+    needs_roof: pins.filter(p=>p.status==='needs_roof').length,
+    bid_sent:   pins.filter(p=>p.status==='bid_sent').length,
+    converted:  pins.filter(p=>p.status==='converted').length,
+    not_interested: pins.filter(p=>p.status==='not_interested').length,
+    interested: pins.filter(p=>p.status==='needs_roof'||p.status==='bid_sent').length
+  };
+}
+
+// Ray-casting point-in-polygon test
+function isPointInPolygon(pin, zone){
+  const poly = zone.polygon || [];
+  let inside = false;
+  const x = pin.lng, y = pin.lat;
+  for(let i=0, j=poly.length-1; i<poly.length; j=i++){
+    const xi=poly[i].lng, yi=poly[i].lat;
+    const xj=poly[j].lng, yj=poly[j].lat;
+    const intersect = ((yi>y)!==(yj>y)) && (x < (xj-xi)*(y-yi)/(yj-yi)+xi);
+    if(intersect) inside = !inside;
+  }
+  return inside;
+}
+
+function getRepName(repId){
+  if(!repId) return null;
+  // Try to find in user_profiles cache — we don't cache them, so return repId for now
+  return repId;
+}
+
+function initZonesTab(){
+  setTimeout(()=>{
+    if(!zonesMap){ initZonesMap(); if(currentAccount) loadZonesFromSupabase(); }
+    else zonesMap.invalidateSize();
+    const isAdmin = currentProfile && (currentProfile.role==='admin'||currentProfile.role==='super_admin');
+    const btn = document.getElementById('btn-draw-zone');
+    if(btn) btn.style.display = isAdmin ? 'inline-flex' : 'none';
+  }, 80);
+}
+
+function clearZonesState(){
+  S_zones = [];
+  if(zonesMap){ zonesMap.remove(); zonesMap=null; }
+  zoneOverlays = {};
+  pendingPolygon = null;
 }
 </script>
 </body>
