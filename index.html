@@ -3618,6 +3618,19 @@ function onSignedOut(){
 function showLoginScreen(){
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('main-app').style.display='none';
+  // Always reset the login form to a clean, ready state
+  // This prevents the "Signing in..." freeze after sign-out
+  const btn = document.getElementById('login-btn');
+  const err = document.getElementById('login-error');
+  if(btn){ btn.textContent='Sign In'; btn.disabled=false; }
+  if(err){ err.textContent=''; }
+  // Ensure the login card is visible (not stuck on forgot-pw or set-pw views)
+  const card = document.getElementById('login-card');
+  const forgot = document.getElementById('forgot-pw-view');
+  const setPw = document.getElementById('set-pw-view');
+  if(card){ card.style.display='block'; }
+  if(forgot){ forgot.style.display='none'; }
+  if(setPw){ setPw.style.display='none'; }
 }
 
 function hideLoginScreen(){
