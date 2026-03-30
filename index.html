@@ -1342,6 +1342,9 @@ document.addEventListener('click',e=>{
 let tileStreet,tileSatellite,tileLabels,isSatellite=false;
 
 function initMap(){
+  // Destroy existing Leaflet instance if present (prevents "Map container is already initialized"
+  // error when the user signs out and signs back in without a page refresh)
+  if(map){ try{ map.remove(); }catch(e){} map=null; markers={}; }
   map=L.map('the-map',{zoomControl:false}).setView([42.33,-83.04],13);
   L.control.zoom({position:'bottomleft'}).addTo(map);
   tileStreet=L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{
