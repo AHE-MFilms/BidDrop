@@ -937,6 +937,20 @@ tr:hover td{background:var(--card);}
 
 <div class="toast" id="toast"></div>
 
+<!-- Queue Preview Modal -->
+<div class="overlay" id="m-queue-preview" style="display:none;" onclick="if(event.target===this)closeM('m-queue-preview')">
+  <div class="modal" style="max-width:960px;width:95vw;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div class="modal-title" style="margin-bottom:0;">&#128065; Mailer Preview</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-primary" onclick="printQueuePreview()" style="padding:8px 18px;font-size:13px;">&#128424; Print</button>
+        <button class="btn-cancel" onclick="closeM('m-queue-preview')" style="padding:8px 14px;">Close</button>
+      </div>
+    </div>
+    <div id="queue-preview-content" class="mailer" style="background:#fff;"></div>
+  </div>
+</div>
+
 <script>
 // ═══════════════════════════════
 //  STATE
@@ -2831,32 +2845,44 @@ function bulkDeleteQueue(){
 
 function previewQueueItem(id){
   const item=S.queue.find(x=>x.id===id);if(!item)return;
-  // Temporarily load the queue item into the preview state without switching tabs
+  // Save current estimator state
   const savedOwner=document.getElementById('e-owner').value;
   const savedAddr=document.getElementById('e-addr').value;
   const savedPhoto=window._homePhotoData;
   const savedStructures=JSON.parse(JSON.stringify(structures));
-  // Load queue item data
+  // Temporarily load queue item data to generate the mailer HTML
   document.getElementById('e-owner').value=item.owner||'';
   document.getElementById('e-addr').value=item.addr||'';
   if(item.structures&&item.structures.length){structures=JSON.parse(JSON.stringify(item.structures));}
   window._homePhotoData=item.photo_data||null;
   calcP();updatePreview();
-  // Open print preview modal/window
-  const w=window.open('','_blank','width=900,height=700,scrollbars=yes');
-  const previewEl=document.getElementById('preview-pane');
-  if(w&&previewEl){
-    w.document.write('<html><head><title>Preview - '+item.addr+'</title>'+
-      '<style>body{margin:0;padding:20px;background:#f5f5f5;}@media print{body{margin:0;padding:0;}}</style></head><body>'+
-      previewEl.innerHTML+'</body></html>');
-    w.document.close();
-  }
-  // Restore previous state
+  // Copy the rendered mailer HTML into the modal
+  const mailerEl=document.getElementById('mailer-preview');
+  const modalContent=document.getElementById('queue-preview-content');
+  if(mailerEl&&modalContent){modalContent.innerHTML=mailerEl.innerHTML;}
+  // Restore previous estimator state
   document.getElementById('e-owner').value=savedOwner;
   document.getElementById('e-addr').value=savedAddr;
   window._homePhotoData=savedPhoto;
   structures=savedStructures;
   calcP();updatePreview();
+  // Store item id for print
+  window._previewingQueueId=id;
+  openM('m-queue-preview');
+}
+function printQueuePreview(){
+  const content=document.getElementById('queue-preview-content');
+  if(!content)return;
+  const w=window.open('','_blank');
+  w.document.write('<html><head><title>Mailer Preview</title><style>'+
+    'body{margin:0;padding:0;background:#fff;}'+
+    '@media print{@page{margin:0;}body{margin:0;}}'+
+    // Copy all styles from parent
+    Array.from(document.styleSheets).map(function(ss){try{return Array.from(ss.cssRules).map(function(r){return r.cssText;}).join('\n');}catch(e){return '';}}).join('\n')+
+    '</style></head><body>'+content.innerHTML+'</body></html>');
+  w.document.close();
+  w.focus();
+  setTimeout(function(){w.print();},600);
 }
 function editEstimate(id){
   const item=S.queue.find(x=>x.id===id);if(!item)return;
