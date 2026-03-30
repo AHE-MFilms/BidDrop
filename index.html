@@ -2809,8 +2809,13 @@ async function sendAllPending(){
   for(const i of pend){await sendLob(i.id);await sleep(600);}
 }
 
-function rmQ(id){
+async function rmQ(id){
   if(!confirm('Delete this estimate?'))return;
+  // Delete from Supabase first
+  if(currentAccount && sb){
+    const {error} = await sb.from('queue').delete().eq('id', id);
+    if(error){ toast('Delete failed: '+error.message,'error'); return; }
+  }
   S.queue=S.queue.filter(x=>x.id!==id);
   save();renderQueue();toast('🗑 Estimate deleted','info');
 }
@@ -2835,10 +2840,15 @@ function clearQueueSelection(){
   if(all){all.checked=false;all.indeterminate=false;}
   updateQueueBulkBar();
 }
-function bulkDeleteQueue(){
+async function bulkDeleteQueue(){
   const ids = Array.from(document.querySelectorAll('.q-row-cb:checked')).map(function(cb){return cb.dataset.id;});
   if(!ids.length) return;
   if(!confirm('Delete ' + ids.length + ' selected item' + (ids.length>1?'s':'') + '?')) return;
+  // Delete from Supabase first
+  if(currentAccount && sb){
+    const {error} = await sb.from('queue').delete().in('id', ids);
+    if(error){ toast('Delete failed: '+error.message,'error'); return; }
+  }
   S.queue = S.queue.filter(function(x){return !ids.includes(x.id);});
   save(); renderQueue(); toast('🗑 Deleted ' + ids.length + ' item' + (ids.length>1?'s':''), 'info');
 }
