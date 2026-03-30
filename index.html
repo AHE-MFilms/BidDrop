@@ -2640,6 +2640,13 @@ function deleteEstimate(estId){
 function addEstimateToMailQueue(estId){
   const est = (S.estimates||[]).find(function(e){return e.id===estId;});
   if(!est){ toast('Estimate not found','error'); return; }
+  // Block duplicate pending entries for the same address
+  const addr = (est.addr||'').trim().toLowerCase();
+  const existing = (S.queue||[]).find(function(q){ return q.addr.trim().toLowerCase()===addr && q.status==='pending'; });
+  if(existing){
+    toast('\u26a0\ufe0f Already in Mail Queue — remove the existing entry first if you want to re-add','warn');
+    return;
+  }
   // Build a queue item from the estimate
   const pin = (S.pins||[]).find(function(p){return p.id===est.pinId;});
   const mainStruct = (est.structures||[])[0] || {};
