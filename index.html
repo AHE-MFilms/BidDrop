@@ -2944,16 +2944,47 @@ function renderActChart(){
             y:{ticks:{color:'#3D5269',stepSize:1,font:{size:10}},grid:{color:'#1C2840'},beginAtZero:true}}}});
 }
 
-function renderTeam(){
+async function renderTeam(){
   const el=document.getElementById('team-list');
-  if(!S.team.length){el.innerHTML='<div style="text-align:center;padding:18px;color:var(--muted);font-size:11px;">Pin homes to auto-add canvassers.</div>';return;}
-  el.innerHTML=S.team.map(m=>
-    '<div class="team-row">'+
-    '<div class="t-avatar">'+m.name.charAt(0).toUpperCase()+'</div>'+
-    '<div class="t-name">'+escHtml(m.name)+'</div>'+
-    '<div class="t-stats"><b>'+(m.pins||0)+'</b> pins · <b>'+(m.ests||0)+'</b> est.</div>'+
-    '</div>'
-  ).join('');
+  if(!el) return;
+  // Super admin with no account: show nothing
+  if(!currentAccount){
+    el.innerHTML='<div style="text-align:center;padding:18px;color:var(--muted);font-size:11px;">No account loaded.</div>';
+    return;
+  }
+  // Load real team members from Supabase
+  const {data:profiles, error} = await sb.from('user_profiles').select('id,name,email,role').eq('account_id', currentAccount.id);
+  if(error || !profiles || !profiles.length){
+    el.innerHTML='<div style="text-align:center;padding:18px;color:var(--muted);font-size:11px;">No team members yet. Use Admin Panel to add users.</div>';
+    return;
+  }
+  const canRemove = isAdminOrAbove();
+  el.innerHTML = profiles.map(p=>{
+    // Count pins and estimates for this rep from already-loaded S.pins
+    const repName = (p.name||p.email||'').toLowerCase();
+    const pinCount = S.pins.filter(pin=>(pin.rep||'').toLowerCase()===repName).length;
+    const estCount = S.pins.filter(pin=>(pin.rep||'').toLowerCase()===repName && pin.estimate).length;
+    const initials = (p.name||p.email||'?').charAt(0).toUpperCase();
+    const removeBtn = canRemove
+      ? '<button onclick="removeTeamMember(\''+p.id+'\',\''+escHtml(p.name||p.email)+'\')" '+
+        'title="Remove from team" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:0 4px;line-height:1;" '+
+        'onmouseover="this.style.color=\'var(--danger)\'" onmouseout="this.style.color=\'var(--muted)\'">×</button>'
+      : '';
+    return '<div class="team-row">'+
+      '<div class="t-avatar">'+initials+'</div>'+
+      '<div class="t-name">'+escHtml(p.name||p.email||'Unnamed')+'</div>'+
+      '<div class="t-stats"><b>'+pinCount+'</b> pins · <b>'+estCount+'</b> est.</div>'+
+      removeBtn+
+      '</div>';
+  }).join('');
+}
+
+async function removeTeamMember(profileId, name){
+  if(!confirm('Remove '+name+' from the team?\n\nThis removes their profile but does NOT delete their login. You can re-add them via Admin Panel.')) return;
+  const {error} = await sb.from('user_profiles').delete().eq('id', profileId);
+  if(error){ toast('Error removing member: '+error.message,'error'); return; }
+  toast(name+' removed from team','success');
+  renderTeam();
 }
 
 function addTeamMember(){
