@@ -3927,20 +3927,27 @@ async function onSignedIn(user){
   const btn = document.getElementById('login-btn');
   const err = document.getElementById('login-error');
   try {
-    console.log('[onSignedIn] step 1: loading profile for', user.id);
+    // Force a token refresh before any DB queries.
+    // When restoring a cached session, the JWT may be stale and Supabase's
+    // auto-refresh hasn't completed yet — causing the first .from() query to
+    // hang indefinitely. getUser() waits for the refresh to finish.
+    const { data: { user: freshUser }, error: userErr } = await sb.auth.getUser();
+    if(userErr) throw new Error('Session refresh failed: '+userErr.message);
+    // Use the refreshed user object so all subsequent calls have a valid token
+    currentUser = freshUser || user;
+
     // Load profile
-    const {data:profile, error:profErr} = await sb.from('user_profiles').select('*').eq('id', user.id).single();
-    console.log('[onSignedIn] step 2: profile result', profile, profErr);
+    const {data:profile, error:profErr} = await sb.from('user_profiles').select('*').eq('id', currentUser.id).single();
 
     if(profErr || !profile){
       // First time — check if super admin by email
-      if(user.email === 'john@mongoosefilms.com'){
+      if(currentUser.email === 'john@mongoosefilms.com'){
         const {error:insErr} = await sb.from('user_profiles').insert({
-          id: user.id, account_id: null, role: 'super_admin',
-          name: 'John Bujak', email: user.email
+          id: currentUser.id, account_id: null, role: 'super_admin',
+          name: 'John Bujak', email: currentUser.email
         });
         if(insErr) throw new Error('Could not create super_admin profile: '+insErr.message);
-        const {data:p2} = await sb.from('user_profiles').select('*').eq('id', user.id).single();
+        const {data:p2} = await sb.from('user_profiles').select('*').eq('id', currentUser.id).single();
         currentProfile = p2;
       } else {
         throw new Error('No profile found. Contact your administrator.');
@@ -3948,52 +3955,37 @@ async function onSignedIn(user){
     } else {
       currentProfile = profile;
     }
-    console.log('[onSignedIn] step 3: profile set, role=', currentProfile?.role, 'account_id=', currentProfile?.account_id);
 
     // Load account config
     if(currentProfile && currentProfile.account_id){
-      console.log('[onSignedIn] step 4: loading account', currentProfile.account_id);
       const {data:account, error:acctErr} = await sb.from('accounts').select('*').eq('id', currentProfile.account_id).single();
-      console.log('[onSignedIn] step 5: account result', account, acctErr);
       if(acctErr) throw new Error('Could not load account: '+acctErr.message);
       currentAccount = account;
       if(account) S.cfg = accountRowToCfg(account);
-    } else {
-      console.log('[onSignedIn] step 4: no account_id (super_admin or unassigned)');
     }
 
     // Check if user must change their password on first login
-    console.log('[onSignedIn] step 6: must_change_password=', currentProfile?.must_change_password);
     if(currentProfile.must_change_password){
       showSetNewPassword();
-      window._mustChangePwUserId = user.id;
+      window._mustChangePwUserId = currentUser.id;
       return;
     }
     // Hide login, show app
-    console.log('[onSignedIn] step 7: calling hideLoginScreen');
     hideLoginScreen();
-    console.log('[onSignedIn] step 8: calling load()');
     load();
-    console.log('[onSignedIn] step 9: calling applyBrand()');
     applyBrand();
-    console.log('[onSignedIn] step 10: calling initMap()');
     initMap();
-    console.log('[onSignedIn] step 11: calling renderStructures()');
     renderStructures();
-    console.log('[onSignedIn] step 12: calling updatePreview()');
     updatePreview();
-    console.log('[onSignedIn] step 13: calling applyRoleUI()');
     applyRoleUI();
-    console.log('[onSignedIn] step 14: loading pins from Supabase');
+    // Load data from Supabase
     await loadPinsFromSupabase();
-    console.log('[onSignedIn] step 15: loading queue from Supabase');
     await loadQueueFromSupabase();
-    console.log('[onSignedIn] step 16: done!');
     if(currentAccount) subscribeRealtime();
-    toast('Welcome, '+(currentProfile.name||user.email).split(' ')[0]+'! 👋','success');
+    toast('Welcome, '+(currentProfile.name||currentUser.email).split(' ')[0]+'! 👋','success');
 
   } catch(e) {
-    console.error('[onSignedIn] CAUGHT ERROR at step above:', e);
+    console.error('[onSignedIn] error:', e);
     if(err) err.textContent = 'Login error: '+e.message;
     if(btn){ btn.textContent='Sign In'; btn.disabled=false; }
     showLoginScreen();
