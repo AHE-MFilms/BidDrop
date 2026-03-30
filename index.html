@@ -3718,6 +3718,8 @@ async function loadPinsFromSupabase(){
   markers={};
   S.pins.forEach(addMarker);
   renderPinList();
+  // Refresh zone overlays now that pins are loaded
+  refreshZoneOverlays();
 }
 
 async function loadQueueFromSupabase(){
