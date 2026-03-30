@@ -690,6 +690,17 @@ tr:hover td{background:var(--card);}
         <div id="zones-draw-tip" style="display:none;margin-top:8px;font-size:12px;color:var(--accent);background:var(--accent-dim);border:1px solid rgba(242,92,5,.2);border-radius:6px;padding:8px 10px;">Click on the map to draw your zone. Click the first point to close the polygon.</div>
       </div>
       <div class="pin-list" id="zones-list" style="padding:10px;"></div>
+      <!-- Pin detail panel (shown when a pin dot is clicked) -->
+      <div id="zones-pin-detail" style="display:none;border-top:1px solid var(--border);padding:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.5px;">PIN DETAIL</div>
+          <button onclick="closeZonePinDetail()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;">×</button>
+        </div>
+        <div id="zpd-address" style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;"></div>
+        <div id="zpd-meta" style="font-size:12px;color:var(--muted);margin-bottom:10px;"></div>
+        <div id="zpd-estimate" style="font-size:13px;color:var(--accent);font-weight:700;margin-bottom:12px;"></div>
+        <button id="zpd-edit-btn" onclick="openPinInEstimator()" class="btn-ok" style="width:100%;font-size:12px;padding:9px;">Edit in Estimator</button>
+      </div>
     </div>
   </div>
 
@@ -4356,12 +4367,14 @@ function renderZoneOverlays(){
     }
     zoneOverlays[zone.id] = poly;
   });
-  // Overlay existing pins as small colored dots
+  // Overlay existing pins as clickable colored dots
   (S.pins||[]).forEach(pin=>{
     const color = pin.status==='needs_roof'?'#F25C05':pin.status==='bid_sent'?'#3B82F6':pin.status==='converted'?'#22C55E':'#6688A8';
-    L.circleMarker([pin.lat, pin.lng],{
-      radius:5, color:'#0F1623', weight:1, fillColor:color, fillOpacity:0.9
-    }).addTo(zonesMap).bindTooltip(escHtml(pin.address||'Pin'), {sticky:true});
+    const dot = L.circleMarker([pin.lat, pin.lng],{
+      radius:6, color:'#0F1623', weight:1.5, fillColor:color, fillOpacity:0.95
+    }).addTo(zonesMap);
+    dot.bindTooltip(escHtml(pin.address||'Pin'), {sticky:true});
+    dot.on('click', ()=>showZonePinDetail(pin));
   });
   document.getElementById('zones-count').textContent = S_zones.length;
 }
@@ -4443,6 +4456,48 @@ function isPointInPolygon(pin, zone){
     if(intersect) inside = !inside;
   }
   return inside;
+}
+
+let currentZonePin = null;
+
+function showZonePinDetail(pin){
+  currentZonePin = pin;
+  const statusLabels = {needs_roof:'Needs Roof',bid_sent:'Bid Sent',converted:'Converted',not_interested:'Not Interested'};
+  const statusColors = {needs_roof:'#F25C05',bid_sent:'#3B82F6',converted:'#22C55E',not_interested:'#6688A8'};
+  const label = statusLabels[pin.status] || pin.status;
+  const color = statusColors[pin.status] || '#aaa';
+  document.getElementById('zpd-address').textContent = pin.address || 'Unknown address';
+  document.getElementById('zpd-meta').innerHTML =
+    '<span style="color:'+color+';font-weight:700;">'+label+'</span>'+
+    ' &nbsp;·&nbsp; Rep: '+(pin.rep||'Unknown')+
+    (pin.notes ? '<br><span style="margin-top:4px;display:block;">'+escHtml(pin.notes)+'</span>' : '');
+  // Estimate info
+  let estHtml = '';
+  if(pin.estimate){
+    const est = typeof pin.estimate==='string' ? JSON.parse(pin.estimate) : pin.estimate;
+    if(est && est.total) estHtml = '💰 Estimate: $'+Number(est.total).toLocaleString();
+  }
+  document.getElementById('zpd-estimate').textContent = estHtml;
+  document.getElementById('zpd-edit-btn').style.display = pin.id ? 'block' : 'none';
+  document.getElementById('zones-pin-detail').style.display = 'block';
+}
+
+function closeZonePinDetail(){
+  currentZonePin = null;
+  document.getElementById('zones-pin-detail').style.display = 'none';
+}
+
+function openPinInEstimator(){
+  if(!currentZonePin) return;
+  // Switch to estimator tab and pre-select this pin
+  goTab('estimate');
+  setTimeout(()=>{
+    const picker = document.getElementById('est-pin-picker');
+    if(picker){
+      picker.value = currentZonePin.id;
+      picker.dispatchEvent(new Event('change'));
+    }
+  }, 150);
 }
 
 function getRepName(repId){
