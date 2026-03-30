@@ -3927,8 +3927,10 @@ async function onSignedIn(user){
   const btn = document.getElementById('login-btn');
   const err = document.getElementById('login-error');
   try {
+    console.log('[onSignedIn] step 1: loading profile for', user.id);
     // Load profile
     const {data:profile, error:profErr} = await sb.from('user_profiles').select('*').eq('id', user.id).single();
+    console.log('[onSignedIn] step 2: profile result', profile, profErr);
 
     if(profErr || !profile){
       // First time — check if super admin by email
@@ -3946,44 +3948,56 @@ async function onSignedIn(user){
     } else {
       currentProfile = profile;
     }
+    console.log('[onSignedIn] step 3: profile set, role=', currentProfile?.role, 'account_id=', currentProfile?.account_id);
 
     // Load account config
     if(currentProfile && currentProfile.account_id){
+      console.log('[onSignedIn] step 4: loading account', currentProfile.account_id);
       const {data:account, error:acctErr} = await sb.from('accounts').select('*').eq('id', currentProfile.account_id).single();
+      console.log('[onSignedIn] step 5: account result', account, acctErr);
       if(acctErr) throw new Error('Could not load account: '+acctErr.message);
       currentAccount = account;
       if(account) S.cfg = accountRowToCfg(account);
+    } else {
+      console.log('[onSignedIn] step 4: no account_id (super_admin or unassigned)');
     }
 
-       // Check if user must change their password on first login
+    // Check if user must change their password on first login
+    console.log('[onSignedIn] step 6: must_change_password=', currentProfile?.must_change_password);
     if(currentProfile.must_change_password){
-      // Show Set New Password screen — intercept before entering the app
       showSetNewPassword();
-      // Override doSetNewPassword to also clear the flag after success
       window._mustChangePwUserId = user.id;
-      return; // Don't load the app yet
+      return;
     }
     // Hide login, show app
+    console.log('[onSignedIn] step 7: calling hideLoginScreen');
     hideLoginScreen();
-    load(); // load any local cache
+    console.log('[onSignedIn] step 8: calling load()');
+    load();
+    console.log('[onSignedIn] step 9: calling applyBrand()');
     applyBrand();
+    console.log('[onSignedIn] step 10: calling initMap()');
     initMap();
+    console.log('[onSignedIn] step 11: calling renderStructures()');
     renderStructures();
+    console.log('[onSignedIn] step 12: calling updatePreview()');
     updatePreview();
+    console.log('[onSignedIn] step 13: calling applyRoleUI()');
     applyRoleUI();
-    // Load data from Supabase
+    console.log('[onSignedIn] step 14: loading pins from Supabase');
     await loadPinsFromSupabase();
+    console.log('[onSignedIn] step 15: loading queue from Supabase');
     await loadQueueFromSupabase();
-    // Subscribe to realtime if in an account
+    console.log('[onSignedIn] step 16: done!');
     if(currentAccount) subscribeRealtime();
     toast('Welcome, '+(currentProfile.name||user.email).split(' ')[0]+'! 👋','success');
 
   } catch(e) {
-    console.error('onSignedIn error:', e);
+    console.error('[onSignedIn] CAUGHT ERROR at step above:', e);
     if(err) err.textContent = 'Login error: '+e.message;
     if(btn){ btn.textContent='Sign In'; btn.disabled=false; }
     showLoginScreen();
-    await sb.auth.signOut();
+    try { await sb.auth.signOut(); } catch(_){}
   }
 }
 
