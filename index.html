@@ -472,6 +472,7 @@ tr:hover td{background:var(--card);}
     <div class="map-toolbar">
       <button class="mtool-btn" id="btn-satellite" onclick="toggleSatellite()">🛰 Satellite</button>
       <button class="mtool-btn" id="btn-measure" onclick="toggleMeasure()">📐 Measure Roof</button>
+      <button class="mtool-btn" id="btn-zones-toggle" onclick="toggleZonesOnMap()">🗂 Zones</button>
     </div>
     <div class="measure-hud" id="measure-hud">
       <div class="mhud-lbl">Total Roof Area</div>
@@ -1967,6 +1968,7 @@ function savePin(){
   bumpTeam(pin.rep,'pins');
   addAct('<strong>'+escHtml(pin.rep)+'</strong> pinned <strong>'+escHtml(pin.address)+'</strong> — '+sLabel(pin.status),pin.status);
   renderPinList();
+  refreshZoneOverlays();
   sbSavePin(pin).catch(e=>console.error('Pin save:',e));
   sbAddActivity('<strong>'+escHtml(pin.rep)+'</strong> pinned <strong>'+escHtml(pin.address)+'</strong>',pin.status);
   // Auto-push to GHL (fire-and-forget — never blocks the UI)
@@ -2031,7 +2033,7 @@ async function doDeletePin(){
   }
   S.pins=S.pins.filter(p=>p.id!==id);
   if(markers[id]){map.removeLayer(markers[id]);delete markers[id];}
-  closeM('m-delete-pin');renderPinList();save();toast('🗑 Pin deleted','info');
+  closeM('m-delete-pin');renderPinList();refreshZoneOverlays();save();toast('🗑 Pin deleted','info');
 }
 
 function cycleStatus(id){
@@ -2039,7 +2041,7 @@ function cycleStatus(id){
   const opts=['needs_roof','bid_sent','converted','not_interested'];
   p.status=opts[(opts.indexOf(p.status)+1)%opts.length];
   if(markers[id]){map.removeLayer(markers[id]);delete markers[id];}
-  addMarker(p);renderPinList();
+  addMarker(p);renderPinList();refreshZoneOverlays();
   sbUpdatePinStatus(id,p.status).catch(e=>console.error('Status:',e));
   // Sync status change to GHL (fire-and-forget)
   ghlSyncPinStatus(p).catch(e=>console.warn('GHL sync:',e));
@@ -3774,6 +3776,7 @@ function subscribeRealtime(){
           }
           addMarker(pin);
           renderPinList();
+          refreshZoneOverlays();
           if(eventType==='INSERT'&&pin.rep!==currentProfile?.name)
             toast('📍 '+pin.rep+' pinned '+pin.address.split(',')[0],'info');
         } else if(eventType==='DELETE'){
@@ -4461,6 +4464,62 @@ function clearZonesState(){
   if(zonesMap){ zonesMap.remove(); zonesMap=null; }
   zoneOverlays = {};
   pendingPolygon = null;
+  // Also clear main-map zone overlays
+  mainMapZoneOverlays.forEach(l=>{ try{ map.removeLayer(l); }catch(_){} });
+  mainMapZoneOverlays = [];
+}
+
+// ── ZONES ON MAIN CANVASS MAP ────────────────────────────────────────────────
+let mainMapZonesVisible = false;
+let mainMapZoneOverlays = [];
+
+function toggleZonesOnMap(){
+  const btn = document.getElementById('btn-zones-toggle');
+  mainMapZonesVisible = !mainMapZonesVisible;
+  if(mainMapZonesVisible){
+    btn.classList.add('active');
+    btn.textContent = '🗂 Zones ✓';
+    drawZonesOnMainMap();
+  } else {
+    btn.classList.remove('active');
+    btn.textContent = '🗂 Zones';
+    mainMapZoneOverlays.forEach(l=>{ try{ map.removeLayer(l); }catch(_){} });
+    mainMapZoneOverlays = [];
+  }
+}
+
+function drawZonesOnMainMap(){
+  // Clear existing
+  mainMapZoneOverlays.forEach(l=>{ try{ map.removeLayer(l); }catch(_){} });
+  mainMapZoneOverlays = [];
+  if(!mainMapZonesVisible || !map) return;
+  S_zones.forEach(zone=>{
+    const latlngs = (zone.polygon||[]).map(p=>[p.lat, p.lng]);
+    if(!latlngs.length) return;
+    const poly = L.polygon(latlngs, {
+      color: zone.color || '#F25C05',
+      fillColor: zone.color || '#F25C05',
+      fillOpacity: 0.15,
+      weight: 2,
+      dashArray: '6,4',
+      interactive: false
+    }).addTo(map);
+    // Zone name label
+    const center = poly.getBounds().getCenter();
+    const label = L.divIcon({
+      className:'',
+      html:'<div style="background:rgba(15,22,35,0.75);color:'+zone.color+';border:1px solid '+zone.color+';border-radius:5px;padding:2px 7px;font-size:11px;font-weight:700;font-family:Oswald,sans-serif;white-space:nowrap;">'+escHtml(zone.name)+'</div>',
+      iconAnchor:[0,0]
+    });
+    const labelMarker = L.marker(center, {icon:label, interactive:false}).addTo(map);
+    mainMapZoneOverlays.push(poly, labelMarker);
+  });
+}
+
+// Call this after any pin or estimate change to keep both maps in sync
+function refreshZoneOverlays(){
+  if(zonesMap) renderZoneOverlays();
+  if(mainMapZonesVisible) drawZonesOnMainMap();
 }
 </script>
 </body>
