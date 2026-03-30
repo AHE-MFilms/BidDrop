@@ -581,7 +581,10 @@ tr:hover td{background:var(--card);}
         </button>
       </div>
       <button class="btn-primary" id="add-queue-btn" onclick="addToQueue()">📬 Add to Mail Queue (Lob)</button>
-      <button class="btn-sec" onclick="clearEst()">Clear Form</button>
+      <div style="display:flex;gap:10px;margin-bottom:4px;">
+        <button class="btn-sec" onclick="clearEst()" style="flex:1;">Clear Form</button>
+        <button onclick="saveEstimateNow()" style="flex:2;background:var(--accent);border:none;border-radius:10px;padding:13px 18px;color:#fff;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.5px;">&#128190; Save Estimate</button>
+      </div>
       <button class="btn-preview-toggle" onclick="toggleMailPreview()">👁 Preview Mailer</button>
       <button class="btn-sec" onclick="printPreview()" style="margin-top:6px;background:var(--card2);border-color:var(--info);color:var(--info);">🖨 Print Preview (8.5×11)</button>
     </div>
@@ -1075,16 +1078,17 @@ let currentEstPinId = null;
 function goTab(t){
   const prev = document.querySelector('.tab-pane.active');
   const prevId = prev ? prev.id : '';
-  // Auto-save estimate to pin when leaving the estimate tab
-  if(prevId === 'tab-estimate' && t !== 'estimate' && currentEstPinId){
-    autoSaveEstimateToPin(currentEstPinId);
-  }
+  // Switch tabs immediately — never block on save
   document.querySelectorAll('.tab-btn,.bnav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
   document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active',p.id==='tab-'+t));
   if(t==='map'){setTimeout(()=>map&&map.invalidateSize(),80);}
   if(t==='dashboard')renderDash();
   if(t==='mailqueue')renderQueue();
   if(t==='estimate'){populateEstPinPicker();updatePreview();}
+  // Fire-and-forget auto-save AFTER tab switch completes
+  if(prevId === 'tab-estimate' && t !== 'estimate' && currentEstPinId){
+    setTimeout(()=>{ try{ autoSaveEstimateToPin(currentEstPinId); }catch(e){} }, 0);
+  }
 }
 
 function populateEstPinPicker(){
@@ -1131,20 +1135,29 @@ function newEstimate(){
   toast('🗒 New estimate started','info');
 }
 
+function saveEstimateNow(){
+  if(!currentEstPinId){
+    toast('⚠️ No pin linked — select a pinned home from the dropdown first','warn');
+    return;
+  }
+  autoSaveEstimateToPin(currentEstPinId);
+  toast('✅ Estimate saved to pin','success');
+}
+
 function autoSaveEstimateToPin(pinId){
-  const pin = S.pins.find(p=>p.id===pinId);
-  if(!pin) return;
-  const owner = (document.getElementById('e-owner')||{}).value||'';
-  const email = (document.getElementById('e-email')||{}).value||'';
-  const total = structures.reduce((sum,s)=>sum+calcStructurePrice(s),0);
-  // Save lightweight estimate snapshot to pin
-  pin.estimate = { owner, email, total, structures: structures.map(s=>({...s})) };
-  pin.at_est = new Date().toISOString();
-  // Persist to Supabase
-  sb.from('pins').update({ estimate: pin.estimate }).eq('id', pinId).then(({error})=>{
-    if(error) console.warn('Auto-save estimate:', error);
-  });
-  save();
+  try{
+    const pin = (S.pins||[]).find(p=>p.id===pinId);
+    if(!pin) return;
+    const owner = (document.getElementById('e-owner')||{}).value||'';
+    const email = (document.getElementById('e-email')||{}).value||'';
+    const total = (structures||[]).reduce((sum,s)=>sum+(calcStructurePrice?calcStructurePrice(s):0),0);
+    pin.estimate = { owner, email, total, structures: (structures||[]).map(s=>({...s})) };
+    pin.at_est = new Date().toISOString();
+    sb.from('pins').update({ estimate: pin.estimate }).eq('id', pinId).then(({error})=>{
+      if(error) console.warn('Auto-save estimate:', error);
+    });
+    save();
+  }catch(e){ console.warn('autoSaveEstimateToPin error:', e); }
 }
 
 function togglePinPanel(){
