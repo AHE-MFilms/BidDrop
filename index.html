@@ -2059,16 +2059,19 @@ function mkIcon(status){
 function addMarker(pin){
   const pid=pin.id;
   const m=L.marker([pin.lat,pin.lng],{icon:mkIcon(pin.status)}).addTo(map);
+  // Pre-compute popup photo HTML to avoid IIFE inside template literal
+  const _dmgPhotos = pin.damage_photos||[];
+  const _popupPhotos = _dmgPhotos.length
+    ? '<div style="display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap;">' + _dmgPhotos.map(src=>'<img src="'+src+'" style="width:calc(33% - 3px);height:80px;object-fit:cover;border-radius:6px;display:block;" onerror="this.style.display=\'none\'">').join('') + '</div>'
+    : pin.photo_url
+      ? '<img src="'+pin.photo_url+'" style="width:100%;max-height:160px;object-fit:cover;border-radius:8px;margin-bottom:10px;display:block;" onerror="this.style.display=\'none\'">'
+      : '';
+  const _popupNotes = pin.notes ? '<div style="font-size:13px;color:#A8BECE;margin-bottom:10px;font-style:italic;">"'+escHtml(pin.notes)+'"</div>' : '';
   m.bindPopup(`
     <div style="min-width:260px;max-width:300px;">
       <div style="font-weight:700;font-size:16px;margin-bottom:8px;color:#FFFFFF;line-height:1.4;">${escHtml(pin.address||'Unknown')}</div>
       <div style="display:inline-block;background:${sColor(pin.status)};color:white;font-size:13px;padding:4px 12px;border-radius:7px;font-weight:700;margin-bottom:12px;">${sLabel(pin.status)}</div>
-      ${(()=>{
-  const photos = pin.damage_photos||[];
-  if(photos.length) return '<div style="display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap;">' + photos.map(src=>'<img src="'+src+'" style="width:calc(33% - 3px);height:80px;object-fit:cover;border-radius:6px;display:block;" onerror="this.style.display='none'">').join('') + '</div>';
-  if(pin.photo_url) return '<img src="'+pin.photo_url+'" style="width:100%;max-height:160px;object-fit:cover;border-radius:8px;margin-bottom:10px;display:block;" onerror="this.style.display='none'">';
-  return '';
-})()}${pin.notes?`<div style="font-size:13px;color:#A8BECE;margin-bottom:10px;font-style:italic;">"${escHtml(pin.notes)}"</div>`:''}
+      ${_popupPhotos}${_popupNotes}
       <button onclick="goEstFromPin('${pid}')" style="background:#F25C05;border:none;border-radius:8px;padding:13px;color:white;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:8px;display:block;">📋 Build Estimate</button>
       <button onclick="measureForPin('${pid}')" style="background:transparent;border:2px solid #F25C05;border-radius:8px;padding:11px;color:#F25C05;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:8px;display:block;">📐 Measure This Roof</button>
       <button onclick="confirmDeletePin('${pid}')" style="background:transparent;border:2px solid #EF4444;border-radius:8px;padding:10px;color:#EF4444;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;display:block;">🗑 Delete Pin</button>
@@ -3343,12 +3346,7 @@ function renderAgencyAccounts(){
           '<div style="font-size:10px;color:var(--muted);">All time: $'+revAllTime+'</div>' +
         '</div>' +
         '<div class="ag-bill-val">$'+revThisMonth+'</div>' +
-      '</div>' +
-      '<button onclick="editClientAccount(\''+a.id+'\')"
-        style="width:100%;margin-top:10px;background:none;border:1px solid var(--border);border-radius:7px;padding:7px;color:var(--mid);font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.4px;"
-        onmouseover="this.style.borderColor=\'var(--accent)\';this.style.color=\'var(--accent)\'"
-        onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--mid)\'">
-        ✏️ Edit Client</button>' +
+      '</div>' +      '<button onclick="editClientAccount(\''+a.id+'\')" style="width:100%;margin-top:10px;background:none;border:1px solid var(--border);border-radius:7px;padding:7px;color:var(--mid);font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.4px;" onmouseover="this.style.borderColor=\'var(--accent)\';this.style.color=\'var(--accent)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--mid)\'">✏️ Edit Client</button>' +
       '</div>';
   }).join('');
 }
