@@ -440,6 +440,41 @@ tr:hover td{background:var(--card);}
   </div>
 </div>
 
+<div class="overlay" id="m-edit-client" style="display:none;">
+  <div class="modal" style="max-width:520px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div class="modal-title" style="margin-bottom:0;">✏️ Edit Client Account</div>
+      <button onclick="closeM('m-edit-client')" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;">×</button>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Company Name</label><input class="fi" id="ec-name" placeholder="Rapid Roof LLC"></div>
+      <div class="fg"><label class="fl">Company Phone</label><input class="fi" id="ec-phone" placeholder="(313) 555-0100"></div>
+    </div>
+    <div class="fg"><label class="fl">Company Address</label><input class="fi" id="ec-addr" placeholder="123 Main St, Detroit, MI 48000"></div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Plan</label>
+        <select class="fs" id="ec-plan">
+          <option value="starter">Starter</option>
+          <option value="pro">Pro</option>
+          <option value="agency">Agency</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">Mailer Rate ($/piece)</label><input class="fi" id="ec-rate" type="number" step="0.01" placeholder="2.50"></div>
+    </div>
+    <div class="fg"><label class="fl">Notes (internal)</label><input class="fi" id="ec-notes" placeholder="e.g. Net 30 billing, referral from..."></div>
+    <div class="fg" style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);">
+        <input type="checkbox" id="ec-active" style="width:16px;height:16px;accent-color:var(--accent);">
+        Account Active
+      </label>
+    </div>
+    <div id="ec-result" style="font-size:12px;margin-top:8px;min-height:18px;"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeM('m-edit-client')">Cancel</button>
+      <button class="btn-primary" id="btn-save-client" onclick="saveClientAccount()">Save Changes</button>
+    </div>
+  </div>
+</div>
 <div class="hdr">
   <div class="logo">
     <span>📍</span>
@@ -3192,8 +3227,77 @@ function renderAgencyAccounts(){
         '</div>' +
         '<div class="ag-bill-val">$'+revThisMonth+'</div>' +
       '</div>' +
+      '<button onclick="editClientAccount(\''+a.id+'\')"
+        style="width:100%;margin-top:10px;background:none;border:1px solid var(--border);border-radius:7px;padding:7px;color:var(--mid);font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.4px;"
+        onmouseover="this.style.borderColor=\'var(--accent)\';this.style.color=\'var(--accent)\'"
+        onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--mid)\'">
+        ✏️ Edit Client</button>' +
       '</div>';
   }).join('');
+}
+
+function editClientAccount(accountId){
+  if(!_agencyData) return;
+  const a = _agencyData.accounts.find(x=>x.id===accountId);
+  if(!a){ toast('Account not found','error'); return; }
+  // Store ID on modal for save
+  document.getElementById('m-edit-client').dataset.accountId = accountId;
+  // Populate fields
+  document.getElementById('ec-name').value  = a.company_name||a.name||'';
+  document.getElementById('ec-phone').value = a.company_phone||'';
+  document.getElementById('ec-addr').value  = a.company_addr||'';
+  document.getElementById('ec-plan').value  = a.plan||'starter';
+  document.getElementById('ec-rate').value  = parseFloat(a.mailer_rate)||2.50;
+  document.getElementById('ec-notes').value = a.notes||'';
+  document.getElementById('ec-active').checked = a.active!==false;
+  document.getElementById('ec-result').textContent = '';
+  const btn = document.getElementById('btn-save-client');
+  if(btn){ btn.disabled=false; btn.textContent='Save Changes'; }
+  openM('m-edit-client');
+}
+
+async function saveClientAccount(){
+  const accountId = document.getElementById('m-edit-client').dataset.accountId;
+  if(!accountId){ toast('No account selected','error'); return; }
+  const name   = document.getElementById('ec-name').value.trim();
+  const phone  = document.getElementById('ec-phone').value.trim();
+  const addr   = document.getElementById('ec-addr').value.trim();
+  const plan   = document.getElementById('ec-plan').value;
+  const rate   = parseFloat(document.getElementById('ec-rate').value)||2.50;
+  const notes  = document.getElementById('ec-notes').value.trim();
+  const active = document.getElementById('ec-active').checked;
+  if(!name){ toast('Company name is required','error'); return; }
+  const resultEl = document.getElementById('ec-result');
+  const btn = document.getElementById('btn-save-client');
+  resultEl.textContent = 'Saving…'; resultEl.style.color='var(--muted)';
+  if(btn){ btn.disabled=true; btn.textContent='Saving…'; }
+  try {
+    const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0d2JoeG5ybWZtZGVub2d6dWVhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDgwMjAwMSwiZXhwIjoyMDkwMzc4MDAxfQ.UdxoP59JF42z6w5pF2Jf3N5LT9mhQ-Ls-OLi-2S5HRI';
+    const res = await fetch(SUPABASE_URL+'/rest/v1/accounts?id=eq.'+accountId, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SERVICE_KEY,
+        'Authorization': 'Bearer '+SERVICE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({ name, company_name:name, company_phone:phone||null, company_addr:addr||null, plan, mailer_rate:rate, notes:notes||null, active })
+    });
+    if(!res.ok){ const e=await res.json(); throw new Error(e.message||JSON.stringify(e)); }
+    const updated = await res.json();
+    // Update local cache
+    const idx = _agencyData.accounts.findIndex(x=>x.id===accountId);
+    if(idx>=0) _agencyData.accounts[idx] = {..._agencyData.accounts[idx], name, company_name:name, company_phone:phone, company_addr:addr, plan, mailer_rate:rate, notes, active};
+    resultEl.innerHTML = '✅ Saved!'; resultEl.style.color='var(--success)';
+    toast('✅ '+name+' updated','success');
+    renderAgencyAccounts();
+    renderAgencyKPIs();
+    setTimeout(()=>closeM('m-edit-client'), 900);
+  } catch(e){
+    resultEl.innerHTML = '❌ '+escHtml(e.message); resultEl.style.color='var(--danger)';
+    toast('Error: '+e.message,'error');
+    if(btn){ btn.disabled=false; btn.textContent='Save Changes'; }
+  }
 }
 
 function renderAgencyMailerLog(){
