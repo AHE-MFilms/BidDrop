@@ -746,7 +746,7 @@ tr:hover td{background:var(--card);}
     <div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
         <div class="dc-title" style="margin-bottom:0;">Client Accounts</div>
-        <button onclick="openM('m-admin')" style="background:var(--accent);border:none;border-radius:8px;padding:8px 16px;color:white;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.4px;">+ Onboard New Client</button>
+        <button onclick="openAdminPanel();setTimeout(showAddAccountForm,400)" style="background:var(--accent);border:none;border-radius:8px;padding:8px 16px;color:white;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.4px;">+ Onboard New Client</button>
       </div>
       <div id="agency-accounts-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;"></div>
     </div>
