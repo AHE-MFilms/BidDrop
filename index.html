@@ -2074,6 +2074,7 @@ function addMarker(pin){
       ${_popupPhotos}${_popupNotes}
       <button onclick="goEstFromPin('${pid}')" style="background:#F25C05;border:none;border-radius:8px;padding:13px;color:white;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:8px;display:block;">📋 Build Estimate</button>
       <button onclick="measureForPin('${pid}')" style="background:transparent;border:2px solid #F25C05;border-radius:8px;padding:11px;color:#F25C05;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:8px;display:block;">📐 Measure This Roof</button>
+      <button onclick="openPinPhotoAdder('${pid}')" style="background:transparent;border:2px solid #22C55E;border-radius:8px;padding:11px;color:#22C55E;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:8px;display:block;">📷 Add Photos</button>
       <button onclick="confirmDeletePin('${pid}')" style="background:transparent;border:2px solid #EF4444;border-radius:8px;padding:10px;color:#EF4444;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;display:block;">🗑 Delete Pin</button>
     </div>
   `,{maxWidth:320});
@@ -2164,6 +2165,70 @@ function removePinPhoto(idx){
 function resetPinModal(){
   window._pinDamagePhotos = [];
   renderPinPhotosRow();
+}
+
+// ── ADD PHOTOS TO EXISTING PIN (from map popup) ──────────────────────────────
+function openPinPhotoAdder(pinId){
+  window._addingPhotosForPin = pinId;
+  // Create or reuse a hidden file input
+  let inp = document.getElementById('popup-photo-input');
+  if(!inp){
+    inp = document.createElement('input');
+    inp.type = 'file';
+    inp.id = 'popup-photo-input';
+    inp.accept = 'image/*';
+    inp.setAttribute('capture','environment');
+    inp.multiple = true;
+    inp.style.display = 'none';
+    inp.onchange = handlePopupPhotoInput;
+    document.body.appendChild(inp);
+  }
+  inp.value = '';
+  inp.click();
+}
+
+function handlePopupPhotoInput(e){
+  const pinId = window._addingPhotosForPin;
+  if(!pinId || !e.target.files || !e.target.files.length) return;
+  const pin = S.pins.find(p=>p.id===pinId);
+  if(!pin) return;
+  const files = Array.from(e.target.files).slice(0, 3 - (pin.damage_photos||[]).length);
+  if(!files.length){ toast('Maximum 3 photos per pin','error'); return; }
+  let processed = 0;
+  files.forEach(file=>{
+    const r = new FileReader();
+    r.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX = 1200; let w = img.width, h = img.height;
+        if(w > MAX){ h = Math.round(h*MAX/w); w = MAX; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const data = canvas.toDataURL('image/jpeg', 0.82);
+        if(!pin.damage_photos) pin.damage_photos = [];
+        if(pin.damage_photos.length < 3) pin.damage_photos.push(data);
+        if(!pin.photo_url && !pin.photo_data) pin.photo_data = data;
+        processed++;
+        if(processed === files.length){
+          // Re-render the marker popup and pin list
+          if(markers[pinId]){
+            map.removeLayer(markers[pinId]);
+            delete markers[pinId];
+          }
+          addMarker(pin);
+          renderPinList();
+          sbSavePin(pin).catch(e=>console.error('Pin save:',e));
+          save();
+          toast('📷 '+processed+' photo'+(processed>1?'s':'')+' added!','success');
+          // Re-open the popup
+          if(markers[pinId]) markers[pinId].openPopup();
+        }
+      };
+      img.src = ev.target.result;
+    };
+    r.readAsDataURL(file);
+  });
 }
 
 function filterPins(s){
