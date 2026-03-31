@@ -744,7 +744,10 @@ tr:hover td{background:var(--card);}
     </div>
     <!-- Per-account cards -->
     <div>
-      <div class="dc-title" style="margin-bottom:10px;">Client Accounts</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div class="dc-title" style="margin-bottom:0;">Client Accounts</div>
+        <button onclick="openM('m-admin')" style="background:var(--accent);border:none;border-radius:8px;padding:8px 16px;color:white;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.4px;">+ Onboard New Client</button>
+      </div>
       <div id="agency-accounts-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;"></div>
     </div>
     <!-- Mailer log table -->
@@ -4498,7 +4501,17 @@ function renderSuperAdminPanel(accounts, allProfiles){
         '<div class="fg"><label class="fl">Temp Password *</label><input class="fi" id="new-acct-pass" placeholder="min 6 chars" type="password"></div>' +
         '<div class="fg"><label class="fl">Company Phone</label><input class="fi" id="new-acct-phone" placeholder="(313) 555-0100"></div>' +
       '</div>' +
-      '<div class="fg"><label class="fl">Company Address</label><input class="fi" id="new-acct-addr" placeholder="123 Main St, Detroit, MI, 48000"></div>' +
+      '<div class="fg"><label class="fl">Street Address</label><input class="fi" id="new-acct-street" placeholder="32640 Dequindre Rd, Suite B"></div>'+
+      '<div class="frow">'+
+        '<div class="fg" style="flex:2;"><label class="fl">City</label><input class="fi" id="new-acct-city" placeholder="Sterling Heights"></div>'+
+        '<div class="fg" style="flex:1;"><label class="fl">State</label>'+
+          '<select class="fs" id="new-acct-state">'+
+            '<option value="">—</option>'+
+            'AL,AK,AZ,AR,CA,CO,CT,DE,FL,GA,HI,ID,IL,IN,IA,KS,KY,LA,ME,MD,MA,MI,MN,MS,MO,MT,NE,NV,NH,NJ,NM,NY,NC,ND,OH,OK,OR,PA,RI,SC,SD,TN,TX,UT,VT,VA,WA,WV,WI,WY'.split(',').map(s=>'<option value="'+s+'"'+(s==\'MI\'?' selected':'')+'>'+s+'</option>').join('')+
+          '</select>'+
+        '</div>'+
+        '<div class="fg" style="flex:1;"><label class="fl">Zip</label><input class="fi" id="new-acct-zip" placeholder="48310" maxlength="5"></div>'+
+      '</div>' +
       '<div class="frow">' +
         '<div class="fg"><label class="fl">Plan</label>' +
           '<select class="fs" id="new-acct-plan">' +
@@ -4563,7 +4576,11 @@ async function createAccount(){
   const email  = document.getElementById('new-acct-email').value.trim();
   const pass   = document.getElementById('new-acct-pass').value.trim();
   const phone  = document.getElementById('new-acct-phone').value.trim();
-  const addr   = document.getElementById('new-acct-addr').value.trim();
+  const street = document.getElementById('new-acct-street').value.trim();
+  const city   = document.getElementById('new-acct-city').value.trim();
+  const state  = document.getElementById('new-acct-state').value.trim();
+  const zip    = document.getElementById('new-acct-zip').value.trim();
+  const addr   = [street, city, state, zip].filter(Boolean).join(', ');
   const plan   = document.getElementById('new-acct-plan').value;
   const rate   = parseFloat(document.getElementById('new-acct-rate').value)||2.50;
   if(!name||!email||!pass){toast('Company name, email and password are required','error');return;}
