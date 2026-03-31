@@ -2360,6 +2360,66 @@ function removeStructure(id){
   renderStructures();calcP();updatePreview();
 }
 
+// ── PER-STRUCTURE PHOTOS ──────────────────────────────────────────────
+function addStructurePhoto(sid){
+  window._structPhotoTarget = sid;
+  let inp = document.getElementById('struct-photo-input');
+  if(!inp){
+    inp = document.createElement('input');
+    inp.type = 'file';
+    inp.id = 'struct-photo-input';
+    inp.accept = 'image/*';
+    inp.setAttribute('capture','environment');
+    inp.multiple = true;
+    inp.style.display = 'none';
+    inp.onchange = _handleStructPhotoInput;
+    document.body.appendChild(inp);
+  }
+  inp.value = '';
+  inp.click();
+}
+
+function _handleStructPhotoInput(e){
+  const sid = window._structPhotoTarget;
+  const s = structures.find(x=>x.id===sid);
+  if(!s || !e.target.files || !e.target.files.length) return;
+  if(!s.photos) s.photos = [];
+  const slots = 3 - s.photos.length;
+  if(slots <= 0){ toast('Max 3 photos per structure','error'); return; }
+  const files = Array.from(e.target.files).slice(0, slots);
+  let done = 0;
+  files.forEach(file=>{
+    const r = new FileReader();
+    r.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX = 1200; let w = img.width, h = img.height;
+        if(w > MAX){ h = Math.round(h*MAX/w); w = MAX; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        s.photos.push(canvas.toDataURL('image/jpeg', 0.82));
+        done++;
+        if(done === files.length){
+          renderStructures();
+          updatePreview();
+          toast('📷 '+done+' photo'+(done>1?'s':'')+' added to structure','success');
+        }
+      };
+      img.src = ev.target.result;
+    };
+    r.readAsDataURL(file);
+  });
+}
+
+function removeStructurePhoto(sid, idx){
+  const s = structures.find(x=>x.id===sid);
+  if(!s || !s.photos) return;
+  s.photos.splice(idx, 1);
+  renderStructures();
+  updatePreview();
+}
+
 // Called from oninput/onchange handlers via data-sid attribute
 function _structField(el,field){
   const sid=el.dataset.sid;
@@ -2394,8 +2454,10 @@ function renderStructures(){
       '</div>'+
       '<div class="struct-card-actions">'+
       '<button class="struct-meas-btn" data-sid="'+s.id+'" onclick="measureForStructure(this.dataset.sid)">📐 Re-measure on Map</button>'+
+      '<button class="struct-photo-btn" data-sid="'+s.id+'" onclick="addStructurePhoto(this.dataset.sid)" title="Add damage photos" style="background:transparent;border:1px solid #22C55E;border-radius:7px;padding:6px 10px;color:#22C55E;font-size:12px;font-weight:700;cursor:pointer;">📷 Photos'+(s.photos&&s.photos.length?' ('+s.photos.length+')':'')+'</button>'+
       '<button class="struct-del-btn" data-sid="'+s.id+'" onclick="removeStructure(this.dataset.sid)" title="Remove structure">🗑</button>'+
       '</div>'+
+      (s.photos&&s.photos.length ? '<div style="display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;">'+s.photos.map((src,pi)=>'<div style="position:relative;display:inline-block;"><img src="'+src+'" style="width:72px;height:60px;object-fit:cover;border-radius:6px;display:block;"><button onclick="removeStructurePhoto(\"'+s.id+'\",'+pi+')" style="position:absolute;top:-4px;right:-4px;background:#EF4444;border:none;border-radius:50%;width:16px;height:16px;color:white;font-size:10px;cursor:pointer;line-height:16px;padding:0;">×</button></div>').join('')+'</div>' : '')+
       '<div class="frow" style="gap:8px;margin-bottom:8px;">'+
       '<div class="fg" style="margin-bottom:0;"><label class="fl">Sq Ft</label>'+
       '<input type="number" class="fi" style="font-size:14px;padding:9px 10px;" data-sid="'+s.id+'" value="'+(s.sqft||'')+'" placeholder="2400" oninput="_structField(this,\'sqft\')"></div>'+
@@ -2506,22 +2568,41 @@ function updatePreview(){
     : '';
   // Damage photos section for estimate/PDF
   const dmgPhotos = window._damagePhotos || (window._homePhotoData ? [window._homePhotoData] : []);
-  const damageSection = dmgPhotos.length > 1
-    ? '<div style="margin:18px 0;padding:14px;background:#f8f8f8;border-radius:8px;border:1px solid #e0e0e0;">' +
-        '<div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#F25C05;margin-bottom:10px;">DAMAGE ASSESSMENT — PHOTOS</div>' +
-        '<div style="display:grid;grid-template-columns:repeat('+Math.min(dmgPhotos.length,3)+',1fr);gap:8px;">' +
-        dmgPhotos.slice(0,3).map((src,i)=>'<div><img src="'+src+'" style="width:100%;height:120px;object-fit:cover;border-radius:6px;display:block;"><div style="font-size:9px;color:#888;text-align:center;margin-top:3px;">Photo '+(i+1)+'</div></div>').join('') +
-        '</div>' +
-        '<div style="font-size:10px;color:#666;margin-top:8px;font-style:italic;">Photos taken at time of assessment. Damage visible includes missing/broken shingles, granule loss, and structural wear.</div>' +
+  // Collect all per-structure photos
+  const structPhotoBlocks = structures.filter(s=>s.photos&&s.photos.length).map((s,si)=>{
+    const cols = Math.min(s.photos.length, 3);
+    return '<div style="margin-bottom:12px;">'+
+      '<div style="font-size:9px;font-weight:700;color:#F25C05;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;">Bldg '+(si+1)+' — '+escHtml(s.name||'Structure '+(si+1))+'</div>'+
+      '<div style="display:grid;grid-template-columns:repeat('+cols+',1fr);gap:6px;">'+
+      s.photos.slice(0,3).map((src,pi)=>'<div><img src="'+src+'" style="width:100%;height:110px;object-fit:cover;border-radius:6px;display:block;"><div style="font-size:9px;color:#888;text-align:center;margin-top:2px;">Photo '+(pi+1)+'</div></div>').join('')+
+      '</div></div>';
+  }).join('');
+  const hasAnyPhotos = dmgPhotos.length > 1 || structPhotoBlocks.length > 0;
+  const damageSection = hasAnyPhotos
+    ? '<div style="margin:18px 0;padding:14px;background:#f8f8f8;border-radius:8px;border:1px solid #e0e0e0;">'+
+        '<div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#F25C05;margin-bottom:10px;">DAMAGE ASSESSMENT — PHOTOS</div>'+
+        (dmgPhotos.length > 1
+          ? '<div style="display:grid;grid-template-columns:repeat('+Math.min(dmgPhotos.length,3)+',1fr);gap:8px;margin-bottom:'+(structPhotoBlocks.length?'14px':'0')+';">'+
+            dmgPhotos.slice(0,3).map((src,i)=>'<div><img src="'+src+'" style="width:100%;height:120px;object-fit:cover;border-radius:6px;display:block;"><div style="font-size:9px;color:#888;text-align:center;margin-top:3px;">Photo '+(i+1)+'</div></div>').join('')+
+            '</div>' : '')+
+        structPhotoBlocks+
+        '<div style="font-size:10px;color:#666;margin-top:8px;font-style:italic;">Photos taken at time of assessment. Damage visible includes missing/broken shingles, granule loss, and structural wear.</div>'+
       '</div>'
     : '';
-  // Damage photos for the mailer letter (same data, slightly different styling)
-  const damageMailerSection = dmgPhotos.length > 1
-    ? '<div style="margin:14px 0;padding:10px;background:#f9f9f9;border-radius:6px;border:1px solid #e8e8e8;">' +
-        '<div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#F25C05;margin-bottom:8px;">DAMAGE ASSESSMENT PHOTOS</div>' +
-        '<div style="display:grid;grid-template-columns:repeat('+Math.min(dmgPhotos.length,3)+',1fr);gap:6px;">' +
-        dmgPhotos.slice(0,3).map(src=>'<img src="'+src+'" style="width:100%;height:100px;object-fit:cover;border-radius:4px;display:block;">').join('') +
-        '</div>' +
+  // Damage photos for the mailer letter
+  const damageMailerSection = hasAnyPhotos
+    ? '<div style="margin:14px 0;padding:10px;background:#f9f9f9;border-radius:6px;border:1px solid #e8e8e8;">'+
+        '<div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#F25C05;margin-bottom:8px;">DAMAGE ASSESSMENT PHOTOS</div>'+
+        (dmgPhotos.length > 1
+          ? '<div style="display:grid;grid-template-columns:repeat('+Math.min(dmgPhotos.length,3)+',1fr);gap:6px;margin-bottom:'+(structPhotoBlocks.length?'10px':'0')+';">'+
+            dmgPhotos.slice(0,3).map(src=>'<img src="'+src+'" style="width:100%;height:100px;object-fit:cover;border-radius:4px;display:block;">').join('')+
+            '</div>' : '')+
+        structures.filter(s=>s.photos&&s.photos.length).map((s,si)=>{
+          return '<div style="margin-bottom:8px;"><div style="font-size:8px;font-weight:700;color:#F25C05;margin-bottom:4px;">Bldg '+(si+1)+' — '+escHtml(s.name||'Structure '+(si+1))+'</div>'+
+            '<div style="display:grid;grid-template-columns:repeat('+Math.min(s.photos.length,3)+',1fr);gap:4px;">'+
+            s.photos.slice(0,3).map(src=>'<img src="'+src+'" style="width:100%;height:80px;object-fit:cover;border-radius:4px;display:block;">').join('')+
+            '</div></div>';
+        }).join('')+
       '</div>'
     : '';
   const headshot    = cfg.headshot    || null;
