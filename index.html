@@ -197,6 +197,14 @@ tr:hover td{background:var(--card);}
 .btn-add-team:hover{border-color:var(--accent);color:var(--accent);}
 .act-feed{max-height:220px;overflow-y:auto;}
 .act-feed::-webkit-scrollbar{width:3px;}
+.dmg-photos-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.dmg-thumb{position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;border:2px solid var(--border);flex-shrink:0;}
+.dmg-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.dmg-thumb .dmg-rm{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.7);border:none;border-radius:50%;width:18px;height:18px;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;}
+.dmg-add-btn{width:80px;height:80px;border-radius:8px;border:2px dashed var(--border);background:var(--card2);color:var(--muted);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color .15s;}
+.dmg-add-btn:hover{border-color:var(--accent);color:var(--accent);}
+.dmg-section{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-top:10px;}
+.dmg-section-title{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin-bottom:6px;}
 .ag-acct-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;transition:border-color .15s;}
 .ag-acct-card:hover{border-color:var(--accent);}
 .ag-acct-name{font-family:var(--font-h);font-size:15px;font-weight:700;letter-spacing:.5px;margin-bottom:4px;}
@@ -813,7 +821,7 @@ tr:hover td{background:var(--card);}
 
 <!-- ADD PIN MODAL -->
 <div class="overlay" id="m-pin" style="display:none;">
-  <div class="modal">
+  <div class="modal" style="max-width:480px;">
     <div class="modal-title">📍 Pin This Home</div>
     <div class="fg"><label class="fl">Address</label><input class="fi" id="p-addr" placeholder="Auto-filled from map click…"></div>
     <div class="fg"><label class="fl">Status</label>
@@ -826,6 +834,14 @@ tr:hover td{background:var(--card);}
     </div>
     <div class="fg"><label class="fl">Notes</label><input class="fi" id="p-notes" placeholder="e.g. Missing shingles, storm damage visible…"></div>
     <div class="fg"><label class="fl">Canvasser Name</label><input class="fi" id="p-rep" placeholder="Your name"></div>
+    <!-- Damage Photos -->
+    <div class="dmg-section">
+      <div class="dmg-section-title">📷 Damage Photos (up to 3)</div>
+      <div class="dmg-photos-row" id="pin-photos-row">
+        <button class="dmg-add-btn" onclick="addPinPhoto()" title="Add damage photo">+</button>
+      </div>
+      <input type="file" id="pin-photo-input" accept="image/*" capture="environment" style="display:none;" onchange="handlePinPhotoInput(this)">
+    </div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeM('m-pin')">Cancel</button>
       <button class="btn-ok" onclick="savePin()">Save Pin</button>
@@ -1316,6 +1332,7 @@ function loadEstFromPicker(){
     const photoSrc = savedEst.photo_data || savedEst.photo_url || p.photo_url || null;
     if(photoSrc){
       window._homePhotoData = photoSrc;
+    window._damagePhotos = est.damage_photos || (photoSrc ? [photoSrc] : []);
       const prev = document.getElementById('home-photo-preview');
       if(prev) prev.innerHTML = '<img src="'+photoSrc+'" style="width:100%;height:100%;object-fit:cover;">';
       const clr = document.getElementById('clear-photo-btn');
@@ -1768,6 +1785,7 @@ function onMapClick(e){
   // Auto-fill rep name from logged in user
   const repInp = document.getElementById('p-rep');
   if(repInp && currentProfile) repInp.value = currentProfile.name || '';
+  resetPinModal();
   openM('m-pin');
   // Disable Save and show loading until reverse geocode completes
   const saveBtn = document.querySelector('#m-pin .btn-ok');
@@ -2045,7 +2063,12 @@ function addMarker(pin){
     <div style="min-width:260px;max-width:300px;">
       <div style="font-weight:700;font-size:16px;margin-bottom:8px;color:#FFFFFF;line-height:1.4;">${escHtml(pin.address||'Unknown')}</div>
       <div style="display:inline-block;background:${sColor(pin.status)};color:white;font-size:13px;padding:4px 12px;border-radius:7px;font-weight:700;margin-bottom:12px;">${sLabel(pin.status)}</div>
-      ${pin.photo_url?`<img src="${pin.photo_url}" style="width:100%;max-height:160px;object-fit:cover;border-radius:8px;margin-bottom:10px;display:block;" onerror="this.style.display='none'">`:''}${pin.notes?`<div style="font-size:13px;color:#A8BECE;margin-bottom:10px;font-style:italic;">"${escHtml(pin.notes)}"</div>`:''}
+      ${(()=>{
+  const photos = pin.damage_photos||[];
+  if(photos.length) return '<div style="display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap;">' + photos.map(src=>'<img src="'+src+'" style="width:calc(33% - 3px);height:80px;object-fit:cover;border-radius:6px;display:block;" onerror="this.style.display='none'">').join('') + '</div>';
+  if(pin.photo_url) return '<img src="'+pin.photo_url+'" style="width:100%;max-height:160px;object-fit:cover;border-radius:8px;margin-bottom:10px;display:block;" onerror="this.style.display='none'">';
+  return '';
+})()}${pin.notes?`<div style="font-size:13px;color:#A8BECE;margin-bottom:10px;font-style:italic;">"${escHtml(pin.notes)}"</div>`:''}
       <button onclick="goEstFromPin('${pid}')" style="background:#F25C05;border:none;border-radius:8px;padding:13px;color:white;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:8px;display:block;">📋 Build Estimate</button>
       <button onclick="measureForPin('${pid}')" style="background:transparent;border:2px solid #F25C05;border-radius:8px;padding:11px;color:#F25C05;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:8px;display:block;">📐 Measure This Roof</button>
       <button onclick="confirmDeletePin('${pid}')" style="background:transparent;border:2px solid #EF4444;border-radius:8px;padding:10px;color:#EF4444;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;display:block;">🗑 Delete Pin</button>
@@ -2056,6 +2079,7 @@ function addMarker(pin){
 
 function savePin(){
   if(!tempLL)return;
+  const dmgPhotos = window._pinDamagePhotos || [];
   const pin={
     id:'p'+Date.now(),
     lat:tempLL.lat,lng:tempLL.lng,
@@ -2063,7 +2087,10 @@ function savePin(){
     status:document.getElementById('p-status').value,
     notes:document.getElementById('p-notes').value.trim(),
     rep:document.getElementById('p-rep').value.trim()||'Unknown',
-    at:new Date().toISOString()
+    at:new Date().toISOString(),
+    // Store first photo as primary photo_url (for existing display logic)
+    photo_data: dmgPhotos[0]||null,
+    damage_photos: dmgPhotos.length ? [...dmgPhotos] : null
   };
   S.pins.unshift(pin);
   addMarker(pin);
@@ -2073,9 +2100,67 @@ function savePin(){
   refreshZoneOverlays();
   sbSavePin(pin).catch(e=>console.error('Pin save:',e));
   sbAddActivity('<strong>'+escHtml(pin.rep)+'</strong> pinned <strong>'+escHtml(pin.address)+'</strong>',pin.status);
-  // Auto-push to GHL (fire-and-forget — never blocks the UI)
   ghlAutoPushPin(pin).catch(e=>console.warn('GHL push:',e));
-  save();closeM('m-pin');toast('📍 Pin saved','success');
+  window._pinDamagePhotos = [];
+  save();closeM('m-pin');toast('📍 Pin saved'+(dmgPhotos.length?' with '+dmgPhotos.length+' photo'+(dmgPhotos.length>1?'s':''):''),'success');
+}
+
+// ── PIN DAMAGE PHOTOS ──────────────────────────────────────────────────────
+window._pinDamagePhotos = []; // array of base64 data URLs, max 3
+
+function addPinPhoto(){
+  document.getElementById('pin-photo-input').click();
+}
+
+function handlePinPhotoInput(inp){
+  if(!inp.files||!inp.files[0]) return;
+  if((window._pinDamagePhotos||[]).length >= 3){ toast('Maximum 3 damage photos per pin','error'); return; }
+  const r = new FileReader();
+  r.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const MAX = 1200; let w = img.width, h = img.height;
+      if(w > MAX){ h = Math.round(h*MAX/w); w = MAX; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const data = canvas.toDataURL('image/jpeg', 0.82);
+      if(!window._pinDamagePhotos) window._pinDamagePhotos = [];
+      window._pinDamagePhotos.push(data);
+      renderPinPhotosRow();
+      toast('📷 Photo '+(window._pinDamagePhotos.length)+' added','success');
+    };
+    img.src = e.target.result;
+  };
+  r.readAsDataURL(inp.files[0]);
+  inp.value = ''; // reset so same file can be re-selected
+}
+
+function renderPinPhotosRow(){
+  const row = document.getElementById('pin-photos-row');
+  if(!row) return;
+  const photos = window._pinDamagePhotos || [];
+  let html = photos.map((src, i) =>
+    '<div class="dmg-thumb">' +
+      '<img src="'+src+'" alt="Damage photo '+(i+1)+'">' +
+      '<button class="dmg-rm" onclick="removePinPhoto('+i+')" title="Remove">×</button>' +
+    '</div>'
+  ).join('');
+  if(photos.length < 3){
+    html += '<button class="dmg-add-btn" onclick="addPinPhoto()" title="Add damage photo">+</button>';
+  }
+  row.innerHTML = html;
+}
+
+function removePinPhoto(idx){
+  if(!window._pinDamagePhotos) return;
+  window._pinDamagePhotos.splice(idx, 1);
+  renderPinPhotosRow();
+}
+
+function resetPinModal(){
+  window._pinDamagePhotos = [];
+  renderPinPhotosRow();
 }
 
 function filterPins(s){
@@ -2093,7 +2178,7 @@ function renderPinList(){
   }
   el.innerHTML=list.map(p=>{
     const pid=p.id;
-    return '<div class="pc" onclick="flyTo(\''+pid+'\')">'+(p.photo_url?'<img src="'+p.photo_url+'" style="width:100%;height:90px;object-fit:cover;border-radius:6px 6px 0 0;display:block;" onerror="this.style.display=\'none\'">':'')+'<div class="pc-top"><div class="pc-addr">'+escHtml(p.address)+'</div><div class="sdot" style="background:'+sColor(p.status)+';">'
+    return '<div class="pc" onclick="flyTo(\''+pid+'\')">'+(p.damage_photos&&p.damage_photos.length?'<div style="display:flex;gap:2px;">'+p.damage_photos.slice(0,3).map(src=>'<img src="'+src+'" style="flex:1;height:80px;object-fit:cover;border-radius:6px 6px 0 0;display:block;" onerror="this.style.display=\'none\'">').join('')+'</div>':p.photo_url?'<img src="'+p.photo_url+'" style="width:100%;height:90px;object-fit:cover;border-radius:6px 6px 0 0;display:block;" onerror="this.style.display=\'none\'">':'')+'<div class="pc-top"><div class="pc-addr">'+escHtml(p.address)+'</div><div class="sdot" style="background:'+sColor(p.status)+';">'
 +'</div></div>'+'<div class="pc-meta"><span>'+timeAgo(p.at)+'</span>'+(p.rep?'<span>· '+escHtml(p.rep)+'</span>':'')+'</div>'+(p.notes?'<div class="pc-note">'+
 '"'+escHtml(p.notes)+'"</div>':'')+'<div class="pc-acts">'+'<button class="btn-xs pr" onclick="event.stopPropagation();goEstFromPin(\''+pid+'\')">'+'📋 Estimate</button>'+'<button class="btn-xs" onclick="event.stopPropagation();cycleStatus(\''+pid+'\')">'+'Edit</button>'+'<button class="btn-xs danger" onclick="event.stopPropagation();rmPin(\''+pid+'\')">'+'✕</button>'+'</div></div>';
   }).join('');
@@ -2162,6 +2247,23 @@ function goEstFromPin(id){
     if(est.structures && est.structures.length){
       structures = est.structures;
     }
+  }
+  // Load damage photos from pin
+  const dmgSrcs4 = p.damage_photos||[];
+  if(dmgSrcs4.length){
+    window._homePhotoData = dmgSrcs4[0];
+    window._damagePhotos = [...dmgSrcs4];
+    const prev = document.getElementById('home-photo-preview');
+    if(prev) prev.innerHTML = '<img src="'+dmgSrcs4[0]+'" style="width:100%;height:100%;object-fit:cover;">';
+    const clr = document.getElementById('clear-photo-btn');
+    if(clr) clr.style.display = 'block';
+  } else if(p.photo_url){
+    window._homePhotoData = p.photo_url;
+    window._damagePhotos = [p.photo_url];
+    const prev = document.getElementById('home-photo-preview');
+    if(prev) prev.innerHTML = '<img src="'+p.photo_url+'" style="width:100%;height:100%;object-fit:cover;">';
+    const clr = document.getElementById('clear-photo-btn');
+    if(clr) clr.style.display = 'block';
   }
   goTab('estimate');
   document.getElementById('e-addr').value=p.address||'';
@@ -2334,6 +2436,17 @@ function updatePreview(){
   const homePhoto = window._homePhotoData
     ? '<img src="'+window._homePhotoData+'" style="width:100%;max-height:200px;object-fit:cover;border-radius:6px;margin-bottom:16px;display:block;">'
     : '';
+  // Damage photos section for estimate/PDF
+  const dmgPhotos = window._damagePhotos || (window._homePhotoData ? [window._homePhotoData] : []);
+  const damageSection = dmgPhotos.length > 1
+    ? '<div style="margin:18px 0;padding:14px;background:#f8f8f8;border-radius:8px;border:1px solid #e0e0e0;">' +
+        '<div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#F25C05;margin-bottom:10px;">DAMAGE ASSESSMENT — PHOTOS</div>' +
+        '<div style="display:grid;grid-template-columns:repeat('+Math.min(dmgPhotos.length,3)+',1fr);gap:8px;">' +
+        dmgPhotos.slice(0,3).map((src,i)=>'<div><img src="'+src+'" style="width:100%;height:120px;object-fit:cover;border-radius:6px;display:block;"><div style="font-size:9px;color:#888;text-align:center;margin-top:3px;">Photo '+(i+1)+'</div></div>').join('') +
+        '</div>' +
+        '<div style="font-size:10px;color:#666;margin-top:8px;font-style:italic;">Photos taken at time of assessment. Damage visible includes missing/broken shingles, granule loss, and structural wear.</div>' +
+      '</div>'
+    : '';
 
   const headshot    = cfg.headshot    || null;
   const review1     = cfg.review1     || null;
@@ -2500,7 +2613,7 @@ function updatePreview(){
     '<div style="display:table;width:100%;border-collapse:separate;border-spacing:10px 0;margin:0 -10px;">'+
     '<div style="display:table-cell;width:50%;vertical-align:top;">'+
     '<div class="ml-section-hdr" style="background:'+color+';display:block;">Why Did You Receive This?</div>'+
-    '<p style="font-size:10px;line-height:1.6;color:#555;margin:4px 0 0;">'+escHtml(why)+'</p>'+
+    '<p style="font-size:10px;line-height:1.6;color:#555;margin:4px 0 0;">'+escHtml(why)+'</p>'+damageMailerSection+
     '</div>'+
     '<div style="display:table-cell;width:50%;vertical-align:top;">'+
     '<div class="ml-section-hdr" style="background:#222;display:block;">How We Stand Out</div>'+
@@ -2777,6 +2890,7 @@ function loadEstimateIntoEstimator(estId){
   const photoSrc = est.photo_data || est.photo_url || null;
   if(photoSrc){
     window._homePhotoData = photoSrc;
+    window._damagePhotos = est.damage_photos || (photoSrc ? [photoSrc] : []);
     const prev = document.getElementById('home-photo-preview');
     if(prev) prev.innerHTML = '<img src="'+photoSrc+'" style="width:100%;height:100%;object-fit:cover;">';
     const clr = document.getElementById('clear-photo-btn');
@@ -2831,6 +2945,7 @@ function addEstimateToMailQueue(estId){
     total: est.total || 0,
     photo_data: est.photo_data || null,
     photo_url: est.photo_url || (pin ? pin.photo_url : null) || null,
+    damage_photos: window._damagePhotos||est.damage_photos||null,
     status: 'pending',
     lobId: null, mailedAt: null,
     at: new Date().toISOString()
@@ -2951,6 +3066,8 @@ async function sendLob(id){
 }
 
 function genLobHtml(i){
+  // Build damage photos HTML if available
+  const dmgPhotosLob = window._damagePhotos || [];
   const co=S.cfg.companyName||'Your Roofing Co';
   const ph=S.cfg.companyPhone||'';
   return '<h1>'+escHtml(co)+'</h1>'+
