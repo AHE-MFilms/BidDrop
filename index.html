@@ -2450,7 +2450,15 @@ function updatePreview(){
         '<div style="font-size:10px;color:#666;margin-top:8px;font-style:italic;">Photos taken at time of assessment. Damage visible includes missing/broken shingles, granule loss, and structural wear.</div>' +
       '</div>'
     : '';
-
+  // Damage photos for the mailer letter (same data, slightly different styling)
+  const damageMailerSection = dmgPhotos.length > 1
+    ? '<div style="margin:14px 0;padding:10px;background:#f9f9f9;border-radius:6px;border:1px solid #e8e8e8;">' +
+        '<div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#F25C05;margin-bottom:8px;">DAMAGE ASSESSMENT PHOTOS</div>' +
+        '<div style="display:grid;grid-template-columns:repeat('+Math.min(dmgPhotos.length,3)+',1fr);gap:6px;">' +
+        dmgPhotos.slice(0,3).map(src=>'<img src="'+src+'" style="width:100%;height:100px;object-fit:cover;border-radius:4px;display:block;">').join('') +
+        '</div>' +
+      '</div>'
+    : '';
   const headshot    = cfg.headshot    || null;
   const review1     = cfg.review1     || null;
   const review2     = cfg.review2     || null;
