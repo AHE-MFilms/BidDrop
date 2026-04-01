@@ -1420,8 +1420,8 @@ function loadEstFromPicker(){
   if(savedEst){
     if(savedEst.owner) document.getElementById('e-owner').value = savedEst.owner;
     if(savedEst.email) document.getElementById('e-email').value = savedEst.email;
-    if(savedEst.structures && savedEst.structures.length) structures = savedEst.structures.map(function(s){return Object.assign({},s);});
-    else structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'6/12',material:'arch_shingle',complexity:'moderate',pts:null}];
+    if(savedEst.structures && savedEst.structures.length) structures = savedEst.structures.map(function(s){return normStruct(s);});
+    else structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'1.15',mat:'1.3',complexity:'1.12',pts:null}];
     // Restore photo from estimate record
     const photoSrc = savedEst.photo_data || savedEst.photo_url || p.photo_url || null;
     if(photoSrc){
@@ -1437,8 +1437,8 @@ function loadEstFromPicker(){
     const est = typeof p.estimate === 'string' ? JSON.parse(p.estimate) : p.estimate;
     if(est.owner) document.getElementById('e-owner').value = est.owner;
     if(est.email) document.getElementById('e-email').value = est.email;
-    if(est.structures && est.structures.length) structures = est.structures.map(function(s){return Object.assign({},s);});
-    else structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'6/12',material:'arch_shingle',complexity:'moderate',pts:null}];
+    if(est.structures && est.structures.length) structures = est.structures.map(function(s){return normStruct(s);})
+    else structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'1.15',mat:'1.3',complexity:'1.12',pts:null}];
     // Load pin photo if available
     if(p.photo_url){
       const prev = document.getElementById('home-photo-preview');
@@ -1447,7 +1447,7 @@ function loadEstFromPicker(){
       if(clr) clr.style.display = 'block';
     }
   } else {
-    structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'6/12',material:'arch_shingle',complexity:'moderate',pts:null}];
+    structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'1.15',mat:'1.3',complexity:'1.12',pts:null}];
     if(p.photo_url){
       const prev = document.getElementById('home-photo-preview');
       if(prev) prev.innerHTML = '<img src="'+p.photo_url+'" style="width:100%;height:100%;object-fit:cover;">';
@@ -1465,7 +1465,7 @@ function newEstimate(){
   document.getElementById('e-addr').value = '';
   document.getElementById('e-email').value = '';
   clearHomePhoto(); // always wipe photo when starting fresh
-  structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'6/12',material:'arch_shingle',complexity:'moderate',pts:null}];
+  structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'1.15',mat:'1.3',complexity:'1.12',pts:null}];
   renderStructures(); calcP(); updatePreview();
   const sel = document.getElementById('est-pin-picker');
   if(sel) sel.value = '';
@@ -2657,6 +2657,21 @@ function applyDataSid(selectHtml,sid){
   return selectHtml.replace('<select ','<select data-sid="'+sid+'" ');
 }
 
+// Migrate old structure objects that used string field names (e.g. material:'arch_shingle', pitch:'6/12')
+function normStruct(s){
+  const matMap = {'arch_shingle':'1.3','3tab':'1.0','3_tab':'1.0','designer':'1.8','metal':'2.5'};
+  const pitchMap = {'4/12':'1.0','5/12':'1.07','6/12':'1.15','7/12':'1.23','8/12':'1.31','9/12':'1.40','10/12':'1.50','11/12':'1.65','12/12':'1.80'};
+  const complexMap = {'simple':'1.0','moderate':'1.12','complex':'1.25','very_complex':'1.40'};
+  const out = Object.assign({}, s);
+  // Fix mat field (was sometimes stored as 'material')
+  if(!out.mat && out.material) out.mat = matMap[out.material] || out.material;
+  if(out.mat && isNaN(parseFloat(out.mat))) out.mat = matMap[out.mat] || '1.3';
+  // Fix pitch field
+  if(out.pitch && isNaN(parseFloat(out.pitch))) out.pitch = pitchMap[out.pitch] || '1.15';
+  // Fix complexity field
+  if(out.complexity && isNaN(parseFloat(out.complexity))) out.complexity = complexMap[out.complexity] || '1.12';
+  return out;
+}
 function calcStructPrice(s){
   const c=S.cfg;
   const sqft=parseFloat(s.sqft)||0;if(!sqft)return 0;
@@ -3232,7 +3247,7 @@ function loadEstimateIntoEstimator(estId){
     const clr = document.getElementById('clear-photo-btn');
     if(clr) clr.style.display = 'block';
   }
-  structures = (est.structures||[]).map(s=>({...s}));
+  structures = (est.structures||[]).map(s=>normStruct(s));
   // Restore add-ons
   const sky = document.getElementById('a-sky'); if(sky) sky.checked = !!est.skylight;
   const skyQ = document.getElementById('a-sky-q'); if(skyQ) skyQ.value = est.skylightQty||1;
@@ -4817,7 +4832,7 @@ async function loadPinsFromSupabase(){
           owner: est.owner || '',
           email: est.email || '',
           total: est.total || 0,
-          structures: est.structures || [],
+          structures: (est.structures || []).map(normStruct),
           photo_url: pin.photo_url || null,
           savedAt: pin.at_est || pin.at || new Date().toISOString(),
           sentAt: null, status: 'saved'
