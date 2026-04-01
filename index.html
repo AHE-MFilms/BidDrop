@@ -1426,7 +1426,7 @@ function loadEstFromPicker(){
     const photoSrc = savedEst.photo_data || savedEst.photo_url || p.photo_url || null;
     if(photoSrc){
       window._homePhotoData = photoSrc;
-    window._damagePhotos = est.damage_photos || (photoSrc ? [photoSrc] : []);
+    window._damagePhotos = savedEst.damage_photos || (photoSrc ? [photoSrc] : []);
       const prev = document.getElementById('home-photo-preview');
       if(prev) prev.innerHTML = '<img src="'+photoSrc+'" style="width:100%;height:100%;object-fit:cover;">';
       const clr = document.getElementById('clear-photo-btn');
@@ -2492,7 +2492,7 @@ function goEstFromPin(id){
     if(est.owner) document.getElementById('e-owner').value = est.owner;
     if(est.email) document.getElementById('e-email').value = est.email;
     if(est.structures && est.structures.length){
-      structures = est.structures;
+      structures = est.structures.map(s=>normStruct(s));
     }
   }
   // Load damage photos from pin
