@@ -5225,32 +5225,60 @@ async function createSuperAdmin(){
   const email = document.getElementById('new-sa-email').value.trim();
   const pass  = document.getElementById('new-sa-pass').value.trim();
   const result = document.getElementById('new-sa-result');
-  if(!email||!pass){ toast('Email and password are required','error'); return; }
-  if(pass.length<6){ toast('Password must be at least 6 characters','error'); return; }
-  result.textContent='Creating super admin…'; result.style.color='var(--muted)';
+  if(!email){ toast('Email is required','error'); return; }
+  result.textContent='Working…'; result.style.color='var(--muted)';
   try {
     const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0d2JoeG5ybWZtZGVub2d6dWVhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDgwMjAwMSwiZXhwIjoyMDkwMzc4MDAxfQ.UdxoP59JF42z6w5pF2Jf3N5LT9mhQ-Ls-OLi-2S5HRI';
-    // 1. Create auth user (auto-confirmed)
-    const adminRes = await fetch(SUPABASE_URL+'/auth/v1/admin/users', {
-      method: 'POST',
-      headers: {'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json'},
-      body: JSON.stringify({ email, password:pass, email_confirm:true, user_metadata:{name} })
+    let userId = null;
+    let isExisting = false;
+
+    // Step 1: Try to find existing auth user by email via admin list
+    const listRes = await fetch(SUPABASE_URL+'/auth/v1/admin/users?per_page=1000', {
+      headers: {'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY}
     });
-    const adminData = await adminRes.json();
-    if(!adminRes.ok) throw new Error(adminData.message||adminData.msg||JSON.stringify(adminData));
-    const userId = adminData.id;
-    if(!userId) throw new Error('No user ID returned');
-    // 2. Create user_profile with role=super_admin and account_id=null (platform-wide)
-    const {error:profErr} = await sb.from('user_profiles').insert({
+    if(listRes.ok){
+      const listData = await listRes.json();
+      const users = listData.users || listData || [];
+      const found = users.find(u => u.email && u.email.toLowerCase()===email.toLowerCase());
+      if(found){ userId = found.id; isExisting = true; }
+    }
+
+    if(!isExisting){
+      // User doesn't exist yet — create them (password required)
+      if(!pass){ toast('Password is required for new accounts','error'); result.textContent=''; return; }
+      if(pass.length<6){ toast('Password must be at least 6 characters','error'); result.textContent=''; return; }
+      const adminRes = await fetch(SUPABASE_URL+'/auth/v1/admin/users', {
+        method: 'POST',
+        headers: {'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json'},
+        body: JSON.stringify({ email, password:pass, email_confirm:true, user_metadata:{name} })
+      });
+      const adminData = await adminRes.json();
+      if(!adminRes.ok) throw new Error(adminData.message||adminData.msg||JSON.stringify(adminData));
+      userId = adminData.id;
+      if(!userId) throw new Error('No user ID returned');
+    } else if(pass && pass.length>=6){
+      // Existing user — update their password if one was provided
+      await fetch(SUPABASE_URL+'/auth/v1/admin/users/'+userId, {
+        method: 'PUT',
+        headers: {'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json'},
+        body: JSON.stringify({ password:pass, email_confirm:true })
+      });
+    }
+
+    // Step 2: Upsert user_profile to super_admin (works whether profile exists or not)
+    const {error:profErr} = await sb.from('user_profiles').upsert({
       id: userId, account_id: null, role: 'super_admin',
-      name: name||email.split('@')[0], email, must_change_password: true
-    });
+      name: name||email.split('@')[0], email,
+      must_change_password: pass ? true : false
+    }, { onConflict: 'id' });
     if(profErr) throw profErr;
-    result.innerHTML = '✅ <strong>'+escHtml(name||email)+'</strong> is now a Super Admin!<br>'+
+
+    const modeLabel = isExisting ? 'promoted to Super Admin' : 'created as Super Admin';
+    result.innerHTML = '✅ <strong>'+escHtml(name||email)+'</strong> '+modeLabel+'!<br>'+
       '<span style="font-size:11px;color:var(--muted);">Email: '+escHtml(email)+'<br>'+
-      'Temp password: <code style="background:var(--card2);padding:2px 6px;border-radius:4px;">'+escHtml(pass)+'</code></span>';
+      (pass ? 'Password: <code style="background:var(--card2);padding:2px 6px;border-radius:4px;">'+escHtml(pass)+'</code>' : 'Password unchanged — they can use their existing password.')+'</span>';
     result.style.color='var(--success)';
-    toast('✅ Super Admin created: '+escHtml(email),'success');
+    toast('✅ Super Admin '+(isExisting?'promoted':'created')+': '+escHtml(email),'success');
     setTimeout(renderAdminPanel, 2500);
   } catch(e){
     result.innerHTML='❌ '+escHtml(e.message);
