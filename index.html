@@ -1208,6 +1208,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 let sb; // Supabase client — initialized after page load
 let masterLobKey = ''; // Fetched at login from AHE agency account — never exposed to client UI
 const AGENCY_ACCOUNT_ID = 'ab08643f-3d71-4f47-abac-31599cf10d25'; // AHE master account row
+const OWNER_EMAIL = 'john@mongoosefilms.com'; // Primary owner — cannot be deleted by any other super_admin
 
 const DEFAULTS = {
   companyName:'Your Roofing Co', companyAddr:'123 Main St, Detroit MI 48000', companyPhone:'(313) 555-0100',
@@ -4663,7 +4664,8 @@ async function initCoSwitcher(){
   if(coSub) coSub.style.display = 'none';
   // Fetch all accounts
   const {data:accounts} = await sb.from('accounts').select('id,name,company_name').order('name',{ascending:true});
-  _allAccounts = accounts||[];
+  // Exclude the AHE master agency account from the switcher — it's the super_admin's own internal workspace
+  _allAccounts = (accounts||[]).filter(a=>a.id!==AGENCY_ACCOUNT_ID);
   // Set current label
   updateCoSwitcherLabel();
   // Populate list
@@ -5002,7 +5004,35 @@ function renderSuperAdminPanel(accounts, allProfiles){
     '</div>' +
     '</div>' +
     '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:18px 0 10px;">Add Rep / Admin to Existing Account</div>' +
-    renderAddUserForm(clientAccounts)
+    renderAddUserForm(clientAccounts) +
+    // Super Admin Management section
+    '<hr style="border:none;border-top:1px solid var(--border);margin:24px 0 16px;">' +
+    '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#8B5CF6;margin-bottom:12px;">🛡 Super Admins — BidDrop Platform Access</div>' +
+    '<div style="font-size:11px;color:var(--muted);margin-bottom:12px;">Super Admins can switch between all client accounts, access the Agency view, manage all clients, and configure platform settings. They cannot delete the primary owner.</div>' +
+    // List existing super_admins
+    allProfiles.filter(p=>p.role==='super_admin').map(p=>{
+      const isOwner = p.email===OWNER_EMAIL;
+      return '<div style="background:var(--card);border:1px solid '+(isOwner?'#8B5CF6':'var(--border)')+';border-radius:8px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">'+
+        '<div>'+
+          '<div style="font-weight:700;font-size:13px;">'+escHtml(p.name||p.email||p.id.slice(0,8))+(isOwner?' <span style="font-size:9px;background:#8B5CF622;color:#8B5CF6;border:1px solid #8B5CF644;border-radius:6px;padding:1px 6px;font-weight:700;">PRIMARY OWNER</span>':'')+'</div>'+
+          '<div style="font-size:11px;color:var(--muted);">'+escHtml(p.email||'')+'</div>'+
+        '</div>'+
+        (!isOwner && currentUser && currentUser.email===OWNER_EMAIL
+          ? '<button onclick="removeSuperAdmin(\''+p.id+'\',\''+escHtml(p.email||p.id)+'\')" style="background:none;border:1px solid var(--danger);border-radius:6px;padding:4px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">Remove</button>'
+          : '')+
+        '</div>';
+    }).join('') +
+    // Add new super_admin form
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:14px;margin-top:8px;">'+
+      '<div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:10px;">+ Invite New Super Admin</div>'+
+      '<div class="frow">'+
+        '<div class="fg"><label class="fl">Full Name</label><input class="fi" id="new-sa-name" placeholder="Jane Smith"></div>'+
+        '<div class="fg"><label class="fl">Email *</label><input class="fi" id="new-sa-email" type="email" placeholder="jane@agency.com"></div>'+
+      '</div>'+
+      '<div class="fg"><label class="fl">Temporary Password *</label><input class="fi" id="new-sa-pass" type="password" placeholder="min 6 chars"></div>'+
+      '<button onclick="createSuperAdmin()" class="btn-primary" style="margin-top:6px;">Create Super Admin Account</button>'+
+      '<div id="new-sa-result" style="margin-top:8px;font-size:12px;"></div>'+
+    '</div>'
   );
 }
 
@@ -5187,6 +5217,67 @@ async function createUser(){
 }
 
 // ═══════════════════════════════
+//  SUPER ADMIN MANAGEMENT
+// ═══════════════════════════════
+async function createSuperAdmin(){
+  if(!isSuperAdmin()){ toast('Permission denied','error'); return; }
+  const name  = document.getElementById('new-sa-name').value.trim();
+  const email = document.getElementById('new-sa-email').value.trim();
+  const pass  = document.getElementById('new-sa-pass').value.trim();
+  const result = document.getElementById('new-sa-result');
+  if(!email||!pass){ toast('Email and password are required','error'); return; }
+  if(pass.length<6){ toast('Password must be at least 6 characters','error'); return; }
+  result.textContent='Creating super admin…'; result.style.color='var(--muted)';
+  try {
+    const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0d2JoeG5ybWZtZGVub2d6dWVhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDgwMjAwMSwiZXhwIjoyMDkwMzc4MDAxfQ.UdxoP59JF42z6w5pF2Jf3N5LT9mhQ-Ls-OLi-2S5HRI';
+    // 1. Create auth user (auto-confirmed)
+    const adminRes = await fetch(SUPABASE_URL+'/auth/v1/admin/users', {
+      method: 'POST',
+      headers: {'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json'},
+      body: JSON.stringify({ email, password:pass, email_confirm:true, user_metadata:{name} })
+    });
+    const adminData = await adminRes.json();
+    if(!adminRes.ok) throw new Error(adminData.message||adminData.msg||JSON.stringify(adminData));
+    const userId = adminData.id;
+    if(!userId) throw new Error('No user ID returned');
+    // 2. Create user_profile with role=super_admin and account_id=null (platform-wide)
+    const {error:profErr} = await sb.from('user_profiles').insert({
+      id: userId, account_id: null, role: 'super_admin',
+      name: name||email.split('@')[0], email, must_change_password: true
+    });
+    if(profErr) throw profErr;
+    result.innerHTML = '✅ <strong>'+escHtml(name||email)+'</strong> is now a Super Admin!<br>'+
+      '<span style="font-size:11px;color:var(--muted);">Email: '+escHtml(email)+'<br>'+
+      'Temp password: <code style="background:var(--card2);padding:2px 6px;border-radius:4px;">'+escHtml(pass)+'</code></span>';
+    result.style.color='var(--success)';
+    toast('✅ Super Admin created: '+escHtml(email),'success');
+    setTimeout(renderAdminPanel, 2500);
+  } catch(e){
+    result.innerHTML='❌ '+escHtml(e.message);
+    result.style.color='var(--danger)';
+    toast('❌ '+e.message,'error');
+  }
+}
+
+async function removeSuperAdmin(userId, emailOrId){
+  if(!isSuperAdmin()){ toast('Permission denied','error'); return; }
+  // Only the primary owner can remove other super_admins
+  if(!currentUser || currentUser.email!==OWNER_EMAIL){
+    toast('Only the primary owner can remove super admins','error');
+    return;
+  }
+  if(!confirm('Remove super_admin access for '+emailOrId+'? This will demote them to a regular user (no account).')){ return; }
+  try {
+    const {error} = await sb.from('user_profiles').update({role:'rep',account_id:null}).eq('id',userId);
+    if(error) throw error;
+    toast('✅ Super admin removed: '+escHtml(emailOrId),'success');
+    renderAdminPanel();
+  } catch(e){
+    toast('❌ '+e.message,'error');
+  }
+}
+
+// ═══════════════════════════════
 //  INIT
 // ═══════════════════════════════
 window.addEventListener('load', ()=>{
@@ -5255,7 +5346,7 @@ async function onSignedIn(user){
 
     if(profErr || !profile){
       // First time — check if super admin by email
-      if(currentUser.email === 'john@mongoosefilms.com'){
+      if(currentUser.email === OWNER_EMAIL){
         const {error:insErr} = await sb.from('user_profiles').insert({
           id: currentUser.id, account_id: null, role: 'super_admin',
           name: 'John Bujak', email: currentUser.email
