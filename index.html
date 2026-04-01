@@ -24,7 +24,7 @@ html,body{height:100%;overflow:hidden;}
 body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:flex;flex-direction:column;font-size:15px;}
 .hdr{background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;height:54px;flex-shrink:0;gap:6px;}
 .logo{font-family:var(--font-h);font-size:20px;font-weight:700;color:var(--accent);letter-spacing:1.5px;margin-right:12px;display:flex;align-items:center;gap:8px;white-space:nowrap;}
-.ahe-header-logo{height:28px;opacity:.85;object-fit:contain;}
+.ahe-header-logo{height:44px;opacity:1;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(242,92,5,.25));}
 .logo-sub{font-size:11px;font-weight:400;color:var(--muted);letter-spacing:0;font-family:var(--font-b);}
 .tabs{display:flex;gap:0;flex:1;}
 .tab-btn{background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-family:var(--font-b);font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:0 18px;height:54px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px;}
@@ -49,6 +49,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 .fchip.active[data-s="bid_sent"]{background:rgba(59,130,246,.15);border-color:var(--info);color:var(--info);}
 .fchip.active[data-s="converted"]{background:rgba(34,197,94,.15);border-color:var(--success);color:var(--success);}
 .fchip.active[data-s="not_interested"]{background:rgba(61,82,105,.2);border-color:var(--muted);color:var(--mid);}
+.fchip.active[data-s="contacted"]{background:rgba(168,85,247,.15);border-color:#A855F7;color:#A855F7;}
+.fchip.active[data-s="quoted"]{background:rgba(59,130,246,.15);border-color:var(--info);color:var(--info);}
+.fchip.active[data-s="signed"]{background:rgba(34,197,94,.15);border-color:var(--success);color:var(--success);}
+.fchip.active[data-s="lost"]{background:rgba(239,68,68,.15);border-color:#EF4444;color:#EF4444;}
 .map-tip{background:var(--accent-dim);border:1px solid rgba(242,92,5,.2);border-radius:7px;padding:10px 14px;margin:8px;font-size:13px;color:var(--accent);font-weight:600;text-align:center;}
 .pin-list{flex:1;overflow-y:auto;padding:6px;}
 .pin-list::-webkit-scrollbar{width:3px;}
@@ -389,8 +393,11 @@ tr:hover td{background:var(--card);}
 <div id="login-screen" style="position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:99999;flex-direction:column;gap:0;">
   <div style="width:100%;max-width:420px;padding:20px;">
     <!-- Logo -->
-    <div style="text-align:center;margin-bottom:32px;">
-      <div style="font-family:var(--font-h);font-size:32px;font-weight:700;color:var(--accent);letter-spacing:2px;margin-bottom:4px;">📍 BIDDROP</div>
+    <div style="text-align:center;margin-bottom:28px;">
+      <div id="login-ahe-logo-wrap" style="margin-bottom:10px;">
+        <img src="" id="ahe-login-logo-top" style="height:64px;opacity:.95;object-fit:contain;filter:drop-shadow(0 3px 14px rgba(242,92,5,.35));" onerror="this.style.display='none'">
+      </div>
+      <div style="font-family:var(--font-h);font-size:34px;font-weight:700;color:var(--accent);letter-spacing:2px;margin-bottom:4px;">📍 BIDDROP</div>
       <div style="font-size:12px;color:var(--muted);letter-spacing:.5px;">by America's Home Experts</div>
     </div>
     <!-- Card -->
@@ -428,7 +435,7 @@ tr:hover td{background:var(--card);}
       <button id="set-pw-btn" class="btn-primary" onclick="doSetNewPassword()">Update Password</button>
     </div>
     <div style="text-align:center;margin-top:16px;">
-      <img src="" id="ahe-login-logo" style="height:28px;opacity:.5;object-fit:contain;">
+      <img src="" id="ahe-login-logo" style="height:52px;opacity:.9;object-fit:contain;filter:drop-shadow(0 2px 12px rgba(242,92,5,.3));">
     </div>
   </div>
 </div>
@@ -482,6 +489,20 @@ tr:hover td{background:var(--card);}
       <button class="btn-primary" id="btn-save-client" onclick="saveClientAccount()">Save Changes</button>
     </div>
   </div>
+</div>
+<!-- OFFLINE BANNER -->
+<div id="offline-banner" style="display:none;background:#EF4444;color:#fff;text-align:center;padding:7px 14px;font-size:12px;font-weight:700;font-family:var(--font-b);letter-spacing:.3px;z-index:9999;flex-shrink:0;">
+  📡 Offline — pins will sync when connection is restored (<span id="offline-queue-count">0</span> queued)
+</div>
+<!-- PWA INSTALL PROMPT -->
+<div id="pwa-install-bar" style="display:none;background:var(--panel);border-bottom:2px solid var(--accent);padding:10px 16px;display:none;align-items:center;gap:10px;flex-shrink:0;">
+  <span style="font-size:20px;">📲</span>
+  <div style="flex:1;">
+    <div style="font-weight:700;font-size:13px;color:var(--text);">Install BidDrop</div>
+    <div style="font-size:11px;color:var(--muted);">Add to your home screen for the best experience</div>
+  </div>
+  <button id="pwa-install-btn" onclick="doPwaInstall()" style="background:var(--accent);border:none;border-radius:8px;padding:8px 16px;color:#fff;font-family:var(--font-b);font-size:12px;font-weight:700;cursor:pointer;">Install</button>
+  <button onclick="document.getElementById('pwa-install-bar').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;">&times;</button>
 </div>
 <div class="hdr">
   <div class="logo">
@@ -559,9 +580,12 @@ tr:hover td{background:var(--card);}
         <div class="filters">
           <button class="fchip active" data-s="all" onclick="filterPins('all')">All</button>
           <button class="fchip" data-s="needs_roof" onclick="filterPins('needs_roof')">🟠 Needs Roof</button>
-          <button class="fchip" data-s="bid_sent" onclick="filterPins('bid_sent')">🔵 Bid Sent</button>
-          <button class="fchip" data-s="converted" onclick="filterPins('converted')">🟢 Converted</button>
+          <button class="fchip" data-s="contacted" onclick="filterPins('contacted')">🟣 Contacted</button>
+          <button class="fchip" data-s="quoted" onclick="filterPins('quoted')">🔵 Quoted</button>
+          <button class="fchip" data-s="signed" onclick="filterPins('signed')">🟢 Signed</button>
+          <button class="fchip" data-s="converted" onclick="filterPins('converted')">✅ Converted</button>
           <button class="fchip" data-s="not_interested" onclick="filterPins('not_interested')">⚫ Pass</button>
+          <button class="fchip" data-s="lost" onclick="filterPins('lost')">🔴 Lost</button>
         </div>
       </div>
       <div class="map-tip">👆 Drop a pin → tap it → Measure This Roof</div>
@@ -731,6 +755,18 @@ tr:hover td{background:var(--card);}
       <div class="dash-card"><div class="dc-title">Team</div><div id="team-list"></div><button class="btn-add-team" onclick="addTeamMember()">+ Add Team Member</button></div>
     </div>
     <div class="dash-card"><div class="dc-title">Recent Activity</div><div class="act-feed" id="act-feed"></div></div>
+    <!-- REP LEADERBOARD -->
+    <div class="dash-card" id="leaderboard-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="dc-title" style="margin-bottom:0;">🏆 Rep Leaderboard</div>
+        <select id="lb-period" onchange="renderLeaderboard()" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:11px;font-family:var(--font-b);cursor:pointer;">
+          <option value="all">All Time</option>
+          <option value="30">Last 30 Days</option>
+          <option value="7">Last 7 Days</option>
+        </select>
+      </div>
+      <div id="leaderboard-list"><div style="text-align:center;padding:18px;color:var(--muted);font-size:11px;">No data yet.</div></div>
+    </div>
   </div>
 
   <!-- AGENCY VIEW — super_admin only -->
@@ -764,6 +800,7 @@ tr:hover td{background:var(--card);}
             <option value="90">Last 90 days</option>
             <option value="0">All time</option>
           </select>
+          <button onclick="exportInvoicePDF()" style="background:var(--accent);border:none;border-radius:7px;padding:6px 14px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font-b);white-space:nowrap;">📄 Export Invoice PDF</button>
         </div>
       </div>
       <div id="agency-mailer-log" style="overflow-x:auto;">
@@ -830,13 +867,17 @@ tr:hover td{background:var(--card);}
     <div class="fg"><label class="fl">Status</label>
       <select class="fs" id="p-status">
         <option value="needs_roof">🟠 Needs Roof</option>
-        <option value="bid_sent">🔵 Bid Sent</option>
+        <option value="contacted">🟣 Contacted</option>
+        <option value="quoted">🔵 Quoted</option>
+        <option value="signed">🟢 Signed</option>
         <option value="converted">🟢 Converted</option>
         <option value="not_interested">⚫ Not Interested</option>
+        <option value="lost">🔴 Lost</option>
       </select>
     </div>
     <div class="fg"><label class="fl">Notes</label><input class="fi" id="p-notes" placeholder="e.g. Missing shingles, storm damage visible…"></div>
     <div class="fg"><label class="fl">Canvasser Name</label><input class="fi" id="p-rep" placeholder="Your name"></div>
+    <div class="fg"><label class="fl">Homeowner Phone <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);">(optional, for follow-up)</span></label><input class="fi" id="p-phone" type="tel" placeholder="+1 555 000 0000"></div>
     <!-- Damage Photos -->
     <div class="dmg-section">
       <div class="dmg-section-title">📷 Damage Photos (up to 3)</div>
@@ -1064,6 +1105,8 @@ tr:hover td{background:var(--card);}
     <div id="lob-settings-section" style="display:none;">
       <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:16px 0 10px;">Lob.com (Physical Mail) — Agency Master Key</div>
       <div class="fg"><label class="fl">Lob.com API Key <span style="font-weight:400;color:var(--muted);text-transform:none;font-size:10px;">(stored securely — not visible to clients)</span></label><input class="fi" id="s-lob" placeholder="live_c39f..."></div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:16px 0 10px;">Billing</div>
+      <div class="fg"><label class="fl">Mailer Cost Per Piece ($) <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">Used for invoice export</span></label><input class="fi" id="s-mailer-cost" type="number" step="0.01" min="0" placeholder="0.85" value="0.85"></div>
     </div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="doLogout()" style="background:none;border-color:var(--danger);color:var(--danger);">Sign Out</button>
@@ -1088,6 +1131,26 @@ tr:hover td{background:var(--card);}
   </div>
 </div>
 
+<!-- FOLLOW-UP MODAL -->
+<div class="overlay" id="m-follow-up" style="display:none;">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-title">✉️ Homeowner Follow-Up</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px;">Send a quick follow-up to the homeowner via GHL (SMS or email).</div>
+    <div class="fg"><label class="fl">Homeowner Name</label><input class="fi" id="fu-name" placeholder="e.g. John Smith"></div>
+    <div class="fg"><label class="fl">Phone (SMS)</label><input class="fi" id="fu-phone" type="tel" placeholder="+1 555 000 0000"></div>
+    <div class="fg"><label class="fl">Email</label><input class="fi" id="fu-email" type="email" placeholder="homeowner@email.com"></div>
+    <div class="fg"><label class="fl">Message</label><textarea class="fi" id="fu-message" rows="4" style="resize:vertical;" placeholder="Hi {name}, this is {rep} from {company}. Just following up about your roof..."></textarea></div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <button onclick="insertFuTemplate('sms')" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font-b);">SMS Template</button>
+      <button onclick="insertFuTemplate('email')" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font-b);">Email Template</button>
+    </div>
+    <input type="hidden" id="fu-pin-id">
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeM('m-follow-up')">Cancel</button>
+      <button class="btn-ok" onclick="sendFollowUp()">Send via GHL</button>
+    </div>
+  </div>
+</div>
 <!-- MEASURE PICKER MODAL -->
 <div class="overlay" id="m-measure-pick" style="display:none;">
   <div class="modal" style="max-width:480px;">
@@ -1152,10 +1215,12 @@ const DEFAULTS = {
   // Services for page 4
   offerSiding:true, offerWindows:false, offerGutters:true, offerCustom:'',
   // Referral
-  referralAmt:'250', referralText:'For every customer you send our way who moves forward with a project, we\'ll send you a Visa gift card as a thank you.'
+  referralAmt:'250', referralText:'For every customer you send our way who moves forward with a project, we\'ll send you a Visa gift card as a thank you.',
+  // Billing
+  mailerCostPerPiece:'0.85'
 };
 
-let S = { pins:[], queue:[], estimates:[], team:[], activity:[], cfg:{...DEFAULTS} };
+let S = { pins:[], queue:[], estimates:[], team:[], activity:[], cfg:{...DEFAULTS}, offlineQueue:[] };
 let map, markers={}, tempLL=null, curFilter='all', actChart=null;
 
 // ── AUTH STATE ────────────────────────────────
@@ -1187,8 +1252,8 @@ const STORIES_OPTS = [
 const PITCHLBL = {'1.0':'4/12 Low','1.07':'5/12','1.15':'6/12 Std','1.23':'7/12','1.31':'8/12 Mod','1.40':'9/12','1.50':'10/12 Steep','1.65':'11/12','1.80':'12/12 Steep'};
 const MATLBL  = {'1.0':'3-Tab Shingle','1.3':'Architectural Shingle','1.8':'Designer/Premium','2.5':'Metal Roofing'};
 
-function sColor(s){return{needs_roof:'#F25C05',bid_sent:'#3B82F6',converted:'#22C55E',not_interested:'#3D5269'}[s]||'#3D5269';}
-function sLabel(s){return{needs_roof:'Needs Roof',bid_sent:'Bid Sent',converted:'Converted',not_interested:'Not Interested'}[s]||s;}
+function sColor(s){return{needs_roof:'#F25C05',contacted:'#A855F7',quoted:'#3B82F6',signed:'#22C55E',converted:'#22C55E',bid_sent:'#3B82F6',not_interested:'#3D5269',lost:'#EF4444'}[s]||'#3D5269';}
+function sLabel(s){return{needs_roof:'Needs Roof',contacted:'Contacted',quoted:'Quoted',signed:'Signed',converted:'Converted',bid_sent:'Bid Sent',not_interested:'Not Interested',lost:'Lost'}[s]||s;}
 
 // ═══════════════════════════════
 //  PERSIST — Supabase + localStorage fallback
@@ -1799,6 +1864,7 @@ function onMapClick(e){
   document.getElementById('p-addr').value='';
   document.getElementById('p-notes').value='';
   document.getElementById('p-status').value='needs_roof';
+  document.getElementById('p-phone').value='';
   // Auto-fill rep name from logged in user
   const repInp = document.getElementById('p-rep');
   if(repInp && currentProfile) repInp.value = currentProfile.name || '';
@@ -2108,6 +2174,7 @@ function savePin(){
     status:document.getElementById('p-status').value,
     notes:document.getElementById('p-notes').value.trim(),
     rep:document.getElementById('p-rep').value.trim()||'Unknown',
+    phone:document.getElementById('p-phone').value.trim()||null,
     at:new Date().toISOString(),
     // Store first photo as primary photo_url (for existing display logic)
     photo_data: dmgPhotos[0]||null,
@@ -2119,7 +2186,7 @@ function savePin(){
   addAct('<strong>'+escHtml(pin.rep)+'</strong> pinned <strong>'+escHtml(pin.address)+'</strong> — '+sLabel(pin.status),pin.status);
   renderPinList();
   refreshZoneOverlays();
-  sbSavePin(pin).catch(e=>console.error('Pin save:',e));
+  savePin_withOffline(pin).catch(e=>console.error('Pin save:',e));
   sbAddActivity('<strong>'+escHtml(pin.rep)+'</strong> pinned <strong>'+escHtml(pin.address)+'</strong>',pin.status);
   ghlAutoPushPin(pin).catch(e=>console.warn('GHL push:',e));
   window._pinDamagePhotos = [];
@@ -2265,13 +2332,96 @@ function renderPinList(){
     const pid=p.id;
     return '<div class="pc" onclick="flyTo(\''+pid+'\')">'+(p.damage_photos&&p.damage_photos.length?'<div style="display:flex;gap:2px;">'+p.damage_photos.slice(0,3).map(src=>'<img src="'+src+'" style="flex:1;height:80px;object-fit:cover;border-radius:6px 6px 0 0;display:block;" onerror="this.style.display=\'none\'">').join('')+'</div>':p.photo_url?'<img src="'+p.photo_url+'" style="width:100%;height:90px;object-fit:cover;border-radius:6px 6px 0 0;display:block;" onerror="this.style.display=\'none\'">':'')+'<div class="pc-top"><div class="pc-addr">'+escHtml(p.address)+'</div><div class="sdot" style="background:'+sColor(p.status)+';">'
 +'</div></div>'+'<div class="pc-meta"><span>'+timeAgo(p.at)+'</span>'+(p.rep?'<span>· '+escHtml(p.rep)+'</span>':'')+'</div>'+(p.notes?'<div class="pc-note">'+
-'"'+escHtml(p.notes)+'"</div>':'')+'<div class="pc-acts">'+'<button class="btn-xs pr" onclick="event.stopPropagation();goEstFromPin(\''+pid+'\')">'+'📋 Estimate</button>'+'<button class="btn-xs" onclick="event.stopPropagation();cycleStatus(\''+pid+'\')">'+'Edit</button>'+'<button class="btn-xs danger" onclick="event.stopPropagation();rmPin(\''+pid+'\')">'+'✕</button>'+'</div></div>';
+'"'+escHtml(p.notes)+'"</div>':'')+'<div class="pc-acts">'+'<button class="btn-xs pr" onclick="event.stopPropagation();goEstFromPin(\''+pid+'\')">'+'📋 Estimate</button>'+'<button class="btn-xs" onclick="event.stopPropagation();openFollowUp(\''+pid+'\')">'+'✉️ Follow Up</button>'+'<button class="btn-xs" onclick="event.stopPropagation();cycleStatus(\''+pid+'\')">'+'↻ Status</button>'+'<button class="btn-xs danger" onclick="event.stopPropagation();rmPin(\''+pid+'\')">'+'✕</button>'+'</div></div>';
   }).join('');
 }
 
 function flyTo(id){
   const p=S.pins.find(x=>x.id===id);
   if(p&&map){map.flyTo([p.lat,p.lng],17,{duration:.7});markers[id]&&markers[id].openPopup();}
+}
+
+// ═══════════════════════════════
+//  HOMEOWNER FOLLOW-UP
+// ═══════════════════════════════
+function openFollowUp(pinId){
+  const p=S.pins.find(x=>x.id===pinId);
+  if(!p) return;
+  document.getElementById('fu-pin-id').value=pinId;
+  // Pre-fill from estimate if available
+  const est = p.estimate ? (typeof p.estimate==='string'?JSON.parse(p.estimate):p.estimate) : {};
+  document.getElementById('fu-name').value = est.owner||'';
+  document.getElementById('fu-email').value = est.email||'';
+  document.getElementById('fu-phone').value = p.phone||'';
+  // Pre-fill message template
+  const rep = p.rep||currentProfile?.name||'';
+  const company = S.cfg.companyName||'our company';
+  const addr = (p.address||'').split(',')[0];
+  document.getElementById('fu-message').value =
+    'Hi '+(est.owner||'there')+', this is '+rep+' from '+company+'. I stopped by your home at '+addr+' regarding your roof. I\'d love to schedule a free inspection. Give me a call or reply to this message!';
+  openM('m-follow-up');
+}
+function insertFuTemplate(type){
+  const name = document.getElementById('fu-name').value||'there';
+  const rep = currentProfile?.name||'your rep';
+  const company = S.cfg.companyName||'our company';
+  const pinId = document.getElementById('fu-pin-id').value;
+  const p = S.pins.find(x=>x.id===pinId)||{};
+  const addr = (p.address||'').split(',')[0];
+  if(type==='sms'){
+    document.getElementById('fu-message').value =
+      'Hi '+name+'! This is '+rep+' from '+company+'. Following up about your roof at '+addr+'. Free inspection available this week — reply YES to schedule!';
+  } else {
+    document.getElementById('fu-message').value =
+      'Hi '+name+',\n\nI hope this message finds you well! I\'m '+rep+' from '+company+'. I recently visited your property at '+addr+' and noticed your roof may need attention.\n\nWe\'re offering free storm damage inspections this week. Would you like to schedule a time?\n\nBest,\n'+rep+'\n'+company;
+  }
+}
+async function sendFollowUp(){
+  const pinId = document.getElementById('fu-pin-id').value;
+  const name  = document.getElementById('fu-name').value.trim();
+  const phone = document.getElementById('fu-phone').value.trim();
+  const email = document.getElementById('fu-email').value.trim();
+  const msg   = document.getElementById('fu-message').value.trim();
+  if(!msg){toast('Enter a message to send','error');return;}
+  if(!phone&&!email){toast('Enter a phone or email to send to','error');return;}
+  if(!S.cfg.ghlApiKey){toast('GHL API key not configured in Settings','error');return;}
+  const btn = document.querySelector('#m-follow-up .btn-ok');
+  if(btn){btn.textContent='Sending…';btn.disabled=true;}
+  try{
+    // Create/find contact in GHL then send message
+    const contactPayload={firstName:name.split(' ')[0]||name,lastName:name.split(' ').slice(1).join(' ')||'',email:email||undefined,phone:phone||undefined};
+    const cRes = await fetch('https://rest.gohighlevel.com/v1/contacts/',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+S.cfg.ghlApiKey,'Content-Type':'application/json'},
+      body:JSON.stringify(contactPayload)
+    });
+    const cData = await cRes.json();
+    const contactId = cData.contact?.id||cData.id;
+    if(contactId && phone){
+      // Send SMS via GHL
+      await fetch('https://rest.gohighlevel.com/v1/conversations/messages',{
+        method:'POST',
+        headers:{'Authorization':'Bearer '+S.cfg.ghlApiKey,'Content-Type':'application/json'},
+        body:JSON.stringify({type:'SMS',contactId,message:msg})
+      });
+    }
+    if(contactId && email){
+      // Send email via GHL
+      await fetch('https://rest.gohighlevel.com/v1/conversations/messages',{
+        method:'POST',
+        headers:{'Authorization':'Bearer '+S.cfg.ghlApiKey,'Content-Type':'application/json'},
+        body:JSON.stringify({type:'Email',contactId,subject:'Following Up About Your Roof',message:msg,html:'<p>'+msg.replace(/\n/g,'<br>')+'</p>'})
+      });
+    }
+    // Log activity
+    addAct('Follow-up sent to <strong>'+escHtml(name||email||phone)+'</strong> for '+escHtml((S.pins.find(x=>x.id===pinId)||{}).address||''),'bid_sent');
+    closeM('m-follow-up');
+    toast('✅ Follow-up sent!','success');
+  } catch(e){
+    toast('Send failed: '+e.message,'error');
+  } finally {
+    if(btn){btn.textContent='Send via GHL';btn.disabled=false;}
+  }
 }
 
 async function rmPin(id){
@@ -2310,7 +2460,7 @@ async function doDeletePin(){
 
 function cycleStatus(id){
   const p=S.pins.find(x=>x.id===id);if(!p)return;
-  const opts=['needs_roof','bid_sent','converted','not_interested'];
+  const opts=['needs_roof','contacted','quoted','signed','converted','not_interested','lost'];
   p.status=opts[(opts.indexOf(p.status)+1)%opts.length];
   if(markers[id]){map.removeLayer(markers[id]);delete markers[id];}
   addMarker(p);renderPinList();refreshZoneOverlays();
@@ -3586,6 +3736,91 @@ async function saveClientAccount(){
   }
 }
 
+// ═══════════════════════════════
+//  INVOICE PDF EXPORT
+// ═══════════════════════════════
+async function exportInvoicePDF(){
+  // Gather data from current mailer log filter
+  const clientFilter = (document.getElementById('ag-log-filter')||{}).value||'all';
+  const period = parseInt((document.getElementById('ag-log-period')||{}).value||'30');
+  const cutoff = period>0 ? new Date(Date.now()-period*86400000) : null;
+  // Fetch mailer_log from Supabase
+  let query = sb.from('mailer_log').select('*,accounts(name)').order('sent_at',{ascending:false});
+  if(clientFilter!=='all') query = query.eq('account_id',clientFilter);
+  const {data:logs, error} = await query;
+  if(error){toast('Could not load mailer log: '+error.message,'error');return;}
+  const rows = (logs||[]).filter(r=>!cutoff||new Date(r.sent_at)>=cutoff);
+  // Build invoice HTML
+  const today = new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  const company = S.cfg.companyName||'America\'s Home Experts';
+  const perMailer = parseFloat(S.cfg.mailerCostPerPiece||0.85);
+  const subtotal = rows.length * perMailer;
+  const tax = subtotal * 0.0;
+  const total = subtotal + tax;
+  const invoiceNum = 'INV-'+Date.now().toString().slice(-6);
+  // Group by client
+  const byClient={};
+  rows.forEach(r=>{
+    const cName = r.accounts?.name||r.account_id||'Unknown';
+    if(!byClient[cName]) byClient[cName]={name:cName,count:0,subtotal:0};
+    byClient[cName].count++;
+    byClient[cName].subtotal+=perMailer;
+  });
+  const clientRows = Object.values(byClient).map(c=>
+    '<tr><td style="padding:8px 12px;border-bottom:1px solid #eee;">'+c.name+'</td>'+
+    '<td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:center;">'+c.count+'</td>'+
+    '<td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;">$'+perMailer.toFixed(2)+'</td>'+
+    '<td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700;">$'+c.subtotal.toFixed(2)+'</td></tr>'
+  ).join('');
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>
+    body{font-family:Arial,sans-serif;color:#1a1a2e;margin:0;padding:40px;font-size:14px;}
+    .inv-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:40px;}
+    .inv-logo{font-size:28px;font-weight:900;color:#F25C05;letter-spacing:2px;}
+    .inv-meta{text-align:right;font-size:13px;color:#666;}
+    .inv-meta strong{color:#1a1a2e;font-size:15px;display:block;margin-bottom:4px;}
+    h2{font-size:18px;margin:24px 0 12px;color:#1a1a2e;border-bottom:2px solid #F25C05;padding-bottom:6px;}
+    table{width:100%;border-collapse:collapse;}
+    th{background:#F25C05;color:#fff;padding:10px 12px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;}
+    th:nth-child(2),th:nth-child(3),th:nth-child(4){text-align:center;}
+    th:nth-child(4){text-align:right;}
+    .totals{margin-top:24px;text-align:right;}
+    .totals table{width:280px;margin-left:auto;}
+    .totals td{padding:6px 12px;}
+    .grand-total{background:#F25C05;color:#fff;font-weight:900;font-size:16px;}
+    .footer{margin-top:48px;font-size:11px;color:#aaa;text-align:center;border-top:1px solid #eee;padding-top:16px;}
+  </style></head><body>
+  <div class="inv-header">
+    <div>
+      <div class="inv-logo">📍 BIDDROP</div>
+      <div style="font-size:12px;color:#888;margin-top:4px;">${company}</div>
+    </div>
+    <div class="inv-meta">
+      <strong>INVOICE ${invoiceNum}</strong>
+      Date: ${today}<br>
+      Period: ${period>0?'Last '+period+' days':'All time'}
+    </div>
+  </div>
+  <h2>Mailer Services Summary</h2>
+  <table><thead><tr><th>Client</th><th>Mailers Sent</th><th>Rate / Piece</th><th>Subtotal</th></tr></thead>
+  <tbody>${clientRows}</tbody></table>
+  <div class="totals"><table>
+    <tr><td>Subtotal</td><td style="text-align:right;">$${subtotal.toFixed(2)}</td></tr>
+    <tr class="grand-total"><td>Total Due</td><td style="text-align:right;">$${total.toFixed(2)}</td></tr>
+  </table></div>
+  <div class="footer">Thank you for your business! • Generated by BidDrop • ${today}</div>
+  </body></html>`;
+  // Open in new window for printing/saving
+  const win = window.open('','_blank','width=900,height=700');
+  if(win){
+    win.document.write(html);
+    win.document.close();
+    setTimeout(()=>win.print(),600);
+  } else {
+    toast('Pop-up blocked — allow pop-ups to export PDF','error');
+  }
+}
+
 function renderAgencyMailerLog(){
   if(!_agencyData) return;
   const {accounts, mailerLog} = _agencyData;
@@ -3635,12 +3870,50 @@ function renderAgencyMailerLog(){
 
 function renderDash(){
   const mailed=S.queue.filter(i=>i.status==='sent').length;
-  const conv=S.pins.filter(p=>p.status==='converted').length;
+  const conv=S.pins.filter(p=>p.status==='converted'||p.status==='signed').length;
   document.getElementById('s-pins').textContent=S.pins.length;
   document.getElementById('s-ests').textContent=S.estimates.length;
   document.getElementById('s-mailed').textContent=mailed;
   document.getElementById('s-conv').textContent=mailed?Math.round(conv/mailed*100)+'%':'—';
-  renderActChart();renderTeam();renderActFeed();
+  renderActChart();renderTeam();renderActFeed();renderLeaderboard();
+}
+function renderLeaderboard(){
+  const el=document.getElementById('leaderboard-list');
+  if(!el) return;
+  const period = (document.getElementById('lb-period')||{}).value||'all';
+  const cutoff = period==='all' ? null : new Date(Date.now()-parseInt(period)*86400000);
+  // Aggregate pins by rep
+  const repMap={};
+  S.pins.forEach(p=>{
+    const at = p.at ? new Date(p.at) : null;
+    if(cutoff && at && at < cutoff) return;
+    const rep=(p.rep||'Unknown').trim()||'Unknown';
+    if(!repMap[rep]) repMap[rep]={name:rep,pins:0,contacted:0,quoted:0,signed:0,converted:0,lost:0,not_interested:0};
+    repMap[rep].pins++;
+    if(repMap[rep][p.status]!==undefined) repMap[rep][p.status]++;
+  });
+  const reps=Object.values(repMap).sort((a,b)=>b.pins-a.pins);
+  if(!reps.length){el.innerHTML='<div style="text-align:center;padding:18px;color:var(--muted);font-size:11px;">No pins yet.</div>';return;}
+  el.innerHTML=reps.map((r,i)=>{
+    const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'<span style="font-size:11px;color:var(--muted);font-weight:700;width:20px;display:inline-block;text-align:center;">'+(i+1)+'</span>';
+    const convRate=r.pins?Math.round((r.signed+r.converted)/r.pins*100):0;
+    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);">'+
+      '<div style="font-size:18px;width:24px;text-align:center;flex-shrink:0;">'+medal+'</div>'+
+      '<div style="flex:1;min-width:0;">'+
+        '<div style="font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(r.name)+'</div>'+
+        '<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+
+          '<span style="color:var(--accent);">'+r.pins+' pins</span> · '+
+          '<span style="color:#A855F7;">'+r.contacted+' contacted</span> · '+
+          '<span style="color:#3B82F6;">'+r.quoted+' quoted</span> · '+
+          '<span style="color:#22C55E;">'+(r.signed+r.converted)+' signed</span>'+
+        '</div>'+
+      '</div>'+
+      '<div style="text-align:right;flex-shrink:0;">'+
+        '<div style="font-family:var(--font-h);font-size:16px;font-weight:700;color:var(--accent);">'+r.pins+'</div>'+
+        '<div style="font-size:10px;color:var(--muted);">'+convRate+'% conv</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
 }
 
 function renderActChart(){
@@ -3715,6 +3988,66 @@ function bumpTeam(name,field){
   let m=S.team.find(x=>x.name.toLowerCase()===name.toLowerCase());
   if(!m){m={name,pins:0,ests:0};S.team.push(m);}
   m[field]=(m[field]||0)+1;
+}
+
+// ═══════════════════════════════
+//  OFFLINE PIN QUEUE & PWA
+// ═══════════════════════════════
+let _pwaInstallEvent = null;
+window.addEventListener('beforeinstallprompt', e=>{
+  e.preventDefault();
+  _pwaInstallEvent = e;
+  const bar = document.getElementById('pwa-install-bar');
+  if(bar && document.getElementById('main-app').style.display !== 'none') bar.style.display='flex';
+});
+function doPwaInstall(){
+  if(!_pwaInstallEvent) return;
+  _pwaInstallEvent.prompt();
+  _pwaInstallEvent.userChoice.then(r=>{
+    if(r.outcome==='accepted') document.getElementById('pwa-install-bar').style.display='none';
+    _pwaInstallEvent=null;
+  });
+}
+function updateOfflineBanner(){
+  const banner = document.getElementById('offline-banner');
+  const cnt = document.getElementById('offline-queue-count');
+  if(!banner) return;
+  const isOffline = !navigator.onLine;
+  banner.style.display = isOffline ? 'block' : 'none';
+  if(cnt) cnt.textContent = (S.offlineQueue||[]).length;
+}
+window.addEventListener('online', async ()=>{
+  updateOfflineBanner();
+  await flushOfflineQueue();
+});
+window.addEventListener('offline', ()=>updateOfflineBanner());
+async function flushOfflineQueue(){
+  if(!currentAccount || !S.offlineQueue || !S.offlineQueue.length) return;
+  const queue = [...S.offlineQueue];
+  S.offlineQueue = [];
+  let synced = 0;
+  for(const pin of queue){
+    try{
+      await sbSavePin(pin);
+      synced++;
+    } catch(e){
+      S.offlineQueue.push(pin); // re-queue on failure
+    }
+  }
+  save();
+  if(synced) toast('✅ '+synced+' offline pin'+(synced>1?'s':'')+' synced!','success');
+  updateOfflineBanner();
+}
+async function savePin_withOffline(pin){
+  if(!navigator.onLine){
+    S.offlineQueue = S.offlineQueue||[];
+    S.offlineQueue.push(pin);
+    save();
+    updateOfflineBanner();
+    toast('📡 Offline — pin saved locally, will sync when online','info');
+    return;
+  }
+  await sbSavePin(pin);
 }
 
 function renderActFeed(){
@@ -3795,6 +4128,7 @@ function openSettings(){
   const lobSection = document.getElementById('lob-settings-section');
   if(lobSection) lobSection.style.display = isSuperAdmin() ? 'block' : 'none';
   if(isSuperAdmin()) document.getElementById('s-lob').value = masterLobKey||c.lobKey||'';
+  if(isSuperAdmin()){ const mc=document.getElementById('s-mailer-cost'); if(mc) mc.value=c.mailerCostPerPiece||'0.85'; }
   const lp=document.getElementById('logo-preview');
   if(lp)lp.innerHTML=c.logoData?'<img src="'+c.logoData+'" style="max-width:100%;max-height:100%;object-fit:contain;">':'No logo';
   document.getElementById('s-reptitle').value=c.repTitle||'';
@@ -3853,6 +4187,7 @@ function saveSettings(){
     ghlPipelineId:v('s-ghl-pipe'),
     ghlStageId:document.getElementById('s-ghl-stage').value||'',
     lobKey: isSuperAdmin() ? v('s-lob') : (S.cfg.lobKey||''),
+    mailerCostPerPiece: isSuperAdmin() ? (v('s-mailer-cost')||'0.85') : (S.cfg.mailerCostPerPiece||'0.85'),
     logoData:S.cfg.logoData||null,
     headshot:S.cfg.headshot||null,
     review1:S.cfg.review1||null,
@@ -3870,6 +4205,8 @@ function applyBrand(){
   if(aheImg) aheImg.src = AHE_LOGO;
   const loginLogo = document.getElementById('ahe-login-logo');
   if(loginLogo) loginLogo.src = AHE_LOGO;
+  const loginLogoTop = document.getElementById('ahe-login-logo-top');
+  if(loginLogoTop) loginLogoTop.src = AHE_LOGO;
   const c=S.cfg.brandColor||'#F25C05';
   document.documentElement.style.setProperty('--accent',c);
   document.documentElement.style.setProperty('--accent-dim',hexToRgba(c,.1));
@@ -4851,6 +5188,12 @@ async function onSignedIn(user){
     await loadQueueFromSupabase();
     if(currentAccount) subscribeRealtime();
     toast('Welcome, '+(currentProfile.name||currentUser.email).split(' ')[0]+'! 👋','success');
+    updateOfflineBanner();
+    // Show PWA install bar if prompt is ready
+    if(_pwaInstallEvent){
+      const bar = document.getElementById('pwa-install-bar');
+      if(bar) bar.style.display='flex';
+    }
 
   } catch(e) {
     console.error('[onSignedIn] error:', e);
@@ -5237,8 +5580,8 @@ let currentZonePin = null;
 
 function showZonePinDetail(pin){
   currentZonePin = pin;
-  const statusLabels = {needs_roof:'Needs Roof',bid_sent:'Bid Sent',converted:'Converted',not_interested:'Not Interested'};
-  const statusColors = {needs_roof:'#F25C05',bid_sent:'#3B82F6',converted:'#22C55E',not_interested:'#6688A8'};
+  const statusLabels = {needs_roof:'Needs Roof',contacted:'Contacted',quoted:'Quoted',signed:'Signed',bid_sent:'Bid Sent',converted:'Converted',not_interested:'Not Interested',lost:'Lost'};
+  const statusColors = {needs_roof:'#F25C05',contacted:'#A855F7',quoted:'#3B82F6',signed:'#22C55E',bid_sent:'#3B82F6',converted:'#22C55E',not_interested:'#6688A8',lost:'#EF4444'};
   const label = statusLabels[pin.status] || pin.status;
   const color = statusColors[pin.status] || '#aaa';
   document.getElementById('zpd-address').textContent = pin.address || 'Unknown address';
