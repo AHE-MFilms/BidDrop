@@ -4522,6 +4522,15 @@ function renderSuperAdminPanel(accounts, allProfiles){
         '</div>' +
         '<div class="fg"><label class="fl">Your Mailer Rate ($/piece)</label><input class="fi" id="new-acct-rate" placeholder="2.50" type="number" step="0.01" value="2.50"></div>' +
       '</div>' +
+      '<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px;">'+
+        '<div style="font-size:11px;font-weight:700;color:#1a7f4b;letter-spacing:.5px;margin-bottom:10px;">⚡ GHL CONNECTION <span style="font-weight:400;color:var(--muted);font-size:10px;text-transform:none;letter-spacing:0;">(optional)</span></div>'+
+        '<div class="fg"><label class="fl">GHL Location API Key</label><input class="fi" id="new-acct-ghl-key" placeholder="pit-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" type="password"></div>'+
+        '<div class="frow">'+
+          '<div class="fg"><label class="fl">GHL Location ID</label><input class="fi" id="new-acct-ghl-loc" placeholder="gz85VU6SxGXS7lqHAQGx"></div>'+
+          '<div class="fg"><label class="fl">Pipeline ID</label><input class="fi" id="new-acct-ghl-pipe" placeholder="bxskBIBdbklHry0B63qx"></div>'+
+        '</div>'+
+        '<div style="font-size:10px;color:var(--muted);margin-bottom:10px;">Find these in the client&#39;s GHL sub-account → Settings → Integrations. Leave blank to skip.</div>'+
+      '</div>'+
       '<button id="btn-create-acct" onclick="createAccount()" class="btn-primary">Create Account + Admin Login</button>' +
       '<div id="new-acct-result" style="margin-top:10px;font-size:12px;"></div>' +
     '</div>' +
@@ -4581,8 +4590,11 @@ async function createAccount(){
   const state  = document.getElementById('new-acct-state').value.trim();
   const zip    = document.getElementById('new-acct-zip').value.trim();
   const addr   = [street, city, state, zip].filter(Boolean).join(', ');
-  const plan   = document.getElementById('new-acct-plan').value;
-  const rate   = parseFloat(document.getElementById('new-acct-rate').value)||2.50;
+  const plan    = document.getElementById('new-acct-plan').value;
+  const rate    = parseFloat(document.getElementById('new-acct-rate').value)||2.50;
+  const ghlKey  = document.getElementById('new-acct-ghl-key').value.trim();
+  const ghlLoc  = document.getElementById('new-acct-ghl-loc').value.trim();
+  const ghlPipe = document.getElementById('new-acct-ghl-pipe').value.trim();
   if(!name||!email||!pass){toast('Company name, email and password are required','error');return;}
   if(pass.length<6){toast('Password must be at least 6 characters','error');return;}
   const resultEl = document.getElementById('new-acct-result');
@@ -4598,7 +4610,10 @@ async function createAccount(){
       company_addr: addr||null,
       plan, mailer_rate: rate,
       active: true,
-      created_by: currentUser.id
+      created_by: currentUser.id,
+      ...(ghlKey  ? {ghl_api_key: ghlKey}       : {}),
+      ...(ghlLoc  ? {ghl_location_id: ghlLoc}   : {}),
+      ...(ghlPipe ? {ghl_pipeline_id: ghlPipe}  : {})
     }).select().single();
     if(acctErr) throw acctErr;
     // 2. Create auth user via Admin API (auto-confirmed)
