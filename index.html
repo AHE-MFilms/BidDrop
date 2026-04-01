@@ -509,7 +509,18 @@ tr:hover td{background:var(--card);}
     <span>📍</span>
     <span id="app-brand">BIDDROP</span>
     <span class="logo-sub">by AHE</span>
-    <span class="logo-sub" id="co-sub"></span>
+    <!-- Company switcher — visible to super_admin only -->
+    <div id="co-switcher-wrap" style="display:none;position:relative;">
+      <button id="co-switcher-btn" onclick="toggleCoSwitcher()" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:3px 10px 3px 8px;color:var(--text);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;max-width:160px;">
+        <span id="co-switcher-label" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">T&amp;M Roofing</span>
+        <span style="font-size:9px;opacity:.6;">▼</span>
+      </button>
+      <div id="co-switcher-menu" style="display:none;position:absolute;top:calc(100% + 6px);left:0;min-width:200px;background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:9999;overflow:hidden;">
+        <div style="padding:8px 12px 6px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);">Switch Company</div>
+        <div id="co-switcher-list" style="max-height:260px;overflow-y:auto;"></div>
+      </div>
+    </div>
+    <span class="logo-sub" id="co-sub" style="display:none;"></span>
   </div>
   <div class="tabs">
     <button class="tab-btn active" onclick="goTab('map')" data-tab="map">🗺 Canvass Map</button>
@@ -4210,7 +4221,17 @@ function applyBrand(){
   const c=S.cfg.brandColor||'#F25C05';
   document.documentElement.style.setProperty('--accent',c);
   document.documentElement.style.setProperty('--accent-dim',hexToRgba(c,.1));
-  document.getElementById('co-sub').textContent=S.cfg.companyName?' · '+S.cfg.companyName:'';
+  const coSubEl = document.getElementById('co-sub');
+  if(coSubEl){
+    if(isSuperAdmin()){
+      coSubEl.style.display='none'; // switcher replaces it for super_admin
+    } else {
+      coSubEl.style.display='';
+      coSubEl.textContent=S.cfg.companyName?' · '+S.cfg.companyName:'';
+    }
+  }
+  // Update switcher label if visible
+  updateCoSwitcherLabel();
 }
 
 function hexToRgba(hex,a){
@@ -4625,6 +4646,96 @@ function applyRoleUI(){
     badge.textContent = (currentProfile.name||currentProfile.email||'User').split(' ')[0];
     badge.title = currentProfile.role.replace('_',' ').toUpperCase();
   }
+}
+
+// ═══════════════════════════════
+//  COMPANY SWITCHER (super_admin only)
+// ═══════════════════════════════
+let _allAccounts = [];
+let _coSwitcherOpen = false;
+
+async function initCoSwitcher(){
+  if(!isSuperAdmin()) return;
+  // Show the switcher, hide the old co-sub span
+  const wrap = document.getElementById('co-switcher-wrap');
+  if(wrap) wrap.style.display = 'flex';
+  const coSub = document.getElementById('co-sub');
+  if(coSub) coSub.style.display = 'none';
+  // Fetch all accounts
+  const {data:accounts} = await sb.from('accounts').select('id,name,company_name').order('name',{ascending:true});
+  _allAccounts = accounts||[];
+  // Set current label
+  updateCoSwitcherLabel();
+  // Populate list
+  const list = document.getElementById('co-switcher-list');
+  if(!list) return;
+  list.innerHTML = _allAccounts.map(a=>{
+    const isCurrent = currentAccount && currentAccount.id===a.id;
+    return '<button onclick="switchAccount(\''+a.id+'\')" style="display:block;width:100%;text-align:left;background:'+(isCurrent?'var(--accent-dim)':'none')+';border:none;border-bottom:1px solid var(--border);padding:10px 14px;color:var(--text);font-family:var(--font-b);font-size:12px;font-weight:'+(isCurrent?'700':'500')+';cursor:pointer;">'+(isCurrent?'✓ ':'')+escHtml(a.name||a.company_name||a.id)+'</button>';
+  }).join('');
+  // Close on outside click
+  document.addEventListener('click', function coClickAway(e){
+    if(!document.getElementById('co-switcher-wrap')?.contains(e.target)){
+      closeCoSwitcher();
+    }
+  }, {once:false, capture:false});
+}
+
+function updateCoSwitcherLabel(){
+  if(!isSuperAdmin()) return;
+  const lbl = document.getElementById('co-switcher-label');
+  if(lbl) lbl.textContent = currentAccount ? (currentAccount.name||currentAccount.company_name||'Unknown') : '— Pick a Company —';
+}
+
+function toggleCoSwitcher(){
+  const menu = document.getElementById('co-switcher-menu');
+  if(!menu) return;
+  _coSwitcherOpen = !_coSwitcherOpen;
+  menu.style.display = _coSwitcherOpen ? 'block' : 'none';
+}
+
+function closeCoSwitcher(){
+  _coSwitcherOpen = false;
+  const menu = document.getElementById('co-switcher-menu');
+  if(menu) menu.style.display = 'none';
+}
+
+async function switchAccount(accountId){
+  closeCoSwitcher();
+  if(currentAccount && currentAccount.id===accountId){
+    toast('Already viewing this company','info');
+    return;
+  }
+  toast('Switching company…','info');
+  // Unsubscribe from old realtime channel
+  if(realtimeChannel){ sb.removeChannel(realtimeChannel); realtimeChannel=null; }
+  // Load new account
+  const {data:account, error} = await sb.from('accounts').select('*').eq('id',accountId).single();
+  if(error||!account){ toast('Could not load account: '+(error?.message||'not found'),'error'); return; }
+  currentAccount = account;
+  S.cfg = accountRowToCfg(account);
+  S.pins = []; S.estimates = []; S.team = []; S.activity = [];
+  // Remove only marker layers, not tile layers
+  if(map) Object.values(markers).forEach(m=>{ try{ map.removeLayer(m); }catch(e){} });
+  markers = {};
+  // Reload data for new account
+  applyBrand();
+  updatePreview();
+  await loadPinsFromSupabase();
+  await loadQueueFromSupabase();
+  subscribeRealtime();
+  renderPinList();
+  renderDash();
+  updateCoSwitcherLabel();
+  // Refresh the switcher list to update checkmark
+  const list = document.getElementById('co-switcher-list');
+  if(list && _allAccounts.length){
+    list.innerHTML = _allAccounts.map(a=>{
+      const isCurrent = currentAccount && currentAccount.id===a.id;
+      return '<button onclick="switchAccount(\''+a.id+'\')" style="display:block;width:100%;text-align:left;background:'+(isCurrent?'var(--accent-dim)':'none')+';border:none;border-bottom:1px solid var(--border);padding:10px 14px;color:var(--text);font-family:var(--font-b);font-size:12px;font-weight:'+(isCurrent?'700':'500')+';cursor:pointer;">'+(isCurrent?'✓ ':'')+escHtml(a.name||a.company_name||a.id)+'</button>';
+    }).join('');
+  }
+  toast('✅ Switched to '+escHtml(account.name||account.company_name||''),'success');
 }
 
 // ── SUPABASE PIN OPERATIONS (replace in-memory S.pins) ───────────────────────
@@ -5183,6 +5294,7 @@ async function onSignedIn(user){
     renderStructures();
     updatePreview();
     applyRoleUI();
+    if(isSuperAdmin()) initCoSwitcher();
     // Load data from Supabase
     await loadPinsFromSupabase();
     await loadQueueFromSupabase();
