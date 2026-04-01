@@ -4501,6 +4501,10 @@ function renderSuperAdminPanel(accounts, allProfiles){
         '<div class="fg"><label class="fl">Temp Password *</label><input class="fi" id="new-acct-pass" placeholder="min 6 chars" type="password"></div>' +
         '<div class="fg"><label class="fl">Company Phone</label><input class="fi" id="new-acct-phone" placeholder="(313) 555-0100"></div>' +
       '</div>' +
+      '<div class="frow">' +
+        '<div class="fg"><label class="fl">Company Website</label><input class="fi" id="new-acct-website" placeholder="https://rapidroof.com" type="url"></div>' +
+        '<div class="fg"><label class="fl">Booking / QR URL <span style="font-weight:400;color:var(--muted);font-size:10px;">(Calendly, etc.)</span></label><input class="fi" id="new-acct-booking" placeholder="https://calendly.com/..."></div>' +
+      '</div>' +
       '<div class="fg"><label class="fl">Street Address</label><input class="fi" id="new-acct-street" placeholder="32640 Dequindre Rd, Suite B"></div>'+
       '<div class="frow">'+
         '<div class="fg" style="flex:2;"><label class="fl">City</label><input class="fi" id="new-acct-city" placeholder="Sterling Heights"></div>'+
@@ -4592,6 +4596,8 @@ async function createAccount(){
   const addr   = [street, city, state, zip].filter(Boolean).join(', ');
   const plan    = document.getElementById('new-acct-plan').value;
   const rate    = parseFloat(document.getElementById('new-acct-rate').value)||2.50;
+  const website = document.getElementById('new-acct-website').value.trim();
+  const booking  = document.getElementById('new-acct-booking').value.trim();
   const ghlKey  = document.getElementById('new-acct-ghl-key').value.trim();
   const ghlLoc  = document.getElementById('new-acct-ghl-loc').value.trim();
   const ghlPipe = document.getElementById('new-acct-ghl-pipe').value.trim();
@@ -4611,9 +4617,11 @@ async function createAccount(){
       plan, mailer_rate: rate,
       active: true,
       created_by: currentUser.id,
-      ...(ghlKey  ? {ghl_api_key: ghlKey}       : {}),
-      ...(ghlLoc  ? {ghl_location_id: ghlLoc}   : {}),
-      ...(ghlPipe ? {ghl_pipeline_id: ghlPipe}  : {})
+      ...(website ? {company_website: website}  : {}),
+      ...(booking  ? {booking_url: booking}       : {}),
+      ...(ghlKey  ? {ghl_api_key: ghlKey}        : {}),
+      ...(ghlLoc  ? {ghl_location_id: ghlLoc}    : {}),
+      ...(ghlPipe ? {ghl_pipeline_id: ghlPipe}   : {})
     }).select().single();
     if(acctErr) throw acctErr;
     // 2. Create auth user via Admin API (auto-confirmed)
