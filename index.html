@@ -3503,7 +3503,7 @@ function renderAgencyAccounts(){
           '<div style="font-size:10px;color:var(--muted);">All time: $'+revAllTime+'</div>' +
         '</div>' +
         '<div class="ag-bill-val">$'+revThisMonth+'</div>' +
-      '</div>' +      '<button onclick="editClientAccount(\''+a.id+'\')" style="width:100%;margin-top:10px;background:none;border:1px solid var(--border);border-radius:7px;padding:7px;color:var(--mid);font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.4px;" onmouseover="this.style.borderColor=\'var(--accent)\';this.style.color=\'var(--accent)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--mid)\'">✏️ Edit Client</button>' +
+      '</div>' +      '<div style="display:flex;gap:6px;margin-top:10px;">' + '<button onclick="editClientAccount(\''+a.id+'\')" style="flex:1;background:none;border:1px solid var(--border);border-radius:7px;padding:7px;color:var(--mid);font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.4px;" onmouseover="this.style.borderColor=\'var(--accent)\';this.style.color=\'var(--accent)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--mid)\'">✏️ Edit</button>' + '<button onclick="openManageTeam(\''+a.id+'\')" style="flex:1;background:none;border:1px solid #3B82F6;border-radius:7px;padding:7px;color:#3B82F6;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.4px;" onmouseover="this.style.background=\'#3B82F622\'" onmouseout="this.style.background=\'none\'">👥 Team ('+users.length+')</button>' + '</div>' +
       '</div>';
   }).join('');
 }
@@ -5371,6 +5371,143 @@ function refreshZoneOverlays(){
   const zonesList = document.getElementById('zones-list');
   if(zonesList) renderZonesList();
 }
+
+// ── MANAGE TEAM (Agency View) ─────────────────────────────────────────────────
+function openManageTeam(accountId){
+  if(!_agencyData) return;
+  const a = _agencyData.accounts.find(x=>x.id===accountId);
+  if(!a){ toast('Account not found','error'); return; }
+  document.getElementById('mt-company-name').textContent = a.company_name||a.name;
+  document.getElementById('m-manage-team').dataset.accountId = accountId;
+  renderManageTeam(accountId);
+  openM('m-manage-team');
+}
+
+function renderManageTeam(accountId){
+  if(!_agencyData) return;
+  const users = _agencyData.profiles.filter(p=>p.account_id===accountId);
+  const el = document.getElementById('mt-body');
+  if(!el) return;
+
+  const userRows = users.length ? users.map(u=>{
+    const roleColor = u.role==='admin' ? '#F25C05' : '#3B82F6';
+    return '<div style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:12px;margin-bottom:8px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
+        '<div>' +
+          '<div style="font-weight:700;font-size:14px;">'+(u.name||'Unnamed')+'</div>' +
+          '<div style="font-size:11px;color:var(--muted);">'+(u.email||'')+'</div>' +
+        '</div>' +
+        '<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;background:'+roleColor+'22;color:'+roleColor+';border:1px solid '+roleColor+'44;text-transform:uppercase;">'+u.role+'</span>' +
+      '</div>' +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+        '<button onclick="mtChangeRole(''+u.id+'',''+accountId+'')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--mid);font-size:11px;font-weight:700;cursor:pointer;">⇄ Change Role</button>' +
+        '<button onclick="mtResetPassword(''+u.id+'',''+escHtml(u.email||'')+'')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--mid);font-size:11px;font-weight:700;cursor:pointer;">🔑 Reset Password</button>' +
+        '<button onclick="mtRemoveUser(''+u.id+'',''+escHtml(u.name||'Unnamed')+'',''+accountId+'')" style="background:none;border:1px solid #EF444444;border-radius:6px;padding:5px 10px;color:#EF4444;font-size:11px;font-weight:700;cursor:pointer;">🗑 Remove</button>' +
+      '</div>' +
+    '</div>';
+  }).join('') : '<div style="color:var(--muted);font-size:12px;padding:10px;">No team members yet.</div>';
+
+  el.innerHTML = userRows +
+    '<div style="border-top:1px solid var(--border);margin-top:14px;padding-top:14px;">' +
+      '<div style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.5px;margin-bottom:10px;">+ ADD TEAM MEMBER</div>' +
+      '<div class="frow">' +
+        '<div class="fg"><label class="fl">Name</label><input class="fi" id="mt-new-name" placeholder="Mike Johnson"></div>' +
+        '<div class="fg"><label class="fl">Email</label><input class="fi" id="mt-new-email" placeholder="mike@company.com" type="email"></div>' +
+      '</div>' +
+      '<div class="frow">' +
+        '<div class="fg"><label class="fl">Temp Password</label><input class="fi" id="mt-new-pass" placeholder="min 6 chars" type="password"></div>' +
+        '<div class="fg"><label class="fl">Role</label><select class="fs" id="mt-new-role"><option value="rep">Rep (Field)</option><option value="admin">Admin</option></select></div>' +
+      '</div>' +
+      '<button onclick="mtAddMember(''+accountId+'')" class="btn-primary" style="margin-top:4px;">Create Login</button>' +
+      '<div id="mt-add-result" style="margin-top:8px;font-size:12px;"></div>' +
+    '</div>';
+}
+
+async function mtChangeRole(userId, accountId){
+  const u = _agencyData.profiles.find(p=>p.id===userId);
+  if(!u) return;
+  const newRole = u.role==='admin' ? 'rep' : 'admin';
+  if(!confirm('Change '+( u.name||u.email)+' from '+u.role+' to '+newRole+'?')) return;
+  const {error} = await sb.from('user_profiles').update({role:newRole}).eq('id',userId);
+  if(error){ toast('Error: '+error.message,'error'); return; }
+  // Update local data
+  u.role = newRole;
+  toast('Role updated to '+newRole,'success');
+  renderManageTeam(accountId);
+  renderAgencyAccounts();
+}
+
+async function mtResetPassword(userId, email){
+  const newPass = prompt('Enter new password for '+email+' (min 6 chars):');
+  if(!newPass || newPass.length < 6){ toast('Password must be at least 6 characters','error'); return; }
+  const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0d2JoeG5ybWZtZGVub2d6dWVhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDgwMjAwMSwiZXhwIjoyMDkwMzc4MDAxfQ.UdxoP59JF42z6w5pF2Jf3N5LT9mhQ-Ls-OLi-2S5HRI';
+  const res = await fetch('https://gtwbhxnrmfmdenogzuea.supabase.co/auth/v1/admin/users/'+userId, {
+    method: 'PUT',
+    headers: {'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json'},
+    body: JSON.stringify({password: newPass})
+  });
+  const data = await res.json();
+  if(!res.ok){ toast('Error: '+(data.message||JSON.stringify(data)),'error'); return; }
+  // Mark must_change_password
+  await sb.from('user_profiles').update({must_change_password:true}).eq('id',userId);
+  toast('✅ Password reset for '+email,'success');
+}
+
+async function mtRemoveUser(userId, userName, accountId){
+  if(!confirm('Remove '+userName+' from this account? This cannot be undone.')) return;
+  const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0d2JoeG5ybWZtZGVub2d6dWVhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDgwMjAwMSwiZXhwIjoyMDkwMzc4MDAxfQ.UdxoP59JF42z6w5pF2Jf3N5LT9mhQ-Ls-OLi-2S5HRI';
+  // Delete profile first
+  const {error:profErr} = await sb.from('user_profiles').delete().eq('id',userId);
+  if(profErr){ toast('Error removing profile: '+profErr.message,'error'); return; }
+  // Delete auth user
+  const res = await fetch('https://gtwbhxnrmfmdenogzuea.supabase.co/auth/v1/admin/users/'+userId, {
+    method: 'DELETE',
+    headers: {'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY}
+  });
+  if(!res.ok){ const d=await res.json(); toast('Error deleting auth user: '+(d.message||'unknown'),'error'); return; }
+  // Update local data
+  _agencyData.profiles = _agencyData.profiles.filter(p=>p.id!==userId);
+  toast('✅ '+userName+' removed','success');
+  renderManageTeam(accountId);
+  renderAgencyAccounts();
+}
+
+async function mtAddMember(accountId){
+  const name  = document.getElementById('mt-new-name').value.trim();
+  const email = document.getElementById('mt-new-email').value.trim();
+  const pass  = document.getElementById('mt-new-pass').value.trim();
+  const role  = document.getElementById('mt-new-role').value;
+  const result= document.getElementById('mt-add-result');
+  if(!name||!email||!pass){ toast('Name, email and password required','error'); return; }
+  if(pass.length<6){ toast('Password must be at least 6 characters','error'); return; }
+  result.textContent='Creating...'; result.style.color='var(--muted)';
+  const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0d2JoeG5ybWZtZGVub2d6dWVhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDgwMjAwMSwiZXhwIjoyMDkwMzc4MDAxfQ.UdxoP59JF42z6w5pF2Jf3N5LT9mhQ-Ls-OLi-2S5HRI';
+  try {
+    const adminRes = await fetch('https://gtwbhxnrmfmdenogzuea.supabase.co/auth/v1/admin/users', {
+      method:'POST',
+      headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json'},
+      body: JSON.stringify({email, password:pass, email_confirm:true, user_metadata:{name}})
+    });
+    const adminData = await adminRes.json();
+    if(!adminRes.ok) throw new Error(adminData.message||JSON.stringify(adminData));
+    const userId = adminData.id;
+    if(!userId) throw new Error('No user ID returned');
+    const {error:profErr} = await sb.from('user_profiles').insert({
+      id:userId, account_id:accountId, role, name, email, must_change_password:true
+    });
+    if(profErr) throw profErr;
+    // Update local data
+    _agencyData.profiles.push({id:userId, account_id:accountId, role, name, email, must_change_password:true});
+    result.innerHTML = '✅ <strong>'+escHtml(name)+'</strong> created!<br><span style="font-size:11px;color:var(--muted);">Temp password: <code style="background:var(--card2);padding:2px 5px;border-radius:4px;">'+escHtml(pass)+'</code></span>';
+    result.style.color='var(--success)';
+    renderManageTeam(accountId);
+    renderAgencyAccounts();
+  } catch(e){
+    result.innerHTML='❌ '+escHtml(e.message);
+    result.style.color='var(--danger)';
+  }
+}
+
 </script>
 </body>
 </html>
