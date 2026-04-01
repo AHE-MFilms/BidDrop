@@ -5399,10 +5399,9 @@ function renderManageTeam(accountId){
         '</div>' +
         '<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;background:'+roleColor+'22;color:'+roleColor+';border:1px solid '+roleColor+'44;text-transform:uppercase;">'+u.role+'</span>' +
       '</div>' +
-      '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
-        '<button onclick="mtChangeRole(''+u.id+'',''+accountId+'')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--mid);font-size:11px;font-weight:700;cursor:pointer;">⇄ Change Role</button>' +
-        '<button onclick="mtResetPassword(''+u.id+'',''+escHtml(u.email||'')+'')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--mid);font-size:11px;font-weight:700;cursor:pointer;">🔑 Reset Password</button>' +
-        '<button onclick="mtRemoveUser(''+u.id+'',''+escHtml(u.name||'Unnamed')+'',''+accountId+'')" style="background:none;border:1px solid #EF444444;border-radius:6px;padding:5px 10px;color:#EF4444;font-size:11px;font-weight:700;cursor:pointer;">🗑 Remove</button>' +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +        '<button onclick="mtChangeRole(\'' + u.id + '\',\'' + accountId + '\')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--mid);font-size:11px;font-weight:700;cursor:pointer;">⇄ Change Role</button>' +
+        '<button onclick="mtResetPassword(\'' + u.id + '\',\'' + (u.email||'').replace(/'/g,"\'",'') + '\')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--mid);font-size:11px;font-weight:700;cursor:pointer;">🔑 Reset Password</button>' +
+        '<button onclick="mtRemoveUser(\'' + u.id + '\',\'' + (u.name||'Unnamed').replace(/'/g,"\'",'') + '\',\'' + accountId + '\')" style="background:none;border:1px solid #EF444444;border-radius:6px;padding:5px 10px;color:#EF4444;font-size:11px;font-weight:700;cursor:pointer;">🗑 Remove</button>' +
       '</div>' +
     '</div>';
   }).join('') : '<div style="color:var(--muted);font-size:12px;padding:10px;">No team members yet.</div>';
