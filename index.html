@@ -626,6 +626,24 @@ tr:hover td{background:var(--card);}
         <label class="fl">Property Address</label>
         <input class="fi" id="e-addr" placeholder="123 Oak St, Detroit MI 48000" oninput="updatePreview()">
       </div>
+      <!-- Equity snapshot badge (shown after RentCast lookup) -->
+      <div id="equity-badge" style="display:none;background:linear-gradient(135deg,#0f2027,#1a3a2a);border:1px solid #22C55E44;border-radius:10px;padding:12px 14px;margin-bottom:10px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:#22C55E;margin-bottom:6px;">🏠 PROPERTY SNAPSHOT</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:80px;">
+            <div style="font-size:10px;color:#A8BECE;margin-bottom:2px;">Est. Value</div>
+            <div id="eq-value" style="font-size:15px;font-weight:700;color:#FFFFFF;">—</div>
+          </div>
+          <div style="flex:1;min-width:80px;">
+            <div style="font-size:10px;color:#A8BECE;margin-bottom:2px;">Est. Equity</div>
+            <div id="eq-equity" style="font-size:15px;font-weight:700;color:#22C55E;">—</div>
+          </div>
+          <div style="flex:1;min-width:80px;">
+            <div style="font-size:10px;color:#A8BECE;margin-bottom:2px;">Mortgage Bal.</div>
+            <div id="eq-mortgage" style="font-size:15px;font-weight:700;color:#F25C05;">—</div>
+          </div>
+        </div>
+      </div>
       <div class="fg">
         <label class="fl">Homeowner Email <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— required to Send via GHL</span></label>
         <input class="fi" id="e-email" placeholder="jane@email.com" type="email">
@@ -1461,7 +1479,9 @@ function loadEstFromPicker(){
       if(clr) clr.style.display = 'block';
     }
   }
-   renderStructures(); calcP(); updatePreview();
+  renderStructures(); calcP(); updatePreview();
+  // Show cached equity data immediately if available, then refresh async
+  if(p.equityData) showEquityBadge(p.equityData); else hideEquityBadge();
   toast('📋 Loaded: '+p.address.split(',')[0],'info');
   autoFillOwnerIfEmpty(p.address);
 }
@@ -1471,6 +1491,7 @@ function newEstimate(){
   document.getElementById('e-addr').value = '';
   document.getElementById('e-email').value = '';
   clearHomePhoto(); // always wipe photo when starting fresh
+  hideEquityBadge();
   structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'1.15',mat:'1.3',complexity:'1.12',pts:null}];
   renderStructures(); calcP(); updatePreview();
   const sel = document.getElementById('est-pin-picker');
@@ -2169,11 +2190,22 @@ function addMarker(pin){
       ? '<img src="'+pin.photo_url+'" style="width:100%;max-height:160px;object-fit:cover;border-radius:8px;margin-bottom:10px;display:block;" onerror="this.style.display=\'none\'">'
       : '';
   const _popupNotes = pin.notes ? '<div style="font-size:13px;color:#A8BECE;margin-bottom:10px;font-style:italic;">"'+escHtml(pin.notes)+'"</div>' : '';
+  // Equity snapshot for popup
+  const _eq = pin.equityData;
+  const _popupEquity = _eq && (_eq.estValue || _eq.equity) ? `
+    <div style="background:linear-gradient(135deg,#0f2027,#1a3a2a);border:1px solid #22C55E55;border-radius:8px;padding:10px 12px;margin-bottom:10px;">
+      <div style="font-size:9px;font-weight:700;letter-spacing:.7px;color:#22C55E;margin-bottom:6px;">🏠 PROPERTY SNAPSHOT</div>
+      <div style="display:flex;gap:8px;">
+        <div style="flex:1;"><div style="font-size:9px;color:#A8BECE;">Est. Value</div><div style="font-size:13px;font-weight:700;color:#FFF;">${fmtMoney(_eq.estValue)||'—'}</div></div>
+        <div style="flex:1;"><div style="font-size:9px;color:#A8BECE;">Equity</div><div style="font-size:13px;font-weight:700;color:#22C55E;">${fmtMoney(_eq.equity)||'—'}</div></div>
+        <div style="flex:1;"><div style="font-size:9px;color:#A8BECE;">Mortgage</div><div style="font-size:13px;font-weight:700;color:#F25C05;">${fmtMoney(_eq.mortgageBalance)||'—'}</div></div>
+      </div>
+    </div>` : '';
   m.bindPopup(`
     <div style="min-width:260px;max-width:300px;">
       <div style="font-weight:700;font-size:16px;margin-bottom:8px;color:#FFFFFF;line-height:1.4;">${escHtml(pin.address||'Unknown')}</div>
       <div style="display:inline-block;background:${sColor(pin.status)};color:white;font-size:13px;padding:4px 12px;border-radius:7px;font-weight:700;margin-bottom:12px;">${sLabel(pin.status)}</div>
-      ${_popupPhotos}${_popupNotes}
+      ${_popupPhotos}${_popupNotes}${_popupEquity}
       <button onclick="goEstFromPin('${pid}')" style="background:#F25C05;border:none;border-radius:8px;padding:13px;color:white;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:8px;display:block;">📋 Build Estimate</button>
       <button onclick="measureForPin('${pid}')" style="background:transparent;border:2px solid #F25C05;border-radius:8px;padding:11px;color:#F25C05;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:8px;display:block;">📐 Measure This Roof</button>
       <button onclick="openPinPhotoAdder('${pid}')" style="background:transparent;border:2px solid #22C55E;border-radius:8px;padding:11px;color:#22C55E;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:8px;display:block;">📷 Add Photos</button>
@@ -4276,9 +4308,10 @@ document.querySelectorAll('.overlay').forEach(o=>{
 
 let toastT;
 // ═══════════════════════════════
-//  RENTCAST OWNER LOOKUP
+//  RENTCAST PROPERTY LOOKUP
 // ═══════════════════════════════
-async function lookupOwnerName(address){
+function fmtMoney(v){ if(!v||isNaN(v)) return null; return '$'+Math.round(v).toLocaleString(); }
+async function lookupPropertyData(address){
   const key = (S.cfg && S.cfg.rentcastKey) || '';
   if(!key || !address) return null;
   try{
@@ -4286,22 +4319,55 @@ async function lookupOwnerName(address){
     const res = await fetch(url, {headers:{'X-Api-Key': key, 'accept':'application/json'}});
     if(!res.ok) return null;
     const data = await res.json();
-    const record = Array.isArray(data) ? data[0] : data;
-    if(!record || !record.owner || !record.owner.names || !record.owner.names.length) return null;
-    return record.owner.names[0] || null;
+    const r = Array.isArray(data) ? data[0] : data;
+    if(!r) return null;
+    const name = (r.owner && r.owner.names && r.owner.names[0]) || null;
+    const estValue = r.estimatedValue || null;
+    const mortgageBalance = (r.mortgage && r.mortgage.amount) ? r.mortgage.amount : null;
+    const equity = (estValue && mortgageBalance) ? Math.max(0, estValue - mortgageBalance) : (estValue ? estValue : null);
+    return { name, estValue, mortgageBalance, equity };
   } catch(e){
     console.warn('RentCast lookup failed:', e);
     return null;
   }
 }
+// Backwards-compat alias
+async function lookupOwnerName(address){ const d=await lookupPropertyData(address); return d?d.name:null; }
+function showEquityBadge(data){
+  const badge = document.getElementById('equity-badge');
+  if(!badge) return;
+  if(!data || (!data.estValue && !data.equity)) { badge.style.display='none'; return; }
+  const valEl = document.getElementById('eq-value');
+  const eqEl  = document.getElementById('eq-equity');
+  const mortEl= document.getElementById('eq-mortgage');
+  if(valEl)  valEl.textContent  = fmtMoney(data.estValue)      || '—';
+  if(eqEl)   eqEl.textContent   = fmtMoney(data.equity)         || '—';
+  if(mortEl) mortEl.textContent = fmtMoney(data.mortgageBalance) || '—';
+  badge.style.display = 'block';
+}
+function hideEquityBadge(){
+  const badge = document.getElementById('equity-badge');
+  if(badge) badge.style.display='none';
+}
 async function autoFillOwnerIfEmpty(address){
   const ownerEl = document.getElementById('e-owner');
-  if(!ownerEl || ownerEl.value.trim()) return; // already has a name
-  const name = await lookupOwnerName(address);
-  if(name && ownerEl && !ownerEl.value.trim()){
-    ownerEl.value = name;
+  const needsName = ownerEl && !ownerEl.value.trim();
+  const data = await lookupPropertyData(address);
+  if(!data) return;
+  if(needsName && data.name && ownerEl && !ownerEl.value.trim()){
+    ownerEl.value = data.name;
     updatePreview();
-    toast('\ud83c\udfe0 Owner: '+name,'info');
+    toast('🏠 Owner: '+data.name,'info');
+  }
+  showEquityBadge(data);
+  // Store equity data on current pin for popup display
+  if(currentEstPinId){
+    const pin = S.pins.find(p=>p.id===currentEstPinId);
+    if(pin){
+      pin.equityData = { estValue: data.estValue, mortgageBalance: data.mortgageBalance, equity: data.equity };
+      // Refresh the map marker popup to show equity
+      if(markers[currentEstPinId]) addMarker(pin);
+    }
   }
 }
 function toast(msg,type='info'){
