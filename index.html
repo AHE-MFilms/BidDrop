@@ -5879,7 +5879,8 @@ function previewZonePin(){
   document.getElementById('e-email').value = est.email || '';
   document.getElementById('e-addr').value  = pin.address || '';
   // Load structures into estimator state and re-render preview
-  S.structures = est.structures || [];
+  structures = (est.structures || []).map(s => normStruct(s));
+  renderStructures();
   if(typeof updatePreview === 'function') updatePreview();
   // Copy rendered mailer into the preview modal
   const mailerEl = document.getElementById('mailer-preview');
