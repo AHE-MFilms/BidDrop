@@ -3948,38 +3948,80 @@ function renderLeaderboard(){
   if(!el) return;
   const period = (document.getElementById('lb-period')||{}).value||'all';
   const cutoff = period==='all' ? null : new Date(Date.now()-parseInt(period)*86400000);
+
+  // Build a map from pin address -> rep name for joining estimates & queue
+  const addrToRep = {};
+  const pinIdToRep = {};
+  S.pins.forEach(p=>{
+    const rep = (p.rep||'Unknown').trim()||'Unknown';
+    if(p.address) addrToRep[p.address.trim()] = rep;
+    if(p.id) pinIdToRep[p.id] = rep;
+  });
+
   // Aggregate pins by rep
   const repMap={};
+  function getOrCreate(rep){
+    if(!repMap[rep]) repMap[rep]={name:rep,pins:0,estimates:0,mailers:0,signed:0,converted:0};
+    return repMap[rep];
+  }
+
   S.pins.forEach(p=>{
     const at = p.at ? new Date(p.at) : null;
     if(cutoff && at && at < cutoff) return;
     const rep=(p.rep||'Unknown').trim()||'Unknown';
-    if(!repMap[rep]) repMap[rep]={name:rep,pins:0,contacted:0,quoted:0,signed:0,converted:0,lost:0,not_interested:0};
-    repMap[rep].pins++;
-    if(repMap[rep][p.status]!==undefined) repMap[rep][p.status]++;
+    const r=getOrCreate(rep);
+    r.pins++;
+    if(p.status==='signed')   r.signed++;
+    if(p.status==='converted') r.converted++;
   });
+
+  // Aggregate estimates by rep (join via pinId -> rep)
+  (S.estimates||[]).forEach(e=>{
+    const at = e.savedAt ? new Date(e.savedAt) : null;
+    if(cutoff && at && at < cutoff) return;
+    const rep = pinIdToRep[e.pinId] || addrToRep[(e.addr||'').trim()] || null;
+    if(!rep) return;
+    getOrCreate(rep).estimates++;
+  });
+
+  // Aggregate mailers sent by rep (join via addr -> rep)
+  (S.queue||[]).filter(q=>q.status==='sent').forEach(q=>{
+    const at = q.mailedAt ? new Date(q.mailedAt) : null;
+    if(cutoff && at && at < cutoff) return;
+    const rep = addrToRep[(q.addr||'').trim()] || null;
+    if(!rep) return;
+    getOrCreate(rep).mailers++;
+  });
+
   const reps=Object.values(repMap).sort((a,b)=>b.pins-a.pins);
   if(!reps.length){el.innerHTML='<div style="text-align:center;padding:18px;color:var(--muted);font-size:11px;">No pins yet.</div>';return;}
-  el.innerHTML=reps.map((r,i)=>{
-    const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'<span style="font-size:11px;color:var(--muted);font-weight:700;width:20px;display:inline-block;text-align:center;">'+(i+1)+'</span>';
-    const convRate=r.pins?Math.round((r.signed+r.converted)/r.pins*100):0;
-    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);">'+
-      '<div style="font-size:18px;width:24px;text-align:center;flex-shrink:0;">'+medal+'</div>'+
-      '<div style="flex:1;min-width:0;">'+
-        '<div style="font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(r.name)+'</div>'+
-        '<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+
-          '<span style="color:var(--accent);">'+r.pins+' pins</span> · '+
-          '<span style="color:#A855F7;">'+r.contacted+' contacted</span> · '+
-          '<span style="color:#3B82F6;">'+r.quoted+' quoted</span> · '+
-          '<span style="color:#22C55E;">'+(r.signed+r.converted)+' signed</span>'+
-        '</div>'+
-      '</div>'+
-      '<div style="text-align:right;flex-shrink:0;">'+
-        '<div style="font-family:var(--font-h);font-size:16px;font-weight:700;color:var(--accent);">'+r.pins+'</div>'+
-        '<div style="font-size:10px;color:var(--muted);">'+convRate+'% conv</div>'+
-      '</div>'+
+
+  // Header row
+  const hdr = '<div style="display:grid;grid-template-columns:28px 1fr repeat(4,52px);gap:6px;padding:0 0 6px 0;border-bottom:2px solid var(--border);margin-bottom:4px;">'+
+    '<div></div>'+
+    '<div style="font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--muted);">REP</div>'+
+    '<div style="font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--accent);text-align:center;">PINS</div>'+
+    '<div style="font-size:10px;font-weight:700;letter-spacing:.5px;color:#A855F7;text-align:center;">ESTS</div>'+
+    '<div style="font-size:10px;font-weight:700;letter-spacing:.5px;color:#3B82F6;text-align:center;">MAILED</div>'+
+    '<div style="font-size:10px;font-weight:700;letter-spacing:.5px;color:#22C55E;text-align:center;">CONV%</div>'+
+  '</div>';
+
+  const rows = reps.map((r,i)=>{
+    const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':
+      '<span style="font-size:11px;color:var(--muted);font-weight:700;">'+('0'+(i+1)).slice(-2)+'</span>';
+    const convRate = r.pins ? Math.round((r.signed+r.converted)/r.pins*100) : 0;
+    const convColor = convRate>=20?'#22C55E':convRate>=10?'#F59E0B':'var(--muted)';
+    return '<div style="display:grid;grid-template-columns:28px 1fr repeat(4,52px);gap:6px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">'+
+      '<div style="font-size:17px;text-align:center;">'+medal+'</div>'+
+      '<div style="font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(r.name)+'</div>'+
+      '<div style="text-align:center;font-family:var(--font-h);font-size:15px;font-weight:700;color:var(--accent);">'+r.pins+'</div>'+
+      '<div style="text-align:center;font-family:var(--font-h);font-size:15px;font-weight:700;color:#A855F7;">'+r.estimates+'</div>'+
+      '<div style="text-align:center;font-family:var(--font-h);font-size:15px;font-weight:700;color:#3B82F6;">'+r.mailers+'</div>'+
+      '<div style="text-align:center;font-family:var(--font-h);font-size:15px;font-weight:700;color:'+convColor+';">'+convRate+'%</div>'+
     '</div>';
   }).join('');
+
+  el.innerHTML = hdr + rows;
 }
 
 function renderActChart(){
