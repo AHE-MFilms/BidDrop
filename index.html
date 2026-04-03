@@ -1113,6 +1113,11 @@ tr:hover td{background:var(--card);}
       </div>
     </div>
 
+    <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:16px 0 10px;">Property Owner Lookup (RentCast)</div>
+    <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:11px;color:var(--mid);margin-bottom:10px;">
+      🏠 Auto-fills the homeowner name when a pinned address is loaded. Get a free key at <a href="https://app.rentcast.io/app/api-access" target="_blank" style="color:var(--accent);">rentcast.io</a> (50 free lookups/mo, then ~$0.04 each).
+    </div>
+    <div class="fg"><label class="fl">RentCast API Key</label><input class="fi" id="s-rentcast-key" placeholder="live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" type="password"></div>
     <div id="lob-settings-section" style="display:none;">
       <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:16px 0 10px;">Lob.com (Physical Mail) — Agency Master Key</div>
       <div class="fg"><label class="fl">Lob.com API Key <span style="font-weight:400;color:var(--muted);text-transform:none;font-size:10px;">(stored securely — not visible to clients)</span></label><input class="fi" id="s-lob" placeholder="live_c39f..."></div>
@@ -1309,7 +1314,7 @@ async function syncAccountToSupabase(){
     cost_gutter: cfg.costGutter, overhead: cfg.overhead, margin: cfg.margin,
     ghl_api_key: cfg.ghlApiKey, ghl_location_id: cfg.ghlLocationId,
     ghl_pipeline_id: cfg.ghlPipelineId, ghl_stage_id: cfg.ghlStageId,
-    lob_key: cfg.lobKey, logo_data: cfg.logoData,
+    lob_key: cfg.lobKey, rentcast_key: cfg.rentcastKey||'', logo_data: cfg.logoData,
     headshot: cfg.headshot, headshot_pos: cfg.headshotPos,
     review1: cfg.review1, review2: cfg.review2
   }).eq('id', currentAccount.id);
@@ -1362,6 +1367,7 @@ function accountRowToCfg(row){
     ghlPipelineId: row.ghl_pipeline_id||'',
     ghlStageId: row.ghl_stage_id||'',
     lobKey: row.lob_key||'',
+    rentcastKey: row.rentcast_key||'',
     logoData: row.logo_data||null,
     headshot: row.headshot||null,
     headshotPos: row.headshot_pos||'30',
@@ -1455,10 +1461,10 @@ function loadEstFromPicker(){
       if(clr) clr.style.display = 'block';
     }
   }
-  renderStructures(); calcP(); updatePreview();
+   renderStructures(); calcP(); updatePreview();
   toast('📋 Loaded: '+p.address.split(',')[0],'info');
+  autoFillOwnerIfEmpty(p.address);
 }
-
 function newEstimate(){
   currentEstPinId = null;
   document.getElementById('e-owner').value = '';
@@ -2017,6 +2023,7 @@ function useRoofMeasurement(){
       if(sel) sel.value = pin.id;
       calcP();updatePreview();
       toast('📐 '+sqft.toLocaleString()+' sq ft loaded for '+escHtml(pin.address.split(',')[0])+'!','success');
+      autoFillOwnerIfEmpty(pin.address);
       return;
     }
   }
@@ -4155,6 +4162,7 @@ function openSettings(){
   const lobSection = document.getElementById('lob-settings-section');
   if(lobSection) lobSection.style.display = isSuperAdmin() ? 'block' : 'none';
   if(isSuperAdmin()) document.getElementById('s-lob').value = masterLobKey||c.lobKey||'';
+  const rcKeyEl = document.getElementById('s-rentcast-key'); if(rcKeyEl) rcKeyEl.value = c.rentcastKey||'';
   if(isSuperAdmin()){ const mc=document.getElementById('s-mailer-cost'); if(mc) mc.value=c.mailerCostPerPiece||'0.85'; }
   const lp=document.getElementById('logo-preview');
   if(lp)lp.innerHTML=c.logoData?'<img src="'+c.logoData+'" style="max-width:100%;max-height:100%;object-fit:contain;">':'No logo';
@@ -4214,6 +4222,7 @@ function saveSettings(){
     ghlPipelineId:v('s-ghl-pipe'),
     ghlStageId:document.getElementById('s-ghl-stage').value||'',
     lobKey: isSuperAdmin() ? v('s-lob') : (S.cfg.lobKey||''),
+    rentcastKey: v('s-rentcast-key') || S.cfg.rentcastKey || '',
     mailerCostPerPiece: isSuperAdmin() ? (v('s-mailer-cost')||'0.85') : (S.cfg.mailerCostPerPiece||'0.85'),
     logoData:S.cfg.logoData||null,
     headshot:S.cfg.headshot||null,
@@ -4266,6 +4275,35 @@ document.querySelectorAll('.overlay').forEach(o=>{
 });
 
 let toastT;
+// ═══════════════════════════════
+//  RENTCAST OWNER LOOKUP
+// ═══════════════════════════════
+async function lookupOwnerName(address){
+  const key = (S.cfg && S.cfg.rentcastKey) || '';
+  if(!key || !address) return null;
+  try{
+    const url = 'https://api.rentcast.io/v1/properties?address='+encodeURIComponent(address)+'&limit=1';
+    const res = await fetch(url, {headers:{'X-Api-Key': key, 'accept':'application/json'}});
+    if(!res.ok) return null;
+    const data = await res.json();
+    const record = Array.isArray(data) ? data[0] : data;
+    if(!record || !record.owner || !record.owner.names || !record.owner.names.length) return null;
+    return record.owner.names[0] || null;
+  } catch(e){
+    console.warn('RentCast lookup failed:', e);
+    return null;
+  }
+}
+async function autoFillOwnerIfEmpty(address){
+  const ownerEl = document.getElementById('e-owner');
+  if(!ownerEl || ownerEl.value.trim()) return; // already has a name
+  const name = await lookupOwnerName(address);
+  if(name && ownerEl && !ownerEl.value.trim()){
+    ownerEl.value = name;
+    updatePreview();
+    toast('\ud83c\udfe0 Owner: '+name,'info');
+  }
+}
 function toast(msg,type='info'){
   const el=document.getElementById('toast');
   el.className='toast '+type;el.textContent=msg;el.classList.add('show');
