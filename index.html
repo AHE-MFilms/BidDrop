@@ -2830,7 +2830,7 @@ function updatePreview(){
         '<div class="ml-row"><span class="rl">Felt / Synthetic Underlayment</span><span class="rv">Included</span></div>'+
         '</div>'+
         '<div class="ml-subtotal" style="background:'+col+';">'+
-        '<span class="ml-subtotal-lbl">'+escHtml(s.name.toUpperCase())+' SUBTOTAL</span>'+
+        '<span class="ml-subtotal-lbl">'+escHtml((s.name||'Structure').toUpperCase())+' SUBTOTAL</span>'+
         '<span class="ml-subtotal-amt">$'+sp.toLocaleString()+'</span>'+
         '</div></div>';
     });
@@ -3027,7 +3027,7 @@ function updatePreview(){
         (finMo
           ? '<div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;background:rgba(0,0,0,.25);border-radius:20px;padding:4px 12px;">'+
             '<span style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.7);">Financing</span>'+
-            '<span style="font-family:Oswald,sans-serif;font-size:16px;font-weight:700;color:#fff;">$'+escHtml(finMo)+'/mo</span>'+
+            '<span style="font-family:Oswald,sans-serif;font-size:16px;font-weight:700;color:#fff;">$'+finMo.toLocaleString()+'/mo</span>'+
             '<span style="font-size:9px;color:rgba(255,255,255,.6);">'+escHtml(finTrm)+'</span>'+
             '</div>'
           : ''
