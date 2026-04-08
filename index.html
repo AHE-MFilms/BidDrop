@@ -3315,15 +3315,14 @@ function renderEstimatesTab(){
       : '<span style="background:rgba(59,130,246,.1);color:var(--info);border:1px solid var(--info);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;">SAVED</span>';
     const eid = escHtml(est.id);
     const actionBtns = _estView === 'trash'
-      ? '<button onclick="restoreEstimate(''+eid+'')" style="background:#1a7f4b;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#8629; Restore</button>'
-        +'<button onclick="hardDeleteEstimate(''+eid+'')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">&#10005; Purge</button>'
-      : '<button onclick="loadEstimateIntoEstimator(''+eid+'')" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#9999; Edit</button>'
-        +'<button onclick="sendEstimateViaGHL(''+eid+'')" style="background:#1a7f4b;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#9889; GHL</button>'
-        +'<button onclick="addEstimateToMailQueue(''+eid+'')" style="background:var(--accent);border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128228; Mail Queue</button>'
-        +'<button onclick="openDripModal(''+eid+'')" style="background:#7C3AED;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128336; Drip</button>'
-        +'<button onclick="printEstimate(''+eid+'')" style="background:#1f3d68;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128424; Print</button>'
-        +'<button onclick="deleteEstimate(''+eid+'')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">&#10005;</button>';
-    return '<tr style="border-bottom:1px solid var(--border);">'
+      ? `<button onclick="restoreEstimate('${eid}')" style="background:#1a7f4b;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#8629; Restore</button>`
+        +`<button onclick="hardDeleteEstimate('${eid}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">&#10005; Purge</button>`
+      : `<button onclick="loadEstimateIntoEstimator('${eid}')" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#9999; Edit</button>`
+        +`<button onclick="sendEstimateViaGHL('${eid}')" style="background:#1a7f4b;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#9889; GHL</button>`
+        +`<button onclick="addEstimateToMailQueue('${eid}')" style="background:var(--accent);border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128228; Mail Queue</button>`
+        +`<button onclick="openDripModal('${eid}')" style="background:#7C3AED;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128336; Drip</button>`
+        +`<button onclick="printEstimate('${eid}')" style="background:#1f3d68;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128424; Print</button>`
+        +`<button onclick="deleteEstimate('${eid}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">&#10005;</button>`;
       +'<td style="padding:10px 8px;"><input type="checkbox" class="est-row-cb" data-id="'+eid+'" onchange="updateEstimateSelectionBar()" style="cursor:pointer;"></td>'
       +'<td style="padding:12px;font-size:14px;font-weight:600;color:var(--text);">'+escHtml(shortAddr)+'<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+escHtml(addr.split(',').slice(1).join(',').trim())+'</div></td>'
       +'<td style="padding:12px;font-size:13px;color:var(--mid);">'+escHtml(owner)+'</td>'
