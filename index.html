@@ -4857,73 +4857,6 @@ function printNow(){
   };
 <\/script>
 </div><!-- /main-app -->
-
-<!-- ── DRIP SEQUENCE MODAL ─────────────────────────────────────────────── -->
-<div id="m-drip" class="modal-overlay" onclick="if(event.target===this)closeM('m-drip')" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:none;align-items:center;justify-content:center;">
-  <div style="background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <div style="font-family:var(--font-h);font-size:18px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;">🗓 Mail Drip Sequence</div>
-      <button onclick="closeM('m-drip')" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;">✕</button>
-    </div>
-    <div id="drip-est-label" style="font-size:13px;color:var(--muted);margin-bottom:18px;"></div>
-    <!-- Drip steps -->
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;" id="drip-steps-container">
-      <!-- Step 1 -->
-      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-          <div style="background:var(--accent);color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 1</div>
-          <div style="font-size:13px;font-weight:600;color:var(--text);">4-Page Letter</div>
-          <div style="margin-left:auto;font-size:12px;color:var(--muted);">Send immediately</div>
-        </div>
-        <div style="font-size:12px;color:var(--muted);">Full estimate mailer — 4 pages with pricing, financing, and call-to-action.</div>
-      </div>
-      <!-- Step 2 -->
-      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-          <div style="background:#7C3AED;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 2</div>
-          <div style="font-size:13px;font-weight:600;color:var(--text);">Follow-Up Postcard</div>
-          <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
-            <input type="number" id="drip-delay-2" value="14" min="1" max="90" style="width:52px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 6px;color:var(--text);font-size:12px;text-align:center;">
-            <span style="font-size:12px;color:var(--muted);">days after step 1</span>
-          </div>
-        </div>
-        <div style="font-size:12px;color:var(--muted);">Reminder postcard — "Your estimate is still available."</div>
-      </div>
-      <!-- Step 3 -->
-      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-          <div style="background:#7C3AED;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 3</div>
-          <div style="font-size:13px;font-weight:600;color:var(--text);">Urgency Postcard</div>
-          <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
-            <input type="number" id="drip-delay-3" value="21" min="1" max="90" style="width:52px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 6px;color:var(--text);font-size:12px;text-align:center;">
-            <span style="font-size:12px;color:var(--muted);">days after step 1</span>
-          </div>
-        </div>
-        <div style="font-size:12px;color:var(--muted);">Urgency postcard — "Estimate expires soon. Call today."</div>
-      </div>
-      <!-- Step 4 -->
-      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-          <div style="background:#7C3AED;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 4</div>
-          <div style="font-size:13px;font-weight:600;color:var(--text);">Final Postcard</div>
-          <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
-            <input type="number" id="drip-delay-4" value="35" min="1" max="90" style="width:52px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 6px;color:var(--text);font-size:12px;text-align:center;">
-            <span style="font-size:12px;color:var(--muted);">days after step 1</span>
-          </div>
-        </div>
-        <div style="font-size:12px;color:var(--muted);">Final touch — "Last chance. We'd love to earn your business."</div>
-      </div>
-    </div>
-    <!-- Info note -->
-    <div style="background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:10px 14px;font-size:12px;color:#C4B5FD;margin-bottom:18px;">
-      <strong>How it works:</strong> Step 1 is added to your Mail Queue immediately. Steps 2–4 are scheduled and will appear in your Mail Queue automatically on their send dates. You can cancel the sequence at any time from the Estimates tab.
-    </div>
-    <div style="display:flex;gap:10px;">
-      <button onclick="startDripSequence()" style="flex:1;background:#7C3AED;border:none;border-radius:8px;padding:14px;color:#fff;font-family:var(--font-b);font-size:14px;font-weight:700;cursor:pointer;">🗓 Start Drip Sequence</button>
-      <button onclick="closeM('m-drip')" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:14px 20px;color:var(--muted);font-family:var(--font-b);font-size:14px;cursor:pointer;">Cancel</button>
-    </div>
-  </div>
-</div>
 </body>
 </html>`);
   win.document.close();
@@ -6685,6 +6618,75 @@ function cancelDrip(estId){
   toast('Drip sequence cancelled','info');
 }
 
+
 </script>
+<!-- ── DRIP SEQUENCE MODAL ─────────────────────────────────────────────── -->
+<div id="m-drip" class="modal-overlay" onclick="if(event.target===this)closeM('m-drip')" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:none;align-items:center;justify-content:center;">
+  <div style="background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div style="font-family:var(--font-h);font-size:18px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;">🗓 Mail Drip Sequence</div>
+      <button onclick="closeM('m-drip')" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;">✕</button>
+    </div>
+    <div id="drip-est-label" style="font-size:13px;color:var(--muted);margin-bottom:18px;"></div>
+    <!-- Drip steps -->
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;" id="drip-steps-container">
+      <!-- Step 1 -->
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <div style="background:var(--accent);color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 1</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);">4-Page Letter</div>
+          <div style="margin-left:auto;font-size:12px;color:var(--muted);">Send immediately</div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);">Full estimate mailer — 4 pages with pricing, financing, and call-to-action.</div>
+      </div>
+      <!-- Step 2 -->
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <div style="background:#7C3AED;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 2</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);">Follow-Up Postcard</div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+            <input type="number" id="drip-delay-2" value="14" min="1" max="90" style="width:52px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 6px;color:var(--text);font-size:12px;text-align:center;">
+            <span style="font-size:12px;color:var(--muted);">days after step 1</span>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);">Reminder postcard — "Your estimate is still available."</div>
+      </div>
+      <!-- Step 3 -->
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <div style="background:#7C3AED;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 3</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);">Urgency Postcard</div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+            <input type="number" id="drip-delay-3" value="21" min="1" max="90" style="width:52px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 6px;color:var(--text);font-size:12px;text-align:center;">
+            <span style="font-size:12px;color:var(--muted);">days after step 1</span>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);">Urgency postcard — "Estimate expires soon. Call today."</div>
+      </div>
+      <!-- Step 4 -->
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <div style="background:#7C3AED;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 4</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);">Final Postcard</div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+            <input type="number" id="drip-delay-4" value="35" min="1" max="90" style="width:52px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 6px;color:var(--text);font-size:12px;text-align:center;">
+            <span style="font-size:12px;color:var(--muted);">days after step 1</span>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);">Final touch — "Last chance. We'd love to earn your business."</div>
+      </div>
+    </div>
+    <!-- Info note -->
+    <div style="background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:10px 14px;font-size:12px;color:#C4B5FD;margin-bottom:18px;">
+      <strong>How it works:</strong> Step 1 is added to your Mail Queue immediately. Steps 2–4 are scheduled and will appear in your Mail Queue automatically on their send dates. You can cancel the sequence at any time from the Estimates tab.
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="startDripSequence()" style="flex:1;background:#7C3AED;border:none;border-radius:8px;padding:14px;color:#fff;font-family:var(--font-b);font-size:14px;font-weight:700;cursor:pointer;">🗓 Start Drip Sequence</button>
+      <button onclick="closeM('m-drip')" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:14px 20px;color:var(--muted);font-family:var(--font-b);font-size:14px;cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+
 </body>
 </html>
