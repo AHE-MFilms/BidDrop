@@ -718,9 +718,27 @@ tr:hover td{background:var(--card);}
   <!-- ESTIMATES HISTORY -->
   <div class="tab-pane" id="tab-estimates">
     <div style="width:100%;padding:22px;overflow-y:auto;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;padding-bottom:12px;border-bottom:2px solid var(--border);">
-        <div class="pane-title" style="margin:0;padding:0;border:none;">🗂 Saved Estimates</div>
-        <button onclick="goTab('estimate')" style="background:var(--accent);border:none;border-radius:8px;padding:9px 16px;color:#fff;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;">+ New Estimate</button>
+      <!-- Header -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:12px;border-bottom:2px solid var(--border);">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="pane-title" style="margin:0;padding:0;border:none;">🗂 Saved Estimates</div>
+          <div style="display:flex;gap:4px;margin-left:8px;">
+            <button id="est-tab-active" onclick="switchEstView('active')" style="background:var(--accent);border:none;border-radius:6px;padding:5px 12px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">Active</button>
+            <button id="est-tab-trash" onclick="switchEstView('trash')" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:5px 12px;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;">🗑 Trash</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select id="est-rep-filter" onchange="renderEstimatesTab()" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-size:12px;cursor:pointer;"><option value="">All Reps</option></select>
+          <button onclick="exportEstimatesCSV()" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:7px 12px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;">⬇ CSV</button>
+          <button onclick="goTab('estimate')" style="background:var(--accent);border:none;border-radius:8px;padding:9px 16px;color:#fff;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;">+ New Estimate</button>
+        </div>
+      </div>
+      <!-- Bulk action bar -->
+      <div id="est-bulk-bar" style="display:none;align-items:center;gap:10px;margin-bottom:10px;padding:8px 12px;background:var(--card2);border-radius:8px;border:1px solid var(--border);">
+        <span id="est-selected-count" style="font-size:13px;font-weight:600;color:var(--text);">0 selected</span>
+        <button id="est-bulk-delete-btn" onclick="bulkDeleteEstimates()" style="background:#EF4444;border:none;border-radius:6px;padding:6px 14px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">🗑 Delete Selected</button>
+        <button id="est-bulk-restore-btn" onclick="bulkRestoreEstimates()" style="display:none;background:#1a7f4b;border:none;border-radius:6px;padding:6px 14px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">↩ Restore Selected</button>
+        <button onclick="clearEstimateSelection()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 14px;color:var(--muted);font-size:12px;cursor:pointer;">Clear</button>
       </div>
       <div id="estimates-empty" style="text-align:center;padding:60px 20px;color:var(--muted);">
         <div style="font-size:40px;margin-bottom:12px;">🗂</div>
@@ -730,8 +748,10 @@ tr:hover td{background:var(--card);}
       <table id="estimates-table" style="display:none;width:100%;border-collapse:collapse;">
         <thead>
           <tr style="border-bottom:2px solid var(--border);">
+            <th style="padding:10px 8px;width:32px;"><input type="checkbox" id="est-select-all" onchange="toggleAllEstimateSelect(this.checked)" style="cursor:pointer;"></th>
             <th style="text-align:left;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">Address</th>
             <th style="text-align:left;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">Homeowner</th>
+            <th style="text-align:left;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">Rep</th>
             <th style="text-align:right;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">Total</th>
             <th style="text-align:left;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">Saved</th>
             <th style="text-align:center;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">Actions</th>
@@ -1525,7 +1545,8 @@ function saveEstimateNow(){
     gutters: (document.getElementById('a-gut')||{}).checked||false,
     gutterLf: parseInt((document.getElementById('a-gut-q')||{}).value||120),
     savedAt: new Date().toISOString(),
-    sentAt: null, status: 'saved'
+    sentAt: null, status: 'saved',
+    rep: pin.rep || (currentUser && currentUser.email ? currentUser.email.split('@')[0] : '')
   };
   const editingId = window._editingEstimateId || null;
   window._editingEstimateId = null;
@@ -3230,42 +3251,201 @@ function addToQueue(){
   save();toast('📬 Added to mail queue!','success');renderQueue();
 }
 
+// ── Estimates view state ──────────────────────────────────────────────────
+let _estView = 'active'; // 'active' | 'trash'
+
+function switchEstView(view){
+  _estView = view;
+  const btnA = document.getElementById('est-tab-active');
+  const btnT = document.getElementById('est-tab-trash');
+  const delBtn = document.getElementById('est-bulk-delete-btn');
+  const restBtn = document.getElementById('est-bulk-restore-btn');
+  if(btnA){ btnA.style.background = view==='active' ? 'var(--accent)' : 'var(--card2)'; btnA.style.color = view==='active' ? '#fff' : 'var(--muted)'; btnA.style.border = view==='active' ? 'none' : '1px solid var(--border)'; }
+  if(btnT){ btnT.style.background = view==='trash' ? '#EF4444' : 'var(--card2)'; btnT.style.color = view==='trash' ? '#fff' : 'var(--muted)'; btnT.style.border = view==='trash' ? 'none' : '1px solid var(--border)'; }
+  if(delBtn) delBtn.style.display = view==='active' ? '' : 'none';
+  if(restBtn) restBtn.style.display = view==='trash' ? '' : 'none';
+  clearEstimateSelection();
+  renderEstimatesTab();
+}
+
 function renderEstimatesTab(){
-  const list = S.estimates || [];
+  const allEsts = S.estimates || [];
+  // Populate rep filter dropdown
+  const repSel = document.getElementById('est-rep-filter');
+  if(repSel){
+    const curRep = repSel.value;
+    const reps = [...new Set(allEsts.map(e=>e.rep||'').filter(Boolean))].sort();
+    repSel.innerHTML = '<option value="">All Reps</option>' + reps.map(r=>'<option value="'+escHtml(r)+'"'+(r===curRep?' selected':'')+'>'+escHtml(r)+'</option>').join('');
+  }
+  const repFilter = repSel ? repSel.value : '';
+  // Filter by view (active vs trash) and rep
+  const now = Date.now();
+  const thirtyDays = 30*24*60*60*1000;
+  let list = allEsts.filter(e=>{
+    if(_estView === 'trash'){
+      if(!e.deletedAt) return false;
+      if(now - new Date(e.deletedAt).getTime() > thirtyDays) return false;
+      return true;
+    } else {
+      return !e.deletedAt;
+    }
+  });
+  if(repFilter) list = list.filter(e=>(e.rep||'')=== repFilter);
+
   const empty = document.getElementById('estimates-empty');
   const table = document.getElementById('estimates-table');
   const tbody = document.getElementById('estimates-tbody');
   if(!empty || !table || !tbody) return;
   if(!list.length){
-    empty.style.display='block'; table.style.display='none'; return;
+    empty.style.display='block'; table.style.display='none';
+    const lbl = empty.querySelector('div:nth-child(2)');
+    if(lbl) lbl.textContent = _estView==='trash' ? 'Trash is empty' : 'No saved estimates yet';
+    return;
   }
   empty.style.display='none'; table.style.display='table';
   tbody.innerHTML = list.map(function(est){
-    const date = est.savedAt ? new Date(est.savedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '\u2014';
-    const addr = est.addr || '\u2014';
+    const date = est.savedAt ? new Date(est.savedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
+    const addr = est.addr || '—';
     const shortAddr = addr.split(',')[0];
     const owner = est.owner || 'Homeowner';
+    const rep = est.rep || '—';
     const total = '$'+(est.total||0).toLocaleString();
     const sentBadge = est.sentAt
       ? '<span style="background:rgba(34,197,94,.15);color:var(--success);border:1px solid var(--success);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;">SENT</span>'
       : '<span style="background:rgba(59,130,246,.1);color:var(--info);border:1px solid var(--info);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;">SAVED</span>';
     const eid = escHtml(est.id);
+    const actionBtns = _estView === 'trash'
+      ? '<button onclick="restoreEstimate(''+eid+'')" style="background:#1a7f4b;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#8629; Restore</button>'
+        +'<button onclick="hardDeleteEstimate(''+eid+'')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">&#10005; Purge</button>'
+      : '<button onclick="loadEstimateIntoEstimator(''+eid+'')" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#9999; Edit</button>'
+        +'<button onclick="sendEstimateViaGHL(''+eid+'')" style="background:#1a7f4b;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#9889; GHL</button>'
+        +'<button onclick="addEstimateToMailQueue(''+eid+'')" style="background:var(--accent);border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128228; Mail Queue</button>'
+        +'<button onclick="openDripModal(''+eid+'')" style="background:#7C3AED;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128336; Drip</button>'
+        +'<button onclick="printEstimate(''+eid+'')" style="background:#1f3d68;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128424; Print</button>'
+        +'<button onclick="deleteEstimate(''+eid+'')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">&#10005;</button>';
     return '<tr style="border-bottom:1px solid var(--border);">'
+      +'<td style="padding:10px 8px;"><input type="checkbox" class="est-row-cb" data-id="'+eid+'" onchange="updateEstimateSelectionBar()" style="cursor:pointer;"></td>'
       +'<td style="padding:12px;font-size:14px;font-weight:600;color:var(--text);">'+escHtml(shortAddr)+'<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+escHtml(addr.split(',').slice(1).join(',').trim())+'</div></td>'
       +'<td style="padding:12px;font-size:13px;color:var(--mid);">'+escHtml(owner)+'</td>'
+      +'<td style="padding:12px;font-size:12px;color:var(--muted);">'+escHtml(rep)+'</td>'
       +'<td style="padding:12px;text-align:right;font-family:var(--font-h);font-size:16px;font-weight:700;color:var(--accent);">'+total+'</td>'
       +'<td style="padding:12px;font-size:12px;color:var(--muted);">'+date+'<div style="margin-top:4px;">'+sentBadge+'</div></td>'
       +'<td style="padding:12px;text-align:center;">'
-        +'<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">'
-          +'<button onclick="loadEstimateIntoEstimator(\''+eid+'\')" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#9999; Edit</button>'
-          +'<button onclick="sendEstimateViaGHL(\''+eid+'\')" style="background:#1a7f4b;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#9889; GHL</button>'
-          +'<button onclick="addEstimateToMailQueue(\''+eid+'\')" style="background:var(--accent);border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128228; Mail Queue</button>'
-          +'<button onclick="printEstimate(\''+eid+'\')" style="background:#1f3d68;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128424; Print</button>'
-          +'<button onclick="deleteEstimate(\''+eid+'\')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">&#10005;</button>'
-        +'</div>'
+        +'<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">'+actionBtns+'</div>'
       +'</td>'
       +'</tr>';
   }).join('');
+}
+
+// ── Checkbox / bulk selection helpers ────────────────────────────────────
+function toggleAllEstimateSelect(checked){
+  document.querySelectorAll('.est-row-cb').forEach(cb=>cb.checked=checked);
+  updateEstimateSelectionBar();
+}
+function clearEstimateSelection(){
+  document.querySelectorAll('.est-row-cb').forEach(cb=>cb.checked=false);
+  const all = document.getElementById('est-select-all');
+  if(all){all.checked=false;all.indeterminate=false;}
+  updateEstimateSelectionBar();
+}
+function updateEstimateSelectionBar(){
+  const cbs = document.querySelectorAll('.est-row-cb:checked');
+  const bar = document.getElementById('est-bulk-bar');
+  const cnt = document.getElementById('est-selected-count');
+  const all = document.getElementById('est-select-all');
+  const total = document.querySelectorAll('.est-row-cb').length;
+  if(bar) bar.style.display = cbs.length ? 'flex' : 'none';
+  if(cnt) cnt.textContent = cbs.length + ' selected';
+  if(all){ all.indeterminate = cbs.length>0 && cbs.length<total; if(cbs.length===total && total>0) all.checked=true; }
+}
+
+// ── Soft delete (move to trash) ───────────────────────────────────────────
+function deleteEstimate(estId){
+  const est = (S.estimates||[]).find(e=>e.id===estId);
+  if(!est) return;
+  est.deletedAt = new Date().toISOString();
+  // Clear estimate data from the linked pin (keep pin, clear estimate)
+  if(est.pinId){
+    const pin = (S.pins||[]).find(p=>p.id===est.pinId);
+    if(pin){ pin.estimate = null; pin.at_est = null;
+      if(sb) sb.from('pins').update({estimate:null}).eq('id',est.pinId).then(()=>{});
+    }
+  }
+  save(); renderEstimatesTab();
+  toast('Moved to Trash — recoverable for 30 days','info');
+}
+function bulkDeleteEstimates(){
+  const ids = Array.from(document.querySelectorAll('.est-row-cb:checked')).map(cb=>cb.dataset.id);
+  if(!ids.length) return;
+  if(!confirm('Move '+ids.length+' estimate(s) to Trash?')) return;
+  ids.forEach(id=>{
+    const e=(S.estimates||[]).find(x=>x.id===id);
+    if(e){ e.deletedAt=new Date().toISOString();
+      if(e.pinId){ const pin=(S.pins||[]).find(p=>p.id===e.pinId); if(pin){ pin.estimate=null; pin.at_est=null; if(sb) sb.from('pins').update({estimate:null}).eq('id',e.pinId).then(()=>{}); } }
+    }
+  });
+  save(); clearEstimateSelection(); renderEstimatesTab();
+  toast('Moved '+ids.length+' estimate(s) to Trash','info');
+}
+
+// ── Restore from trash ────────────────────────────────────────────────────
+function restoreEstimate(estId){
+  const est = (S.estimates||[]).find(e=>e.id===estId);
+  if(!est) return;
+  delete est.deletedAt;
+  if(est.pinId){
+    const pin = (S.pins||[]).find(p=>p.id===est.pinId);
+    if(pin){ pin.estimate = {owner:est.owner,email:est.email,total:est.total,structures:est.structures}; pin.at_est = est.savedAt;
+      if(sb) sb.from('pins').update({estimate:pin.estimate}).eq('id',est.pinId).then(()=>{});
+    }
+  }
+  save(); renderEstimatesTab();
+  toast('Estimate restored','success');
+}
+function bulkRestoreEstimates(){
+  const ids = Array.from(document.querySelectorAll('.est-row-cb:checked')).map(cb=>cb.dataset.id);
+  if(!ids.length) return;
+  ids.forEach(id=>{
+    const e=(S.estimates||[]).find(x=>x.id===id);
+    if(e){ delete e.deletedAt;
+      if(e.pinId){ const pin=(S.pins||[]).find(p=>p.id===e.pinId); if(pin){ pin.estimate={owner:e.owner,email:e.email,total:e.total,structures:e.structures}; pin.at_est=e.savedAt; if(sb) sb.from('pins').update({estimate:pin.estimate}).eq('id',e.pinId).then(()=>{}); } }
+    }
+  });
+  save(); clearEstimateSelection(); renderEstimatesTab();
+  toast('Restored '+ids.length+' estimate(s)','success');
+}
+
+// ── Hard delete (purge from trash) ────────────────────────────────────────
+function hardDeleteEstimate(estId){
+  if(!confirm('Permanently delete this estimate? This cannot be undone.')) return;
+  S.estimates = (S.estimates||[]).filter(e=>e.id!==estId);
+  save(); renderEstimatesTab();
+  toast('Estimate permanently deleted','info');
+}
+
+// ── CSV Export ────────────────────────────────────────────────────────────
+function exportEstimatesCSV(){
+  const list = (S.estimates||[]).filter(e=>!e.deletedAt);
+  if(!list.length){ toast('No estimates to export','warn'); return; }
+  const headers = ['Address','Homeowner','Rep','Email','Total','Structures','Saved Date','Status'];
+  const rows = list.map(e=>[
+    '"'+(e.addr||'').replace(/"/g,'""')+'"',
+    '"'+(e.owner||'').replace(/"/g,'""')+'"',
+    '"'+(e.rep||'').replace(/"/g,'""')+'"',
+    '"'+(e.email||'').replace(/"/g,'""')+'"',
+    e.total||0,
+    (e.structures||[]).length,
+    e.savedAt ? new Date(e.savedAt).toLocaleDateString('en-US') : '',
+    e.sentAt ? 'Sent' : 'Saved'
+  ]);
+  const csv = [headers.join(','), ...rows.map(r=>r.join(','))].join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download='estimates_'+(S.cfg&&S.cfg.companyName?S.cfg.companyName.replace(/\s+/g,'_'):'BidDrop')+'_'+new Date().toISOString().slice(0,10)+'.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('CSV downloaded ('+list.length+' estimates)','success');
 }
 
 function loadEstimateIntoEstimator(estId){
@@ -3301,13 +3481,6 @@ function loadEstimateIntoEstimator(estId){
   renderStructures(); calcP(); updatePreview();
   goTab('estimate');
   toast('📋 Loaded into Estimator — edit and save to update','info');
-}
-function deleteEstimate(estId){
-  if(!confirm('Delete this estimate?')) return;
-  S.estimates = (S.estimates||[]).filter(e=>e.id!==estId);
-  save();
-  renderEstimatesTab();
-  toast('Estimate deleted','info');
 }
 function addEstimateToMailQueue(estId){
   const est = (S.estimates||[]).find(function(e){return e.id===estId;});
@@ -3380,6 +3553,8 @@ function saveLobKey(){/* Agency model: key stored server-side */}
 
 function renderQueue(){
   // Agency model: Lob key loaded at login, not shown in UI
+  // Promote any scheduled drip items whose send date has passed
+  try{ _processDripScheduleSync(); }catch(e){}
   const tbody=document.getElementById('q-tbody');
   const tbl=document.getElementById('q-table');
   const empty=document.getElementById('q-empty');
@@ -4682,6 +4857,73 @@ function printNow(){
   };
 <\/script>
 </div><!-- /main-app -->
+
+<!-- ── DRIP SEQUENCE MODAL ─────────────────────────────────────────────── -->
+<div id="m-drip" class="modal-overlay" onclick="if(event.target===this)closeM('m-drip')" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:none;align-items:center;justify-content:center;">
+  <div style="background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div style="font-family:var(--font-h);font-size:18px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;">🗓 Mail Drip Sequence</div>
+      <button onclick="closeM('m-drip')" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;">✕</button>
+    </div>
+    <div id="drip-est-label" style="font-size:13px;color:var(--muted);margin-bottom:18px;"></div>
+    <!-- Drip steps -->
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;" id="drip-steps-container">
+      <!-- Step 1 -->
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <div style="background:var(--accent);color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 1</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);">4-Page Letter</div>
+          <div style="margin-left:auto;font-size:12px;color:var(--muted);">Send immediately</div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);">Full estimate mailer — 4 pages with pricing, financing, and call-to-action.</div>
+      </div>
+      <!-- Step 2 -->
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <div style="background:#7C3AED;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 2</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);">Follow-Up Postcard</div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+            <input type="number" id="drip-delay-2" value="14" min="1" max="90" style="width:52px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 6px;color:var(--text);font-size:12px;text-align:center;">
+            <span style="font-size:12px;color:var(--muted);">days after step 1</span>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);">Reminder postcard — "Your estimate is still available."</div>
+      </div>
+      <!-- Step 3 -->
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <div style="background:#7C3AED;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 3</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);">Urgency Postcard</div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+            <input type="number" id="drip-delay-3" value="21" min="1" max="90" style="width:52px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 6px;color:var(--text);font-size:12px;text-align:center;">
+            <span style="font-size:12px;color:var(--muted);">days after step 1</span>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);">Urgency postcard — "Estimate expires soon. Call today."</div>
+      </div>
+      <!-- Step 4 -->
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <div style="background:#7C3AED;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 4</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);">Final Postcard</div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+            <input type="number" id="drip-delay-4" value="35" min="1" max="90" style="width:52px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 6px;color:var(--text);font-size:12px;text-align:center;">
+            <span style="font-size:12px;color:var(--muted);">days after step 1</span>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);">Final touch — "Last chance. We'd love to earn your business."</div>
+      </div>
+    </div>
+    <!-- Info note -->
+    <div style="background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:10px 14px;font-size:12px;color:#C4B5FD;margin-bottom:18px;">
+      <strong>How it works:</strong> Step 1 is added to your Mail Queue immediately. Steps 2–4 are scheduled and will appear in your Mail Queue automatically on their send dates. You can cancel the sequence at any time from the Estimates tab.
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="startDripSequence()" style="flex:1;background:#7C3AED;border:none;border-radius:8px;padding:14px;color:#fff;font-family:var(--font-b);font-size:14px;font-weight:700;cursor:pointer;">🗓 Start Drip Sequence</button>
+      <button onclick="closeM('m-drip')" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:14px 20px;color:var(--muted);font-family:var(--font-b);font-size:14px;cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>`);
   win.document.close();
@@ -6293,6 +6535,154 @@ async function mtAddMember(accountId){
     result.innerHTML='❌ '+escHtml(e.message);
     result.style.color='var(--danger)';
   }
+}
+
+
+// ── DRIP SEQUENCE ────────────────────────────────────────────────────────
+let _dripEstId = null;
+
+function openDripModal(estId){
+  const est = (S.estimates||[]).find(e=>e.id===estId);
+  if(!est){ toast('Estimate not found','error'); return; }
+  _dripEstId = estId;
+  const lbl = document.getElementById('drip-est-label');
+  if(lbl) lbl.textContent = (est.addr||'Unknown address') + ' — ' + (est.owner||'Homeowner') + ' — $'+(est.total||0).toLocaleString();
+  // Show existing drip status if any
+  if(est.drip && est.drip.steps){
+    const active = est.drip.steps.filter(s=>!s.sentAt).length;
+    if(active > 0){
+      const lbl2 = document.getElementById('drip-est-label');
+      if(lbl2) lbl2.textContent += ' · ⚡ Drip active ('+active+' steps pending)';
+    }
+  }
+  openM('m-drip');
+}
+
+function startDripSequence(){
+  const est = (S.estimates||[]).find(e=>e.id===_dripEstId);
+  if(!est){ toast('Estimate not found','error'); return; }
+  const d2 = parseInt(document.getElementById('drip-delay-2').value)||14;
+  const d3 = parseInt(document.getElementById('drip-delay-3').value)||21;
+  const d4 = parseInt(document.getElementById('drip-delay-4').value)||35;
+  const now = new Date();
+  const msDay = 86400000;
+  est.drip = {
+    startedAt: now.toISOString(),
+    steps: [
+      { step:1, type:'letter',   label:'4-Page Letter',       sendAt: now.toISOString(),                              sentAt:null, queueId:null },
+      { step:2, type:'postcard', label:'Follow-Up Postcard',  sendAt: new Date(now.getTime()+d2*msDay).toISOString(), sentAt:null, queueId:null },
+      { step:3, type:'postcard', label:'Urgency Postcard',    sendAt: new Date(now.getTime()+d3*msDay).toISOString(), sentAt:null, queueId:null },
+      { step:4, type:'postcard', label:'Final Postcard',      sendAt: new Date(now.getTime()+d4*msDay).toISOString(), sentAt:null, queueId:null }
+    ]
+  };
+  // Add step 1 to mail queue immediately
+  addEstimateToMailQueueWithDripTag(est, 1);
+  // Schedule steps 2-4 as future queue items (status='scheduled')
+  [1,2,3].forEach(i=>{
+    const step = est.drip.steps[i];
+    scheduleDripStep(est, step);
+  });
+  save();
+  closeM('m-drip');
+  renderEstimatesTab();
+  toast('Drip sequence started! Step 1 added to Mail Queue now. Steps 2–4 scheduled.','success');
+}
+
+function addEstimateToMailQueueWithDripTag(est, stepNum){
+  const pin = (S.pins||[]).find(p=>p.id===est.pinId);
+  const mainStruct = (est.structures||[])[0] || {};
+  const matMap = {'1.0':'3-Tab Shingle','1.3':'Architectural Shingle','1.8':'Designer Shingle','2.5':'Metal Roofing'};
+  const qid = 'q_drip_'+est.id+'_s'+stepNum+'_'+Date.now();
+  const qItem = {
+    id: qid,
+    owner: est.owner||'Homeowner', addr: est.addr||'', email: est.email||'',
+    sqft: mainStruct.sqft||0, pitch: mainStruct.pitch||'6/12',
+    mat: matMap[String(mainStruct.mat||mainStruct.material)]||'Architectural Shingle',
+    structures: est.structures||[], total: est.total||0,
+    photo_data: est.photo_data||null, photo_url: est.photo_url||(pin?pin.photo_url:null)||null,
+    status: 'pending', lobId:null, mailedAt:null,
+    at: new Date().toISOString(),
+    drip_step: stepNum, drip_est_id: est.id
+  };
+  if(!S.queue) S.queue=[];
+  S.queue.unshift(qItem);
+  sbSaveQueueItem(qItem);
+  // Mark step as queued
+  if(est.drip && est.drip.steps[stepNum-1]) est.drip.steps[stepNum-1].queueId = qid;
+}
+
+function scheduleDripStep(est, step){
+  // Store as a scheduled queue item (status='scheduled') — visible in queue but won't send until sendAt date
+  const pin = (S.pins||[]).find(p=>p.id===est.pinId);
+  const mainStruct = (est.structures||[])[0]||{};
+  const matMap = {'1.0':'3-Tab Shingle','1.3':'Architectural Shingle','1.8':'Designer Shingle','2.5':'Metal Roofing'};
+  const qid = 'q_drip_'+est.id+'_s'+step.step+'_'+Date.now();
+  const qItem = {
+    id: qid,
+    owner: est.owner||'Homeowner', addr: est.addr||'', email: est.email||'',
+    sqft: mainStruct.sqft||0, pitch: mainStruct.pitch||'6/12',
+    mat: matMap[String(mainStruct.mat||mainStruct.material)]||'Architectural Shingle',
+    structures: est.structures||[], total: est.total||0,
+    photo_data: est.photo_data||null, photo_url: est.photo_url||(pin?pin.photo_url:null)||null,
+    status: 'scheduled', lobId:null, mailedAt:null,
+    at: step.sendAt,
+    drip_step: step.step, drip_est_id: est.id,
+    scheduled_send_at: step.sendAt
+  };
+  if(!S.queue) S.queue=[];
+  S.queue.push(qItem);
+  sbSaveQueueItem(qItem);
+  step.queueId = qid;
+}
+
+function _processDripScheduleSync(){
+  const now = new Date();
+  let changed = false;
+  (S.queue||[]).forEach(item=>{
+    if(item.status==='scheduled' && item.scheduled_send_at){
+      if(new Date(item.scheduled_send_at) <= now){
+        item.status = 'pending';
+        if(sb) sb.from('mail_queue').update({status:'pending'}).eq('id',item.id).then(()=>{});
+        changed = true;
+      }
+    }
+  });
+  if(changed) save();
+}
+
+// Check scheduled drip items on app load and when queue renders — promote to 'pending' if sendAt has passed
+function processDripSchedule(){
+  const now = new Date();
+  let changed = false;
+  (S.queue||[]).forEach(item=>{
+    if(item.status==='scheduled' && item.scheduled_send_at){
+      if(new Date(item.scheduled_send_at) <= now){
+        item.status = 'pending';
+        sbSaveQueueItem(item);
+        changed = true;
+        toast('📬 Drip step '+item.drip_step+' ready to send for '+item.addr,'info');
+      }
+    }
+  });
+  if(changed){ save(); renderQueue(); }
+}
+
+// Cancel all pending drip steps for an estimate
+function cancelDrip(estId){
+  const est = (S.estimates||[]).find(e=>e.id===estId);
+  if(!est||!est.drip) return;
+  const stepIds = est.drip.steps.map(s=>s.queueId).filter(Boolean);
+  S.queue = (S.queue||[]).filter(q=>{
+    if(stepIds.includes(q.id) && q.status!=='sent'){
+      // Remove from Supabase too
+      if(sb) sb.from('mail_queue').delete().eq('id',q.id).then(()=>{});
+      return false;
+    }
+    return true;
+  });
+  delete est.drip;
+  save(); renderEstimatesTab(); renderQueue();
+  toast('Drip sequence cancelled','info');
 }
 
 </script>
