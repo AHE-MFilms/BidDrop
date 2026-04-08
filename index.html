@@ -1558,7 +1558,7 @@ function saveEstimateNow(){
     S.estimates = (S.estimates||[]).filter(e=>e.pinId !== currentEstPinId);
     S.estimates.unshift(estRecord);
   }
-  pin.estimate = { owner, email, total, structures: estRecord.structures };
+  pin.estimate = { id: estRecord.id, owner, email, total, structures: estRecord.structures, rep: estRecord.rep, savedAt: estRecord.savedAt };
   pin.at_est = estRecord.savedAt;
   sb.from('pins').update({ estimate: pin.estimate }).eq('id', currentEstPinId).then(({error})=>{
     if(error) console.warn('Save estimate to pin:', error);
@@ -3322,8 +3322,8 @@ function renderEstimatesTab(){
         +`<button onclick="addEstimateToMailQueue('${eid}')" style="background:var(--accent);border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128228; Mail Queue</button>`
         +`<button onclick="openDripModal('${eid}')" style="background:#7C3AED;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128336; Drip</button>`
         +`<button onclick="printEstimate('${eid}')" style="background:#1f3d68;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128424; Print</button>`
-        +`<button onclick="deleteEstimate('${eid}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">&#10005;</button>`;
-      +'<td style="padding:10px 8px;"><input type="checkbox" class="est-row-cb" data-id="'+eid+'" onchange="updateEstimateSelectionBar()" style="cursor:pointer;"></td>'
+        +`<button onclick="deleteEstimate('${eid}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">&#10005;</button>`
+      return '<tr style="border-bottom:1px solid var(--border);">'+'<td style="padding:10px 8px;"><input type="checkbox" class="est-row-cb" data-id="'+eid+'" onchange="updateEstimateSelectionBar()" style="cursor:pointer;"></td>'
       +'<td style="padding:12px;font-size:14px;font-weight:600;color:var(--text);">'+escHtml(shortAddr)+'<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+escHtml(addr.split(',').slice(1).join(',').trim())+'</div></td>'
       +'<td style="padding:12px;font-size:13px;color:var(--mid);">'+escHtml(owner)+'</td>'
       +'<td style="padding:12px;font-size:12px;color:var(--muted);">'+escHtml(rep)+'</td>'
@@ -5154,7 +5154,8 @@ async function loadPinsFromSupabase(){
           total: est.total || 0,
           structures: (est.structures || []).map(normStruct),
           photo_url: pin.photo_url || null,
-          savedAt: pin.at_est || pin.at || new Date().toISOString(),
+          savedAt: est.savedAt || pin.at_est || pin.at || new Date().toISOString(),
+          rep: est.rep || pin.rep || '',
           sentAt: null, status: 'saved'
         });
       }
