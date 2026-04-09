@@ -1539,6 +1539,7 @@ function saveEstimateNow(){
     structures: (structures||[]).map(s=>({...s})),
     photo_url: photoUrl,
     photo_data: photoData,
+    damage_photos: (window._damagePhotos && window._damagePhotos.length) ? [...window._damagePhotos] : (pin.damage_photos && pin.damage_photos.length ? [...pin.damage_photos] : null),
     skylight: (document.getElementById('a-sky')||{}).checked||false,
     skylightQty: parseInt((document.getElementById('a-sky-q')||{}).value||1),
     chimney: (document.getElementById('a-chim')||{}).checked||false,
@@ -1558,7 +1559,7 @@ function saveEstimateNow(){
     S.estimates = (S.estimates||[]).filter(e=>e.pinId !== currentEstPinId);
     S.estimates.unshift(estRecord);
   }
-  pin.estimate = { id: estRecord.id, owner, email, total, structures: estRecord.structures, rep: estRecord.rep, savedAt: estRecord.savedAt };
+  pin.estimate = { id: estRecord.id, owner, email, total, structures: estRecord.structures, rep: estRecord.rep, savedAt: estRecord.savedAt, damage_photos: estRecord.damage_photos||null };
   pin.at_est = estRecord.savedAt;
   // Fix F: auto-advance pin status to 'quoted' when an estimate is saved
   if(pin.status === 'needs_roof' || !pin.status){
@@ -2559,6 +2560,7 @@ function goEstFromPin(id){
   currentEstPinId = id;
   if(!structures.length)addStructure(0,'Main House');
   // Load saved estimate data if available
+  let _estDmgPhotos = null;
   if(p.estimate){
     const est = typeof p.estimate === 'string' ? JSON.parse(p.estimate) : p.estimate;
     if(est.owner) document.getElementById('e-owner').value = est.owner;
@@ -2566,9 +2568,10 @@ function goEstFromPin(id){
     if(est.structures && est.structures.length){
       structures = est.structures.map(s=>normStruct(s));
     }
+    if(est.damage_photos && est.damage_photos.length) _estDmgPhotos = est.damage_photos;
   }
-  // Load damage photos from pin
-  const dmgSrcs4 = p.damage_photos||[];
+  // Load damage photos from pin (prefer pin.damage_photos, fall back to estimate's damage_photos)
+  const dmgSrcs4 = p.damage_photos || _estDmgPhotos || [];
   if(dmgSrcs4.length){
     window._homePhotoData = dmgSrcs4[0];
     window._damagePhotos = [...dmgSrcs4];
@@ -2843,11 +2846,11 @@ function updatePreview(){
       s.photos.slice(0,3).map((src,pi)=>'<div><img src="'+src+'" style="width:100%;height:110px;object-fit:cover;border-radius:6px;display:block;"><div style="font-size:9px;color:#888;text-align:center;margin-top:2px;">Photo '+(pi+1)+'</div></div>').join('')+
       '</div></div>';
   }).join('');
-  const hasAnyPhotos = dmgPhotos.length > 1 || structPhotoBlocks.length > 0;
+  const hasAnyPhotos = dmgPhotos.length >= 1 || structPhotoBlocks.length > 0;
   const damageSection = hasAnyPhotos
     ? '<div style="margin:18px 0;padding:14px;background:#f8f8f8;border-radius:8px;border:1px solid #e0e0e0;">'+
         '<div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#F25C05;margin-bottom:10px;">DAMAGE ASSESSMENT — PHOTOS</div>'+
-        (dmgPhotos.length > 1
+        (dmgPhotos.length >= 1
           ? '<div style="display:grid;grid-template-columns:repeat('+Math.min(dmgPhotos.length,3)+',1fr);gap:8px;margin-bottom:'+(structPhotoBlocks.length?'14px':'0')+';">'+
             dmgPhotos.slice(0,3).map((src,i)=>'<div><img src="'+src+'" style="width:100%;height:120px;object-fit:cover;border-radius:6px;display:block;"><div style="font-size:9px;color:#888;text-align:center;margin-top:3px;">Photo '+(i+1)+'</div></div>').join('')+
             '</div>' : '')+
@@ -2859,7 +2862,7 @@ function updatePreview(){
   const damageMailerSection = hasAnyPhotos
     ? '<div style="margin:14px 0;padding:10px;background:#f9f9f9;border-radius:6px;border:1px solid #e8e8e8;">'+
         '<div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#F25C05;margin-bottom:8px;">DAMAGE ASSESSMENT PHOTOS</div>'+
-        (dmgPhotos.length > 1
+        (dmgPhotos.length >= 1
           ? '<div style="display:grid;grid-template-columns:repeat('+Math.min(dmgPhotos.length,3)+',1fr);gap:6px;margin-bottom:'+(structPhotoBlocks.length?'10px':'0')+';">'+
             dmgPhotos.slice(0,3).map(src=>'<img src="'+src+'" style="width:100%;height:100px;object-fit:cover;border-radius:4px;display:block;">').join('')+
             '</div>' : '')+
@@ -3480,6 +3483,14 @@ function loadEstimateIntoEstimator(estId){
     window._damagePhotos = est.damage_photos || (photoSrc ? [photoSrc] : []);
     const prev = document.getElementById('home-photo-preview');
     if(prev) prev.innerHTML = '<img src="'+photoSrc+'" style="width:100%;height:100%;object-fit:cover;">';
+    const clr = document.getElementById('clear-photo-btn');
+    if(clr) clr.style.display = 'block';
+  } else if(est.damage_photos && est.damage_photos.length) {
+    // No primary photo but damage photos exist — load them
+    window._damagePhotos = [...est.damage_photos];
+    window._homePhotoData = est.damage_photos[0];
+    const prev = document.getElementById('home-photo-preview');
+    if(prev) prev.innerHTML = '<img src="'+est.damage_photos[0]+'" style="width:100%;height:100%;object-fit:cover;">';
     const clr = document.getElementById('clear-photo-btn');
     if(clr) clr.style.display = 'block';
   }
@@ -5210,6 +5221,7 @@ async function loadPinsFromSupabase(){
           total: est.total || 0,
           structures: (est.structures || []).map(normStruct),
           photo_url: pin.photo_url || null,
+          damage_photos: est.damage_photos || pin.damage_photos || null,
           savedAt: est.savedAt || pin.at_est || pin.at || new Date().toISOString(),
           rep: est.rep || pin.rep || '',
           sentAt: null, status: 'saved'
