@@ -252,7 +252,7 @@ tr:hover td{background:var(--card);}
 .leaflet-container{background:#111827;}
 .leaflet-popup-content-wrapper{background:#1A2333;border:2px solid #2E4060;border-radius:12px;color:#F0F6FF;box-shadow:0 12px 40px rgba(0,0,0,.7);}
 .leaflet-popup-tip{background:#1A2333;}
-.leaflet-popup-content{font-family:var(--font-b);font-size:15px;margin:16px;}
+.leaflet-popup-content{font-family:var(--font-b);font-size:13px;margin:10px;}
 .leaflet-popup-close-button{color:var(--mid) !important;font-size:16px !important;}
 .leaflet-control-zoom{margin-left:12px !important;margin-bottom:24px !important;}
 .leaflet-bottom.leaflet-left{bottom:70px !important;}
@@ -1431,13 +1431,34 @@ function accountRowToCfg(row){
 let currentEstPinId = null;
 
 function goTab(t){
+  // Persist home photo before leaving estimator tab
+  const prevTab = document.querySelector('.tab-btn.active');
+  const leavingEstimate = prevTab && prevTab.dataset.tab === 'estimate';
+  if(leavingEstimate && window._homePhotoData){
+    try{ sessionStorage.setItem('bd_home_photo_'+( currentEstPinId||'_'), window._homePhotoData); }catch(e){}
+  }
   document.querySelectorAll('.tab-btn,.bnav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
   document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active',p.id==='tab-'+t));
   if(t==='map'){setTimeout(()=>map&&map.invalidateSize(),80);}
   if(t==='dashboard')renderDash();
   if(t==='mailqueue')renderQueue();
   if(t==='estimates')renderEstimatesTab();
-  if(t==='estimate'){populateEstPinPicker();updatePreview();scheduleDraftSave&&clearTimeout(_draftTimer);}
+  if(t==='estimate'){
+    populateEstPinPicker();updatePreview();scheduleDraftSave&&clearTimeout(_draftTimer);
+    // Restore home photo if it was cleared during tab switch
+    if(!window._homePhotoData && currentEstPinId){
+      try{
+        const saved = sessionStorage.getItem('bd_home_photo_'+currentEstPinId);
+        if(saved){
+          window._homePhotoData = saved;
+          const prev = document.getElementById('home-photo-preview');
+          if(prev) prev.innerHTML = '<img src="'+saved+'" style="width:100%;height:100%;object-fit:cover;">';
+          const clr = document.getElementById('clear-photo-btn');
+          if(clr) clr.style.display = 'block';
+        }
+      }catch(e){}
+    }
+  }
   if(t==='zones')initZonesTab();
   if(t==='agency')renderAgencyView();
 }
@@ -1770,6 +1791,7 @@ function handleHomePhoto(inp){
       canvas.getContext('2d').drawImage(img,0,0,w,h);
       const data=canvas.toDataURL('image/jpeg',.82);
       window._homePhotoData=data;
+      try{ sessionStorage.setItem('bd_home_photo_'+(currentEstPinId||'_'), data); }catch(e){}
       const prev=document.getElementById('home-photo-preview');
       if(prev)prev.innerHTML='<img src="'+data+'" style="width:100%;height:100%;object-fit:cover;">';
       const clr=document.getElementById('clear-photo-btn');
@@ -1783,6 +1805,7 @@ function handleHomePhoto(inp){
 
 function clearHomePhoto(){
   window._homePhotoData=null;
+  try{ if(currentEstPinId) sessionStorage.removeItem('bd_home_photo_'+currentEstPinId); sessionStorage.removeItem('bd_home_photo__'); }catch(e){}
   const prev=document.getElementById('home-photo-preview');
   if(prev)prev.innerHTML='No photo';
   const clr=document.getElementById('clear-photo-btn');
@@ -2304,17 +2327,17 @@ function addMarker(pin){
       </div>
     </div>` : '';
   m.bindPopup(`
-    <div style="min-width:260px;max-width:300px;">
-      <div style="font-weight:700;font-size:16px;margin-bottom:8px;color:#FFFFFF;line-height:1.4;">${escHtml(pin.address||'Unknown')}</div>
-      <div style="display:inline-block;background:${sColor(pin.status)};color:white;font-size:13px;padding:4px 12px;border-radius:7px;font-weight:700;margin-bottom:12px;">${sLabel(pin.status)}</div>
-      ${_popupPhotos}${_popupNotes}${_popupEquity}
-      ${pin.estimate && pin.estimate.total ? `<div style="background:linear-gradient(135deg,#0a1628,#0f2040);border:1px solid #3B82F655;border-radius:8px;padding:8px 12px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;"><span style="font-size:10px;font-weight:700;letter-spacing:.6px;color:#3B82F6;">✓ ESTIMATE SAVED</span><span style="font-family:var(--font-m,monospace);font-size:15px;font-weight:700;color:#FFF;">$${(pin.estimate.total||0).toLocaleString()}</span></div>` : ''}
-      <button onclick="goEstFromPin('${pid}')" style="background:#F25C05;border:none;border-radius:8px;padding:13px;color:white;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:8px;display:block;">${pin.estimate && pin.estimate.total ? '📋 Edit Estimate' : '📋 Build Estimate'}</button>
-      <button onclick="measureForPin('${pid}')" style="background:transparent;border:2px solid #F25C05;border-radius:8px;padding:11px;color:#F25C05;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:8px;display:block;">📐 Measure This Roof</button>
-      <button onclick="openPinPhotoAdder('${pid}')" style="background:transparent;border:2px solid #22C55E;border-radius:8px;padding:11px;color:#22C55E;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:8px;display:block;">📷 Add Photos</button>
-      <button onclick="confirmDeletePin('${pid}')" style="background:transparent;border:2px solid #EF4444;border-radius:8px;padding:10px;color:#EF4444;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;display:block;">🗑 Delete Pin</button>
+    <div style="min-width:200px;max-width:240px;">
+      <div style="font-weight:700;font-size:13px;margin-bottom:5px;color:#FFFFFF;line-height:1.3;">${escHtml(pin.address||'Unknown')}</div>
+      <div style="display:inline-block;background:${sColor(pin.status)};color:white;font-size:11px;padding:2px 8px;border-radius:5px;font-weight:700;margin-bottom:8px;">${sLabel(pin.status)}</div>
+      ${pin.photo_url ? '<img src="'+pin.photo_url+'" style="width:100%;max-height:90px;object-fit:cover;border-radius:6px;margin-bottom:8px;display:block;" onerror="this.style.display=\'none\'">' : ''}
+      ${pin.estimate && pin.estimate.total ? `<div style="background:#0a1628;border:1px solid #3B82F655;border-radius:6px;padding:5px 8px;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;"><span style="font-size:9px;font-weight:700;color:#3B82F6;">✓ ESTIMATE</span><span style="font-size:13px;font-weight:700;color:#FFF;">$${(pin.estimate.total||0).toLocaleString()}</span></div>` : ''}
+      <button onclick="goEstFromPin('${pid}')" style="background:#F25C05;border:none;border-radius:7px;padding:8px;color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">${pin.estimate && pin.estimate.total ? '📋 Edit Estimate' : '📋 Build Estimate'}</button>
+      <button onclick="measureForPin('${pid}')" style="background:transparent;border:1.5px solid #F25C05;border-radius:7px;padding:6px;color:#F25C05;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">📐 Measure Roof</button>
+      <button onclick="openPinPhotoAdder('${pid}')" style="background:transparent;border:1.5px solid #22C55E;border-radius:7px;padding:6px;color:#22C55E;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">📷 Add Photos</button>
+      <button onclick="confirmDeletePin('${pid}')" style="background:transparent;border:1.5px solid #EF4444;border-radius:7px;padding:5px;color:#EF4444;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;display:block;">🗑 Delete Pin</button>
     </div>
-  `,{maxWidth:320});
+  `,{maxWidth:260});
   markers[pid]=m;
 }
 
