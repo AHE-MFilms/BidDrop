@@ -1560,9 +1560,20 @@ function saveEstimateNow(){
   }
   pin.estimate = { id: estRecord.id, owner, email, total, structures: estRecord.structures, rep: estRecord.rep, savedAt: estRecord.savedAt };
   pin.at_est = estRecord.savedAt;
-  sb.from('pins').update({ estimate: pin.estimate }).eq('id', currentEstPinId).then(({error})=>{
-    if(error) console.warn('Save estimate to pin:', error);
-  });
+  // Fix F: auto-advance pin status to 'quoted' when an estimate is saved
+  if(pin.status === 'needs_roof' || !pin.status){
+    pin.status = 'quoted';
+    sb.from('pins').update({ estimate: pin.estimate, status: 'quoted' }).eq('id', currentEstPinId).then(({error})=>{
+      if(error) console.warn('Save estimate to pin:', error);
+    });
+  } else {
+    sb.from('pins').update({ estimate: pin.estimate }).eq('id', currentEstPinId).then(({error})=>{
+      if(error) console.warn('Save estimate to pin:', error);
+    });
+  }
+  // Refresh the map marker so it shows updated status and estimate badge
+  if(markers[currentEstPinId] && map){ map.removeLayer(markers[currentEstPinId]); delete markers[currentEstPinId]; }
+  addMarker(pin);
   save();
   addAct('Estimate saved for <strong>'+escHtml(pin.address||'')+'</strong> — <strong>$'+total.toLocaleString()+'</strong>','bid_sent');
   toast('✅ Estimate saved!','success');
@@ -2227,7 +2238,8 @@ function addMarker(pin){
       <div style="font-weight:700;font-size:16px;margin-bottom:8px;color:#FFFFFF;line-height:1.4;">${escHtml(pin.address||'Unknown')}</div>
       <div style="display:inline-block;background:${sColor(pin.status)};color:white;font-size:13px;padding:4px 12px;border-radius:7px;font-weight:700;margin-bottom:12px;">${sLabel(pin.status)}</div>
       ${_popupPhotos}${_popupNotes}${_popupEquity}
-      <button onclick="goEstFromPin('${pid}')" style="background:#F25C05;border:none;border-radius:8px;padding:13px;color:white;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:8px;display:block;">📋 Build Estimate</button>
+      ${pin.estimate && pin.estimate.total ? `<div style="background:linear-gradient(135deg,#0a1628,#0f2040);border:1px solid #3B82F655;border-radius:8px;padding:8px 12px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;"><span style="font-size:10px;font-weight:700;letter-spacing:.6px;color:#3B82F6;">✓ ESTIMATE SAVED</span><span style="font-family:var(--font-m,monospace);font-size:15px;font-weight:700;color:#FFF;">$${(pin.estimate.total||0).toLocaleString()}</span></div>` : ''}
+      <button onclick="goEstFromPin('${pid}')" style="background:#F25C05;border:none;border-radius:8px;padding:13px;color:white;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:8px;display:block;">${pin.estimate && pin.estimate.total ? '📋 Edit Estimate' : '📋 Build Estimate'}</button>
       <button onclick="measureForPin('${pid}')" style="background:transparent;border:2px solid #F25C05;border-radius:8px;padding:11px;color:#F25C05;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:8px;display:block;">📐 Measure This Roof</button>
       <button onclick="openPinPhotoAdder('${pid}')" style="background:transparent;border:2px solid #22C55E;border-radius:8px;padding:11px;color:#22C55E;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:8px;display:block;">📷 Add Photos</button>
       <button onclick="confirmDeletePin('${pid}')" style="background:transparent;border:2px solid #EF4444;border-radius:8px;padding:10px;color:#EF4444;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;display:block;">🗑 Delete Pin</button>
@@ -3368,6 +3380,9 @@ function deleteEstimate(estId){
     const pin = (S.pins||[]).find(p=>p.id===est.pinId);
     if(pin){ pin.estimate = null; pin.at_est = null;
       if(sb) sb.from('pins').update({estimate:null}).eq('id',est.pinId).then(()=>{});
+      // Fix C: refresh map marker so popup no longer shows stale estimate badge
+      if(map && markers[est.pinId]){ map.removeLayer(markers[est.pinId]); delete markers[est.pinId]; }
+      addMarker(pin);
     }
   }
   save(); renderEstimatesTab();
@@ -3380,7 +3395,10 @@ function bulkDeleteEstimates(){
   ids.forEach(id=>{
     const e=(S.estimates||[]).find(x=>x.id===id);
     if(e){ e.deletedAt=new Date().toISOString();
-      if(e.pinId){ const pin=(S.pins||[]).find(p=>p.id===e.pinId); if(pin){ pin.estimate=null; pin.at_est=null; if(sb) sb.from('pins').update({estimate:null}).eq('id',e.pinId).then(()=>{}); } }
+      if(e.pinId){ const pin=(S.pins||[]).find(p=>p.id===e.pinId); if(pin){ pin.estimate=null; pin.at_est=null; if(sb) sb.from('pins').update({estimate:null}).eq('id',e.pinId).then(()=>{});
+        // Fix C: refresh map marker for each deleted estimate
+        if(map && markers[e.pinId]){ map.removeLayer(markers[e.pinId]); delete markers[e.pinId]; } addMarker(pin);
+      } }
     }
   });
   save(); clearEstimateSelection(); renderEstimatesTab();
@@ -3497,6 +3515,8 @@ function addEstimateToMailQueue(estId){
   const matMap = {'1.0':'3-Tab Shingle','1.3':'Architectural Shingle','1.8':'Designer Shingle','2.5':'Metal Roofing'};
   const qItem = {
     id: 'q_' + Date.now(),
+    pinId: est.pinId || null,   // Fix A: store pinId so queue can look up live estimate
+    estId: est.id || null,      // Fix A: store estId for direct lookup
     owner: est.owner || 'Homeowner',
     addr: est.addr || '',
     email: est.email || '',
@@ -3560,6 +3580,22 @@ function renderQueue(){
   if(!S.queue.length){tbl.style.display='none';empty.style.display='block';return;}
   tbl.style.display='table';empty.style.display='none';
   tbody.innerHTML=S.queue.map(i=>{
+    // Fix A: sync live estimate data from S.estimates so queue always shows current numbers
+    if(i.status !== 'sent'){
+      const liveEst = (S.estimates||[]).find(e=>
+        (i.estId && e.id===i.estId) ||
+        (i.pinId && e.pinId===i.pinId) ||
+        (e.addr||'').trim().toLowerCase()===(i.addr||'').trim().toLowerCase()
+      );
+      if(liveEst){
+        i.total = liveEst.total || i.total;
+        i.owner = liveEst.owner || i.owner;
+        i.structures = liveEst.structures || i.structures;
+        const ms = (liveEst.structures||[])[0]||{};
+        const mm={'1.0':'3-Tab Shingle','1.3':'Architectural Shingle','1.8':'Designer Shingle','2.5':'Metal Roofing'};
+        i.mat = mm[ms.material] || ms.material || i.mat;
+      }
+    }
     const sc={pending:'#F59E0B',sent:'#22C55E',failed:'#EF4444'}[i.status]||'#3D5269';
     const sl={pending:'Pending',sent:'Mailed ✓',failed:'Failed'}[i.status]||i.status;
     const qid = i.id;
@@ -3745,26 +3781,37 @@ function printQueuePreview(){
 }
 function editEstimate(id){
   const item=S.queue.find(x=>x.id===id);if(!item)return;
+  // Fix E: try to find the linked estimate in S.estimates and load it properly
+  const linkedEst = (S.estimates||[]).find(e=>
+    (item.pinId && e.pinId===item.pinId) ||
+    (e.addr||'').trim().toLowerCase()===(item.addr||'').trim().toLowerCase()
+  );
+  if(linkedEst){
+    // Use the full loadEstimateIntoEstimator flow so currentEstPinId is set
+    loadEstimateIntoEstimator(linkedEst.id);
+    window._editingQueueId = id;
+    document.getElementById('add-queue-btn').textContent='✅ Update Estimate';
+    return;
+  }
+  // Fallback: load directly from queue item
   document.getElementById('e-owner').value=item.owner||'';
   document.getElementById('e-addr').value=item.addr||'';
-  // Restore structures if saved, otherwise create one with sqft
   if(item.structures&&item.structures.length){
     structures=JSON.parse(JSON.stringify(item.structures));
   } else {
     structures=[{id:'s'+Date.now(),name:'Main House',sqft:item.sqft||0,pitch:'1.31',mat:'1.3',stories:'1',complexity:'1.12'}];
   }
-  // Restore photo
   if(item.photo_data){
     window._homePhotoData=item.photo_data;
-    const prev=document.getElementById('photo-preview');
-    const btn=document.getElementById('photo-remove-btn');
-    if(prev){prev.innerHTML='<img src="'+item.photo_data+'" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">';}
-    if(btn){btn.style.display='';}
+    const prev=document.getElementById('home-photo-preview');
+    const btn=document.getElementById('clear-photo-btn');
+    if(prev){prev.innerHTML='<img src="'+item.photo_data+'" style="width:100%;height:100%;object-fit:cover;">';}
+    if(btn){btn.style.display='block';}
   } else {
     window._homePhotoData=null;
-    const prev=document.getElementById('photo-preview');
-    if(prev){prev.innerHTML='<span style="color:var(--muted);font-size:11px;">No photo</span>';}
   }
+  // Set currentEstPinId from queue item if available
+  if(item.pinId) currentEstPinId = item.pinId;
   window._editingQueueId=id;
   renderStructures();goTab('estimate');calcP();updatePreview();
   document.getElementById('add-queue-btn').textContent='✅ Update Estimate';
@@ -4574,6 +4621,15 @@ async function autoFillOwnerIfEmpty(address){
     ownerEl.value = data.name;
     updatePreview();
     toast('🏠 Owner: '+data.name,'info');
+    // Fix D: persist the auto-filled name to the pin so it survives page reload
+    if(currentEstPinId){
+      const _pin = (S.pins||[]).find(p=>p.id===currentEstPinId);
+      if(_pin && _pin.estimate){
+        _pin.estimate.owner = data.name;
+        sb.from('pins').update({ estimate: _pin.estimate }).eq('id', currentEstPinId)
+          .then(({error})=>{ if(error) console.warn('Owner persist:', error); });
+      }
+    }
   }
   showEquityBadge(data);
   // Store equity data on current pin for popup display
