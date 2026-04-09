@@ -57,14 +57,19 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 .pin-list{flex:1;overflow-y:auto;padding:6px;}
 .pin-list::-webkit-scrollbar{width:3px;}
 .pin-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
-.pc{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:11px;margin-bottom:7px;cursor:pointer;transition:all .15s;}
+.pc{background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:7px;cursor:pointer;transition:all .15s;overflow:hidden;}
 .pc:hover{border-color:var(--accent);background:var(--card2);}
+.pc-summary{display:flex;align-items:center;gap:8px;padding:10px 11px;}
+.pc-chevron{font-size:11px;color:var(--muted);transition:transform .2s;flex-shrink:0;margin-left:auto;}
+.pc.open .pc-chevron{transform:rotate(90deg);}
 .pc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px;}
-.pc-addr{font-size:14px;font-weight:600;color:var(--text);line-height:1.35;flex:1;margin-right:7px;}
-.sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px;}
-.pc-meta{display:flex;gap:8px;font-size:12px;color:var(--muted);font-family:var(--font-m);}
-.pc-note{font-size:13px;color:var(--mid);margin-top:4px;font-style:italic;}
-.pc-acts{display:flex;gap:5px;margin-top:8px;}
+.pc-addr{font-size:13px;font-weight:600;color:var(--text);line-height:1.3;flex:1;margin-right:4px;}
+.sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:2px;}
+.pc-meta{display:flex;gap:6px;font-size:11px;color:var(--muted);font-family:var(--font-m);}
+.pc-note{font-size:12px;color:var(--mid);margin-top:3px;font-style:italic;}
+.pc-body{display:none;padding:0 11px 10px;border-top:1px solid var(--border);}
+.pc.open .pc-body{display:block;}
+.pc-acts{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap;}
 .btn-xs{font-family:var(--font-b);font-size:10px;font-weight:700;padding:4px 9px;border-radius:5px;border:1px solid var(--border);cursor:pointer;background:var(--card2);color:var(--mid);transition:all .15s;letter-spacing:.3px;text-transform:uppercase;}
 .btn-xs:hover{border-color:var(--accent);color:var(--accent);}
 .btn-xs.pr{background:var(--accent);border-color:var(--accent);color:#fff;}
@@ -611,6 +616,11 @@ tr:hover td{background:var(--card);}
         <span>Build Estimate</span>
         <button onclick="newEstimate()" style="background:none;border:1px solid var(--border);border-radius:7px;padding:5px 12px;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.4px;text-transform:uppercase;">✕ New</button>
       </div>
+      <!-- Draft restored banner -->
+      <div id="draft-banner" style="display:none;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);border-radius:7px;padding:8px 12px;margin-bottom:14px;font-size:12px;color:#93C5FD;display:none;align-items:center;gap:8px;">
+        <span>💾 Draft restored</span><span id="draft-banner-time" style="color:var(--muted);"></span>
+        <button onclick="discardDraft()" style="margin-left:auto;background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-decoration:underline;">Discard</button>
+      </div>
       <!-- Pin picker: load a saved pin into the estimate -->
       <div class="fg" id="est-pin-picker-wrap">
         <label class="fl">Load from Pinned Home</label>
@@ -620,11 +630,11 @@ tr:hover td{background:var(--card);}
       </div>
       <div class="fg">
         <label class="fl">Homeowner Name</label>
-        <input class="fi" id="e-owner" placeholder="Jane Smith" oninput="updatePreview()">
+        <input class="fi" id="e-owner" placeholder="Jane Smith" oninput="updatePreview();scheduleDraftSave()">
       </div>
       <div class="fg">
         <label class="fl">Property Address</label>
-        <input class="fi" id="e-addr" placeholder="123 Oak St, Detroit MI 48000" oninput="updatePreview()">
+        <input class="fi" id="e-addr" placeholder="123 Oak St, Detroit MI 48000" oninput="updatePreview();scheduleDraftSave()">
       </div>
       <!-- Equity snapshot badge (shown after RentCast lookup) -->
       <div id="equity-badge" style="display:none;background:linear-gradient(135deg,#0f2027,#1a3a2a);border:1px solid #22C55E44;border-radius:10px;padding:12px 14px;margin-bottom:10px;">
@@ -671,18 +681,18 @@ tr:hover td{background:var(--card);}
       <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px;">
         <div style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">Property Add-ons</div>
         <label class="addon-row">
-          <input type="checkbox" id="a-sky" onchange="calcP();updatePreview()">
+          <input type="checkbox" id="a-sky" onchange="calcP();updatePreview();scheduleDraftSave()">
           Skylights (+$350 ea)
-          <input type="number" class="addon-qty" id="a-sky-q" value="1" min="1" max="10" onchange="calcP();updatePreview()">
+          <input type="number" class="addon-qty" id="a-sky-q" value="1" min="1" max="10" onchange="calcP();updatePreview();scheduleDraftSave()">
         </label>
         <label class="addon-row">
-          <input type="checkbox" id="a-chim" onchange="calcP();updatePreview()">
+          <input type="checkbox" id="a-chim" onchange="calcP();updatePreview();scheduleDraftSave()">
           Chimney Flashing (+$280)
         </label>
         <label class="addon-row">
-          <input type="checkbox" id="a-gut" onchange="calcP();updatePreview()">
+          <input type="checkbox" id="a-gut" onchange="calcP();updatePreview();scheduleDraftSave()">
           Gutters (+$8/lf)
-          <input type="number" class="addon-qty" id="a-gut-q" value="120" min="1" onchange="calcP();updatePreview()"> lf
+          <input type="number" class="addon-qty" id="a-gut-q" value="120" min="1" onchange="calcP();updatePreview();scheduleDraftSave()"> lf
         </label>
       </div>
 
@@ -1427,7 +1437,7 @@ function goTab(t){
   if(t==='dashboard')renderDash();
   if(t==='mailqueue')renderQueue();
   if(t==='estimates')renderEstimatesTab();
-  if(t==='estimate'){populateEstPinPicker();updatePreview();}
+  if(t==='estimate'){populateEstPinPicker();updatePreview();scheduleDraftSave&&clearTimeout(_draftTimer);}
   if(t==='zones')initZonesTab();
   if(t==='agency')renderAgencyView();
 }
@@ -1470,7 +1480,7 @@ function loadEstFromPicker(){
     const photoSrc = savedEst.photo_data || savedEst.photo_url || p.photo_url || null;
     if(photoSrc){
       window._homePhotoData = photoSrc;
-    window._damagePhotos = savedEst.damage_photos || (photoSrc ? [photoSrc] : []);
+    window._damagePhotos = savedEst.damage_photos || p.damage_photos || [];
       const prev = document.getElementById('home-photo-preview');
       if(prev) prev.innerHTML = '<img src="'+photoSrc+'" style="width:100%;height:100%;object-fit:cover;">';
       const clr = document.getElementById('clear-photo-btn');
@@ -1505,12 +1515,68 @@ function loadEstFromPicker(){
   toast('📋 Loaded: '+p.address.split(',')[0],'info');
   autoFillOwnerIfEmpty(p.address);
 }
+// ── AUTO-SAVE DRAFT ──────────────────────────────────────────────────────
+let _draftTimer = null;
+function scheduleDraftSave(){
+  clearTimeout(_draftTimer);
+  _draftTimer = setTimeout(saveDraft, 2000);
+}
+function saveDraft(){
+  if(!currentEstPinId) return;
+  const draft = {
+    pinId: currentEstPinId,
+    owner: (document.getElementById('e-owner')||{}).value||'',
+    email: (document.getElementById('e-email')||{}).value||'',
+    structures: (structures||[]).map(s=>({...s})),
+    damage_photos: window._damagePhotos||[],
+    skylight: (document.getElementById('a-sky')||{}).checked||false,
+    skylightQty: parseInt((document.getElementById('a-sky-q')||{}).value||1),
+    chimney: (document.getElementById('a-chim')||{}).checked||false,
+    gutters: (document.getElementById('a-gut')||{}).checked||false,
+    gutterLf: parseInt((document.getElementById('a-gut-q')||{}).value||120),
+    savedAt: new Date().toISOString()
+  };
+  try{ localStorage.setItem('biddrop_draft_'+currentEstPinId, JSON.stringify(draft)); }catch(e){}
+}
+function restoreDraft(pinId){
+  try{
+    const raw = localStorage.getItem('biddrop_draft_'+pinId);
+    if(!raw) return false;
+    const draft = JSON.parse(raw);
+    if(!draft || !draft.structures) return false;
+    if(draft.owner) document.getElementById('e-owner').value = draft.owner;
+    if(draft.email) document.getElementById('e-email').value = draft.email;
+    structures = draft.structures.map(s=>normStruct(s));
+    if(draft.damage_photos && draft.damage_photos.length) window._damagePhotos = [...draft.damage_photos];
+    const sky=document.getElementById('a-sky'); if(sky) sky.checked=!!draft.skylight;
+    const skyQ=document.getElementById('a-sky-q'); if(skyQ) skyQ.value=draft.skylightQty||1;
+    const chim=document.getElementById('a-chim'); if(chim) chim.checked=!!draft.chimney;
+    const gut=document.getElementById('a-gut'); if(gut) gut.checked=!!draft.gutters;
+    const gutQ=document.getElementById('a-gut-q'); if(gutQ) gutQ.value=draft.gutterLf||120;
+    const banner=document.getElementById('draft-banner');
+    const bannerTime=document.getElementById('draft-banner-time');
+    if(banner){ banner.style.display='flex'; if(bannerTime) bannerTime.textContent='· '+timeAgo(draft.savedAt); }
+    return true;
+  }catch(e){ return false; }
+}
+function discardDraft(){
+  if(currentEstPinId) try{ localStorage.removeItem('biddrop_draft_'+currentEstPinId); }catch(e){}
+  const banner=document.getElementById('draft-banner');
+  if(banner) banner.style.display='none';
+  toast('Draft discarded','info');
+}
+function clearDraftBanner(){
+  const banner=document.getElementById('draft-banner');
+  if(banner) banner.style.display='none';
+}
 function newEstimate(){
   currentEstPinId = null;
   document.getElementById('e-owner').value = '';
   document.getElementById('e-addr').value = '';
   document.getElementById('e-email').value = '';
+  window._damagePhotos = [];
   clearHomePhoto(); // always wipe photo when starting fresh
+  clearDraftBanner();
   hideEquityBadge();
   structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'1.15',mat:'1.3',complexity:'1.12',pts:null}];
   renderStructures(); calcP(); updatePreview();
@@ -1575,6 +1641,9 @@ function saveEstimateNow(){
   // Refresh the map marker so it shows updated status and estimate badge
   if(markers[currentEstPinId] && map){ map.removeLayer(markers[currentEstPinId]); delete markers[currentEstPinId]; }
   addMarker(pin);
+  // Clear draft after official save
+  try{ localStorage.removeItem('biddrop_draft_'+currentEstPinId); }catch(e){}
+  clearDraftBanner();
   save();
   addAct('Estimate saved for <strong>'+escHtml(pin.address||'')+'</strong> — <strong>$'+total.toLocaleString()+'</strong>','bid_sent');
   toast('✅ Estimate saved!','success');
@@ -2415,12 +2484,22 @@ function renderPinList(){
   }
   el.innerHTML=list.map(p=>{
     const pid=p.id;
-    return '<div class="pc" onclick="flyTo(\''+pid+'\')">'+(p.damage_photos&&p.damage_photos.length?'<div style="display:flex;gap:2px;">'+p.damage_photos.slice(0,3).map(src=>'<img src="'+src+'" style="flex:1;height:80px;object-fit:cover;border-radius:6px 6px 0 0;display:block;" onerror="this.style.display=\'none\'">').join('')+'</div>':p.photo_url?'<img src="'+p.photo_url+'" style="width:100%;height:90px;object-fit:cover;border-radius:6px 6px 0 0;display:block;" onerror="this.style.display=\'none\'">':'')+'<div class="pc-top"><div class="pc-addr">'+escHtml(p.address)+'</div><div class="sdot" style="background:'+sColor(p.status)+';">'
-+'</div></div>'+'<div class="pc-meta"><span>'+timeAgo(p.at)+'</span>'+(p.rep?'<span>· '+escHtml(p.rep)+'</span>':'')+'</div>'+(p.notes?'<div class="pc-note">'+
-'"'+escHtml(p.notes)+'"</div>':'')+'<div class="pc-acts">'+'<button class="btn-xs pr" onclick="event.stopPropagation();goEstFromPin(\''+pid+'\')">'+'📋 Estimate</button>'+'<button class="btn-xs" onclick="event.stopPropagation();openFollowUp(\''+pid+'\')">'+'✉️ Follow Up</button>'+'<button class="btn-xs" onclick="event.stopPropagation();cycleStatus(\''+pid+'\')">'+'↻ Status</button>'+'<button class="btn-xs danger" onclick="event.stopPropagation();rmPin(\''+pid+'\')">'+'✕</button>'+'</div></div>';
+    const dmgThumb = p.damage_photos&&p.damage_photos.length ? '<img src="'+p.damage_photos[0]+'" style="width:36px;height:36px;object-fit:cover;border-radius:5px;flex-shrink:0;" onerror="this.style.display=\'none\'">':p.photo_url?'<img src="'+p.photo_url+'" style="width:36px;height:36px;object-fit:cover;border-radius:5px;flex-shrink:0;" onerror="this.style.display=\'none\'">':'';
+    const dmgCount = p.damage_photos&&p.damage_photos.length?'<span style="font-size:10px;color:var(--accent);font-weight:700;">📷'+p.damage_photos.length+'</span>':'';
+    return '<div class="pc" id="pc-'+pid+'" onclick="togglePinCard(\''+pid+'\')">'+'<div class="pc-summary">'+dmgThumb+'<div style="flex:1;min-width:0;"><div class="pc-addr">'+escHtml(p.address)+'</div><div class="pc-meta"><span>'+timeAgo(p.at)+'</span>'+(p.rep?'<span>· '+escHtml(p.rep)+'</span>':'')+'</div></div>'+dmgCount+'<div class="sdot" style="background:'+sColor(p.status)+';margin-top:0;"></div><span class="pc-chevron">›</span></div>'+'<div class="pc-body">'+(p.notes?'<div class="pc-note" style="margin-bottom:8px;">"'+escHtml(p.notes)+'"</div>':'')+'<div class="pc-acts">'+'<button class="btn-xs pr" onclick="event.stopPropagation();goEstFromPin(\''+pid+'\')">'+'📋 Estimate</button>'+'<button class="btn-xs" onclick="event.stopPropagation();openFollowUp(\''+pid+'\')">'+'✉️ Follow Up</button>'+'<button class="btn-xs" onclick="event.stopPropagation();cycleStatus(\''+pid+'\')">'+'↻ Status</button>'+'<button class="btn-xs danger" onclick="event.stopPropagation();rmPin(\''+pid+'\')">'+'✕</button>'+'</div></div></div>';
   }).join('');
 }
 
+function togglePinCard(pid){
+  const el=document.getElementById('pc-'+pid);
+  if(!el)return;
+  const wasOpen=el.classList.contains('open');
+  // Close all open cards
+  document.querySelectorAll('.pc.open').forEach(c=>c.classList.remove('open'));
+  if(!wasOpen){el.classList.add('open');}
+  // Also fly to pin
+  flyTo(pid);
+}
 function flyTo(id){
   const p=S.pins.find(x=>x.id===id);
   if(p&&map){map.flyTo([p.lat,p.lng],17,{duration:.7});markers[id]&&markers[id].openPopup();}
@@ -2572,32 +2651,34 @@ function goEstFromPin(id){
   }
   // Load damage photos from pin (prefer pin.damage_photos, fall back to estimate's damage_photos)
   const dmgSrcs4 = p.damage_photos || _estDmgPhotos || [];
-  if(dmgSrcs4.length){
-    window._homePhotoData = dmgSrcs4[0];
-    window._damagePhotos = [...dmgSrcs4];
-    const prev = document.getElementById('home-photo-preview');
-    if(prev) prev.innerHTML = '<img src="'+dmgSrcs4[0]+'" style="width:100%;height:100%;object-fit:cover;">';
-    const clr = document.getElementById('clear-photo-btn');
-    if(clr) clr.style.display = 'block';
-  } else if(p.photo_url){
+  window._damagePhotos = dmgSrcs4.length ? [...dmgSrcs4] : [];
+  // Home photo is separate from damage photos — load from photo_url only
+  if(p.photo_url){
     window._homePhotoData = p.photo_url;
-    window._damagePhotos = [p.photo_url];
     const prev = document.getElementById('home-photo-preview');
     if(prev) prev.innerHTML = '<img src="'+p.photo_url+'" style="width:100%;height:100%;object-fit:cover;">';
     const clr = document.getElementById('clear-photo-btn');
     if(clr) clr.style.display = 'block';
+  } else {
+    window._homePhotoData = null;
+    const prev = document.getElementById('home-photo-preview');
+    if(prev) prev.innerHTML = 'No photo';
+    const clr = document.getElementById('clear-photo-btn');
+    if(clr) clr.style.display = 'none';
   }
   goTab('estimate');
   document.getElementById('e-addr').value=p.address||'';
   // Update picker to show this pin as selected
   const sel = document.getElementById('est-pin-picker');
   if(sel) sel.value = id;
+  // Try to restore draft for this pin
+  const hadDraft = restoreDraft(id);
+  if(!hadDraft) clearDraftBanner();
   renderStructures();calcP();updatePreview();
   toast('📋 '+p.address.split(',')[0],'info');
 }
-
 // ═══════════════════════════════
-//  STRUCTURES ENGINE
+//  STRUCTURES ENGINEE
 // ═══════════════════════════════
 function addStructure(sqft, name, pts){
   const id='s'+Date.now();
@@ -2792,9 +2873,9 @@ function calcP(){
     const el=document.getElementById('sp-'+s.id);
     if(el)el.textContent='$'+calcStructPrice(s).toLocaleString();
   });
+  if(typeof scheduleDraftSave==='function') scheduleDraftSave();
   return grand;
 }
-
 // ═══════════════════════════════
 //  MAILER PREVIEW
 // ═══════════════════════════════
@@ -2836,7 +2917,7 @@ function updatePreview(){
     ? '<img src="'+window._homePhotoData+'" style="width:100%;max-height:200px;object-fit:cover;border-radius:6px;margin-bottom:16px;display:block;">'
     : '';
   // Damage photos section for estimate/PDF
-  const dmgPhotos = window._damagePhotos || (window._homePhotoData ? [window._homePhotoData] : []);
+  const dmgPhotos = (window._damagePhotos && window._damagePhotos.length) ? window._damagePhotos : [];
   // Collect all per-structure photos
   const structPhotoBlocks = structures.filter(s=>s.photos&&s.photos.length).map((s,si)=>{
     const cols = Math.min(s.photos.length, 3);
@@ -3480,7 +3561,7 @@ function loadEstimateIntoEstimator(estId){
   const photoSrc = est.photo_data || est.photo_url || null;
   if(photoSrc){
     window._homePhotoData = photoSrc;
-    window._damagePhotos = est.damage_photos || (photoSrc ? [photoSrc] : []);
+    window._damagePhotos = est.damage_photos || [];
     const prev = document.getElementById('home-photo-preview');
     if(prev) prev.innerHTML = '<img src="'+photoSrc+'" style="width:100%;height:100%;object-fit:cover;">';
     const clr = document.getElementById('clear-photo-btn');
@@ -5170,12 +5251,21 @@ async function sbSavePin(pin){
       window._homePhotoData = null; // clear after upload
     }
   }
+  // Store damage_photos inside the estimate JSONB so they persist across reloads
+  if(pin.damage_photos && pin.damage_photos.length){
+    const existingEst = pin.estimate ? (typeof pin.estimate==='string'?JSON.parse(pin.estimate):pin.estimate) : {};
+    if(!existingEst.damage_photos || !existingEst.damage_photos.length){
+      existingEst.damage_photos = [...pin.damage_photos];
+      pin.estimate = existingEst;
+    }
+  }
   const {error} = await sb.from('pins').upsert({
     id: pin.id, account_id: currentAccount.id,
     created_by: currentUser.id, rep_name: pin.rep,
     lat: pin.lat, lng: pin.lng, address: pin.address,
     status: pin.status, notes: pin.notes, pts: pin.pts||null,
     photo_url: photoUrl,
+    estimate: pin.estimate || null,
     updated_at: new Date().toISOString()
   });
   if(error) console.error('Pin save error:', error);
@@ -5196,16 +5286,20 @@ async function loadPinsFromSupabase(){
   if(!currentAccount) return;
   const {data, error} = await sb.from('pins').select('*').eq('account_id', currentAccount.id).order('created_at', {ascending:false});
   if(error){console.error('Load pins error:', error); return;}
-  S.pins = (data||[]).map(row=>({
-    id: row.id, lat: parseFloat(row.lat), lng: parseFloat(row.lng),
-    address: row.address||'', status: row.status||'needs_roof',
-    notes: row.notes||'', rep: row.rep_name||'Unknown',
-    pts: row.pts||null, at: row.created_at,
-    photo_url: row.photo_url||null,
-    estimate: row.estimate||null,
-    ghlContactId: row.ghl_contact_id||null,
-    ghlOpportunityId: row.ghl_opportunity_id||null
-  }));
+  S.pins = (data||[]).map(row=>{
+    const est = row.estimate ? (typeof row.estimate==='string'?JSON.parse(row.estimate):row.estimate) : null;
+    return {
+      id: row.id, lat: parseFloat(row.lat), lng: parseFloat(row.lng),
+      address: row.address||'', status: row.status||'needs_roof',
+      notes: row.notes||'', rep: row.rep_name||'Unknown',
+      pts: row.pts||null, at: row.created_at,
+      photo_url: row.photo_url||null,
+      estimate: row.estimate||null,
+      damage_photos: (est && est.damage_photos && est.damage_photos.length) ? est.damage_photos : null,
+      ghlContactId: row.ghl_contact_id||null,
+      ghlOpportunityId: row.ghl_opportunity_id||null
+    };
+  });
   // Rebuild S.estimates from pin.estimate data loaded from DB
   S.estimates = [];
   S.pins.forEach(function(pin){
