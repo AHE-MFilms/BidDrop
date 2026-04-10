@@ -1,0 +1,41 @@
+{
+  "name": "BidDrop — Roofing Canvass",
+  "short_name": "BidDrop",
+  "description": "Roofing canvass, estimate, and lead management tool for field reps.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f1117",
+  "theme_color": "#F25C05",
+  "categories": ["business", "productivity"],
+  "icons": [
+    { "src": "icon-16.png",  "sizes": "16x16",   "type": "image/png" },
+    { "src": "icon-32.png",  "sizes": "32x32",   "type": "image/png" },
+    { "src": "icon-48.png",  "sizes": "48x48",   "type": "image/png" },
+    { "src": "icon-72.png",  "sizes": "72x72",   "type": "image/png" },
+    { "src": "icon-96.png",  "sizes": "96x96",   "type": "image/png" },
+    { "src": "icon-128.png", "sizes": "128x128", "type": "image/png" },
+    { "src": "icon-144.png", "sizes": "144x144", "type": "image/png" },
+    { "src": "icon-152.png", "sizes": "152x152", "type": "image/png" },
+    { "src": "icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Canvas Map",
+      "short_name": "Map",
+      "description": "Open the canvass map",
+      "url": "/?tab=map",
+      "icons": [{ "src": "icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Estimator",
+      "short_name": "Estimate",
+      "description": "Build a new estimate",
+      "url": "/?tab=estimator",
+      "icons": [{ "src": "icon-96.png", "sizes": "96x96" }]
+    }
+  ]
+}

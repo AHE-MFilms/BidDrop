@@ -5,6 +5,19 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BidDrop — Roofing Canvass Platform</title>
+<!-- PWA Manifest & Icons -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#F25C05">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BidDrop">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<link rel="apple-touch-icon" sizes="152x152" href="/icon-152.png">
+<link rel="apple-touch-icon" sizes="144x144" href="/icon-144.png">
+<link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/icon-16.png">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css">
@@ -7079,6 +7092,31 @@ function stormDropPin(lat, lon, locationHint){
   </div>
 </div>
 
+
+<!-- PWA Service Worker Registration -->
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => {
+        console.log('[BidDrop PWA] Service worker registered:', reg.scope);
+        // Check for updates every time the app is opened
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          newWorker.addEventListener('statechange', () => {
+            if(newWorker.state === 'installed' && navigator.serviceWorker.controller){
+              // New version available — show a subtle toast
+              if(typeof toast === 'function'){
+                toast('\uD83D\uDD04 Update available — refresh to get the latest version', 'info', 8000);
+              }
+            }
+          });
+        });
+      })
+      .catch(err => console.warn('[BidDrop PWA] SW registration failed:', err));
+  });
+}
+</script>
 
 </body>
 </html>
