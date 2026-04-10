@@ -1056,7 +1056,9 @@ tr:hover td{background:var(--card);}
       <div class="fg"><label class="fl">Term (months)</label>
         <select class="fs" id="s-fin-term">
           <option value="36">36 months (3 yr)</option>
+          <option value="48">48 months (4 yr)</option>
           <option value="60" selected>60 months (5 yr)</option>
+          <option value="72">72 months (6 yr)</option>
           <option value="84">84 months (7 yr)</option>
           <option value="120">120 months (10 yr)</option>
           <option value="180">180 months (15 yr)</option>
@@ -1208,6 +1210,11 @@ tr:hover td{background:var(--card);}
       </div>
     </div>
 
+    <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:16px 0 10px;">Follow-Up Message Templates</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:8px 12px;font-size:11px;color:var(--muted);margin-bottom:10px;">Use <code style="background:var(--card2);padding:1px 5px;border-radius:3px;color:var(--accent);">{name}</code> <code style="background:var(--card2);padding:1px 5px;border-radius:3px;color:var(--accent);">{rep}</code> <code style="background:var(--card2);padding:1px 5px;border-radius:3px;color:var(--accent);">{company}</code> <code style="background:var(--card2);padding:1px 5px;border-radius:3px;color:var(--accent);">{address}</code> as dynamic tokens.</div>
+    <div class="fg"><label class="fl">SMS Template</label><textarea class="fi" id="s-ghl-sms-tpl" rows="3" style="resize:vertical;" placeholder="Hi {name}! This is {rep} from {company}. Following up about your roof at {address}. Free inspection available — reply YES to schedule!"></textarea></div>
+    <div class="fg"><label class="fl">Email Template</label><textarea class="fi" id="s-ghl-email-tpl" rows="5" style="resize:vertical;" placeholder="Hi {name},\n\nI hope this message finds you well! I'm {rep} from {company}. I recently visited your property at {address} and noticed your roof may need attention.\n\nWe're offering free storm damage inspections this week. Would you like to schedule a time?\n\nBest,\n{rep}\n{company}"></textarea></div>
+
     <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:16px 0 10px;">Property Owner Lookup (RentCast)</div>
     <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:11px;color:var(--mid);margin-bottom:10px;">
       🏠 Auto-fills the homeowner name when a pinned address is loaded. Get a free key at <a href="https://app.rentcast.io/app/api-access" target="_blank" style="color:var(--accent);">rentcast.io</a> (50 free lookups/mo, then ~$0.04 each).
@@ -1317,6 +1324,8 @@ const DEFAULTS = {
   costSkylight:375, costChimney:295, costGutter:9,
   overhead:15, margin:20, brandColor:'#F25C05', lobKey:'',
   ghlApiKey:'pit-08e80077-de2c-42c9-ac9b-867c4e48ea70', ghlLocationId:'gz85VU6SxGXS7lqHAQGx', ghlPipelineId:'bxskBIBdbklHry0B63qx', ghlStageId:'',
+  ghlSmsTpl:'Hi {name}! This is {rep} from {company}. Following up about your roof at {address}. Free inspection available this week — reply YES to schedule!',
+  ghlEmailTpl:'Hi {name},\n\nI hope this message finds you well! I\'m {rep} from {company}. I recently visited your property at {address} and noticed your roof may need attention.\n\nWe\'re offering free storm damage inspections this week. Would you like to schedule a time?\n\nBest,\n{rep}\n{company}',
   // Letter & pitch
   repName:'', licenseNum:'', yearsInBusiness:'5+', warrantyYears:'10',
   hookLetter:'Most homeowners are tired of door-knockers, pushy salespeople, and high prices when it comes to getting a new roof. I won\'t bother you by knocking on the door — instead, I skip the hassle and lead with my price.',
@@ -1409,6 +1418,7 @@ async function syncAccountToSupabase(){
     cost_gutter: cfg.costGutter, overhead: cfg.overhead, margin: cfg.margin,
     ghl_api_key: cfg.ghlApiKey, ghl_location_id: cfg.ghlLocationId,
     ghl_pipeline_id: cfg.ghlPipelineId, ghl_stage_id: cfg.ghlStageId,
+    ghl_sms_tpl: cfg.ghlSmsTpl||null, ghl_email_tpl: cfg.ghlEmailTpl||null,
     lob_key: cfg.lobKey, rentcast_key: cfg.rentcastKey||'', logo_data: cfg.logoData,
     headshot: cfg.headshot, headshot_pos: cfg.headshotPos,
     review1: cfg.review1, review2: cfg.review2
@@ -1461,6 +1471,8 @@ function accountRowToCfg(row){
     ghlLocationId: row.ghl_location_id||'',
     ghlPipelineId: row.ghl_pipeline_id||'',
     ghlStageId: row.ghl_stage_id||'',
+    ghlSmsTpl: row.ghl_sms_tpl||DEFAULTS.ghlSmsTpl,
+    ghlEmailTpl: row.ghl_email_tpl||DEFAULTS.ghlEmailTpl,
     lobKey: row.lob_key||'',
     rentcastKey: row.rentcast_key||'',
     logoData: row.logo_data||null,
@@ -1686,11 +1698,25 @@ function saveEstimateNow(){
   const editingId = window._editingEstimateId || null;
   window._editingEstimateId = null;
   if(editingId){
+    // Editing an existing estimate: replace it in-place but archive the old one as a revision
     const idx = (S.estimates||[]).findIndex(e=>e.id===editingId);
-    if(idx>=0){ S.estimates[idx] = estRecord; }
-    else { S.estimates.unshift(estRecord); }
+    if(idx>=0){
+      const oldRec = S.estimates[idx];
+      // Bump version and archive old as a revision sibling
+      const prevVersion = oldRec.version||1;
+      const archivedRev = {...oldRec, id:'rev_'+oldRec.id+'_v'+prevVersion, isRevision:true, revisedAt:new Date().toISOString()};
+      estRecord.version = prevVersion + 1;
+      S.estimates.splice(idx, 1, estRecord);
+      S.estimates.push(archivedRev);
+    } else {
+      S.estimates.unshift(estRecord);
+    }
   } else {
-    S.estimates = (S.estimates||[]).filter(e=>e.pinId !== currentEstPinId);
+    // New save: mark existing active estimate for this pin as a revision
+    const existing = (S.estimates||[]).filter(e=>e.pinId===currentEstPinId && !e.isRevision && !e.deletedAt);
+    existing.forEach(e=>{ e.isRevision=true; e.revisedAt=new Date().toISOString(); });
+    const prevMax = existing.reduce((m,e)=>Math.max(m,e.version||1),0);
+    estRecord.version = prevMax + 1;
     S.estimates.unshift(estRecord);
   }
   pin.estimate = { id: estRecord.id, owner, email, total, structures: estRecord.structures, rep: estRecord.rep, savedAt: estRecord.savedAt, damage_photos: estRecord.damage_photos||null };
@@ -2720,23 +2746,30 @@ function openFollowUp(pinId){
   const rep = p.rep||currentProfile?.name||'';
   const company = S.cfg.companyName||'our company';
   const addr = (p.address||'').split(',')[0];
-  document.getElementById('fu-message').value =
-    'Hi '+(est.owner||'there')+', this is '+rep+' from '+company+'. I stopped by your home at '+addr+' regarding your roof. I\'d love to schedule a free inspection. Give me a call or reply to this message!';
+  const initTpl = S.cfg.ghlSmsTpl || DEFAULTS.ghlSmsTpl;
+  document.getElementById('fu-message').value = applyFuTokens(initTpl, est.owner||'there', rep, company, addr);
   openM('m-follow-up');
+}
+function applyFuTokens(tpl, name, rep, company, addr){
+  return tpl
+    .replace(/\{name\}/g, name)
+    .replace(/\{rep\}/g, rep)
+    .replace(/\{company\}/g, company)
+    .replace(/\{address\}/g, addr);
 }
 function insertFuTemplate(type){
   const name = document.getElementById('fu-name').value||'there';
-  const rep = currentProfile?.name||'your rep';
+  const rep = currentProfile?.name || S.cfg.repName || 'your rep';
   const company = S.cfg.companyName||'our company';
   const pinId = document.getElementById('fu-pin-id').value;
   const p = S.pins.find(x=>x.id===pinId)||{};
   const addr = (p.address||'').split(',')[0];
   if(type==='sms'){
-    document.getElementById('fu-message').value =
-      'Hi '+name+'! This is '+rep+' from '+company+'. Following up about your roof at '+addr+'. Free inspection available this week — reply YES to schedule!';
+    const tpl = S.cfg.ghlSmsTpl || DEFAULTS.ghlSmsTpl;
+    document.getElementById('fu-message').value = applyFuTokens(tpl, name, rep, company, addr);
   } else {
-    document.getElementById('fu-message').value =
-      'Hi '+name+',\n\nI hope this message finds you well! I\'m '+rep+' from '+company+'. I recently visited your property at '+addr+' and noticed your roof may need attention.\n\nWe\'re offering free storm damage inspections this week. Would you like to schedule a time?\n\nBest,\n'+rep+'\n'+company;
+    const tpl = S.cfg.ghlEmailTpl || DEFAULTS.ghlEmailTpl;
+    document.getElementById('fu-message').value = applyFuTokens(tpl, name, rep, company, addr);
   }
 }
 async function sendFollowUp(){
@@ -3587,6 +3620,7 @@ function renderEstimatesTab(){
   const now = Date.now();
   const thirtyDays = 30*24*60*60*1000;
   let list = allEsts.filter(e=>{
+    if(e.isRevision) return false; // revisions shown only in history modal
     if(_estView === 'trash'){
       if(!e.deletedAt) return false;
       if(now - new Date(e.deletedAt).getTime() > thirtyDays) return false;
@@ -3622,18 +3656,25 @@ function renderEstimatesTab(){
     const actionBtns = _estView === 'trash'
       ? `<button onclick="restoreEstimate('${eid}')" style="background:#1a7f4b;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#8629; Restore</button>`
         +`<button onclick="hardDeleteEstimate('${eid}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">&#10005; Purge</button>`
-      : `<button onclick="loadEstimateIntoEstimator('${eid}')" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#9999; Edit</button>`
-        +`<button onclick="sendEstimateViaGHL('${eid}')" style="background:#1a7f4b;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#9889; GHL</button>`
-        +`<button onclick="addEstimateToMailQueue('${eid}')" style="background:var(--accent);border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128228; Mail Queue</button>`
-        +`<button onclick="openDripModal('${eid}')" style="background:#7C3AED;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128336; Drip</button>`
-        +`<button onclick="printEstimate('${eid}')" style="background:#1f3d68;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128424; Print</button>`
-        +`<button onclick="deleteEstimate('${eid}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">&#10005;</button>`
+      : (()=>{
+          const revCount = (S.estimates||[]).filter(e=>e.pinId===est.pinId && e.isRevision).length;
+          const histBtn = revCount > 0
+            ? `<button onclick="openEstHistory('${eid}')" style="background:#374151;border:none;border-radius:6px;padding:6px 10px;color:#9CA3AF;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128221; History (${revCount})</button>`
+            : '';
+          return `<button onclick="loadEstimateIntoEstimator('${eid}')" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#9999; Edit</button>`
+            +`<button onclick="sendEstimateViaGHL('${eid}')" style="background:#1a7f4b;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#9889; GHL</button>`
+            +`<button onclick="addEstimateToMailQueue('${eid}')" style="background:var(--accent);border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128228; Mail Queue</button>`
+            +`<button onclick="openDripModal('${eid}')" style="background:#7C3AED;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128336; Drip</button>`
+            +`<button onclick="printEstimate('${eid}')" style="background:#1f3d68;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128424; Print</button>`
+            +histBtn
+            +`<button onclick="deleteEstimate('${eid}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">&#10005;</button>`;
+        })()
       return '<tr style="border-bottom:1px solid var(--border);">'+'<td style="padding:10px 8px;"><input type="checkbox" class="est-row-cb" data-id="'+eid+'" onchange="updateEstimateSelectionBar()" style="cursor:pointer;"></td>'
       +'<td style="padding:12px;font-size:14px;font-weight:600;color:var(--text);">'+escHtml(shortAddr)+'<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+escHtml(addr.split(',').slice(1).join(',').trim())+'</div></td>'
       +'<td style="padding:12px;font-size:13px;color:var(--mid);">'+escHtml(owner)+'</td>'
       +'<td style="padding:12px;font-size:12px;color:var(--muted);">'+escHtml(rep)+'</td>'
       +'<td style="padding:12px;text-align:right;font-family:var(--font-h);font-size:16px;font-weight:700;color:var(--accent);">'+total+'</td>'
-      +'<td style="padding:12px;font-size:12px;color:var(--muted);">'+date+'<div style="margin-top:4px;">'+sentBadge+'</div></td>'
+      +'<td style="padding:12px;font-size:12px;color:var(--muted);">'+date+(est.version&&est.version>1?'<div style="margin-top:3px;"><span style="background:rgba(249,115,22,.15);color:#F97316;border:1px solid rgba(249,115,22,.4);border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;">v'+est.version+'</span></div>':'')+'<div style="margin-top:4px;">'+sentBadge+'</div></td>'
       +'<td style="padding:12px;text-align:center;">'
         +'<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">'+actionBtns+'</div>'
       +'</td>'
@@ -3661,6 +3702,80 @@ function updateEstimateSelectionBar(){
   if(bar) bar.style.display = cbs.length ? 'flex' : 'none';
   if(cnt) cnt.textContent = cbs.length + ' selected';
   if(all){ all.indeterminate = cbs.length>0 && cbs.length<total; if(cbs.length===total && total>0) all.checked=true; }
+}
+
+// ── Estimate revision history ────────────────────────────────────────────
+function openEstHistory(estId){
+  const activeEst = (S.estimates||[]).find(e=>e.id===estId);
+  if(!activeEst) return;
+  const revisions = (S.estimates||[])
+    .filter(e=>e.pinId===activeEst.pinId && e.isRevision)
+    .sort((a,b)=>new Date(b.savedAt)-new Date(a.savedAt));
+  if(!revisions.length){ toast('No previous versions found for this estimate','info'); return; }
+  // Build modal
+  let existing = document.getElementById('m-est-history');
+  if(existing) existing.remove();
+  const rows = revisions.map(r=>{
+    const d = r.savedAt ? new Date(r.savedAt).toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}) : '—';
+    const t = '$'+(r.total||0).toLocaleString();
+    const v = r.version ? 'v'+r.version : '—';
+    const structs = (r.structures||[]).map(s=>escHtml(s.name||s.type||'Structure')+' ('+escHtml(s.roofType||'')+')').join(', ');
+    const rid = escHtml(r.id);
+    return '<tr style="border-bottom:1px solid var(--border);">'  
+      +'<td style="padding:10px 12px;font-size:12px;color:var(--muted);">'+d+'</td>'
+      +'<td style="padding:10px 12px;text-align:center;"><span style="background:rgba(249,115,22,.15);color:#F97316;border:1px solid rgba(249,115,22,.4);border-radius:4px;padding:2px 7px;font-size:11px;font-weight:700;">'+v+'</span></td>'
+      +'<td style="padding:10px 12px;text-align:right;font-family:var(--font-h);font-size:15px;font-weight:700;color:var(--accent);">'+t+'</td>'
+      +'<td style="padding:10px 12px;font-size:11px;color:var(--muted);">'+structs+'</td>'
+      +'<td style="padding:10px 12px;text-align:center;">'
+        +'<button onclick="restoreRevision(\''+rid+'\',\''+escHtml(estId)+'\')" style="background:#1a7f4b;border:none;border-radius:6px;padding:5px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#8629; Restore</button>'
+      +'</td>'
+      +'</tr>';
+  }).join('');
+  const modal = document.createElement('div');
+  modal.className='overlay'; modal.id='m-est-history'; modal.dataset.dynamic='1';
+  modal.addEventListener('click',e=>{if(e.target===modal)closeM('m-est-history');});
+  modal.innerHTML='<div class="modal" style="max-width:700px;">'
+    +'<div class="modal-title">&#128221; Estimate Revision History — '+escHtml((activeEst.addr||'').split(',')[0])+'</div>'
+    +'<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Showing '+revisions.length+' previous version'+(revisions.length!==1?'s':'')+'. Restoring a revision will replace the current active estimate.</div>'
+    +'<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;">'
+    +'<thead><tr style="border-bottom:2px solid var(--border);">'
+    +'<th style="padding:8px 12px;text-align:left;font-size:11px;color:var(--muted);font-weight:700;">Saved</th>'
+    +'<th style="padding:8px 12px;text-align:center;font-size:11px;color:var(--muted);font-weight:700;">Ver</th>'
+    +'<th style="padding:8px 12px;text-align:right;font-size:11px;color:var(--muted);font-weight:700;">Total</th>'
+    +'<th style="padding:8px 12px;text-align:left;font-size:11px;color:var(--muted);font-weight:700;">Structures</th>'
+    +'<th style="padding:8px 12px;"></th>'
+    +'</tr></thead>'
+    +'<tbody>'+rows+'</tbody></table></div>'
+    +'<div class="modal-footer"><button class="btn-cancel" onclick="closeM(\'m-est-history\')">Close</button></div>'
+    +'</div>';
+  document.body.appendChild(modal);
+  modal.style.display='flex';
+}
+function restoreRevision(revId, activeEstId){
+  if(!confirm('Restore this version? The current estimate will be archived as a revision.')) return;
+  const rev = (S.estimates||[]).find(e=>e.id===revId);
+  const active = (S.estimates||[]).find(e=>e.id===activeEstId);
+  if(!rev || !active) return;
+  // Archive current active as a revision
+  const curVersion = active.version||1;
+  const archived = {...active, id:'rev_'+active.id+'_v'+curVersion, isRevision:true, revisedAt:new Date().toISOString()};
+  // Promote revision to active
+  const restoredVersion = rev.version||1;
+  const restored = {...rev, id:activeEstId, isRevision:false, version:curVersion+1, savedAt:new Date().toISOString(), revisedAt:undefined};
+  // Remove old revision from list, replace active, add archived current
+  const idx = (S.estimates||[]).findIndex(e=>e.id===activeEstId);
+  if(idx>=0) S.estimates.splice(idx,1,restored);
+  S.estimates = (S.estimates||[]).filter(e=>e.id!==revId);
+  S.estimates.push(archived);
+  // Sync pin.estimate
+  const pin = (S.pins||[]).find(p=>p.id===restored.pinId);
+  if(pin){
+    pin.estimate = {id:restored.id,owner:restored.owner,email:restored.email,total:restored.total,structures:restored.structures,rep:restored.rep,savedAt:restored.savedAt};
+    pin.at_est = restored.savedAt;
+    if(sb) sb.from('pins').update({estimate:pin.estimate}).eq('id',pin.id).then(()=>{});
+  }
+  save(); closeM('m-est-history'); renderEstimatesTab();
+  toast('&#10003; Revision restored as v'+(curVersion+1),'success');
 }
 
 // ── Soft delete (move to trash) ───────────────────────────────────────────
@@ -4744,6 +4859,8 @@ function openSettings(){
   document.getElementById('s-ghl-key').value=c.ghlApiKey||'';
   document.getElementById('s-ghl-loc').value=c.ghlLocationId||'';
   document.getElementById('s-ghl-pipe').value=c.ghlPipelineId||'';
+  document.getElementById('s-ghl-sms-tpl').value=c.ghlSmsTpl||DEFAULTS.ghlSmsTpl;
+  document.getElementById('s-ghl-email-tpl').value=c.ghlEmailTpl||DEFAULTS.ghlEmailTpl;
   // Restore stage dropdown — if stages already fetched, keep selection
   const stgSel=document.getElementById('s-ghl-stage');
   if(stgSel){
@@ -4817,6 +4934,8 @@ function saveSettings(){
     ghlLocationId:v('s-ghl-loc'),
     ghlPipelineId:v('s-ghl-pipe'),
     ghlStageId:document.getElementById('s-ghl-stage').value||'',
+    ghlSmsTpl:v('s-ghl-sms-tpl')||DEFAULTS.ghlSmsTpl,
+    ghlEmailTpl:v('s-ghl-email-tpl')||DEFAULTS.ghlEmailTpl,
     lobKey: isSuperAdmin() ? v('s-lob') : (S.cfg.lobKey||''),
     rentcastKey: v('s-rentcast-key') || S.cfg.rentcastKey || '',
     mailerCostPerPiece: isSuperAdmin() ? (v('s-mailer-cost')||'0.85') : (S.cfg.mailerCostPerPiece||'0.85'),
@@ -4864,7 +4983,13 @@ function hexToRgba(hex,a){
 //  MODAL / TOAST / UTILS
 // ═══════════════════════════════
 function openM(id){document.getElementById(id).style.display='flex';}
-function closeM(id){document.getElementById(id).style.display='none';}
+function closeM(id){
+  const el=document.getElementById(id);
+  if(!el) return;
+  // Dynamically-created modals (e.g. history) are removed from DOM; static ones just hidden
+  if(el.dataset.dynamic==='1') el.remove();
+  else el.style.display='none';
+}
 
 document.querySelectorAll('.overlay').forEach(o=>{
   o.addEventListener('click',e=>{if(e.target===o)closeM(o.id);});
