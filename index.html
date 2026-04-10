@@ -115,7 +115,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 .btn-sec:hover{border-color:var(--accent);color:var(--text);}
 /* ── MAILER MULTI-PAGE ───────────────────────────── */
 .mailer{width:100%;max-width:680px;font-family:'Georgia',serif;color:#1a1a1a;display:flex;flex-direction:column;gap:28px;}
-.ml-page{background:#fff;border-radius:3px;box-shadow:0 20px 60px rgba(0,0,0,.55);overflow:hidden;}
+.ml-page{background:#fff;border-radius:3px;box-shadow:0 20px 60px rgba(0,0,0,.55);overflow:hidden;width:7.5in;min-height:10in;max-height:10in;box-sizing:border-box;}
 .ml-hdr{padding:14px 24px;display:flex;justify-content:space-between;align-items:flex-start;}
 .ml-co-name{font-family:var(--font-h);font-size:22px;font-weight:700;letter-spacing:1px;}
 .ml-co-info{font-size:10px;color:#666;margin-top:3px;line-height:1.6;}
@@ -314,7 +314,7 @@ tr:hover td{background:var(--card);}
 /* ── PRINT / LOB LETTER ──────────────────────── */
 @media print {
   @page { size: letter; margin: 0.5in; }
-  .ml-page { page-break-after: always; box-shadow: none !important; }
+  .ml-page { page-break-after: always; box-shadow: none !important; width: 7.5in !important; height: 10in !important; max-height: 10in !important; overflow: hidden !important; }
   .ml-page:last-child { page-break-after: avoid; }
 }
 .ml-page[data-page] { page-break-after: always; }
@@ -3933,7 +3933,7 @@ function printQueuePreview(){
   const w=window.open('','_blank');
   w.document.write('<html><head><title>Mailer Preview</title><style>'+
     'body{margin:0;padding:0;background:#fff;}'+
-    '@media print{@page{margin:0;}body{margin:0;}}'+
+    '@media print{@page{size:letter;margin:0.5in;}.ml-page{page-break-after:always;width:7.5in !important;height:10in !important;max-height:10in !important;overflow:hidden !important;box-shadow:none !important;}.ml-page:last-child{page-break-after:avoid;}}'+
     // Copy all styles from parent
     Array.from(document.styleSheets).map(function(ss){try{return Array.from(ss.cssRules).map(function(r){return r.cssText;}).join('\n');}catch(e){return '';}}).join('\n')+
     '</style></head><body>'+content.innerHTML+'</body></html>');
@@ -5060,7 +5060,7 @@ function printNow(){
   @page{size:letter;margin:0.5in;}
   body{background:#fff;font-family:'Barlow',sans-serif;}
   .mailer{max-width:7.5in;margin:0 auto;}
-  .ml-page{page-break-after:always;margin-bottom:0;}
+  .ml-page{page-break-after:always;margin-bottom:0;width:7.5in !important;height:10in !important;max-height:10in !important;overflow:hidden !important;box-shadow:none !important;}
   .ml-page:last-child{page-break-after:avoid;}
   ${getMailerStyles()}
 </style>
@@ -5114,7 +5114,7 @@ function printPreview(){
   body{background:#e5e5e5;font-family:'Barlow',sans-serif;}
   .preview-wrap{max-width:8.5in;margin:0 auto;padding:20px;}
   .preview-label{background:#333;color:#fff;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border-radius:4px 4px 0 0;display:inline-block;margin-top:16px;}
-  .page-sheet{background:#fff;width:7.5in;min-height:10in;margin:0 auto 0;padding:0;box-shadow:0 4px 24px rgba(0,0,0,.25);page-break-after:always;overflow:hidden;}
+  .page-sheet{background:#fff;width:7.5in;height:10in;max-height:10in;margin:0 auto 0;padding:0;box-shadow:0 4px 24px rgba(0,0,0,.25);page-break-after:always;overflow:hidden;}
   .page-sheet:last-child{page-break-after:avoid;}
   /* Inherit all mailer styles */
   ${getMailerStyles()}
