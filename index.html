@@ -570,6 +570,40 @@ tr:hover td{background:var(--card);}
       <button class="mtool-btn" id="btn-satellite" onclick="toggleSatellite()">🛰 Satellite</button>
       <button class="mtool-btn" id="btn-measure" onclick="toggleMeasure()">📐 Measure Roof</button>
       <button class="mtool-btn" id="btn-zones-toggle" onclick="toggleZonesOnMap()">🗂 Zones</button>
+      <button class="mtool-btn" id="btn-storm-toggle" onclick="toggleStormEvents()">⛈ Storm Events</button>
+    </div>
+    <!-- Storm Events Panel -->
+    <div id="storm-panel" style="display:none;position:absolute;top:12px;left:12px;z-index:1001;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;width:260px;box-shadow:0 4px 20px rgba(0,0,0,.5);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);">⛈ Hail Strike Map</div>
+        <button onclick="toggleStormEvents()" style="background:none;border:none;color:var(--mid);font-size:16px;cursor:pointer;line-height:1;">✕</button>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:10px;">Source: NOAA Storm Prediction Center · Free</div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:11px;font-weight:700;color:var(--mid);display:block;margin-bottom:5px;">DATE RANGE</label>
+        <select id="storm-days" onchange="loadStormEvents()" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:7px 10px;font-size:12px;">
+          <option value="1">Today</option>
+          <option value="3">Last 3 Days</option>
+          <option value="7" selected>Last 7 Days</option>
+          <option value="14">Last 14 Days</option>
+          <option value="30">Last 30 Days</option>
+        </select>
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:11px;font-weight:700;color:var(--mid);display:block;margin-bottom:5px;">MIN HAIL SIZE</label>
+        <select id="storm-min-size" onchange="renderStormMarkers()" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:7px 10px;font-size:12px;">
+          <option value="75">0.75"+ (Penny)</option>
+          <option value="100" selected>1.00"+ (Quarter)</option>
+          <option value="150">1.50"+ (Golf Ball)</option>
+          <option value="200">2.00"+ (Baseball+)</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:12px;font-size:11px;color:var(--mid);">
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#F59E0B;display:inline-block;"></span>Quarter</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#F97316;display:inline-block;"></span>Golf Ball</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#EF4444;display:inline-block;"></span>Baseball+</span>
+      </div>
+      <div id="storm-status" style="font-size:11px;color:var(--mid);text-align:center;min-height:16px;"></div>
     </div>
     <div class="measure-hud" id="measure-hud">
       <div class="mhud-lbl">Total Roof Area</div>
@@ -6801,6 +6835,179 @@ function cancelDrip(estId){
   delete est.drip;
   save(); renderEstimatesTab(); renderQueue();
   toast('Drip sequence cancelled','info');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  STORM EVENTS — NOAA SPC Hail Overlay
+// ═══════════════════════════════════════════════════════════════
+let _stormActive = false;
+let _stormData = [];       // all fetched hail reports
+let _stormLayers = [];     // Leaflet circle layers on map
+
+function toggleStormEvents(){
+  _stormActive = !_stormActive;
+  const btn = document.getElementById('btn-storm-toggle');
+  const panel = document.getElementById('storm-panel');
+  if(_stormActive){
+    btn.classList.add('active');
+    btn.textContent = '\u2715 Hide Storm Events';
+    panel.style.display = 'block';
+    // Position panel below the toolbar (4 buttons × ~42px each + gap)
+    const toolbar = document.querySelector('.map-toolbar');
+    if(toolbar){
+      const tbRect = toolbar.getBoundingClientRect();
+      const mapRect = document.getElementById('the-map').getBoundingClientRect();
+      panel.style.top = (tbRect.bottom - mapRect.top + 10) + 'px';
+    } else {
+      panel.style.top = '210px';
+    }
+    loadStormEvents();
+  } else {
+    btn.classList.remove('active');
+    btn.textContent = '\u26c8 Storm Events';
+    panel.style.display = 'none';
+    clearStormMarkers();
+    _stormData = [];
+  }
+}
+
+function clearStormMarkers(){
+  _stormLayers.forEach(l => map.removeLayer(l));
+  _stormLayers = [];
+}
+
+async function loadStormEvents(){
+  if(!_stormActive) return;
+  clearStormMarkers();
+  _stormData = [];
+  const days = parseInt(document.getElementById('storm-days').value) || 7;
+  const statusEl = document.getElementById('storm-status');
+  statusEl.textContent = 'Loading...';
+
+  // Build list of dates to fetch (YYMMDD format)
+  const dates = [];
+  for(let i = 0; i < days; i++){
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const yy = String(d.getFullYear()).slice(2);
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
+    dates.push(`${yy}${mm}${dd}`);
+  }
+
+  // Use a CORS proxy since NOAA doesn't allow direct browser fetches
+  const PROXY = 'https://corsproxy.io/?url=';
+  let total = 0;
+  let fetched = 0;
+
+  for(const dateStr of dates){
+    try{
+      const url = `https://www.spc.noaa.gov/climo/reports/${dateStr}_rpts_filtered_hail.csv`;
+      const res = await fetch(PROXY + encodeURIComponent(url));
+      if(!res.ok) continue;
+      const text = await res.text();
+      const lines = text.trim().split('\n');
+      // Skip header line
+      for(let i = 1; i < lines.length; i++){
+        const parts = lines[i].split(',');
+        if(parts.length < 7) continue;
+        const size = parseInt(parts[1]);  // hundredths of inches
+        const lat = parseFloat(parts[5]);
+        const lon = parseFloat(parts[6]);
+        if(isNaN(lat)||isNaN(lon)||isNaN(size)) continue;
+        _stormData.push({
+          date: dateStr,
+          time: parts[0],
+          size,
+          location: parts[2] ? parts[2].trim() : '',
+          county: parts[3] ? parts[3].trim() : '',
+          state: parts[4] ? parts[4].trim() : '',
+          lat, lon,
+          comment: parts.slice(7).join(',').trim()
+        });
+        total++;
+      }
+      fetched++;
+    } catch(e){ /* skip failed dates */ }
+  }
+
+  renderStormMarkers();
+  if(total === 0){
+    statusEl.textContent = 'No hail reports found for this period.';
+  }
+}
+
+function renderStormMarkers(){
+  clearStormMarkers();
+  const minSize = parseInt(document.getElementById('storm-min-size').value) || 100;
+  const filtered = _stormData.filter(r => r.size >= minSize);
+  const statusEl = document.getElementById('storm-status');
+
+  filtered.forEach(r => {
+    // Color by size
+    let color, label;
+    if(r.size >= 200){       color='#EF4444'; label='Baseball+'; }
+    else if(r.size >= 150){ color='#F97316'; label='Golf Ball'; }
+    else if(r.size >= 100){ color='#F59E0B'; label='Quarter'; }
+    else {                   color='#FBBF24'; label='Penny'; }
+
+    const sizeInches = (r.size / 100).toFixed(2);
+    const dateFormatted = `20${r.date.slice(0,2)}-${r.date.slice(2,4)}-${r.date.slice(4,6)}`;
+
+    const circle = L.circleMarker([r.lat, r.lon], {
+      radius: 8,
+      fillColor: color,
+      color: '#fff',
+      weight: 1.5,
+      opacity: 0.9,
+      fillOpacity: 0.75
+    });
+
+    circle.bindPopup(`
+      <div style="font-family:sans-serif;min-width:200px;">
+        <div style="font-weight:700;font-size:14px;color:#1a1a1a;margin-bottom:6px;">\u26c8 Hail Report</div>
+        <div style="font-size:12px;color:#333;margin-bottom:4px;"><b>Size:</b> ${sizeInches}\" (${label})</div>
+        <div style="font-size:12px;color:#333;margin-bottom:4px;"><b>Location:</b> ${r.location}, ${r.county}, ${r.state}</div>
+        <div style="font-size:12px;color:#333;margin-bottom:4px;"><b>Date:</b> ${dateFormatted}</div>
+        ${r.comment ? `<div style="font-size:11px;color:#666;margin-bottom:8px;font-style:italic;">${r.comment}</div>` : ''}
+        <button onclick="stormDropPin(${r.lat},${r.lon},'${r.location.replace(/'/g,"\\'")}, ${r.county}, ${r.state}')" 
+          style="width:100%;background:#F25C05;color:#fff;border:none;border-radius:6px;padding:8px;font-weight:700;font-size:12px;cursor:pointer;margin-top:4px;">
+          \uD83D\uDCCD Drop Pin Here
+        </button>
+      </div>
+    `);
+
+    circle.addTo(map);
+    _stormLayers.push(circle);
+  });
+
+  if(statusEl){
+    statusEl.textContent = filtered.length > 0
+      ? `${filtered.length} hail report${filtered.length!==1?'s':''} shown`
+      : 'No reports match current filters.';
+  }
+}
+
+function stormDropPin(lat, lon, locationHint){
+  // Close any open popup
+  map.closePopup();
+  // Set the temp lat/lng and open the pin modal pre-filled
+  tempLL = {lat, lng: lon};
+  document.getElementById('p-addr').value = locationHint || '';
+  document.getElementById('p-notes').value = 'Hail damage reported in this area.';
+  document.getElementById('p-status').value = 'needs_roof';
+  document.getElementById('p-phone').value = '';
+  const repInp = document.getElementById('p-rep');
+  if(repInp && currentProfile) repInp.value = currentProfile.name || '';
+  resetPinModal();
+  openM('m-pin');
+  // Reverse geocode to get the real address
+  const saveBtn = document.querySelector('#m-pin .btn-ok');
+  const addrInp = document.getElementById('p-addr');
+  if(saveBtn){ saveBtn.disabled = true; saveBtn.textContent = 'Locating...'; }
+  revGeo(lat, lon).then(()=>{
+    if(saveBtn){ saveBtn.disabled = false; saveBtn.textContent = 'Save Pin'; }
+  });
 }
 
 
