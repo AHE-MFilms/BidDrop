@@ -3579,6 +3579,10 @@ function addToQueue(){
     addr, sqft:totalSqft, pitch:pitchLabel, mat:matLabel,
     structures:JSON.parse(JSON.stringify(structures)),
     total:grand, status:'pending',
+    // Snapshot photos at queue time so sendLob has them even if estimator is cleared
+    photo_url: (window._homePhotoData && window._homePhotoData.startsWith('http')) ? window._homePhotoData : null,
+    photo_data: (window._homePhotoData && !window._homePhotoData.startsWith('http')) ? window._homePhotoData : null,
+    damage_photos: (window._damagePhotos && window._damagePhotos.length) ? [...window._damagePhotos] : null,
     at:new Date().toISOString(), mailedAt:null, lobId:null
   };
   S.queue.unshift(item);
@@ -4043,7 +4047,18 @@ async function sendLob(id){
   const fromRaw=S.cfg.companyAddr||'123 Main St, Detroit, MI, 48000';
   const fp=fromRaw.split(',').map(s=>s.trim());
   const tp=item.addr.split(',').map(s=>s.trim());
-  const html=genLobHtml(item);
+  // Parse recipient address parts (handle 'line1, city, state, zip' or 'line1, city, state zip')
+  const toLine1 = tp[0]||'';
+  const toCity  = tp[1]||'';
+  let   toState = tp[2]||'MI';
+  let   toZip   = tp[3]||'00000';
+  // Handle 'State Zip' in one field
+  if(!toZip && toState && toState.includes(' ')){
+    const parts=toState.split(' ');
+    toZip=parts.pop();
+    toState=parts.join(' ');
+  }
+  const fileHtml = buildLobMailerHtml(item);
   toast('Sending to Lob.com…','info');
   try{
     const res=await fetch('https://api.lob.com/v1/letters',{
@@ -4051,10 +4066,12 @@ async function sendLob(id){
       headers:{'Authorization':'Basic '+btoa(key+':'),'Content-Type':'application/json'},
       body:JSON.stringify({
         description:'Roof Bid — '+item.addr,
-        to:{name:item.owner,address_line1:tp[0]||'',address_city:tp[1]||'',address_state:tp[2]||'MI',address_zip:tp[3]||'00000',address_country:'US'},
+        to:{name:item.owner,address_line1:toLine1,address_city:toCity,address_state:toState,address_zip:toZip,address_country:'US'},
         from:{name:co,address_line1:fp[0]||'123 Main St',address_city:fp[1]||'Detroit',address_state:fp[2]||'MI',address_zip:fp[3]||'48000',address_country:'US'},
-        file:'<html><head><meta charset="utf-8"><style>body{font-family:Arial,sans-serif;font-size:12pt;margin:40px;}h1{color:#F25C05;}table{width:100%;border-collapse:collapse;}td{padding:8px;border:1px solid #ddd;}.total{background:#222;color:white;font-size:14pt;font-weight:bold;}</style></head><body>'+html+'</body></html>',
-        color:false,double_sided:false
+        file: fileHtml,
+        color: true,
+        double_sided: false,
+        address_placement: 'insert_blank_page'
       })
     });
     const d=await res.json();
@@ -4071,7 +4088,8 @@ async function sendLob(id){
           estimate_total: item.total||0,
           lob_id: d.id,
           queue_item_id: item.id,
-          company_name: S.cfg.companyName||''
+          company_name: S.cfg.companyName||'',
+          sent_at: new Date().toISOString()
         }).then(({error})=>{ if(error) console.warn('mailer_log insert error:',error.message); });
       }
       save();renderQueue();toast('✅ Letter queued for mailing!','success');
@@ -4081,26 +4099,354 @@ async function sendLob(id){
   } catch(e){item.status='failed';save();renderQueue();toast('Network error — mailer service unavailable','error');}
 }
 
-function genLobHtml(i){
-  // Build damage photos HTML if available
-  const dmgPhotosLob = window._damagePhotos || [];
-  const co=S.cfg.companyName||'Your Roofing Co';
-  const ph=S.cfg.companyPhone||'';
-  return '<h1>'+escHtml(co)+'</h1>'+
-    '<p><strong>Custom Roof Estimate · '+escHtml(i.addr)+'</strong></p>'+
-    '<p>Dear '+escHtml(i.owner)+',</p>'+
-    '<p>We prepared a custom estimate for your property — no obligation, no appointment needed.</p>'+
-    '<table><tr style="background:#F25C05;color:white;"><td colspan="2"><strong>YOUR ESTIMATE</strong></td></tr>'+
-    '<tr><td>Roof Area</td><td>'+i.sqft.toLocaleString()+' sq ft</td></tr>'+
-    '<tr><td>Material</td><td>'+escHtml(i.mat)+'</td></tr>'+
-    '<tr><td>Pitch</td><td>'+escHtml(i.pitch)+'</td></tr>'+
-    '<tr><td>Labor, Material &amp; Cleanup</td><td>Included</td></tr>'+
-    '<tr><td>Workmanship Warranty</td><td>10 Years</td></tr>'+
-    '<tr class="total"><td>TOTAL ESTIMATE</td><td>$'+i.total.toLocaleString()+'</td></tr>'+
+// ─────────────────────────────────────────────────────────────────────────────
+//  buildLobMailerHtml(item)
+//  Generates a full 4-page, Lob-compatible HTML letter from a queue item.
+//  Uses item.structures, item.photo_url/photo_data, item.damage_photos, S.cfg.
+// ─────────────────────────────────────────────────────────────────────────────
+function buildLobMailerHtml(item){
+  const cfg    = S.cfg;
+  const owner  = item.owner || 'Homeowner';
+  const addr   = item.addr  || '';
+  const co     = cfg.companyName   || 'Your Roofing Co';
+  const coAddr = cfg.companyAddr   || '';
+  const ph     = cfg.companyPhone  || '(000) 000-0000';
+  const color  = cfg.brandColor    || '#F25C05';
+  const rep    = cfg.repName       || co;
+  const repTitle= cfg.repTitle     || '';
+  const hsPos  = cfg.headshotPos   || '30';
+  const lic    = cfg.licenseNum    || '';
+  const yrs    = cfg.yearsInBusiness || '5+';
+  const warr   = cfg.warrantyYears || '10';
+  const hook   = cfg.hookLetter    || 'Most homeowners are tired of door-knockers, pushy salespeople, and high prices when it comes to getting a new roof. I skip the hassle and lead with my price.';
+  const why    = cfg.whyReceived   || 'We assessed your neighborhood and identified your home as a candidate for roof replacement. We look for things like missing shingles, moss, algae, buckling, and granule loss.';
+
+  // Financing
+  const finEnabled = cfg.financingEnabled !== false;
+  const finApr  = parseFloat(cfg.financingApr)  || 9.99;
+  const finTerm = parseInt(cfg.financingTerm)   || 60;
+  const finDown = parseFloat(cfg.financingDown) || 0;
+  function calcMo(total){
+    const loan = total * (1 - finDown/100);
+    if(!loan) return 0;
+    const r = finApr / 100 / 12;
+    if(r === 0) return Math.round(loan / finTerm);
+    return Math.round(loan * r * Math.pow(1+r,finTerm) / (Math.pow(1+r,finTerm)-1));
+  }
+
+  // Images — use stored URLs/base64 from item + cfg
+  const homePhotoSrc = item.photo_url || item.photo_data || null;
+  const dmgPhotos    = Array.isArray(item.damage_photos) ? item.damage_photos : [];
+  const headshot     = cfg.headshot  || null;
+  const review1      = cfg.review1   || null;
+  const review2      = cfg.review2   || null;
+  const bookingUrl   = cfg.bookingUrl || '';
+  const qrUrl = bookingUrl
+    ? 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&margin=6&data='+encodeURIComponent(bookingUrl)
+    : '';
+
+  // Logo
+  const logoImg = cfg.logoData
+    ? '<img src="'+cfg.logoData+'" style="max-height:46px;max-width:150px;object-fit:contain;display:block;">'
+    : '<div style="font-family:Oswald,sans-serif;font-size:20px;font-weight:700;color:'+color+';">'+escHtml(co)+'</div>';
+
+  // Structures & totals
+  const iStructures = Array.isArray(item.structures) ? item.structures : [];
+  let grandTotal = item.total || 0;
+  let structSectionsP2 = '';
+  if(iStructures.length){
+    iStructures.forEach((s,i)=>{
+      const sp = calcStructPrice ? calcStructPrice(s) : (s.price||0);
+      const sq = ((parseFloat(s.sqft)||0)/100*1.12*(parseFloat(s.pitch)||1.31)).toFixed(1);
+      const col = i===0 ? color : '#444';
+      structSectionsP2 +=
+        '<div style="border:2px solid '+col+';border-radius:6px;overflow:hidden;margin-bottom:10px;">'+
+        '<div style="padding:7px 14px;background:'+col+';font-family:Oswald,sans-serif;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#fff;">'+escHtml((s.name||'Structure '+(i+1)).toUpperCase())+'</div>'+
+        '<div style="background:#f8f8f8;">'+
+        '<div style="display:flex;justify-content:space-between;padding:5px 14px;border-bottom:1px solid #eee;font-size:10px;"><span style="color:#555;">Roof Area</span><span style="font-weight:600;color:#1a1a1a;">'+(s.sqft?Number(s.sqft).toLocaleString()+' sq ft':'—')+' ('+sq+' sq)</span></div>'+
+        '<div style="display:flex;justify-content:space-between;padding:5px 14px;border-bottom:1px solid #eee;font-size:10px;"><span style="color:#555;">Pitch</span><span style="font-weight:600;color:#1a1a1a;">'+(PITCHLBL[s.pitch]||s.pitch)+'</span></div>'+
+        '<div style="display:flex;justify-content:space-between;padding:5px 14px;border-bottom:1px solid #eee;font-size:10px;"><span style="color:#555;">Material</span><span style="font-weight:600;color:#1a1a1a;">'+(MATLBL[s.mat]||s.mat)+'</span></div>'+
+        '<div style="display:flex;justify-content:space-between;padding:5px 14px;border-bottom:1px solid #eee;font-size:10px;"><span style="color:#555;">Stories</span><span style="font-weight:600;color:#1a1a1a;">'+s.stories+'</span></div>'+
+        '<div style="display:flex;justify-content:space-between;padding:5px 14px;border-bottom:1px solid #eee;font-size:10px;"><span style="color:#555;">Tear-off &amp; Disposal</span><span style="font-weight:600;color:#1a1a1a;">Included</span></div>'+
+        '<div style="display:flex;justify-content:space-between;padding:5px 14px;border-bottom:1px solid #eee;font-size:10px;"><span style="color:#555;">Ice &amp; Water Shield</span><span style="font-weight:600;color:#1a1a1a;">Included</span></div>'+
+        '<div style="display:flex;justify-content:space-between;padding:5px 14px;font-size:10px;"><span style="color:#555;">Felt / Synthetic Underlayment</span><span style="font-weight:600;color:#1a1a1a;">Included</span></div>'+
+        '</div>'+
+        '<div style="display:flex;justify-content:space-between;padding:8px 14px;background:'+col+';color:#fff;">'+
+        '<span style="font-family:Oswald,sans-serif;font-size:11px;font-weight:600;letter-spacing:.5px;">'+escHtml((s.name||'Structure').toUpperCase())+' SUBTOTAL</span>'+
+        '<span style="font-family:Oswald,sans-serif;font-size:15px;font-weight:700;">$'+sp.toLocaleString()+'</span>'+
+        '</div></div>';
+    });
+  } else {
+    structSectionsP2='<div style="padding:20px;text-align:center;color:#999;font-style:italic;">No structures added.</div>';
+  }
+
+  const finMo  = (finEnabled && grandTotal) ? calcMo(grandTotal) : 0;
+  const finTrm = finApr+'% APR · '+finTerm+' mo · $0 down';
+  const finDisc = 'Financing estimate based on '+finApr+'% APR, '+finTerm+'-month term, subject to credit approval.';
+
+  // Differentiators
+  const diffs = [
+    cfg.diff1||'Licensed, Bonded & Insured',
+    cfg.diff2||'Manufacturer Certified',
+    cfg.diff3||'Itemized Pricing for Transparency',
+    cfg.diff4||'Workmanship Warranty',
+    cfg.diff5||'Financing Available',
+    cfg.diff6||'Local Crews'
+  ].filter(d=>d.trim());
+  const competitorNegs = ['Insufficient','Rarely','No','State Minimum','No','Outside Crews'];
+
+  // Services (page 4)
+  const svcDefs = [];
+  if(cfg.offerSiding)  svcDefs.push({icon:'🏠',name:'SIDING',bullets:['James Hardie Install','30 Year Warranty','Fiber Cement Strength']});
+  if(cfg.offerWindows) svcDefs.push({icon:'🪟',name:'WINDOWS',bullets:['Energy Efficient','100% Virgin Vinyl','Low-E Glass']});
+  if(cfg.offerGutters) svcDefs.push({icon:'🌊',name:'GUTTERS',bullets:['Seamless Gutters','Hidden Fasteners','Rust-Free Aluminum']});
+  if(cfg.offerCustom&&cfg.offerCustom.trim()) svcDefs.push({icon:'⭐',name:cfg.offerCustom.toUpperCase(),bullets:[]});
+  const servicesHtml = svcDefs.length
+    ? '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0;">'+
+        svcDefs.map(s=>
+          '<div style="border:2px solid '+color+'22;border-radius:6px;padding:10px;text-align:center;">'+
+          '<div style="font-size:22px;margin-bottom:4px;">'+s.icon+'</div>'+
+          '<div style="font-family:Oswald,sans-serif;font-size:14px;font-weight:700;letter-spacing:.5px;color:'+color+';">'+escHtml(s.name)+'</div>'+
+          (s.bullets.length?'<div style="font-size:10px;color:#666;line-height:1.8;margin-top:4px;text-align:left;">'+s.bullets.map(b=>'• '+b).join('<br>')+'</div>':'')+
+          '</div>'
+        ).join('')+
+      '</div>'
+    : '';
+
+  const refAmt  = cfg.referralAmt  || '250';
+  const refText = cfg.referralText || "For every customer you send our way who moves forward with a project, we'll send you a Visa gift card as a thank you.";
+
+  // Damage photos section
+  const hasPhotos = dmgPhotos.length > 0;
+  const damageMailerSection = hasPhotos
+    ? '<div style="margin:14px 0;padding:10px;background:#f9f9f9;border-radius:6px;border:1px solid #e8e8e8;">'+
+        '<div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:'+color+';margin-bottom:8px;">DAMAGE ASSESSMENT PHOTOS</div>'+
+        '<div style="display:grid;grid-template-columns:repeat('+Math.min(dmgPhotos.length,3)+',1fr);gap:6px;">'+
+        dmgPhotos.slice(0,3).map(src=>'<img src="'+src+'" style="width:100%;height:100px;object-fit:cover;border-radius:4px;display:block;">').join('')+
+        '</div></div>'
+    : '';
+
+  // Shared helpers
+  function pageHdr(n){
+    return '<div style="padding:14px 24px;display:flex;justify-content:space-between;align-items:flex-start;">'+
+      '<div>'+logoImg+'<div style="font-size:10px;color:#666;margin-top:3px;line-height:1.6;">'+escHtml(coAddr).replace(/,/g,'<br>')+'<br>'+escHtml(ph)+(lic?'<br>'+escHtml(lic):'')+'</div></div>'+
+      '<div style="text-align:right;font-size:11px;color:#444;line-height:1.8;"><strong>'+escHtml(owner)+'</strong><br>'+escHtml(addr).split(',').join('<br>')+'<br><span style="font-size:9px;color:#aaa;margin-top:3px;display:block;">Page '+n+' of 4</span></div>'+
+      '</div>'+
+      '<div style="height:5px;background:'+color+';"></div>';
+  }
+  function pageFooter(){
+    return '<div style="padding:7px 24px;border-top:1px solid #eee;font-size:9px;color:#aaa;line-height:1.6;text-align:center;">'+
+      escHtml(co)+' · '+escHtml(ph)+(lic?' · '+escHtml(lic):'')+' · Licensed &amp; Insured · '+new Date().getFullYear()+
+      '</div>';
+  }
+
+  // CTA band
+  const ctaBand =
+    '<div style="background:#1a1a1a;display:flex;align-items:center;gap:0;">'+
+    '<div style="flex:1;padding:11px 18px;border-right:1px solid rgba(255,255,255,.1);">'+
+    '<div style="font-size:8px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:2px;">Call or Text to Schedule</div>'+
+    '<div style="font-family:Oswald,sans-serif;font-size:26px;font-weight:700;color:#fff;white-space:nowrap;line-height:1;">'+escHtml(ph)+'</div>'+
+    '<div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:3px;">Estimate locked 30 days &nbsp;·&nbsp; No door-knock &nbsp;·&nbsp; No pressure</div>'+
+    '</div>'+
+    '<div style="flex:0 0 auto;padding:10px 16px;display:flex;flex-direction:column;align-items:center;gap:3px;">'+
+    (qrUrl
+      ? '<img src="'+qrUrl+'" style="width:68px;height:68px;border-radius:5px;background:#fff;display:block;">'+
+        '<div style="font-size:7px;color:rgba(255,255,255,.45);letter-spacing:.8px;text-transform:uppercase;margin-top:2px;">Scan to Book</div>'
+      : '<div style="width:68px;height:68px;border:1px dashed rgba(255,255,255,.2);border-radius:5px;display:flex;align-items:center;justify-content:center;">'+
+        '<div style="font-size:8px;color:rgba(255,255,255,.25);text-align:center;line-height:1.4;">Add URL<br>for QR</div>'+
+        '</div>'+
+        '<div style="font-size:7px;color:rgba(255,255,255,.25);letter-spacing:.8px;text-transform:uppercase;margin-top:2px;">Scan to Book</div>'
+    )+
+    '</div>'+
+    '</div>';
+
+  // ── PAGE 1 — Hook + Price ──────────────────────────────────────────────
+  const page1 =
+    '<div style="background:#fff;overflow:hidden;width:7.5in;min-height:10in;max-height:10in;box-sizing:border-box;page-break-after:always;">'+
+    pageHdr(1)+
+    '<div style="padding:16px 24px;">'+
+    '<div style="display:table;width:100%;border-collapse:separate;border-spacing:12px 0;margin:0 -12px 10px;">'+
+    '<div style="display:table-cell;width:160px;vertical-align:top;">'+
+    (homePhotoSrc
+      ? '<div style="width:160px;height:130px;border-radius:6px;overflow:hidden;border:1px solid #e8e8e8;">'+
+        '<img src="'+homePhotoSrc+'" style="width:100%;height:100%;object-fit:cover;display:block;">'+
+        '</div>'
+      : '<div style="width:160px;height:130px;border-radius:6px;border:1px dashed #ddd;"></div>'
+    )+
+    '</div>'+
+    '<div style="display:table-cell;vertical-align:top;">'+
+    '<div style="font-size:13px;margin-bottom:7px;color:#2a2a2a;">Dear '+escHtml(owner)+',</div>'+
+    '<p style="font-size:11px;line-height:1.6;color:#333;margin:5px 0 0;">'+escHtml(hook)+'</p>'+
+    '</div>'+
+    '</div>'+
+    '<div style="display:table;width:100%;border-collapse:separate;border-spacing:10px 0;margin:0 -10px;">'+
+    '<div style="display:table-cell;width:50%;vertical-align:top;">'+
+    '<div style="font-weight:700;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#fff;padding:5px 11px;border-radius:4px;margin:10px 0 6px;display:block;background:'+color+';">Why Did You Receive This?</div>'+
+    '<p style="font-size:10px;line-height:1.6;color:#555;margin:4px 0 0;">'+escHtml(why)+'</p>'+damageMailerSection+
+    '</div>'+
+    '<div style="display:table-cell;width:50%;vertical-align:top;">'+
+    '<div style="font-weight:700;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#fff;padding:5px 11px;border-radius:4px;margin:10px 0 6px;display:block;background:#222;">How We Stand Out</div>'+
+    '<ul style="list-style:none;margin:4px 0 0;padding:0;">'+
+    diffs.map(d=>'<li style="display:flex;align-items:flex-start;gap:6px;padding:4px 0;border-bottom:1px solid #f0f0f0;font-size:11px;color:#333;"><span style="font-size:14px;flex-shrink:0;margin-top:1px;color:'+color+';">✓</span><span>'+escHtml(d)+'</span></li>').join('')+
+    '</ul>'+
+    '</div>'+
+    '</div>'+
+    (headshot
+      ? '<div style="position:relative;overflow:hidden;background:'+color+';padding:18px 20px;">'+
+        '<svg style="position:absolute;right:0;top:0;width:55%;height:100%;opacity:.08;" viewBox="0 0 200 120" preserveAspectRatio="xMidYMid slice">'+
+        '<polygon points="0,0 200,0 200,120" fill="#fff"/>'+
+        '<circle cx="160" cy="20" r="70" fill="none" stroke="#fff" stroke-width="18"/>'+
+        '</svg>'+
+        '<div style="position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;">'+
+        '<div>'+
+        '<div style="font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:4px;">Your Total Investment</div>'+
+        '<div style="font-family:Oswald,sans-serif;font-size:44px;font-weight:700;line-height:1;color:#fff;">$'+(grandTotal?grandTotal.toLocaleString():'—')+'</div>'+
+        (finMo
+          ? '<div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;background:rgba(0,0,0,.25);border-radius:20px;padding:4px 12px;">'+
+            '<span style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.7);">Financing</span>'+
+            '<span style="font-family:Oswald,sans-serif;font-size:16px;font-weight:700;color:#fff;">$'+finMo.toLocaleString()+'/mo</span>'+
+            '<span style="font-size:9px;color:rgba(255,255,255,.6);">'+escHtml(finTrm)+'</span>'+
+            '</div>'
+          : ''
+        )+
+        '</div>'+
+        '<div style="display:flex;flex-direction:column;align-items:center;gap:5px;">'+
+        '<div style="width:80px;height:80px;border-radius:50%;overflow:hidden;border:3px solid rgba(255,255,255,.9);">'+
+        '<img src="'+headshot+'" style="width:100%;height:100%;object-fit:cover;object-position:center '+hsPos+'%;">'+
+        '</div>'+
+        '<div style="text-align:center;">'+
+        '<div style="font-family:Oswald,sans-serif;font-size:12px;font-weight:700;color:#fff;letter-spacing:.3px;">'+escHtml(rep)+'</div>'+
+        (repTitle?'<div style="font-size:8px;color:rgba(255,255,255,.7);letter-spacing:.6px;text-transform:uppercase;">'+escHtml(repTitle)+'</div>':'')+
+        '</div>'+
+        '</div>'+
+        '</div>'+
+        '</div>'+ctaBand
+      : '<div style="position:relative;overflow:hidden;background:'+color+';padding:18px 20px;">'+
+        '<div style="position:relative;z-index:1;">'+
+        '<div style="font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:4px;">Your Total Investment</div>'+
+        '<div style="font-family:Oswald,sans-serif;font-size:44px;font-weight:700;line-height:1;color:#fff;">$'+(grandTotal?grandTotal.toLocaleString():'—')+'</div>'+
+        (finMo
+          ? '<div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;background:rgba(0,0,0,.25);border-radius:20px;padding:4px 12px;">'+
+            '<span style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.7);">Financing</span>'+
+            '<span style="font-family:Oswald,sans-serif;font-size:16px;font-weight:700;color:#fff;">$'+finMo.toLocaleString()+'/mo</span>'+
+            '<span style="font-size:9px;color:rgba(255,255,255,.6);">'+escHtml(finTrm)+'</span>'+
+            '</div>'
+          : ''
+        )+
+        '</div>'+
+        '</div>'+ctaBand
+    )+
+    '</div>'+
+    (finMo?'<div style="padding:5px 24px 0;font-size:8px;color:#aaa;font-style:italic;">'+finDisc+'</div>':'')+
+    pageFooter()+
+    '</div>';
+
+  // ── PAGE 2 — Estimate Detail ───────────────────────────────────────────
+  const page2 =
+    '<div style="background:#fff;overflow:hidden;width:7.5in;min-height:10in;max-height:10in;box-sizing:border-box;page-break-after:always;">'+
+    pageHdr(2)+
+    '<div style="padding:16px 24px;">'+
+    '<div style="font-family:Oswald,sans-serif;font-size:18px;font-weight:700;letter-spacing:.5px;margin-bottom:2px;color:#1a1a1a;">ROOF ESTIMATE</div>'+
+    '<div style="font-size:10px;color:#888;margin-bottom:10px;">Detailed breakdown for '+escHtml(addr)+'</div>'+
+    structSectionsP2+
+    '<div style="display:flex;justify-content:space-between;padding:10px 16px;background:#1a1a1a;color:#fff;border-radius:6px;margin-top:8px;">'+
+    '<span style="font-family:Oswald,sans-serif;font-size:13px;font-weight:600;letter-spacing:.5px;">TOTAL INVESTMENT</span>'+
+    '<span style="font-family:Oswald,sans-serif;font-size:22px;font-weight:700;">$'+(grandTotal?grandTotal.toLocaleString():'0')+'</span>'+
+    '</div>'+
+    (finMo?'<div style="text-align:center;margin-top:7px;font-size:11px;color:#555;">Est. Financing: <strong style="color:'+color+';">$'+finMo.toLocaleString()+'/mo</strong> · '+escHtml(finTrm)+'</div>':'')+
+    '<div style="margin-top:10px;padding:9px 12px;background:#f8f8f8;border-radius:6px;font-size:9px;color:#888;line-height:1.65;">'+
+    '<strong style="color:#555;display:block;margin-bottom:3px;">Every installation includes:</strong>'+
+    'Complete tear-off &amp; disposal · Synthetic underlayment · Ice &amp; water shield · Drip edge flashing · Ridge cap shingles · Workmanship warranty · Licensed &amp; insured crews'+
+    '</div>'+
+    '<div style="margin-top:7px;font-size:8px;color:#bbb;line-height:1.5;">Estimates are created using satellite imagery. Final pricing confirmed at inspection. Factors that may affect price include skylights, chimneys, special vents, plywood decking, and manufacturer price increases.</div>'+
+    '</div>'+
+    pageFooter()+
+    '</div>';
+
+  // ── PAGE 3 — The Company Difference ───────────────────────────────────
+  const compareRows = diffs.map((d,i)=>{
+    const neg = competitorNegs[i] || 'Rarely';
+    return '<tr>'+
+      '<td style="font-weight:600;color:#333;width:42%;padding:6px 10px;border-bottom:1px solid #eee;">'+escHtml(d)+'</td>'+
+      '<td style="text-align:center;color:#fff;font-weight:700;background:'+color+';padding:6px 10px;border-bottom:1px solid #eee;">✓</td>'+
+      '<td style="text-align:center;color:#999;font-style:italic;padding:6px 10px;border-bottom:1px solid #eee;">'+escHtml(neg)+'</td>'+
+      '</tr>';
+  });
+  const staticRows = [
+    ['Years in Business', yrs, '1–2 Years'],
+    ['Workmanship Warranty', warr+' Years', 'State Minimum'],
+  ].map(([feat,us,them])=>
+    '<tr>'+
+    '<td style="font-weight:600;color:#333;width:42%;padding:6px 10px;border-bottom:1px solid #eee;">'+escHtml(feat)+'</td>'+
+    '<td style="text-align:center;color:#fff;font-weight:700;background:'+color+';padding:6px 10px;border-bottom:1px solid #eee;">'+escHtml(us)+'</td>'+
+    '<td style="text-align:center;color:#999;font-style:italic;padding:6px 10px;border-bottom:1px solid #eee;">'+escHtml(them)+'</td>'+
+    '</tr>'
+  );
+  const page3 =
+    '<div style="background:#fff;overflow:hidden;width:7.5in;min-height:10in;max-height:10in;box-sizing:border-box;page-break-after:always;">'+
+    '<div style="padding:16px 24px;text-align:center;background:'+color+';">'+
+    '<div style="font-family:Oswald,sans-serif;font-size:22px;font-weight:700;color:#fff;letter-spacing:1px;">THE '+escHtml(co.toUpperCase())+' DIFFERENCE</div>'+
+    '<div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:4px;">We protect what matters most. Selecting the right contractor is crucial.</div>'+
+    '</div>'+
+    '<div style="padding:16px 24px;">'+
+    '<p style="font-size:10px;line-height:1.6;color:#555;margin-bottom:10px;">Your roof is one of the most important investments you\'ll make for your home and family. It\'s important to us that your questions are answered and that you have all the information necessary to make the best decision.</p>'+
+    '<table style="width:100%;border-collapse:collapse;font-size:11px;">'+
+    '<thead><tr>'+
+    '<th style="text-align:left;background:#f8f8f8;color:#777;padding:6px 10px;font-family:Oswald,sans-serif;font-size:10px;letter-spacing:.6px;text-transform:uppercase;"></th>'+
+    '<th style="background:'+color+';color:#fff;border-radius:4px 4px 0 0;padding:6px 10px;font-family:Oswald,sans-serif;font-size:10px;letter-spacing:.6px;text-transform:uppercase;">'+escHtml(co)+'</th>'+
+    '<th style="background:#eee;color:#888;padding:6px 10px;font-family:Oswald,sans-serif;font-size:10px;letter-spacing:.6px;text-transform:uppercase;">Typical Contractor</th>'+
+    '</tr></thead>'+
+    '<tbody>'+staticRows.join('')+compareRows.join('')+'</tbody>'+
     '</table>'+
-    '<p>Price locked for 30 days. Call to schedule your free inspection:</p>'+
-    '<p><strong style="font-size:16pt;">'+escHtml(ph)+'</strong></p>'+
-    '<p>'+escHtml(co)+' · Licensed &amp; Insured</p>';
+    '</div>'+
+    pageFooter()+
+    '</div>';
+
+  // ── PAGE 4 — We Also Offer + Referral ─────────────────────────────────
+  const page4 =
+    '<div style="background:#fff;overflow:hidden;width:7.5in;min-height:10in;max-height:10in;box-sizing:border-box;page-break-after:avoid;">'+
+    pageHdr(4)+
+    '<div style="padding:16px 24px;">'+
+    (svcDefs.length>0
+      ? '<div style="font-family:Oswald,sans-serif;font-size:18px;font-weight:700;letter-spacing:.5px;color:'+color+';margin-bottom:8px;">WE ALSO OFFER...</div>'+servicesHtml
+      : '')+
+    ((review1||review2)
+      ? '<div style="margin-top:16px;">'+
+        '<div style="font-weight:700;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#fff;padding:5px 11px;border-radius:4px;margin:10px 0 6px;display:block;background:#1a1a1a;">What Our Customers Say</div>'+
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0 0;">'+
+        (review1?'<img src="'+review1+'" style="width:100%;border-radius:8px;display:block;" alt="Customer Review">':'<div style="border:2px dashed #e0e0e0;border-radius:8px;padding:20px;text-align:center;color:#ccc;font-size:11px;font-style:italic;">Review image 1</div>')+
+        (review2?'<img src="'+review2+'" style="width:100%;border-radius:8px;display:block;" alt="Customer Review">':'<div style="border:2px dashed #e0e0e0;border-radius:8px;padding:20px;text-align:center;color:#ccc;font-size:11px;font-style:italic;">Review image 2</div>')+
+        '</div>'+
+        '</div>'
+      : ''
+    )+
+    '<div style="margin-top:'+(svcDefs.length||review1||review2?'10':'0')+'px;">'+
+    '<div style="font-weight:700;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#fff;padding:5px 11px;border-radius:4px;margin:10px 0 6px;display:block;background:'+color+';">Referral Program</div>'+
+    '<div style="border-radius:8px;padding:12px;margin-top:10px;display:flex;gap:12px;align-items:flex-start;background:#f8f8f8;border:2px solid '+color+'22;">'+
+    '<div style="width:78px;height:60px;background:linear-gradient(135deg,#1a5276,#2e86c1);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-family:Oswald,sans-serif;font-size:11px;font-weight:700;text-align:center;line-height:1.3;letter-spacing:.3px;"><div style="font-size:20px;">$'+escHtml(refAmt)+'</div>VISA GIFT CARD</div>'+
+    '<div>'+
+    '<div style="font-family:Oswald,sans-serif;font-size:16px;font-weight:700;margin-bottom:5px;">Share &amp; Get Rewarded</div>'+
+    '<div style="font-size:11px;color:#555;line-height:1.6;">'+escHtml(refText)+'</div>'+
+    '<div style="margin-top:8px;font-size:11px;font-weight:700;color:'+color+';">Call '+escHtml(ph)+' and mention this mailer</div>'+
+    '</div></div></div>'+
+    '</div>'+
+    pageFooter()+
+    '</div>';
+
+  // ── Assemble full Lob HTML document ───────────────────────────────────
+  const mailerCss = `
+    *{margin:0;padding:0;box-sizing:border-box;}
+    @page{size:letter;margin:0;}
+    body{background:#fff;font-family:'Barlow',Helvetica,Arial,sans-serif;color:#1a1a1a;}
+    .lob-wrap{width:7.5in;margin:0 auto;}
+  `;
+
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8">'+
+    '<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">'+
+    '<style>'+mailerCss+'</style>'+
+    '</head><body>'+
+    '<div class="lob-wrap">'+page1+page2+page3+page4+'</div>'+
+    '</body></html>';
 }
 
 async function sendAllPending(){
