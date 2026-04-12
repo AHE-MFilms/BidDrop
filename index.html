@@ -1271,6 +1271,21 @@ tr:hover td{background:var(--card);}
         <button onclick="clearReview(2)" style="width:100%;margin-top:4px;background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;text-align:center;">Remove</button>
       </div>
     </div>
+    <!-- ── DRIP CAMPAIGN TOGGLE (Admin only) ─────────────── -->
+    <div id="drip-toggle-section" style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);">📮 Drip Mail Campaigns</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px;">When enabled, reps can enroll addresses in an automated postcard follow-up sequence after the initial flyer is sent.</div>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex-shrink:0;">
+        <span style="font-size:12px;color:var(--muted);" id="drip-toggle-label">Off</span>
+        <div style="position:relative;width:44px;height:24px;">
+          <input type="checkbox" id="s-drip-enabled" style="opacity:0;width:0;height:0;position:absolute;" onchange="updateDripToggleLabel()">
+          <span onclick="document.getElementById('s-drip-enabled').click()" style="position:absolute;inset:0;background:var(--border);border-radius:12px;cursor:pointer;transition:.2s;" id="drip-toggle-track"></span>
+          <span id="drip-toggle-knob" style="position:absolute;left:2px;top:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:.2s;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,.3);"></span>
+        </div>
+      </label>
+    </div>
     <!-- ── DRIP POSTCARD DESIGNS ─────────────────────── -->
     <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:16px 0 10px;">Drip Postcard Designs <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— Upload your own 6×4" front artwork for each follow-up step. We handle the address back.</span></div>
     <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--muted);margin-bottom:12px;">📬 Upload a 6×4" (1800×1200px recommended) JPEG or PNG for each drip step. Your company branding, design, and messaging — BidDrop automatically adds the homeowner's mailing address to the back.</div>
@@ -4011,7 +4026,7 @@ function renderEstimatesTab(){
           return `<button onclick="loadEstimateIntoEstimator('${eid}')" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#9999; Edit</button>`
             +`<button onclick="sendEstimateViaGHL('${eid}')" style="background:#1a7f4b;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#9889; GHL</button>`
             +`<button onclick="addEstimateToMailQueue('${eid}')" style="background:var(--accent);border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128228; Mail Queue</button>`
-            +`<button onclick="openDripModal('${eid}')" style="background:#7C3AED;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128336; Drip</button>`
+            +(S.cfg && S.cfg.dripEnabled ? `<button onclick="openDripModal('${eid}')" style="background:#7C3AED;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128336; Drip</button>` : '')
             +`<button onclick="printEstimate('${eid}')" style="background:#1f3d68;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128424; Print</button>`
             +histBtn
             +`<button onclick="deleteEstimate('${eid}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">&#10005;</button>`;
@@ -4337,6 +4352,8 @@ function renderQueue(){
   // Agency model: Lob key loaded at login, not shown in UI
   // Promote any scheduled drip items whose send date has passed
   try{ _processDripScheduleSync(); }catch(e){}
+  // Auto-fire any due drip steps (fire-and-forget, only when dripEnabled)
+  if(S.cfg && S.cfg.dripEnabled) autoFireDueDripSteps().catch(e=>console.warn('[BidDrop] autoFire error:',e));
   const tbody=document.getElementById('q-tbody');
   const tbl=document.getElementById('q-table');
   const empty=document.getElementById('q-empty');
@@ -4364,8 +4381,8 @@ function renderQueue(){
     const qid = i.id;
     return '<tr>'+
       '<td style="text-align:center;"><input type="checkbox" class="q-row-cb" data-id="'+escHtml(qid)+'" onchange="updateQueueBulkBar()" style="cursor:pointer;width:16px;height:16px;accent-color:var(--accent);"></td>'+
-      '<td style="font-weight:600;">'+escHtml(i.owner)+'</td>'+
-      '<td style="color:var(--mid);font-size:11px;">'+escHtml(i.addr)+'</td>'+
+      '<td style="font-weight:600;">'+escHtml(i.owner)+(i.drip_step?'<br><span style="font-size:9px;background:#7C3AED22;color:#C4B5FD;border:1px solid #7C3AED44;border-radius:10px;padding:1px 6px;font-weight:700;">📮 Drip Step '+i.drip_step+'</span>':'')+'</td>'+
+      '<td style="color:var(--mid);font-size:11px;">'+escHtml(i.addr)+(i.drip_step && S.cfg && S.cfg['postcardStep'+i.drip_step] ? '<br><img src="'+S.cfg['postcardStep'+i.drip_step]+'" style="width:60px;height:40px;object-fit:cover;border-radius:4px;margin-top:3px;border:1px solid var(--border);" title="Postcard front preview">' : '')+'</td>'+
       '<td style="font-family:var(--font-m);color:var(--accent);font-weight:600;">$'+i.total.toLocaleString()+'</td>'+
       '<td style="font-size:11px;color:var(--mid);">'+escHtml(i.mat)+'</td>'+
       '<td style="font-family:var(--font-m);font-size:10px;color:var(--muted);">'+fmtDate(i.at)+'</td>'+
@@ -5586,6 +5603,12 @@ function openSettings(){
     const url=c['postcardStep'+step];
     if(pcp)pcp.innerHTML=url?'<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;border-radius:5px;">':'No design<br>uploaded';
   });
+  // Load drip enabled toggle
+  const dripCk = document.getElementById('s-drip-enabled');
+  if(dripCk){ dripCk.checked = !!c.dripEnabled; updateDripToggleLabel(); }
+  // Only admins can see the drip toggle section
+  const dripToggleSec = document.getElementById('drip-toggle-section');
+  if(dripToggleSec) dripToggleSec.style.display = isAdminOrAbove() ? 'flex' : 'none';
   // Attach financing preview listeners
   ['s-fin-apr','s-fin-term','s-fin-down'].forEach(id=>{
     const el=document.getElementById(id);
@@ -5645,7 +5668,8 @@ function saveSettings(){
     postcardStep4:S.cfg.postcardStep4||null,
     repTitle:document.getElementById('s-reptitle').value||'',
     headshotPos:document.getElementById('s-hspos').value||'30',
-    bookingUrl:document.getElementById('s-bookingurl').value||''
+    bookingUrl:document.getElementById('s-bookingurl').value||'',
+    dripEnabled: isAdminOrAbove() ? !!(document.getElementById('s-drip-enabled') && document.getElementById('s-drip-enabled').checked) : (S.cfg.dripEnabled||false)
   };
   applyBrand();save();closeM('m-settings');updatePreview();
   // Super admin: persist master Lob and RentCast keys directly to agency account row (never touches client rows)
@@ -7829,6 +7853,89 @@ function _processDripScheduleSync(){
 }
 
 // Check scheduled drip items on app load and when queue renders — promote to 'pending' if sendAt has passed
+// Also auto-fires items that are past their sendAt and have a postcard design uploaded
+async function autoFireDueDripSteps(){
+  if(!S.cfg || !S.cfg.dripEnabled) return; // only fire if drip is enabled
+  const now = new Date();
+  const due = (S.queue||[]).filter(q=>
+    q.drip_step &&
+    q.status === 'pending' &&
+    q.scheduled_send_at &&
+    new Date(q.scheduled_send_at) <= now &&
+    S.cfg['postcardStep'+q.drip_step] // postcard design must be uploaded
+  );
+  for(const item of due){
+    console.log('[BidDrop] Auto-firing drip step', item.drip_step, 'for', item.addr);
+    await sendDripPostcard(item.id);
+  }
+}
+
+async function sendDripPostcard(id){
+  const item = S.queue.find(x=>x.id===id);
+  if(!item || item.status==='sent') return;
+  const key = masterLobKey || S.cfg.lobKey;
+  if(!key) return;
+  const co = S.cfg.companyName||'Your Roofing Co';
+  const fromRaw = S.cfg.companyAddr||'123 Main St, Detroit, MI, 48000';
+  const fp = fromRaw.split(',').map(s=>s.trim());
+  const tp = item.addr.split(',').map(s=>s.trim());
+  const toLine1 = tp[0]||'';
+  const toCity  = tp[1]||'';
+  let   toState = tp[2]||'MI';
+  let   toZip   = tp[3]||'00000';
+  if(!toZip && toState && toState.includes(' ')){
+    const parts=toState.split(' '); toZip=parts.pop(); toState=parts.join(' ');
+  }
+  const frontUrl = S.cfg['postcardStep'+item.drip_step];
+  if(!frontUrl){ console.warn('[BidDrop] No postcard design for step', item.drip_step); return; }
+  const backHtml = buildPostcardBack({
+    fromName: co,
+    fromAddr: fromRaw,
+    fromCity: '',
+    fromPhone: S.cfg.companyPhone||'',
+    logoUrl: S.cfg.logoData||'',
+    toName: item.owner||'Homeowner',
+    toAddr: item.addr
+  });
+  try{
+    const res = await fetch('https://api.lob.com/v1/postcards',{
+      method:'POST',
+      headers:{'Authorization':'Basic '+btoa(key+':'),'Content-Type':'application/json'},
+      body: JSON.stringify({
+        description: 'Drip Step '+item.drip_step+' — '+item.addr,
+        to:{name:item.owner,address_line1:toLine1,address_city:toCity,address_state:toState,address_zip:toZip,address_country:'US'},
+        from:{name:co,address_line1:fp[0]||'123 Main St',address_city:fp[1]||'Detroit',address_state:fp[2]||'MI',address_zip:fp[3]||'48000',address_country:'US'},
+        front: frontUrl,
+        back: backHtml,
+        size: '4x6'
+      })
+    });
+    const d = await res.json();
+    if(res.ok){
+      item.status='sent'; item.mailedAt=new Date().toISOString(); item.lobId=d.id;
+      addAct('Drip Step '+item.drip_step+' postcard mailed to <strong>'+escHtml(item.addr)+'</strong>','converted');
+      if(currentAccount && sb){
+        sb.from('mailer_log').insert({
+          account_id: currentAccount.id,
+          sent_by: currentUser?.id||null,
+          address: item.addr,
+          owner_name: item.owner,
+          estimate_total: item.total||0,
+          lob_id: d.id,
+          queue_item_id: item.id,
+          company_name: S.cfg.companyName||'',
+          sent_at: new Date().toISOString()
+        }).then(({error})=>{ if(error) console.warn('mailer_log insert:',error.message); });
+      }
+      save(); renderQueue();
+      toast('📮 Drip Step '+item.drip_step+' auto-mailed to '+item.addr,'success');
+    } else {
+      item.status='failed'; save(); renderQueue();
+      console.warn('[BidDrop] Drip send failed:', d.error?.message);
+    }
+  } catch(e){ item.status='failed'; save(); renderQueue(); console.warn('[BidDrop] Drip send error:',e); }
+}
+
 function processDripSchedule(){
   const now = new Date();
   let changed = false;
@@ -7861,6 +7968,19 @@ function cancelDrip(estId){
   delete est.drip;
   save(); renderEstimatesTab(); renderQueue();
   toast('Drip sequence cancelled','info');
+}
+
+// Toggle label + track color for the drip enabled switch
+function updateDripToggleLabel(){
+  const ck = document.getElementById('s-drip-enabled');
+  const lbl = document.getElementById('drip-toggle-label');
+  const track = document.getElementById('drip-toggle-track');
+  const knob = document.getElementById('drip-toggle-knob');
+  if(!ck) return;
+  const on = ck.checked;
+  if(lbl) lbl.textContent = on ? 'On' : 'Off';
+  if(track) track.style.background = on ? 'var(--accent)' : 'var(--border)';
+  if(knob) knob.style.left = on ? '22px' : '2px';
 }
 
 // ═══════════════════════════════════════════════════════════════
