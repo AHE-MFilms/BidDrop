@@ -2199,6 +2199,30 @@ function refreshDripPostcardPreviews(){
   });
 }
 
+// Preview the postcard front design in a full-size lightbox
+function previewPostcardFront(step){
+  const url = S.cfg && S.cfg['postcardStep'+step];
+  if(!url){ toast('No postcard design uploaded for this step','error'); return; }
+  const stepNames = {2:'Step 2 — Follow-Up (Day 7)',3:'Step 3 — Urgency (Day 14)',4:'Step 4 — Final (Day 35)'};
+  const label = stepNames[step] || 'Step '+step;
+  // Create lightbox overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'pc-front-lightbox';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;';
+  overlay.innerHTML = `
+    <div style="width:100%;max-width:700px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <span style="color:#fff;font-weight:700;font-size:14px;">📮 Postcard Front — ${label}</span>
+        <button onclick="document.getElementById('pc-front-lightbox').remove()" style="background:none;border:1px solid rgba(255,255,255,.3);border-radius:6px;padding:4px 12px;color:#fff;font-size:13px;cursor:pointer;">✕ Close</button>
+      </div>
+      <img src="${url}" style="width:100%;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.6);display:block;">
+      <div style="text-align:center;margin-top:10px;color:rgba(255,255,255,.5);font-size:11px;">Click anywhere outside to close</div>
+    </div>
+  `;
+  overlay.addEventListener('click', function(e){ if(e.target===overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
 // Preview the auto-generated postcard back side in a modal
 function previewPostcardBack(step){
   const est = (S.estimates||[]).find(e=>e.id===_dripEstId);
@@ -8216,7 +8240,7 @@ function stormDropPin(lat, lon, locationHint){
         </div>
         <div style="font-size:12px;color:var(--muted);">Reminder postcard — "Your estimate is still available."</div>
         <div id="drip-pc2-thumb" style="margin-top:8px;display:none;">
-          <img id="drip-pc2-img" style="width:100%;max-height:80px;object-fit:cover;border-radius:5px;border:1px solid var(--border);" alt="Postcard front">
+          <img id="drip-pc2-img" style="width:100%;max-height:80px;object-fit:cover;border-radius:5px;border:1px solid var(--border);cursor:zoom-in;" alt="Postcard front" onclick="previewPostcardFront(2)" title="Click to view full size">
           <button onclick="previewPostcardBack(2)" style="margin-top:5px;width:100%;background:none;border:1px solid #7C3AED;border-radius:5px;padding:4px 8px;color:#C4B5FD;font-size:10px;font-weight:700;cursor:pointer;">📧 Preview Back Side</button>
         </div>
         <div id="drip-pc2-missing" style="margin-top:8px;background:rgba(124,58,237,.08);border:1px dashed rgba(124,58,237,.3);border-radius:5px;padding:6px 10px;font-size:10px;color:#C4B5FD;display:none;">⚠️ No postcard design uploaded yet — go to Settings → Drip Postcard Designs to upload your artwork.</div>
@@ -8233,7 +8257,7 @@ function stormDropPin(lat, lon, locationHint){
         </div>
         <div style="font-size:12px;color:var(--muted);">Urgency postcard — "Estimate expires soon. Call today."</div>
         <div id="drip-pc3-thumb" style="margin-top:8px;display:none;">
-          <img id="drip-pc3-img" style="width:100%;max-height:80px;object-fit:cover;border-radius:5px;border:1px solid var(--border);" alt="Postcard front">
+          <img id="drip-pc3-img" style="width:100%;max-height:80px;object-fit:cover;border-radius:5px;border:1px solid var(--border);cursor:zoom-in;" alt="Postcard front" onclick="previewPostcardFront(3)" title="Click to view full size">
           <button onclick="previewPostcardBack(3)" style="margin-top:5px;width:100%;background:none;border:1px solid #7C3AED;border-radius:5px;padding:4px 8px;color:#C4B5FD;font-size:10px;font-weight:700;cursor:pointer;">📧 Preview Back Side</button>
         </div>
         <div id="drip-pc3-missing" style="margin-top:8px;background:rgba(124,58,237,.08);border:1px dashed rgba(124,58,237,.3);border-radius:5px;padding:6px 10px;font-size:10px;color:#C4B5FD;display:none;">⚠️ No postcard design uploaded yet — go to Settings → Drip Postcard Designs to upload your artwork.</div>
@@ -8250,7 +8274,7 @@ function stormDropPin(lat, lon, locationHint){
         </div>
         <div style="font-size:12px;color:var(--muted);">Final touch — "Last chance. We'd love to earn your business."</div>
         <div id="drip-pc4-thumb" style="margin-top:8px;display:none;">
-          <img id="drip-pc4-img" style="width:100%;max-height:80px;object-fit:cover;border-radius:5px;border:1px solid var(--border);" alt="Postcard front">
+          <img id="drip-pc4-img" style="width:100%;max-height:80px;object-fit:cover;border-radius:5px;border:1px solid var(--border);cursor:zoom-in;" alt="Postcard front" onclick="previewPostcardFront(4)" title="Click to view full size">
           <button onclick="previewPostcardBack(4)" style="margin-top:5px;width:100%;background:none;border:1px solid #7C3AED;border-radius:5px;padding:4px 8px;color:#C4B5FD;font-size:10px;font-weight:700;cursor:pointer;">📧 Preview Back Side</button>
         </div>
         <div id="drip-pc4-missing" style="margin-top:8px;background:rgba(124,58,237,.08);border:1px dashed rgba(124,58,237,.3);border-radius:5px;padding:6px 10px;font-size:10px;color:#C4B5FD;display:none;">⚠️ No postcard design uploaded yet — go to Settings → Drip Postcard Designs to upload your artwork.</div>
