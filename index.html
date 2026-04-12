@@ -939,13 +939,13 @@ tr:hover td{background:var(--card);}
       <div style="display:flex;gap:0;flex-wrap:wrap;">
         <div style="flex:1;min-width:280px;padding:16px;border-right:1px solid var(--border);">
           <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">Front Side (Your Design)</div>
-          <div id="fu-pc2-front" style="width:100%;min-height:160px;background:var(--card2);border:2px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+          <div id="fu-pc2-front" style="width:100%;background:var(--card2);border:2px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;">
             <div style="text-align:center;color:var(--muted);font-size:12px;padding:20px;">📭 No design uploaded yet.<br><br><button onclick="openSettings()" style="background:var(--accent);border:none;border-radius:7px;padding:8px 16px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;margin-top:8px;">Upload Now</button></div>
           </div>
         </div>
         <div style="flex:1;min-width:280px;padding:16px;">
           <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">Back Side (Auto-Generated)</div>
-          <div id="fu-pc2-back" style="width:100%;min-height:160px;background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;"></div>
+          <div id="fu-pc2-back" style="width:100%;min-height:180px;background:#fff;border:1px solid var(--border);border-radius:8px;"></div>
         </div>
       </div>
     </div>
@@ -960,13 +960,13 @@ tr:hover td{background:var(--card);}
       <div style="display:flex;gap:0;flex-wrap:wrap;">
         <div style="flex:1;min-width:280px;padding:16px;border-right:1px solid var(--border);">
           <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">Front Side (Your Design)</div>
-          <div id="fu-pc3-front" style="width:100%;min-height:160px;background:var(--card2);border:2px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+          <div id="fu-pc3-front" style="width:100%;background:var(--card2);border:2px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;">
             <div style="text-align:center;color:var(--muted);font-size:12px;padding:20px;">📭 No design uploaded yet.<br><br><button onclick="openSettings()" style="background:var(--accent);border:none;border-radius:7px;padding:8px 16px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;margin-top:8px;">Upload Now</button></div>
           </div>
         </div>
         <div style="flex:1;min-width:280px;padding:16px;">
           <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">Back Side (Auto-Generated)</div>
-          <div id="fu-pc3-back" style="width:100%;min-height:160px;background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;"></div>
+          <div id="fu-pc3-back" style="width:100%;min-height:180px;background:#fff;border:1px solid var(--border);border-radius:8px;"></div>
         </div>
       </div>
     </div>
@@ -981,13 +981,13 @@ tr:hover td{background:var(--card);}
       <div style="display:flex;gap:0;flex-wrap:wrap;">
         <div style="flex:1;min-width:280px;padding:16px;border-right:1px solid var(--border);">
           <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">Front Side (Your Design)</div>
-          <div id="fu-pc4-front" style="width:100%;min-height:160px;background:var(--card2);border:2px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+          <div id="fu-pc4-front" style="width:100%;background:var(--card2);border:2px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;">
             <div style="text-align:center;color:var(--muted);font-size:12px;padding:20px;">📭 No design uploaded yet.<br><br><button onclick="openSettings()" style="background:var(--accent);border:none;border-radius:7px;padding:8px 16px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;margin-top:8px;">Upload Now</button></div>
           </div>
         </div>
         <div style="flex:1;min-width:280px;padding:16px;">
           <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">Back Side (Auto-Generated)</div>
-          <div id="fu-pc4-back" style="width:100%;min-height:160px;background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;"></div>
+          <div id="fu-pc4-back" style="width:100%;min-height:180px;background:#fff;border:1px solid var(--border);border-radius:8px;"></div>
         </div>
       </div>
     </div>
@@ -1672,6 +1672,8 @@ function renderFollowUpTab(){
 
     // Front side
     if(url){
+      frontEl.style.display = 'block';
+      frontEl.style.overflow = 'visible';
       frontEl.innerHTML = '<img src="'+url+'" style="width:100%;height:auto;display:block;border-radius:6px;">';
     } else {
       frontEl.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px;">\ud83d\udced No design uploaded yet.<br><br><button onclick="openSettings()" style="background:var(--accent);border:none;border-radius:7px;padding:8px 16px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;margin-top:8px;">Upload Now</button></div>';
@@ -1691,26 +1693,25 @@ function renderFollowUpTab(){
 // Inline (iframe-free) version of the postcard back for embedding in the tab
 function buildPostcardBackInline({ fromName, fromAddr, fromCity, fromPhone, logoUrl }){
   return `
-  <div style="display:flex;font-family:Arial,sans-serif;font-size:12px;background:#fff;padding:16px;gap:16px;box-sizing:border-box;min-height:160px;">
-    <div style="flex:1.4;display:flex;flex-direction:column;gap:10px;border-right:1px solid #ddd;padding-right:16px;">
-      ${logoUrl ? '<img src="'+logoUrl+'" style="max-width:110px;max-height:40px;object-fit:contain;display:block;">' : ''}
+  <div style="display:flex;font-family:Arial,sans-serif;font-size:12px;background:#fff;padding:20px;gap:20px;box-sizing:border-box;min-height:180px;">
+    <div style="flex:1.4;display:flex;flex-direction:column;justify-content:space-between;border-right:2px dashed #ddd;padding-right:20px;">
       <div>
-        <div style="font-weight:700;font-size:11px;color:#111;">${fromName}</div>
-        <div style="color:#555;font-size:10px;line-height:1.6;margin-top:3px;">${fromAddr}<br>${fromCity}${fromPhone ? '<br>'+fromPhone : ''}</div>
+        ${logoUrl ? '<img src="'+logoUrl+'" style="max-width:120px;max-height:44px;object-fit:contain;display:block;margin-bottom:10px;">' : ''}
+        <div style="font-weight:700;font-size:12px;color:#111;line-height:1.4;">${fromName}</div>
+        <div style="color:#555;font-size:11px;line-height:1.6;margin-top:4px;">${fromAddr}${fromCity ? '<br>'+fromCity : ''}${fromPhone ? '<br>'+fromPhone : ''}</div>
       </div>
-      <div style="margin-top:auto;border-top:1px dashed #ccc;padding-top:6px;font-size:7px;color:#bbb;letter-spacing:2px;text-align:center;">|||||||||||||||||||||||||||||||||||</div>
+      <div style="border-top:1px dashed #ccc;padding-top:8px;font-size:7px;color:#bbb;letter-spacing:3px;text-align:center;margin-top:16px;">|||||||||||||||||||||||||||||||||||||||||</div>
     </div>
-    <div style="flex:1;display:flex;flex-direction:column;justify-content:space-between;gap:10px;">
-      <div style="border:1px solid #333;padding:5px 8px;text-align:center;font-size:8px;color:#333;line-height:1.5;align-self:flex-end;">
-        <strong style="display:block;font-size:10px;">PRSRT STD</strong>U.S. POSTAGE<br>PAID<br>PERMIT #000
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:space-between;">
+      <div style="align-self:flex-end;border:1px solid #333;padding:6px 10px;text-align:center;font-size:8px;color:#333;line-height:1.6;">
+        <strong style="display:block;font-size:10px;letter-spacing:.5px;">PRSRT STD</strong>U.S. POSTAGE<br>PAID<br>PERMIT #000
       </div>
-      <div style="font-size:11px;line-height:1.7;color:#111;">
-        <div style="font-weight:700;font-size:12px;">Homeowner Name</div>
-        <div style="border-top:1px solid #eee;margin:4px 0;"></div>
+      <div style="font-size:12px;line-height:1.8;color:#111;margin-top:16px;">
+        <div style="font-weight:700;font-size:13px;border-bottom:1px solid #eee;padding-bottom:4px;margin-bottom:6px;">Homeowner Name</div>
         <div>123 Main Street</div>
         <div>City, State 00000</div>
       </div>
-      <div style="font-size:7px;color:#ccc;letter-spacing:1px;text-align:center;">DELIVERY POINT BARCODE</div>
+      <div style="font-size:7px;color:#ccc;letter-spacing:2px;text-align:center;margin-top:10px;">DELIVERY POINT BARCODE</div>
     </div>
   </div>`;
 }
