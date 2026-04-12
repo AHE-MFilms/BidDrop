@@ -1419,7 +1419,8 @@ async function syncAccountToSupabase(){
     ghl_api_key: cfg.ghlApiKey, ghl_location_id: cfg.ghlLocationId,
     ghl_pipeline_id: cfg.ghlPipelineId, ghl_stage_id: cfg.ghlStageId,
     ghl_sms_tpl: cfg.ghlSmsTpl||null, ghl_email_tpl: cfg.ghlEmailTpl||null,
-    lob_key: cfg.lobKey, rentcast_key: cfg.rentcastKey||'', logo_data: cfg.logoData,
+    // lob_key intentionally omitted — master Lob key is stored only on the agency account row, never on client accounts
+    rentcast_key: cfg.rentcastKey||'', logo_data: cfg.logoData,
     headshot: cfg.headshot, headshot_pos: cfg.headshotPos,
     review1: cfg.review1, review2: cfg.review2
   }).eq('id', currentAccount.id);
@@ -1473,7 +1474,7 @@ function accountRowToCfg(row){
     ghlStageId: row.ghl_stage_id||'',
     ghlSmsTpl: row.ghl_sms_tpl||DEFAULTS.ghlSmsTpl,
     ghlEmailTpl: row.ghl_email_tpl||DEFAULTS.ghlEmailTpl,
-    lobKey: row.lob_key||'',
+    // lobKey intentionally not loaded from client account rows — masterLobKey is used at the agency level
     rentcastKey: row.rentcast_key||'',
     logoData: row.logo_data||null,
     headshot: row.headshot||null,
@@ -5282,7 +5283,7 @@ function saveSettings(){
     ghlStageId:document.getElementById('s-ghl-stage').value||'',
     ghlSmsTpl:v('s-ghl-sms-tpl')||DEFAULTS.ghlSmsTpl,
     ghlEmailTpl:v('s-ghl-email-tpl')||DEFAULTS.ghlEmailTpl,
-    lobKey: isSuperAdmin() ? v('s-lob') : (S.cfg.lobKey||''),
+    // lobKey intentionally excluded from client cfg — masterLobKey handles all Lob sends at agency level
     rentcastKey: v('s-rentcast-key') || S.cfg.rentcastKey || '',
     mailerCostPerPiece: isSuperAdmin() ? (v('s-mailer-cost')||'0.85') : (S.cfg.mailerCostPerPiece||'0.85'),
     logoData:S.cfg.logoData||null,
@@ -5294,6 +5295,15 @@ function saveSettings(){
     bookingUrl:document.getElementById('s-bookingurl').value||''
   };
   applyBrand();save();closeM('m-settings');updatePreview();
+  // Super admin: persist master Lob key directly to agency account row (never touches client rows)
+  if(isSuperAdmin() && sb){
+    const newLobKey = document.getElementById('s-lob') ? document.getElementById('s-lob').value.trim() : '';
+    if(newLobKey !== masterLobKey){
+      masterLobKey = newLobKey;
+      sb.from('accounts').update({ lob_key: newLobKey }).eq('id', AGENCY_ACCOUNT_ID)
+        .then(({error})=>{ if(error) console.warn('Lob key save error:',error.message); });
+    }
+  }
   toast('Settings saved!','success');
 }
 
