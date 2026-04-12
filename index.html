@@ -1471,6 +1471,24 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 let sb; // Supabase client — initialized after page load
 let masterLobKey = '';      // Fetched at login from AHE agency account — never exposed to client UI
 let masterRentcastKey = ''; // Fetched at login from AHE agency account — never exposed to client UI
+
+// ── Secure API helper — all privileged operations go through /api/admin ──────
+async function adminAPI(action, body={}, queryParams={}) {
+  const { data: { session } } = await sb.auth.getSession();
+  const token = session ? session.access_token : '';
+  const qs = new URLSearchParams({ action, ...queryParams }).toString();
+  const res = await fetch('/api/admin?' + qs, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token
+    },
+    body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'API error ' + res.status);
+  return data;
+}
 const AGENCY_ACCOUNT_ID = 'ab08643f-3d71-4f47-abac-31599cf10d25'; // AHE master account row
 const OWNER_EMAIL = 'john@mongoosefilms.com'; // Primary owner — cannot be deleted by any other super_admin
 
@@ -1480,7 +1498,7 @@ const DEFAULTS = {
   costTearoff:75, costIceWater:42, costFelts:22, costDumpster:450,
   costSkylight:375, costChimney:295, costGutter:9,
   overhead:15, margin:20, brandColor:'#F25C05', lobKey:'',
-  ghlApiKey:'pit-08e80077-de2c-42c9-ac9b-867c4e48ea70', ghlLocationId:'gz85VU6SxGXS7lqHAQGx', ghlPipelineId:'bxskBIBdbklHry0B63qx', ghlStageId:'',
+  ghlApiKey:'', ghlLocationId:'gz85VU6SxGXS7lqHAQGx', ghlPipelineId:'bxskBIBdbklHry0B63qx', ghlStageId:'',
   ghlSmsTpl:'Hi {name}! This is {rep} from {company}. Following up about your roof at {address}. Free inspection available this week — reply YES to schedule!',
   ghlEmailTpl:'Hi {name},\n\nI hope this message finds you well! I\'m {rep} from {company}. I recently visited your property at {address} and noticed your roof may need attention.\n\nWe\'re offering free storm damage inspections this week. Would you like to schedule a time?\n\nBest,\n{rep}\n{company}',
   // Letter & pitch
@@ -2231,7 +2249,41 @@ function previewPostcardFront(step){
   document.body.appendChild(overlay);
 }
 
-// Preview the auto-generated postcard back side in a modal
+// Preview the postcard back in an in-page lightbox (matches front card behavior)
+function previewPostcardBackLightbox(step, toName, toAddr, fromName, fromAddr, fromCity, fromPhone, logoUrl){
+  const stepNames = {2:'Step 2 — Follow-Up (Day 7)',3:'Step 3 — Urgency (Day 14)',4:'Step 4 — Final (Day 35)'};
+  const label = stepNames[step] || 'Step '+step;
+  const existing = document.getElementById('pc-back-lightbox');
+  if(existing) existing.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'pc-back-lightbox';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;';
+  // Build the back inline (no iframe needed — render directly as scaled HTML)
+  const backInner = `
+    <div style="width:100%;max-width:700px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <span style="color:#fff;font-weight:700;font-size:14px;">📮 Postcard Back — ${label}</span>
+        <button onclick="document.getElementById('pc-back-lightbox').remove()" style="background:none;border:1px solid rgba(255,255,255,.3);border-radius:6px;padding:4px 12px;color:#fff;font-size:13px;cursor:pointer;">✕ Close</button>
+      </div>
+      <div style="background:#fff;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.6);overflow:hidden;display:flex;font-family:Arial,sans-serif;">
+        <div style="flex:1.4;border-right:1px solid #ccc;padding:24px 20px;display:flex;flex-direction:column;justify-content:space-between;min-height:200px;">
+          <div>${logoUrl?'<img src="'+logoUrl+'" style="max-height:40px;max-width:120px;object-fit:contain;margin-bottom:8px;display:block;">':''}<div style="font-size:11px;color:#333;line-height:1.7;"><strong style="font-size:12px;">${toName?fromName:fromName}</strong><br>${fromAddr}${fromCity?'<br>'+fromCity:''}</div></div>
+          <div style="font-size:9px;color:#bbb;border-top:1px dashed #ddd;padding-top:6px;letter-spacing:2px;">|||||||||||||||||||||||||||||||||||||||||||||</div>
+        </div>
+        <div style="flex:1;padding:20px;display:flex;flex-direction:column;justify-content:space-between;">
+          <div style="border:1px solid #333;padding:6px 10px;font-size:9px;color:#333;text-align:center;align-self:flex-end;"><strong style="font-size:11px;display:block;">PRSRT STD</strong>U.S. POSTAGE<br>PAID<br>PERMIT #000</div>
+          <div style="font-size:12px;color:#111;line-height:1.7;"><strong style="font-size:13px;">${toName}</strong><br>${toAddr.split(',').map(l=>l.trim()).join('<br>')}</div>
+          <div style="font-size:8px;color:#bbb;border-top:1px dashed #ddd;padding-top:6px;letter-spacing:2px;">DELIVERY POINT BARCODE</div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:10px;color:rgba(255,255,255,.5);font-size:11px;">Click anywhere outside to close</div>
+    </div>`;
+  overlay.innerHTML = backInner;
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
+// Preview the auto-generated postcard back side — now uses lightbox (matches front)
 function previewPostcardBack(step){
   const est = (S.estimates||[]).find(e=>e.id===_dripEstId);
   const cfg = S.cfg || {};
@@ -2242,10 +2294,7 @@ function previewPostcardBack(step){
   const fromCity = cfg.companyCity      || '';
   const fromPhone= cfg.phone            || '';
   const logoUrl  = cfg.logoData         || '';
-
-  const html = buildPostcardBack({ toName, toAddr, fromName, fromAddr, fromCity, fromPhone, logoUrl });
-  const win = window.open('','_blank','width=700,height=500');
-  if(win){ win.document.write(html); win.document.close(); }
+  previewPostcardBackLightbox(step, toName, toAddr, fromName, fromAddr, fromCity, fromPhone, logoUrl);
 }
 
 // Build the standard USPS-compliant postcard back side HTML
@@ -2327,8 +2376,10 @@ function showEstimatePostcards(estId){
       ? `<div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:700;color:#9CA3AF;letter-spacing:1px;margin-bottom:4px;">▲ FRONT</div><img src="${img}" style="width:100%;border-radius:6px;cursor:zoom-in;" onclick="previewPostcardFront(${s.num})" title="Click to enlarge"></div>`
       : `<div style="background:#1f2937;border:2px dashed #374151;border-radius:8px;padding:24px;text-align:center;color:#6B7280;font-size:12px;margin-bottom:8px;">No design uploaded<br><span style="font-size:10px;">Settings → Drip Postcard Designs</span></div>`;
 
-    const backData = buildPostcardBack({ toName, toAddr, fromName, fromAddr, fromCity, fromPhone, logoUrl });
-    const backBlob = 'data:text/html;charset=utf-8,'+encodeURIComponent(backData);
+    const _tn = toName.replace(/'/g,"\\'"); const _ta = toAddr.replace(/'/g,"\\'");
+    const _fn = fromName.replace(/'/g,"\\'"); const _fa = fromAddr.replace(/'/g,"\\'");
+    const _fc = fromCity.replace(/'/g,"\\'"); const _fp = fromPhone.replace(/'/g,"\\'");
+    const _lu = logoUrl.replace(/'/g,"\\'");
 
     return `<div style="background:#111827;border:1px solid #374151;border-radius:10px;padding:14px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
@@ -2337,7 +2388,7 @@ function showEstimatePostcards(estId){
       </div>
       ${frontHtml}
       <div style="font-size:10px;font-weight:700;color:#9CA3AF;letter-spacing:1px;margin-bottom:4px;">▼ BACK (AUTO-GENERATED)</div>
-      <div style="background:#fff;border-radius:6px;padding:10px;display:flex;gap:8px;font-family:Arial,sans-serif;min-height:90px;">
+      <div style="background:#fff;border-radius:6px;padding:10px;display:flex;gap:8px;font-family:Arial,sans-serif;min-height:90px;cursor:zoom-in;" onclick="previewPostcardBackLightbox(${s.num},'${_tn}','${_ta}','${_fn}','${_fa}','${_fc}','${_fp}','${_lu}')" title="Click to enlarge">
         <div style="flex:1.4;border-right:1px solid #ccc;padding-right:8px;display:flex;flex-direction:column;justify-content:space-between;">
           <div>${logoUrl?'<img src="'+logoUrl+'" style="max-height:28px;max-width:80px;object-fit:contain;margin-bottom:4px;">':''}<div style="font-size:8px;color:#333;line-height:1.5;"><strong>${fromName}</strong><br>${fromAddr}${fromCity?'<br>'+fromCity:''}</div></div>
           <div style="font-size:6px;color:#bbb;border-top:1px dashed #ddd;padding-top:3px;letter-spacing:1px;">|||||||||||||||||||||||||||||</div>
@@ -2348,7 +2399,7 @@ function showEstimatePostcards(estId){
           <div style="font-size:5px;color:#bbb;border-top:1px dashed #ddd;padding-top:3px;letter-spacing:1px;">DELIVERY POINT BARCODE</div>
         </div>
       </div>
-      <button onclick="window.open('${backBlob}','_blank','width=700,height=500')" style="margin-top:8px;width:100%;background:#1f2937;border:1px solid #374151;border-radius:6px;padding:6px;color:#9CA3AF;font-size:11px;cursor:pointer;">&#128065; Open Full Back Preview</button>
+      <button onclick="previewPostcardBackLightbox(${s.num},'${_tn}','${_ta}','${_fn}','${_fa}','${_fc}','${_fp}','${_lu}')" style="margin-top:8px;width:100%;background:#1f2937;border:1px solid #374151;border-radius:6px;padding:6px;color:#9CA3AF;font-size:11px;cursor:pointer;">&#128065; Open Full Back Preview</button>
     </div>`;
   }).join('');
 
@@ -3242,34 +3293,18 @@ async function sendFollowUp(){
   const msg   = document.getElementById('fu-message').value.trim();
   if(!msg){toast('Enter a message to send','error');return;}
   if(!phone&&!email){toast('Enter a phone or email to send to','error');return;}
-  if(!S.cfg.ghlApiKey){toast('GHL API key not configured in Settings','error');return;}
   const btn = document.querySelector('#m-follow-up .btn-ok');
   if(btn){btn.textContent='Sending…';btn.disabled=true;}
   try{
-    // Create/find contact in GHL then send message
+    // Create/find contact in GHL then send message — proxied through secure server API
     const contactPayload={firstName:name.split(' ')[0]||name,lastName:name.split(' ').slice(1).join(' ')||'',email:email||undefined,phone:phone||undefined};
-    const cRes = await fetch('https://rest.gohighlevel.com/v1/contacts/',{
-      method:'POST',
-      headers:{'Authorization':'Bearer '+S.cfg.ghlApiKey,'Content-Type':'application/json'},
-      body:JSON.stringify(contactPayload)
-    });
-    const cData = await cRes.json();
+    const cData = await adminAPI('ghl', { path:'/contacts/', method:'POST', body:contactPayload });
     const contactId = cData.contact?.id||cData.id;
     if(contactId && phone){
-      // Send SMS via GHL
-      await fetch('https://rest.gohighlevel.com/v1/conversations/messages',{
-        method:'POST',
-        headers:{'Authorization':'Bearer '+S.cfg.ghlApiKey,'Content-Type':'application/json'},
-        body:JSON.stringify({type:'SMS',contactId,message:msg})
-      });
+      await adminAPI('ghl', { path:'/conversations/messages', method:'POST', body:{type:'SMS',contactId,message:msg} });
     }
     if(contactId && email){
-      // Send email via GHL
-      await fetch('https://rest.gohighlevel.com/v1/conversations/messages',{
-        method:'POST',
-        headers:{'Authorization':'Bearer '+S.cfg.ghlApiKey,'Content-Type':'application/json'},
-        body:JSON.stringify({type:'Email',contactId,subject:'Following Up About Your Roof',message:msg,html:'<p>'+msg.replace(/\n/g,'<br>')+'</p>'})
-      });
+      await adminAPI('ghl', { path:'/conversations/messages', method:'POST', body:{type:'Email',contactId,subject:'Following Up About Your Roof',message:msg,html:'<p>'+msg.replace(/\n/g,'<br>')+'</p>'} });
     }
     // Log activity
     addAct('Follow-up sent to <strong>'+escHtml(name||email||phone)+'</strong> for '+escHtml((S.pins.find(x=>x.id===pinId)||{}).address||''),'bid_sent');
@@ -4506,8 +4541,7 @@ function renderQueue(){
 async function sendLob(id){
   const item=S.queue.find(x=>x.id===id);if(!item)return;
   // Agency model: always use master Lob key loaded at login
-  const key = masterLobKey || S.cfg.lobKey;
-  if(!key){toast('Mailer service not configured — contact your administrator','error');return;}
+  if(!masterLobKey){toast('Mailer service not configured — contact your administrator','error');return;}
   const co=S.cfg.companyName||'Your Roofing Co';
   const fromRaw=S.cfg.companyAddr||'123 Main St, Detroit, MI, 48000';
   const fp=fromRaw.split(',').map(s=>s.trim());
@@ -4526,21 +4560,17 @@ async function sendLob(id){
   const fileHtml = buildLobMailerHtml(item);
   toast('Sending direct mail…','info');
   try{
-    const res=await fetch('https://api.lob.com/v1/letters',{
-      method:'POST',
-      headers:{'Authorization':'Basic '+btoa(key+':'),'Content-Type':'application/json'},
-      body:JSON.stringify({
-        description:'Roof Bid — '+item.addr,
-        to:{name:item.owner,address_line1:toLine1,address_city:toCity,address_state:toState,address_zip:toZip,address_country:'US'},
-        from:{name:co,address_line1:fp[0]||'123 Main St',address_city:fp[1]||'Detroit',address_state:fp[2]||'MI',address_zip:fp[3]||'48000',address_country:'US'},
-        file: fileHtml,
-        color: true,
-        double_sided: false,
-        address_placement: 'insert_blank_page'
-      })
-    });
-    const d=await res.json();
-    if(res.ok){
+    // Send via secure server-side proxy — Lob key never exposed in browser
+    const d = await adminAPI('lob-letter', { payload: {
+      description:'Roof Bid — '+item.addr,
+      to:{name:item.owner,address_line1:toLine1,address_city:toCity,address_state:toState,address_zip:toZip,address_country:'US'},
+      from:{name:co,address_line1:fp[0]||'123 Main St',address_city:fp[1]||'Detroit',address_state:fp[2]||'MI',address_zip:fp[3]||'48000',address_country:'US'},
+      file: fileHtml,
+      color: true,
+      double_sided: false,
+      address_placement: 'insert_blank_page'
+    }});
+    if(d && d.id){
       item.status='sent';item.mailedAt=new Date().toISOString();item.lobId=d.id;
       addAct('Bid letter mailed to <strong>'+escHtml(item.addr)+'</strong>','converted');
       // If this is a drip step, log it to GHL contact timeline
@@ -5057,10 +5087,6 @@ let _agencyData = null; // cached {accounts, profiles, pins, mailerLog}
 
 async function renderAgencyView(){
   if(!isSuperAdmin()) return;
-  const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0d2JoeG5ybWZtZGVub2d6dWVhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDgwMjAwMSwiZXhwIjoyMDkwMzc4MDAxfQ.UdxoP59JF42z6w5pF2Jf3N5LT9mhQ-Ls-OLi-2S5HRI';
-  const headers = {'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY};
-  const BASE = SUPABASE_URL+'/rest/v1/';
-
   // Show loading state
   document.getElementById('agency-accounts-grid').innerHTML =
     '<div style="color:var(--muted);font-size:12px;padding:10px;">Loading client data…</div>';
@@ -5068,19 +5094,11 @@ async function renderAgencyView(){
     '<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">Loading…</div>';
 
   try {
-    // Fetch all data in parallel
-    const [acctRes, profRes, pinsRes, logRes] = await Promise.all([
-      fetch(BASE+'accounts?select=id,name,company_name,plan,active,mailer_rate,created_at&order=created_at.asc', {headers}),
-      fetch(BASE+'user_profiles?select=id,account_id,name,email,role', {headers}),
-      fetch(BASE+'pins?select=id,account_id,status,created_at,rep_name', {headers}),
-      fetch(BASE+'mailer_log?select=*&order=sent_at.desc&limit=500', {headers})
-    ]);
-    const [accounts, profiles, pins, mailerLog] = await Promise.all([
-      acctRes.json(), profRes.json(), pinsRes.json(), logRes.json()
-    ]);
+    // Fetch all data via secure server-side API
+    const { accounts: allAccounts, profiles, pins, mailerLog } = await adminAPI('agency-data');
 
     // Filter out AHE agency account from client list
-    const clientAccounts = (accounts||[]).filter(a=>a.id!==AGENCY_ACCOUNT_ID);
+    const clientAccounts = (allAccounts||[]).filter(a=>a.id!==AGENCY_ACCOUNT_ID);
 
     _agencyData = { accounts: clientAccounts, profiles: profiles||[], pins: pins||[], mailerLog: mailerLog||[] };
 
@@ -5224,19 +5242,10 @@ async function saveClientAccount(){
   resultEl.textContent = 'Saving…'; resultEl.style.color='var(--muted)';
   if(btn){ btn.disabled=true; btn.textContent='Saving…'; }
   try {
-    const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0d2JoeG5ybWZtZGVub2d6dWVhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDgwMjAwMSwiZXhwIjoyMDkwMzc4MDAxfQ.UdxoP59JF42z6w5pF2Jf3N5LT9mhQ-Ls-OLi-2S5HRI';
-    const res = await fetch(SUPABASE_URL+'/rest/v1/accounts?id=eq.'+accountId, {
-      method: 'PATCH',
-      headers: {
-        'apikey': SERVICE_KEY,
-        'Authorization': 'Bearer '+SERVICE_KEY,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=representation'
-      },
-      body: JSON.stringify({ name, company_name:name, company_phone:phone||null, company_addr:addr||null, plan, mailer_rate:rate, notes:notes||null, active })
+    const updated = await adminAPI('patch-account', {
+      accountId,
+      updates: { name, company_name:name, company_phone:phone||null, company_addr:addr||null, plan, mailer_rate:rate, notes:notes||null, active }
     });
-    if(!res.ok){ const e=await res.json(); throw new Error(e.message||JSON.stringify(e)); }
-    const updated = await res.json();
     // Update local cache
     const idx = _agencyData.accounts.findIndex(x=>x.id===accountId);
     if(idx>=0) _agencyData.accounts[idx] = {..._agencyData.accounts[idx], name, company_name:name, company_phone:phone, company_addr:addr, plan, mailer_rate:rate, notes, active};
@@ -5844,13 +5853,10 @@ let toastT;
 // ═══════════════════════════════
 function fmtMoney(v){ if(!v||isNaN(v)) return null; return '$'+Math.round(v).toLocaleString(); }
 async function lookupPropertyData(address){
-  const key = masterRentcastKey || (S.cfg && S.cfg.rentcastKey) || '';
-  if(!key || !address) return null;
+  if(!masterRentcastKey || !address) return null;
   try{
-    const url = 'https://api.rentcast.io/v1/properties?address='+encodeURIComponent(address)+'&limit=1';
-    const res = await fetch(url, {headers:{'X-Api-Key': key, 'accept':'application/json'}});
-    if(!res.ok) return null;
-    const data = await res.json();
+    // Proxy through secure server-side API — RentCast key never exposed in browser
+    const data = await adminAPI('rentcast', {}, { address });
     const r = Array.isArray(data) ? data[0] : data;
     if(!r) return null;
     const name = (r.owner && r.owner.names && r.owner.names[0]) || null;
@@ -5966,19 +5972,8 @@ function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 const GHL_BASE = 'https://services.leadconnectorhq.com';
 
 async function ghlRequest(path, method='GET', body=null){
-  const key = S.cfg.ghlApiKey || 'pit-08e80077-de2c-42c9-ac9b-867c4e48ea70';
-  const opts = {
-    method,
-    headers:{
-      'Authorization': 'Bearer '+key,
-      'Content-Type': 'application/json',
-      'Version': '2021-07-28'
-    }
-  };
-  if(body) opts.body = JSON.stringify(body);
-  const res = await fetch(GHL_BASE+path, opts);
-  const data = await res.json();
-  if(!res.ok) throw new Error(data.message||data.msg||JSON.stringify(data));
+  // All GHL calls go through the secure server-side proxy — API key never exposed in browser
+  const data = await adminAPI('ghl', { path, method, body: body||undefined });
   return data;
 }
 
@@ -6159,8 +6154,7 @@ async function sendViaGHL(){
   if(!email){toast('Enter homeowner email to send via GHL','error');return;}
   if(!total){toast('Build an estimate first','error');return;}
 
-  const apiKey = S.cfg.ghlApiKey || 'pit-08e80077-de2c-42c9-ac9b-867c4e48ea70';
-  if(!apiKey){toast('Add your GHL API key in Settings','error');return;}
+  // GHL API key is used server-side only — no need to check it here
 
   toast('Sending to GHL...','info');
   try {
@@ -6828,7 +6822,6 @@ async function createAccount(){
   const btn = document.getElementById('btn-create-acct');
   if(btn){btn.disabled=true;btn.textContent='Creating…';}
   try {
-    const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0d2JoeG5ybWZtZGVub2d6dWVhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDgwMjAwMSwiZXhwIjoyMDkwMzc4MDAxfQ.UdxoP59JF42z6w5pF2Jf3N5LT9mhQ-Ls-OLi-2S5HRI';
     // 1. Create account row
     const {data:acct, error:acctErr} = await sb.from('accounts').insert({
       name, company_name:name,
@@ -6844,14 +6837,8 @@ async function createAccount(){
       ...(ghlPipe ? {ghl_pipeline_id: ghlPipe}   : {})
     }).select().single();
     if(acctErr) throw acctErr;
-    // 2. Create auth user via Admin API (auto-confirmed)
-    const adminRes = await fetch(SUPABASE_URL+'/auth/v1/admin/users', {
-      method:'POST',
-      headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json'},
-      body: JSON.stringify({ email, password:pass, email_confirm:true, user_metadata:{name} })
-    });
-    const adminData = await adminRes.json();
-    if(!adminRes.ok) throw new Error(adminData.message||adminData.msg||JSON.stringify(adminData));
+    // 2. Create auth user via secure API (service key stays server-side)
+    const adminData = await adminAPI('create-user', { email, password:pass, name });
     const userId = adminData.id;
     if(!userId) throw new Error('No user ID returned');
     // 3. Create user profile as admin
@@ -6892,26 +6879,8 @@ async function createUser(){
   const createBtn = document.querySelector('#admin-panel-body .btn-primary:last-of-type');
   if(createBtn){ createBtn.disabled=true; createBtn.textContent='Creating...'; }
   try {
-    // Use Supabase Admin API (service role) to create user with auto-confirm
-    // This bypasses the email confirmation flow entirely
-    const SUPABASE_URL = 'https://gtwbhxnrmfmdenogzuea.supabase.co';
-    const SERVICE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0d2JoeG5ybWZtZGVub2d6dWVhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDgwMjAwMSwiZXhwIjoyMDkwMzc4MDAxfQ.UdxoP59JF42z6w5pF2Jf3N5LT9mhQ-Ls-OLi-2S5HRI';
-    const adminRes = await fetch(SUPABASE_URL+'/auth/v1/admin/users', {
-      method: 'POST',
-      headers: {
-        'apikey': SERVICE_KEY,
-        'Authorization': 'Bearer '+SERVICE_KEY,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        email,
-        password: pass,
-        email_confirm: true,          // auto-confirm — no email click needed
-        user_metadata: { name }
-      })
-    });
-    const adminData = await adminRes.json();
-    if(!adminRes.ok) throw new Error(adminData.message || adminData.msg || JSON.stringify(adminData));
+    // Create user via secure server-side API (service key stays server-side)
+    const adminData = await adminAPI('create-user', { email, password:pass, name });
     const userId = adminData.id;
     if(!userId) throw new Error('No user ID returned from admin API');
     // Create profile with must_change_password = true
@@ -6956,41 +6925,25 @@ async function createSuperAdmin(){
   if(!email){ toast('Email is required','error'); return; }
   result.textContent='Working…'; result.style.color='var(--muted)';
   try {
-    const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0d2JoeG5ybWZtZGVub2d6dWVhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDgwMjAwMSwiZXhwIjoyMDkwMzc4MDAxfQ.UdxoP59JF42z6w5pF2Jf3N5LT9mhQ-Ls-OLi-2S5HRI';
     let userId = null;
     let isExisting = false;
 
-    // Step 1: Try to find existing auth user by email via admin list
-    const listRes = await fetch(SUPABASE_URL+'/auth/v1/admin/users?per_page=1000', {
-      headers: {'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY}
-    });
-    if(listRes.ok){
-      const listData = await listRes.json();
-      const users = listData.users || listData || [];
-      const found = users.find(u => u.email && u.email.toLowerCase()===email.toLowerCase());
-      if(found){ userId = found.id; isExisting = true; }
-    }
+    // Step 1: Try to find existing auth user by email via secure API
+    const listData = await adminAPI('list-users');
+    const users = listData.users || listData || [];
+    const found = users.find(u => u.email && u.email.toLowerCase()===email.toLowerCase());
+    if(found){ userId = found.id; isExisting = true; }
 
     if(!isExisting){
       // User doesn't exist yet — create them (password required)
       if(!pass){ toast('Password is required for new accounts','error'); result.textContent=''; return; }
       if(pass.length<6){ toast('Password must be at least 6 characters','error'); result.textContent=''; return; }
-      const adminRes = await fetch(SUPABASE_URL+'/auth/v1/admin/users', {
-        method: 'POST',
-        headers: {'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json'},
-        body: JSON.stringify({ email, password:pass, email_confirm:true, user_metadata:{name} })
-      });
-      const adminData = await adminRes.json();
-      if(!adminRes.ok) throw new Error(adminData.message||adminData.msg||JSON.stringify(adminData));
+      const adminData = await adminAPI('create-user', { email, password:pass, name });
       userId = adminData.id;
       if(!userId) throw new Error('No user ID returned');
     } else if(pass && pass.length>=6){
       // Existing user — update their password if one was provided
-      await fetch(SUPABASE_URL+'/auth/v1/admin/users/'+userId, {
-        method: 'PUT',
-        headers: {'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json'},
-        body: JSON.stringify({ password:pass, email_confirm:true })
-      });
+      await adminAPI('reset-password', { userId, password:pass });
     }
 
     // Step 2: Upsert user_profile to super_admin (works whether profile exists or not)
@@ -7078,19 +7031,13 @@ window.addEventListener('load', ()=>{
 });
 
 async function fetchMasterLobKey(){
-  // Fetch master Lob and RentCast keys from the AHE agency account using service role
-  // These keys are never displayed in client UI — only used at the agency level
+  // Confirm master keys exist on the server — keys never leave the server
+  // All Lob and RentCast calls are now proxied through /api/admin
   try {
-    const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0d2JoeG5ybWZtZGVub2d6dWVhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDgwMjAwMSwiZXhwIjoyMDkwMzc4MDAxfQ.UdxoP59JF42z6w5pF2Jf3N5LT9mhQ-Ls-OLi-2S5HRI';
-    const res = await fetch(SUPABASE_URL+'/rest/v1/accounts?id=eq.'+AGENCY_ACCOUNT_ID+'&select=lob_key,rentcast_key', {
-      headers: { 'apikey': SERVICE_KEY, 'Authorization': 'Bearer '+SERVICE_KEY }
-    });
-    const data = await res.json();
-    if(data && data[0]){
-      if(data[0].lob_key)      masterLobKey      = data[0].lob_key;
-      if(data[0].rentcast_key) masterRentcastKey = data[0].rentcast_key;
-    }
-  } catch(e){ console.warn('Could not fetch master keys:', e.message); }
+    const result = await adminAPI('get-master-keys');
+    masterLobKey      = result.hasLobKey      ? '__server__' : '';
+    masterRentcastKey = result.hasRentcastKey ? '__server__' : '';
+  } catch(e){ console.warn('Could not confirm master keys:', e.message); }
 }
 async function onSignedIn(user){
   currentUser = user;
@@ -7796,14 +7743,9 @@ async function mtChangeRole(userId, accountId){
 async function mtResetPassword(userId, email){
   const newPass = prompt('Enter new password for '+email+' (min 6 chars):');
   if(!newPass || newPass.length < 6){ toast('Password must be at least 6 characters','error'); return; }
-  const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0d2JoeG5ybWZtZGVub2d6dWVhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDgwMjAwMSwiZXhwIjoyMDkwMzc4MDAxfQ.UdxoP59JF42z6w5pF2Jf3N5LT9mhQ-Ls-OLi-2S5HRI';
-  const res = await fetch('https://gtwbhxnrmfmdenogzuea.supabase.co/auth/v1/admin/users/'+userId, {
-    method: 'PUT',
-    headers: {'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json'},
-    body: JSON.stringify({password: newPass})
-  });
-  const data = await res.json();
-  if(!res.ok){ toast('Error: '+(data.message||JSON.stringify(data)),'error'); return; }
+  try {
+    await adminAPI('reset-password', { userId, password: newPass });
+  } catch(e){ toast('Error: '+e.message,'error'); return; }
   // Mark must_change_password
   await sb.from('user_profiles').update({must_change_password:true}).eq('id',userId);
   toast('✅ Password reset for '+email,'success');
@@ -7811,16 +7753,13 @@ async function mtResetPassword(userId, email){
 
 async function mtRemoveUser(userId, userName, accountId){
   if(!confirm('Remove '+userName+' from this account? This cannot be undone.')) return;
-  const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0d2JoeG5ybWZtZGVub2d6dWVhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDgwMjAwMSwiZXhwIjoyMDkwMzc4MDAxfQ.UdxoP59JF42z6w5pF2Jf3N5LT9mhQ-Ls-OLi-2S5HRI';
   // Delete profile first
   const {error:profErr} = await sb.from('user_profiles').delete().eq('id',userId);
   if(profErr){ toast('Error removing profile: '+profErr.message,'error'); return; }
-  // Delete auth user
-  const res = await fetch('https://gtwbhxnrmfmdenogzuea.supabase.co/auth/v1/admin/users/'+userId, {
-    method: 'DELETE',
-    headers: {'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY}
-  });
-  if(!res.ok){ const d=await res.json(); toast('Error deleting auth user: '+(d.message||'unknown'),'error'); return; }
+  // Delete auth user via secure API
+  try {
+    await adminAPI('delete-user', { userId });
+  } catch(e){ toast('Error deleting auth user: '+e.message,'error'); return; }
   // Update local data
   _agencyData.profiles = _agencyData.profiles.filter(p=>p.id!==userId);
   toast('✅ '+userName+' removed','success');
@@ -7837,15 +7776,8 @@ async function mtAddMember(accountId){
   if(!name||!email||!pass){ toast('Name, email and password required','error'); return; }
   if(pass.length<6){ toast('Password must be at least 6 characters','error'); return; }
   result.textContent='Creating...'; result.style.color='var(--muted)';
-  const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0d2JoeG5ybWZtZGVub2d6dWVhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDgwMjAwMSwiZXhwIjoyMDkwMzc4MDAxfQ.UdxoP59JF42z6w5pF2Jf3N5LT9mhQ-Ls-OLi-2S5HRI';
   try {
-    const adminRes = await fetch('https://gtwbhxnrmfmdenogzuea.supabase.co/auth/v1/admin/users', {
-      method:'POST',
-      headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json'},
-      body: JSON.stringify({email, password:pass, email_confirm:true, user_metadata:{name}})
-    });
-    const adminData = await adminRes.json();
-    if(!adminRes.ok) throw new Error(adminData.message||JSON.stringify(adminData));
+    const adminData = await adminAPI('create-user', { email, password:pass, name });
     const userId = adminData.id;
     if(!userId) throw new Error('No user ID returned');
     const {error:profErr} = await sb.from('user_profiles').insert({
@@ -7999,8 +7931,7 @@ async function autoFireDueDripSteps(){
 async function sendDripPostcard(id){
   const item = S.queue.find(x=>x.id===id);
   if(!item || item.status==='sent') return;
-  const key = masterLobKey || S.cfg.lobKey;
-  if(!key) return;
+  if(!masterLobKey) return;
   const co = S.cfg.companyName||'Your Roofing Co';
   const fromRaw = S.cfg.companyAddr||'123 Main St, Detroit, MI, 48000';
   const fp = fromRaw.split(',').map(s=>s.trim());
@@ -8024,20 +7955,16 @@ async function sendDripPostcard(id){
     toAddr: item.addr
   });
   try{
-    const res = await fetch('https://api.lob.com/v1/postcards',{
-      method:'POST',
-      headers:{'Authorization':'Basic '+btoa(key+':'),'Content-Type':'application/json'},
-      body: JSON.stringify({
-        description: 'Drip Step '+item.drip_step+' — '+item.addr,
-        to:{name:item.owner,address_line1:toLine1,address_city:toCity,address_state:toState,address_zip:toZip,address_country:'US'},
-        from:{name:co,address_line1:fp[0]||'123 Main St',address_city:fp[1]||'Detroit',address_state:fp[2]||'MI',address_zip:fp[3]||'48000',address_country:'US'},
-        front: frontUrl,
-        back: backHtml,
-        size: '4x6'
-      })
-    });
-    const d = await res.json();
-    if(res.ok){
+    // Send via secure server-side proxy — Lob key never exposed in browser
+    const d = await adminAPI('lob-postcard', { payload: {
+      description: 'Drip Step '+item.drip_step+' — '+item.addr,
+      to:{name:item.owner,address_line1:toLine1,address_city:toCity,address_state:toState,address_zip:toZip,address_country:'US'},
+      from:{name:co,address_line1:fp[0]||'123 Main St',address_city:fp[1]||'Detroit',address_state:fp[2]||'MI',address_zip:fp[3]||'48000',address_country:'US'},
+      front: frontUrl,
+      back: backHtml,
+      size: '4x6'
+    }});
+    if(d && d.id){
       item.status='sent'; item.mailedAt=new Date().toISOString(); item.lobId=d.id;
       addAct('Drip Step '+item.drip_step+' postcard mailed to <strong>'+escHtml(item.addr)+'</strong>','converted');
       if(currentAccount && sb){
