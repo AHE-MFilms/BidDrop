@@ -2209,13 +2209,26 @@ function clearPostcard(step){
 
 // Called when drip modal opens — show postcard thumbnails and missing warnings
 function refreshDripPostcardPreviews(){
+  // Get the current estimate for address data
+  const est = (S.estimates||[]).find(e=>e.id===_dripEstId) || {};
+  const cfg = S.cfg || {};
+  const fromName = cfg.companyName || 'Your Company';
+  const fromAddr = cfg.companyAddress || '1 Company Dr';
+  const toName   = est.owner || 'Homeowner';
+  const toAddr   = est.addr  || '';
+  const toAddrShort = toAddr.split(',').slice(0,2).join(', ');
+
   [2,3,4].forEach(step=>{
-    const url = S.cfg && S.cfg['postcardStep'+step];
-    const thumb = document.getElementById('drip-pc'+step+'-thumb');
+    const url = cfg['postcardStep'+step];
+    const thumb   = document.getElementById('drip-pc'+step+'-thumb');
     const missing = document.getElementById('drip-pc'+step+'-missing');
-    const img = document.getElementById('drip-pc'+step+'-img');
+    const img     = document.getElementById('drip-pc'+step+'-img');
+    const backFrom= document.getElementById('drip-pc'+step+'-back-from');
+    const backTo  = document.getElementById('drip-pc'+step+'-back-to');
     if(url){
       if(img) img.src = url;
+      if(backFrom) backFrom.innerHTML = '<strong>'+fromName+'</strong><br>'+fromAddr;
+      if(backTo)   backTo.innerHTML   = '<strong>'+toName+'</strong><br>'+toAddrShort;
       if(thumb) thumb.style.display = 'block';
       if(missing) missing.style.display = 'none';
     } else {
@@ -8246,8 +8259,19 @@ function stormDropPin(lat, lon, locationHint){
         </div>
         <div style="font-size:12px;color:var(--muted);">Reminder postcard — "Your estimate is still available."</div>
         <div id="drip-pc2-thumb" style="margin-top:8px;display:none;">
-          <img id="drip-pc2-img" style="width:100%;max-height:80px;object-fit:cover;border-radius:5px;border:1px solid var(--border);cursor:zoom-in;" alt="Postcard front" onclick="previewPostcardFront(2)" title="Click to view full size">
-          <button onclick="previewPostcardBack(2)" style="margin-top:5px;width:100%;background:none;border:1px solid #7C3AED;border-radius:5px;padding:4px 8px;color:#C4B5FD;font-size:10px;font-weight:700;cursor:pointer;">📧 Preview Back Side</button>
+          <img id="drip-pc2-img" style="width:100%;max-height:80px;object-fit:cover;border-radius:5px;border:1px solid var(--border);cursor:zoom-in;" alt="Postcard front" onclick="previewPostcardFront(2)" title="Click to enlarge front">
+          <div id="drip-pc2-back" onclick="previewPostcardBack(2)" title="Click to enlarge back" style="margin-top:5px;background:#fff;border-radius:5px;border:1px solid var(--border);padding:6px;display:flex;gap:6px;font-family:Arial,sans-serif;cursor:zoom-in;font-size:7px;color:#111;">
+            <div style="flex:1.4;border-right:1px solid #ccc;padding-right:6px;">
+              <div id="drip-pc2-back-from" style="font-size:7px;color:#333;line-height:1.4;"></div>
+              <div style="font-size:5px;color:#bbb;border-top:1px dashed #ddd;margin-top:3px;letter-spacing:1px;">|||||||||||||||||||||||||</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:space-between;">
+              <div style="border:1px solid #333;padding:2px 4px;font-size:5px;color:#333;text-align:center;align-self:flex-end;"><strong>PRSRT STD</strong><br>U.S. POSTAGE<br>PAID<br>PERMIT #000</div>
+              <div id="drip-pc2-back-to" style="font-size:7px;color:#111;line-height:1.4;"></div>
+              <div style="font-size:4px;color:#bbb;border-top:1px dashed #ddd;margin-top:2px;letter-spacing:1px;">DELIVERY POINT BARCODE</div>
+            </div>
+          </div>
+          <div style="text-align:center;font-size:9px;color:#6B7280;margin-top:2px;">Click back to enlarge</div>
         </div>
         <div id="drip-pc2-missing" style="margin-top:8px;background:rgba(124,58,237,.08);border:1px dashed rgba(124,58,237,.3);border-radius:5px;padding:6px 10px;font-size:10px;color:#C4B5FD;display:none;">⚠️ No postcard design uploaded yet — go to Settings → Drip Postcard Designs to upload your artwork.</div>
       </div>
@@ -8263,8 +8287,19 @@ function stormDropPin(lat, lon, locationHint){
         </div>
         <div style="font-size:12px;color:var(--muted);">Urgency postcard — "Estimate expires soon. Call today."</div>
         <div id="drip-pc3-thumb" style="margin-top:8px;display:none;">
-          <img id="drip-pc3-img" style="width:100%;max-height:80px;object-fit:cover;border-radius:5px;border:1px solid var(--border);cursor:zoom-in;" alt="Postcard front" onclick="previewPostcardFront(3)" title="Click to view full size">
-          <button onclick="previewPostcardBack(3)" style="margin-top:5px;width:100%;background:none;border:1px solid #7C3AED;border-radius:5px;padding:4px 8px;color:#C4B5FD;font-size:10px;font-weight:700;cursor:pointer;">📧 Preview Back Side</button>
+          <img id="drip-pc3-img" style="width:100%;max-height:80px;object-fit:cover;border-radius:5px;border:1px solid var(--border);cursor:zoom-in;" alt="Postcard front" onclick="previewPostcardFront(3)" title="Click to enlarge front">
+          <div id="drip-pc3-back" onclick="previewPostcardBack(3)" title="Click to enlarge back" style="margin-top:5px;background:#fff;border-radius:5px;border:1px solid var(--border);padding:6px;display:flex;gap:6px;font-family:Arial,sans-serif;cursor:zoom-in;font-size:7px;color:#111;">
+            <div style="flex:1.4;border-right:1px solid #ccc;padding-right:6px;">
+              <div id="drip-pc3-back-from" style="font-size:7px;color:#333;line-height:1.4;"></div>
+              <div style="font-size:5px;color:#bbb;border-top:1px dashed #ddd;margin-top:3px;letter-spacing:1px;">|||||||||||||||||||||||||</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:space-between;">
+              <div style="border:1px solid #333;padding:2px 4px;font-size:5px;color:#333;text-align:center;align-self:flex-end;"><strong>PRSRT STD</strong><br>U.S. POSTAGE<br>PAID<br>PERMIT #000</div>
+              <div id="drip-pc3-back-to" style="font-size:7px;color:#111;line-height:1.4;"></div>
+              <div style="font-size:4px;color:#bbb;border-top:1px dashed #ddd;margin-top:2px;letter-spacing:1px;">DELIVERY POINT BARCODE</div>
+            </div>
+          </div>
+          <div style="text-align:center;font-size:9px;color:#6B7280;margin-top:2px;">Click back to enlarge</div>
         </div>
         <div id="drip-pc3-missing" style="margin-top:8px;background:rgba(124,58,237,.08);border:1px dashed rgba(124,58,237,.3);border-radius:5px;padding:6px 10px;font-size:10px;color:#C4B5FD;display:none;">⚠️ No postcard design uploaded yet — go to Settings → Drip Postcard Designs to upload your artwork.</div>
       </div>
@@ -8280,8 +8315,19 @@ function stormDropPin(lat, lon, locationHint){
         </div>
         <div style="font-size:12px;color:var(--muted);">Final touch — "Last chance. We'd love to earn your business."</div>
         <div id="drip-pc4-thumb" style="margin-top:8px;display:none;">
-          <img id="drip-pc4-img" style="width:100%;max-height:80px;object-fit:cover;border-radius:5px;border:1px solid var(--border);cursor:zoom-in;" alt="Postcard front" onclick="previewPostcardFront(4)" title="Click to view full size">
-          <button onclick="previewPostcardBack(4)" style="margin-top:5px;width:100%;background:none;border:1px solid #7C3AED;border-radius:5px;padding:4px 8px;color:#C4B5FD;font-size:10px;font-weight:700;cursor:pointer;">📧 Preview Back Side</button>
+          <img id="drip-pc4-img" style="width:100%;max-height:80px;object-fit:cover;border-radius:5px;border:1px solid var(--border);cursor:zoom-in;" alt="Postcard front" onclick="previewPostcardFront(4)" title="Click to enlarge front">
+          <div id="drip-pc4-back" onclick="previewPostcardBack(4)" title="Click to enlarge back" style="margin-top:5px;background:#fff;border-radius:5px;border:1px solid var(--border);padding:6px;display:flex;gap:6px;font-family:Arial,sans-serif;cursor:zoom-in;font-size:7px;color:#111;">
+            <div style="flex:1.4;border-right:1px solid #ccc;padding-right:6px;">
+              <div id="drip-pc4-back-from" style="font-size:7px;color:#333;line-height:1.4;"></div>
+              <div style="font-size:5px;color:#bbb;border-top:1px dashed #ddd;margin-top:3px;letter-spacing:1px;">|||||||||||||||||||||||||</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:space-between;">
+              <div style="border:1px solid #333;padding:2px 4px;font-size:5px;color:#333;text-align:center;align-self:flex-end;"><strong>PRSRT STD</strong><br>U.S. POSTAGE<br>PAID<br>PERMIT #000</div>
+              <div id="drip-pc4-back-to" style="font-size:7px;color:#111;line-height:1.4;"></div>
+              <div style="font-size:4px;color:#bbb;border-top:1px dashed #ddd;margin-top:2px;letter-spacing:1px;">DELIVERY POINT BARCODE</div>
+            </div>
+          </div>
+          <div style="text-align:center;font-size:9px;color:#6B7280;margin-top:2px;">Click back to enlarge</div>
         </div>
         <div id="drip-pc4-missing" style="margin-top:8px;background:rgba(124,58,237,.08);border:1px dashed rgba(124,58,237,.3);border-radius:5px;padding:6px 10px;font-size:10px;color:#C4B5FD;display:none;">⚠️ No postcard design uploaded yet — go to Settings → Drip Postcard Designs to upload your artwork.</div>
       </div>
