@@ -1277,14 +1277,14 @@ tr:hover td{background:var(--card);}
         <div style="font-size:13px;font-weight:700;color:var(--text);">📮 Drip Mail Campaigns</div>
         <div style="font-size:11px;color:var(--muted);margin-top:3px;">When enabled, reps can enroll addresses in an automated postcard follow-up sequence after the initial flyer is sent.</div>
       </div>
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex-shrink:0;">
+      <div style="display:flex;align-items:center;gap:8px;cursor:pointer;flex-shrink:0;" onclick="toggleDripEnabled()">
         <span style="font-size:12px;color:var(--muted);" id="drip-toggle-label">Off</span>
-        <div style="position:relative;width:44px;height:24px;">
-          <input type="checkbox" id="s-drip-enabled" style="opacity:0;width:0;height:0;position:absolute;" onchange="updateDripToggleLabel()">
-          <span onclick="document.getElementById('s-drip-enabled').click()" style="position:absolute;inset:0;background:var(--border);border-radius:12px;cursor:pointer;transition:.2s;" id="drip-toggle-track"></span>
-          <span id="drip-toggle-knob" style="position:absolute;left:2px;top:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:.2s;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,.3);"></span>
+        <div style="position:relative;width:44px;height:24px;pointer-events:none;">
+          <span style="position:absolute;inset:0;background:var(--border);border-radius:12px;transition:.2s;" id="drip-toggle-track"></span>
+          <span id="drip-toggle-knob" style="position:absolute;left:2px;top:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3);"></span>
         </div>
-      </label>
+      </div>
+      <input type="checkbox" id="s-drip-enabled" style="display:none;">
     </div>
     <!-- ── DRIP POSTCARD DESIGNS ─────────────────────── -->
     <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:16px 0 10px;">Drip Postcard Designs <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— Upload your own 6×4" front artwork for each follow-up step. We handle the address back.</span></div>
@@ -8098,7 +8098,14 @@ function cancelDrip(estId){
   toast('Drip sequence cancelled','info');
 }
 
-// Toggle label + track color for the drip enabled switch
+// Toggle drip enabled switch (called by clicking the visual toggle)
+function toggleDripEnabled(){
+  const ck = document.getElementById('s-drip-enabled');
+  if(!ck) return;
+  ck.checked = !ck.checked;
+  updateDripToggleLabel();
+}
+// Update visual state of drip toggle to match checkbox
 function updateDripToggleLabel(){
   const ck = document.getElementById('s-drip-enabled');
   const lbl = document.getElementById('drip-toggle-label');
