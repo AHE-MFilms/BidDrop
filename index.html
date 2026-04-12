@@ -7583,15 +7583,14 @@ async function loadStormEvents(){
     dates.push(`${yy}${mm}${dd}`);
   }
 
-  // Use a CORS proxy since NOAA doesn't allow direct browser fetches
-  const PROXY = 'https://corsproxy.io/?url=';
+  // NOAA SPC sends Access-Control-Allow-Origin: * — fetch directly, no proxy needed
   let total = 0;
   let fetched = 0;
 
   for(const dateStr of dates){
     try{
       const url = `https://www.spc.noaa.gov/climo/reports/${dateStr}_rpts_filtered_hail.csv`;
-      const res = await fetch(PROXY + encodeURIComponent(url));
+      const res = await fetch(url);
       if(!res.ok) continue;
       const text = await res.text();
       const lines = text.trim().split('\n');
