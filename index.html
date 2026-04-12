@@ -597,16 +597,16 @@ tr:hover td{background:var(--card);}
         <select id="storm-days" onchange="loadStormEvents()" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:7px 10px;font-size:12px;">
           <option value="1">Today</option>
           <option value="3">Last 3 Days</option>
-          <option value="7" selected>Last 7 Days</option>
+          <option value="7">Last 7 Days</option>
           <option value="14">Last 14 Days</option>
-          <option value="30">Last 30 Days</option>
+          <option value="30" selected>Last 30 Days</option>
         </select>
       </div>
       <div style="margin-bottom:12px;">
         <label style="font-size:11px;font-weight:700;color:var(--mid);display:block;margin-bottom:5px;">MIN HAIL SIZE</label>
         <select id="storm-min-size" onchange="renderStormMarkers()" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:7px 10px;font-size:12px;">
-          <option value="75">0.75"+ (Penny)</option>
-          <option value="100" selected>1.00"+ (Quarter)</option>
+          <option value="75" selected>0.75"+ (Penny)</option>
+          <option value="100">1.00"+ (Quarter)</option>
           <option value="150">1.50"+ (Golf Ball)</option>
           <option value="200">2.00"+ (Baseball+)</option>
         </select>
