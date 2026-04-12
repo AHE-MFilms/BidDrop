@@ -2035,8 +2035,6 @@ function flyToResult(lat,lon,name){
   document.getElementById('map-search-inp').value=(name||'').split(',').slice(0,2).join(',').trim();
   map.flyTo([parseFloat(lat),parseFloat(lon)],19,{duration:.8});
 }
-}
-
 function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 document.addEventListener('click',e=>{
