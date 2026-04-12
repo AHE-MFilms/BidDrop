@@ -7583,26 +7583,26 @@ async function loadStormEvents(){
     dates.push(`${yy}${mm}${dd}`);
   }
 
-  // NOAA SPC sends Access-Control-Allow-Origin: * — fetch directly, no proxy needed
-  let total = 0;
-  let fetched = 0;
-
-  for(const dateStr of dates){
-    try{
+  // NOAA SPC sends Access-Control-Allow-Origin: * — fetch all dates in parallel
+  let completed = 0;
+  const fetchOne = async (dateStr) => {
+    try {
       const url = `https://www.spc.noaa.gov/climo/reports/${dateStr}_rpts_filtered_hail.csv`;
       const res = await fetch(url);
-      if(!res.ok) continue;
+      completed++;
+      statusEl.textContent = `Loading… ${completed}/${dates.length}`;
+      if(!res.ok) return [];
       const text = await res.text();
       const lines = text.trim().split('\n');
-      // Skip header line
+      const rows = [];
       for(let i = 1; i < lines.length; i++){
         const parts = lines[i].split(',');
         if(parts.length < 7) continue;
-        const size = parseInt(parts[1]);  // hundredths of inches
+        const size = parseInt(parts[1]);
         const lat = parseFloat(parts[5]);
         const lon = parseFloat(parts[6]);
         if(isNaN(lat)||isNaN(lon)||isNaN(size)) continue;
-        _stormData.push({
+        rows.push({
           date: dateStr,
           time: parts[0],
           size,
@@ -7612,14 +7612,16 @@ async function loadStormEvents(){
           lat, lon,
           comment: parts.slice(7).join(',').trim()
         });
-        total++;
       }
-      fetched++;
-    } catch(e){ /* skip failed dates */ }
-  }
+      return rows;
+    } catch(e){ completed++; return []; }
+  };
+
+  const results = await Promise.all(dates.map(fetchOne));
+  _stormData = results.flat();
 
   renderStormMarkers();
-  if(total === 0){
+  if(_stormData.length === 0){
     statusEl.textContent = 'No hail reports found for this period.';
   }
 }
