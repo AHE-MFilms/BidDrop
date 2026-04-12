@@ -1215,11 +1215,13 @@ tr:hover td{background:var(--card);}
     <div class="fg"><label class="fl">SMS Template</label><textarea class="fi" id="s-ghl-sms-tpl" rows="3" style="resize:vertical;" placeholder="Hi {name}! This is {rep} from {company}. Following up about your roof at {address}. Free inspection available — reply YES to schedule!"></textarea></div>
     <div class="fg"><label class="fl">Email Template</label><textarea class="fi" id="s-ghl-email-tpl" rows="5" style="resize:vertical;" placeholder="Hi {name},\n\nI hope this message finds you well! I'm {rep} from {company}. I recently visited your property at {address} and noticed your roof may need attention.\n\nWe're offering free storm damage inspections this week. Would you like to schedule a time?\n\nBest,\n{rep}\n{company}"></textarea></div>
 
-    <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:16px 0 10px;">Property Owner Lookup (RentCast)</div>
+    <div id="rentcast-settings-section" style="display:none;">
+    <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:16px 0 10px;">Property Owner Lookup (RentCast) — Agency Master Key</div>
     <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:11px;color:var(--mid);margin-bottom:10px;">
       🏠 Auto-fills the homeowner name when a pinned address is loaded. Get a free key at <a href="https://app.rentcast.io/app/api-access" target="_blank" style="color:var(--accent);">rentcast.io</a> (50 free lookups/mo, then ~$0.04 each).
     </div>
-    <div class="fg"><label class="fl">RentCast API Key</label><input class="fi" id="s-rentcast-key" placeholder="live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" type="password"></div>
+    <div class="fg"><label class="fl">RentCast API Key <span style="font-weight:400;color:var(--muted);text-transform:none;font-size:10px;">(stored securely — not visible to clients)</span></label><input class="fi" id="s-rentcast-key" placeholder="live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" type="password"></div>
+    </div><!-- /rentcast-settings-section -->
     <div id="lob-settings-section" style="display:none;">
       <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:16px 0 10px;">Lob.com (Physical Mail) — Agency Master Key</div>
       <div class="fg"><label class="fl">Lob.com API Key <span style="font-weight:400;color:var(--muted);text-transform:none;font-size:10px;">(stored securely — not visible to clients)</span></label><input class="fi" id="s-lob" placeholder="live_c39f..."></div>
@@ -1313,7 +1315,8 @@ const AHE_LOGO = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1B
 const SUPABASE_URL = 'https://gtwbhxnrmfmdenogzuea.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0d2JoeG5ybWZtZGVub2d6dWVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MDIwMDEsImV4cCI6MjA5MDM3ODAwMX0.BsQ16dnGb4xKIgIPxvgqjdGUnZ9H374car1_4e1Umbs';
 let sb; // Supabase client — initialized after page load
-let masterLobKey = ''; // Fetched at login from AHE agency account — never exposed to client UI
+let masterLobKey = '';      // Fetched at login from AHE agency account — never exposed to client UI
+let masterRentcastKey = ''; // Fetched at login from AHE agency account — never exposed to client UI
 const AGENCY_ACCOUNT_ID = 'ab08643f-3d71-4f47-abac-31599cf10d25'; // AHE master account row
 const OWNER_EMAIL = 'john@mongoosefilms.com'; // Primary owner — cannot be deleted by any other super_admin
 
@@ -1419,8 +1422,8 @@ async function syncAccountToSupabase(){
     ghl_api_key: cfg.ghlApiKey, ghl_location_id: cfg.ghlLocationId,
     ghl_pipeline_id: cfg.ghlPipelineId, ghl_stage_id: cfg.ghlStageId,
     ghl_sms_tpl: cfg.ghlSmsTpl||null, ghl_email_tpl: cfg.ghlEmailTpl||null,
-    // lob_key intentionally omitted — master Lob key is stored only on the agency account row, never on client accounts
-    rentcast_key: cfg.rentcastKey||'', logo_data: cfg.logoData,
+    // lob_key and rentcast_key intentionally omitted — both are master keys stored only on the agency account row
+    logo_data: cfg.logoData,
     headshot: cfg.headshot, headshot_pos: cfg.headshotPos,
     review1: cfg.review1, review2: cfg.review2
   }).eq('id', currentAccount.id);
@@ -1474,8 +1477,7 @@ function accountRowToCfg(row){
     ghlStageId: row.ghl_stage_id||'',
     ghlSmsTpl: row.ghl_sms_tpl||DEFAULTS.ghlSmsTpl,
     ghlEmailTpl: row.ghl_email_tpl||DEFAULTS.ghlEmailTpl,
-    // lobKey intentionally not loaded from client account rows — masterLobKey is used at the agency level
-    rentcastKey: row.rentcast_key||'',
+    // lobKey and rentcastKey intentionally not loaded from client account rows — master keys used at agency level
     logoData: row.logo_data||null,
     headshot: row.headshot||null,
     headshotPos: row.headshot_pos||'30',
@@ -5218,11 +5220,15 @@ function openSettings(){
     }
     if(c.ghlStageId) stgSel.value=c.ghlStageId;
   }
-  // Show Lob key field only to super_admin
+  // Show Lob and RentCast key fields only to super_admin
   const lobSection = document.getElementById('lob-settings-section');
   if(lobSection) lobSection.style.display = isSuperAdmin() ? 'block' : 'none';
-  if(isSuperAdmin()) document.getElementById('s-lob').value = masterLobKey||c.lobKey||'';
-  const rcKeyEl = document.getElementById('s-rentcast-key'); if(rcKeyEl) rcKeyEl.value = c.rentcastKey||'';
+  const rcSection = document.getElementById('rentcast-settings-section');
+  if(rcSection) rcSection.style.display = isSuperAdmin() ? 'block' : 'none';
+  if(isSuperAdmin()){
+    const lobEl = document.getElementById('s-lob'); if(lobEl) lobEl.value = masterLobKey||'';
+    const rcKeyEl = document.getElementById('s-rentcast-key'); if(rcKeyEl) rcKeyEl.value = masterRentcastKey||'';
+  }
   if(isSuperAdmin()){ const mc=document.getElementById('s-mailer-cost'); if(mc) mc.value=c.mailerCostPerPiece||'0.85'; }
   const lp=document.getElementById('logo-preview');
   if(lp)lp.innerHTML=c.logoData?'<img src="'+c.logoData+'" style="max-width:100%;max-height:100%;object-fit:contain;">':'No logo';
@@ -5283,8 +5289,7 @@ function saveSettings(){
     ghlStageId:document.getElementById('s-ghl-stage').value||'',
     ghlSmsTpl:v('s-ghl-sms-tpl')||DEFAULTS.ghlSmsTpl,
     ghlEmailTpl:v('s-ghl-email-tpl')||DEFAULTS.ghlEmailTpl,
-    // lobKey intentionally excluded from client cfg — masterLobKey handles all Lob sends at agency level
-    rentcastKey: v('s-rentcast-key') || S.cfg.rentcastKey || '',
+    // lobKey and rentcastKey intentionally excluded from client cfg — master keys at agency level only
     mailerCostPerPiece: isSuperAdmin() ? (v('s-mailer-cost')||'0.85') : (S.cfg.mailerCostPerPiece||'0.85'),
     logoData:S.cfg.logoData||null,
     headshot:S.cfg.headshot||null,
@@ -5295,13 +5300,16 @@ function saveSettings(){
     bookingUrl:document.getElementById('s-bookingurl').value||''
   };
   applyBrand();save();closeM('m-settings');updatePreview();
-  // Super admin: persist master Lob key directly to agency account row (never touches client rows)
+  // Super admin: persist master Lob and RentCast keys directly to agency account row (never touches client rows)
   if(isSuperAdmin() && sb){
     const newLobKey = document.getElementById('s-lob') ? document.getElementById('s-lob').value.trim() : '';
-    if(newLobKey !== masterLobKey){
-      masterLobKey = newLobKey;
-      sb.from('accounts').update({ lob_key: newLobKey }).eq('id', AGENCY_ACCOUNT_ID)
-        .then(({error})=>{ if(error) console.warn('Lob key save error:',error.message); });
+    const newRcKey  = document.getElementById('s-rentcast-key') ? document.getElementById('s-rentcast-key').value.trim() : '';
+    const updates = {};
+    if(newLobKey !== masterLobKey){ masterLobKey = newLobKey; updates.lob_key = newLobKey; }
+    if(newRcKey  !== masterRentcastKey){ masterRentcastKey = newRcKey; updates.rentcast_key = newRcKey; }
+    if(Object.keys(updates).length){
+      sb.from('accounts').update(updates).eq('id', AGENCY_ACCOUNT_ID)
+        .then(({error})=>{ if(error) console.warn('Master key save error:',error.message); });
     }
   }
   toast('Settings saved!','success');
@@ -5357,7 +5365,7 @@ let toastT;
 // ═══════════════════════════════
 function fmtMoney(v){ if(!v||isNaN(v)) return null; return '$'+Math.round(v).toLocaleString(); }
 async function lookupPropertyData(address){
-  const key = (S.cfg && S.cfg.rentcastKey) || '';
+  const key = masterRentcastKey || (S.cfg && S.cfg.rentcastKey) || '';
   if(!key || !address) return null;
   try{
     const url = 'https://api.rentcast.io/v1/properties?address='+encodeURIComponent(address)+'&limit=1';
@@ -6538,18 +6546,19 @@ window.addEventListener('load', ()=>{
 });
 
 async function fetchMasterLobKey(){
-  // Fetch the master Lob key from the AHE agency account using service role
-  // This key is never displayed in the UI — only used server-side for sends
+  // Fetch master Lob and RentCast keys from the AHE agency account using service role
+  // These keys are never displayed in client UI — only used at the agency level
   try {
     const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0d2JoeG5ybWZtZGVub2d6dWVhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDgwMjAwMSwiZXhwIjoyMDkwMzc4MDAxfQ.UdxoP59JF42z6w5pF2Jf3N5LT9mhQ-Ls-OLi-2S5HRI';
-    const res = await fetch(SUPABASE_URL+'/rest/v1/accounts?id=eq.'+AGENCY_ACCOUNT_ID+'&select=lob_key', {
+    const res = await fetch(SUPABASE_URL+'/rest/v1/accounts?id=eq.'+AGENCY_ACCOUNT_ID+'&select=lob_key,rentcast_key', {
       headers: { 'apikey': SERVICE_KEY, 'Authorization': 'Bearer '+SERVICE_KEY }
     });
     const data = await res.json();
-    if(data && data[0] && data[0].lob_key) {
-      masterLobKey = data[0].lob_key;
+    if(data && data[0]){
+      if(data[0].lob_key)      masterLobKey      = data[0].lob_key;
+      if(data[0].rentcast_key) masterRentcastKey = data[0].rentcast_key;
     }
-  } catch(e){ console.warn('Could not fetch master Lob key:', e.message); }
+  } catch(e){ console.warn('Could not fetch master keys:', e.message); }
 }
 async function onSignedIn(user){
   currentUser = user;
