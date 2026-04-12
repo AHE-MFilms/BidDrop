@@ -1703,13 +1703,17 @@ function renderFollowUpTab(){
     const fromCity = cfg.companyCity   || '';
     const fromPhone= cfg.phone         || '';
     const logoUrl  = cfg.logoData      || '';
-    const backHtml = buildPostcardBackInline({ fromName, fromAddr, fromCity, fromPhone, logoUrl });
+    // Use first estimate as sample data for the preview, or generic placeholder
+    const sampleEst = (S.estimates||[]).find(e=>!e.isRevision && !e.deleted);
+    const previewToName = sampleEst ? (sampleEst.owner||'Sample Homeowner') : 'Sample Homeowner';
+    const previewToAddr = sampleEst ? (sampleEst.addr||'123 Main Street, Canton, MI 48188') : '123 Main Street, Canton, MI 48188';
+    const backHtml = buildPostcardBackInline({ fromName, fromAddr, fromCity, fromPhone, logoUrl, toName: previewToName, toAddr: previewToAddr });
     backEl.innerHTML = backHtml;
   });
 }
 
 // Inline (iframe-free) version of the postcard back for embedding in the tab
-function buildPostcardBackInline({ fromName, fromAddr, fromCity, fromPhone, logoUrl }){
+function buildPostcardBackInline({ fromName, fromAddr, fromCity, fromPhone, logoUrl, toName, toAddr }){
   return `
   <div style="position:absolute;inset:0;display:flex;font-family:Arial,sans-serif;background:#fff;padding:16px 20px;gap:16px;box-sizing:border-box;">
     <!-- Return address left column -->
@@ -1727,10 +1731,9 @@ function buildPostcardBackInline({ fromName, fromAddr, fromCity, fromPhone, logo
         <strong style="display:block;font-size:9px;letter-spacing:.3px;">PRSRT STD</strong>U.S. POSTAGE<br>PAID<br>PERMIT #000
       </div>
       <div style="font-size:11px;line-height:1.7;color:#111;">
-        <div style="font-weight:700;font-size:12px;margin-bottom:4px;">Homeowner Name</div>
+        <div style="font-weight:700;font-size:12px;margin-bottom:4px;">\${toName||'Homeowner Name'}</div>
         <div style="border-top:1px solid #eee;margin-bottom:5px;"></div>
-        <div>123 Main Street</div>
-        <div>City, State 00000</div>
+        \${(toAddr||'123 Main Street, City, State 00000').split(',').map(l=>'<div>'+l.trim()+'</div>').join('')}
       </div>
       <div style="font-size:6px;color:#ccc;letter-spacing:2px;text-align:center;">DELIVERY POINT BARCODE</div>
     </div>
@@ -4438,6 +4441,8 @@ async function sendLob(id){
     if(res.ok){
       item.status='sent';item.mailedAt=new Date().toISOString();item.lobId=d.id;
       addAct('Bid letter mailed to <strong>'+escHtml(item.addr)+'</strong>','converted');
+      // If this is a drip step, log it to GHL contact timeline
+      if(item.drip_step) ghlAddDripNote(item.owner, item.addr, item.drip_step, item.mailedAt).catch(e=>console.warn('[GHL drip note]',e));
       // Log to mailer_log for agency billing
       if(currentAccount && sb){
         sb.from('mailer_log').insert({
@@ -6021,6 +6026,25 @@ async function ghlSendEmail(contactId, toEmail, toName, subject, htmlBody){
     emailTo: toEmail,
     emailFrom: undefined // uses location's connected sending email
   });
+}
+
+// Add a note to a GHL contact by address lookup
+async function ghlAddDripNote(ownerName, address, stepNum, mailedAt){
+  if(!S.cfg.ghlApiKey && !S.cfg.ghlLocationId) return;
+  try {
+    // Find contact by address
+    const locationId = S.cfg.ghlLocationId || 'gz85VU6SxGXS7lqHAQGx';
+    const search = await ghlRequest('/contacts/?locationId='+locationId+'&query='+encodeURIComponent(address));
+    const contacts = search.contacts || [];
+    if(!contacts.length){ console.log('[GHL] No contact found for drip note:', address); return; }
+    const contactId = contacts[0].id;
+    const stepNames = {2:'Follow-Up (Day 7)',3:'Urgency (Day 14)',4:'Final (Day 35)'};
+    const stepLabel = stepNames[stepNum] || 'Step '+stepNum;
+    const dateStr = mailedAt ? new Date(mailedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    const noteBody = '📮 BidDrop Drip — '+stepLabel+' postcard mailed on '+dateStr+'. Address: '+address;
+    await ghlRequest('/contacts/'+contactId+'/notes', 'POST', { body: noteBody, userId: contactId });
+    console.log('[GHL] Drip note added for', address, 'step', stepNum);
+  } catch(e){ console.warn('[GHL] Failed to add drip note:', e.message); }
 }
 
 async function sendViaGHL(){
@@ -7929,6 +7953,8 @@ async function sendDripPostcard(id){
       }
       save(); renderQueue();
       toast('📮 Drip Step '+item.drip_step+' auto-mailed to '+item.addr,'success');
+      // Sync to GHL contact timeline (fire-and-forget)
+      ghlAddDripNote(item.owner, item.addr, item.drip_step, item.mailedAt).catch(e=>console.warn('[GHL drip note]',e));
     } else {
       item.status='failed'; save(); renderQueue();
       console.warn('[BidDrop] Drip send failed:', d.error?.message);

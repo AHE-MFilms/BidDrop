@@ -1,0 +1,5 @@
+[project]
+id = "gtwbhxnrmfmdenogzuea"
+
+[functions.drip-scheduler]
+verify_jwt = false
