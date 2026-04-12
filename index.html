@@ -1192,6 +1192,63 @@ tr:hover td{background:var(--card);}
         <button onclick="clearReview(2)" style="width:100%;margin-top:4px;background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;text-align:center;">Remove</button>
       </div>
     </div>
+    <!-- ── DRIP POSTCARD DESIGNS ─────────────────────── -->
+    <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:16px 0 10px;">Drip Postcard Designs <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— Upload your own 6×4" front artwork for each follow-up step. We handle the address back.</span></div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--muted);margin-bottom:12px;">📬 Upload a 6×4" (1800×1200px recommended) JPEG or PNG for each drip step. Your company branding, design, and messaging — BidDrop automatically adds the homeowner's mailing address to the back.</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <!-- Step 2 postcard -->
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div style="background:#7C3AED;color:#fff;font-family:var(--font-h);font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;">STEP 2</div>
+          <div style="font-size:12px;font-weight:700;color:var(--text);">Follow-Up Postcard <span style="font-size:11px;font-weight:400;color:var(--muted);">— Day 7</span></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <div id="pc2-preview" style="width:120px;height:80px;background:var(--bg);border:2px dashed var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);overflow:hidden;flex-shrink:0;text-align:center;line-height:1.4;">No design<br>uploaded</div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+            <label style="display:block;background:var(--card);border:2px solid var(--border);border-radius:7px;padding:8px 12px;text-align:center;cursor:pointer;color:var(--mid);font-size:11px;font-weight:600;">
+              🖼 Upload Postcard Front (Step 2)
+              <input type="file" accept="image/*" style="display:none;" onchange="handlePostcardUpload(this,2)">
+            </label>
+            <button onclick="clearPostcard(2)" style="background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;text-align:center;">✕ Remove</button>
+          </div>
+        </div>
+      </div>
+      <!-- Step 3 postcard -->
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div style="background:#7C3AED;color:#fff;font-family:var(--font-h);font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;">STEP 3</div>
+          <div style="font-size:12px;font-weight:700;color:var(--text);">Urgency Postcard <span style="font-size:11px;font-weight:400;color:var(--muted);">— Day 14</span></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <div id="pc3-preview" style="width:120px;height:80px;background:var(--bg);border:2px dashed var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);overflow:hidden;flex-shrink:0;text-align:center;line-height:1.4;">No design<br>uploaded</div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+            <label style="display:block;background:var(--card);border:2px solid var(--border);border-radius:7px;padding:8px 12px;text-align:center;cursor:pointer;color:var(--mid);font-size:11px;font-weight:600;">
+              🖼 Upload Postcard Front (Step 3)
+              <input type="file" accept="image/*" style="display:none;" onchange="handlePostcardUpload(this,3)">
+            </label>
+            <button onclick="clearPostcard(3)" style="background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;text-align:center;">✕ Remove</button>
+          </div>
+        </div>
+      </div>
+      <!-- Step 4 postcard -->
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div style="background:#7C3AED;color:#fff;font-family:var(--font-h);font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;">STEP 4</div>
+          <div style="font-size:12px;font-weight:700;color:var(--text);">Final Postcard <span style="font-size:11px;font-weight:400;color:var(--muted);">— Day 35</span></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <div id="pc4-preview" style="width:120px;height:80px;background:var(--bg);border:2px dashed var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);overflow:hidden;flex-shrink:0;text-align:center;line-height:1.4;">No design<br>uploaded</div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+            <label style="display:block;background:var(--card);border:2px solid var(--border);border-radius:7px;padding:8px 12px;text-align:center;cursor:pointer;color:var(--mid);font-size:11px;font-weight:600;">
+              🖼 Upload Postcard Front (Step 4)
+              <input type="file" accept="image/*" style="display:none;" onchange="handlePostcardUpload(this,4)">
+            </label>
+            <button onclick="clearPostcard(4)" style="background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;text-align:center;">✕ Remove</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:16px 0 10px;">GoHighLevel Integration</div>
     <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:11px;color:var(--mid);margin-bottom:10px;">
       🔗 Connect this client's GHL sub-account to create contacts, opportunities, and send emails directly from BidDrop.
@@ -1935,6 +1992,126 @@ function clearLogo(){
   if(prev)prev.innerHTML='No logo';
   save();updatePreview();
 }
+
+// ── DRIP POSTCARD UPLOAD HANDLERS ────────────────────────────────────────────
+function handlePostcardUpload(inp, step){
+  if(!inp.files||!inp.files[0]) return;
+  const file = inp.files[0];
+  const acctId = (currentAccount && currentAccount.id) || 'shared';
+  const path = acctId + '/cfg/postcard-step' + step + '.jpg';
+  toast('Uploading postcard design…','info');
+  uploadToStorage(file, path, 1800, 0.92, 'image/jpeg').then(url=>{
+    if(url){
+      S.cfg['postcardStep'+step] = url;
+      const prev = document.getElementById('pc'+step+'-preview');
+      if(prev) prev.innerHTML = '<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;border-radius:5px;">';
+      save(); toast('Postcard Step '+step+' uploaded!','success');
+    } else {
+      const r2 = new FileReader();
+      r2.onload = ev => {
+        S.cfg['postcardStep'+step] = ev.target.result;
+        const prev = document.getElementById('pc'+step+'-preview');
+        if(prev) prev.innerHTML = '<img src="'+ev.target.result+'" style="width:100%;height:100%;object-fit:cover;border-radius:5px;">';
+        save(); toast('Postcard Step '+step+' saved!','success');
+      };
+      r2.readAsDataURL(file);
+    }
+  });
+}
+
+function clearPostcard(step){
+  S.cfg['postcardStep'+step] = null;
+  const prev = document.getElementById('pc'+step+'-preview');
+  if(prev) prev.innerHTML = 'No design<br>uploaded';
+  save();
+}
+
+// Called when drip modal opens — show postcard thumbnails and missing warnings
+function refreshDripPostcardPreviews(){
+  [2,3,4].forEach(step=>{
+    const url = S.cfg && S.cfg['postcardStep'+step];
+    const thumb = document.getElementById('drip-pc'+step+'-thumb');
+    const missing = document.getElementById('drip-pc'+step+'-missing');
+    const img = document.getElementById('drip-pc'+step+'-img');
+    if(url){
+      if(img) img.src = url;
+      if(thumb) thumb.style.display = 'block';
+      if(missing) missing.style.display = 'none';
+    } else {
+      if(thumb) thumb.style.display = 'none';
+      if(missing) missing.style.display = 'block';
+    }
+  });
+}
+
+// Preview the auto-generated postcard back side in a modal
+function previewPostcardBack(step){
+  const est = (S.estimates||[]).find(e=>e.id===_dripEstId);
+  const cfg = S.cfg || {};
+  const toName   = (est && est.owner)   || 'Homeowner';
+  const toAddr   = (est && est.addr)    || '123 Main St';
+  const fromName = cfg.companyName      || 'Your Company';
+  const fromAddr = cfg.companyAddress   || '1 Company Dr';
+  const fromCity = cfg.companyCity      || '';
+  const fromPhone= cfg.phone            || '';
+  const logoUrl  = cfg.logoData         || '';
+
+  const html = buildPostcardBack({ toName, toAddr, fromName, fromAddr, fromCity, fromPhone, logoUrl });
+  const win = window.open('','_blank','width=700,height=500');
+  if(win){ win.document.write(html); win.document.close(); }
+}
+
+// Build the standard USPS-compliant postcard back side HTML
+function buildPostcardBack({ toName, toAddr, fromName, fromAddr, fromCity, fromPhone, logoUrl }){
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{width:6in;height:4in;font-family:Arial,sans-serif;background:#fff;display:flex;overflow:hidden;}
+  .left{width:3.5in;height:4in;border-right:1px solid #ccc;padding:0.25in;display:flex;flex-direction:column;justify-content:space-between;}
+  .right{width:2.5in;height:4in;padding:0.25in;display:flex;flex-direction:column;justify-content:space-between;}
+  .return-addr{font-size:8pt;color:#333;line-height:1.5;}
+  .return-addr .co{font-weight:700;font-size:9pt;}
+  .logo{max-width:1.2in;max-height:0.5in;object-fit:contain;margin-bottom:6px;}
+  .indicia{border:1px solid #333;padding:4px 8px;text-align:center;font-size:7pt;color:#333;line-height:1.4;width:1.1in;align-self:flex-end;}
+  .indicia strong{display:block;font-size:9pt;}
+  .to-addr{font-size:10pt;line-height:1.6;color:#111;}
+  .to-addr .name{font-weight:700;font-size:11pt;}
+  .barcode-area{border-top:1px dashed #ccc;padding-top:6px;font-size:7pt;color:#aaa;text-align:center;letter-spacing:2px;}
+  .divider{border:none;border-top:1px solid #e0e0e0;margin:6px 0;}
+</style>
+</head>
+<body>
+  <div class="left">
+    <div>
+      ${logoUrl ? '<img src="'+logoUrl+'" class="logo" alt="Logo">' : ''}
+      <div class="return-addr">
+        <div class="co">${fromName}</div>
+        <div>${fromAddr}</div>
+        <div>${fromCity}</div>
+        ${fromPhone ? '<div>'+fromPhone+'</div>' : ''}
+      </div>
+    </div>
+    <div class="barcode-area">|||||||||||||||||||||||||||||||||||||||</div>
+  </div>
+  <div class="right">
+    <div class="indicia">
+      <strong>PRSRT STD</strong>
+      U.S. POSTAGE<br>PAID<br>PERMIT #000
+    </div>
+    <div class="to-addr">
+      <div class="name">${toName}</div>
+      <hr class="divider">
+      ${toAddr.split(',').map(l=>'<div>'+l.trim()+'</div>').join('')}
+    </div>
+    <div class="barcode-area" style="font-size:6pt;">DELIVERY POINT BARCODE</div>
+  </div>
+</body>
+</html>`;
+}
+
 
 function handleHomePhoto(inp){
   if(!inp.files||!inp.files[0])return;
@@ -5252,6 +5429,11 @@ function openSettings(){
   if(r1p)r1p.innerHTML=c.review1?'<img src="'+c.review1+'" style="width:100%;height:100%;object-fit:cover;border-radius:5px;">':'No image';
   const r2p=document.getElementById('review2-preview');
   if(r2p)r2p.innerHTML=c.review2?'<img src="'+c.review2+'" style="width:100%;height:100%;object-fit:cover;border-radius:5px;">':'No image';
+  [2,3,4].forEach(step=>{
+    const pcp=document.getElementById('pc'+step+'-preview');
+    const url=c['postcardStep'+step];
+    if(pcp)pcp.innerHTML=url?'<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;border-radius:5px;">':'No design<br>uploaded';
+  });
   // Attach financing preview listeners
   ['s-fin-apr','s-fin-term','s-fin-down'].forEach(id=>{
     const el=document.getElementById(id);
@@ -5306,6 +5488,9 @@ function saveSettings(){
     headshot:S.cfg.headshot||null,
     review1:S.cfg.review1||null,
     review2:S.cfg.review2||null,
+    postcardStep2:S.cfg.postcardStep2||null,
+    postcardStep3:S.cfg.postcardStep3||null,
+    postcardStep4:S.cfg.postcardStep4||null,
     repTitle:document.getElementById('s-reptitle').value||'',
     headshotPos:document.getElementById('s-hspos').value||'30',
     bookingUrl:document.getElementById('s-bookingurl').value||''
@@ -7395,6 +7580,7 @@ function openDripModal(estId){
       if(lbl2) lbl2.textContent += ' · ⚡ Drip active ('+active+' steps pending)';
     }
   }
+  refreshDripPostcardPreviews();
   openM('m-drip');
 }
 
@@ -7731,6 +7917,11 @@ function stormDropPin(lat, lon, locationHint){
           </div>
         </div>
         <div style="font-size:12px;color:var(--muted);">Reminder postcard — "Your estimate is still available."</div>
+        <div id="drip-pc2-thumb" style="margin-top:8px;display:none;">
+          <img id="drip-pc2-img" style="width:100%;max-height:80px;object-fit:cover;border-radius:5px;border:1px solid var(--border);" alt="Postcard front">
+          <button onclick="previewPostcardBack(2)" style="margin-top:5px;width:100%;background:none;border:1px solid #7C3AED;border-radius:5px;padding:4px 8px;color:#C4B5FD;font-size:10px;font-weight:700;cursor:pointer;">📧 Preview Back Side</button>
+        </div>
+        <div id="drip-pc2-missing" style="margin-top:8px;background:rgba(124,58,237,.08);border:1px dashed rgba(124,58,237,.3);border-radius:5px;padding:6px 10px;font-size:10px;color:#C4B5FD;display:none;">⚠️ No postcard design uploaded yet — go to Settings → Drip Postcard Designs to upload your artwork.</div>
       </div>
       <!-- Step 3 -->
       <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;">
@@ -7743,6 +7934,11 @@ function stormDropPin(lat, lon, locationHint){
           </div>
         </div>
         <div style="font-size:12px;color:var(--muted);">Urgency postcard — "Estimate expires soon. Call today."</div>
+        <div id="drip-pc3-thumb" style="margin-top:8px;display:none;">
+          <img id="drip-pc3-img" style="width:100%;max-height:80px;object-fit:cover;border-radius:5px;border:1px solid var(--border);" alt="Postcard front">
+          <button onclick="previewPostcardBack(3)" style="margin-top:5px;width:100%;background:none;border:1px solid #7C3AED;border-radius:5px;padding:4px 8px;color:#C4B5FD;font-size:10px;font-weight:700;cursor:pointer;">📧 Preview Back Side</button>
+        </div>
+        <div id="drip-pc3-missing" style="margin-top:8px;background:rgba(124,58,237,.08);border:1px dashed rgba(124,58,237,.3);border-radius:5px;padding:6px 10px;font-size:10px;color:#C4B5FD;display:none;">⚠️ No postcard design uploaded yet — go to Settings → Drip Postcard Designs to upload your artwork.</div>
       </div>
       <!-- Step 4 -->
       <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;">
@@ -7755,6 +7951,11 @@ function stormDropPin(lat, lon, locationHint){
           </div>
         </div>
         <div style="font-size:12px;color:var(--muted);">Final touch — "Last chance. We'd love to earn your business."</div>
+        <div id="drip-pc4-thumb" style="margin-top:8px;display:none;">
+          <img id="drip-pc4-img" style="width:100%;max-height:80px;object-fit:cover;border-radius:5px;border:1px solid var(--border);" alt="Postcard front">
+          <button onclick="previewPostcardBack(4)" style="margin-top:5px;width:100%;background:none;border:1px solid #7C3AED;border-radius:5px;padding:4px 8px;color:#C4B5FD;font-size:10px;font-weight:700;cursor:pointer;">📧 Preview Back Side</button>
+        </div>
+        <div id="drip-pc4-missing" style="margin-top:8px;background:rgba(124,58,237,.08);border:1px dashed rgba(124,58,237,.3);border-radius:5px;padding:6px 10px;font-size:10px;color:#C4B5FD;display:none;">⚠️ No postcard design uploaded yet — go to Settings → Drip Postcard Designs to upload your artwork.</div>
       </div>
     </div>
     <!-- Info note -->
