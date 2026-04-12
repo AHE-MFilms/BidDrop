@@ -547,6 +547,7 @@ tr:hover td{background:var(--card);}
     <button class="tab-btn" onclick="goTab('mailqueue')" data-tab="mailqueue">📬 Mail Queue</button>
     <button class="tab-btn" onclick="goTab('dashboard')" data-tab="dashboard">📊 Dashboard</button>
     <button class="tab-btn" id="agency-tab-btn" onclick="goTab('agency')" data-tab="agency" style="display:none;">🏢 Agency</button>
+    <button class="tab-btn" onclick="goTab('followup')" data-tab="followup">📮 Follow-Up Mail</button>
     <button class="tab-btn" id="zones-tab-btn" onclick="goTab('zones')" data-tab="zones">🗂 Canvass Areas</button>
   </div>
   <div style="margin-left:auto;margin-right:8px;display:flex;align-items:center;">
@@ -565,6 +566,7 @@ tr:hover td{background:var(--card);}
   <button class="bnav-btn" onclick="goTab('estimates')" data-tab="estimates"><span class="bicon">🗂</span>Estimates</button>
   <button class="bnav-btn" onclick="goTab('mailqueue')" data-tab="mailqueue"><span class="bicon">📬</span>Mail</button>
   <button class="bnav-btn" onclick="goTab('dashboard')" data-tab="dashboard"><span class="bicon">📊</span>Stats</button>
+  <button class="bnav-btn" onclick="goTab('followup')" data-tab="followup"><span class="bicon">📮</span>Follow-Up</button>
   <button class="bnav-btn" id="zones-bnav-btn" onclick="goTab('zones')" data-tab="zones"><span class="bicon">🗂</span>Zones</button>
   <button class="bnav-btn" onclick="openSettings()"><span class="bicon">⚙️</span>Settings</button>
 </nav>
@@ -917,6 +919,80 @@ tr:hover td{background:var(--card);}
       </div>
     </div>
   </div>
+  <!-- FOLLOW-UP MAIL -->
+  <div class="tab-pane" id="tab-followup" style="flex-direction:column;overflow-y:auto;padding:20px;gap:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-family:var(--font-h);font-size:22px;font-weight:700;color:var(--text);">📮 Follow-Up Mail Designs</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:3px;">Preview and manage your drip postcard artwork. Upload designs in <strong>Settings → Drip Postcard Designs</strong>.</div>
+      </div>
+      <button onclick="openSettings()" style="background:var(--accent);border:none;border-radius:9px;padding:10px 20px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.4px;">⚙️ Upload / Change Designs</button>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="dash-card" style="padding:0;overflow:hidden;">
+      <div style="background:var(--card2);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:10px;">
+        <div style="background:#7C3AED;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 12px;border-radius:20px;">STEP 2 — DAY 7</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);">Follow-Up Postcard</div>
+        <div style="font-size:12px;color:var(--muted);margin-left:auto;">Reminder — "Your estimate is still available."</div>
+      </div>
+      <div style="display:flex;gap:0;flex-wrap:wrap;">
+        <div style="flex:1;min-width:280px;padding:16px;border-right:1px solid var(--border);">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">Front Side (Your Design)</div>
+          <div id="fu-pc2-front" style="width:100%;aspect-ratio:3/2;background:var(--card2);border:2px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <div style="text-align:center;color:var(--muted);font-size:12px;padding:20px;">📭 No design uploaded yet.<br><br><button onclick="openSettings()" style="background:var(--accent);border:none;border-radius:7px;padding:8px 16px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;margin-top:8px;">Upload Now</button></div>
+          </div>
+        </div>
+        <div style="flex:1;min-width:280px;padding:16px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">Back Side (Auto-Generated)</div>
+          <div id="fu-pc2-back" style="width:100%;aspect-ratio:3/2;background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="dash-card" style="padding:0;overflow:hidden;">
+      <div style="background:var(--card2);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:10px;">
+        <div style="background:#7C3AED;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 12px;border-radius:20px;">STEP 3 — DAY 14</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);">Urgency Postcard</div>
+        <div style="font-size:12px;color:var(--muted);margin-left:auto;">Urgency — "Estimate expires soon. Call today."</div>
+      </div>
+      <div style="display:flex;gap:0;flex-wrap:wrap;">
+        <div style="flex:1;min-width:280px;padding:16px;border-right:1px solid var(--border);">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">Front Side (Your Design)</div>
+          <div id="fu-pc3-front" style="width:100%;aspect-ratio:3/2;background:var(--card2);border:2px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <div style="text-align:center;color:var(--muted);font-size:12px;padding:20px;">📭 No design uploaded yet.<br><br><button onclick="openSettings()" style="background:var(--accent);border:none;border-radius:7px;padding:8px 16px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;margin-top:8px;">Upload Now</button></div>
+          </div>
+        </div>
+        <div style="flex:1;min-width:280px;padding:16px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">Back Side (Auto-Generated)</div>
+          <div id="fu-pc3-back" style="width:100%;aspect-ratio:3/2;background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="dash-card" style="padding:0;overflow:hidden;">
+      <div style="background:var(--card2);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:10px;">
+        <div style="background:#7C3AED;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 12px;border-radius:20px;">STEP 4 — DAY 35</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);">Final Postcard</div>
+        <div style="font-size:12px;color:var(--muted);margin-left:auto;">Final — "One last thing. We'd love to earn your business."</div>
+      </div>
+      <div style="display:flex;gap:0;flex-wrap:wrap;">
+        <div style="flex:1;min-width:280px;padding:16px;border-right:1px solid var(--border);">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">Front Side (Your Design)</div>
+          <div id="fu-pc4-front" style="width:100%;aspect-ratio:3/2;background:var(--card2);border:2px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <div style="text-align:center;color:var(--muted);font-size:12px;padding:20px;">📭 No design uploaded yet.<br><br><button onclick="openSettings()" style="background:var(--accent);border:none;border-radius:7px;padding:8px 16px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;margin-top:8px;">Upload Now</button></div>
+          </div>
+        </div>
+        <div style="flex:1;min-width:280px;padding:16px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">Back Side (Auto-Generated)</div>
+          <div id="fu-pc4-back" style="width:100%;aspect-ratio:3/2;background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- CANVASS AREAS -->
   <div class="tab-pane" id="tab-zones" style="flex-direction:row;">
     <div id="zones-map" style="flex:1;height:100%;min-width:0;"></div>
@@ -1583,6 +1659,60 @@ function goTab(t){
   }
   if(t==='zones')initZonesTab();
   if(t==='agency')renderAgencyView();
+  if(t==='followup')renderFollowUpTab();
+}
+
+function renderFollowUpTab(){
+  const cfg = S.cfg || {};
+  [2,3,4].forEach(step=>{
+    const url = cfg['postcardStep'+step];
+    const frontEl = document.getElementById('fu-pc'+step+'-front');
+    const backEl  = document.getElementById('fu-pc'+step+'-back');
+    if(!frontEl || !backEl) return;
+
+    // Front side
+    if(url){
+      frontEl.innerHTML = '<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;">';
+    } else {
+      frontEl.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px;">\ud83d\udced No design uploaded yet.<br><br><button onclick="openSettings()" style="background:var(--accent);border:none;border-radius:7px;padding:8px 16px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;margin-top:8px;">Upload Now</button></div>';
+    }
+
+    // Back side — always render the USPS address template
+    const fromName = cfg.companyName  || 'Your Company';
+    const fromAddr = cfg.companyAddress|| '1 Company Dr';
+    const fromCity = cfg.companyCity   || '';
+    const fromPhone= cfg.phone         || '';
+    const logoUrl  = cfg.logoData      || '';
+    const backHtml = buildPostcardBackInline({ fromName, fromAddr, fromCity, fromPhone, logoUrl });
+    backEl.innerHTML = backHtml;
+  });
+}
+
+// Inline (iframe-free) version of the postcard back for embedding in the tab
+function buildPostcardBackInline({ fromName, fromAddr, fromCity, fromPhone, logoUrl }){
+  return `
+  <div style="width:100%;height:100%;display:flex;font-family:Arial,sans-serif;font-size:12px;background:#fff;">
+    <div style="flex:1.4;padding:14px;border-right:1px solid #ddd;display:flex;flex-direction:column;justify-content:space-between;">
+      <div>
+        ${logoUrl ? '<img src="'+logoUrl+'" style="max-width:100px;max-height:36px;object-fit:contain;margin-bottom:8px;display:block;">' : ''}
+        <div style="font-weight:700;font-size:11px;">${fromName}</div>
+        <div style="color:#555;font-size:10px;line-height:1.5;">${fromAddr}<br>${fromCity}${fromPhone ? '<br>'+fromPhone : ''}</div>
+      </div>
+      <div style="border-top:1px dashed #ccc;padding-top:6px;font-size:8px;color:#bbb;letter-spacing:2px;text-align:center;">|||||||||||||||||||||||||||||||||||</div>
+    </div>
+    <div style="flex:1;padding:14px;display:flex;flex-direction:column;justify-content:space-between;">
+      <div style="border:1px solid #333;padding:5px 8px;text-align:center;font-size:8px;color:#333;line-height:1.5;align-self:flex-end;">
+        <strong style="display:block;font-size:10px;">PRSRT STD</strong>U.S. POSTAGE<br>PAID<br>PERMIT #000
+      </div>
+      <div style="font-size:11px;line-height:1.7;color:#111;">
+        <div style="font-weight:700;">Homeowner Name</div>
+        <div style="border-top:1px solid #eee;margin:4px 0;"></div>
+        <div>123 Main Street</div>
+        <div>City, State 00000</div>
+      </div>
+      <div style="font-size:7px;color:#ccc;letter-spacing:1px;text-align:center;">DELIVERY POINT BARCODE</div>
+    </div>
+  </div>`;
 }
 
 function populateEstPinPicker(){
