@@ -677,7 +677,10 @@ tr:hover td{background:var(--card);}
       </div>
       <div class="fg">
         <label class="fl">Homeowner Name</label>
-        <input class="fi" id="e-owner" placeholder="Jane Smith" oninput="updatePreview();scheduleDraftSave()">
+        <div style="display:flex;gap:6px;align-items:center;">
+          <input class="fi" id="e-owner" placeholder="Jane Smith" oninput="updatePreview();scheduleDraftSave()" style="flex:1;margin-bottom:0;">
+          <button id="rc-lookup-btn" onclick="manualRentcastLookup()" title="Look up owner name &amp; property data from RentCast" style="flex-shrink:0;padding:0 12px;height:38px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">🏠 Look Up</button>
+        </div>
       </div>
       <div class="fg">
         <label class="fl">Property Address</label>
@@ -1593,10 +1596,10 @@ function loadEstFromPicker(){
     }
   }
   renderStructures(); calcP(); updatePreview();
-  // Show cached equity data immediately if available, then refresh async
+  // Show cached equity data if already looked up previously
   if(p.equityData) showEquityBadge(p.equityData); else hideEquityBadge();
   toast('📋 Loaded: '+p.address.split(',')[0],'info');
-  autoFillOwnerIfEmpty(p.address);
+  // RentCast lookup is now MANUAL — rep must press the 🏠 Look Up button
 }
 // ── AUTO-SAVE DRAFT ──────────────────────────────────────────────────────
 let _draftTimer = null;
@@ -2343,7 +2346,7 @@ function useRoofMeasurement(){
       if(sel) sel.value = pin.id;
       calcP();updatePreview();
       toast('📐 '+sqft.toLocaleString()+' sq ft loaded for '+escHtml(pin.address.split(',')[0])+'!','success');
-      autoFillOwnerIfEmpty(pin.address);
+      // RentCast lookup is now MANUAL — rep must press the 🏠 Look Up button
       return;
     }
   }
@@ -5401,6 +5404,40 @@ function showEquityBadge(data){
 function hideEquityBadge(){
   const badge = document.getElementById('equity-badge');
   if(badge) badge.style.display='none';
+}
+async function manualRentcastLookup(){
+  const btn = document.getElementById('rc-lookup-btn');
+  const addrEl = document.getElementById('e-addr');
+  const address = (addrEl && addrEl.value.trim()) || (currentEstPinId && ((S.pins||[]).find(p=>p.id===currentEstPinId)||{}).address) || '';
+  if(!address){ toast('Enter a property address first','error'); return; }
+  if(btn){ btn.textContent='⏳ Looking up...'; btn.disabled=true; }
+  try{
+    const data = await lookupPropertyData(address);
+    if(!data){ toast('No data found for this address','error'); return; }
+    const ownerEl = document.getElementById('e-owner');
+    if(data.name && ownerEl){
+      ownerEl.value = data.name;
+      updatePreview(); scheduleDraftSave();
+      // Persist to pin
+      if(currentEstPinId){
+        const _pin = (S.pins||[]).find(p=>p.id===currentEstPinId);
+        if(_pin && _pin.estimate){
+          _pin.estimate.owner = data.name;
+          if(sb) sb.from('pins').update({ estimate: _pin.estimate }).eq('id', currentEstPinId).then(()=>{});
+        }
+      }
+    }
+    showEquityBadge(data);
+    if(currentEstPinId){
+      const pin = S.pins.find(p=>p.id===currentEstPinId);
+      if(pin){ pin.equityData = { estValue: data.estValue, mortgageBalance: data.mortgageBalance, equity: data.equity }; }
+    }
+    toast('🏠 '+(data.name ? 'Owner: '+data.name : 'Property data loaded'),'success');
+  } catch(e){
+    toast('Lookup failed: '+e.message,'error');
+  } finally{
+    if(btn){ btn.textContent='🏠 Look Up'; btn.disabled=false; }
+  }
 }
 async function autoFillOwnerIfEmpty(address){
   const ownerEl = document.getElementById('e-owner');
