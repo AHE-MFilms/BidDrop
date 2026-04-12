@@ -761,7 +761,7 @@ tr:hover td{background:var(--card);}
             <span style="font-size:16px;">🖨</span> Print Now
           </button>
         </div>
-        <button class="btn-primary" id="add-queue-btn" onclick="addToQueue()">📬 Add to Mail Queue (Lob)</button>
+        <button class="btn-primary" id="add-queue-btn" onclick="addToQueue()">📬 Add to Mail Queue</button>
         <div style="display:grid;grid-template-columns:1fr 2fr;gap:8px;">
           <button class="btn-sec" onclick="clearEst()">Clear Form</button>
           <button onclick="saveEstimateNow()" style="background:var(--accent);border:none;border-radius:10px;padding:13px 18px;color:#fff;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.5px;">&#128190; Save Estimate</button>
@@ -856,7 +856,7 @@ tr:hover td{background:var(--card);}
     <div class="stats-row">
       <div class="stat-card"><div class="stat-icon">📍</div><div class="stat-lbl">Homes Pinned</div><div class="stat-val" id="s-pins">0</div><div class="stat-sub">All canvassers</div></div>
       <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-lbl">Estimates Built</div><div class="stat-val" id="s-ests">0</div><div class="stat-sub">In mail queue</div></div>
-      <div class="stat-card"><div class="stat-icon">📬</div><div class="stat-lbl">Bids Mailed</div><div class="stat-val" id="s-mailed">0</div><div class="stat-sub">Via Lob.com</div></div>
+      <div class="stat-card"><div class="stat-icon">📬</div><div class="stat-lbl">Bids Mailed</div><div class="stat-val" id="s-mailed">0</div><div class="stat-sub">Direct Mail Sent</div></div>
       <div class="stat-card"><div class="stat-icon">🏆</div><div class="stat-lbl">Conversion Rate</div><div class="stat-val" id="s-conv">—</div><div class="stat-sub">Converted / Mailed</div></div>
     </div>
     <div class="dash-grid">
@@ -4073,7 +4073,7 @@ async function sendLob(id){
     toState=parts.join(' ');
   }
   const fileHtml = buildLobMailerHtml(item);
-  toast('Sending to Lob.com…','info');
+  toast('Sending direct mail…','info');
   try{
     const res=await fetch('https://api.lob.com/v1/letters',{
       method:'POST',
@@ -4091,7 +4091,7 @@ async function sendLob(id){
     const d=await res.json();
     if(res.ok){
       item.status='sent';item.mailedAt=new Date().toISOString();item.lobId=d.id;
-      addAct('Bid letter mailed to <strong>'+escHtml(item.addr)+'</strong> via Lob.com','converted');
+      addAct('Bid letter mailed to <strong>'+escHtml(item.addr)+'</strong>','converted');
       // Log to mailer_log for agency billing
       if(currentAccount && sb){
         sb.from('mailer_log').insert({
@@ -4108,7 +4108,7 @@ async function sendLob(id){
       }
       save();renderQueue();toast('✅ Letter queued for mailing!','success');
     } else {
-      item.status='failed';save();renderQueue();toast('Lob error: '+(d.error?.message||'Check API key & address'),'error');
+      item.status='failed';save();renderQueue();toast('Mail error: '+(d.error?.message||'Check mail settings & address'),'error');
     }
   } catch(e){item.status='failed';save();renderQueue();toast('Network error — mailer service unavailable','error');}
 }
@@ -4909,7 +4909,7 @@ function renderAgencyMailerLog(){
 
   el.innerHTML = '<table class="ag-log-table">' +
     '<thead><tr>' +
-      '<th>Date</th><th>Client</th><th>Address</th><th>Owner</th><th>Estimate</th><th>Lob ID</th>' +
+      '<th>Date</th><th>Client</th><th>Address</th><th>Owner</th><th>Estimate</th><th>Mail ID</th>' +
     '</tr></thead>' +
     '<tbody>' +
     rows.map(m=>{
