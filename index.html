@@ -2377,8 +2377,23 @@ function initMap(){
   map.on('dblclick',onMapDblClick);
   S.pins.forEach(addMarker);
   renderPinList();
+  // ── Geolocation: zoom to user on login ──────────────────────────────────────
+  // 1. Instantly zoom to last known location (cached) so the map isn't stuck on Detroit
+  try{
+    const cached = localStorage.getItem('bd_last_loc');
+    if(cached){ const [lat,lng]=JSON.parse(cached); map.setView([lat,lng],17); }
+  }catch(e){}
+  // 2. Request fresh GPS fix — updates map and refreshes cache
   if(navigator.geolocation){
-    navigator.geolocation.getCurrentPosition(p=>map.setView([p.coords.latitude,p.coords.longitude],18),()=>{});
+    navigator.geolocation.getCurrentPosition(
+      p=>{
+        const lat=p.coords.latitude, lng=p.coords.longitude;
+        map.setView([lat,lng],18);
+        try{ localStorage.setItem('bd_last_loc',JSON.stringify([lat,lng])); }catch(e){}
+      },
+      ()=>{}, // silent fail — cached location already applied above
+      {enableHighAccuracy:true, timeout:10000, maximumAge:60000}
+    );
   }
 }
 
