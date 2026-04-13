@@ -1718,7 +1718,7 @@ function renderFollowUpTab(){
     if(url){
       frontEl.style.display = 'block';
       frontEl.style.minHeight = 'unset';
-      frontEl.innerHTML = '<img src="'+url+'" style="width:100%;height:auto;display:block;border-radius:5px;">';
+      frontEl.innerHTML = '<img src="'+url+'" style="width:100%;height:auto;display:block;border-radius:5px;cursor:zoom-in;" title="Click to enlarge front" onclick="previewPostcardFront('+step+')">';
     } else {
       frontEl.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px;">\ud83d\udced No design uploaded yet.<br><br><button onclick="openSettings()" style="background:var(--accent);border:none;border-radius:7px;padding:8px 16px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;margin-top:8px;">Upload Now</button></div>';
     }
@@ -1735,6 +1735,10 @@ function renderFollowUpTab(){
     const previewToAddr = sampleEst ? (sampleEst.addr||'123 Main Street, Canton, MI 48188') : '123 Main Street, Canton, MI 48188';
     const backHtml = buildPostcardBackInline({ fromName, fromAddr, fromCity, fromPhone, logoUrl, toName: previewToName, toAddr: previewToAddr });
     backEl.innerHTML = backHtml;
+    // Make back clickable to open lightbox (matches front card behavior)
+    backEl.style.cursor = 'zoom-in';
+    backEl.title = 'Click to enlarge back';
+    backEl.onclick = () => previewPostcardBackLightbox(step, previewToName, previewToAddr, fromName, fromAddr, fromCity, fromPhone, logoUrl);
   });
 }
 
@@ -4559,6 +4563,11 @@ function renderQueue(){
 async function sendLob(id){
   const item=S.queue.find(x=>x.id===id);if(!item)return;
   // Agency model: always use master Lob key loaded at login
+  // If not yet loaded (e.g. initial fetch failed), retry once
+  if(!masterLobKey){
+    toast('Checking mailer service…','info');
+    await fetchMasterLobKey();
+  }
   if(!masterLobKey){toast('Mailer service not configured — contact your administrator','error');return;}
   const co=S.cfg.companyName||'Your Roofing Co';
   const fromRaw=S.cfg.companyAddr||'123 Main St, Detroit, MI, 48000';
@@ -7102,7 +7111,7 @@ async function onSignedIn(user){
     load();
     applyBrand();
     // Agency model: fetch master Lob key from AHE account (service role — clients cannot read this)
-    fetchMasterLobKey();
+    await fetchMasterLobKey();
     initMap();
     renderStructures();
     updatePreview();
@@ -7949,6 +7958,7 @@ async function autoFireDueDripSteps(){
 async function sendDripPostcard(id){
   const item = S.queue.find(x=>x.id===id);
   if(!item || item.status==='sent') return;
+  if(!masterLobKey) await fetchMasterLobKey();
   if(!masterLobKey) return;
   const co = S.cfg.companyName||'Your Roofing Co';
   const fromRaw = S.cfg.companyAddr||'123 Main St, Detroit, MI, 48000';

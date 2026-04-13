@@ -221,7 +221,7 @@ export default async function handler(req, res) {
 
       // ── Lob postcard proxy ────────────────────────────────────────────────
       case 'lob-postcard': {
-        if (!isAdmin) { res.status(403).json({ error: 'Admins only' }); return; }
+        // Any authenticated user (rep, admin, super_admin) can send mailings
         const { payload } = req.body;
         if (!payload) { res.status(400).json({ error: 'payload required' }); return; }
         const lobRes = await fetch('https://api.lob.com/v1/postcards', {
@@ -239,7 +239,7 @@ export default async function handler(req, res) {
 
       // ── Lob letter proxy ──────────────────────────────────────────────────
       case 'lob-letter': {
-        if (!isAdmin) { res.status(403).json({ error: 'Admins only' }); return; }
+        // Any authenticated user (rep, admin, super_admin) can send mailings
         const { payload } = req.body;
         if (!payload) { res.status(400).json({ error: 'payload required' }); return; }
         const lobRes = await fetch('https://api.lob.com/v1/letters', {
