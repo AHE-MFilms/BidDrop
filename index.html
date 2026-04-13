@@ -4595,7 +4595,8 @@ async function sendLob(id){
       file: fileHtml,
       color: true,
       double_sided: false,
-      address_placement: 'insert_blank_page'
+      address_placement: 'insert_blank_page',
+      use_type: 'marketing'
     }});
     if(d && d.id){
       item.status='sent';item.mailedAt=new Date().toISOString();item.lobId=d.id;
@@ -7990,7 +7991,8 @@ async function sendDripPostcard(id){
       from:{name:co,address_line1:fp[0]||'123 Main St',address_city:fp[1]||'Detroit',address_state:fp[2]||'MI',address_zip:fp[3]||'48000',address_country:'US'},
       front: frontUrl,
       back: backHtml,
-      size: '4x6'
+      size: '4x6',
+      use_type: 'marketing'
     }});
     if(d && d.id){
       item.status='sent'; item.mailedAt=new Date().toISOString(); item.lobId=d.id;
