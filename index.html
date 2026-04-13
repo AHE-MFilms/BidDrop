@@ -4560,6 +4560,14 @@ function renderQueue(){
   }).join('');
 }
 
+// ── Convert full US state name to 2-letter abbreviation ─────────────────────
+function toStateAbbr(s){
+  if(!s) return s;
+  const map={'alabama':'AL','alaska':'AK','arizona':'AZ','arkansas':'AR','california':'CA','colorado':'CO','connecticut':'CT','delaware':'DE','florida':'FL','georgia':'GA','hawaii':'HI','idaho':'ID','illinois':'IL','indiana':'IN','iowa':'IA','kansas':'KS','kentucky':'KY','louisiana':'LA','maine':'ME','maryland':'MD','massachusetts':'MA','michigan':'MI','minnesota':'MN','mississippi':'MS','missouri':'MO','montana':'MT','nebraska':'NE','nevada':'NV','new hampshire':'NH','new jersey':'NJ','new mexico':'NM','new york':'NY','north carolina':'NC','north dakota':'ND','ohio':'OH','oklahoma':'OK','oregon':'OR','pennsylvania':'PA','rhode island':'RI','south carolina':'SC','south dakota':'SD','tennessee':'TN','texas':'TX','utah':'UT','vermont':'VT','virginia':'VA','washington':'WA','west virginia':'WV','wisconsin':'WI','wyoming':'WY'};
+  const abbr = map[s.trim().toLowerCase()];
+  return abbr || s.trim();
+}
+
 async function sendLob(id){
   const item=S.queue.find(x=>x.id===id);if(!item)return;
   // Agency model: always use master Lob key loaded at login
@@ -4584,6 +4592,7 @@ async function sendLob(id){
     toZip=parts.pop();
     toState=parts.join(' ');
   }
+  toState = toStateAbbr(toState);
   const fileHtml = buildLobMailerHtml(item);
   toast('Sending direct mail…','info');
   try{
@@ -7972,6 +7981,7 @@ async function sendDripPostcard(id){
   if(!toZip && toState && toState.includes(' ')){
     const parts=toState.split(' '); toZip=parts.pop(); toState=parts.join(' ');
   }
+  toState = toStateAbbr(toState);
   const frontUrl = S.cfg['postcardStep'+item.drip_step];
   if(!frontUrl){ console.warn('[BidDrop] No postcard design for step', item.drip_step); return; }
   const backHtml = buildPostcardBack({
