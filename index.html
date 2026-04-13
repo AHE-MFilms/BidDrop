@@ -1841,7 +1841,10 @@ function loadEstFromPicker(){
   // Show cached equity data if already looked up previously
   if(p.equityData) showEquityBadge(p.equityData); else hideEquityBadge();
   toast('📋 Loaded: '+p.address.split(',')[0],'info');
-  // RentCast lookup is now MANUAL — rep must press the 🏠 Look Up button
+  // Auto-lookup owner name if field is empty
+  if(masterRentcastKey && p.address && !document.getElementById('e-owner').value.trim()){
+    autoFillOwnerIfEmpty(p.address);
+  }
 }
 // ── AUTO-SAVE DRAFT ──────────────────────────────────────────────────────
 let _draftTimer = null;
@@ -5933,7 +5936,7 @@ async function manualRentcastLookup(){
   if(btn){ btn.textContent='⏳ Looking up...'; btn.disabled=true; }
   try{
     const data = await lookupPropertyData(address);
-    if(!data){ toast('No data found for this address','error'); return; }
+    if(!data){ toast('No property record found — try a different address format','error'); return; }
     const ownerEl = document.getElementById('e-owner');
     if(data.name && ownerEl){
       ownerEl.value = data.name;
