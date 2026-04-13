@@ -4585,13 +4585,14 @@ async function sendLob(id){
   const toLine1 = tp[0]||'';
   const toCity  = tp[1]||'';
   let   toState = tp[2]||'MI';
-  let   toZip   = tp[3]||'00000';
-  // Handle 'State Zip' in one field
-  if(!toZip && toState && toState.includes(' ')){
+  let   toZip   = tp[3]||'';
+  // Handle 'State Zip' in one field (e.g. 'Michigan 48188' when address has no 4th comma)
+  if((!toZip || toZip==='00000') && toState && toState.includes(' ')){
     const parts=toState.split(' ');
     toZip=parts.pop();
     toState=parts.join(' ');
   }
+  if(!toZip) toZip='00000';
   toState = toStateAbbr(toState);
   const fileHtml = buildLobMailerHtml(item);
   toast('Sending direct mail…','info');
@@ -7977,10 +7978,11 @@ async function sendDripPostcard(id){
   const toLine1 = tp[0]||'';
   const toCity  = tp[1]||'';
   let   toState = tp[2]||'MI';
-  let   toZip   = tp[3]||'00000';
-  if(!toZip && toState && toState.includes(' ')){
+  let   toZip   = tp[3]||'';
+  if((!toZip || toZip==='00000') && toState && toState.includes(' ')){
     const parts=toState.split(' '); toZip=parts.pop(); toState=parts.join(' ');
   }
+  if(!toZip) toZip='00000';
   toState = toStateAbbr(toState);
   const frontUrl = S.cfg['postcardStep'+item.drip_step];
   if(!frontUrl){ console.warn('[BidDrop] No postcard design for step', item.drip_step); return; }
