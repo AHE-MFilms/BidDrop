@@ -1,0 +1,6 @@
+.vercel
+.env*.local
+.env.check
+.env.prod
+_pc_back_patch.js
+node_modules/

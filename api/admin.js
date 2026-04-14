@@ -130,6 +130,21 @@ export default async function handler(req, res) {
         break;
       }
 
+      // ── Update a user's auth email/password (super_admin only) ─────────────
+      case 'update-user': {
+        if (!isSuperAdmin) { res.status(403).json({ error: 'Super admin only' }); return; }
+        const { userId: updateUserId, updates: userUpdates } = req.body;
+        if (!updateUserId || !userUpdates) { res.status(400).json({ error: 'userId and updates required' }); return; }
+        const r = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${updateUserId}`, {
+          method: 'PUT',
+          headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(userUpdates)
+        });
+        if (!r.ok) { const d = await r.json(); res.status(r.status).json({ error: d.message || 'Update failed' }); return; }
+        res.status(200).json({ success: true });
+        break;
+      }
+
       // ── List all auth users (super_admin only) ────────────────────────────
       case 'list-users': {
         if (!isSuperAdmin) { res.status(403).json({ error: 'Super admin only' }); return; }
