@@ -39,11 +39,19 @@ async function sbFetch(path, opts = {}) {
 // ── Verify caller JWT and return user object ──────────────────────────────────
 async function verifyCallerJwt(req) {
   const token = (req.headers['authorization'] || '').replace(/^Bearer\s+/i, '').trim();
-  if (!token) return null;
+  if (!token) { console.log('[auth] no token'); return null; }
+  console.log('[auth] token prefix:', token.substring(0, 20), 'len:', token.length);
+  console.log('[auth] SERVICE_KEY defined:', !!SERVICE_KEY, 'len:', SERVICE_KEY ? SERVICE_KEY.length : 0);
+  console.log('[auth] SUPABASE_URL:', SUPABASE_URL);
   const r = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
     headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${token}` }
   });
-  if (!r.ok) return null;
+  console.log('[auth] supabase verify status:', r.status);
+  if (!r.ok) {
+    const body = await r.text();
+    console.log('[auth] supabase verify error body:', body);
+    return null;
+  }
   return await r.json(); // { id, email, ... }
 }
 
