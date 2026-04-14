@@ -5894,7 +5894,7 @@ let toastT;
 // ═══════════════════════════════
 function fmtMoney(v){ if(!v||isNaN(v)) return null; return '$'+Math.round(v).toLocaleString(); }
 async function lookupPropertyData(address){
-  if(!masterRentcastKey || !address) return null;
+  if(!address) return null;
   try{
     // Proxy through secure server-side API — RentCast key never exposed in browser
     const data = await adminAPI('rentcast', {}, { address });
