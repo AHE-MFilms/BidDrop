@@ -1,18 +1,16 @@
-// BidDrop Service Worker — v1.0
-// Cache-first for app shell, network-first for API calls
+// BidDrop Service Worker — v2.0
+// Network-first for index.html (always get latest code), cache-first for static assets
 
-const CACHE_NAME = 'biddrop-v1';
+const CACHE_NAME = 'biddrop-v2';
 
 // Core app shell files to cache on install
 const PRECACHE_URLS = [
-  '/',
-  '/index.html',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png'
 ];
 
-// ── Install: pre-cache the app shell ──────────────────────────────────────────
+// ── Install: pre-cache static assets (NOT index.html — always fetch fresh) ───
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
@@ -21,18 +19,21 @@ self.addEventListener('install', event => {
   );
 });
 
-// ── Activate: clean up old caches ─────────────────────────────────────────────
+// ── Activate: clean up ALL old caches immediately ─────────────────────────────
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
       Promise.all(
-        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+        keys.filter(k => k !== CACHE_NAME).map(k => {
+          console.log('[SW] Deleting old cache:', k);
+          return caches.delete(k);
+        })
       )
     ).then(() => self.clients.claim())
   );
 });
 
-// ── Fetch: stale-while-revalidate for app shell, network-first for APIs ───────
+// ── Fetch: network-first for HTML, cache-first for static assets ──────────────
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
@@ -40,7 +41,7 @@ self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   if (!url.protocol.startsWith('http')) return;
 
-  // Network-first for Supabase, GHL, NOAA, and other external APIs
+  // Network-first for Supabase, GHL, NOAA, Vercel API, and other external APIs
   const isExternal = (
     url.hostname.includes('supabase.co') ||
     url.hostname.includes('supabase.in') ||
@@ -56,7 +57,10 @@ self.addEventListener('fetch', event => {
     url.hostname.includes('cdnjs.cloudflare.com')
   );
 
-  if (isExternal) {
+  // Network-first for HTML pages and API calls — always get the latest code
+  const isHTML = url.pathname === '/' || url.pathname.endsWith('.html') || url.pathname.startsWith('/api/');
+
+  if (isExternal || isHTML) {
     // Network-first: try network, fall back to cache if offline
     event.respondWith(
       fetch(event.request)
@@ -77,7 +81,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Cache-first for the app shell (same origin)
+  // Cache-first for static assets (icons, manifest, etc.)
   event.respondWith(
     caches.match(event.request).then(cached => {
       const networkFetch = fetch(event.request).then(response => {
