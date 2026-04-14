@@ -1473,8 +1473,14 @@ let masterLobKey = '';      // Fetched at login from AHE agency account — neve
 let masterRentcastKey = ''; // Fetched at login from AHE agency account — never exposed to client UI
 
 // ── Secure API helper — all privileged operations go through /api/admin ──────
-async function adminAPI(action, body={}, queryParams={}) {
-  const { data: { session } } = await sb.auth.getSession();
+async function adminAPI(action, body={}, queryParams={}, _retried=false) {
+  // Always get the freshest session — Supabase auto-refreshes if the token is close to expiry
+  let { data: { session } } = await sb.auth.getSession();
+  // If session looks expired or missing, force a refresh
+  if (!session || (session.expires_at && session.expires_at * 1000 < Date.now() + 5000)) {
+    const refreshed = await sb.auth.refreshSession();
+    session = refreshed.data.session;
+  }
   const token = session ? session.access_token : '';
   const qs = new URLSearchParams({ action, ...queryParams }).toString();
   const res = await fetch('/api/admin?' + qs, {
@@ -1485,6 +1491,11 @@ async function adminAPI(action, body={}, queryParams={}) {
     },
     body: JSON.stringify(body)
   });
+  // If 401, try once more with a forced token refresh
+  if (res.status === 401 && !_retried) {
+    const refreshed = await sb.auth.refreshSession();
+    if (refreshed.data.session) return adminAPI(action, body, queryParams, true);
+  }
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'API error ' + res.status);
   return data;
