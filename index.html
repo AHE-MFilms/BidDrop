@@ -5864,9 +5864,10 @@ function renderAgencyAccounts(){
           '<span style="font-size:13px;font-weight:800;color:#4ade80;">'+(a.lookup_credits||0)+'</span>' +
           '<span style="font-size:10px;color:var(--muted);">paid</span>' +
           '<span style="font-size:10px;color:var(--muted);">|</span>' +
-          '<span style="font-size:13px;font-weight:800;color:var(--accent);">'+(Math.max(0,10-(a.free_lookups_used||0)))+'</span>' +
-          '<span style="font-size:10px;color:var(--muted);">free left</span>' +
+          '<span style="font-size:13px;font-weight:800;color:var(--accent);">'+(Math.max(0,(a.free_lookups_limit||10)-(a.free_lookups_used||0)))+'</span>' +
+          '<span style="font-size:10px;color:var(--muted);">/ '+(a.free_lookups_limit||10)+' free</span>' +
           '<button onclick="adjustCredits(\''+a.id+'\')" style="background:none;border:1px solid var(--border);border-radius:5px;padding:2px 7px;color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;margin-left:4px;">Adjust</button>' +
+          '<button onclick="setFreeLimit(\''+a.id+'\')" style="background:none;border:1px solid #a855f7;border-radius:5px;padding:2px 7px;color:#a855f7;font-size:10px;font-weight:700;cursor:pointer;margin-left:2px;" title="Set monthly free lookup limit">Set Limit</button>' +
         '</div>' +
       '</div>' +
       '<div style="display:flex;gap:6px;margin-top:10px;">' + '<button onclick="editClientAccount(\''+a.id+'\')" style="flex:1;background:none;border:1px solid var(--border);border-radius:7px;padding:7px;color:var(--mid);font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.4px;" onmouseover="this.style.borderColor=\'var(--accent)\';this.style.color=\'var(--accent)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--mid)\'">✏️ Edit</button>' + '<button onclick="openManageTeam(\''+a.id+'\')" style="flex:1;background:none;border:1px solid #3B82F6;border-radius:7px;padding:7px;color:#3B82F6;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.4px;" onmouseover="this.style.background=\'#3B82F622\'" onmouseout="this.style.background=\'none\'">👥 Team ('+users.length+')</button>' + '</div>' +
@@ -5888,7 +5889,34 @@ async function adjustCredits(accountId){
     if(error) throw error;
     a.lookup_credits = newVal;
     toast(`Credits updated to ${newVal} for ${a.company_name||a.name}`,'success');
-    // Re-render the agency panel
+    await renderAdminPanel();
+  }catch(e){
+    toast('Error: '+e.message,'error');
+  }
+}
+
+async function setFreeLimit(accountId){
+  if(!_agencyData) return;
+  const a = _agencyData.accounts.find(x=>x.id===accountId);
+  if(!a) return;
+  const currentLimit = a.free_lookups_limit ?? 10;
+  const freeUsed     = a.free_lookups_used || 0;
+  const freeLeft     = Math.max(0, currentLimit - freeUsed);
+  const input = prompt(
+    `Set monthly free lookup limit for ${a.company_name||a.name}\n` +
+    `Current: ${freeLeft} remaining of ${currentLimit}/month (${freeUsed} used)\n\n` +
+    `Enter new monthly free lookup allowance:`,
+    String(currentLimit)
+  );
+  if(input===null) return;
+  const newLimit = parseInt(input,10);
+  if(isNaN(newLimit)||newLimit<0){ toast('Invalid value','error'); return; }
+  try{
+    const {error} = await sb.from('accounts').update({ free_lookups_limit: newLimit }).eq('id',accountId);
+    if(error) throw error;
+    a.free_lookups_limit = newLimit;
+    const newFreeLeft = Math.max(0, newLimit - freeUsed);
+    toast(`✅ ${a.company_name||a.name} now gets ${newLimit} free lookups/month (${newFreeLeft} remaining this month)`,'success');
     await renderAdminPanel();
   }catch(e){
     toast('Error: '+e.message,'error');
@@ -7429,7 +7457,7 @@ async function renderAdminPanel(){
 
   if(isSuperAdmin()){
     // Super admin sees all accounts
-    const {data:accounts} = await sb.from('accounts').select('id,name,company_name,created_at,plan,active,mailer_rate,notes,enable_postcard,enable_letter,lookup_credits,free_lookups_used,free_lookups_reset').order('created_at',{ascending:true});
+    const {data:accounts} = await sb.from('accounts').select('id,name,company_name,created_at,plan,active,mailer_rate,notes,enable_postcard,enable_letter,lookup_credits,free_lookups_used,free_lookups_reset,free_lookups_limit').order('created_at',{ascending:true});
     const {data:profiles} = await sb.from('user_profiles').select('*');
     el.innerHTML = renderSuperAdminPanel(accounts||[], profiles||[]);
   } else if(isAdminOrAbove()){

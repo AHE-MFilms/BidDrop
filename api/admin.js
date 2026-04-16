@@ -192,7 +192,7 @@ export default async function handler(req, res) {
       case 'agency-data': {
         if (!isSuperAdmin) { res.status(403).json({ error: 'Super admin only' }); return; }
         const [acctRes, profRes, pinsRes, logRes] = await Promise.all([
-          sbFetch('accounts?select=id,name,company_name,plan,active,mailer_rate,created_at,enable_postcard,enable_letter&order=created_at.asc'),
+          sbFetch('accounts?select=id,name,company_name,plan,active,mailer_rate,created_at,enable_postcard,enable_letter,lookup_credits,free_lookups_used,free_lookups_reset,free_lookups_limit&order=created_at.asc'),
           sbFetch('user_profiles?select=id,account_id,name,email,role'),
           sbFetch('pins?select=id,account_id,status,created_at,rep_name'),
           sbFetch('mailer_log?select=*&order=sent_at.desc&limit=500')
@@ -283,16 +283,15 @@ export default async function handler(req, res) {
         const { address } = req.query;
         if (!address) { res.status(400).json({ error: 'address required' }); return; }
 
-        const FREE_LOOKUPS_PER_MONTH = 10;
-
-        // Fetch the account's current credit state
+        // Fetch the account's current credit state (including per-account free limit)
         const acctRes = await sbFetch(
-          `accounts?id=eq.${profile.account_id}&select=id,lookup_credits,free_lookups_used,free_lookups_reset`
+          `accounts?id=eq.${profile.account_id}&select=id,lookup_credits,free_lookups_used,free_lookups_reset,free_lookups_limit`
         );
         if (!acctRes.ok) { res.status(500).json({ error: 'Failed to fetch account credits' }); return; }
         const acctRows = await acctRes.json();
         if (!acctRows.length) { res.status(404).json({ error: 'Account not found' }); return; }
         let acct = acctRows[0];
+        const FREE_LOOKUPS_PER_MONTH = acct.free_lookups_limit ?? 10;
 
         // Check if free lookup counter needs monthly reset
         const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
@@ -318,7 +317,7 @@ export default async function handler(req, res) {
           // No credits available
           res.status(402).json({
             error: 'no_credits',
-            message: 'You have used all 10 free lookups this month. Purchase credits to continue.',
+            message: `You have used all ${FREE_LOOKUPS_PER_MONTH} free lookups this month. Purchase credits to continue.`,
             free_used: acct.free_lookups_used,
             paid_credits: acct.lookup_credits
           });

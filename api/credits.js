@@ -218,7 +218,7 @@ export default async function handler(req, res) {
       // ── Get current credit balance ───────────────────────────────────────
       case 'balance': {
         const acctRes = await sbFetch(
-          `accounts?id=eq.${profile.account_id}&select=lookup_credits,free_lookups_used,free_lookups_reset`
+          `accounts?id=eq.${profile.account_id}&select=lookup_credits,free_lookups_used,free_lookups_reset,free_lookups_limit`
         );
         if (!acctRes.ok) { res.status(500).json({ error: 'Failed to fetch balance' }); return; }
         const accts = await acctRes.json();
@@ -241,8 +241,8 @@ export default async function handler(req, res) {
         res.status(200).json({
           paid_credits:  acct.lookup_credits,
           free_used:     freeUsed,
-          free_limit:    10,
-          free_remaining: Math.max(0, 10 - freeUsed),
+          free_limit:    acct.free_lookups_limit ?? 10,
+          free_remaining: Math.max(0, (acct.free_lookups_limit ?? 10) - freeUsed),
           packs: CREDIT_PACKS
         });
         break;
