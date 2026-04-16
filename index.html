@@ -461,6 +461,59 @@ tr:hover td{background:var(--card);}
 <!-- MAIN APP (hidden until logged in) -->
 <div id="main-app" style="display:none;flex-direction:column;height:100%;overflow:hidden;">
 
+<!-- BUY CREDITS MODAL -->
+<div class="overlay" id="m-buy-credits" style="display:none;">
+  <div class="modal" style="max-width:480px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <div class="modal-title" style="margin-bottom:0;">🔍 Lookup Credits</div>
+      <button onclick="closeM('m-buy-credits')" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;">&times;</button>
+    </div>
+    <p style="color:var(--muted);font-size:13px;margin:0 0 16px;">Look up homeowner names &amp; property data. Each account gets <strong>10 free lookups/month</strong> that reset on the 1st.</p>
+
+    <!-- Current balance -->
+    <div id="credits-balance-box" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:18px;display:flex;gap:20px;">
+      <div style="flex:1;text-align:center;">
+        <div style="font-size:22px;font-weight:800;color:var(--accent);" id="cb-free-remaining">—</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">Free Left This Month</div>
+      </div>
+      <div style="width:1px;background:var(--border);"></div>
+      <div style="flex:1;text-align:center;">
+        <div style="font-size:22px;font-weight:800;color:#4ade80;" id="cb-paid-credits">—</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">Paid Credits</div>
+      </div>
+    </div>
+
+    <!-- Credit packs -->
+    <div style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Buy Credits — $0.25 each</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;">
+      <button class="credit-pack-btn" onclick="buyCredits('pack_50')" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;text-align:center;transition:border-color .2s;">
+        <div style="font-size:20px;font-weight:800;color:var(--text);">50</div>
+        <div style="font-size:11px;color:var(--muted);margin:2px 0 6px;">credits</div>
+        <div style="font-size:15px;font-weight:700;color:var(--accent);">$12.50</div>
+      </button>
+      <button class="credit-pack-btn" onclick="buyCredits('pack_200')" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;text-align:center;transition:border-color .2s;">
+        <div style="font-size:20px;font-weight:800;color:var(--text);">200</div>
+        <div style="font-size:11px;color:var(--muted);margin:2px 0 6px;">credits</div>
+        <div style="font-size:15px;font-weight:700;color:var(--accent);">$50.00</div>
+      </button>
+      <button class="credit-pack-btn" onclick="buyCredits('pack_500')" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;text-align:center;position:relative;border-color:var(--accent);">
+        <div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;white-space:nowrap;">BEST VALUE</div>
+        <div style="font-size:20px;font-weight:800;color:var(--text);">500</div>
+        <div style="font-size:11px;color:var(--muted);margin:2px 0 6px;">credits</div>
+        <div style="font-size:15px;font-weight:700;color:var(--accent);">$125.00</div>
+      </button>
+      <button class="credit-pack-btn" onclick="buyCredits('pack_1000')" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;text-align:center;">
+        <div style="font-size:20px;font-weight:800;color:var(--text);">1,000</div>
+        <div style="font-size:11px;color:var(--muted);margin:2px 0 6px;">credits</div>
+        <div style="font-size:15px;font-weight:700;color:var(--accent);">$250.00</div>
+      </button>
+    </div>
+
+    <p style="font-size:11px;color:var(--muted);text-align:center;margin:0;">Credits never expire &bull; Secure checkout via Stripe &bull; Instant activation</p>
+    <div class="modal-footer" style="margin-top:14px;"><button class="btn-cancel" onclick="closeM('m-buy-credits')">Close</button></div>
+  </div>
+</div>
+
 <!-- ADMIN MODAL -->
 <div class="overlay" id="m-admin" style="display:none;">
   <div class="modal" style="max-width:580px;">
@@ -599,6 +652,11 @@ tr:hover td{background:var(--card);}
   </div>
   <div class="hdr-actions">
     <button class="icon-btn" id="admin-panel-btn" onclick="openAdminPanel()" title="Admin Panel" style="display:none;">🛡</button>
+    <!-- Lookup credit badge -->
+    <button id="credit-badge-btn" onclick="showBuyCreditsModal()" title="Lookup Credits" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:3px 10px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;">
+      <span style="font-size:13px;">🔍</span>
+      <span id="credit-badge-label">10 free</span>
+    </button>
     <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
     <button class="icon-btn" id="user-badge" onclick="openAdminPanel()" title="Your Account" style="font-size:11px;font-weight:700;width:auto;padding:0 10px;color:var(--accent);">...</button>
   </div>
@@ -1757,8 +1815,11 @@ function accountRowToCfg(row){
     postcardStep3: row.postcard_step3||null,
     postcardStep4: row.postcard_step4||null,
     dripEnabled: row.drip_enabled||false,
-    enablePostcard: row.enable_postcard!==false,
-    enableLetter:   row.enable_letter!==false,
+    enablePostcard:   row.enable_postcard!==false,
+    enableLetter:     row.enable_letter!==false,
+    lookupCredits:    row.lookup_credits    || 0,
+    freeLookupsUsed:  row.free_lookups_used || 0,
+    freeLookupsReset: row.free_lookups_reset|| null,
   };
 }
 
@@ -5796,9 +5857,42 @@ function renderAgencyAccounts(){
           '<div style="font-size:10px;color:var(--muted);">All time: $'+revAllTime+'</div>' +
         '</div>' +
         '<div class="ag-bill-val">$'+revThisMonth+'</div>' +
-      '</div>' +      '<div style="display:flex;gap:6px;margin-top:10px;">' + '<button onclick="editClientAccount(\''+a.id+'\')" style="flex:1;background:none;border:1px solid var(--border);border-radius:7px;padding:7px;color:var(--mid);font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.4px;" onmouseover="this.style.borderColor=\'var(--accent)\';this.style.color=\'var(--accent)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--mid)\'">✏️ Edit</button>' + '<button onclick="openManageTeam(\''+a.id+'\')" style="flex:1;background:none;border:1px solid #3B82F6;border-radius:7px;padding:7px;color:#3B82F6;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.4px;" onmouseover="this.style.background=\'#3B82F622\'" onmouseout="this.style.background=\'none\'">👥 Team ('+users.length+')</button>' + '</div>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-top:8px;">' +
+        '<div style="font-size:11px;color:var(--muted);">🔍 Lookup Credits</div>' +
+        '<div style="display:flex;align-items:center;gap:8px;">' +
+          '<span style="font-size:13px;font-weight:800;color:#4ade80;">'+(a.lookup_credits||0)+'</span>' +
+          '<span style="font-size:10px;color:var(--muted);">paid</span>' +
+          '<span style="font-size:10px;color:var(--muted);">|</span>' +
+          '<span style="font-size:13px;font-weight:800;color:var(--accent);">'+(Math.max(0,10-(a.free_lookups_used||0)))+'</span>' +
+          '<span style="font-size:10px;color:var(--muted);">free left</span>' +
+          '<button onclick="adjustCredits(\''+a.id+'\')" style="background:none;border:1px solid var(--border);border-radius:5px;padding:2px 7px;color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;margin-left:4px;">Adjust</button>' +
+        '</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:6px;margin-top:10px;">' + '<button onclick="editClientAccount(\''+a.id+'\')" style="flex:1;background:none;border:1px solid var(--border);border-radius:7px;padding:7px;color:var(--mid);font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.4px;" onmouseover="this.style.borderColor=\'var(--accent)\';this.style.color=\'var(--accent)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--mid)\'">✏️ Edit</button>' + '<button onclick="openManageTeam(\''+a.id+'\')" style="flex:1;background:none;border:1px solid #3B82F6;border-radius:7px;padding:7px;color:#3B82F6;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.4px;" onmouseover="this.style.background=\'#3B82F622\'" onmouseout="this.style.background=\'none\'">👥 Team ('+users.length+')</button>' + '</div>' +
       '</div>';
   }).join('');
+}
+
+async function adjustCredits(accountId){
+  if(!_agencyData) return;
+  const a = _agencyData.accounts.find(x=>x.id===accountId);
+  if(!a) return;
+  const current = a.lookup_credits||0;
+  const input = prompt(`Adjust paid credits for ${a.company_name||a.name}\nCurrent balance: ${current}\n\nEnter new balance:`, current);
+  if(input===null) return;
+  const newVal = parseInt(input,10);
+  if(isNaN(newVal)||newVal<0){ toast('Invalid value','error'); return; }
+  try{
+    const {error} = await sb.from('accounts').update({lookup_credits:newVal}).eq('id',accountId);
+    if(error) throw error;
+    a.lookup_credits = newVal;
+    toast(`Credits updated to ${newVal} for ${a.company_name||a.name}`,'success');
+    // Re-render the agency panel
+    await renderAdminPanel();
+  }catch(e){
+    toast('Error: '+e.message,'error');
+  }
 }
 
 function editClientAccount(accountId){
@@ -6464,7 +6558,29 @@ async function lookupPropertyData(address){
   try{
     // Proxy through secure server-side API — RentCast key never exposed in browser
     const data = await adminAPI('rentcast', {}, { address });
-    const r = Array.isArray(data) ? data[0] : data;
+
+    // Handle no-credits error (402)
+    if(data && data.error === 'no_credits'){
+      // Update local credit state
+      if(data.free_used !== undefined) S.cfg.freeLookupsUsed = data.free_used;
+      if(data.paid_credits !== undefined) S.cfg.lookupCredits = data.paid_credits;
+      updateCreditBadge();
+      // Show buy credits modal
+      showBuyCreditsModal();
+      return null;
+    }
+
+    // Update local credit state from response
+    if(data && data._credits){
+      S.cfg.freeLookupsUsed = data._credits.free_used;
+      S.cfg.lookupCredits   = data._credits.paid_credits;
+      updateCreditBadge();
+    }
+
+    // New format: { properties: [...], _credits: {...} }
+    // Old format: [...] (array directly)
+    const arr = data && data.properties ? data.properties : (Array.isArray(data) ? data : null);
+    const r = arr ? arr[0] : (data && !data.error ? data : null);
     if(!r) return null;
     const name = (r.owner && r.owner.names && r.owner.names[0]) || null;
     const estValue = r.estimatedValue || null;
@@ -6562,6 +6678,75 @@ function toast(msg,type='info'){
   const el=document.getElementById('toast');
   el.className='toast '+type;el.textContent=msg;el.classList.add('show');
   clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3200);
+}
+
+// ═══════════════════════════════
+//  LOOKUP CREDITS
+// ═══════════════════════════════
+function updateCreditBadge(){
+  const badge = document.getElementById('credit-badge-label');
+  if(!badge) return;
+  const freeLeft = Math.max(0, 10 - (S.cfg.freeLookupsUsed||0));
+  const paid     = S.cfg.lookupCredits || 0;
+  if(freeLeft > 0){
+    badge.textContent = freeLeft + ' free';
+    document.getElementById('credit-badge-btn').style.borderColor = 'rgba(255,255,255,.15)';
+  } else if(paid > 0){
+    badge.textContent = paid + ' credits';
+    document.getElementById('credit-badge-btn').style.borderColor = '#4ade80';
+  } else {
+    badge.textContent = 'Buy Credits';
+    document.getElementById('credit-badge-btn').style.borderColor = '#ef4444';
+  }
+}
+
+async function showBuyCreditsModal(){
+  // Refresh balance from server
+  try{
+    const sess = (await sb.auth.getSession()).data.session;
+    if(sess){
+      const r = await fetch('/api/credits?action=balance',{ headers:{ 'Authorization':'Bearer '+sess.access_token } });
+      if(r.ok){
+        const b = await r.json();
+        S.cfg.lookupCredits   = b.paid_credits;
+        S.cfg.freeLookupsUsed = b.free_used;
+        updateCreditBadge();
+      }
+    }
+  }catch(_){}
+  const freeLeft = Math.max(0, 10 - (S.cfg.freeLookupsUsed||0));
+  const paid     = S.cfg.lookupCredits || 0;
+  const fEl = document.getElementById('cb-free-remaining');
+  const pEl = document.getElementById('cb-paid-credits');
+  if(fEl) fEl.textContent = freeLeft;
+  if(pEl) pEl.textContent = paid;
+  openM('m-buy-credits');
+}
+
+async function buyCredits(packId){
+  try{
+    const sess = (await sb.auth.getSession()).data.session;
+    if(!sess){ toast('Please sign in first.','error'); return; }
+    const btn = event.currentTarget;
+    const origText = btn.innerHTML;
+    btn.innerHTML = '<span style="opacity:.5;">Loading...</span>';
+    btn.disabled = true;
+    const r = await fetch('/api/credits?action=checkout',{
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+sess.access_token },
+      body: JSON.stringify({ pack_id: packId })
+    });
+    const data = await r.json();
+    btn.innerHTML = origText;
+    btn.disabled = false;
+    if(data.checkout_url){
+      window.location.href = data.checkout_url;
+    } else {
+      toast('Error: '+(data.error||'Could not start checkout'),'error');
+    }
+  }catch(e){
+    toast('Error: '+e.message,'error');
+  }
 }
 
 function timeAgo(iso){
@@ -7244,7 +7429,7 @@ async function renderAdminPanel(){
 
   if(isSuperAdmin()){
     // Super admin sees all accounts
-    const {data:accounts} = await sb.from('accounts').select('id,name,company_name,created_at,plan,active,mailer_rate,notes,enable_postcard,enable_letter').order('created_at',{ascending:true});
+    const {data:accounts} = await sb.from('accounts').select('id,name,company_name,created_at,plan,active,mailer_rate,notes,enable_postcard,enable_letter,lookup_credits,free_lookups_used,free_lookups_reset').order('created_at',{ascending:true});
     const {data:profiles} = await sb.from('user_profiles').select('*');
     el.innerHTML = renderSuperAdminPanel(accounts||[], profiles||[]);
   } else if(isAdminOrAbove()){
@@ -7770,6 +7955,23 @@ async function onSignedIn(user){
     if(currentAccount) subscribeRealtime();
     toast('Welcome, '+(currentProfile.name||currentUser.email).split(' ')[0]+'! 👋','success');
     updateOfflineBanner();
+    // Initialize credit badge
+    updateCreditBadge();
+    // Handle Stripe redirect params
+    const _urlParams = new URLSearchParams(window.location.search);
+    if(_urlParams.get('credits_success')){
+      history.replaceState({}, '', window.location.pathname);
+      // Refresh credit balance from server
+      try{
+        const bal = await fetch('/api/credits?action=balance', { headers:{ 'Authorization':'Bearer '+(await sb.auth.getSession()).data.session?.access_token } });
+        if(bal.ok){ const b=await bal.json(); S.cfg.lookupCredits=b.paid_credits; S.cfg.freeLookupsUsed=b.free_used; updateCreditBadge(); }
+      }catch(_){}
+      toast('✅ Credits added to your account!','success');
+      showBuyCreditsModal();
+    } else if(_urlParams.get('credits_cancelled')){
+      history.replaceState({}, '', window.location.pathname);
+      toast('Credit purchase cancelled.','info');
+    }
     // Show PWA install bar if prompt is ready
     if(_pwaInstallEvent){
       const bar = document.getElementById('pwa-install-bar');

@@ -278,16 +278,96 @@ export default async function handler(req, res) {
         break;
       }
 
-      // ── RentCast proxy ────────────────────────────────────────────────────
+      // ── RentCast proxy (with credit enforcement) ─────────────────────────
       case 'rentcast': {
         const { address } = req.query;
         if (!address) { res.status(400).json({ error: 'address required' }); return; }
+
+        const FREE_LOOKUPS_PER_MONTH = 10;
+
+        // Fetch the account's current credit state
+        const acctRes = await sbFetch(
+          `accounts?id=eq.${profile.account_id}&select=id,lookup_credits,free_lookups_used,free_lookups_reset`
+        );
+        if (!acctRes.ok) { res.status(500).json({ error: 'Failed to fetch account credits' }); return; }
+        const acctRows = await acctRes.json();
+        if (!acctRows.length) { res.status(404).json({ error: 'Account not found' }); return; }
+        let acct = acctRows[0];
+
+        // Check if free lookup counter needs monthly reset
+        const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+        const resetDate = acct.free_lookups_reset;
+        const resetMonth = resetDate ? resetDate.slice(0, 7) : '';
+        const thisMonth  = today.slice(0, 7);
+        if (resetMonth !== thisMonth) {
+          // Reset free lookups for the new month
+          await sbFetch(`accounts?id=eq.${profile.account_id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ free_lookups_used: 0, free_lookups_reset: today })
+          });
+          acct.free_lookups_used = 0;
+        }
+
+        // Determine credit type to use
+        let creditType = null;
+        if (acct.free_lookups_used < FREE_LOOKUPS_PER_MONTH) {
+          creditType = 'free';
+        } else if (acct.lookup_credits > 0) {
+          creditType = 'paid';
+        } else {
+          // No credits available
+          res.status(402).json({
+            error: 'no_credits',
+            message: 'You have used all 10 free lookups this month. Purchase credits to continue.',
+            free_used: acct.free_lookups_used,
+            paid_credits: acct.lookup_credits
+          });
+          return;
+        }
+
+        // Call RentCast
         const rcRes = await fetch(
           `https://api.rentcast.io/v1/properties?address=${encodeURIComponent(address)}&limit=1`,
           { headers: { 'X-Api-Key': RENTCAST_KEY } }
         );
         const rcData = await rcRes.json();
-        res.status(rcRes.status).json(rcData);
+
+        // Only deduct credits on a successful lookup (200 with data)
+        if (rcRes.status === 200 && Array.isArray(rcData) && rcData.length > 0) {
+          if (creditType === 'free') {
+            await sbFetch(`accounts?id=eq.${profile.account_id}`, {
+              method: 'PATCH',
+              body: JSON.stringify({ free_lookups_used: acct.free_lookups_used + 1 })
+            });
+          } else {
+            await sbFetch(`accounts?id=eq.${profile.account_id}`, {
+              method: 'PATCH',
+              body: JSON.stringify({ lookup_credits: acct.lookup_credits - 1 })
+            });
+          }
+          // Log the lookup
+          await sbFetch('lookup_log', {
+            method: 'POST',
+            body: JSON.stringify({
+              account_id: profile.account_id,
+              user_id:    caller.id,
+              address,
+              credit_type: creditType
+            })
+          });
+        }
+
+        // Return data with credit state so the UI can update
+        const newFreeUsed    = creditType === 'free' ? acct.free_lookups_used + 1 : acct.free_lookups_used;
+        const newPaidCredits = creditType === 'paid' ? acct.lookup_credits - 1   : acct.lookup_credits;
+        res.status(rcRes.status).json({
+          ...( Array.isArray(rcData) ? { properties: rcData } : rcData ),
+          _credits: {
+            free_used:    newFreeUsed,
+            free_limit:   FREE_LOOKUPS_PER_MONTH,
+            paid_credits: newPaidCredits
+          }
+        });
         break;
       }
 
