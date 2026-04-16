@@ -8,6 +8,23 @@
 
 import Stripe from 'stripe';
 
+// Vercel: disable body parsing so we get the raw body for Stripe webhook signature verification
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+// Helper to read raw body from Vercel request
+async function getRawBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on('data', chunk => chunks.push(chunk));
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+}
+
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://gtwbhxnrmfmdenogzuea.supabase.co';
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
 const STRIPE_KEY   = process.env.STRIPE_SECRET_KEY;
@@ -76,8 +93,7 @@ export default async function handler(req, res) {
     let event;
 
     try {
-      // Vercel provides raw body via req.body when content-type is application/json
-      const rawBody = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+      const rawBody = await getRawBody(req);
       event = stripe.webhooks.constructEvent(rawBody, sig, WEBHOOK_SECRET);
     } catch (err) {
       console.error('[webhook] signature verification failed:', err.message);
