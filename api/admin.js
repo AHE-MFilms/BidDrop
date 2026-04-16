@@ -192,7 +192,7 @@ export default async function handler(req, res) {
       case 'agency-data': {
         if (!isSuperAdmin) { res.status(403).json({ error: 'Super admin only' }); return; }
         const [acctRes, profRes, pinsRes, logRes] = await Promise.all([
-          sbFetch('accounts?select=id,name,company_name,plan,active,mailer_rate,created_at&order=created_at.asc'),
+          sbFetch('accounts?select=id,name,company_name,plan,active,mailer_rate,created_at,enable_postcard,enable_letter&order=created_at.asc'),
           sbFetch('user_profiles?select=id,account_id,name,email,role'),
           sbFetch('pins?select=id,account_id,status,created_at,rep_name'),
           sbFetch('mailer_log?select=*&order=sent_at.desc&limit=500')

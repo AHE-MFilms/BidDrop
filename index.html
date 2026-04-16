@@ -495,7 +495,21 @@ tr:hover td{background:var(--card);}
       <div class="fg"><label class="fl">Mailer Rate ($/piece)</label><input class="fi" id="ec-rate" type="number" step="0.01" placeholder="2.50"></div>
     </div>
     <div class="fg"><label class="fl">Notes (internal)</label><input class="fi" id="ec-notes" placeholder="e.g. Net 30 billing, referral from..."></div>
-    <div class="fg" style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+    <!-- Mailer type toggles -->
+    <div style="margin-top:10px;">
+      <label class="fl" style="margin-bottom:8px;">Mailer Types Enabled</label>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;">
+          <input type="checkbox" id="ec-enable-postcard" style="width:16px;height:16px;accent-color:var(--accent);">
+          📬 Postcard
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;">
+          <input type="checkbox" id="ec-enable-letter" style="width:16px;height:16px;accent-color:var(--accent);">
+          ✉️ Letter
+        </label>
+      </div>
+    </div>
+    <div class="fg" style="display:flex;align-items:center;gap:10px;margin-top:10px;">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);">
         <input type="checkbox" id="ec-active" style="width:16px;height:16px;accent-color:var(--accent);">
         Account Active
@@ -1743,6 +1757,8 @@ function accountRowToCfg(row){
     postcardStep3: row.postcard_step3||null,
     postcardStep4: row.postcard_step4||null,
     dripEnabled: row.drip_enabled||false,
+    enablePostcard: row.enable_postcard!==false,
+    enableLetter:   row.enable_letter!==false,
   };
 }
 
@@ -4714,11 +4730,11 @@ function renderQueue(){
       '<td style="font-family:var(--font-m);font-size:10px;color:var(--muted);">'+fmtDate(i.at)+'</td>'+
       '<td><span class="spill" style="background:'+sc+'22;color:'+sc+';border:1px solid '+sc+'44;">'+sl+'</span></td>'+
       '<td style="display:flex;gap:5px;align-items:center;">'+
-      (i.status==='pending'?'<button class="btn-xs pr" onclick="sendLob(\''+qid+'\')" title="Send 4-page letter">📬 Letter</button>':'')+
-      (i.status==='pending'?'<button class="btn-xs" onclick="sendLobPostcard6x9(\''+qid+'\')" style="background:#0e7490;border-color:#0e7490;color:#fff;" title="Send 6×9 house photo postcard">🏠 Postcard</button>':'')+
+      (i.status==='pending' && S.cfg.enableLetter!==false ?'<button class="btn-xs pr" onclick="sendLob(\''+qid+'\')" title="Send 4-page letter">📬 Letter</button>':'')+
+      (i.status==='pending' && S.cfg.enablePostcard!==false?'<button class="btn-xs" onclick="sendLobPostcard6x9(\''+qid+'\')" style="background:#0e7490;border-color:#0e7490;color:#fff;" title="Send 6×9 house photo postcard">🏠 Postcard</button>':'')+
       (i.status==='sent'?'<span style="font-size:10px;color:var(--muted);">'+fmtDate(i.mailedAt)+'</span>':'')+
-      (i.status==='failed'?'<button class="btn-xs" onclick="sendLob(\''+qid+'\')">' + 'Retry Letter</button>':'')+
-      (i.status==='failed'?'<button class="btn-xs" onclick="sendLobPostcard6x9(\''+qid+'\')" style="background:#0e7490;border-color:#0e7490;color:#fff;">Retry Card</button>':'')+
+      (i.status==='failed' && S.cfg.enableLetter!==false ?'<button class="btn-xs" onclick="sendLob(\''+qid+'\')">' + 'Retry Letter</button>':'')+
+      (i.status==='failed' && S.cfg.enablePostcard!==false?'<button class="btn-xs" onclick="sendLobPostcard6x9(\''+qid+'\')" style="background:#0e7490;border-color:#0e7490;color:#fff;">Retry Card</button>':'')+
       (i.status==='pending'?'<button class="btn-xs" onclick="editEstimate(\''+qid+'\')">✏️ Edit</button>':'')+
       '<button class="btn-xs" onclick="previewQueueItem(\''+qid+'\')">&#128065; Letter</button>'+
       '<button class="btn-xs" onclick="previewPostcard6x9(\''+qid+'\')" style="background:#0e749022;border-color:#0e7490;color:#0e7490;" title="Preview postcard front & back">🏠 Card</button>'+
@@ -5799,6 +5815,8 @@ function editClientAccount(accountId){
   document.getElementById('ec-rate').value  = parseFloat(a.mailer_rate)||2.50;
   document.getElementById('ec-notes').value = a.notes||'';
   document.getElementById('ec-active').checked = a.active!==false;
+  document.getElementById('ec-enable-postcard').checked = a.enable_postcard!==false;
+  document.getElementById('ec-enable-letter').checked   = a.enable_letter!==false;
   document.getElementById('ec-result').textContent = '';
   const btn = document.getElementById('btn-save-client');
   if(btn){ btn.disabled=false; btn.textContent='Save Changes'; }
@@ -5814,7 +5832,9 @@ async function saveClientAccount(){
   const plan   = document.getElementById('ec-plan').value;
   const rate   = parseFloat(document.getElementById('ec-rate').value)||2.50;
   const notes  = document.getElementById('ec-notes').value.trim();
-  const active = document.getElementById('ec-active').checked;
+  const active          = document.getElementById('ec-active').checked;
+  const enablePostcard  = document.getElementById('ec-enable-postcard').checked;
+  const enableLetter    = document.getElementById('ec-enable-letter').checked;
   if(!name){ toast('Company name is required','error'); return; }
   const resultEl = document.getElementById('ec-result');
   const btn = document.getElementById('btn-save-client');
@@ -5823,11 +5843,11 @@ async function saveClientAccount(){
   try {
     const updated = await adminAPI('patch-account', {
       accountId,
-      updates: { name, company_name:name, company_phone:phone||null, company_addr:addr||null, plan, mailer_rate:rate, notes:notes||null, active }
+      updates: { name, company_name:name, company_phone:phone||null, company_addr:addr||null, plan, mailer_rate:rate, notes:notes||null, active, enable_postcard:enablePostcard, enable_letter:enableLetter }
     });
     // Update local cache
     const idx = _agencyData.accounts.findIndex(x=>x.id===accountId);
-    if(idx>=0) _agencyData.accounts[idx] = {..._agencyData.accounts[idx], name, company_name:name, company_phone:phone, company_addr:addr, plan, mailer_rate:rate, notes, active};
+    if(idx>=0) _agencyData.accounts[idx] = {..._agencyData.accounts[idx], name, company_name:name, company_phone:phone, company_addr:addr, plan, mailer_rate:rate, notes, active, enable_postcard:enablePostcard, enable_letter:enableLetter};
     resultEl.innerHTML = '✅ Saved!'; resultEl.style.color='var(--success)';
     toast('✅ '+name+' updated','success');
     renderAgencyAccounts();
@@ -7224,7 +7244,7 @@ async function renderAdminPanel(){
 
   if(isSuperAdmin()){
     // Super admin sees all accounts
-    const {data:accounts} = await sb.from('accounts').select('id,name,company_name,created_at,plan,active,mailer_rate,notes').order('created_at',{ascending:true});
+    const {data:accounts} = await sb.from('accounts').select('id,name,company_name,created_at,plan,active,mailer_rate,notes,enable_postcard,enable_letter').order('created_at',{ascending:true});
     const {data:profiles} = await sb.from('user_profiles').select('*');
     el.innerHTML = renderSuperAdminPanel(accounts||[], profiles||[]);
   } else if(isAdminOrAbove()){
