@@ -1015,9 +1015,31 @@ tr:hover td{background:var(--card);}
     </div>
     <!-- Per-account cards -->
     <div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
         <div class="dc-title" style="margin-bottom:0;">Client Accounts</div>
-        <button onclick="openAdminPanel();setTimeout(showAddAccountForm,400)" style="background:var(--accent);border:none;border-radius:8px;padding:8px 16px;color:white;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.4px;">+ Onboard New Client</button>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input id="ag-search" type="text" placeholder="🔍 Search clients..." oninput="filterAgencyAccounts()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:6px 12px;color:var(--fg);font-size:12px;width:180px;outline:none;" />
+          <select id="ag-sort" onchange="filterAgencyAccounts()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--fg);font-size:12px;cursor:pointer;">
+            <option value="name_asc">Name A→Z</option>
+            <option value="name_desc">Name Z→A</option>
+            <option value="plan">Plan</option>
+            <option value="pins_desc">Most Pins</option>
+            <option value="activity">Recent Activity</option>
+            <option value="created">Date Added</option>
+          </select>
+          <select id="ag-filter-plan" onchange="filterAgencyAccounts()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--fg);font-size:12px;cursor:pointer;">
+            <option value="all">All Plans</option>
+            <option value="starter">Starter</option>
+            <option value="pro">Pro</option>
+            <option value="agency">Agency</option>
+          </select>
+          <select id="ag-filter-status" onchange="filterAgencyAccounts()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--fg);font-size:12px;cursor:pointer;">
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+          <button onclick="openAdminPanel();setTimeout(showAddAccountForm,400)" style="background:var(--accent);border:none;border-radius:8px;padding:8px 16px;color:white;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.4px;">+ Onboard New Client</button>
+        </div>
       </div>
       <div id="agency-accounts-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;"></div>
     </div>
@@ -5800,18 +5822,72 @@ function renderAgencyKPIs(){
   document.getElementById('ag-pins').textContent = totalPins.toLocaleString();
 }
 
-function renderAgencyAccounts(){
+function filterAgencyAccounts(){
   if(!_agencyData) return;
+  const q      = (document.getElementById('ag-search')?.value||'').toLowerCase().trim();
+  const sort   = document.getElementById('ag-sort')?.value || 'name_asc';
+  const plan   = document.getElementById('ag-filter-plan')?.value || 'all';
+  const status = document.getElementById('ag-filter-status')?.value || 'all';
   const {accounts, profiles, pins, mailerLog} = _agencyData;
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+  let filtered = accounts.filter(a=>{
+    const name = (a.company_name||a.name||'').toLowerCase();
+    if(q && !name.includes(q)) return false;
+    if(plan !== 'all' && (a.plan||'starter').toLowerCase() !== plan) return false;
+    if(status === 'active'   && a.active === false) return false;
+    if(status === 'inactive' && a.active !== false) return false;
+    return true;
+  });
+
+  filtered.sort((a,b)=>{
+    const nameA = (a.company_name||a.name||'').toLowerCase();
+    const nameB = (b.company_name||b.name||'').toLowerCase();
+    if(sort==='name_asc')  return nameA < nameB ? -1 : nameA > nameB ? 1 : 0;
+    if(sort==='name_desc') return nameA > nameB ? -1 : nameA < nameB ? 1 : 0;
+    if(sort==='plan'){
+      const order = {agency:0,pro:1,starter:2};
+      return (order[a.plan]??2) - (order[b.plan]??2);
+    }
+    if(sort==='pins_desc'){
+      const pA = pins.filter(p=>p.account_id===a.id).length;
+      const pB = pins.filter(p=>p.account_id===b.id).length;
+      return pB - pA;
+    }
+    if(sort==='activity'){
+      const lastA = Math.max(
+        ...pins.filter(p=>p.account_id===a.id).map(p=>new Date(p.created_at).getTime()), 0,
+        ...mailerLog.filter(m=>m.account_id===a.id).map(m=>new Date(m.sent_at).getTime()), 0
+      );
+      const lastB = Math.max(
+        ...pins.filter(p=>p.account_id===b.id).map(p=>new Date(p.created_at).getTime()), 0,
+        ...mailerLog.filter(m=>m.account_id===b.id).map(m=>new Date(m.sent_at).getTime()), 0
+      );
+      return lastB - lastA;
+    }
+    if(sort==='created') return new Date(a.created_at) - new Date(b.created_at);
+    return 0;
+  });
+
+  _renderAgencyAccountCards(filtered);
+}
+
+function renderAgencyAccounts(){
+  filterAgencyAccounts();
+}
+
+function _renderAgencyAccountCards(accounts){
+  if(!_agencyData) return;
+  const {profiles, pins, mailerLog} = _agencyData;
   const el = document.getElementById('agency-accounts-grid');
   if(!el) return;
 
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-  const allTimeStart = '2000-01-01T00:00:00Z';
 
   if(!accounts.length){
-    el.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:10px;">No client accounts yet. Use Admin Panel to onboard clients.</div>';
+    el.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:10px;">No accounts match your search.</div>';
     return;
   }
 
