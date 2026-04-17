@@ -37,7 +37,7 @@ html,body{height:100%;overflow:hidden;}
 body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:flex;flex-direction:column;font-size:15px;}
 .hdr{background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;height:54px;flex-shrink:0;gap:6px;}
 .logo{font-family:var(--font-h);font-size:20px;font-weight:700;color:var(--accent);letter-spacing:1.5px;margin-right:12px;display:flex;align-items:center;gap:8px;white-space:nowrap;}
-.ahe-header-logo{height:44px;opacity:1;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(242,92,5,.25));}
+.ahe-header-logo{height:44px;opacity:1;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(242,92,5,.25));max-width:160px;}
 .logo-sub{font-size:11px;font-weight:400;color:var(--muted);letter-spacing:0;font-family:var(--font-b);}
 .tabs{display:flex;gap:0;flex:1;}
 .tab-btn{background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-family:var(--font-b);font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:0 18px;height:54px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px;}
@@ -336,7 +336,11 @@ tr:hover td{background:var(--card);}
 @media(max-width:768px){
   .tabs{display:none;}
   .logo-sub{display:none;}
-  .hdr{padding:0 14px;height:50px;}
+  .hdr{padding:0 10px;height:50px;}
+  .ahe-header-logo{height:32px;max-width:100px;}
+  .hdr-actions{gap:4px;}
+  #credit-badge-btn{padding:3px 7px;gap:2px;}
+  #credit-badge-btn .credit-badge-text{display:none;}
   .bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--panel);border-top:1px solid var(--border);z-index:2000;height:62px;padding-bottom:env(safe-area-inset-bottom);}
   .bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;color:var(--muted);cursor:pointer;font-family:var(--font-b);font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;transition:color .15s;-webkit-tap-highlight-color:transparent;}
   .bnav-btn .bicon{font-size:22px;line-height:1;}
@@ -351,7 +355,14 @@ tr:hover td{background:var(--card);}
   .fab-pins{position:absolute;bottom:14px;right:14px;z-index:1000;background:var(--accent);border:none;border-radius:50%;width:54px;height:54px;font-size:24px;cursor:pointer;box-shadow:0 4px 20px rgba(242,92,5,.55);display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;}
   .map-toolbar{flex-direction:row;top:10px;left:50%;transform:translateX(-50%);width:auto;gap:6px;}
   .mtool-btn{font-size:10px;padding:7px 12px;}
-  .measure-hud{left:10px;right:10px;transform:none;bottom:76px;}
+  .measure-hud{left:0;right:0;bottom:auto;top:108px;transform:none;border-radius:0;border-left:none;border-right:none;border-top:none;padding:8px 14px;display:none;flex-direction:row;align-items:center;gap:8px;flex-wrap:nowrap;width:100%;box-sizing:border-box;}
+  .measure-hud.show{display:flex;}
+  .mhud-lbl{display:none;}
+  .mhud-sqft{font-size:18px;min-width:40px;}
+  .mhud-hint{font-size:10px;flex:1;margin-top:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  #mhud-bldg-count{font-size:10px;min-height:0;}
+  .mhud-btn{padding:5px 10px;font-size:11px;flex-shrink:0;}
+  #btn-use-measure{width:auto;flex-shrink:0;}
   #tab-estimate{flex-direction:column;overflow-y:auto;}
   .est-form{width:100%;border-right:none;padding:16px 16px 0;overflow-y:visible;}
   .est-preview{display:none;padding:16px;flex-direction:column;align-items:center;}
@@ -655,7 +666,7 @@ tr:hover td{background:var(--card);}
     <!-- Lookup credit badge -->
     <button id="credit-badge-btn" onclick="showBuyCreditsModal()" title="Lookup Credits" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:3px 10px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;">
       <span style="font-size:13px;">🔍</span>
-      <span id="credit-badge-label">10 free</span>
+      <span id="credit-badge-label" class="credit-badge-text">10 free</span>
     </button>
     <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
     <button class="icon-btn" id="user-badge" onclick="openAdminPanel()" title="Your Account" style="font-size:11px;font-weight:700;width:auto;padding:0 10px;color:var(--accent);">...</button>
