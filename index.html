@@ -4874,8 +4874,18 @@ async function sendLob(id){
       address_placement: 'insert_blank_page',
       use_type: 'marketing'
     }});
+    if(d && d.error === 'no_credits'){
+      // Not enough credits — show Buy Credits modal
+      toast('Not enough credits to send a letter ($4.00 = 16 credits). Please purchase more credits.','error');
+      if(d._credits) S.cfg._creditBalance = d._credits.paid_credits;
+      updateCreditBadge();
+      setTimeout(()=>showBuyCreditsModal(), 800);
+      return;
+    }
     if(d && d.id){
       item.status='sent';item.mailedAt=new Date().toISOString();item.lobId=d.id;
+      // Update credit badge with new balance
+      if(d._credits){ S.cfg._creditBalance = d._credits.paid_credits; updateCreditBadge(); }
       addAct('Bid letter mailed to <strong>'+escHtml(item.addr)+'</strong>','converted');
       // If this is a drip step, log it to GHL contact timeline
       if(item.drip_step) ghlAddDripNote(item.owner, item.addr, item.drip_step, item.mailedAt).catch(e=>console.warn('[GHL drip note]',e));
@@ -4897,7 +4907,7 @@ async function sendLob(id){
     } else {
       item.status='failed';save();renderQueue();toast('Mail error: '+(d.error?.message||'Check mail settings & address'),'error');
     }
-  } catch(e){item.status='failed';save();renderQueue();toast('Network error — mailer service unavailable','error');}
+  } catch(e){item.status='failed';save();renderQueue();toast('Network error — mailer service unavailable','error');}}
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -5181,8 +5191,18 @@ async function sendLobPostcard6x9(id){
       size: '6x9',
       use_type: 'marketing'
     }});
+    if(d && d.error === 'no_credits'){
+      // Not enough credits — show Buy Credits modal
+      toast('Not enough credits to send a postcard ($4.00 = 16 credits). Please purchase more credits.','error');
+      if(d._credits) S.cfg._creditBalance = d._credits.paid_credits;
+      updateCreditBadge();
+      setTimeout(()=>showBuyCreditsModal(), 800);
+      return;
+    }
     if(d && d.id){
       item.status='sent'; item.mailedAt=new Date().toISOString(); item.lobId=d.id;
+      // Update credit badge with new balance
+      if(d._credits){ S.cfg._creditBalance = d._credits.paid_credits; updateCreditBadge(); }
       addAct('Estimate postcard mailed to <strong>'+escHtml(item.addr)+'</strong>','converted');
       if(currentAccount && sb){
         sb.from('mailer_log').insert({

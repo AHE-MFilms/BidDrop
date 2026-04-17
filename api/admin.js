@@ -244,9 +244,35 @@ export default async function handler(req, res) {
 
       // ── Lob postcard proxy ────────────────────────────────────────────────
       case 'lob-postcard': {
-        // Any authenticated user (rep, admin, super_admin) can send mailings
+        const POSTCARD_CREDITS = 16; // 16 credits = $4.00
         const { payload } = req.body;
         if (!payload) { res.status(400).json({ error: 'payload required' }); return; }
+
+        // Enforce credit balance before sending
+        const pcAcctRes = await sbFetch(
+          `accounts?id=eq.${profile.account_id}&select=id,lookup_credits`
+        );
+        if (!pcAcctRes.ok) { res.status(500).json({ error: 'Failed to fetch account credits' }); return; }
+        const pcAcctRows = await pcAcctRes.json();
+        if (!pcAcctRows.length) { res.status(404).json({ error: 'Account not found' }); return; }
+        const pcAcct = pcAcctRows[0];
+        if ((pcAcct.lookup_credits || 0) < POSTCARD_CREDITS) {
+          res.status(402).json({
+            error: 'no_credits',
+            message: `Sending a postcard costs ${POSTCARD_CREDITS} credits ($4.00). You have ${pcAcct.lookup_credits || 0} credits. Please purchase more credits to continue.`,
+            credits_needed: POSTCARD_CREDITS,
+            credits_available: pcAcct.lookup_credits || 0
+          });
+          return;
+        }
+
+        // Deduct credits BEFORE sending (charge at time of order)
+        await sbFetch(`accounts?id=eq.${profile.account_id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ lookup_credits: pcAcct.lookup_credits - POSTCARD_CREDITS })
+        });
+
+        // Send the postcard
         const lobRes = await fetch('https://api.lob.com/v1/postcards', {
           method: 'POST',
           headers: {
@@ -256,15 +282,53 @@ export default async function handler(req, res) {
           body: JSON.stringify(payload)
         });
         const lobData = await lobRes.json();
-        res.status(lobRes.status).json(lobData);
+
+        // If Lob failed, refund the credits
+        if (!lobRes.ok) {
+          await sbFetch(`accounts?id=eq.${profile.account_id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ lookup_credits: pcAcct.lookup_credits })
+          });
+        }
+
+        res.status(lobRes.status).json({
+          ...lobData,
+          _credits: { paid_credits: lobRes.ok ? pcAcct.lookup_credits - POSTCARD_CREDITS : pcAcct.lookup_credits }
+        });
         break;
       }
 
       // ── Lob letter proxy ──────────────────────────────────────────────────
       case 'lob-letter': {
-        // Any authenticated user (rep, admin, super_admin) can send mailings
+        const LETTER_CREDITS = 16; // 16 credits = $4.00
         const { payload } = req.body;
         if (!payload) { res.status(400).json({ error: 'payload required' }); return; }
+
+        // Enforce credit balance before sending
+        const ltAcctRes = await sbFetch(
+          `accounts?id=eq.${profile.account_id}&select=id,lookup_credits`
+        );
+        if (!ltAcctRes.ok) { res.status(500).json({ error: 'Failed to fetch account credits' }); return; }
+        const ltAcctRows = await ltAcctRes.json();
+        if (!ltAcctRows.length) { res.status(404).json({ error: 'Account not found' }); return; }
+        const ltAcct = ltAcctRows[0];
+        if ((ltAcct.lookup_credits || 0) < LETTER_CREDITS) {
+          res.status(402).json({
+            error: 'no_credits',
+            message: `Sending a letter costs ${LETTER_CREDITS} credits ($4.00). You have ${ltAcct.lookup_credits || 0} credits. Please purchase more credits to continue.`,
+            credits_needed: LETTER_CREDITS,
+            credits_available: ltAcct.lookup_credits || 0
+          });
+          return;
+        }
+
+        // Deduct credits BEFORE sending (charge at time of order)
+        await sbFetch(`accounts?id=eq.${profile.account_id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ lookup_credits: ltAcct.lookup_credits - LETTER_CREDITS })
+        });
+
+        // Send the letter
         const lobRes = await fetch('https://api.lob.com/v1/letters', {
           method: 'POST',
           headers: {
@@ -274,7 +338,19 @@ export default async function handler(req, res) {
           body: JSON.stringify(payload)
         });
         const lobData = await lobRes.json();
-        res.status(lobRes.status).json(lobData);
+
+        // If Lob failed, refund the credits
+        if (!lobRes.ok) {
+          await sbFetch(`accounts?id=eq.${profile.account_id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ lookup_credits: ltAcct.lookup_credits })
+          });
+        }
+
+        res.status(lobRes.status).json({
+          ...lobData,
+          _credits: { paid_credits: lobRes.ok ? ltAcct.lookup_credits - LETTER_CREDITS : ltAcct.lookup_credits }
+        });
         break;
       }
 
