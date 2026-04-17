@@ -30,7 +30,7 @@
   --bg:#0F1623;--panel:#1A2333;--card:#1F2C3E;--card2:#243347;
   --border:#2E4060;--accent:#F25C05;--accent-dim:rgba(242,92,5,0.12);
   --success:#22C55E;--warning:#F59E0B;--info:#3B82F6;--danger:#EF4444;
-  --text:#F0F6FF;--mid:#A8BECE;--muted:#6688A8;
+  --text:#F0F6FF;--mid:#C8D8E8;--muted:#96B0C8;
   --font-h:'Oswald',sans-serif;--font-b:'Barlow',sans-serif;--font-m:'DM Mono',monospace;
 }
 html,body{height:100%;overflow:hidden;}
@@ -40,7 +40,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 .ahe-header-logo{height:44px;opacity:1;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(242,92,5,.25));max-width:160px;}
 .logo-sub{font-size:11px;font-weight:400;color:var(--muted);letter-spacing:0;font-family:var(--font-b);}
 .tabs{display:flex;gap:0;flex:1;}
-.tab-btn{background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-family:var(--font-b);font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:0 18px;height:54px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px;}
+.tab-btn{background:none;border:none;border-bottom:2px solid transparent;color:var(--mid);font-family:var(--font-b);font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:0 18px;height:54px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px;}
 .tab-btn:hover{color:var(--text);}
 .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
 .hdr-actions{display:flex;align-items:center;gap:8px;margin-left:auto;}
@@ -83,7 +83,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 .pc-body{display:none;padding:0 11px 10px;border-top:1px solid var(--border);}
 .pc.open .pc-body{display:block;}
 .pc-acts{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap;}
-.btn-xs{font-family:var(--font-b);font-size:10px;font-weight:700;padding:4px 9px;border-radius:5px;border:1px solid var(--border);cursor:pointer;background:var(--card2);color:var(--mid);transition:all .15s;letter-spacing:.3px;text-transform:uppercase;}
+.btn-xs{font-family:var(--font-b);font-size:10px;font-weight:700;padding:4px 9px;border-radius:5px;border:1px solid var(--border);cursor:pointer;background:var(--card2);color:var(--text);transition:all .15s;letter-spacing:.3px;text-transform:uppercase;}
 .btn-xs:hover{border-color:var(--accent);color:var(--accent);}
 .btn-xs.pr{background:var(--accent);border-color:var(--accent);color:#fff;}
 .btn-xs.pr:hover{opacity:.85;}
@@ -665,14 +665,12 @@ tr:hover td{background:var(--card);}
     <img id="ahe-hdr-logo" class="ahe-header-logo" alt="America's Home Experts">
   </div>
   <div class="hdr-actions">
-    <button class="icon-btn" id="admin-panel-btn" onclick="openAdminPanel()" title="Admin Panel" style="display:none;">🛡</button>
     <!-- Lookup credit badge -->
     <button id="credit-badge-btn" onclick="showBuyCreditsModal()" title="Lookup Credits" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:3px 10px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;">
       <span style="font-size:13px;">🔍</span>
-      <span id="credit-badge-label" class="credit-badge-text">10 free</span>
+      <span id="credit-badge-label" class="credit-badge-text">10 credits</span>
     </button>
-    <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
-    <button class="icon-btn" id="user-badge" onclick="openAdminPanel()" title="Your Account" style="font-size:11px;font-weight:700;width:auto;padding:0 10px;color:var(--accent);">...</button>
+    <button class="icon-btn" id="user-badge" onclick="goTab('settings')" title="Settings" style="font-size:11px;font-weight:700;width:auto;padding:0 10px;color:var(--accent);">...</button>
   </div>
 </div>
 
@@ -965,16 +963,16 @@ tr:hover td{background:var(--card);}
   <div class="tab-pane" id="tab-mailqueue">
     <!-- Credits bar -->
     <div id="queue-credits-bar" style="background:var(--card);border-bottom:1px solid var(--border);padding:10px 22px;display:flex;align-items:center;gap:16px;flex-shrink:0;flex-wrap:wrap;">
-      <span style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">Your Credits</span>
-      <div style="display:flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:6px 14px;">
-        <span style="font-size:18px;font-weight:800;color:var(--accent);" id="qcb-free">—</span>
-        <span style="font-size:11px;color:var(--muted);">free lookups left this month</span>
+      <span style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--mid);">Your Credits</span>
+      <div style="display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 18px;">
+        <span style="font-size:24px;font-weight:800;color:var(--accent);" id="qcb-total">—</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);">Credits Available</div>
+          <div style="font-size:10px;color:var(--mid);">Each mailer = 1 credit ($4.00)</div>
+        </div>
       </div>
-      <div style="display:flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:6px 14px;">
-        <span style="font-size:18px;font-weight:800;color:#4ade80;" id="qcb-paid">—</span>
-        <span style="font-size:11px;color:var(--muted);">paid credits</span>
-      </div>
-      <span style="font-size:10px;color:var(--muted);">Each postcard or letter = 16 credits ($4.00)</span>
+      <span id="qcb-free" style="display:none;">—</span>
+      <span id="qcb-paid" style="display:none;">—</span>
       <button onclick="showBuyCreditsModal()" style="margin-left:auto;background:var(--accent);border:none;border-radius:8px;padding:8px 20px;color:#fff;font-family:var(--font-b);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.5px;text-transform:uppercase;white-space:nowrap;">+ Buy Credits</button>
     </div>
     <div class="q-hdr">
@@ -1201,6 +1199,31 @@ tr:hover td{background:var(--card);}
   </div>
 
 </div>
+  <div class="tab-pane" id="tab-settings" style="flex-direction:column;overflow-y:auto;">
+    <div style="max-width:900px;width:100%;margin:0 auto;padding:24px 20px;display:flex;flex-direction:column;gap:24px;">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-family:var(--font-h);font-size:16px;font-weight:700;color:var(--text);letter-spacing:.5px;">&#128101; Team Members</div>
+          <div id="settings-team-role-badge" style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:9px;background:var(--accent-dim);color:var(--accent);text-transform:uppercase;"></div>
+        </div>
+        <div id="settings-team-body" style="padding:16px 20px;">
+          <div style="color:var(--mid);font-size:13px;">Loading team...</div>
+        </div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);">
+          <div style="font-family:var(--font-h);font-size:16px;font-weight:700;color:var(--text);letter-spacing:.5px;">&#9881;&#65039; Company Settings</div>
+        </div>
+        <div style="padding:20px;">
+          <p style="color:var(--mid);font-size:13px;margin:0 0 16px;">Configure your company info, pricing, postcard content, and integrations.</p>
+          <button onclick="openSettings()" style="background:var(--accent);border:none;border-radius:9px;padding:12px 28px;color:#fff;font-family:var(--font-h);font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.5px;">Open Settings &amp; Pricing</button>
+        </div>
+      </div>
+      <div style="text-align:center;padding-bottom:20px;">
+        <button onclick="doLogout()" style="background:none;border:1px solid var(--danger);border-radius:8px;padding:10px 28px;color:var(--danger);font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;">Sign Out</button>
+      </div>
+    </div>
+  </div>
 
 <!-- SAVE ZONE MODAL -->
 <div class="overlay" id="m-save-zone" style="display:none;">
@@ -1912,6 +1935,38 @@ function goTab(t){
   if(t==='zones')initZonesTab();
   if(t==='agency')renderAgencyView();
   if(t==='followup')renderFollowUpTab();
+  if(t==='settings')renderSettingsTab();
+}
+
+
+function renderSettingsTab(){
+  // Load team members into the settings tab
+  const body = document.getElementById('settings-team-body');
+  const roleBadge = document.getElementById('settings-team-role-badge');
+  if(!body) return;
+  body.innerHTML = '<div style="color:var(--mid);font-size:13px;">Loading...</div>';
+
+  // Show the admin panel content inline
+  (async ()=>{
+    try{
+      const isSA = currentUser && currentUser.role === 'super_admin';
+      const isAdm = isAdminOrAbove();
+      if(roleBadge) roleBadge.textContent = isSA ? 'Super Admin' : (isAdm ? 'Admin' : 'Rep');
+
+      if(isSA){
+        // Super admin: show link to full admin panel
+        body.innerHTML = '<div style="color:var(--mid);font-size:13px;margin-bottom:12px;">You are logged in as Super Admin.</div>' +
+          '<button onclick="openAdminPanel()" style="background:var(--accent);border:none;border-radius:8px;padding:10px 22px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">Open Full Admin Panel</button>';
+      } else if(isAdm){
+        const {data:profiles} = await sb.from('user_profiles').select('*').eq('account_id', currentAccount.id);
+        body.innerHTML = renderAccountAdminPanel(profiles||[]);
+      } else {
+        body.innerHTML = '<div style="color:var(--mid);font-size:13px;">Contact your admin to manage team members.</div>';
+      }
+    } catch(e){
+      body.innerHTML = '<div style="color:var(--mid);font-size:13px;">Could not load team data.</div>';
+    }
+  })();
 }
 
 function renderFollowUpTab(){
@@ -4842,14 +4897,14 @@ function renderQueue(){
       '<td style="font-family:var(--font-m);font-size:10px;color:var(--muted);">'+fmtDate(i.at)+'</td>'+
       '<td><span class="spill" style="background:'+sc+'22;color:'+sc+';border:1px solid '+sc+'44;">'+sl+'</span></td>'+
       '<td style="display:flex;gap:5px;align-items:center;">'+
-      (i.status==='pending' && S.cfg.enableLetter!==false ?'<button class="btn-xs pr" onclick="sendLob(\''+qid+'\')" title="Send 4-page letter">📬 Letter</button>':'')+
-      (i.status==='pending' && S.cfg.enablePostcard!==false?'<button class="btn-xs" onclick="sendLobPostcard6x9(\''+qid+'\')" style="background:#0e7490;border-color:#0e7490;color:#fff;" title="Send 6×9 house photo postcard">🏠 Postcard</button>':'')+
+      (i.status==='pending' && S.cfg.enableLetter!==false ?'<button class="btn-xs pr" onclick="sendLob(\''+qid+'\')" title="Send 4-page letter">📬 Order Letter</button>':'')+
+      (i.status==='pending' && S.cfg.enablePostcard!==false?'<button class="btn-xs" onclick="sendLobPostcard6x9(\''+qid+'\')" style="background:#0e7490;border-color:#0e7490;color:#fff;" title="Send 6×9 house photo postcard">🏠 Order Postcard</button>':'')+
       (i.status==='sent'?'<span style="font-size:10px;color:var(--muted);">'+fmtDate(i.mailedAt)+'</span>':'')+
       (i.status==='failed' && S.cfg.enableLetter!==false ?'<button class="btn-xs" onclick="sendLob(\''+qid+'\')">' + 'Retry Letter</button>':'')+
       (i.status==='failed' && S.cfg.enablePostcard!==false?'<button class="btn-xs" onclick="sendLobPostcard6x9(\''+qid+'\')" style="background:#0e7490;border-color:#0e7490;color:#fff;">Retry Card</button>':'')+
       (i.status==='pending'?'<button class="btn-xs" onclick="editEstimate(\''+qid+'\')">✏️ Edit</button>':'')+
-      '<button class="btn-xs" onclick="previewQueueItem(\''+qid+'\')">&#128065; Letter</button>'+
-      '<button class="btn-xs" onclick="previewPostcard6x9(\''+qid+'\')" style="background:#0e749022;border-color:#0e7490;color:#0e7490;" title="Preview postcard front & back">🏠 Card</button>'+
+      '<button class="btn-xs" onclick="previewQueueItem(\''+qid+'\')">Preview Letter</button>'+
+      '<button class="btn-xs" onclick="previewPostcard6x9(\''+qid+'\')" style="background:#0e749022;border-color:#0e7490;color:#0e7490;" title="Preview postcard front & back">Preview Card</button>'+
       '<button class="btn-xs danger" onclick="rmQ(\''+qid+'\')" title="Delete">🗑 Delete</button>'+
       '</td></tr>';
   }).join('');
@@ -6892,27 +6947,23 @@ function updateCreditBadge(){
   const freeLimit = S.cfg.freeLookupsLimit || 10;
   const freeLeft = Math.max(0, freeLimit - (S.cfg.freeLookupsUsed||0));
   const paid     = S.cfg.lookupCredits || 0;
-  if(freeLeft > 0){
-    badge.textContent = freeLeft + ' free';
+  const total    = freeLeft + paid;
+  if(total > 0){
+    badge.textContent = total + ' credits';
     document.getElementById('credit-badge-btn').style.borderColor = 'rgba(255,255,255,.15)';
-  } else if(paid > 0){
-    badge.textContent = paid + ' credits';
-    document.getElementById('credit-badge-btn').style.borderColor = '#4ade80';
   } else {
     badge.textContent = 'Buy Credits';
     document.getElementById('credit-badge-btn').style.borderColor = '#ef4444';
   }
-  // Also update the Mail Queue credits bar
-  const qFree = document.getElementById('qcb-free');
-  const qPaid = document.getElementById('qcb-paid');
-  if(qFree) qFree.textContent = freeLeft;
-  if(qPaid) qPaid.textContent = paid;
+  // Update the Mail Queue credits bar total
+  const qTotal = document.getElementById('qcb-total');
+  if(qTotal) qTotal.textContent = total;
   // Color the buy button red if out of credits
   const buyBtn = document.querySelector('#queue-credits-bar button');
   if(buyBtn){
-    if(freeLeft === 0 && paid === 0){
+    if(total === 0){
       buyBtn.style.background = '#ef4444';
-      buyBtn.textContent = '⚠ Buy Credits — Out!';
+      buyBtn.textContent = 'Out of Credits — Buy Now';
     } else {
       buyBtn.style.background = 'var(--accent)';
       buyBtn.textContent = '+ Buy Credits';
@@ -7357,7 +7408,6 @@ function applyRoleUI(){
   if(gear) gear.style.display = isAdminOrAbove() ? 'flex' : 'none';
   if(gearNav) gearNav.style.display = isAdminOrAbove() ? 'flex' : 'none';
   // Show admin panel button for admins
-  document.getElementById('admin-panel-btn') && (document.getElementById('admin-panel-btn').style.display = isAdminOrAbove()?'flex':'none');
   // Show Agency tab only for super_admin
   const agencyTabBtn = document.getElementById('agency-tab-btn');
   if(agencyTabBtn) agencyTabBtn.style.display = isSuperAdmin() ? 'flex' : 'none';
