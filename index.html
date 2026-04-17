@@ -4907,7 +4907,7 @@ async function sendLob(id){
     } else {
       item.status='failed';save();renderQueue();toast('Mail error: '+(d.error?.message||'Check mail settings & address'),'error');
     }
-  } catch(e){item.status='failed';save();renderQueue();toast('Network error — mailer service unavailable','error');}}
+  } catch(e){item.status='failed';save();renderQueue();toast('Network error — mailer service unavailable','error');}
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
