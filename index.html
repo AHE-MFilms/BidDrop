@@ -949,6 +949,20 @@ tr:hover td{background:var(--card);}
   </div>
     <!-- MAIL QUEUE -->
   <div class="tab-pane" id="tab-mailqueue">
+    <!-- Credits bar -->
+    <div id="queue-credits-bar" style="background:var(--card);border-bottom:1px solid var(--border);padding:10px 22px;display:flex;align-items:center;gap:16px;flex-shrink:0;flex-wrap:wrap;">
+      <span style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">Your Credits</span>
+      <div style="display:flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:6px 14px;">
+        <span style="font-size:18px;font-weight:800;color:var(--accent);" id="qcb-free">—</span>
+        <span style="font-size:11px;color:var(--muted);">free lookups left this month</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:6px 14px;">
+        <span style="font-size:18px;font-weight:800;color:#4ade80;" id="qcb-paid">—</span>
+        <span style="font-size:11px;color:var(--muted);">paid credits</span>
+      </div>
+      <span style="font-size:10px;color:var(--muted);">Each postcard or letter = 16 credits ($4.00)</span>
+      <button onclick="showBuyCreditsModal()" style="margin-left:auto;background:var(--accent);border:none;border-radius:8px;padding:8px 20px;color:#fff;font-family:var(--font-b);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.5px;text-transform:uppercase;white-space:nowrap;">+ Buy Credits</button>
+    </div>
     <div class="q-hdr">
       <span class="q-title">📬 Mail Queue</span>
       <button class="btn-send-all" onclick="sendAllPending()">Send All Pending</button>
@@ -1842,6 +1856,7 @@ function accountRowToCfg(row){
     lookupCredits:    row.lookup_credits    || 0,
     freeLookupsUsed:  row.free_lookups_used || 0,
     freeLookupsReset: row.free_lookups_reset|| null,
+    freeLookupsLimit: row.free_lookups_limit || 10,
   };
 }
 
@@ -6810,7 +6825,8 @@ function toast(msg,type='info'){
 function updateCreditBadge(){
   const badge = document.getElementById('credit-badge-label');
   if(!badge) return;
-  const freeLeft = Math.max(0, 10 - (S.cfg.freeLookupsUsed||0));
+  const freeLimit = S.cfg.freeLookupsLimit || 10;
+  const freeLeft = Math.max(0, freeLimit - (S.cfg.freeLookupsUsed||0));
   const paid     = S.cfg.lookupCredits || 0;
   if(freeLeft > 0){
     badge.textContent = freeLeft + ' free';
@@ -6821,6 +6837,22 @@ function updateCreditBadge(){
   } else {
     badge.textContent = 'Buy Credits';
     document.getElementById('credit-badge-btn').style.borderColor = '#ef4444';
+  }
+  // Also update the Mail Queue credits bar
+  const qFree = document.getElementById('qcb-free');
+  const qPaid = document.getElementById('qcb-paid');
+  if(qFree) qFree.textContent = freeLeft;
+  if(qPaid) qPaid.textContent = paid;
+  // Color the buy button red if out of credits
+  const buyBtn = document.querySelector('#queue-credits-bar button');
+  if(buyBtn){
+    if(freeLeft === 0 && paid === 0){
+      buyBtn.style.background = '#ef4444';
+      buyBtn.textContent = '⚠ Buy Credits — Out!';
+    } else {
+      buyBtn.style.background = 'var(--accent)';
+      buyBtn.textContent = '+ Buy Credits';
+    }
   }
 }
 
@@ -6838,7 +6870,8 @@ async function showBuyCreditsModal(){
       }
     }
   }catch(_){}
-  const freeLeft = Math.max(0, 10 - (S.cfg.freeLookupsUsed||0));
+  const freeLimit2 = S.cfg.freeLookupsLimit || 10;
+  const freeLeft = Math.max(0, freeLimit2 - (S.cfg.freeLookupsUsed||0));
   const paid     = S.cfg.lookupCredits || 0;
   const fEl = document.getElementById('cb-free-remaining');
   const pEl = document.getElementById('cb-paid-credits');
