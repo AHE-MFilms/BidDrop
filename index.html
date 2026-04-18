@@ -2561,11 +2561,6 @@ function refreshDripPostcardPreviews(){
     if(missing) missing.style.display = 'none';
   });
 }
-  });
-}
-
-// Preview the postcard front design in a full-size lightbox
-
 // Preview the drip postcard front in a full-screen lightbox (uses house photo + message)
 function previewDripFront(step){
   const est = (S.estimates||[]).find(e=>e.id===_dripEstId) || {};
