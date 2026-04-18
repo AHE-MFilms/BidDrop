@@ -4610,8 +4610,15 @@ function _refreshPostcardPreview(){
 
   const frontFrame = document.getElementById('pc-front-preview');
   const backFrame  = document.getElementById('pc-back-preview');
-  if(frontFrame){ try{ frontFrame.contentDocument.open(); frontFrame.contentDocument.write(frontHtml); frontFrame.contentDocument.close(); }catch(e){} }
-  if(backFrame){  try{ backFrame.contentDocument.open();  backFrame.contentDocument.write(backHtml);  backFrame.contentDocument.close(); }catch(e){} }
+  function _writeFrame(frame, html){
+    if(!frame) return;
+    const blob = new Blob([html], {type:'text/html'});
+    const url = URL.createObjectURL(blob);
+    frame.onload = function(){ URL.revokeObjectURL(url); };
+    frame.src = url;
+  }
+  _writeFrame(frontFrame, frontHtml);
+  _writeFrame(backFrame, backHtml);
   setTimeout(_scalePostcardPreviews, 80);
 
   // If no house photo, asynchronously geocode and refresh front
@@ -4625,8 +4632,10 @@ function _refreshPostcardPreview(){
           fakeItem.photo_url = `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/${lon},${lat},19,0/900x600@2x?access_token=${MB}`;
           const updatedFront = buildPostcard6x9FrontHtml(fakeItem);
           if(frontFrame && _previewMode==='postcard'){
-            try{ frontFrame.contentDocument.open(); frontFrame.contentDocument.write(updatedFront); frontFrame.contentDocument.close(); }catch(e){}
-            setTimeout(_scalePostcardPreviews, 80);
+            const blob2 = new Blob([updatedFront], {type:'text/html'});
+            const url2 = URL.createObjectURL(blob2);
+            frontFrame.onload = function(){ URL.revokeObjectURL(url2); setTimeout(_scalePostcardPreviews, 80); };
+            frontFrame.src = url2;
           }
         }
       }).catch(()=>{});
@@ -6036,7 +6045,11 @@ async function previewPostcard6x9(id){
         if(!frame) return;
         frame.style.width='864px'; frame.style.height='576px';
         frame.style.transform='scale('+scale+')'; frame.style.transformOrigin='top left';
-        frame.contentDocument.open(); frame.contentDocument.write(html); frame.contentDocument.close();
+        // Use blob URL — contentDocument.write is blocked on HTTPS
+        const blob = new Blob([html], {type:'text/html'});
+        const url = URL.createObjectURL(blob);
+        frame.onload = function(){ URL.revokeObjectURL(url); };
+        frame.src = url;
       });
     }, 200);
   } else {
@@ -6075,7 +6088,11 @@ async function previewPostcard6x9(id){
         frame.style.width='864px'; frame.style.height='576px';
         frame.style.transform='scale('+scale+')'; frame.style.transformOrigin='top left';
         scaler.style.height=Math.round(576*scale)+'px';
-        frame.contentDocument.open(); frame.contentDocument.write(html); frame.contentDocument.close();
+        // Use blob URL — contentDocument.write is blocked on HTTPS
+        const blob = new Blob([html], {type:'text/html'});
+        const url = URL.createObjectURL(blob);
+        frame.onload = function(){ URL.revokeObjectURL(url); };
+        frame.src = url;
       });
     }, 200);
   }
