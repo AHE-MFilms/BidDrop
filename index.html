@@ -44,18 +44,24 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 @media(max-width:1100px){.ahe-header-logo{max-width:110px;height:36px;}}
 @media(max-width:900px){#ahe-logo-wrap{display:none!important;}}
 .logo-sub{font-size:11px;font-weight:400;color:var(--muted);letter-spacing:0;font-family:var(--font-b);}
-.tabs{display:flex;gap:0;flex:1;min-width:0;overflow:hidden;position:relative;}
-.tab-btn{background:none;border:none;border-bottom:2px solid transparent;color:var(--mid);font-family:var(--font-b);font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:0 14px;height:54px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;}
+/* ── NAV MENU (hamburger dropdown) ── */
+.tabs{display:flex;align-items:center;flex:1;min-width:0;}
+/* individual tab-btns: shown on wide screens, hidden on narrow */
+.tab-btn{background:none;border:none;border-bottom:2px solid transparent;color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;padding:0 11px;height:54px;cursor:pointer;transition:color .15s,border-color .15s;display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;}
 .tab-btn:hover{color:var(--text);}
 .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
-/* More dropdown */
-#tabs-more-btn{background:none;border:none;border-bottom:2px solid transparent;color:var(--mid);font-family:var(--font-b);font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:0 14px;height:54px;cursor:pointer;white-space:nowrap;display:none;align-items:center;gap:4px;flex-shrink:0;}
-#tabs-more-btn:hover,#tabs-more-btn.has-active{color:var(--accent);border-bottom-color:var(--accent);}
-#tabs-more-dropdown{position:absolute;top:54px;right:0;background:var(--panel);border:1px solid var(--border);border-radius:0 0 10px 10px;z-index:9999;min-width:180px;box-shadow:0 8px 24px rgba(0,0,0,.4);display:none;flex-direction:column;padding:4px 0;}
-#tabs-more-dropdown.open{display:flex;}
-.tabs-more-item{background:none;border:none;color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;padding:11px 18px;cursor:pointer;text-align:left;white-space:nowrap;transition:background .12s,color .12s;}
-.tabs-more-item:hover{background:var(--card);color:var(--text);}
-.tabs-more-item.active{color:var(--accent);}
+/* hamburger button — always visible */
+#nav-menu-btn{background:none;border:1px solid var(--border);border-radius:8px;color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:0 12px;height:34px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;flex-shrink:0;margin-left:4px;transition:border-color .15s,color .15s;}
+#nav-menu-btn:hover,#nav-menu-btn.has-active{border-color:var(--accent);color:var(--accent);}
+#nav-menu-btn .nav-hamburger{display:flex;flex-direction:column;gap:4px;}
+#nav-menu-btn .nav-hamburger span{display:block;width:16px;height:2px;background:currentColor;border-radius:2px;}
+/* dropdown panel */
+#nav-menu-dropdown{position:fixed;top:54px;left:0;right:0;background:var(--panel);border-bottom:1px solid var(--border);z-index:9998;display:none;flex-direction:row;flex-wrap:wrap;padding:8px 12px;gap:4px;box-shadow:0 8px 24px rgba(0,0,0,.5);}
+#nav-menu-dropdown.open{display:flex;}
+.nav-menu-item{background:none;border:none;border-radius:8px;color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;padding:10px 14px;cursor:pointer;white-space:nowrap;transition:background .12s,color .12s;display:flex;align-items:center;gap:5px;}
+.nav-menu-item:hover{background:var(--card2);color:var(--text);}
+.nav-menu-item.active{background:rgba(242,92,5,.12);color:var(--accent);}
+.nav-menu-item.admin-item{color:#F25C05;}
 .hdr-actions{display:flex;align-items:center;gap:6px;margin-left:4px;flex-shrink:0;}
 @media(max-width:900px){.credit-badge-text{display:none;}}
 .icon-btn{background:var(--card);border:1px solid var(--border);color:var(--mid);width:34px;height:34px;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s;}
@@ -685,19 +691,35 @@ tr:hover td{background:var(--card);}
     <span class="logo-sub" id="co-sub" style="display:none;"></span>
   </div>
   <div class="tabs" id="tabs-bar">
-    <button class="tab-btn active" onclick="goTab('map')" data-tab="map">🗺 Canvass Map</button>
-    <button class="tab-btn" onclick="goTab('estimate')" data-tab="estimate">📋 Estimator</button>
-    <button class="tab-btn" onclick="goTab('estimates')" data-tab="estimates">🗂 Estimates</button>
-    <button class="tab-btn" onclick="goTab('mailqueue')" data-tab="mailqueue">📬 Mail Queue</button>
-    <button class="tab-btn" onclick="goTab('dashboard')" data-tab="dashboard">📊 Dashboard</button>
+    <!-- Hamburger nav menu button -->
+    <button id="nav-menu-btn" onclick="toggleNavMenu(event)">
+      <div class="nav-hamburger"><span></span><span></span><span></span></div>
+      <span id="nav-menu-label">Menu</span>
+    </button>
+    <!-- Hidden tab-btns kept for goTab / applyRoleUI compatibility -->
+    <button class="tab-btn active" onclick="goTab('map')" data-tab="map" style="display:none;">🗺 Canvass Map</button>
+    <button class="tab-btn" onclick="goTab('estimate')" data-tab="estimate" style="display:none;">📋 Estimator</button>
+    <button class="tab-btn" onclick="goTab('estimates')" data-tab="estimates" style="display:none;">🗂 Estimates</button>
+    <button class="tab-btn" onclick="goTab('mailqueue')" data-tab="mailqueue" style="display:none;">📬 Mail Queue</button>
+    <button class="tab-btn" onclick="goTab('dashboard')" data-tab="dashboard" style="display:none;">📊 Dashboard</button>
     <button class="tab-btn" id="agency-tab-btn" onclick="goTab('agency')" data-tab="agency" style="display:none;">🏢 Agency</button>
-    <button class="tab-btn" onclick="goTab('followup')" data-tab="followup">📮 Follow-Up Mail</button>
-    <button class="tab-btn" id="zones-tab-btn" onclick="goTab('zones')" data-tab="zones">🗂 Canvass Areas</button>
-    <button class="tab-btn" id="settings-tab-btn" onclick="goTab('settings')" data-tab="settings">⚙️ Settings</button>
-    <button class="tab-btn" id="admin-panel-tab-btn" onclick="openAdminPanel()" data-tab="admin" style="display:none;background:rgba(242,92,5,.12);color:#F25C05;border-bottom:2px solid #F25C05;">🛡 Admin</button>
-    <!-- Overflow More button -->
-    <button id="tabs-more-btn" onclick="toggleTabsMoreDropdown(event)">More ▾</button>
-    <div id="tabs-more-dropdown"></div>
+    <button class="tab-btn" onclick="goTab('followup')" data-tab="followup" style="display:none;">📮 Follow-Up Mail</button>
+    <button class="tab-btn" id="zones-tab-btn" onclick="goTab('zones')" data-tab="zones" style="display:none;">🗂 Canvass Areas</button>
+    <button class="tab-btn" id="settings-tab-btn" onclick="goTab('settings')" data-tab="settings" style="display:none;">⚙️ Settings</button>
+    <button class="tab-btn" id="admin-panel-tab-btn" onclick="openAdminPanel()" data-tab="admin" style="display:none;">🛡 Admin</button>
+  </div>
+  <!-- Full-width dropdown nav panel -->
+  <div id="nav-menu-dropdown">
+    <button class="nav-menu-item active" onclick="navGo('map')" data-nav="map">🗺 Canvass Map</button>
+    <button class="nav-menu-item" onclick="navGo('estimate')" data-nav="estimate">📋 Estimator</button>
+    <button class="nav-menu-item" onclick="navGo('estimates')" data-nav="estimates">🗂 Estimates</button>
+    <button class="nav-menu-item" onclick="navGo('mailqueue')" data-nav="mailqueue">📬 Mail Queue</button>
+    <button class="nav-menu-item" onclick="navGo('dashboard')" data-nav="dashboard">📊 Dashboard</button>
+    <button class="nav-menu-item" id="agency-nav-item" onclick="navGo('agency')" data-nav="agency" style="display:none;">🏢 Agency</button>
+    <button class="nav-menu-item" onclick="navGo('followup')" data-nav="followup">📮 Follow-Up Mail</button>
+    <button class="nav-menu-item" id="zones-nav-item" onclick="navGo('zones')" data-nav="zones">🗂 Canvass Areas</button>
+    <button class="nav-menu-item" id="settings-nav-item" onclick="navGo('settings')" data-nav="settings">⚙️ Settings</button>
+    <button class="nav-menu-item admin-item" id="admin-nav-item" onclick="navGo('admin')" data-nav="admin" style="display:none;">🛡 Admin</button>
   </div>
   <div id="ahe-logo-wrap" style="margin-left:auto;margin-right:8px;display:flex;align-items:center;">
     <img id="ahe-hdr-logo" class="ahe-header-logo" alt="America's Home Experts">
@@ -7782,6 +7804,8 @@ function applyRoleUI(){
     badge.textContent = (currentProfile.name||currentProfile.email||'User').split(' ')[0];
     badge.title = currentProfile.role.replace('_',' ').toUpperCase();
   }
+  // Sync hamburger nav menu visibility
+  if(typeof syncNavRoleUI === 'function') syncNavRoleUI();
 }
 
 // ═══════════════════════════════
@@ -9882,86 +9906,68 @@ function stormDropPin(lat, lon, locationHint){
 
 
 // ═══════════════════════════════
-//  NAV TAB OVERFLOW → "More ▾" DROPDOWN
+//  HAMBURGER NAV MENU
 // ═══════════════════════════════
-function updateTabsOverflow(){
-  const bar = document.getElementById('tabs-bar');
-  const moreBtn = document.getElementById('tabs-more-btn');
-  const dropdown = document.getElementById('tabs-more-dropdown');
-  if(!bar||!moreBtn||!dropdown) return;
-
-  // Reset: show all real tab-btns, hide more btn
-  const allBtns = Array.from(bar.querySelectorAll('.tab-btn'));
-  allBtns.forEach(b=>{ b.style.visibility=''; b.style.position=''; });
-  moreBtn.style.display='none';
-  dropdown.innerHTML='';
-  dropdown.classList.remove('open');
-
-  // Measure available width (bar width minus more-btn width)
-  const moreBtnW = 90; // reserved px for the More button
-  const barW = bar.clientWidth - moreBtnW;
-
-  let usedW = 0;
-  const overflowBtns = [];
-  allBtns.forEach(btn=>{
-    // Skip hidden buttons (agency, admin when not super_admin)
-    if(btn.style.display==='none') return;
-    const w = btn.offsetWidth || 120;
-    if(usedW + w <= barW){
-      usedW += w;
-    } else {
-      overflowBtns.push(btn);
-    }
-  });
-
-  if(overflowBtns.length===0) return; // everything fits
-
-  // Show More button
-  moreBtn.style.display='flex';
-  const hasActiveInOverflow = overflowBtns.some(b=>b.classList.contains('active'));
-  moreBtn.classList.toggle('has-active', hasActiveInOverflow);
-
-  // Hide overflow tab-btns from bar
-  overflowBtns.forEach(btn=>{
-    btn.style.visibility='hidden';
-    btn.style.position='absolute';
-    btn.style.pointerEvents='none';
-    // Build dropdown item
-    const item = document.createElement('button');
-    item.className='tabs-more-item'+(btn.classList.contains('active')?' active':'');
-    item.textContent = btn.textContent.trim();
-    item.onclick = function(){
-      dropdown.classList.remove('open');
-      if(btn.dataset.tab==='admin') openAdminPanel();
-      else goTab(btn.dataset.tab);
-    };
-    dropdown.appendChild(item);
-  });
-}
-
-function toggleTabsMoreDropdown(e){
-  e.stopPropagation();
-  const d=document.getElementById('tabs-more-dropdown');
+function toggleNavMenu(e){
+  if(e) e.stopPropagation();
+  const d = document.getElementById('nav-menu-dropdown');
   if(d) d.classList.toggle('open');
 }
 
+function closeNavMenu(){
+  const d = document.getElementById('nav-menu-dropdown');
+  if(d) d.classList.remove('open');
+}
+
+// Navigate from the dropdown menu
+function navGo(tab){
+  closeNavMenu();
+  if(tab === 'admin'){ openAdminPanel(); return; }
+  goTab(tab);
+}
+
+// Sync active state on nav-menu-items after goTab
+function syncNavMenu(t){
+  document.querySelectorAll('.nav-menu-item').forEach(b=>{
+    b.classList.toggle('active', b.dataset.nav === t);
+  });
+  // Update the menu button label to show current tab name
+  const active = document.querySelector('.nav-menu-item[data-nav="'+t+'"]');
+  const lbl = document.getElementById('nav-menu-label');
+  if(lbl && active) lbl.textContent = active.textContent.trim();
+}
+
 // Close dropdown when clicking outside
-document.addEventListener('click',function(e){
-  const d=document.getElementById('tabs-more-dropdown');
-  const b=document.getElementById('tabs-more-btn');
-  if(d&&b&&!b.contains(e.target)&&!d.contains(e.target)) d.classList.remove('open');
+document.addEventListener('click', function(e){
+  const d = document.getElementById('nav-menu-dropdown');
+  const b = document.getElementById('nav-menu-btn');
+  if(d && b && !b.contains(e.target) && !d.contains(e.target)) closeNavMenu();
 });
 
-// Run on load and on resize
-window.addEventListener('resize', updateTabsOverflow);
-window.addEventListener('load', function(){ setTimeout(updateTabsOverflow,100); });
-
-// Patch goTab to refresh overflow after tab switch
+// Patch goTab to sync nav menu active state
 const _origGoTab = goTab;
 goTab = function(t){
   _origGoTab(t);
-  setTimeout(updateTabsOverflow,0);
+  syncNavMenu(t);
 };
+
+// Also sync applyRoleUI visibility for nav items
+function syncNavRoleUI(){
+  // Mirror tab-btn display:none/flex to nav-menu-items
+  const map = {
+    'agency-tab-btn': 'agency-nav-item',
+    'zones-tab-btn': 'zones-nav-item',
+    'settings-tab-btn': 'settings-nav-item',
+    'admin-panel-tab-btn': 'admin-nav-item'
+  };
+  Object.entries(map).forEach(([tabId, navId])=>{
+    const tabBtn = document.getElementById(tabId);
+    const navItem = document.getElementById(navId);
+    if(tabBtn && navItem){
+      navItem.style.display = tabBtn.style.display === 'none' ? 'none' : '';
+    }
+  });
+}
 
 </script>
 <!-- ── DRIP SEQUENCE MODAL ─────────────────────────────────────────────── -->
