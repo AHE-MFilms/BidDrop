@@ -446,6 +446,62 @@ export default async function handler(req, res) {
         break;
       }
 
+      case 'create-bucket': {
+        // Create the pin-photos storage bucket with public read + authenticated write
+        if (callerProfile.role !== 'super_admin') {
+          return res.status(403).json({ error: 'super_admin only' });
+        }
+        // Create bucket
+        const bucketRes = await fetch(`${SUPABASE_URL}/storage/v1/bucket`, {
+          method: 'POST',
+          headers: {
+            'apikey': SERVICE_KEY,
+            'Authorization': `Bearer ${SERVICE_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            id: 'pin-photos',
+            name: 'pin-photos',
+            public: true,
+            file_size_limit: 10485760, // 10MB
+            allowed_mime_types: ['image/jpeg','image/png','image/webp','image/gif']
+          })
+        });
+        const bucketBody = await bucketRes.json();
+        return res.json({ bucket_status: bucketRes.status, bucket: bucketBody });
+      }
+
+      case 'run-migration': {
+        // One-time migration: add missing columns to queue and accounts tables
+        if (callerProfile.role !== 'super_admin') {
+          return res.status(403).json({ error: 'super_admin only' });
+        }
+        const sqls = [
+          `ALTER TABLE queue ADD COLUMN IF NOT EXISTS photo_url TEXT`,
+          `ALTER TABLE queue ADD COLUMN IF NOT EXISTS photo_data TEXT`,
+          `ALTER TABLE queue ADD COLUMN IF NOT EXISTS pin_id TEXT`,
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS logo_data TEXT`,
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS headshot_data TEXT`,
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS review1_data TEXT`,
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS review2_data TEXT`,
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS headshot_pos REAL`
+        ];
+        const results = [];
+        for (const sql of sqls) {
+          const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/exec_sql`, {
+            method: 'POST',
+            headers: {
+              'apikey': SERVICE_KEY,
+              'Authorization': `Bearer ${SERVICE_KEY}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ query: sql })
+          });
+          results.push({ sql: sql.substring(0, 60), status: r.status, ok: r.ok });
+        }
+        return res.json({ results });
+      }
+
       default:
         res.status(400).json({ error: `Unknown action: ${action}` });
     }

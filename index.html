@@ -1807,7 +1807,7 @@ function save(){
 async function syncAccountToSupabase(){
   if(!currentAccount) return;
   const cfg = S.cfg;
-  await sb.from('accounts').update({
+  const {error: syncErr} = await sb.from('accounts').update({
     company_name: cfg.companyName, company_phone: cfg.companyPhone,
     company_addr: cfg.companyAddr, rep_name: cfg.repName,
     rep_title: cfg.repTitle, license_num: cfg.licenseNum,
@@ -1847,6 +1847,8 @@ async function syncAccountToSupabase(){
     drip4_subtext:  cfg.drip4Subtext||null,
     drip_enabled: cfg.dripEnabled||false
   }).eq('id', currentAccount.id);
+  if(syncErr) console.error('[BidDrop] syncAccountToSupabase error:', syncErr.message, syncErr);
+  else console.log('[BidDrop] Account synced to Supabase OK');
 }
 
 function accountRowToCfg(row){
@@ -7881,22 +7883,33 @@ async function loadPinsFromSupabase(){
 async function loadQueueFromSupabase(){
   if(!currentAccount) return;
   const {data} = await sb.from('queue').select('*').eq('account_id', currentAccount.id).order('created_at', {ascending:false});
-  S.queue = (data||[]).map(row=>({
-    id: row.id, owner: row.owner, addr: row.addr, email: row.email||'',
-    sqft: row.sqft, pitch: row.pitch, mat: row.mat,
-    structures: row.structures||[], total: row.total,
-    status: row.status, lobId: row.lob_id,
-    mailedAt: row.mailed_at, at: row.created_at
-  }));
+  S.queue = (data||[]).map(row=>{
+    const allStructs = row.structures||[];
+    const meta = allStructs.find(s=>s&&s.id==='_meta')||{};
+    const structs = allStructs.filter(s=>s&&s.id!=='_meta');
+    return {
+      id: row.id, owner: row.owner, addr: row.addr, email: row.email||'',
+      sqft: row.sqft, pitch: row.pitch, mat: row.mat,
+      structures: structs, total: row.total,
+      status: row.status, lobId: row.lob_id,
+      mailedAt: row.mailed_at, at: row.created_at,
+      photo_url: meta.photo_url||null,
+      photo_data: meta.photo_data||null,
+      pinId: meta.pin_id||null
+    };
+  });
 }
 
 async function sbSaveQueueItem(item){
   if(!currentAccount) return;
+  // Embed photo_url, photo_data, pin_id inside structures as _meta (no extra columns needed)
+  const structs = (item.structures||[]).filter(s=>s&&s.id!=='_meta');
+  const meta = {id:'_meta', photo_url: item.photo_url||null, photo_data: item.photo_data||null, pin_id: item.pinId||null};
   const {error} = await sb.from('queue').upsert({
     id: item.id, account_id: currentAccount.id, created_by: currentUser.id,
     owner: item.owner, addr: item.addr, email: item.email||'',
     sqft: item.sqft, pitch: item.pitch, mat: item.mat,
-    structures: item.structures||[], total: item.total,
+    structures: [...structs, meta], total: item.total,
     status: item.status, lob_id: item.lobId||null,
     mailed_at: item.mailedAt||null
   });
