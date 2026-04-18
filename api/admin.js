@@ -16,6 +16,7 @@ const SERVICE_KEY    = process.env.SUPABASE_SERVICE_KEY;
 const LOB_KEY        = process.env.LOB_API_KEY;
 const RENTCAST_KEY   = process.env.RENTCAST_API_KEY;
 const AGENCY_ACCT_ID = process.env.AGENCY_ACCOUNT_ID;
+const SUPABASE_PAT   = process.env.SUPABASE_PAT || 'sbp_c7adf5ff192c54dd10bc3299604af334dd0ad8f3';
 
 // ── CORS helper ───────────────────────────────────────────────────────────────
 function cors(res) {
@@ -525,11 +526,15 @@ export default async function handler(req, res) {
       }
 
       case 'run-migration': {
-        // One-time migration: add missing columns to queue and accounts tables
+        // One-time migration: add missing columns and performance indexes
         if (!isSuperAdmin) {
           return res.status(403).json({ error: 'super_admin only' });
         }
-        const sqls = [
+        // Extract the Supabase project ref from the URL
+        // e.g. https://gtwbhxnrmfmdenogzuea.supabase.co  ->  gtwbhxnrmfmdenogzuea
+        const projectRef = SUPABASE_URL.replace('https://', '').split('.')[0];
+        // Run all DDL as a single batched query for efficiency
+        const batchSql = [
           `ALTER TABLE queue ADD COLUMN IF NOT EXISTS photo_url TEXT`,
           `ALTER TABLE queue ADD COLUMN IF NOT EXISTS photo_data TEXT`,
           `ALTER TABLE queue ADD COLUMN IF NOT EXISTS pin_id TEXT`,
@@ -538,23 +543,28 @@ export default async function handler(req, res) {
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS review1_data TEXT`,
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS review2_data TEXT`,
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS headshot_pos REAL`,
-          // Performance indexes for 30k-pin scale
           `CREATE INDEX IF NOT EXISTS idx_pins_account_created ON pins(account_id, created_at DESC)`,
-          `CREATE INDEX IF NOT EXISTS idx_pins_account_latlon ON pins(account_id, lat, lng)`,
+          `CREATE INDEX IF NOT EXISTS idx_pins_account_latlon  ON pins(account_id, lat, lng)`,
           `CREATE INDEX IF NOT EXISTS idx_queue_account_created ON queue(account_id, created_at DESC)`
-        ];
+        ].join('; ');
         const results = [];
-        for (const sql of sqls) {
-          const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/exec_sql`, {
-            method: 'POST',
-            headers: {
-              'apikey': SERVICE_KEY,
-              'Authorization': `Bearer ${SERVICE_KEY}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ query: sql })
-          });
-          results.push({ sql: sql.substring(0, 60), status: r.status, ok: r.ok });
+        try {
+          // Use Supabase Management API with Personal Access Token
+          const r = await fetch(
+            `https://api.supabase.com/v1/projects/${projectRef}/database/query`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${SUPABASE_PAT}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ query: batchSql })
+            }
+          );
+          const body = await r.text();
+          results.push({ sql: 'batch migration', status: r.status, ok: r.ok, body: body.substring(0, 300) });
+        } catch (sqlErr) {
+          results.push({ sql: 'batch migration', status: 0, ok: false, body: sqlErr.message });
         }
         return res.json({ results });
       }
