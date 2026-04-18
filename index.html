@@ -2349,15 +2349,27 @@ async function uploadToStorage(file, storagePath, maxDim, quality, mimeType){
         if(h > maxDim){ w = Math.round(w*maxDim/h); h = maxDim; }
         canvas.width = w; canvas.height = h;
         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        canvas.toBlob(async blob=>{
-          if(!blob){ resolve(null); return; }
-          const { error } = await sb.storage.from('pin-photos').upload(storagePath, blob, {
-            contentType: mimeType, upsert: true
+        // Convert to data URL and upload via server-side API (bypasses Supabase Storage RLS)
+        const dataUrl = canvas.toDataURL(mimeType, quality);
+        try {
+          const session = await sb.auth.getSession();
+          const jwt = session?.data?.session?.access_token;
+          const resp = await fetch('/api/admin?action=upload-photo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwt}` },
+            body: JSON.stringify({ path: storagePath, dataUrl, mimeType })
           });
-          if(error){ console.error('Storage upload error:', error); resolve(null); return; }
-          const { data } = sb.storage.from('pin-photos').getPublicUrl(storagePath);
-          resolve(data?.publicUrl || null);
-        }, mimeType, quality);
+          if(resp.ok){
+            const result = await resp.json();
+            resolve(result.url || null);
+          } else {
+            console.error('Server upload failed:', resp.status);
+            resolve(null);
+          }
+        } catch(err){
+          console.error('Upload error:', err);
+          resolve(null);
+        }
       };
       img.onerror = ()=>resolve(null);
       img.src = ev.target.result;
@@ -7773,16 +7785,26 @@ async function switchAccount(accountId){
 
 // ── SUPABASE PIN OPERATIONS (replace in-memory S.pins) ───────────────────────
 async function uploadPinPhoto(pinId, base64DataUrl){
-  // Convert base64 data URL to a Blob
-  const res = await fetch(base64DataUrl);
-  const blob = await res.blob();
+  // Upload via server-side API (bypasses Supabase Storage RLS)
   const filePath = currentAccount.id + '/' + pinId + '.jpg';
-  const {error} = await sb.storage.from('pin-photos').upload(filePath, blob, {
-    contentType: 'image/jpeg', upsert: true
-  });
-  if(error){ console.error('Photo upload error:', error); return null; }
-  const {data} = sb.storage.from('pin-photos').getPublicUrl(filePath);
-  return data?.publicUrl || null;
+  try {
+    const session = await sb.auth.getSession();
+    const jwt = session?.data?.session?.access_token;
+    const resp = await fetch('/api/admin?action=upload-photo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwt}` },
+      body: JSON.stringify({ path: filePath, dataUrl: base64DataUrl, mimeType: 'image/jpeg' })
+    });
+    if(resp.ok){
+      const result = await resp.json();
+      return result.url || null;
+    }
+    console.error('Pin photo upload failed:', resp.status);
+    return null;
+  } catch(err){
+    console.error('Pin photo upload error:', err);
+    return null;
+  }
 }
 
 async function sbSavePin(pin){
