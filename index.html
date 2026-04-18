@@ -683,6 +683,7 @@ tr:hover td{background:var(--card);}
     <button class="tab-btn" onclick="goTab('followup')" data-tab="followup">📮 Follow-Up Mail</button>
     <button class="tab-btn" id="zones-tab-btn" onclick="goTab('zones')" data-tab="zones">🗂 Canvass Areas</button>
     <button class="tab-btn" id="settings-tab-btn" onclick="goTab('settings')" data-tab="settings">⚙️ Settings</button>
+    <button class="tab-btn" id="admin-panel-tab-btn" onclick="openAdminPanel()" style="display:none;background:rgba(242,92,5,.12);color:#F25C05;border-bottom:2px solid #F25C05;">🛡 Admin</button>
   </div>
   <div id="ahe-logo-wrap" style="margin-left:auto;margin-right:8px;display:flex;align-items:center;">
     <img id="ahe-hdr-logo" class="ahe-header-logo" alt="America's Home Experts">
@@ -7755,7 +7756,9 @@ function applyRoleUI(){
   const gearNav = document.querySelector('.bnav-btn[onclick="openSettings()"]');
   if(gear) gear.style.display = isAdminOrAbove() ? 'flex' : 'none';
   if(gearNav) gearNav.style.display = isAdminOrAbove() ? 'flex' : 'none';
-  // Show admin panel button for admins
+  // Show Admin Panel button in nav for super_admin
+  const adminPanelBtn = document.getElementById('admin-panel-tab-btn');
+  if(adminPanelBtn) adminPanelBtn.style.display = isSuperAdmin() ? 'flex' : 'none';
   // Show Agency tab only for super_admin
   const agencyTabBtn = document.getElementById('agency-tab-btn');
   if(agencyTabBtn) agencyTabBtn.style.display = isSuperAdmin() ? 'flex' : 'none';
