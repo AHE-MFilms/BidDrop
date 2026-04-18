@@ -16,7 +16,7 @@ const SERVICE_KEY    = process.env.SUPABASE_SERVICE_KEY;
 const LOB_KEY        = process.env.LOB_API_KEY;
 const RENTCAST_KEY   = process.env.RENTCAST_API_KEY;
 const AGENCY_ACCT_ID = process.env.AGENCY_ACCOUNT_ID;
-const SUPABASE_PAT   = process.env.SUPABASE_PAT || 'sbp_c7adf5ff192c54dd10bc3299604af334dd0ad8f3';
+const SUPABASE_PAT   = process.env.SUPABASE_PAT || 'sbp_145c8823fe7d9132f688eb40484dee8670e10393';
 
 // ── CORS helper ───────────────────────────────────────────────────────────────
 function cors(res) {
