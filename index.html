@@ -660,6 +660,7 @@ tr:hover td{background:var(--card);}
     <button class="tab-btn" id="agency-tab-btn" onclick="goTab('agency')" data-tab="agency" style="display:none;">🏢 Agency</button>
     <button class="tab-btn" onclick="goTab('followup')" data-tab="followup">📮 Follow-Up Mail</button>
     <button class="tab-btn" id="zones-tab-btn" onclick="goTab('zones')" data-tab="zones">🗂 Canvass Areas</button>
+    <button class="tab-btn" id="settings-tab-btn" onclick="goTab('settings')" data-tab="settings">⚙️ Settings</button>
   </div>
   <div id="ahe-logo-wrap" style="margin-left:auto;margin-right:8px;display:flex;align-items:center;">
     <img id="ahe-hdr-logo" class="ahe-header-logo" alt="America's Home Experts">
@@ -682,7 +683,7 @@ tr:hover td{background:var(--card);}
   <button class="bnav-btn" onclick="goTab('dashboard')" data-tab="dashboard"><span class="bicon">📊</span>Stats</button>
   <button class="bnav-btn" onclick="goTab('followup')" data-tab="followup"><span class="bicon">📮</span>Follow-Up</button>
   <button class="bnav-btn" id="zones-bnav-btn" onclick="goTab('zones')" data-tab="zones"><span class="bicon">🗂</span>Zones</button>
-  <button class="bnav-btn" onclick="openSettings()"><span class="bicon">⚙️</span>Settings</button>
+  <button class="bnav-btn" id="settings-bnav-btn" onclick="goTab('settings')" data-tab="settings"><span class="bicon">⚙️</span>Settings</button>
 </nav>
 
 <div class="main">
@@ -1199,7 +1200,7 @@ tr:hover td{background:var(--card);}
   </div>
 
 </div>
-  <div class="tab-pane" id="tab-settings" style="flex-direction:column;overflow-y:auto;">
+  <div class="tab-pane" id="tab-settings" style="flex-direction:column;overflow-y:auto;padding:0;">
     <div style="max-width:900px;width:100%;margin:0 auto;padding:24px 20px;display:flex;flex-direction:column;gap:24px;">
       <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
         <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
@@ -2475,45 +2476,78 @@ function clearPostcard(step){
 // Build the drip postcard front as an HTML string using the house photo + step message
 // Returns an HTML string suitable for Lob's front parameter
 function buildDripPostcardFrontHtml({ photoUrl, headline, subtext, companyName, estimateTotal, address, phone, logoUrl }){
-  const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  const fmtMoney = n => n ? '$'+Number(n).toLocaleString() : '';
+  // Use the same 864x576 (6x9) format as the main postcard for visual consistency
+  const cfg   = S.cfg || {};
+  const color = cfg.brandColor || '#F25C05';
+  const co    = companyName || cfg.companyName || 'Your Roofing Co';
+  const ph    = phone || cfg.companyPhone || '(000) 000-0000';
+  const total = estimateTotal || 0;
+  const escH  = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  // Parse address for short display
+  const parts = (address||'').split(',');
+  const shortAddr = parts[0] ? parts[0].trim() : (address||'');
+  const cityState = parts.slice(1,3).map(s=>s.trim()).join(', ');
+  const photoStyle = photoUrl
+    ? `background-image:url('${escH(photoUrl)}');background-size:cover;background-position:center;`
+    : `background:#1a2333;`;
+  // Financing
+  const finEnabled = cfg.financingEnabled !== false;
+  const finApr  = parseFloat(cfg.financingApr)  || 9.99;
+  const finTerm = parseInt(cfg.financingTerm)   || 60;
+  const finDown = parseFloat(cfg.financingDown) || 0;
+  let finMo = 0;
+  if(finEnabled && total){
+    const loan = total * (1 - finDown/100);
+    const r = finApr / 100 / 12;
+    finMo = r===0 ? Math.round(loan/finTerm) : Math.round(loan * r * Math.pow(1+r,finTerm) / (Math.pow(1+r,finTerm)-1));
+  }
   return `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=864">
 <style>
   *{margin:0;padding:0;box-sizing:border-box;}
-  body{width:9in;height:6in;font-family:Arial,sans-serif;background:#111;overflow:hidden;position:relative;}
-  .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.75;}
-  .overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.15) 0%,rgba(0,0,0,.7) 100%);}
-  .badge{position:absolute;top:5%;right:4%;background:var(--accent,#E8531A);color:#fff;font-size:9pt;font-weight:700;padding:4px 14px;border-radius:20px;letter-spacing:.5px;}
-  .content{position:absolute;bottom:0;left:0;right:0;padding:5% 6% 6%;}
-  .headline{font-size:28pt;font-weight:900;color:#fff;line-height:1.1;margin-bottom:8px;text-shadow:0 2px 8px rgba(0,0,0,.6);}
-  .subtext{font-size:11pt;color:rgba(255,255,255,.88);line-height:1.4;margin-bottom:14px;text-shadow:0 1px 4px rgba(0,0,0,.5);}
-  .info-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
-  .pill{background:rgba(232,83,26,.92);color:#fff;font-size:9pt;font-weight:700;padding:4px 14px;border-radius:20px;}
-  .pill.green{background:rgba(16,185,129,.9);}
-  .addr{font-size:8.5pt;color:rgba(255,255,255,.75);}
-  .logo-area{position:absolute;top:5%;left:4%;display:flex;align-items:center;gap:8px;}
-  .logo-area img{max-height:36px;max-width:120px;object-fit:contain;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5));}
-  .co-name{color:#fff;font-size:9pt;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.5);}
-  .phone{color:rgba(255,255,255,.8);font-size:8pt;}
+  html,body{width:864px;height:576px;overflow:hidden;font-family:Arial,Helvetica,sans-serif;position:relative;}
+  .photo-bg{position:absolute;inset:0;${photoStyle}}
+  .photo-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.25) 0%,rgba(0,0,0,.1) 40%,rgba(0,0,0,.65) 75%,rgba(0,0,0,.85) 100%);}
+  .content{position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;justify-content:space-between;padding:34px 38px;}
+  .top-bar{display:flex;justify-content:space-between;align-items:flex-start;}
+  .logo-wrap img{max-height:53px;max-width:192px;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.6));}
+  .logo-wrap .co-name{font-size:22px;font-weight:900;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.7);letter-spacing:1px;}
+  .badge{background:${color};color:#fff;font-size:13px;font-weight:800;padding:8px 18px;border-radius:30px;letter-spacing:.5px;text-transform:uppercase;box-shadow:0 3px 12px rgba(0,0,0,.4);white-space:nowrap;}
+  .bottom{}
+  .headline{font-size:38px;font-weight:900;color:#fff;text-shadow:0 3px 12px rgba(0,0,0,.8);line-height:1.1;margin-bottom:10px;letter-spacing:-0.5px;}
+  .subtext-line{font-size:16px;color:rgba(255,255,255,.9);text-shadow:0 2px 6px rgba(0,0,0,.7);margin-bottom:14px;font-weight:500;line-height:1.4;}
+  .addr-line{font-size:16px;color:rgba(255,255,255,.85);text-shadow:0 2px 6px rgba(0,0,0,.7);margin-bottom:14px;font-weight:600;}
+  .price-strip{background:${color};display:inline-flex;align-items:center;gap:20px;padding:12px 24px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.5);}
+  .price-main{font-size:32px;font-weight:900;color:#fff;letter-spacing:-1px;}
+  .price-label{font-size:11px;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.5px;line-height:1.3;}
+  .price-divider{width:1px;height:36px;background:rgba(255,255,255,.3);}
+  .phone-line{margin-top:14px;font-size:16px;color:rgba(255,255,255,.85);font-weight:700;text-shadow:0 2px 6px rgba(0,0,0,.6);letter-spacing:.3px;}
 </style>
 </head>
 <body>
-  ${photoUrl ? `<img class="bg" src="${esc(photoUrl)}">` : '<div style="position:absolute;inset:0;background:linear-gradient(135deg,#1a1a2e,#16213e);"></div>'}
-  <div class="overlay"></div>
-  <div class="badge">YOUR ROOF ASSESSMENT IS READY</div>
-  <div class="logo-area">
-    ${logoUrl ? `<img src="${esc(logoUrl)}" alt="${esc(companyName)}">` : `<div class="co-name">${esc(companyName)}</div>`}
-  </div>
+  <div class="photo-bg"></div>
   <div class="content">
-    <div class="headline">${esc(headline)}</div>
-    <div class="subtext">${esc(subtext)}</div>
-    <div class="info-row">
-      ${estimateTotal ? `<div class="pill">${fmtMoney(estimateTotal)} Estimate</div>` : ''}
-      <div class="addr">${esc(address)}</div>
-      ${phone ? `<div class="pill green">${esc(phone)}</div>` : ''}
+    <div class="top-bar">
+      <div class="logo-wrap">
+        ${logoUrl ? `<img src="${escH(logoUrl)}" alt="${escH(co)}">` : `<div class="co-name">${escH(co)}</div>`}
+      </div>
+      <div class="badge">Follow-Up</div>
+    </div>
+    <div class="bottom">
+      <div class="headline">${escH(headline)}</div>
+      <div class="subtext-line">${escH(subtext)}</div>
+      <div class="addr-line">&#128205; ${escH(shortAddr)}${cityState ? ', '+escH(cityState) : ''}</div>
+      ${total ? `<div class="price-strip">
+        <div>
+          <div class="price-label">Your Estimate</div>
+          <div class="price-main">$${Number(total).toLocaleString()}</div>
+        </div>
+        ${finMo ? `<div class="price-divider"></div><div><div class="price-label">As Low As</div><div class="price-main">$${finMo.toLocaleString()}<span style="font-size:16px;font-weight:600;">/mo</span></div></div>` : ''}
+      </div>` : ''}
+      <div class="phone-line">&#128222; ${escH(ph)}</div>
     </div>
   </div>
 </body>
@@ -2837,7 +2871,9 @@ function handleHomePhoto(inp){
       if(prev)prev.innerHTML='<img src="'+data+'" style="width:100%;height:100%;object-fit:cover;">';
       const clr=document.getElementById('clear-photo-btn');
       if(clr)clr.style.display='block';
-      updatePreview();toast('📷 Photo added to mailer!','success');
+      updatePreview();
+      if(window._previewMode==='postcard') _refreshPostcardPreview();
+      toast('📷 Photo added to mailer!','success');
     } else {
       // Fallback to base64
       const r2 = new FileReader();
@@ -2856,7 +2892,9 @@ function handleHomePhoto(inp){
           if(prev)prev.innerHTML='<img src="'+b64+'" style="width:100%;height:100%;object-fit:cover;">';
           const clr=document.getElementById('clear-photo-btn');
           if(clr)clr.style.display='block';
-          updatePreview();toast('📷 Photo added (local)','info');
+          updatePreview();
+          if(window._previewMode==='postcard') _refreshPostcardPreview();
+          toast('📷 Photo added (local)','info');
         };
         img.src=ev.target.result;
       };
