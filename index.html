@@ -8275,7 +8275,13 @@ function renderSuperAdminPanel(accounts, allProfiles){
       '<div class="fg"><label class="fl">Temporary Password *</label><input class="fi" id="new-sa-pass" type="password" placeholder="min 6 chars"></div>'+
       '<button onclick="createSuperAdmin()" class="btn-primary" style="margin-top:6px;">Create Super Admin Account</button>'+
       '<div id="new-sa-result" style="margin-top:8px;font-size:12px;"></div>'+
-    '</div>'
+    '</div>' +
+    // Database Maintenance section
+    '<hr style="border:none;border-top:1px solid var(--border);margin:24px 0 16px;">'+
+    '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#22C55E;margin-bottom:8px;">🛠 Database Maintenance</div>'+
+    '<div style="font-size:11px;color:var(--muted);margin-bottom:12px;">Run once to add performance indexes for 30,000+ pin accounts. Safe to run multiple times.</div>'+
+    '<button onclick="runMigration()" style="background:linear-gradient(135deg,#22C55E,#16A34A);border:none;border-radius:8px;padding:10px 22px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">⚡ Run Migration</button>'+
+    '<div id="migration-result" style="margin-top:10px;font-size:12px;"></div>'
   );
 }
 
@@ -8486,6 +8492,32 @@ async function createSuperAdmin(){
     result.innerHTML='❌ '+escHtml(e.message);
     result.style.color='var(--danger)';
     toast('❌ '+e.message,'error');
+  }
+}
+
+async function runMigration(){
+  if(!isSuperAdmin()){ toast('Permission denied','error'); return; }
+  const resultEl = document.getElementById('migration-result');
+  const btn = document.querySelector('[onclick="runMigration()"]');
+  if(resultEl) resultEl.innerHTML = '<span style="color:var(--muted);">Running…</span>';
+  if(btn){ btn.disabled=true; btn.textContent='⏳ Running…'; }
+  try {
+    const data = await adminAPI('run-migration');
+    const results = data.results || [];
+    const allOk = results.every(r=>r.ok||r.status===200||r.status===204);
+    if(resultEl){
+      resultEl.innerHTML = (allOk ? '✅ Migration complete! ' : '⚠️ Some steps had issues. ') +
+        '<span style="font-size:10px;color:var(--muted);">' +
+        results.map(r=>'<br>'+escHtml(r.sql)+'... '+(r.ok?'✅':'status '+r.status)).join('') +
+        '</span>';
+      resultEl.style.color = allOk ? 'var(--success)' : 'var(--warning)';
+    }
+    toast(allOk ? '✅ Migration complete!' : '⚠️ Migration finished with warnings', allOk ? 'success' : 'info');
+  } catch(e){
+    if(resultEl){ resultEl.innerHTML='❌ '+escHtml(e.message); resultEl.style.color='var(--danger)'; }
+    toast('❌ Migration failed: '+e.message,'error');
+  } finally {
+    if(btn){ btn.disabled=false; btn.textContent='⚡ Run Migration'; }
   }
 }
 
