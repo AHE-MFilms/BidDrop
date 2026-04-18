@@ -51,7 +51,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 .tab-pane.active{display:flex;}
 #tab-settings{display:none;flex-direction:column;overflow-y:auto;padding:22px;gap:14px;}
   #tab-settings.active{display:flex;}
-  .stab-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;flex-shrink:0;}
+  .stab-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
   .stab-card-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;user-select:none;font-family:var(--font-h);font-size:15px;font-weight:700;color:var(--text);letter-spacing:.4px;transition:background .15s;}
   .stab-card-hdr:hover{background:var(--card2);}
   .stab-card-body{padding:16px 18px 18px;border-top:1px solid var(--border);}
@@ -59,6 +59,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
   .stab-chevron{font-size:14px;color:var(--muted);transition:transform .2s;}
   .stab-chevron.collapsed{transform:rotate(-90deg);}
   .stab-section-hdr{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;}
+  .stab-header-row{display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+  .stab-save-btn{background:var(--accent);border:none;border-radius:9px;padding:10px 28px;color:#fff;font-family:var(--font-h);font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 14px rgba(242,92,5,.35);}
+  .stab-save-lg{font-size:16px;padding:14px 48px;border-radius:10px;box-shadow:0 4px 18px rgba(242,92,5,.4);}
+  .stab-signout-btn{background:none;border:1px solid var(--danger);border-radius:8px;padding:10px 18px;color:var(--danger);font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;}
+  .stab-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;}
+  .stab-full{grid-column:1/-1;}
+  .stab-branding-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;}
+  @media(max-width:900px){.stab-grid{grid-template-columns:1fr;}.stab-branding-grid{grid-template-columns:1fr 1fr;}}
+  @media(max-width:540px){.stab-branding-grid{grid-template-columns:1fr;}.stab-header-row{flex-wrap:wrap;gap:10px;}}
 #tab-map{flex-direction:row;}
 #the-map{flex:1;height:100%;min-width:0;}
 .map-panel{width:310px;flex-shrink:0;background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
@@ -1210,323 +1219,327 @@ tr:hover td{background:var(--card);}
   </div>
   <div class="tab-pane" id="tab-settings">
     <!-- ── SETTINGS HEADER ── -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-shrink:0;">
+    <div class="stab-header-row">
       <div style="font-family:var(--font-h);font-size:22px;font-weight:700;color:var(--text);letter-spacing:.5px;">⚙️ Settings</div>
       <div style="display:flex;gap:10px;align-items:center;">
-        <button onclick="saveSettings()" style="background:var(--accent);border:none;border-radius:9px;padding:10px 28px;color:#fff;font-family:var(--font-h);font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 14px rgba(242,92,5,.35);">💾 Save Settings</button>
-        <button onclick="doLogout()" style="background:none;border:1px solid var(--danger);border-radius:8px;padding:10px 18px;color:var(--danger);font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;">Sign Out</button>
+        <button onclick="saveSettings()" class="stab-save-btn">&#128190; Save Settings</button>
+        <button onclick="doLogout()" class="stab-signout-btn">Sign Out</button>
       </div>
     </div>
 
-    <!-- ── TEAM MEMBERS (admin only) ── -->
-    <div class="stab-card" id="stab-team-card">
-      <div class="stab-card-hdr" onclick="toggleStabCard('team')">
-        <span>👥 Team Members</span>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div id="settings-team-role-badge" style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:9px;background:var(--accent-dim);color:var(--accent);text-transform:uppercase;"></div>
-          <span class="stab-chevron" id="stab-chevron-team">▾</span>
-        </div>
-      </div>
-      <div class="stab-card-body" id="stab-body-team">
-        <div id="settings-team-body" style="padding:4px 0;">
-          <div style="color:var(--mid);font-size:13px;">Loading team...</div>
-        </div>
-      </div>
-    </div>
+    <!-- ── TWO-COLUMN GRID ── -->
+    <div class="stab-grid">
 
-    <!-- ── COMPANY INFO ── -->
-    <div class="stab-card">
-      <div class="stab-card-hdr" onclick="toggleStabCard('company')">
-        <span>🏢 Company Info</span>
-        <span class="stab-chevron" id="stab-chevron-company">▾</span>
-      </div>
-      <div class="stab-card-body" id="stab-body-company">
-        <div class="frow">
-          <div class="fg"><label class="fl">Company Name</label><input class="fi" id="s-co" placeholder="T&amp;M Roofing"></div>
-          <div class="fg"><label class="fl">Phone</label><input class="fi" id="s-ph" placeholder="(313) 555-0100"></div>
+      <!-- LEFT: Team Members -->
+      <div class="stab-card" id="stab-team-card">
+        <div class="stab-card-hdr" onclick="toggleStabCard('team')">
+          <span>&#128101; Team Members</span>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div id="settings-team-role-badge" style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:9px;background:var(--accent-dim);color:var(--accent);text-transform:uppercase;"></div>
+            <span class="stab-chevron" id="stab-chevron-team">&#9662;</span>
+          </div>
         </div>
-        <div class="frow">
-          <div class="fg"><label class="fl">Company Address</label><input class="fi" id="s-addr" placeholder="123 Business Dr, Detroit MI 48000"></div>
-          <div class="fg"><label class="fl">Brand Color</label><input type="color" class="fi" id="s-color" value="#F25C05" style="padding:4px;cursor:pointer;height:42px;"></div>
-        </div>
-        <div class="frow">
-          <div class="fg"><label class="fl">Rep / Owner Name</label><input class="fi" id="s-rep" placeholder="Ted Smith"></div>
-          <div class="fg"><label class="fl">Rep Title</label><input class="fi" id="s-reptitle" placeholder="Owner, Sales Rep, etc."></div>
-        </div>
-        <div class="fg"><label class="fl">Booking / QR Code URL <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— QR auto-generates from this link (Calendly, website, Google Review, etc.)</span></label><input class="fi" id="s-bookingurl" placeholder="https://calendly.com/yourname"></div>
-        <div class="frow">
-          <div class="fg"><label class="fl">License / CCB #</label><input class="fi" id="s-lic" placeholder="CCB#226995"></div>
-          <div class="fg"></div>
-        </div>
-        <div class="frow">
-          <div class="fg"><label class="fl">Years in Business</label><input class="fi" id="s-yrs" placeholder="20+"></div>
-          <div class="fg"><label class="fl">Workmanship Warranty (yrs)</label><input class="fi" id="s-warr" placeholder="10"></div>
+        <div class="stab-card-body" id="stab-body-team">
+          <div id="settings-team-body" style="padding:4px 0;">
+            <div style="color:var(--mid);font-size:13px;">Loading team...</div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- ── BRANDING: LOGO & HEADSHOT ── -->
-    <div class="stab-card">
-      <div class="stab-card-hdr" onclick="toggleStabCard('branding')">
-        <span>🎨 Branding — Logo &amp; Headshot</span>
-        <span class="stab-chevron" id="stab-chevron-branding">▾</span>
+      <!-- RIGHT: Company Info -->
+      <div class="stab-card">
+        <div class="stab-card-hdr" onclick="toggleStabCard('company')">
+          <span>&#127970; Company Info</span>
+          <span class="stab-chevron" id="stab-chevron-company">&#9662;</span>
+        </div>
+        <div class="stab-card-body" id="stab-body-company">
+          <div class="frow">
+            <div class="fg"><label class="fl">Company Name</label><input class="fi" id="s-co" placeholder="T&amp;M Roofing"></div>
+            <div class="fg"><label class="fl">Phone</label><input class="fi" id="s-ph" placeholder="(313) 555-0100"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Company Address</label><input class="fi" id="s-addr" placeholder="123 Business Dr, Detroit MI 48000"></div>
+            <div class="fg"><label class="fl">Brand Color</label><input type="color" class="fi" id="s-color" value="#F25C05" style="padding:4px;cursor:pointer;height:42px;"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Rep / Owner Name</label><input class="fi" id="s-rep" placeholder="Ted Smith"></div>
+            <div class="fg"><label class="fl">Rep Title</label><input class="fi" id="s-reptitle" placeholder="Owner, Sales Rep, etc."></div>
+          </div>
+          <div class="fg"><label class="fl">Booking / QR Code URL <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; QR auto-generates from this link</span></label><input class="fi" id="s-bookingurl" placeholder="https://calendly.com/yourname"></div>
+          <div class="frow">
+            <div class="fg"><label class="fl">License / CCB #</label><input class="fi" id="s-lic" placeholder="CCB#226995"></div>
+            <div class="fg"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Years in Business</label><input class="fi" id="s-yrs" placeholder="20+"></div>
+            <div class="fg"><label class="fl">Workmanship Warranty (yrs)</label><input class="fi" id="s-warr" placeholder="10"></div>
+          </div>
+        </div>
       </div>
-      <div class="stab-card-body" id="stab-body-branding">
-        <div class="frow" style="gap:24px;">
-          <div class="fg">
-            <label class="fl">Company Logo</label>
-            <div style="display:flex;gap:10px;align-items:center;">
-              <div id="logo-preview" style="width:80px;height:50px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);overflow:hidden;flex-shrink:0;">No logo</div>
-              <div style="flex:1;">
-                <label style="display:block;background:var(--card);border:2px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;cursor:pointer;color:var(--mid);font-size:12px;font-weight:600;">
-                  📁 Upload Logo
-                  <input type="file" accept="image/*" style="display:none;" onchange="handleLogoUpload(this)">
-                </label>
-                <button onclick="clearLogo()" style="width:100%;margin-top:5px;background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-align:center;">Remove logo</button>
+
+      <!-- FULL WIDTH: Branding -->
+      <div class="stab-card stab-full">
+        <div class="stab-card-hdr" onclick="toggleStabCard('branding')">
+          <span>&#127912; Branding &#8212; Logo, Headshot &amp; Reviews</span>
+          <span class="stab-chevron" id="stab-chevron-branding">&#9662;</span>
+        </div>
+        <div class="stab-card-body" id="stab-body-branding">
+          <div class="stab-branding-grid">
+            <!-- Logo -->
+            <div>
+              <label class="fl">Company Logo</label>
+              <div style="display:flex;gap:10px;align-items:center;margin-top:6px;">
+                <div id="logo-preview" style="width:80px;height:50px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);overflow:hidden;flex-shrink:0;">No logo</div>
+                <div style="flex:1;">
+                  <label style="display:block;background:var(--card);border:2px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;cursor:pointer;color:var(--mid);font-size:12px;font-weight:600;">
+                    &#128193; Upload Logo
+                    <input type="file" accept="image/*" style="display:none;" onchange="handleLogoUpload(this)">
+                  </label>
+                  <button onclick="clearLogo()" style="width:100%;margin-top:5px;background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-align:center;">Remove logo</button>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="fg">
-            <label class="fl">Owner / Rep Headshot <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— Use transparent PNG</span></label>
-            <div style="display:flex;gap:10px;align-items:center;">
-              <div id="headshot-preview" style="width:70px;height:90px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);overflow:hidden;flex-shrink:0;text-align:center;line-height:1.4;">No photo</div>
-              <div style="flex:1;">
-                <label style="display:block;background:var(--card);border:2px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;cursor:pointer;color:var(--mid);font-size:12px;font-weight:600;">
-                  🧑 Upload Headshot
-                  <input type="file" accept="image/*" style="display:none;" onchange="handleHeadshotUpload(this)">
-                </label>
-                <button onclick="clearHeadshot()" style="width:100%;margin-top:5px;background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-align:center;">Remove headshot</button>
-                <div style="margin-top:10px;">
-                  <label class="fl" style="margin-bottom:4px;">Face Position <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);">— drag to center face</span></label>
-                  <div style="display:flex;align-items:center;gap:8px;">
-                    <span style="font-size:10px;color:var(--muted);">Top</span>
-                    <input type="range" id="s-hspos" min="0" max="100" value="30" style="flex:1;accent-color:var(--accent);" oninput="updatePreview()">
-                    <span style="font-size:10px;color:var(--muted);">Bottom</span>
+            <!-- Headshot -->
+            <div>
+              <label class="fl">Rep Headshot <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; transparent PNG preferred</span></label>
+              <div style="display:flex;gap:10px;align-items:center;margin-top:6px;">
+                <div id="headshot-preview" style="width:70px;height:90px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);overflow:hidden;flex-shrink:0;text-align:center;line-height:1.4;">No photo</div>
+                <div style="flex:1;">
+                  <label style="display:block;background:var(--card);border:2px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;cursor:pointer;color:var(--mid);font-size:12px;font-weight:600;">
+                    &#128100; Upload Headshot
+                    <input type="file" accept="image/*" style="display:none;" onchange="handleHeadshotUpload(this)">
+                  </label>
+                  <button onclick="clearHeadshot()" style="width:100%;margin-top:5px;background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-align:center;">Remove headshot</button>
+                  <div style="margin-top:8px;">
+                    <label class="fl" style="margin-bottom:4px;">Face Position</label>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span style="font-size:10px;color:var(--muted);">Top</span>
+                      <input type="range" id="s-hspos" min="0" max="100" value="30" style="flex:1;accent-color:var(--accent);" oninput="updatePreview()">
+                      <span style="font-size:10px;color:var(--muted);">Bottom</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-        <div style="margin-top:16px;">
-          <label class="fl">Social Proof — Review Images (Page 4)</label>
-          <div class="frow" style="gap:10px;margin-top:8px;">
-            <div class="fg" style="margin-bottom:0;">
-              <label class="fl">Review 1</label>
-              <div id="review1-preview" style="width:100%;height:80px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);overflow:hidden;margin-bottom:5px;">No image</div>
+            <!-- Review 1 -->
+            <div>
+              <label class="fl">Review Image 1 (Page 4)</label>
+              <div id="review1-preview" style="width:100%;height:80px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);overflow:hidden;margin:6px 0 5px;">No image</div>
               <label style="display:block;background:var(--card);border:2px solid var(--border);border-radius:7px;padding:8px;text-align:center;cursor:pointer;color:var(--mid);font-size:11px;font-weight:600;">&#11088; Upload Review 1<input type="file" accept="image/*" style="display:none;" onchange="handleReviewUpload(this,1)"></label>
               <button onclick="clearReview(1)" style="width:100%;margin-top:4px;background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;text-align:center;">Remove</button>
             </div>
-            <div class="fg" style="margin-bottom:0;">
-              <label class="fl">Review 2</label>
-              <div id="review2-preview" style="width:100%;height:80px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);overflow:hidden;margin-bottom:5px;">No image</div>
+            <!-- Review 2 -->
+            <div>
+              <label class="fl">Review Image 2 (Page 4)</label>
+              <div id="review2-preview" style="width:100%;height:80px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);overflow:hidden;margin:6px 0 5px;">No image</div>
               <label style="display:block;background:var(--card);border:2px solid var(--border);border-radius:7px;padding:8px;text-align:center;cursor:pointer;color:var(--mid);font-size:11px;font-weight:600;">&#11088; Upload Review 2<input type="file" accept="image/*" style="display:none;" onchange="handleReviewUpload(this,2)"></label>
               <button onclick="clearReview(2)" style="width:100%;margin-top:4px;background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;text-align:center;">Remove</button>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- ── PRICING ── -->
-    <div class="stab-card">
-      <div class="stab-card-hdr" onclick="toggleStabCard('pricing')">
-        <span>&#128176; Pricing &amp; Estimator</span>
-        <span class="stab-chevron" id="stab-chevron-pricing">&#9662;</span>
-      </div>
-      <div class="stab-card-body" id="stab-body-pricing">
-        <div class="stab-section-hdr">Material Cost Per Square (labor + material)</div>
-        <div class="frow">
-          <div class="fg"><label class="fl">3-Tab Shingle ($/sq)</label><input type="number" class="fi" id="s-c3tab" placeholder="350"></div>
-          <div class="fg"><label class="fl">Architectural ($/sq)</label><input type="number" class="fi" id="s-carch" placeholder="450"></div>
+      <!-- LEFT: Pricing & Estimator -->
+      <div class="stab-card">
+        <div class="stab-card-hdr" onclick="toggleStabCard('pricing')">
+          <span>&#128176; Pricing &amp; Estimator</span>
+          <span class="stab-chevron" id="stab-chevron-pricing">&#9662;</span>
         </div>
-        <div class="frow">
-          <div class="fg"><label class="fl">Designer/Premium ($/sq)</label><input type="number" class="fi" id="s-cdes" placeholder="620"></div>
-          <div class="fg"><label class="fl">Metal Roofing ($/sq)</label><input type="number" class="fi" id="s-cmetal" placeholder="950"></div>
-        </div>
-        <div class="stab-section-hdr" style="margin-top:16px;">Per-Square Line Items</div>
-        <div class="frow">
-          <div class="fg"><label class="fl">Tear-off ($/sq)</label><input type="number" class="fi" id="s-tear" placeholder="75"></div>
-          <div class="fg"><label class="fl">Ice &amp; Water Shield ($/sq)</label><input type="number" class="fi" id="s-ice" placeholder="42"></div>
-        </div>
-        <div class="frow">
-          <div class="fg"><label class="fl">Felt/Synthetic ($/sq)</label><input type="number" class="fi" id="s-felt" placeholder="22"></div>
-          <div class="fg"><label class="fl">Dumpster (flat $)</label><input type="number" class="fi" id="s-dump" placeholder="450"></div>
-        </div>
-        <div class="stab-section-hdr" style="margin-top:16px;">Add-On Pricing</div>
-        <div class="frow">
-          <div class="fg"><label class="fl">Skylight ($/each)</label><input type="number" class="fi" id="s-sky" placeholder="375"></div>
-          <div class="fg"><label class="fl">Chimney Flashing ($)</label><input type="number" class="fi" id="s-chim" placeholder="295"></div>
-        </div>
-        <div class="frow">
-          <div class="fg"><label class="fl">Gutters ($/lf)</label><input type="number" class="fi" id="s-gut" placeholder="9"></div>
-          <div class="fg"></div>
-        </div>
-        <div class="stab-section-hdr" style="margin-top:16px;">Overhead &amp; Margin</div>
-        <div class="frow">
-          <div class="fg"><label class="fl">Overhead %</label><input type="number" class="fi" id="s-ovh" placeholder="15"></div>
-          <div class="fg"><label class="fl">Profit Margin %</label><input type="number" class="fi" id="s-mgn" placeholder="20"></div>
-        </div>
-        <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:11px;color:var(--mid);margin-top:4px;">
-          &#128161; Formula: (Material+Labor+Tearoff+Accessories) &times; (1 + Overhead%) &times; (1 + Margin%) = Estimate
-        </div>
-        <div class="stab-section-hdr" style="margin-top:16px;">Financing Options</div>
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-          <input type="checkbox" id="s-fin-enabled" style="accent-color:var(--accent);width:16px;height:16px;" checked>
-          <label for="s-fin-enabled" style="font-size:13px;font-weight:700;color:var(--mid);cursor:pointer;">Show financing estimate on mailer <span style="font-weight:400;color:var(--muted);font-size:11px;">(auto-calculates from estimate total)</span></label>
-        </div>
-        <div class="frow">
-          <div class="fg"><label class="fl">APR %</label><input type="number" class="fi" id="s-fin-apr" placeholder="9.99" step="0.01" value="9.99"></div>
-          <div class="fg"><label class="fl">Term (months)</label>
-            <select class="fs" id="s-fin-term">
-              <option value="36">36 months (3 yr)</option>
-              <option value="48">48 months (4 yr)</option>
-              <option value="60" selected>60 months (5 yr)</option>
-              <option value="72">72 months (6 yr)</option>
-              <option value="84">84 months (7 yr)</option>
-              <option value="120">120 months (10 yr)</option>
-              <option value="180">180 months (15 yr)</option>
-            </select>
-          </div>
-        </div>
-        <div class="frow">
-          <div class="fg"><label class="fl">Down Payment %</label><input type="number" class="fi" id="s-fin-down" placeholder="0" value="0" min="0" max="50"></div>
-          <div class="fg" style="display:flex;align-items:flex-end;padding-bottom:2px;">
-            <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:8px 12px;font-size:11px;color:var(--mid);width:100%;">
-              &#128161; Preview: <strong id="fin-preview-val" style="color:var(--accent);">&#8212;</strong>/mo based on current estimate
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── MAILER CONTENT ── -->
-    <div class="stab-card">
-      <div class="stab-card-hdr" onclick="toggleStabCard('mailer')">
-        <span>&#128236; Mailer &amp; Postcard Content</span>
-        <span class="stab-chevron" id="stab-chevron-mailer">&#9662;</span>
-      </div>
-      <div class="stab-card-body" id="stab-body-mailer">
-        <div class="stab-section-hdr">Cover Letter (Page 1)</div>
-        <div class="fg"><label class="fl">Hook &#8212; Opening Paragraph</label><textarea class="fi" id="s-hook" rows="3" style="resize:vertical;font-size:13px;" placeholder="Most homeowners are tired of door-knockers..."></textarea></div>
-        <div class="fg"><label class="fl">Why They Received This Bid</label><textarea class="fi" id="s-why" rows="2" style="resize:vertical;font-size:13px;" placeholder="We were in your neighborhood assessing storm damage..."></textarea></div>
-        <div class="stab-section-hdr" style="margin-top:16px;">Postcard (6&#215;9 Mailer)</div>
-        <div class="fg"><label class="fl">Postcard Hook Headline <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; shown on postcard front</span></label><input class="fi" id="s-pc-hook" type="text" style="font-size:13px;" placeholder="Your Roof Needs Attention."></div>
-        <div class="fg"><label class="fl">Postcard Why Paragraph <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; shown on postcard back</span></label><textarea class="fi" id="s-pc-why" rows="2" style="resize:vertical;font-size:13px;" placeholder="We assessed your roof and found..."></textarea></div>
-        <div class="fg"><label class="fl">Customer Quote <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; 5-star review shown on postcard back</span></label><input class="fi" id="s-pc-quote" type="text" style="font-size:13px;" placeholder="&quot;They replaced our roof in one day, no mess, no drama.&quot; &#8212; Mike D., Canton MI"></div>
-        <div class="fg"><label class="fl">Guarantee Tagline <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; bold one-liner shown below price strip</span></label><input class="fi" id="s-pc-guarantee" type="text" style="font-size:13px;" placeholder="No door-knocking. No pressure. Just your price."></div>
-        <div class="stab-section-hdr" style="margin-top:16px;">Your Differentiators (Page 3 Comparison)</div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">These become checkmarks in your column vs "Rarely / No / Hopefully" for typical contractors.</div>
-        <div class="frow"><div class="fg"><input class="fi" id="s-d1" placeholder="Licensed, Bonded &amp; Insured"></div><div class="fg"><input class="fi" id="s-d2" placeholder="Manufacturer Certified"></div></div>
-        <div class="frow"><div class="fg"><input class="fi" id="s-d3" placeholder="Itemized Pricing for Transparency"></div><div class="fg"><input class="fi" id="s-d4" placeholder="Workmanship Warranty"></div></div>
-        <div class="frow"><div class="fg"><input class="fi" id="s-d5" placeholder="Financing Available"></div><div class="fg"><input class="fi" id="s-d6" placeholder="Local Crews"></div></div>
-        <div class="stab-section-hdr" style="margin-top:16px;">Additional Services (Page 4)</div>
-        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
-          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="s-off-sid" style="accent-color:var(--accent);"> Siding</label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="s-off-win" style="accent-color:var(--accent);"> Windows</label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="s-off-gut" style="accent-color:var(--accent);"> Gutters</label>
-        </div>
-        <div class="fg"><label class="fl">Custom Service (optional)</label><input class="fi" id="s-off-custom" placeholder="e.g. Solar, Insulation, Painting"></div>
-        <div class="stab-section-hdr" style="margin-top:16px;">Referral Program (Page 4)</div>
-        <div class="frow">
-          <div class="fg"><label class="fl">Gift Card Amount ($)</label><input class="fi" id="s-refamt" placeholder="250"></div>
-          <div class="fg"></div>
-        </div>
-        <div class="fg"><label class="fl">Referral Program Description</label><textarea class="fi" id="s-reftext" rows="2" style="resize:vertical;font-size:13px;" placeholder="For every customer you send our way..."></textarea></div>
-      </div>
-    </div>
-
-    <!-- ── DRIP CAMPAIGNS ── -->
-    <div class="stab-card" id="stab-drip-card" style="display:none;">
-      <div class="stab-card-hdr" onclick="toggleStabCard('drip')">
-        <span>&#128238; Drip Mail Campaigns</span>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div id="drip-toggle-section" style="display:flex;align-items:center;gap:8px;">
-            <span style="font-size:12px;color:var(--muted);" id="drip-toggle-label">Off</span>
-            <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;" onclick="event.stopPropagation()">
-              <input type="checkbox" id="s-drip-enabled" style="opacity:0;width:0;height:0;position:absolute;" onchange="updateDripToggleLabel()">
-              <span id="drip-toggle-track" style="position:absolute;inset:0;background:var(--border);border-radius:12px;transition:.2s;"></span>
-              <span id="drip-toggle-knob" style="position:absolute;left:2px;top:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3);"></span>
-            </label>
-          </div>
-          <span class="stab-chevron" id="stab-chevron-drip">&#9662;</span>
-        </div>
-      </div>
-      <div class="stab-card-body" id="stab-body-drip">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Each follow-up reuses the homeowner's house photo with your custom message overlaid.</div>
-        <div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;">
-          <div style="font-size:11px;font-weight:700;color:#A855F7;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;">Step 2 &#8212; Follow-Up</div>
+        <div class="stab-card-body" id="stab-body-pricing">
+          <div class="stab-section-hdr">Material Cost Per Square</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Headline</label><input class="fi" id="s-drip2-headline" placeholder="Still thinking it over?" maxlength="40"></div>
-            <div class="fg"><label class="fl">Subtext</label><input class="fi" id="s-drip2-subtext" placeholder="Your estimate is still valid. We'd love to help." maxlength="80"></div>
+            <div class="fg"><label class="fl">3-Tab Shingle ($/sq)</label><input type="number" class="fi" id="s-c3tab" placeholder="350"></div>
+            <div class="fg"><label class="fl">Architectural ($/sq)</label><input type="number" class="fi" id="s-carch" placeholder="450"></div>
           </div>
-        </div>
-        <div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;">
-          <div style="font-size:11px;font-weight:700;color:#A855F7;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;">Step 3 &#8212; Reminder</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Headline</label><input class="fi" id="s-drip3-headline" placeholder="Storm season is coming." maxlength="40"></div>
-            <div class="fg"><label class="fl">Subtext</label><input class="fi" id="s-drip3-subtext" placeholder="Now's the time to protect your home. Call us today." maxlength="80"></div>
+            <div class="fg"><label class="fl">Designer/Premium ($/sq)</label><input type="number" class="fi" id="s-cdes" placeholder="620"></div>
+            <div class="fg"><label class="fl">Metal Roofing ($/sq)</label><input type="number" class="fi" id="s-cmetal" placeholder="950"></div>
           </div>
-        </div>
-        <div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;">
-          <div style="font-size:11px;font-weight:700;color:#A855F7;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;">Step 4 &#8212; Final Notice</div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Per-Square Line Items</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Headline</label><input class="fi" id="s-drip4-headline" placeholder="Final notice." maxlength="40"></div>
-            <div class="fg"><label class="fl">Subtext</label><input class="fi" id="s-drip4-subtext" placeholder="Your estimate expires soon. Secure your spot before prices rise." maxlength="80"></div>
+            <div class="fg"><label class="fl">Tear-off ($/sq)</label><input type="number" class="fi" id="s-tear" placeholder="75"></div>
+            <div class="fg"><label class="fl">Ice &amp; Water Shield ($/sq)</label><input type="number" class="fi" id="s-ice" placeholder="42"></div>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── INTEGRATIONS ── -->
-    <div class="stab-card">
-      <div class="stab-card-hdr" onclick="toggleStabCard('integrations')">
-        <span>&#128279; Integrations</span>
-        <span class="stab-chevron" id="stab-chevron-integrations">&#9662;</span>
-      </div>
-      <div class="stab-card-body" id="stab-body-integrations">
-        <div class="stab-section-hdr">GoHighLevel Integration</div>
-        <div style="background:var(--accent-dim);border:1px solid rgba(242,92,5,.2);border-radius:7px;padding:10px 14px;font-size:11px;color:var(--mid);margin-bottom:12px;">
-          &#128279; Connect this client's GHL sub-account to create contacts, opportunities, and send emails directly from BidDrop.
-        </div>
-        <div class="fg"><label class="fl">GHL Location API Key</label><input class="fi" id="s-ghl-key" placeholder="pit-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" type="password"></div>
-        <div class="fg"><label class="fl">GHL Location ID</label><input class="fi" id="s-ghl-loc" placeholder="gz85VU6SxGXS7lqHAQGx"></div>
-        <div class="frow">
-          <div class="fg"><label class="fl">Pipeline ID</label><input class="fi" id="s-ghl-pipe" placeholder="bxskBIBdbklHry0B63qx" value="bxskBIBdbklHry0B63qx"></div>
-          <div class="fg" style="display:flex;flex-direction:column;gap:6px;">
-            <label class="fl">Lead Stage</label>
-            <div style="display:flex;gap:6px;">
-              <select class="fs" id="s-ghl-stage" style="flex:1;font-size:12px;padding:10px 10px;">
-                <option value="">&#8212; Click Fetch Stages &#8594;</option>
+          <div class="frow">
+            <div class="fg"><label class="fl">Felt/Synthetic ($/sq)</label><input type="number" class="fi" id="s-felt" placeholder="22"></div>
+            <div class="fg"><label class="fl">Dumpster (flat $)</label><input type="number" class="fi" id="s-dump" placeholder="450"></div>
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Add-On Pricing</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Skylight ($/each)</label><input type="number" class="fi" id="s-sky" placeholder="375"></div>
+            <div class="fg"><label class="fl">Chimney Flashing ($)</label><input type="number" class="fi" id="s-chim" placeholder="295"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Gutters ($/lf)</label><input type="number" class="fi" id="s-gut" placeholder="9"></div>
+            <div class="fg"></div>
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Overhead &amp; Margin</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Overhead %</label><input type="number" class="fi" id="s-ovh" placeholder="15"></div>
+            <div class="fg"><label class="fl">Profit Margin %</label><input type="number" class="fi" id="s-mgn" placeholder="20"></div>
+          </div>
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:11px;color:var(--mid);margin-top:4px;">
+            &#128161; Formula: (Material+Labor+Tearoff+Accessories) &times; (1 + Overhead%) &times; (1 + Margin%) = Estimate
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Financing Options</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <input type="checkbox" id="s-fin-enabled" style="accent-color:var(--accent);width:16px;height:16px;" checked>
+            <label for="s-fin-enabled" style="font-size:13px;font-weight:700;color:var(--mid);cursor:pointer;">Show financing on mailer <span style="font-weight:400;color:var(--muted);font-size:11px;">(auto-calculates)</span></label>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">APR %</label><input type="number" class="fi" id="s-fin-apr" placeholder="9.99" step="0.01" value="9.99"></div>
+            <div class="fg"><label class="fl">Term (months)</label>
+              <select class="fs" id="s-fin-term">
+                <option value="36">36 months (3 yr)</option>
+                <option value="48">48 months (4 yr)</option>
+                <option value="60" selected>60 months (5 yr)</option>
+                <option value="72">72 months (6 yr)</option>
+                <option value="84">84 months (7 yr)</option>
+                <option value="120">120 months (10 yr)</option>
+                <option value="180">180 months (15 yr)</option>
               </select>
-              <button onclick="ghlFetchStages()" style="flex-shrink:0;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;" id="btn-fetch-stages">&#8635; Fetch</button>
+            </div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Down Payment %</label><input type="number" class="fi" id="s-fin-down" placeholder="0" value="0" min="0" max="50"></div>
+            <div class="fg" style="display:flex;align-items:flex-end;padding-bottom:2px;">
+              <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:8px 12px;font-size:11px;color:var(--mid);width:100%;">
+                &#128161; Preview: <strong id="fin-preview-val" style="color:var(--accent);">&#8212;</strong>/mo
+              </div>
             </div>
           </div>
         </div>
-        <div class="stab-section-hdr" style="margin-top:16px;">Follow-Up Message Templates</div>
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:8px 12px;font-size:11px;color:var(--muted);margin-bottom:10px;">Use <code style="background:var(--card2);padding:1px 5px;border-radius:3px;color:var(--accent);">{name}</code> <code style="background:var(--card2);padding:1px 5px;border-radius:3px;color:var(--accent);">{rep}</code> <code style="background:var(--card2);padding:1px 5px;border-radius:3px;color:var(--accent);">{company}</code> <code style="background:var(--card2);padding:1px 5px;border-radius:3px;color:var(--accent);">{address}</code> as dynamic tokens.</div>
-        <div class="fg"><label class="fl">SMS Template</label><textarea class="fi" id="s-ghl-sms-tpl" rows="3" style="resize:vertical;" placeholder="Hi {name}! This is {rep} from {company}. Following up about your roof at {address}. Free inspection available &#8212; reply YES to schedule!"></textarea></div>
-        <div class="fg"><label class="fl">Email Template</label><textarea class="fi" id="s-ghl-email-tpl" rows="5" style="resize:vertical;" placeholder="Hi {name}, I hope this message finds you well!..."></textarea></div>
-        <div id="rentcast-settings-section" style="display:none;">
-          <div class="stab-section-hdr" style="margin-top:16px;">Property Owner Lookup (RentCast) &#8212; Agency Master Key</div>
-          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:11px;color:var(--mid);margin-bottom:10px;">
-            &#127968; Auto-fills the homeowner name when a pinned address is loaded. Get a free key at <a href="https://app.rentcast.io/app/api-access" target="_blank" style="color:var(--accent);">rentcast.io</a> (50 free lookups/mo, then ~$0.04 each).
-          </div>
-          <div class="fg"><label class="fl">RentCast API Key <span style="font-weight:400;color:var(--muted);text-transform:none;font-size:10px;">(stored securely &#8212; not visible to clients)</span></label><input class="fi" id="s-rentcast-key" placeholder="live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" type="password"></div>
+      </div>
+
+      <!-- RIGHT: Mailer & Postcard Content -->
+      <div class="stab-card">
+        <div class="stab-card-hdr" onclick="toggleStabCard('mailer')">
+          <span>&#128236; Mailer &amp; Postcard Content</span>
+          <span class="stab-chevron" id="stab-chevron-mailer">&#9662;</span>
         </div>
-        <div id="lob-settings-section" style="display:none;">
-          <div class="stab-section-hdr" style="margin-top:16px;">Direct Mail &#8212; Agency Master Key</div>
-          <div class="fg"><label class="fl">API Key <span style="font-weight:400;color:var(--muted);text-transform:none;font-size:10px;">(stored securely &#8212; not visible to clients)</span></label><input class="fi" id="s-lob" placeholder="live_c39f..."></div>
-          <div class="stab-section-hdr" style="margin-top:16px;">Billing</div>
-          <div class="fg"><label class="fl">Mailer Cost Per Piece ($) <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">Used for invoice export</span></label><input class="fi" id="s-mailer-cost" type="number" step="0.01" min="0" placeholder="0.85" value="0.85"></div>
+        <div class="stab-card-body" id="stab-body-mailer">
+          <div class="stab-section-hdr">Cover Letter (Page 1)</div>
+          <div class="fg"><label class="fl">Hook &#8212; Opening Paragraph</label><textarea class="fi" id="s-hook" rows="3" style="resize:vertical;font-size:13px;" placeholder="Most homeowners are tired of door-knockers..."></textarea></div>
+          <div class="fg"><label class="fl">Why They Received This Bid</label><textarea class="fi" id="s-why" rows="2" style="resize:vertical;font-size:13px;" placeholder="We were in your neighborhood assessing storm damage..."></textarea></div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Postcard (6&#215;9 Mailer)</div>
+          <div class="fg"><label class="fl">Hook Headline <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; postcard front</span></label><input class="fi" id="s-pc-hook" type="text" style="font-size:13px;" placeholder="Your Roof Needs Attention."></div>
+          <div class="fg"><label class="fl">Why Paragraph <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; postcard back</span></label><textarea class="fi" id="s-pc-why" rows="2" style="resize:vertical;font-size:13px;" placeholder="We assessed your roof and found..."></textarea></div>
+          <div class="fg"><label class="fl">Customer Quote <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; 5-star review on back</span></label><input class="fi" id="s-pc-quote" type="text" style="font-size:13px;" placeholder="&quot;They replaced our roof in one day.&quot; &#8212; Mike D."></div>
+          <div class="fg"><label class="fl">Guarantee Tagline <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; below price strip</span></label><input class="fi" id="s-pc-guarantee" type="text" style="font-size:13px;" placeholder="No door-knocking. No pressure. Just your price."></div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Your Differentiators (Page 3)</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Checkmarks in your column vs competitors.</div>
+          <div class="frow"><div class="fg"><input class="fi" id="s-d1" placeholder="Licensed, Bonded &amp; Insured"></div><div class="fg"><input class="fi" id="s-d2" placeholder="Manufacturer Certified"></div></div>
+          <div class="frow"><div class="fg"><input class="fi" id="s-d3" placeholder="Itemized Pricing"></div><div class="fg"><input class="fi" id="s-d4" placeholder="Workmanship Warranty"></div></div>
+          <div class="frow"><div class="fg"><input class="fi" id="s-d5" placeholder="Financing Available"></div><div class="fg"><input class="fi" id="s-d6" placeholder="Local Crews"></div></div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Additional Services (Page 4)</div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="s-off-sid" style="accent-color:var(--accent);"> Siding</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="s-off-win" style="accent-color:var(--accent);"> Windows</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="s-off-gut" style="accent-color:var(--accent);"> Gutters</label>
+          </div>
+          <div class="fg"><label class="fl">Custom Service (optional)</label><input class="fi" id="s-off-custom" placeholder="e.g. Solar, Insulation, Painting"></div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Referral Program (Page 4)</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Gift Card Amount ($)</label><input class="fi" id="s-refamt" placeholder="250"></div>
+            <div class="fg"></div>
+          </div>
+          <div class="fg"><label class="fl">Referral Program Description</label><textarea class="fi" id="s-reftext" rows="2" style="resize:vertical;font-size:13px;" placeholder="For every customer you send our way..."></textarea></div>
         </div>
       </div>
-    </div>
+
+      <!-- LEFT: Drip Campaigns (admin only) -->
+      <div class="stab-card" id="stab-drip-card" style="display:none;">
+        <div class="stab-card-hdr" onclick="toggleStabCard('drip')">
+          <span>&#128238; Drip Mail Campaigns</span>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div id="drip-toggle-section" style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:12px;color:var(--muted);" id="drip-toggle-label">Off</span>
+              <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;" onclick="event.stopPropagation()">
+                <input type="checkbox" id="s-drip-enabled" style="opacity:0;width:0;height:0;position:absolute;" onchange="updateDripToggleLabel()">
+                <span id="drip-toggle-track" style="position:absolute;inset:0;background:var(--border);border-radius:12px;transition:.2s;"></span>
+                <span id="drip-toggle-knob" style="position:absolute;left:2px;top:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3);"></span>
+              </label>
+            </div>
+            <span class="stab-chevron" id="stab-chevron-drip">&#9662;</span>
+          </div>
+        </div>
+        <div class="stab-card-body" id="stab-body-drip">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Each follow-up reuses the homeowner's house photo with your custom message overlaid.</div>
+          <div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;">
+            <div style="font-size:11px;font-weight:700;color:#A855F7;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;">Step 2 &#8212; Follow-Up</div>
+            <div class="frow">
+              <div class="fg"><label class="fl">Headline</label><input class="fi" id="s-drip2-headline" placeholder="Still thinking it over?" maxlength="40"></div>
+              <div class="fg"><label class="fl">Subtext</label><input class="fi" id="s-drip2-subtext" placeholder="Your estimate is still valid." maxlength="80"></div>
+            </div>
+          </div>
+          <div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;">
+            <div style="font-size:11px;font-weight:700;color:#A855F7;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;">Step 3 &#8212; Reminder</div>
+            <div class="frow">
+              <div class="fg"><label class="fl">Headline</label><input class="fi" id="s-drip3-headline" placeholder="Storm season is coming." maxlength="40"></div>
+              <div class="fg"><label class="fl">Subtext</label><input class="fi" id="s-drip3-subtext" placeholder="Now's the time to protect your home." maxlength="80"></div>
+            </div>
+          </div>
+          <div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;">
+            <div style="font-size:11px;font-weight:700;color:#A855F7;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;">Step 4 &#8212; Final Notice</div>
+            <div class="frow">
+              <div class="fg"><label class="fl">Headline</label><input class="fi" id="s-drip4-headline" placeholder="Final notice." maxlength="40"></div>
+              <div class="fg"><label class="fl">Subtext</label><input class="fi" id="s-drip4-subtext" placeholder="Your estimate expires soon." maxlength="80"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Integrations -->
+      <div class="stab-card">
+        <div class="stab-card-hdr" onclick="toggleStabCard('integrations')">
+          <span>&#128279; Integrations</span>
+          <span class="stab-chevron" id="stab-chevron-integrations">&#9662;</span>
+        </div>
+        <div class="stab-card-body" id="stab-body-integrations">
+          <div class="stab-section-hdr">GoHighLevel Integration</div>
+          <div style="background:var(--accent-dim);border:1px solid rgba(242,92,5,.2);border-radius:7px;padding:10px 14px;font-size:11px;color:var(--mid);margin-bottom:12px;">
+            &#128279; Connect your GHL sub-account to create contacts, opportunities, and send emails directly from BidDrop.
+          </div>
+          <div class="fg"><label class="fl">GHL Location API Key</label><input class="fi" id="s-ghl-key" placeholder="pit-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" type="password"></div>
+          <div class="fg"><label class="fl">GHL Location ID</label><input class="fi" id="s-ghl-loc" placeholder="gz85VU6SxGXS7lqHAQGx"></div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Pipeline ID</label><input class="fi" id="s-ghl-pipe" placeholder="bxskBIBdbklHry0B63qx" value="bxskBIBdbklHry0B63qx"></div>
+            <div class="fg" style="display:flex;flex-direction:column;gap:6px;">
+              <label class="fl">Lead Stage</label>
+              <div style="display:flex;gap:6px;">
+                <select class="fs" id="s-ghl-stage" style="flex:1;font-size:12px;padding:10px 10px;">
+                  <option value="">&#8212; Click Fetch Stages &#8594;</option>
+                </select>
+                <button onclick="ghlFetchStages()" style="flex-shrink:0;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;" id="btn-fetch-stages">&#8635; Fetch</button>
+              </div>
+            </div>
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Follow-Up Message Templates</div>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:8px 12px;font-size:11px;color:var(--muted);margin-bottom:10px;">Use <code style="background:var(--card2);padding:1px 5px;border-radius:3px;color:var(--accent);">{name}</code> <code style="background:var(--card2);padding:1px 5px;border-radius:3px;color:var(--accent);">{rep}</code> <code style="background:var(--card2);padding:1px 5px;border-radius:3px;color:var(--accent);">{company}</code> <code style="background:var(--card2);padding:1px 5px;border-radius:3px;color:var(--accent);">{address}</code> as tokens.</div>
+          <div class="fg"><label class="fl">SMS Template</label><textarea class="fi" id="s-ghl-sms-tpl" rows="3" style="resize:vertical;" placeholder="Hi {name}! This is {rep} from {company}..."></textarea></div>
+          <div class="fg"><label class="fl">Email Template</label><textarea class="fi" id="s-ghl-email-tpl" rows="4" style="resize:vertical;" placeholder="Hi {name}, I hope this message finds you well!..."></textarea></div>
+          <div id="rentcast-settings-section" style="display:none;">
+            <div class="stab-section-hdr" style="margin-top:16px;">Property Owner Lookup (RentCast) &#8212; Agency Key</div>
+            <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:11px;color:var(--mid);margin-bottom:10px;">
+              &#127968; Auto-fills homeowner name. Get a free key at <a href="https://app.rentcast.io/app/api-access" target="_blank" style="color:var(--accent);">rentcast.io</a>.
+            </div>
+            <div class="fg"><label class="fl">RentCast API Key</label><input class="fi" id="s-rentcast-key" placeholder="live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" type="password"></div>
+          </div>
+          <div id="lob-settings-section" style="display:none;">
+            <div class="stab-section-hdr" style="margin-top:16px;">Direct Mail &#8212; Agency Master Key</div>
+            <div class="fg"><label class="fl">API Key</label><input class="fi" id="s-lob" placeholder="live_c39f..."></div>
+            <div class="stab-section-hdr" style="margin-top:16px;">Billing</div>
+            <div class="fg"><label class="fl">Mailer Cost Per Piece ($)</label><input class="fi" id="s-mailer-cost" type="number" step="0.01" min="0" placeholder="0.85" value="0.85"></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /stab-grid -->
 
     <!-- ── BOTTOM SAVE BUTTON ── -->
     <div style="display:flex;justify-content:center;gap:16px;padding:8px 0 24px;flex-shrink:0;">
-      <button onclick="saveSettings()" style="background:var(--accent);border:none;border-radius:10px;padding:14px 48px;color:#fff;font-family:var(--font-h);font-size:16px;font-weight:700;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 18px rgba(242,92,5,.4);">&#128190; Save Settings</button>
-      <button onclick="doLogout()" style="background:none;border:1px solid var(--danger);border-radius:8px;padding:14px 24px;color:var(--danger);font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;">Sign Out</button>
+      <button onclick="saveSettings()" class="stab-save-btn stab-save-lg">&#128190; Save Settings</button>
+      <button onclick="doLogout()" class="stab-signout-btn">Sign Out</button>
     </div>
   </div>
 </div><!-- /main -->
