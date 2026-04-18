@@ -23,6 +23,9 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -1754,6 +1757,11 @@ const DEFAULTS = {
 
 let S = { pins:[], queue:[], estimates:[], team:[], activity:[], cfg:{...DEFAULTS}, offlineQueue:[] };
 let map, markers={}, tempLL=null, curFilter='all', actChart=null;
+let clusterGroup = null;          // Leaflet.markercluster group
+let totalPinCount = 0;            // server-side count (may exceed S.pins.length)
+let pinListPage = 0;              // current page for sidebar pin list (50 per page)
+let _viewportLoadTimer = null;    // debounce timer for moveend loading
+let _lastViewportBounds = null;   // last loaded viewport bounds
 
 // ── AUTH STATE ────────────────────────────────
 let currentUser = null;   // Supabase auth user
@@ -2289,7 +2297,11 @@ function saveEstimateNow(){
     });
   }
   // Refresh the map marker so it shows updated status and estimate badge
-  if(markers[currentEstPinId] && map){ map.removeLayer(markers[currentEstPinId]); delete markers[currentEstPinId]; }
+  if(markers[currentEstPinId] && map){
+    if(clusterGroup) clusterGroup.removeLayer(markers[currentEstPinId]);
+    else map.removeLayer(markers[currentEstPinId]);
+    delete markers[currentEstPinId];
+  }
   addMarker(pin);
   // Clear draft after official save
   try{ localStorage.removeItem('biddrop_draft_'+currentEstPinId); }catch(e){}
@@ -3061,6 +3073,7 @@ function initMap(){
   // Destroy existing Leaflet instance if present (prevents "Map container is already initialized"
   // error when the user signs out and signs back in without a page refresh)
   if(map){ try{ map.remove(); }catch(e){} map=null; markers={}; }
+  if(clusterGroup){ try{ clusterGroup.clearLayers(); }catch(e){} clusterGroup=null; }
   // Mapbox token stored split to avoid static secret scanning
   const MB=['pk.eyJ1IjoibW9uZ29vc2VmaWxtcyIsImEiOiJjbW52M2kyNnMxM3pk','MnJvYTYxZnE1YW51In0.nC5GKWDHIAB4DTAP9hV3hQ'].join('');
   window._mapboxToken=MB;
@@ -3076,8 +3089,25 @@ function initMap(){
   });
   tileLabels=null; // Mapbox satellite-streets already includes labels
   map.options.maxZoom=22;
+  // ── MarkerClusterGroup ──────────────────────────────────────────────────────
+  clusterGroup = L.markerClusterGroup({
+    chunkedLoading: true,
+    chunkInterval: 200,
+    chunkDelay: 50,
+    maxClusterRadius: 60,
+    spiderfyOnMaxZoom: true,
+    showCoverageOnHover: false,
+    zoomToBoundsOnClick: true,
+    disableClusteringAtZoom: 18
+  });
+  map.addLayer(clusterGroup);
   map.on('click',onMapClick);
   map.on('dblclick',onMapDblClick);
+  // ── Viewport-based pin loading on map move ──────────────────────────────────
+  map.on('moveend', function(){
+    clearTimeout(_viewportLoadTimer);
+    _viewportLoadTimer = setTimeout(loadPinsForViewport, 400);
+  });
   S.pins.forEach(addMarker);
   renderPinList();
   // ── Geolocation: zoom to user on login ──────────────────────────────────────
@@ -3516,7 +3546,7 @@ function mkIcon(status){
 
 function addMarker(pin){
   const pid=pin.id;
-  const m=L.marker([pin.lat,pin.lng],{icon:mkIcon(pin.status)}).addTo(map);
+  const m=L.marker([pin.lat,pin.lng],{icon:mkIcon(pin.status)});
   // Pre-compute popup photo HTML to avoid IIFE inside template literal
   const _dmgPhotos = pin.damage_photos||[];
   const _popupPhotos = _dmgPhotos.length
@@ -3549,6 +3579,9 @@ function addMarker(pin){
     </div>
   `,{maxWidth:260});
   markers[pid]=m;
+  // Add to cluster group (falls back to direct map add if cluster not ready)
+  if(clusterGroup) clusterGroup.addLayer(m);
+  else m.addTo(map);
 }
 
 function savePin(){
@@ -3692,7 +3725,8 @@ function handlePopupPhotoInput(e){
         processed++;
         if(processed === total){
           if(markers[pinId]){
-            map.removeLayer(markers[pinId]);
+            if(clusterGroup) clusterGroup.removeLayer(markers[pinId]);
+            else map.removeLayer(markers[pinId]);
             delete markers[pinId];
           }
           addMarker(pin);
@@ -3735,23 +3769,38 @@ function handlePopupPhotoInput(e){
 
 function filterPins(s){
   curFilter=s;
+  pinListPage=0; // reset pagination when filter changes
   document.querySelectorAll('.fchip').forEach(c=>c.classList.toggle('active',c.dataset.s===s));
   renderPinList();
 }
 
+const PIN_LIST_PAGE_SIZE = 50;
 function renderPinList(){
   const el=document.getElementById('pin-list');
   const list=curFilter==='all'?S.pins:S.pins.filter(p=>p.status===curFilter);
-  document.getElementById('pin-count').textContent=S.pins.length;  if(!list.length){
+  // Show server-side total when available, otherwise fall back to loaded count
+  const displayCount = totalPinCount > S.pins.length ? totalPinCount : S.pins.length;
+  document.getElementById('pin-count').textContent = displayCount;
+  if(!list.length){
     el.innerHTML='<div style="text-align:center;padding:30px 14px;color:var(--muted);font-size:12px;">'+(curFilter==='all'?'No homes pinned yet. Click the map.':'No homes with this status.')+'</div>';
     return;
   }
-  el.innerHTML=list.map(p=>{
+  // Paginate: show up to (pinListPage+1)*PAGE_SIZE items
+  const visibleCount = (pinListPage + 1) * PIN_LIST_PAGE_SIZE;
+  const visible = list.slice(0, visibleCount);
+  const hasMore = list.length > visibleCount;
+  el.innerHTML = visible.map(p=>{
     const pid=p.id;
     const dmgThumb = p.damage_photos&&p.damage_photos.length ? '<img src="'+p.damage_photos[0]+'" style="width:36px;height:36px;object-fit:cover;border-radius:5px;flex-shrink:0;" onerror="this.style.display=\'none\'">':p.photo_url?'<img src="'+p.photo_url+'" style="width:36px;height:36px;object-fit:cover;border-radius:5px;flex-shrink:0;" onerror="this.style.display=\'none\'">':'';
     const dmgCount = p.damage_photos&&p.damage_photos.length?'<span style="font-size:10px;color:var(--accent);font-weight:700;">📷'+p.damage_photos.length+'</span>':'';
     return '<div class="pc" id="pc-'+pid+'" onclick="togglePinCard(\''+pid+'\')">'+'<div class="pc-summary">'+dmgThumb+'<div style="flex:1;min-width:0;"><div class="pc-addr">'+escHtml(p.address)+'</div><div class="pc-meta"><span>'+timeAgo(p.at)+'</span>'+(p.rep?'<span>· '+escHtml(p.rep)+'</span>':'')+'</div></div>'+dmgCount+'<div class="sdot" style="background:'+sColor(p.status)+';margin-top:0;"></div><span class="pc-chevron">›</span></div>'+'<div class="pc-body">'+(p.notes?'<div class="pc-note" style="margin-bottom:8px;">"'+escHtml(p.notes)+'"</div>':'')+'<div class="pc-acts">'+'<button class="btn-xs pr" onclick="event.stopPropagation();goEstFromPin(\''+pid+'\')">'+'📋 Estimate</button>'+'<button class="btn-xs" onclick="event.stopPropagation();openFollowUp(\''+pid+'\')">'+'✉️ Follow Up</button>'+'<button class="btn-xs" onclick="event.stopPropagation();cycleStatus(\''+pid+'\')">'+'↻ Status</button>'+'<button class="btn-xs danger" onclick="event.stopPropagation();rmPin(\''+pid+'\')">'+'✕</button>'+'</div></div></div>';
   }).join('');
+  if(hasMore){
+    el.insertAdjacentHTML('beforeend',
+      '<div style="text-align:center;padding:10px 0 6px;">'
+      +'<button onclick="pinListPage++;renderPinList()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 18px;color:var(--mid);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font-b);">'
+      +'Load More ('+(list.length - visibleCount)+' remaining)</button></div>');
+  }
 }
 
 function togglePinCard(pid){
@@ -3852,7 +3901,11 @@ async function rmPin(id){
     return;
   }
   S.pins=S.pins.filter(p=>p.id!==id);
-  if(markers[id]){map.removeLayer(markers[id]);delete markers[id];}
+  if(markers[id]){
+    if(clusterGroup) clusterGroup.removeLayer(markers[id]);
+    else map.removeLayer(markers[id]);
+    delete markers[id];
+  }
   renderPinList();save();toast('Pin removed','info');
 }
 
@@ -3873,7 +3926,11 @@ async function doDeletePin(){
     return;
   }
   S.pins=S.pins.filter(p=>p.id!==id);
-  if(markers[id]){map.removeLayer(markers[id]);delete markers[id];}
+  if(markers[id]){
+    if(clusterGroup) clusterGroup.removeLayer(markers[id]);
+    else map.removeLayer(markers[id]);
+    delete markers[id];
+  }
   closeM('m-delete-pin');renderPinList();refreshZoneOverlays();save();toast('🗑 Pin deleted','info');
 }
 
@@ -3881,7 +3938,11 @@ function cycleStatus(id){
   const p=S.pins.find(x=>x.id===id);if(!p)return;
   const opts=['needs_roof','contacted','quoted','signed','converted','not_interested','lost'];
   p.status=opts[(opts.indexOf(p.status)+1)%opts.length];
-  if(markers[id]){map.removeLayer(markers[id]);delete markers[id];}
+  if(markers[id]){
+    if(clusterGroup) clusterGroup.removeLayer(markers[id]);
+    else map.removeLayer(markers[id]);
+    delete markers[id];
+  }
   addMarker(p);renderPinList();refreshZoneOverlays();
   sbUpdatePinStatus(id,p.status).catch(e=>console.error('Status:',e));
   // Sync status change to GHL (fire-and-forget)
@@ -4907,7 +4968,11 @@ function deleteEstimate(estId){
     if(pin){ pin.estimate = null; pin.at_est = null;
       if(sb) sb.from('pins').update({estimate:null}).eq('id',est.pinId).then(()=>{});
       // Fix C: refresh map marker so popup no longer shows stale estimate badge
-      if(map && markers[est.pinId]){ map.removeLayer(markers[est.pinId]); delete markers[est.pinId]; }
+      if(map && markers[est.pinId]){
+        if(clusterGroup) clusterGroup.removeLayer(markers[est.pinId]);
+        else map.removeLayer(markers[est.pinId]);
+        delete markers[est.pinId];
+      }
       addMarker(pin);
     }
   }
@@ -4923,7 +4988,11 @@ function bulkDeleteEstimates(){
     if(e){ e.deletedAt=new Date().toISOString();
       if(e.pinId){ const pin=(S.pins||[]).find(p=>p.id===e.pinId); if(pin){ pin.estimate=null; pin.at_est=null; if(sb) sb.from('pins').update({estimate:null}).eq('id',e.pinId).then(()=>{});
         // Fix C: refresh map marker for each deleted estimate
-        if(map && markers[e.pinId]){ map.removeLayer(markers[e.pinId]); delete markers[e.pinId]; } addMarker(pin);
+        if(map && markers[e.pinId]){
+          if(clusterGroup) clusterGroup.removeLayer(markers[e.pinId]);
+          else map.removeLayer(markers[e.pinId]);
+          delete markers[e.pinId];
+        } addMarker(pin);
       } }
     }
   });
@@ -6602,7 +6671,9 @@ function renderAgencyMailerLog(){
 function renderDash(){
   const mailed=S.queue.filter(i=>i.status==='sent').length;
   const conv=S.pins.filter(p=>p.status==='converted'||p.status==='signed').length;
-  document.getElementById('s-pins').textContent=S.pins.length;
+  // Use server-side count when available (may be larger than loaded S.pins)
+  const displayPinCount = totalPinCount > S.pins.length ? totalPinCount : S.pins.length;
+  document.getElementById('s-pins').textContent=displayPinCount;
   document.getElementById('s-ests').textContent=S.estimates.length;
   document.getElementById('s-mailed').textContent=mailed;
   document.getElementById('s-conv').textContent=mailed?Math.round(conv/mailed*100)+'%':'—';
@@ -7526,7 +7597,11 @@ async function sendViaGHL(){
     const pin = S.pins.find(p=>p.address===addr);
     if(pin && pin.status==='needs_roof'){
       pin.status='bid_sent';
-      if(markers[pin.id]){map.removeLayer(markers[pin.id]);delete markers[pin.id];}
+      if(markers[pin.id]){
+        if(clusterGroup) clusterGroup.removeLayer(markers[pin.id]);
+        else map.removeLayer(markers[pin.id]);
+        delete markers[pin.id];
+      }
       addMarker(pin);
       renderPinList();save();
     }
@@ -7760,8 +7835,9 @@ async function switchAccount(accountId){
   currentAccount = account;
   S.cfg = accountRowToCfg(account);
   S.pins = []; S.estimates = []; S.team = []; S.activity = [];
-  // Remove only marker layers, not tile layers
-  if(map) Object.values(markers).forEach(m=>{ try{ map.removeLayer(m); }catch(e){} });
+  totalPinCount = 0; pinListPage = 0; _lastViewportBounds = null;
+  // Clear cluster group (faster than removing individual markers)
+  if(clusterGroup) clusterGroup.clearLayers();
   markers = {};
   // Reload data for new account
   applyBrand();
@@ -7852,25 +7928,27 @@ async function sbUpdatePinStatus(pinId, status){
   await sb.from('pins').update({status, updated_at: new Date().toISOString()}).eq('id', pinId);
 }
 
-async function loadPinsFromSupabase(){
-  if(!currentAccount) return;
-  const {data, error} = await sb.from('pins').select('*').eq('account_id', currentAccount.id).order('created_at', {ascending:false});
-  if(error){console.error('Load pins error:', error); return;}
-  S.pins = (data||[]).map(row=>{
-    const est = row.estimate ? (typeof row.estimate==='string'?JSON.parse(row.estimate):row.estimate) : null;
-    return {
-      id: row.id, lat: parseFloat(row.lat), lng: parseFloat(row.lng),
-      address: row.address||'', status: row.status||'needs_roof',
-      notes: row.notes||'', rep: row.rep_name||'Unknown',
-      pts: row.pts||null, at: row.created_at,
-      photo_url: row.photo_url||null,
-      estimate: row.estimate||null,
-      damage_photos: (est && est.damage_photos && est.damage_photos.length) ? est.damage_photos : null,
-      ghlContactId: row.ghl_contact_id||null,
-      ghlOpportunityId: row.ghl_opportunity_id||null
-    };
-  });
-  // Rebuild S.estimates from pin.estimate data loaded from DB
+// ── Helper: map a DB row to a JS pin object ──────────────────────────────────
+function _rowToPin(row){
+  const est = row.estimate ? (typeof row.estimate==='string'?JSON.parse(row.estimate):row.estimate) : null;
+  return {
+    id: row.id, lat: parseFloat(row.lat), lng: parseFloat(row.lng),
+    address: row.address||'', status: row.status||'needs_roof',
+    notes: row.notes||'', rep: row.rep_name||'Unknown',
+    phone: row.phone||null,
+    pts: row.pts||null, at: row.created_at,
+    photo_url: row.photo_url||null,
+    estimate: row.estimate||null,
+    at_est: row.at_est||null,
+    damage_photos: row.damage_photos||(est && est.damage_photos && est.damage_photos.length ? est.damage_photos : null),
+    equityData: row.equity_data||null,
+    ghlContactId: row.ghl_contact_id||null,
+    ghlOpportunityId: row.ghl_opportunity_id||null
+  };
+}
+
+// ── Helper: rebuild S.estimates from S.pins ───────────────────────────────────
+function _rebuildEstimatesFromPins(){
   S.estimates = [];
   S.pins.forEach(function(pin){
     if(pin.estimate){
@@ -7893,18 +7971,76 @@ async function loadPinsFromSupabase(){
       }
     }
   });
-  // Clear and re-add all markers
-  Object.values(markers).forEach(m=>map&&map.removeLayer(m));
+}
+
+async function loadPinsFromSupabase(){
+  if(!currentAccount) return;
+  // 1. Fetch server-side count (cheap — no row data transferred)
+  const countRes = await sb.from('pins').select('id', {count:'exact', head:true}).eq('account_id', currentAccount.id);
+  totalPinCount = countRes.count || 0;
+  pinListPage = 0;
+  // 2. Load the 500 most-recent pins so the sidebar and dashboard work immediately
+  const {data, error} = await sb.from('pins').select('*').eq('account_id', currentAccount.id)
+    .order('created_at', {ascending:false}).limit(500);
+  if(error){console.error('Load pins error:', error); return;}
+  S.pins = (data||[]).map(_rowToPin);
+  _rebuildEstimatesFromPins();
+  // 3. Clear and re-add all markers via cluster group
+  if(clusterGroup) clusterGroup.clearLayers();
   markers={};
   S.pins.forEach(addMarker);
   renderPinList();
-  // Refresh zone overlays now that pins are loaded
   refreshZoneOverlays();
+}
+
+// ── Viewport-based incremental pin loading ────────────────────────────────────
+async function loadPinsForViewport(){
+  if(!currentAccount || !map) return;
+  const b = map.getBounds();
+  // Skip if we already loaded this exact viewport
+  if(_lastViewportBounds && _lastViewportBounds.equals(b, 0.0001)) return;
+  _lastViewportBounds = b;
+  const sw = b.getSouthWest(), ne = b.getNorthEast();
+  const {data, error} = await sb.from('pins').select('*')
+    .eq('account_id', currentAccount.id)
+    .gte('lat', sw.lat).lte('lat', ne.lat)
+    .gte('lng', sw.lng).lte('lng', ne.lng)
+    .order('created_at', {ascending:false})
+    .limit(500);
+  if(error || !data || !data.length) return;
+  let added = 0;
+  data.forEach(row=>{
+    if(S.pins.find(p=>p.id===row.id)) return; // already in memory
+    const pin = _rowToPin(row);
+    S.pins.push(pin);
+    addMarker(pin);
+    // Also add to estimates if it has one
+    if(pin.estimate){
+      const est = typeof pin.estimate==='string'?JSON.parse(pin.estimate):pin.estimate;
+      if(est && est.structures && !S.estimates.find(e=>e.pinId===pin.id)){
+        S.estimates.push({
+          id: est.id||('est_'+pin.id), pinId: pin.id,
+          addr: pin.address||'', owner: est.owner||'', email: est.email||'',
+          total: est.total||0, structures: (est.structures||[]).map(normStruct),
+          photo_url: pin.photo_url||null, damage_photos: est.damage_photos||pin.damage_photos||null,
+          savedAt: est.savedAt||pin.at_est||pin.at||new Date().toISOString(),
+          rep: est.rep||pin.rep||'', sentAt: null, status: 'saved'
+        });
+      }
+    }
+    added++;
+  });
+  if(added > 0){
+    renderPinList();
+    refreshZoneOverlays();
+  }
 }
 
 async function loadQueueFromSupabase(){
   if(!currentAccount) return;
-  const {data} = await sb.from('queue').select('*').eq('account_id', currentAccount.id).order('created_at', {ascending:false});
+  // Limit to 200 most-recent queue items; older items are rarely needed in the UI
+  const {data} = await sb.from('queue').select('*').eq('account_id', currentAccount.id)
+    .order('created_at', {ascending:false}).limit(200);
   S.queue = (data||[]).map(row=>{
     const allStructs = row.structures||[];
     const meta = allStructs.find(s=>s&&s.id==='_meta')||{};
@@ -7954,18 +8090,32 @@ function subscribeRealtime(){
       payload=>{
         const {eventType, new:nw, old} = payload;
         if(eventType==='INSERT'||eventType==='UPDATE'){
+          // Include all fields so newly synced pins render correctly
           const pin = {
             id: nw.id, lat: parseFloat(nw.lat), lng: parseFloat(nw.lng),
             address: nw.address||'', status: nw.status||'needs_roof',
             notes: nw.notes||'', rep: nw.rep_name||'Unknown',
-            pts: nw.pts||null, at: nw.created_at
+            phone: nw.phone||null,
+            pts: nw.pts||null, at: nw.created_at,
+            photo_url: nw.photo_url||null,
+            damage_photos: nw.damage_photos||null,
+            estimate: nw.estimate||null,
+            at_est: nw.at_est||null,
+            equityData: nw.equity_data||null,
+            ghlContactId: nw.ghl_contact_id||null,
+            ghlOpportunityId: nw.ghl_opportunity_id||null
           };
           const existing = S.pins.findIndex(p=>p.id===pin.id);
           if(existing>=0){
             S.pins[existing]=pin;
-            if(markers[pin.id]){map.removeLayer(markers[pin.id]);delete markers[pin.id];}
+            if(markers[pin.id]){
+              if(clusterGroup) clusterGroup.removeLayer(markers[pin.id]);
+              else map.removeLayer(markers[pin.id]);
+              delete markers[pin.id];
+            }
           } else {
             S.pins.unshift(pin);
+            totalPinCount = Math.max(totalPinCount, S.pins.length);
           }
           addMarker(pin);
           renderPinList();
@@ -7974,7 +8124,12 @@ function subscribeRealtime(){
             toast('📍 '+pin.rep+' pinned '+pin.address.split(',')[0],'info');
         } else if(eventType==='DELETE'){
           S.pins = S.pins.filter(p=>p.id!==old.id);
-          if(markers[old.id]){map.removeLayer(markers[old.id]);delete markers[old.id];}
+          if(markers[old.id]){
+            if(clusterGroup) clusterGroup.removeLayer(markers[old.id]);
+            else map.removeLayer(markers[old.id]);
+            delete markers[old.id];
+          }
+          totalPinCount = Math.max(0, totalPinCount - 1);
           renderPinList();
         }
       })
@@ -8558,6 +8713,11 @@ function onSignedOut(){
   currentAccount = null;
   S.pins = [];
   S.queue = [];
+  totalPinCount = 0;
+  pinListPage = 0;
+  _lastViewportBounds = null;
+  if(clusterGroup){ try{ clusterGroup.clearLayers(); }catch(e){} clusterGroup=null; }
+  markers = {};
   if(realtimeChannel){ sb.removeChannel(realtimeChannel); realtimeChannel=null; }
   clearZonesState();
   // Clear cached company config so the next user doesn't inherit a stale account

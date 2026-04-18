@@ -537,7 +537,11 @@ export default async function handler(req, res) {
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS headshot_data TEXT`,
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS review1_data TEXT`,
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS review2_data TEXT`,
-          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS headshot_pos REAL`
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS headshot_pos REAL`,
+          // Performance indexes for 30k-pin scale
+          `CREATE INDEX IF NOT EXISTS idx_pins_account_created ON pins(account_id, created_at DESC)`,
+          `CREATE INDEX IF NOT EXISTS idx_pins_account_latlon ON pins(account_id, lat, lng)`,
+          `CREATE INDEX IF NOT EXISTS idx_queue_account_created ON queue(account_id, created_at DESC)`
         ];
         const results = [];
         for (const sql of sqls) {
