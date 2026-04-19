@@ -7020,30 +7020,73 @@ async function bulkDeleteQueue(){
 
 function previewQueueItem(id){
   const item=S.queue.find(x=>x.id===id);if(!item)return;
-  // Save current estimator state
+  // Generate mailer HTML by temporarily loading queue item into estimator
   const savedOwner=document.getElementById('e-owner').value;
   const savedAddr=document.getElementById('e-addr').value;
   const savedPhoto=window._homePhotoData;
   const savedStructures=JSON.parse(JSON.stringify(structures));
-  // Temporarily load queue item data to generate the mailer HTML
   document.getElementById('e-owner').value=item.owner||'';
   document.getElementById('e-addr').value=item.addr||'';
   if(item.structures&&item.structures.length){structures=JSON.parse(JSON.stringify(item.structures));}
-  window._homePhotoData=item.photo_data||null;
+  window._homePhotoData=item.photo_data||item.photo_url||null;
   calcP();updatePreview();
-  // Copy the rendered mailer HTML into the modal
   const mailerEl=document.getElementById('mailer-preview');
-  const modalContent=document.getElementById('queue-preview-content');
-  if(mailerEl&&modalContent){modalContent.innerHTML=mailerEl.innerHTML;}
-  // Restore previous estimator state
+  const mailerHtml=mailerEl?mailerEl.innerHTML:'';
+  // Restore estimator state
   document.getElementById('e-owner').value=savedOwner;
   document.getElementById('e-addr').value=savedAddr;
   window._homePhotoData=savedPhoto;
   structures=savedStructures;
   calcP();updatePreview();
-  // Store item id for print
   window._previewingQueueId=id;
-  openM('m-queue-preview');
+  // ── Full-screen modal above nav bar (same pattern as postcard preview) ──
+  const existing=document.getElementById('m-letter-preview-modal');
+  if(existing) existing.remove();
+  const modal=document.createElement('div');
+  modal.id='m-letter-preview-modal';
+  modal.style.cssText=[
+    'position:fixed;inset:0;z-index:10100;',
+    'background:rgba(5,10,20,0.95);',
+    'display:flex;flex-direction:column;align-items:center;',
+    'overflow-y:auto;padding:20px 16px 40px;',
+    '-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);'
+  ].join('');
+  modal.innerHTML=`
+    <div style="width:100%;max-width:760px;display:flex;align-items:center;justify-content:space-between;
+                margin-bottom:16px;flex-shrink:0;">
+      <div>
+        <div style="font-family:Oswald,sans-serif;font-size:18px;font-weight:700;color:#F0F6FF;letter-spacing:.5px;">
+          &#128065; Letter Preview
+        </div>
+        <div style="font-size:12px;color:#6688A8;margin-top:2px;">
+          ${escHtml(item.owner||'Homeowner')} &mdash; ${escHtml(item.addr||'')}
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-shrink:0;">
+        <button onclick="printQueuePreview()"
+          style="background:#1f3d68;border:1px solid #2E4060;color:#C8D8E8;font-size:13px;font-weight:700;
+                 padding:9px 16px;border-radius:8px;cursor:pointer;white-space:nowrap;">
+          &#128424; Print
+        </button>
+        <button onclick="document.getElementById('m-letter-preview-modal').remove()"
+          style="background:#1e2d42;border:1px solid #2E4060;color:#C8D8E8;font-size:13px;font-weight:700;
+                 padding:9px 20px;border-radius:8px;cursor:pointer;white-space:nowrap;"
+          onmouseover="this.style.background='#F25C05';this.style.borderColor='#F25C05';this.style.color='#fff';"
+          onmouseout="this.style.background='#1e2d42';this.style.borderColor='#2E4060';this.style.color='#C8D8E8';">
+          &times; Close
+        </button>
+      </div>
+    </div>
+    <div style="width:100%;max-width:760px;background:#fff;border-radius:8px;overflow:hidden;" class="mailer">
+      ${mailerHtml}
+    </div>`;
+  document.body.appendChild(modal);
+  // Also keep queue-preview-content in sync for printQueuePreview()
+  const qpc=document.getElementById('queue-preview-content');
+  if(qpc) qpc.innerHTML=mailerHtml;
+  modal.addEventListener('click',function(e){if(e.target===modal)modal.remove();});
+  function _ltrEsc(e){if(e.key==='Escape'){modal.remove();document.removeEventListener('keydown',_ltrEsc);}}
+  document.addEventListener('keydown',_ltrEsc);
 }
 // Preview the 6x9 postcard front and back in a modal
 async function previewPostcard6x9(id){
