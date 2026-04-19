@@ -4708,8 +4708,9 @@ function updatePreview(){
     ? '<img src="'+cfg.logoData+'" style="max-height:46px;max-width:150px;object-fit:contain;display:block;">'
     : '<div style="font-family:\'Oswald\',sans-serif;font-size:20px;font-weight:700;color:'+color+';">'+escHtml(co)+'</div>';
 
-  const homePhoto = window._homePhotoData
-    ? '<img src="'+window._homePhotoData+'" style="width:100%;max-height:200px;object-fit:cover;border-radius:6px;margin-bottom:16px;display:block;">'
+  const _letterFrontPhoto = ((window._allPhotos && window._allPhotos.front)||[])[0] || window._homePhotoData || null;
+  const homePhoto = _letterFrontPhoto
+    ? '<img src="'+_letterFrontPhoto+'" style="width:100%;max-height:200px;object-fit:cover;border-radius:6px;margin-bottom:16px;display:block;">'
     : '';
   // Damage photos section for estimate/PDF
   const dmgPhotos = (window._damagePhotos && window._damagePhotos.length) ? window._damagePhotos : [];
@@ -4897,9 +4898,9 @@ function updatePreview(){
     // Photo + greeting side by side
     '<div style="display:table;width:100%;border-collapse:separate;border-spacing:12px 0;margin:0 -12px 10px;">'+
     '<div style="display:table-cell;width:160px;vertical-align:top;">'+
-    (window._homePhotoData
+    (_letterFrontPhoto
       ? '<div style="width:160px;height:130px;border-radius:6px;overflow:hidden;border:1px solid #e8e8e8;">'+
-        '<img src="'+window._homePhotoData+'" style="width:100%;height:100%;object-fit:cover;display:block;">'+
+        '<img src="'+_letterFrontPhoto+'" style="width:100%;height:100%;object-fit:cover;display:block;">'+
         '</div>'
       : '<div style="width:160px;height:130px;border-radius:6px;border:1px dashed #ddd;"></div>'
     )+
