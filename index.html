@@ -2397,7 +2397,14 @@ function saveEstimateNow(){
   } else {
     // New save: mark existing active estimate for this pin as a revision
     const existing = (S.estimates||[]).filter(e=>e.pinId===currentEstPinId && !e.isRevision && !e.deletedAt);
-    existing.forEach(e=>{ e.isRevision=true; e.revisedAt=new Date().toISOString(); });
+    const revisedAt = new Date().toISOString();
+    existing.forEach(e=>{
+      e.isRevision=true; e.revisedAt=revisedAt;
+      // Persist revision flag to Supabase so old estimates don't reappear as active on reload
+      if(sb) sb.from('estimates').update({is_revision:true}).eq('id',e.id).then(({error})=>{
+        if(error) console.warn('[BidDrop] mark revision:', error.message);
+      });
+    });
     const prevMax = existing.reduce((m,e)=>Math.max(m,e.version||1),0);
     estRecord.version = prevMax + 1;
     S.estimates.unshift(estRecord);
@@ -5877,15 +5884,21 @@ function deleteEstimate(estId){
   renderEstimatesTab();
   toast('Moved to Trash — recoverable for 30 days','info');
 }
-function bulkDeleteEstimates(){
+async function bulkDeleteEstimates(){
   const ids = Array.from(document.querySelectorAll('.est-row-cb:checked')).map(cb=>cb.dataset.id);
   if(!ids.length) return;
   if(!confirm('Move '+ids.length+' estimate(s) to Trash?')) return;
+  const now = new Date().toISOString();
   ids.forEach(id=>{
     const e=(S.estimates||[]).find(x=>x.id===id);
-    if(e){ e.deletedAt=new Date().toISOString();
+    if(e){
+      e.deletedAt = now;
+      // Soft-delete in Supabase estimates table so it survives reload
+      if(sb) sb.from('estimates').update({deleted_at: now}).eq('id', id).then(({error})=>{
+        if(error) console.warn('[BidDrop] bulkDeleteEstimates:', error.message);
+      });
       if(e.pinId){ const pin=(S.pins||[]).find(p=>p.id===e.pinId); if(pin){ pin.estimate=null; pin.at_est=null; if(sb) sb.from('pins').update({estimate:null}).eq('id',e.pinId).then(()=>{});
-        // Fix C: refresh map marker for each deleted estimate
+        // Refresh map marker so popup no longer shows stale estimate badge
         if(map && markers[e.pinId]){
           if(clusterGroup) clusterGroup.removeLayer(markers[e.pinId]);
           else map.removeLayer(markers[e.pinId]);
@@ -5948,6 +5961,10 @@ function bulkRestoreEstimates(){
   ids.forEach(id=>{
     const e=(S.estimates||[]).find(x=>x.id===id);
     if(e){ delete e.deletedAt;
+      // Restore in Supabase estimates table so it survives reload
+      if(sb) sb.from('estimates').update({deleted_at: null}).eq('id', id).then(({error})=>{
+        if(error) console.warn('[BidDrop] bulkRestoreEstimates:', error.message);
+      });
       if(e.pinId){ const pin=(S.pins||[]).find(p=>p.id===e.pinId); if(pin){ pin.estimate={owner:e.owner,email:e.email,total:e.total,structures:e.structures}; pin.at_est=e.savedAt; if(sb) sb.from('pins').update({estimate:pin.estimate}).eq('id',e.pinId).then(()=>{}); } }
     }
   });
@@ -6018,6 +6035,10 @@ function bulkSendViaGHL(){
 function hardDeleteEstimate(estId){
   if(!confirm('Permanently delete this estimate? This cannot be undone.')) return;
   S.estimates = (S.estimates||[]).filter(e=>e.id!==estId);
+  // Hard delete from Supabase so it never comes back on reload
+  if(sb) sb.from('estimates').delete().eq('id', estId).then(({error})=>{
+    if(error) console.warn('[BidDrop] hardDeleteEstimate:', error.message);
+  });
   save(); renderEstimatesTab();
   toast('Estimate permanently deleted','info');
 }
