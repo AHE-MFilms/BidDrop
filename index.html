@@ -8266,92 +8266,94 @@ function renderSuperAdminPanel(accounts, allProfiles){
         '</div>';
     }).join('') +
     '</div>' +
-    '<div style="margin-top:18px;">' +
-    '<button onclick="showAddAccountForm()" class="btn-primary" style="margin-bottom:12px;">+ Onboard New Client</button>' +
-    '<div id="add-account-form" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:16px;margin-bottom:14px;">' +
-      '<div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:12px;">NEW CLIENT ACCOUNT</div>' +
-      '<div class="frow">' +
-        '<div class="fg"><label class="fl">Company Name *</label><input class="fi" id="new-acct-name" placeholder="Rapid Roof LLC"></div>' +
-        '<div class="fg"><label class="fl">Admin Email *</label><input class="fi" id="new-acct-email" placeholder="owner@rapidroof.com" type="email"></div>' +
-      '</div>' +
-      '<div class="frow">' +
-        '<div class="fg"><label class="fl">Temp Password *</label><input class="fi" id="new-acct-pass" placeholder="min 6 chars" type="password"></div>' +
-        '<div class="fg"><label class="fl">Company Phone</label><input class="fi" id="new-acct-phone" placeholder="(313) 555-0100"></div>' +
-      '</div>' +
-      '<div class="frow">' +
-        '<div class="fg"><label class="fl">Company Website</label><input class="fi" id="new-acct-website" placeholder="https://rapidroof.com" type="url"></div>' +
-        '<div class="fg"><label class="fl">Booking / QR URL <span style="font-weight:400;color:var(--muted);font-size:10px;">(Calendly, etc.)</span></label><input class="fi" id="new-acct-booking" placeholder="https://calendly.com/..."></div>' +
-      '</div>' +
-      '<div class="fg"><label class="fl">Street Address</label><input class="fi" id="new-acct-street" placeholder="32640 Dequindre Rd, Suite B"></div>'+
-      '<div class="frow">'+
-        '<div class="fg" style="flex:2;"><label class="fl">City</label><input class="fi" id="new-acct-city" placeholder="Sterling Heights"></div>'+
-        '<div class="fg" style="flex:1;"><label class="fl">State</label>'+
-          '<select class="fs" id="new-acct-state">'+
-            '<option value="">—</option>'+
-            (function(){var st='AL,AK,AZ,AR,CA,CO,CT,DE,FL,GA,HI,ID,IL,IN,IA,KS,KY,LA,ME,MD,MA,MI,MN,MS,MO,MT,NE,NV,NH,NJ,NM,NY,NC,ND,OH,OK,OR,PA,RI,SC,SD,TN,TX,UT,VT,VA,WA,WV,WI,WY';return st.split(',').map(function(s){return '<option value="'+s+'"'+(s==='MI'?' selected':'')+'>'+s+'</option>';}).join('');})() +
-          '</select>'+
-        '</div>'+
-        '<div class="fg" style="flex:1;"><label class="fl">Zip</label><input class="fi" id="new-acct-zip" placeholder="48310" maxlength="5"></div>'+
-      '</div>' +
-      '<div class="frow">' +
-        '<div class="fg"><label class="fl">Plan</label>' +
-          '<select class="fs" id="new-acct-plan">' +
-            '<option value="starter">Starter</option>' +
-            '<option value="pro">Pro</option>' +
-            '<option value="agency">Agency</option>' +
-          '</select>' +
+    // Two-column bottom section
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:20px;margin-top:8px;">' +
+    // LEFT COLUMN: Onboard + Add Rep
+    '<div>' +
+      '<button onclick="showAddAccountForm()" class="btn-primary" style="width:100%;margin-bottom:12px;">+ Onboard New Client</button>' +
+      '<div id="add-account-form" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:16px;margin-bottom:14px;">' +
+        '<div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:12px;">NEW CLIENT ACCOUNT</div>' +
+        '<div class="frow">' +
+          '<div class="fg"><label class="fl">Company Name *</label><input class="fi" id="new-acct-name" placeholder="Rapid Roof LLC"></div>' +
+          '<div class="fg"><label class="fl">Admin Email *</label><input class="fi" id="new-acct-email" placeholder="owner@rapidroof.com" type="email"></div>' +
         '</div>' +
-        '<div class="fg"><label class="fl">Your Mailer Rate ($/piece)</label><input class="fi" id="new-acct-rate" placeholder="2.50" type="number" step="0.01" value="2.50"></div>' +
-      '</div>' +
-      '<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px;">'+
-        '<div style="font-size:11px;font-weight:700;color:#1a7f4b;letter-spacing:.5px;margin-bottom:10px;">⚡ GHL CONNECTION <span style="font-weight:400;color:var(--muted);font-size:10px;text-transform:none;letter-spacing:0;">(optional)</span></div>'+
-        '<div class="fg"><label class="fl">GHL Location API Key</label><input class="fi" id="new-acct-ghl-key" placeholder="pit-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" type="password"></div>'+
+        '<div class="frow">' +
+          '<div class="fg"><label class="fl">Temp Password *</label><input class="fi" id="new-acct-pass" placeholder="min 6 chars" type="password"></div>' +
+          '<div class="fg"><label class="fl">Company Phone</label><input class="fi" id="new-acct-phone" placeholder="(313) 555-0100"></div>' +
+        '</div>' +
+        '<div class="frow">' +
+          '<div class="fg"><label class="fl">Company Website</label><input class="fi" id="new-acct-website" placeholder="https://rapidroof.com" type="url"></div>' +
+          '<div class="fg"><label class="fl">Booking / QR URL <span style="font-weight:400;color:var(--muted);font-size:10px;">(Calendly, etc.)</span></label><input class="fi" id="new-acct-booking" placeholder="https://calendly.com/..."></div>' +
+        '</div>' +
+        '<div class="fg"><label class="fl">Street Address</label><input class="fi" id="new-acct-street" placeholder="32640 Dequindre Rd, Suite B"></div>'+
         '<div class="frow">'+
-          '<div class="fg"><label class="fl">GHL Location ID</label><input class="fi" id="new-acct-ghl-loc" placeholder="gz85VU6SxGXS7lqHAQGx"></div>'+
-          '<div class="fg"><label class="fl">Pipeline ID</label><input class="fi" id="new-acct-ghl-pipe" placeholder="bxskBIBdbklHry0B63qx"></div>'+
+          '<div class="fg" style="flex:2;"><label class="fl">City</label><input class="fi" id="new-acct-city" placeholder="Sterling Heights"></div>'+
+          '<div class="fg" style="flex:1;"><label class="fl">State</label>'+
+            '<select class="fs" id="new-acct-state">'+
+              '<option value="">—</option>'+
+              (function(){var st='AL,AK,AZ,AR,CA,CO,CT,DE,FL,GA,HI,ID,IL,IN,IA,KS,KY,LA,ME,MD,MA,MI,MN,MS,MO,MT,NE,NV,NH,NJ,NM,NY,NC,ND,OH,OK,OR,PA,RI,SC,SD,TN,TX,UT,VT,VA,WA,WV,WI,WY';return st.split(',').map(function(s){return '<option value="'+s+'"'+(s==='MI'?' selected':'')+'>'+s+'</option>';}).join('');})() +
+            '</select>'+
+          '</div>'+
+          '<div class="fg" style="flex:1;"><label class="fl">Zip</label><input class="fi" id="new-acct-zip" placeholder="48310" maxlength="5"></div>'+
+        '</div>' +
+        '<div class="frow">' +
+          '<div class="fg"><label class="fl">Plan</label>' +
+            '<select class="fs" id="new-acct-plan">' +
+              '<option value="starter">Starter</option>' +
+              '<option value="pro">Pro</option>' +
+              '<option value="agency">Agency</option>' +
+            '</select>' +
+          '</div>' +
+          '<div class="fg"><label class="fl">Your Mailer Rate ($/piece)</label><input class="fi" id="new-acct-rate" placeholder="2.50" type="number" step="0.01" value="2.50"></div>' +
+        '</div>' +
+        '<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px;">'+
+          '<div style="font-size:11px;font-weight:700;color:#1a7f4b;letter-spacing:.5px;margin-bottom:10px;">⚡ GHL CONNECTION <span style="font-weight:400;color:var(--muted);font-size:10px;text-transform:none;letter-spacing:0;">(optional)</span></div>'+
+          '<div class="fg"><label class="fl">GHL Location API Key</label><input class="fi" id="new-acct-ghl-key" placeholder="pit-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" type="password"></div>'+
+          '<div class="frow">'+
+            '<div class="fg"><label class="fl">GHL Location ID</label><input class="fi" id="new-acct-ghl-loc" placeholder="gz85VU6SxGXS7lqHAQGx"></div>'+
+            '<div class="fg"><label class="fl">Pipeline ID</label><input class="fi" id="new-acct-ghl-pipe" placeholder="bxskBIBdbklHry0B63qx"></div>'+
+          '</div>'+
+          '<div style="font-size:10px;color:var(--muted);margin-bottom:10px;">Find these in the client&#39;s GHL sub-account → Settings → Integrations. Leave blank to skip.</div>'+
         '</div>'+
-        '<div style="font-size:10px;color:var(--muted);margin-bottom:10px;">Find these in the client&#39;s GHL sub-account → Settings → Integrations. Leave blank to skip.</div>'+
-      '</div>'+
-      '<button id="btn-create-acct" onclick="createAccount()" class="btn-primary">Create Account + Admin Login</button>' +
-      '<div id="new-acct-result" style="margin-top:10px;font-size:12px;"></div>' +
+        '<button id="btn-create-acct" onclick="createAccount()" class="btn-primary">Create Account + Admin Login</button>' +
+        '<div id="new-acct-result" style="margin-top:10px;font-size:12px;"></div>' +
+      '</div>' +
+      '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:18px 0 10px;">Add Rep / Admin to Existing Account</div>' +
+      renderAddUserForm(clientAccounts) +
     '</div>' +
-    '</div>' +
-    '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:18px 0 10px;">Add Rep / Admin to Existing Account</div>' +
-    renderAddUserForm(clientAccounts) +
-    // Super Admin Management section
-    '<hr style="border:none;border-top:1px solid var(--border);margin:24px 0 16px;">' +
-    '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#8B5CF6;margin-bottom:12px;">🛡 Super Admins — BidDrop Platform Access</div>' +
-    '<div style="font-size:11px;color:var(--muted);margin-bottom:12px;">Super Admins can switch between all client accounts, access the Agency view, manage all clients, and configure platform settings. They cannot delete the primary owner.</div>' +
-    // List existing super_admins
-    allProfiles.filter(p=>p.role==='super_admin').map(p=>{
-      const isOwner = p.email===OWNER_EMAIL;
-      return '<div style="background:var(--card);border:1px solid '+(isOwner?'#8B5CF6':'var(--border)')+';border-radius:8px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">'+
-        '<div>'+
-          '<div style="font-weight:700;font-size:13px;">'+escHtml(p.name||p.email||p.id.slice(0,8))+(isOwner?' <span style="font-size:9px;background:#8B5CF622;color:#8B5CF6;border:1px solid #8B5CF644;border-radius:6px;padding:1px 6px;font-weight:700;">PRIMARY OWNER</span>':'')+'</div>'+
-          '<div style="font-size:11px;color:var(--muted);">'+escHtml(p.email||'')+'</div>'+
+    // RIGHT COLUMN: Super Admins + Migration
+    '<div>' +
+      '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#8B5CF6;margin-bottom:12px;">🛡 Super Admins — BidDrop Platform Access</div>' +
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:12px;">Super Admins can switch between all client accounts, access the Agency view, manage all clients, and configure platform settings. They cannot delete the primary owner.</div>' +
+      allProfiles.filter(p=>p.role==='super_admin').map(p=>{
+        const isOwner = p.email===OWNER_EMAIL;
+        return '<div style="background:var(--card);border:1px solid '+(isOwner?'#8B5CF6':'var(--border)')+';border-radius:8px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">'+
+          '<div>'+
+            '<div style="font-weight:700;font-size:13px;">'+escHtml(p.name||p.email||p.id.slice(0,8))+(isOwner?' <span style="font-size:9px;background:#8B5CF622;color:#8B5CF6;border:1px solid #8B5CF644;border-radius:6px;padding:1px 6px;font-weight:700;">PRIMARY OWNER</span>':'')+'</div>'+
+            '<div style="font-size:11px;color:var(--muted);">'+escHtml(p.email||'')+'</div>'+
+          '</div>'+
+          (!isOwner && currentUser && currentUser.email===OWNER_EMAIL
+            ? '<button onclick="removeSuperAdmin(\''+p.id+'\',\''+escHtml(p.email||p.id)+'\')" style="background:none;border:1px solid var(--danger);border-radius:6px;padding:4px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">Remove</button>'
+            : '')+
+          '</div>';
+      }).join('') +
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:14px;margin-top:8px;">'+
+        '<div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:10px;">+ Invite New Super Admin</div>'+
+        '<div class="frow">'+
+          '<div class="fg"><label class="fl">Full Name</label><input class="fi" id="new-sa-name" placeholder="Jane Smith"></div>'+
+          '<div class="fg"><label class="fl">Email *</label><input class="fi" id="new-sa-email" type="email" placeholder="jane@agency.com"></div>'+
         '</div>'+
-        (!isOwner && currentUser && currentUser.email===OWNER_EMAIL
-          ? '<button onclick="removeSuperAdmin(\''+p.id+'\',\''+escHtml(p.email||p.id)+'\')" style="background:none;border:1px solid var(--danger);border-radius:6px;padding:4px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">Remove</button>'
-          : '')+
-        '</div>';
-    }).join('') +
-    // Add new super_admin form
-    '<div style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:14px;margin-top:8px;">'+
-      '<div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:10px;">+ Invite New Super Admin</div>'+
-      '<div class="frow">'+
-        '<div class="fg"><label class="fl">Full Name</label><input class="fi" id="new-sa-name" placeholder="Jane Smith"></div>'+
-        '<div class="fg"><label class="fl">Email *</label><input class="fi" id="new-sa-email" type="email" placeholder="jane@agency.com"></div>'+
-      '</div>'+
-      '<div class="fg"><label class="fl">Temporary Password *</label><input class="fi" id="new-sa-pass" type="password" placeholder="min 6 chars"></div>'+
-      '<button onclick="createSuperAdmin()" class="btn-primary" style="margin-top:6px;">Create Super Admin Account</button>'+
-      '<div id="new-sa-result" style="margin-top:8px;font-size:12px;"></div>'+
+        '<div class="fg"><label class="fl">Temporary Password *</label><input class="fi" id="new-sa-pass" type="password" placeholder="min 6 chars"></div>'+
+        '<button onclick="createSuperAdmin()" class="btn-primary" style="margin-top:6px;">Create Super Admin Account</button>'+
+        '<div id="new-sa-result" style="margin-top:8px;font-size:12px;"></div>'+
+      '</div>' +
+      '<hr style="border:none;border-top:1px solid var(--border);margin:24px 0 16px;">'+
+      '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#22C55E;margin-bottom:8px;">🛠 Database Maintenance</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:12px;">Run once to add performance indexes for 30,000+ pin accounts. Safe to run multiple times.</div>'+
+      '<button onclick="runMigration()" style="background:linear-gradient(135deg,#22C55E,#16A34A);border:none;border-radius:8px;padding:10px 22px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">⚡ Run Migration</button>'+
+      '<div id="migration-result" style="margin-top:10px;font-size:12px;"></div>'+
     '</div>' +
-    // Database Maintenance section
-    '<hr style="border:none;border-top:1px solid var(--border);margin:24px 0 16px;">'+
-    '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#22C55E;margin-bottom:8px;">🛠 Database Maintenance</div>'+
-    '<div style="font-size:11px;color:var(--muted);margin-bottom:12px;">Run once to add performance indexes for 30,000+ pin accounts. Safe to run multiple times.</div>'+
-    '<button onclick="runMigration()" style="background:linear-gradient(135deg,#22C55E,#16A34A);border:none;border-radius:8px;padding:10px 22px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">⚡ Run Migration</button>'+
-    '<div id="migration-result" style="margin-top:10px;font-size:12px;"></div>'
+    '</div>'
   );
 }
 
