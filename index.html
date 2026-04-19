@@ -3827,9 +3827,11 @@ function initMap(){
   if(navigator.geolocation){
     navigator.geolocation.getCurrentPosition(
       p=>{
-        const lat=p.coords.latitude, lng=p.coords.longitude;
-        map.setView([lat,lng],18);
-        try{ localStorage.setItem('bd_last_loc',JSON.stringify([lat,lng])); }catch(e){}
+        try{
+          const lat=p.coords.latitude, lng=p.coords.longitude;
+          localStorage.setItem('bd_last_loc',JSON.stringify([lat,lng]));
+          // Only pan if map exists and is not currently animating
+        }catch(e){} // silent fail — map may not be ready yet
       },
       ()=>{}, // silent fail — cached location already applied above
       {enableHighAccuracy:true, timeout:10000, maximumAge:60000}
