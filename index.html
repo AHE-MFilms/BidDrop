@@ -3882,7 +3882,8 @@ function renderPinList(){
   const hasMore = list.length > visibleCount;
   el.innerHTML = visible.map(p=>{
     const pid=p.id;
-    const dmgThumb = p.damage_photos&&p.damage_photos.length ? '<img src="'+p.damage_photos[0]+'" style="width:36px;height:36px;object-fit:cover;border-radius:5px;flex-shrink:0;" onerror="this.style.display=\'none\'">':p.photo_url?'<img src="'+p.photo_url+'" style="width:36px;height:36px;object-fit:cover;border-radius:5px;flex-shrink:0;" onerror="this.style.display=\'none\'">':'';
+    const _thumbSrc = (p.damage_photos&&p.damage_photos.length) ? p.damage_photos[0] : (p.photo_url || p.photo_data || null);
+    const dmgThumb = _thumbSrc ? '<img src="'+_thumbSrc+'" style="width:36px;height:36px;object-fit:cover;border-radius:5px;flex-shrink:0;" onerror="this.style.display=\'none\'">' : '';
     const dmgCount = p.damage_photos&&p.damage_photos.length?'<span style="font-size:10px;color:var(--accent);font-weight:700;">📷'+p.damage_photos.length+'</span>':'';
     return '<div class="pc" id="pc-'+pid+'" onclick="togglePinCard(\''+pid+'\')">'+'<div class="pc-summary">'+dmgThumb+'<div style="flex:1;min-width:0;"><div class="pc-addr">'+escHtml(p.address)+'</div><div class="pc-meta"><span>'+timeAgo(p.at)+'</span>'+(p.rep?'<span>· '+escHtml(p.rep)+'</span>':'')+'</div></div>'+dmgCount+'<div class="sdot" style="background:'+sColor(p.status)+';margin-top:0;"></div><span class="pc-chevron">›</span></div>'+'<div class="pc-body">'+(p.notes?'<div class="pc-note" style="margin-bottom:8px;">"'+escHtml(p.notes)+'"</div>':'')+'<div class="pc-acts">'+'<button class="btn-xs pr" onclick="event.stopPropagation();goEstFromPin(\''+pid+'\')">'+'📋 Estimate</button>'+'<button class="btn-xs" onclick="event.stopPropagation();openFollowUp(\''+pid+'\')">'+'✉️ Follow Up</button>'+'<button class="btn-xs" onclick="event.stopPropagation();cycleStatus(\''+pid+'\')">'+'↻ Status</button>'+'<button class="btn-xs danger" onclick="event.stopPropagation();rmPin(\''+pid+'\')">'+'✕</button>'+'</div></div></div>';
   }).join('');
@@ -8026,13 +8027,17 @@ async function sbUpdatePinStatus(pinId, status){
 // ── Helper: map a DB row to a JS pin object ──────────────────────────────────
 function _rowToPin(row){
   const est = row.estimate ? (typeof row.estimate==='string'?JSON.parse(row.estimate):row.estimate) : null;
+  // Resolve photo: prefer pin-level photo_url, then estimate's photo_url, then estimate's photo_data
+  const resolvedPhotoUrl  = row.photo_url || (est && est.photo_url)  || null;
+  const resolvedPhotoData = (est && est.photo_data) || null;
   return {
     id: row.id, lat: parseFloat(row.lat), lng: parseFloat(row.lng),
     address: row.address||'', status: row.status||'needs_roof',
     notes: row.notes||'', rep: row.rep_name||'Unknown',
     phone: row.phone||null,
     pts: row.pts||null, at: row.created_at,
-    photo_url: row.photo_url||null,
+    photo_url: resolvedPhotoUrl,
+    photo_data: resolvedPhotoData,
     estimate: row.estimate||null,
     at_est: row.at_est||null,
     damage_photos: row.damage_photos||(est && est.damage_photos && est.damage_photos.length ? est.damage_photos : null),
