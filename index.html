@@ -5105,13 +5105,16 @@ function _refreshPostcardPreview(){
   const addr  = document.getElementById('e-addr')  ? document.getElementById('e-addr').value.trim()  : '';
   const owner = document.getElementById('e-owner') ? document.getElementById('e-owner').value.trim() : 'Homeowner';
   const grand = calcP ? calcP() : 0;
+  // Resolve photo: prefer all_photos.front[0], fall back to legacy _homePhotoData
+  const _frontPhoto = ((window._allPhotos && window._allPhotos.front)||[])[0] || window._homePhotoData || null;
   const fakeItem = {
     addr, owner,
     total: grand,
     structures: JSON.parse(JSON.stringify(structures||[])),
-    photo_url:  (window._homePhotoData && window._homePhotoData.startsWith('http'))  ? window._homePhotoData : null,
-    photo_data: (window._homePhotoData && !window._homePhotoData.startsWith('http')) ? window._homePhotoData : null,
-    damage_photos: window._damagePhotos || []
+    photo_url:  (_frontPhoto && _frontPhoto.startsWith('http'))  ? _frontPhoto : null,
+    photo_data: (_frontPhoto && !_frontPhoto.startsWith('http')) ? _frontPhoto : null,
+    damage_photos: window._damagePhotos || [],
+    all_photos: window._allPhotos ? JSON.parse(JSON.stringify(window._allPhotos)) : null
   };
 
   const frontHtml = buildPostcard6x9FrontHtml(fakeItem);
@@ -5191,6 +5194,7 @@ function addToQueue(){
     photo_url: (window._homePhotoData && window._homePhotoData.startsWith('http')) ? window._homePhotoData : null,
     photo_data: (window._homePhotoData && !window._homePhotoData.startsWith('http')) ? window._homePhotoData : null,
     damage_photos: (window._damagePhotos && window._damagePhotos.length) ? [...window._damagePhotos] : null,
+    all_photos: window._allPhotos ? JSON.parse(JSON.stringify(window._allPhotos)) : null,
     at:new Date().toISOString(), mailedAt:null, lobId:null
   };
   S.queue.unshift(item);
@@ -6544,6 +6548,15 @@ function previewQueueItem(id){
 async function previewPostcard6x9(id){
   const item = S.queue.find(x=>x.id===id); if(!item) return;
   let previewItem = {...item};
+  // Resolve photo from all_photos.front[0] if legacy fields are empty
+  if(!previewItem.photo_url && !previewItem.photo_data){
+    const ap = item.all_photos || {};
+    const fp = (ap.front||[])[0] || null;
+    if(fp){
+      if(fp.startsWith('http')) previewItem.photo_url = fp;
+      else previewItem.photo_data = fp;
+    }
+  }
   if(!previewItem.photo_url && !previewItem.photo_data){
     try{
       const MB = window._mapboxToken || ['pk.eyJ1IjoibW9uZ29vc2VmaWxtcyIsImEiOiJjbW52M2kyNnMxM3pk','MnJvYTYxZnE1YW51In0.nC5GKWDHIAB4DTAP9hV3hQ'].join('');
