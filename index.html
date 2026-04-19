@@ -1197,7 +1197,7 @@ tr:hover td{background:var(--card);}
     <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
       <div>
         <div style="font-family:var(--font-h);font-size:20px;font-weight:700;color:var(--text);">📮 Drip Postcard Designs</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:4px;">Each postcard below will be mailed automatically on its scheduled day. Upload your artwork in Settings.</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">Each postcard uses the same BidDrop template with step-specific messaging — auto-generated, no design needed. Optionally upload custom artwork in Settings to override any step.</div>
       </div>
       <button onclick="openSettings()" style="background:var(--accent);border:none;border-radius:8px;padding:9px 18px;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">⚙️ Upload Designs</button>
     </div>
@@ -2158,11 +2158,40 @@ function renderFollowUpTab(){
 
     // Front side
     if(url){
+      // Custom uploaded artwork — show it
       frontEl.style.display = 'block';
       frontEl.style.minHeight = 'unset';
       frontEl.innerHTML = '<img src="'+url+'" style="width:100%;height:auto;display:block;border-radius:5px;cursor:zoom-in;" title="Click to enlarge front" onclick="previewPostcardFront('+step+')">';
     } else {
-      frontEl.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px;">\ud83d\udced No design uploaded yet.<br><br><button onclick="openSettings()" style="background:var(--accent);border:none;border-radius:7px;padding:8px 16px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;margin-top:8px;">Upload Now</button></div>';
+      // No custom upload — render auto-generated BidDrop postcard with step-specific copy
+      const msg = getDripStepMessage(step);
+      const sampleEst2 = (S.estimates||[]).find(e=>!e.isRevision && !e.deletedAt && !e.deleted);
+      const samplePin2 = sampleEst2 ? (S.pins||[]).find(p=>p.id===sampleEst2.pinId) : null;
+      const previewPhotoUrl = (sampleEst2 && (sampleEst2.photo_url||sampleEst2.photo_data)) || (samplePin2 && samplePin2.photo_url) || null;
+      const frontHtml = buildDripPostcardFrontHtml({
+        photoUrl: previewPhotoUrl,
+        headline: msg.headline,
+        subtext:  msg.subtext,
+        companyName:    cfg.companyName    || 'Your Roofing Co',
+        companyAddress: cfg.companyAddress || '',
+        phone:          cfg.phone          || '',
+        logoUrl:        cfg.logoData       || '',
+        address:        sampleEst2 ? (sampleEst2.addr||'') : '',
+        estimateTotal:  sampleEst2 ? (sampleEst2.total||0) : 0,
+      });
+      frontEl.style.cssText = 'position:relative;width:100%;padding-top:66.67%;overflow:hidden;border-radius:5px;border:1px solid var(--border);cursor:zoom-in;';
+      const encodedHtml = frontHtml.replace(/"/g,'&quot;').replace(/`/g,'&#96;');
+      frontEl.innerHTML = `<iframe srcdoc="${encodedHtml}" style="position:absolute;top:0;left:0;width:864px;height:576px;border:none;transform-origin:top left;pointer-events:none;max-width:none;" scrolling="no"></iframe>`;
+      frontEl.title = 'Auto-generated — click to preview';
+      frontEl.onclick = ()=>previewDripFront(step);
+      requestAnimationFrame(()=>{
+        const iframe = frontEl.querySelector('iframe');
+        if(iframe){ const w=frontEl.offsetWidth||300; iframe.style.transform='scale('+(w/864)+')'; }
+      });
+      setTimeout(()=>{
+        const iframe = frontEl.querySelector('iframe');
+        if(iframe){ const w=frontEl.offsetWidth||300; iframe.style.transform='scale('+(w/864)+')'; }
+      }, 150);
     }
 
     // Back side — always render the USPS address template
@@ -11010,7 +11039,7 @@ async function sendDripPostcard(id){
       from:{name:co,address_line1:fp[0]||'123 Main St',address_city:fp[1]||'Detroit',address_state:fp[2]||'MI',address_zip:fp[3]||'48000',address_country:'US'},
       front: frontHtml,
       back: backHtml,
-      size: '4x6',
+      size: '6x9',
       use_type: 'marketing'
     }});
     if(d && d.id){
