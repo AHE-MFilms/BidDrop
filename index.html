@@ -8196,6 +8196,18 @@ async function renderAdminPanel(){
   if(!el) return;
   el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);">Loading...</div>';
 
+  // Wait for a valid session (auth state change can cause a brief sign-out/sign-in cycle)
+  let session = null;
+  for(let attempt = 0; attempt < 8; attempt++){
+    const { data: { session: s } } = await sb.auth.getSession();
+    if(s && s.access_token){ session = s; break; }
+    await new Promise(r => setTimeout(r, 500));
+  }
+  if(!session){
+    el.innerHTML = '<div style="color:#ef4444;padding:20px;">Session not ready. Please refresh the page.</div>';
+    return;
+  }
+
   try {
     if(isSuperAdmin()){
       // Use server-side API to bypass RLS (service role key)
@@ -8211,7 +8223,8 @@ async function renderAdminPanel(){
       el.innerHTML = '<div style="color:var(--muted);padding:20px;">Access denied.</div>';
     }
   } catch(e) {
-    el.innerHTML = '<div style="color:#ef4444;padding:20px;">Error loading admin panel: '+e.message+'</div>';
+    console.error('[AdminPanel] error:', e);
+    el.innerHTML = '<div style="color:#ef4444;padding:20px;">Error: '+e.message+'<br><br><button onclick="renderAdminPanel()" style="background:var(--accent);color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;">Retry</button></div>';
   }
 }
 
