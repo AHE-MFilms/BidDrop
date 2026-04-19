@@ -1878,6 +1878,7 @@ const DEFAULTS = {
 };
 
 let S = { pins:[], queue:[], estimates:[], team:[], activity:[], cfg:{...DEFAULTS}, offlineQueue:[] };
+let _appInitialized = false; // true once onSignedIn has fully completed
 let map, markers={}, tempLL=null, curFilter='all', actChart=null;
 let clusterGroup = null;          // Leaflet.markercluster group
 let totalPinCount = 0;            // server-side count (may exceed S.pins.length)
@@ -9627,7 +9628,7 @@ window.addEventListener('load', ()=>{
       // Defer to next tick so Supabase releases its internal mutex before
       // we make any DB queries. Without this, all .from() calls hang.
       setTimeout(() => {
-        if(document.getElementById('main-app').style.display !== 'none') return;
+        if(_appInitialized) return; // already loaded — skip duplicate SIGNED_IN/INITIAL_SESSION events
         onSignedIn(session.user).catch(e => {
           console.error('[Auth] onSignedIn error:', e);
           const errEl = document.getElementById('login-error');
@@ -9733,6 +9734,8 @@ async function onSignedIn(user){
       const bar = document.getElementById('pwa-install-bar');
       if(bar) bar.style.display='flex';
     }
+    // Mark app as fully initialized — prevents duplicate onSignedIn calls on token refresh
+    _appInitialized = true;
 
   } catch(e) {
     console.error('[onSignedIn] error:', e);
@@ -9744,6 +9747,7 @@ async function onSignedIn(user){
 }
 
 function onSignedOut(){
+  _appInitialized = false; // allow onSignedIn to run again on next login
   currentUser = null;
   currentProfile = null;
   currentAccount = null;
