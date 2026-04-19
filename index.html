@@ -920,17 +920,19 @@ tr:hover td{background:var(--card);}
         <input class="fi" id="e-email" placeholder="jane@email.com" type="email">
       </div>
       <div class="fg">
-        <label class="fl">Home Photo <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:10px;">— appears on mailer</span></label>
-        <div style="display:flex;gap:9px;align-items:center;">
-          <div id="home-photo-preview" style="width:80px;height:60px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);overflow:hidden;flex-shrink:0;cursor:pointer;" onclick="document.getElementById('home-photo-inp').click()">No photo</div>
-          <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
-            <label style="display:block;background:var(--accent);border:none;border-radius:8px;padding:11px 14px;text-align:center;cursor:pointer;color:#fff;font-size:13px;font-weight:700;">
-              📷 Take / Upload Photo
-              <input type="file" id="home-photo-inp" accept="image/*" capture="environment" style="display:none;" onchange="handleHomePhoto(this)">
-            </label>
-            <button onclick="clearHomePhoto()" id="clear-photo-btn" style="display:none;background:none;border:1px solid var(--border);border-radius:6px;padding:6px;color:var(--muted);font-size:11px;cursor:pointer;">✕ Remove photo</button>
+        <label class="fl">Property Photos <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:10px;">— first Front of Home photo appears on mailer</span></label>
+        <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;">
+          <!-- Mailer preview thumbnail (first front photo) -->
+          <div id="home-photo-preview" onclick="openPhotoModal()" title="Click to manage photos" style="width:80px;height:60px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);overflow:hidden;flex-shrink:0;cursor:pointer;">No photo</div>
+          <div style="flex:1;min-width:160px;display:flex;flex-direction:column;gap:6px;">
+            <button onclick="openPhotoModal()" style="background:var(--accent);border:none;border-radius:8px;padding:11px 14px;text-align:center;cursor:pointer;color:#fff;font-size:13px;font-weight:700;width:100%;">📷 Manage Photos</button>
+            <!-- Photo strip: thumbnails of all photos -->
+            <div id="est-photo-strip" style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;min-height:20px;"><span style="color:var(--muted);font-size:12px;">No photos yet</span></div>
           </div>
         </div>
+        <!-- Hidden legacy inputs kept for backward compat -->
+        <input type="file" id="home-photo-inp" accept="image/*" capture="environment" style="display:none;" onchange="handleHomePhoto(this)">
+        <button id="clear-photo-btn" onclick="clearHomePhoto()" style="display:none;"></button>
       </div>
 
       <div id="structures-list"></div>
@@ -1712,6 +1714,23 @@ tr:hover td{background:var(--card);}
 </div>
 
 <!-- SETTINGS MODAL -->
+<!-- UNIFIED PHOTO MODAL -->
+<div class="overlay" id="m-photos" style="display:none;">
+  <div class="modal" style="max-width:560px;width:95vw;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div class="modal-title" style="margin:0;">📷 Property Photos</div>
+      <button onclick="closeM('m-photos')" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1;">&times;</button>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Up to 3 photos per category. The first <strong>Front of Home</strong> photo appears on the mailer.</div>
+    <!-- Photo categories -->
+    <div id="photo-modal-body">
+      <!-- rendered by renderPhotoModal() -->
+    </div>
+    <div style="margin-top:18px;text-align:right;">
+      <button onclick="closeM('m-photos')" style="background:var(--accent);border:none;border-radius:8px;padding:10px 24px;color:#fff;font-weight:700;font-size:14px;cursor:pointer;">Done</button>
+    </div>
+  </div>
+</div>
 <!-- DELETE PIN MODAL -->
 <div class="overlay" id="m-delete-pin" style="display:none;">
   <div class="modal" style="max-width:420px;">
@@ -2349,6 +2368,7 @@ function saveEstimateNow(){
     photo_url: photoUrl,
     photo_data: photoData,
     damage_photos: (window._damagePhotos && window._damagePhotos.length) ? [...window._damagePhotos] : (pin.damage_photos && pin.damage_photos.length ? [...pin.damage_photos] : null),
+    all_photos: window._allPhotos ? JSON.parse(JSON.stringify(window._allPhotos)) : null,
     skylight: (document.getElementById('a-sky')||{}).checked||false,
     skylightQty: parseInt((document.getElementById('a-sky-q')||{}).value||1),
     chimney: (document.getElementById('a-chim')||{}).checked||false,
@@ -3111,6 +3131,217 @@ function clearHomePhoto(){
   updatePreview();
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// UNIFIED PHOTO SYSTEM
+// _allPhotos = { front:[], damage:[], angles:[], other:[] }  (max 3 each)
+// The first 'front' photo drives the mailer; falls back to satellite if empty.
+// ═══════════════════════════════════════════════════════════════════════════
+window._allPhotos = { front:[], damage:[], angles:[], other:[] };
+
+const PHOTO_CATS = [
+  { key:'front',  icon:'🏠', label:'Front of Home',    hint:'Straight-on shot of the front of the house — appears on the mailer' },
+  { key:'damage', icon:'🔍', label:'Roof Damage',       hint:'Close-ups of missing shingles, hail hits, granule loss, moss, etc.' },
+  { key:'angles', icon:'📐', label:'Additional Angles', hint:'Side views, back of house, garage, detached structures' },
+  { key:'other',  icon:'📎', label:'Something Else',    hint:'Gutters, fascia, notes, or anything that does not fit above' },
+];
+
+function _syncLegacyFromAllPhotos(){
+  // Keep legacy _homePhotoData and _damagePhotos in sync so existing mailer code still works
+  const front = window._allPhotos.front || [];
+  window._homePhotoData = front[0] || null;
+  // damage = all non-front photos flattened
+  const dmg = [
+    ...(window._allPhotos.damage||[]),
+    ...(window._allPhotos.angles||[]),
+    ...(window._allPhotos.other||[])
+  ];
+  window._damagePhotos = dmg;
+  // Update home photo preview in estimator if visible
+  const prev = document.getElementById('home-photo-preview');
+  if(prev){
+    if(window._homePhotoData){
+      prev.innerHTML = '<img src="'+window._homePhotoData+'" style="width:100%;height:100%;object-fit:cover;">';
+    } else {
+      prev.innerHTML = 'No photo';
+    }
+  }
+  const clr = document.getElementById('clear-photo-btn');
+  if(clr) clr.style.display = window._homePhotoData ? 'block' : 'none';
+  // Refresh the estimator photo strip thumbnail
+  _refreshEstimatorPhotoStrip();
+}
+
+function _refreshEstimatorPhotoStrip(){
+  const strip = document.getElementById('est-photo-strip');
+  if(!strip) return;
+  const all = [
+    ...(window._allPhotos.front||[]),
+    ...(window._allPhotos.damage||[]),
+    ...(window._allPhotos.angles||[]),
+    ...(window._allPhotos.other||[])
+  ];
+  if(!all.length){ strip.innerHTML='<span style="color:var(--muted);font-size:12px;">No photos yet</span>'; return; }
+  strip.innerHTML = all.map((src,i)=>'<img src="'+src+'" onclick="openPhotoModal()" title="Click to manage photos" style="width:52px;height:52px;object-fit:cover;border-radius:6px;cursor:pointer;border:2px solid '+(i===0?'var(--accent)':'var(--border)')+';" onerror="this.style.display=\'none\'">' ).join('');
+}
+
+function _loadAllPhotosFromPin(pin){
+  // Migrate legacy fields into _allPhotos on load
+  const ap = { front:[], damage:[], angles:[], other:[] };
+  // Prefer structured all_photos if stored
+  if(pin && pin.all_photos && typeof pin.all_photos==='object'){
+    ['front','damage','angles','other'].forEach(k=>{ ap[k] = Array.isArray(pin.all_photos[k]) ? [...pin.all_photos[k]] : []; });
+  } else {
+    // Migrate: photo_url/photo_data → front, damage_photos → damage
+    const fp = pin && (pin.photo_url || pin.photo_data);
+    if(fp) ap.front.push(fp);
+    const dp = (pin && pin.damage_photos) || [];
+    dp.forEach(p=>{ if(p && !ap.front.includes(p)) ap.damage.push(p); });
+  }
+  window._allPhotos = ap;
+  _syncLegacyFromAllPhotos();
+}
+
+function _loadAllPhotosFromEst(est, pin){
+  const ap = { front:[], damage:[], angles:[], other:[] };
+  if(est && est.all_photos && typeof est.all_photos==='object'){
+    ['front','damage','angles','other'].forEach(k=>{ ap[k] = Array.isArray(est.all_photos[k]) ? [...est.all_photos[k]] : []; });
+  } else {
+    // Migrate legacy
+    const fp = (est && (est.photo_data || est.photo_url)) || (pin && (pin.photo_url || pin.photo_data));
+    if(fp) ap.front.push(fp);
+    const dp = (est && est.damage_photos) || (pin && pin.damage_photos) || [];
+    dp.forEach(p=>{ if(p && !ap.front.includes(p)) ap.damage.push(p); });
+  }
+  window._allPhotos = ap;
+  _syncLegacyFromAllPhotos();
+}
+
+function _clearAllPhotos(){
+  window._allPhotos = { front:[], damage:[], angles:[], other:[] };
+  _syncLegacyFromAllPhotos();
+}
+function _allPhotosCount(){
+  const ap = window._allPhotos || {};
+  return (ap.front||[]).length + (ap.damage||[]).length + (ap.angles||[]).length + (ap.other||[]).length;
+}
+
+function openPhotoModal(pinId){
+  // If a pinId is passed (from map popup), store it so uploads attach to that pin
+  if(pinId) window._photoModalPinId = pinId;
+  else window._photoModalPinId = currentEstPinId || null;
+  renderPhotoModal();
+  openM('m-photos');
+}
+
+function renderPhotoModal(){
+  const body = document.getElementById('photo-modal-body');
+  if(!body) return;
+  body.innerHTML = PHOTO_CATS.map(cat=>{
+    const photos = (window._allPhotos[cat.key] || []);
+    const canAdd = photos.length < 3;
+    const inputId = 'photo-inp-'+cat.key;
+    const thumbs = photos.map((src,i)=>{
+      return '<div style="position:relative;display:inline-block;">'
+        +'<img src="'+src+'" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid '+(cat.key==='front'&&i===0?'var(--accent)':'var(--border)')+';" onerror="this.style.display=\'none\'">'
+        +(cat.key==='front'&&i===0?'<div style="position:absolute;bottom:2px;left:0;right:0;text-align:center;font-size:9px;font-weight:700;background:var(--accent);color:#fff;border-radius:0 0 6px 6px;padding:1px 0;">MAILER</div>':'')
+        +'<button onclick="_removePhotoFromCat(\''+cat.key+'\','+i+')" style="position:absolute;top:-6px;right:-6px;background:#EF4444;border:none;border-radius:50%;width:18px;height:18px;color:#fff;font-size:11px;cursor:pointer;line-height:18px;text-align:center;padding:0;">&times;</button>'
+        +'</div>';
+    }).join('');
+    return '<div style="margin-bottom:20px;padding:14px;background:var(--card);border:1px solid var(--border);border-radius:10px;">'
+      +'<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;">'
+      +'<div><div style="font-size:14px;font-weight:700;color:var(--text);">'+cat.icon+' '+cat.label+'</div>'
+      +'<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+cat.hint+'</div></div>'
+      +'<span style="font-size:11px;color:var(--muted);white-space:nowrap;margin-left:8px;">'+photos.length+'/3</span>'
+      +'</div>'
+      +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">'
+      +thumbs
+      +(canAdd
+        ? '<label for="'+inputId+'" style="width:80px;height:80px;border:2px dashed var(--border);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:11px;text-align:center;gap:4px;">'
+          +'<span style="font-size:22px;">+</span><span>Add Photo</span>'
+          +'<input type="file" id="'+inputId+'" accept="image/*" capture="environment" style="display:none;" onchange="_handlePhotoModalUpload(this,\''+cat.key+'\')">'
+          +'</label>'
+        : '')
+      +'</div>'
+      +'</div>';
+  }).join('');
+}
+
+function _removePhotoFromCat(catKey, idx){
+  if(!window._allPhotos[catKey]) return;
+  window._allPhotos[catKey].splice(idx, 1);
+  _syncLegacyFromAllPhotos();
+  _persistAllPhotos();
+  renderPhotoModal();
+  updatePreview();
+  if(window._previewMode==='postcard') _refreshPostcardPreview();
+}
+
+function _handlePhotoModalUpload(inp, catKey){
+  if(!inp.files||!inp.files[0]) return;
+  const file = inp.files[0];
+  const acctId = (currentAccount && currentAccount.id) || 'shared';
+  const pinId = window._photoModalPinId || currentEstPinId || ('tmp-'+Date.now());
+  const ts = Date.now();
+  const path = acctId+'/pins/'+pinId+'/'+catKey+'_'+ts+'.jpg';
+  toast('Uploading photo…','info');
+  uploadToStorage(file, path, 900, 0.85, 'image/jpeg').then(url=>{
+    const src = url || null;
+    if(src){
+      _addPhotoToCat(catKey, src);
+      toast('📷 Photo saved!','success');
+    } else {
+      // Fallback: base64
+      const r = new FileReader();
+      r.onload = ev=>{
+        const img = new Image();
+        img.onload = ()=>{
+          const canvas = document.createElement('canvas');
+          const MAX=900; let w=img.width,h=img.height;
+          if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+          canvas.width=w;canvas.height=h;
+          canvas.getContext('2d').drawImage(img,0,0,w,h);
+          const b64 = canvas.toDataURL('image/jpeg',.85);
+          _addPhotoToCat(catKey, b64);
+          toast('📷 Photo saved (local)','info');
+        };
+        img.src = ev.target.result;
+      };
+      r.readAsDataURL(file);
+    }
+  });
+}
+
+function _addPhotoToCat(catKey, src){
+  if(!window._allPhotos[catKey]) window._allPhotos[catKey]=[];
+  if(window._allPhotos[catKey].length >= 3){ toast('Max 3 photos per category','warn'); return; }
+  window._allPhotos[catKey].push(src);
+  _syncLegacyFromAllPhotos();
+  _persistAllPhotos();
+  renderPhotoModal();
+  updatePreview();
+  if(window._previewMode==='postcard') _refreshPostcardPreview();
+}
+
+function _persistAllPhotos(){
+  // Save to the current pin in Supabase if we have one
+  const pinId = window._photoModalPinId || currentEstPinId;
+  if(!pinId || !sb) return;
+  const pin = S.pins && S.pins.find(p=>p.id===pinId);
+  if(pin){
+    pin.all_photos = window._allPhotos;
+    // Also keep legacy fields in sync
+    pin.photo_url = (window._allPhotos.front||[])[0] || pin.photo_url || null;
+    pin.damage_photos = window._damagePhotos.length ? [...window._damagePhotos] : null;
+    sb.from('pins').update({
+      all_photos: window._allPhotos,
+      photo_url: pin.photo_url,
+      damage_photos: pin.damage_photos,
+      updated_at: new Date().toISOString()
+    }).eq('id', pinId).then(()=>{});
+    save();
+  }
+}
+
 // ═══════════════════════════════
 //  MAP SEARCH
 // ═══════════════════════════════
@@ -3690,7 +3921,7 @@ function addMarker(pin){
       ${pin.estimate && pin.estimate.total ? `<div style="background:#0a1628;border:1px solid #3B82F655;border-radius:6px;padding:5px 8px;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;"><span style="font-size:9px;font-weight:700;color:#3B82F6;">✓ ESTIMATE</span><span style="font-size:13px;font-weight:700;color:#FFF;">$${(pin.estimate.total||0).toLocaleString()}</span></div>` : ''}
       <button onclick="goEstFromPin('${pid}')" style="background:#F25C05;border:none;border-radius:7px;padding:8px;color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">${pin.estimate && pin.estimate.total ? '📋 Edit Estimate' : '📋 Build Estimate'}</button>
       <button onclick="measureForPin('${pid}')" style="background:transparent;border:1.5px solid #F25C05;border-radius:7px;padding:6px;color:#F25C05;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">📐 Measure Roof</button>
-      <button onclick="openPinPhotoAdder('${pid}')" style="background:transparent;border:1.5px solid #22C55E;border-radius:7px;padding:6px;color:#22C55E;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">📷 Add Photos</button>
+      <button onclick="_loadAllPhotosFromPin(S.pins.find(p=>p.id==='${pid}'));openPhotoModal('${pid}')" style="background:transparent;border:1.5px solid #22C55E;border-radius:7px;padding:6px;color:#22C55E;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">📷 Manage Photos</button>
       <button onclick="confirmDeletePin('${pid}')" style="background:transparent;border:1.5px solid #EF4444;border-radius:7px;padding:5px;color:#EF4444;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;display:block;">🗑 Delete Pin</button>
     </div>
   `,{maxWidth:260});
@@ -4177,23 +4408,10 @@ function goEstFromPin(id){
     }
     if(est.damage_photos && est.damage_photos.length) _estDmgPhotos = est.damage_photos;
   }
-  // Load damage photos from pin (prefer pin.damage_photos, fall back to estimate's damage_photos)
-  const dmgSrcs4 = p.damage_photos || _estDmgPhotos || [];
-  window._damagePhotos = dmgSrcs4.length ? [...dmgSrcs4] : [];
-  // Home photo is separate from damage photos — load from photo_url only
-  if(p.photo_url){
-    window._homePhotoData = p.photo_url;
-    const prev = document.getElementById('home-photo-preview');
-    if(prev) prev.innerHTML = '<img src="'+p.photo_url+'" style="width:100%;height:100%;object-fit:cover;">';
-    const clr = document.getElementById('clear-photo-btn');
-    if(clr) clr.style.display = 'block';
-  } else {
-    window._homePhotoData = null;
-    const prev = document.getElementById('home-photo-preview');
-    if(prev) prev.innerHTML = 'No photo';
-    const clr = document.getElementById('clear-photo-btn');
-    if(clr) clr.style.display = 'none';
-  }
+  // Load all photos via unified system (migrates legacy fields automatically)
+  _clearAllPhotos();
+  const savedEst4pin = p.estimate ? (typeof p.estimate==='string'?JSON.parse(p.estimate):p.estimate) : null;
+  _loadAllPhotosFromEst(savedEst4pin, p);
   goTab('estimate');
   document.getElementById('e-addr').value=p.address||'';
   // Update picker to show this pin as selected
@@ -4327,7 +4545,7 @@ function renderStructures(){
       '</div>'+
       '<div class="struct-card-actions">'+
       '<button class="struct-meas-btn" data-sid="'+s.id+'" onclick="measureForStructure(this.dataset.sid)">📐 Re-measure on Map</button>'+
-      '<button class="struct-photo-btn" data-sid="'+s.id+'" onclick="addStructurePhoto(this.dataset.sid)" title="Add damage photos" style="background:transparent;border:1px solid #22C55E;border-radius:7px;padding:6px 10px;color:#22C55E;font-size:12px;font-weight:700;cursor:pointer;">📷 Photos'+(s.photos&&s.photos.length?' ('+s.photos.length+')':'')+'</button>'+
+      '<button class="struct-photo-btn" data-sid="'+s.id+'" onclick="openPhotoModal()" title="Manage property photos" style="background:transparent;border:1px solid #22C55E;border-radius:7px;padding:6px 10px;color:#22C55E;font-size:12px;font-weight:700;cursor:pointer;">📷 Photos'+((_allPhotosCount()>0)?(' ('+_allPhotosCount()+')'):'')+'</button>'+
       '<button class="struct-del-btn" data-sid="'+s.id+'" onclick="removeStructure(this.dataset.sid)" title="Remove structure">🗑</button>'+
       '</div>'+
       (s.photos&&s.photos.length ? '<div style="display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;">'+s.photos.map((src,pi)=>'<div style="position:relative;display:inline-block;"><img src="'+src+'" style="width:72px;height:60px;object-fit:cover;border-radius:6px;display:block;"><button onclick="removeStructurePhoto(\"'+s.id+'\",'+pi+')" style="position:absolute;top:-4px;right:-4px;background:#EF4444;border:none;border-radius:50%;width:16px;height:16px;color:white;font-size:10px;cursor:pointer;line-height:16px;padding:0;">×</button></div>').join('')+'</div>' : '')+
@@ -5349,24 +5567,9 @@ function loadEstimateIntoEstimator(estId){
   document.getElementById('e-addr').value = est.addr || '';
   document.getElementById('e-owner').value = est.owner || '';
   document.getElementById('e-email').value = est.email || '';
-  clearHomePhoto();
-  const photoSrc = est.photo_data || est.photo_url || null;
-  if(photoSrc){
-    window._homePhotoData = photoSrc;
-    window._damagePhotos = est.damage_photos || [];
-    const prev = document.getElementById('home-photo-preview');
-    if(prev) prev.innerHTML = '<img src="'+photoSrc+'" style="width:100%;height:100%;object-fit:cover;">';
-    const clr = document.getElementById('clear-photo-btn');
-    if(clr) clr.style.display = 'block';
-  } else if(est.damage_photos && est.damage_photos.length) {
-    // No primary photo but damage photos exist — load them
-    window._damagePhotos = [...est.damage_photos];
-    window._homePhotoData = est.damage_photos[0];
-    const prev = document.getElementById('home-photo-preview');
-    if(prev) prev.innerHTML = '<img src="'+est.damage_photos[0]+'" style="width:100%;height:100%;object-fit:cover;">';
-    const clr = document.getElementById('clear-photo-btn');
-    if(clr) clr.style.display = 'block';
-  }
+  _clearAllPhotos();
+  const pin4est = (S.pins||[]).find(p=>p.id===est.pinId);
+  _loadAllPhotosFromEst(est, pin4est);
   structures = (est.structures||[]).map(s=>normStruct(s));
   // Restore add-ons
   const sky = document.getElementById('a-sky'); if(sky) sky.checked = !!est.skylight;
