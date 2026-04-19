@@ -396,9 +396,9 @@ tr:hover td{background:var(--card);}
   .map-panel-drag{width:36px;height:4px;background:var(--muted);border-radius:2px;margin:10px auto 4px;cursor:pointer;opacity:.6;}
   .map-tip{margin:4px 8px 8px;font-size:10px;}
   .fab-pins{position:absolute;bottom:14px;right:14px;z-index:1000;background:var(--accent);border:none;border-radius:50%;width:54px;height:54px;font-size:24px;cursor:pointer;box-shadow:0 4px 20px rgba(242,92,5,.55);display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;}
-  .map-toolbar{flex-direction:row;top:10px;left:50%;transform:translateX(-50%);width:auto;gap:6px;}
-  .mtool-btn{font-size:10px;padding:7px 12px;}
-  .measure-hud{left:0;right:0;bottom:auto;top:108px;transform:none;border-radius:0;border-left:none;border-right:none;border-top:none;padding:8px 14px;display:none;flex-direction:row;align-items:center;gap:8px;flex-wrap:nowrap;width:100%;box-sizing:border-box;}
+  .map-toolbar{flex-direction:row;flex-wrap:wrap;justify-content:center;top:10px;left:4px;right:4px;transform:none;width:auto;gap:5px;}
+  .mtool-btn{font-size:10px;padding:6px 10px;flex-shrink:0;}
+  .measure-hud{left:0;right:0;bottom:auto;top:160px;transform:none;border-radius:0;border-left:none;border-right:none;border-top:none;padding:8px 14px;display:none;flex-direction:row;align-items:center;gap:8px;flex-wrap:nowrap;width:100%;box-sizing:border-box;}
   .measure-hud.show{display:flex;}
   .mhud-lbl{display:none;}
   .mhud-sqft{font-size:18px;min-width:40px;}
@@ -3358,13 +3358,13 @@ function clearHomePhoto(){
 // _allPhotos = { front:[], damage:[], angles:[], other:[] }  (max 3 each)
 // The first 'front' photo drives the mailer; falls back to satellite if empty.
 // ═══════════════════════════════════════════════════════════════════════════
-window._allPhotos = { front:[], damage:[], angles:[], other:[] };
-
+window._allPhotos = { front:[], damage:[], angles:[], buildings:[], other:[] };
 const PHOTO_CATS = [
-  { key:'front',  icon:'🏠', label:'Front of Home',    hint:'Straight-on shot of the front of the house — appears on the mailer' },
-  { key:'damage', icon:'🔍', label:'Roof Damage',       hint:'Close-ups of missing shingles, hail hits, granule loss, moss, etc.' },
-  { key:'angles', icon:'📐', label:'Additional Angles', hint:'Side views, back of house, garage, detached structures' },
-  { key:'other',  icon:'📎', label:'Something Else',    hint:'Gutters, fascia, notes, or anything that does not fit above' },
+  { key:'front',     icon:'🏠', label:'Front of Home',          hint:'Straight-on shot of the front of the house — appears on the mailer' },
+  { key:'damage',    icon:'🔍', label:'Roof Damage',             hint:'Close-ups of missing shingles, hail hits, granule loss, moss, etc.' },
+  { key:'angles',    icon:'📐', label:'Additional Angles',       hint:'Side views, back of house, garage, detached structures' },
+  { key:'buildings', icon:'🏗', label:'Additional Buildings',    hint:'Detached garage, shed, barn, or other structures on the property' },
+  { key:'other',     icon:'📎', label:'Something Else',          hint:'Gutters, fascia, notes, or anything that does not fit above' },
 ];
 
 function _syncLegacyFromAllPhotos(){
@@ -3431,10 +3431,10 @@ function _refreshPinModalPhotoStrip(){
 
 function _loadAllPhotosFromPin(pin){
   // Migrate legacy fields into _allPhotos on load
-  const ap = { front:[], damage:[], angles:[], other:[] };
+  const ap = { front:[], damage:[], angles:[], buildings:[], other:[] };
   // Prefer structured all_photos if stored
   if(pin && pin.all_photos && typeof pin.all_photos==='object'){
-    ['front','damage','angles','other'].forEach(k=>{ ap[k] = Array.isArray(pin.all_photos[k]) ? [...pin.all_photos[k]] : []; });
+    ['front','damage','angles','buildings','other'].forEach(k=>{ ap[k] = Array.isArray(pin.all_photos[k]) ? [...pin.all_photos[k]] : []; });
   } else {
     // Migrate: photo_url/photo_data → front, damage_photos → damage
     const fp = pin && (pin.photo_url || pin.photo_data);
@@ -3447,9 +3447,9 @@ function _loadAllPhotosFromPin(pin){
 }
 
 function _loadAllPhotosFromEst(est, pin){
-  const ap = { front:[], damage:[], angles:[], other:[] };
+  const ap = { front:[], damage:[], angles:[], buildings:[], other:[] };
   if(est && est.all_photos && typeof est.all_photos==='object'){
-    ['front','damage','angles','other'].forEach(k=>{ ap[k] = Array.isArray(est.all_photos[k]) ? [...est.all_photos[k]] : []; });
+    ['front','damage','angles','buildings','other'].forEach(k=>{ ap[k] = Array.isArray(est.all_photos[k]) ? [...est.all_photos[k]] : []; });
   } else {
     // Migrate legacy
     const fp = (est && (est.photo_data || est.photo_url)) || (pin && (pin.photo_url || pin.photo_data));
@@ -3462,12 +3462,12 @@ function _loadAllPhotosFromEst(est, pin){
 }
 
 function _clearAllPhotos(){
-  window._allPhotos = { front:[], damage:[], angles:[], other:[] };
+  window._allPhotos = { front:[], damage:[], angles:[], buildings:[], other:[] };
   _syncLegacyFromAllPhotos();
 }
 function _allPhotosCount(){
   const ap = window._allPhotos || {};
-  return (ap.front||[]).length + (ap.damage||[]).length + (ap.angles||[]).length + (ap.other||[]).length;
+  return (ap.front||[]).length + (ap.damage||[]).length + (ap.angles||[]).length + (ap.buildings||[]).length + (ap.other||[]).length;
 }
 
 function openPhotoModal(pinId){
@@ -11311,9 +11311,9 @@ goTab = function(t){
 // Also sync applyRoleUI visibility for nav items
 function syncNavRoleUI(){
   // Mirror tab-btn display:none/flex to nav-menu-items
+  // Note: zones is always visible (its tab-btn is a legacy hidden stub, not a role-gated item)
   const map = {
     'agency-tab-btn': 'agency-nav-item',
-    'zones-tab-btn': 'zones-nav-item',
     'settings-tab-btn': 'settings-nav-item',
     'admin-panel-tab-btn': 'admin-nav-item'
   };
@@ -11324,6 +11324,9 @@ function syncNavRoleUI(){
       navItem.style.display = tabBtn.style.display === 'none' ? 'none' : '';
     }
   });
+  // Zones is always visible for all roles
+  const zonesNavItem = document.getElementById('zones-nav-item');
+  if(zonesNavItem) zonesNavItem.style.display = '';
   // Populate nav user info section
   const nameEl = document.getElementById('nav-user-name');
   const roleEl = document.getElementById('nav-user-role');
