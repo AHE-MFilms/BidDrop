@@ -824,9 +824,12 @@ tr:hover td{background:var(--card);}
     <div class="map-panel" id="map-panel">
       <div class="map-panel-drag" onclick="togglePinPanel()"></div>
       <div class="mp-hdr">
-        <div class="mp-title">
-          Pinned Homes
-          <span class="badge" id="pin-count">0</span>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <div class="mp-title" style="margin:0;">
+            Pinned Homes
+            <span class="badge" id="pin-count">0</span>
+          </div>
+          <button id="pin-bulk-toggle" onclick="togglePinBulkMode()" style="background:none;border:1px solid var(--border);border-radius:7px;padding:4px 10px;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.4px;text-transform:uppercase;white-space:nowrap;">☑ Select</button>
         </div>
         <div class="filters">
           <button class="fchip active" data-s="all" onclick="filterPins('all')">All</button>
@@ -839,7 +842,27 @@ tr:hover td{background:var(--card);}
           <button class="fchip" data-s="lost" onclick="filterPins('lost')">🔴 Lost</button>
         </div>
       </div>
-      <div class="map-tip">👆 Drop a pin → tap it → Measure This Roof</div>
+      <!-- Pin bulk action bar -->
+      <div id="pin-bulk-bar" style="display:none;flex-direction:column;gap:6px;padding:8px 10px;background:var(--card2);border-bottom:1px solid var(--border);flex-shrink:0;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--text);cursor:pointer;">
+            <input type="checkbox" id="pin-select-all" onchange="toggleAllPinSelect(this.checked)" style="cursor:pointer;"> Select All
+          </label>
+          <span id="pin-selected-count" style="font-size:12px;color:var(--muted);margin-left:4px;">0 selected</span>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button onclick="bulkDeletePins()" style="background:#EF4444;border:none;border-radius:6px;padding:5px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">🗑 Delete</button>
+          <button onclick="bulkSetPinStatus('needs_roof')" style="background:rgba(242,92,5,.2);border:1px solid var(--accent);border-radius:6px;padding:5px 10px;color:var(--accent);font-size:11px;font-weight:700;cursor:pointer;">🟠 Needs Roof</button>
+          <button onclick="bulkSetPinStatus('contacted')" style="background:rgba(168,85,247,.15);border:1px solid #A855F7;border-radius:6px;padding:5px 10px;color:#A855F7;font-size:11px;font-weight:700;cursor:pointer;">🟣 Contacted</button>
+          <button onclick="bulkSetPinStatus('quoted')" style="background:rgba(59,130,246,.15);border:1px solid var(--info);border-radius:6px;padding:5px 10px;color:var(--info);font-size:11px;font-weight:700;cursor:pointer;">🔵 Quoted</button>
+          <button onclick="bulkSetPinStatus('signed')" style="background:rgba(34,197,94,.15);border:1px solid var(--success);border-radius:6px;padding:5px 10px;color:var(--success);font-size:11px;font-weight:700;cursor:pointer;">🟢 Signed</button>
+          <button onclick="bulkSetPinStatus('converted')" style="background:rgba(34,197,94,.2);border:1px solid var(--success);border-radius:6px;padding:5px 10px;color:var(--success);font-size:11px;font-weight:700;cursor:pointer;">✅ Converted</button>
+          <button onclick="bulkSetPinStatus('not_interested')" style="background:rgba(61,82,105,.2);border:1px solid var(--muted);border-radius:6px;padding:5px 10px;color:var(--mid);font-size:11px;font-weight:700;cursor:pointer;">⚫ Pass</button>
+          <button onclick="bulkSetPinStatus('lost')" style="background:rgba(239,68,68,.15);border:1px solid #EF4444;border-radius:6px;padding:5px 10px;color:#EF4444;font-size:11px;font-weight:700;cursor:pointer;">🔴 Lost</button>
+          <button onclick="bulkSendPinsToFollowUp()" style="background:#1a7f4b;border:none;border-radius:6px;padding:5px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">✉️ Follow Up All</button>
+        </div>
+      </div>
+      <div class="map-tip" id="map-tip">👆 Drop a pin → tap it → Measure This Roof</div>
       <div class="pin-list" id="pin-list"></div>
     </div>
   </div>
@@ -1004,11 +1027,13 @@ tr:hover td{background:var(--card);}
         </div>
       </div>
       <!-- Bulk action bar -->
-      <div id="est-bulk-bar" style="display:none;align-items:center;gap:10px;margin-bottom:10px;padding:8px 12px;background:var(--card2);border-radius:8px;border:1px solid var(--border);">
-        <span id="est-selected-count" style="font-size:13px;font-weight:600;color:var(--text);">0 selected</span>
-        <button id="est-bulk-delete-btn" onclick="bulkDeleteEstimates()" style="background:#EF4444;border:none;border-radius:6px;padding:6px 14px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">🗑 Delete Selected</button>
-        <button id="est-bulk-restore-btn" onclick="bulkRestoreEstimates()" style="display:none;background:#1a7f4b;border:none;border-radius:6px;padding:6px 14px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">↩ Restore Selected</button>
-        <button onclick="clearEstimateSelection()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 14px;color:var(--muted);font-size:12px;cursor:pointer;">Clear</button>
+      <div id="est-bulk-bar" style="display:none;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;padding:8px 12px;background:var(--card2);border-radius:8px;border:1px solid var(--border);">
+        <span id="est-selected-count" style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;">0 selected</span>
+        <button id="est-bulk-delete-btn" onclick="bulkDeleteEstimates()" style="background:#EF4444;border:none;border-radius:6px;padding:6px 12px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">🗑 Delete</button>
+        <button id="est-bulk-queue-btn" onclick="bulkAddToMailQueue()" style="background:var(--accent);border:none;border-radius:6px;padding:6px 12px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">📨 Send to Mail Queue</button>
+        <button id="est-bulk-ghl-btn" onclick="bulkSendViaGHL()" style="background:#1a7f4b;border:none;border-radius:6px;padding:6px 12px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">⚡ Send All via GHL</button>
+        <button id="est-bulk-restore-btn" onclick="bulkRestoreEstimates()" style="display:none;background:#1a7f4b;border:none;border-radius:6px;padding:6px 12px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">↩ Restore</button>
+        <button onclick="clearEstimateSelection()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 12px;color:var(--muted);font-size:12px;cursor:pointer;white-space:nowrap;">Clear</button>
       </div>
       <div id="estimates-empty" style="text-align:center;padding:60px 20px;color:var(--muted);">
         <div style="font-size:40px;margin-bottom:12px;">🗂</div>
@@ -3866,6 +3891,75 @@ function filterPins(s){
 }
 
 const PIN_LIST_PAGE_SIZE = 50;
+let _pinBulkMode = false;
+let _selectedPinIds = new Set();
+
+function togglePinBulkMode(){
+  _pinBulkMode = !_pinBulkMode;
+  _selectedPinIds.clear();
+  const bar = document.getElementById('pin-bulk-bar');
+  const btn = document.getElementById('pin-bulk-toggle');
+  const tip = document.getElementById('map-tip');
+  if(bar) bar.style.display = _pinBulkMode ? 'flex' : 'none';
+  if(btn){ btn.textContent = _pinBulkMode ? '✕ Cancel' : '☑ Select'; btn.style.color = _pinBulkMode ? 'var(--accent)' : 'var(--muted)'; btn.style.borderColor = _pinBulkMode ? 'var(--accent)' : 'var(--border)'; }
+  if(tip) tip.style.display = _pinBulkMode ? 'none' : 'block';
+  updatePinSelectionCount();
+  renderPinList();
+}
+function toggleAllPinSelect(checked){
+  const list = curFilter==='all' ? S.pins : S.pins.filter(p=>p.status===curFilter);
+  if(checked) list.forEach(p=>_selectedPinIds.add(p.id));
+  else _selectedPinIds.clear();
+  updatePinSelectionCount();
+  document.querySelectorAll('.pin-cb').forEach(cb=>{ cb.checked = checked; });
+}
+function togglePinSelect(pid){
+  if(_selectedPinIds.has(pid)) _selectedPinIds.delete(pid);
+  else _selectedPinIds.add(pid);
+  updatePinSelectionCount();
+  const all = document.getElementById('pin-select-all');
+  const list = curFilter==='all' ? S.pins : S.pins.filter(p=>p.status===curFilter);
+  if(all){ all.checked = _selectedPinIds.size === list.length && list.length > 0; all.indeterminate = _selectedPinIds.size > 0 && _selectedPinIds.size < list.length; }
+}
+function updatePinSelectionCount(){
+  const cnt = document.getElementById('pin-selected-count');
+  if(cnt) cnt.textContent = _selectedPinIds.size + ' selected';
+}
+function bulkDeletePins(){
+  if(!_selectedPinIds.size) return;
+  if(!confirm('Delete '+_selectedPinIds.size+' pinned home(s)? This cannot be undone.')) return;
+  const ids = [..._selectedPinIds];
+  ids.forEach(id=>{ rmPin(id, true); });
+  _selectedPinIds.clear();
+  updatePinSelectionCount();
+  toast('Deleted '+ids.length+' pin(s)','info');
+}
+function bulkSetPinStatus(status){
+  if(!_selectedPinIds.size) return;
+  const ids = [..._selectedPinIds];
+  ids.forEach(id=>{
+    const p = S.pins.find(x=>x.id===id);
+    if(p){
+      p.status = status;
+      if(sb) sb.from('pins').update({status, updated_at: new Date().toISOString()}).eq('id', id).then(()=>{});
+      if(markers[id]) markers[id].setIcon && addMarker(p);
+    }
+  });
+  save();
+  _selectedPinIds.clear();
+  updatePinSelectionCount();
+  renderPinList();
+  toast('Updated '+ids.length+' pin(s) to '+status.replace('_',' '),'success');
+}
+function bulkSendPinsToFollowUp(){
+  if(!_selectedPinIds.size){ toast('Select at least one pin','info'); return; }
+  const ids = [..._selectedPinIds];
+  const first = S.pins.find(p=>p.id===ids[0]);
+  if(!first) return;
+  toast('Opening follow-up for '+ids.length+' home(s) — send one at a time','info');
+  openFollowUp(ids[0]);
+}
+
 function renderPinList(){
   const el=document.getElementById('pin-list');
   const list=curFilter==='all'?S.pins:S.pins.filter(p=>p.status===curFilter);
@@ -3885,7 +3979,13 @@ function renderPinList(){
     const _thumbSrc = (p.damage_photos&&p.damage_photos.length) ? p.damage_photos[0] : (p.photo_url || p.photo_data || null);
     const dmgThumb = _thumbSrc ? '<img src="'+_thumbSrc+'" style="width:36px;height:36px;object-fit:cover;border-radius:5px;flex-shrink:0;" onerror="this.style.display=\'none\'">' : '';
     const dmgCount = p.damage_photos&&p.damage_photos.length?'<span style="font-size:10px;color:var(--accent);font-weight:700;">📷'+p.damage_photos.length+'</span>':'';
-    return '<div class="pc" id="pc-'+pid+'" onclick="togglePinCard(\''+pid+'\')">'+'<div class="pc-summary">'+dmgThumb+'<div style="flex:1;min-width:0;"><div class="pc-addr">'+escHtml(p.address)+'</div><div class="pc-meta"><span>'+timeAgo(p.at)+'</span>'+(p.rep?'<span>· '+escHtml(p.rep)+'</span>':'')+'</div></div>'+dmgCount+'<div class="sdot" style="background:'+sColor(p.status)+';margin-top:0;"></div><span class="pc-chevron">›</span></div>'+'<div class="pc-body">'+(p.notes?'<div class="pc-note" style="margin-bottom:8px;">"'+escHtml(p.notes)+'"</div>':'')+'<div class="pc-acts">'+'<button class="btn-xs pr" onclick="event.stopPropagation();goEstFromPin(\''+pid+'\')">'+'📋 Estimate</button>'+'<button class="btn-xs" onclick="event.stopPropagation();openFollowUp(\''+pid+'\')">'+'✉️ Follow Up</button>'+'<button class="btn-xs" onclick="event.stopPropagation();cycleStatus(\''+pid+'\')">'+'↻ Status</button>'+'<button class="btn-xs danger" onclick="event.stopPropagation();rmPin(\''+pid+'\')">'+'✕</button>'+'</div></div></div>';
+    const cbHtml = _pinBulkMode
+      ? '<input type="checkbox" class="pin-cb" data-id="'+pid+'" '+((_selectedPinIds.has(pid))?'checked':'')+' onclick="event.stopPropagation();togglePinSelect(\''+pid+'\')" style="cursor:pointer;width:16px;height:16px;flex-shrink:0;margin-right:4px;">'
+      : '';
+    const clickHandler = _pinBulkMode
+      ? 'onclick="togglePinSelect(\''+pid+'\');this.querySelector(\'.pin-cb\')&&(this.querySelector(\'.pin-cb\').checked=_selectedPinIds.has(\''+pid+'\'))"'
+      : 'onclick="togglePinCard(\''+pid+'\')"';
+    return '<div class="pc" id="pc-'+pid+'" '+clickHandler+'>'+'<div class="pc-summary">'+cbHtml+dmgThumb+'<div style="flex:1;min-width:0;"><div class="pc-addr">'+escHtml(p.address)+'</div><div class="pc-meta"><span>'+timeAgo(p.at)+'</span>'+(p.rep?'<span>· '+escHtml(p.rep)+'</span>':'')+'</div></div>'+dmgCount+'<div class="sdot" style="background:'+sColor(p.status)+';margin-top:0;"></div>'+(! _pinBulkMode?'<span class="pc-chevron">›</span>':'')+'</div>'+(!_pinBulkMode?'<div class="pc-body">'+(p.notes?'<div class="pc-note" style="margin-bottom:8px;">"'+escHtml(p.notes)+'"</div>':'')+'<div class="pc-acts">'+'<button class="btn-xs pr" onclick="event.stopPropagation();goEstFromPin(\''+pid+'\')">'+'📋 Estimate</button>'+'<button class="btn-xs" onclick="event.stopPropagation();openFollowUp(\''+pid+'\')">'+'✉️ Follow Up</button>'+'<button class="btn-xs" onclick="event.stopPropagation();cycleStatus(\''+pid+'\')">'+'↻ Status</button>'+'<button class="btn-xs danger" onclick="event.stopPropagation();rmPin(\''+pid+'\')">'+'✕</button>'+'</div></div>':'')+'</div>';
   }).join('');
   if(hasMore){
     el.insertAdjacentHTML('beforeend',
@@ -4970,9 +5070,19 @@ function updateEstimateSelectionBar(){
   const cnt = document.getElementById('est-selected-count');
   const all = document.getElementById('est-select-all');
   const total = document.querySelectorAll('.est-row-cb').length;
+  const isTrash = _estView === 'trash';
   if(bar) bar.style.display = cbs.length ? 'flex' : 'none';
   if(cnt) cnt.textContent = cbs.length + ' selected';
   if(all){ all.indeterminate = cbs.length>0 && cbs.length<total; if(cbs.length===total && total>0) all.checked=true; }
+  // Show/hide buttons based on view
+  const delBtn = document.getElementById('est-bulk-delete-btn');
+  const queueBtn = document.getElementById('est-bulk-queue-btn');
+  const ghlBtn = document.getElementById('est-bulk-ghl-btn');
+  const restoreBtn = document.getElementById('est-bulk-restore-btn');
+  if(delBtn) delBtn.style.display = isTrash ? 'none' : '';
+  if(queueBtn) queueBtn.style.display = isTrash ? 'none' : '';
+  if(ghlBtn) ghlBtn.style.display = isTrash ? 'none' : '';
+  if(restoreBtn) restoreBtn.style.display = isTrash ? '' : 'none';
 }
 
 // ── Estimate revision history ────────────────────────────────────────────
@@ -5117,6 +5227,65 @@ function bulkRestoreEstimates(){
   });
   save(); clearEstimateSelection(); renderEstimatesTab();
   toast('Restored '+ids.length+' estimate(s)','success');
+}
+
+// ── Bulk: add selected estimates to mail queue ───────────────────────────
+function bulkAddToMailQueue(){
+  const ids = Array.from(document.querySelectorAll('.est-row-cb:checked')).map(cb=>cb.dataset.id);
+  if(!ids.length) return;
+  let added = 0, skipped = 0;
+  ids.forEach(id=>{
+    const est = (S.estimates||[]).find(e=>e.id===id);
+    if(!est) return;
+    const addr = (est.addr||'').trim().toLowerCase();
+    const existing = (S.queue||[]).find(q=>q.addr.trim().toLowerCase()===addr && q.status==='pending');
+    if(existing){ skipped++; return; }
+    const pin = (S.pins||[]).find(p=>p.id===est.pinId);
+    const mainStruct = (est.structures||[])[0] || {};
+    const matMap = {'1.0':'3-Tab Shingle','1.3':'Architectural Shingle','1.8':'Designer Shingle','2.5':'Metal Roofing'};
+    const qItem = {
+      id: 'q_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
+      pinId: est.pinId||null, estId: est.id||null,
+      owner: est.owner||'Homeowner', addr: est.addr||'', email: est.email||'',
+      sqft: mainStruct.sqft||0, pitch: mainStruct.pitch||'6/12',
+      mat: matMap[mainStruct.material]||mainStruct.material||'Architectural Shingle',
+      structures: est.structures||[], total: est.total||0,
+      photo_data: est.photo_data||null,
+      photo_url: est.photo_url||(pin?pin.photo_url:null)||null,
+      damage_photos: est.damage_photos||null,
+      status: 'pending', lobId: null, mailedAt: null,
+      at: new Date().toISOString()
+    };
+    if(!S.queue) S.queue=[];
+    S.queue.unshift(qItem);
+    sbSaveQueueItem(qItem);
+    added++;
+  });
+  save();
+  clearEstimateSelection();
+  let msg = 'Added '+added+' estimate(s) to Mail Queue';
+  if(skipped) msg += ' ('+skipped+' skipped — already queued)';
+  toast(msg, added ? 'success' : 'warn');
+}
+
+// ── Bulk: send selected estimates via GHL ─────────────────────────────────
+function bulkSendViaGHL(){
+  const ids = Array.from(document.querySelectorAll('.est-row-cb:checked')).map(cb=>cb.dataset.id);
+  if(!ids.length) return;
+  if(!confirm('Send '+ids.length+' estimate(s) via GHL? This will trigger a GHL contact/opportunity for each.')) return;
+  let sent = 0;
+  const sendNext = (i)=>{
+    if(i >= ids.length){ toast('Sent '+sent+' estimate(s) via GHL','success'); clearEstimateSelection(); renderEstimatesTab(); return; }
+    const est = (S.estimates||[]).find(e=>e.id===ids[i]);
+    if(!est){ sendNext(i+1); return; }
+    loadEstimateIntoEstimator(ids[i]);
+    setTimeout(async ()=>{
+      try{ await sendViaGHL(); est.sentAt=new Date().toISOString(); est.status='sent'; sent++; }catch(e){ console.warn('GHL bulk send error',e); }
+      save();
+      sendNext(i+1);
+    }, 400);
+  };
+  sendNext(0);
 }
 
 // ── Hard delete (purge from trash) ────────────────────────────────────────
