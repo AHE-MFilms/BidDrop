@@ -8194,17 +8194,24 @@ function openAdminPanel(){
 async function renderAdminPanel(){
   const el = document.getElementById('admin-panel-body');
   if(!el) return;
-  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);">Loading...</div>';
+  el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);">Loading...</div>';
 
-  if(isSuperAdmin()){
-    // Super admin sees all accounts
-    const {data:accounts} = await sb.from('accounts').select('id,name,company_name,created_at,plan,active,mailer_rate,notes,enable_postcard,enable_letter,lookup_credits,free_lookups_used,free_lookups_reset,free_lookups_limit').order('created_at',{ascending:true});
-    const {data:profiles} = await sb.from('user_profiles').select('*');
-    el.innerHTML = renderSuperAdminPanel(accounts||[], profiles||[]);
-  } else if(isAdminOrAbove()){
-    // Account admin sees their users
-    const {data:profiles} = await sb.from('user_profiles').select('*').eq('account_id', currentAccount.id);
-    el.innerHTML = renderAccountAdminPanel(profiles||[]);
+  try {
+    if(isSuperAdmin()){
+      // Use server-side API to bypass RLS (service role key)
+      const d = await adminAPI('agency-data');
+      const accounts = Array.isArray(d.accounts) ? d.accounts : [];
+      const profiles = Array.isArray(d.profiles) ? d.profiles : [];
+      el.innerHTML = renderSuperAdminPanel(accounts, profiles);
+    } else if(isAdminOrAbove()){
+      // Account admin sees their users
+      const {data:profiles} = await sb.from('user_profiles').select('*').eq('account_id', currentAccount.id);
+      el.innerHTML = renderAccountAdminPanel(profiles||[]);
+    } else {
+      el.innerHTML = '<div style="color:var(--muted);padding:20px;">Access denied.</div>';
+    }
+  } catch(e) {
+    el.innerHTML = '<div style="color:#ef4444;padding:20px;">Error loading admin panel: '+e.message+'</div>';
   }
 }
 
