@@ -8240,11 +8240,116 @@ async function renderAdminPanel(){
   }
 }
 
+// Store admin panel data for live filtering
+let _adminPanelData = null;
+
+function filterAdminAccounts(){
+  if(!_adminPanelData) return;
+  const {clientAccounts, allProfiles} = _adminPanelData;
+  const q = (document.getElementById('admin-search')?.value||'').toLowerCase().trim();
+  const sort = document.getElementById('admin-sort')?.value || 'name_asc';
+  const planFilter = document.getElementById('admin-filter-plan')?.value || 'all';
+  const statusFilter = document.getElementById('admin-filter-status')?.value || 'all';
+
+  let filtered = clientAccounts.filter(a=>{
+    const name = (a.company_name||a.name||'').toLowerCase();
+    if(q && !name.includes(q)) return false;
+    if(planFilter !== 'all' && (a.plan||'starter').toLowerCase() !== planFilter) return false;
+    if(statusFilter === 'active' && a.active === false) return false;
+    if(statusFilter === 'inactive' && a.active !== false) return false;
+    return true;
+  });
+
+  filtered.sort((a,b)=>{
+    const nameA = (a.company_name||a.name||'').toLowerCase();
+    const nameB = (b.company_name||b.name||'').toLowerCase();
+    if(sort==='name_asc')  return nameA < nameB ? -1 : nameA > nameB ? 1 : 0;
+    if(sort==='name_desc') return nameA > nameB ? -1 : nameA < nameB ? 1 : 0;
+    if(sort==='plan'){
+      const order = {agency:0,pro:1,starter:2};
+      return (order[a.plan]??2) - (order[b.plan]??2);
+    }
+    if(sort==='users_desc'){
+      const uA = allProfiles.filter(p=>p.account_id===a.id).length;
+      const uB = allProfiles.filter(p=>p.account_id===b.id).length;
+      return uB - uA;
+    }
+    return 0;
+  });
+
+  const grid = document.getElementById('admin-accounts-grid');
+  const countEl = document.getElementById('admin-acct-count');
+  if(countEl) countEl.textContent = 'Client Accounts (' + filtered.length + (filtered.length !== clientAccounts.length ? ' of ' + clientAccounts.length : '') + ')';
+  if(!grid) return;
+  if(!filtered.length){
+    grid.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:10px;">No accounts match your search.</div>';
+    return;
+  }
+  grid.innerHTML = filtered.map(a=>{
+    const users = allProfiles.filter(p=>p.account_id===a.id);
+    const planColor = {starter:'#3B82F6',pro:'#8B5CF6',agency:'#F25C05'}[a.plan]||'#6688A8';
+    const activeColor = a.active!==false ? '#22C55E' : '#EF4444';
+    const rate = parseFloat(a.mailer_rate)||2.50;
+    return '<div class="ag-acct-card">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">' +
+        '<div class="ag-acct-name">'+(a.company_name||a.name)+'</div>' +
+        '<div style="display:flex;gap:4px;">' +
+          '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;background:'+planColor+'22;color:'+planColor+';border:1px solid '+planColor+'44;text-transform:uppercase;">'+(a.plan||'starter')+'</span>' +
+          '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;background:'+activeColor+'22;color:'+activeColor+';border:1px solid '+activeColor+'44;">'+(a.active!==false?'Active':'Inactive')+'</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="ag-acct-meta">'+users.length+' user'+(users.length!==1?'s':'')+
+        (a.mailer_rate?' · $'+rate.toFixed(2)+'/mailer':'')+
+      '</div>' +
+      '<div style="margin:10px 0 6px;border-top:1px solid var(--border);padding-top:8px;">' +
+        users.map(u=>'<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 0;">' +
+          '<div style="font-size:11px;color:var(--mid);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' +
+            '\uD83D\uDC64 <span style="font-weight:600;">'+(u.name||u.email||u.id.slice(0,8))+'</span>' +
+            ' \u2014 <span style="color:var(--accent);font-weight:700;">'+u.role+'</span>' +
+            (u.email?' <span style="color:var(--muted);font-size:10px;">'+escHtml(u.email)+'</span>':'')+
+          '</div>' +
+          '<div style="display:flex;gap:4px;flex-shrink:0;">' +
+            '<button onclick="editUser(\''+u.id+'\',\''+escHtml(u.name||'')+'\'\,\''+escHtml(u.email||'')+'\'\,\''+u.role+'\'\,\''+a.id+'\')" style="background:none;border:1px solid var(--border);border-radius:5px;padding:2px 8px;color:var(--mid);font-size:10px;cursor:pointer;" title="Edit user">\u270F\uFE0F Edit</button>' +
+            '<button onclick="deleteUser(\''+u.id+'\',\''+escHtml(u.name||u.email||'user')+'\')" style="background:none;border:1px solid var(--danger);border-radius:5px;padding:2px 8px;color:var(--danger);font-size:10px;cursor:pointer;" title="Delete user">\uD83D\uDDD1 Delete</button>' +
+          '</div>' +
+        '</div>').join('') +
+      '</div>' +
+      (a.notes?'<div style="font-size:10px;color:var(--muted);margin-top:4px;font-style:italic;">'+escHtml(a.notes)+'</div>':'')+
+      '</div>';
+  }).join('');
+}
+
 function renderSuperAdminPanel(accounts, allProfiles){
   const clientAccounts = accounts.filter(a=>a.id!==AGENCY_ACCOUNT_ID);
+  // Store for live filtering
+  _adminPanelData = {clientAccounts, allProfiles};
   return (
-    '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin-bottom:14px;">Client Accounts ('+clientAccounts.length+')</div>' +
-    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-bottom:24px;">' +
+    // Search + sort + filter toolbar
+    '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:14px;">' +
+      '<div id="admin-acct-count" style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);flex-shrink:0;">Client Accounts ('+clientAccounts.length+')</div>' +
+      '<div style="flex:1;min-width:180px;position:relative;">' +
+        '<span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:13px;pointer-events:none;">🔍</span>' +
+        '<input id="admin-search" oninput="filterAdminAccounts()" placeholder="Search clients..." style="width:100%;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 10px 6px 30px;color:var(--text);font-family:var(--font-b);font-size:12px;outline:none;">' +
+      '</div>' +
+      '<select id="admin-sort" onchange="filterAdminAccounts()" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-family:var(--font-b);font-size:11px;cursor:pointer;">' +
+        '<option value="name_asc">Name A→Z</option>' +
+        '<option value="name_desc">Name Z→A</option>' +
+        '<option value="plan">Plan</option>' +
+        '<option value="users_desc">Most Users</option>' +
+      '</select>' +
+      '<select id="admin-filter-plan" onchange="filterAdminAccounts()" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-family:var(--font-b);font-size:11px;cursor:pointer;">' +
+        '<option value="all">All Plans</option>' +
+        '<option value="starter">Starter</option>' +
+        '<option value="pro">Pro</option>' +
+        '<option value="agency">Agency</option>' +
+      '</select>' +
+      '<select id="admin-filter-status" onchange="filterAdminAccounts()" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-family:var(--font-b);font-size:11px;cursor:pointer;">' +
+        '<option value="all">All Status</option>' +
+        '<option value="active">Active</option>' +
+        '<option value="inactive">Inactive</option>' +
+      '</select>' +
+    '</div>' +
+    '<div id="admin-accounts-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-bottom:24px;">' +
     clientAccounts.map(a=>{
       const users = allProfiles.filter(p=>p.account_id===a.id);
       const planColor = {starter:'#3B82F6',pro:'#8B5CF6',agency:'#F25C05'}[a.plan]||'#6688A8';
