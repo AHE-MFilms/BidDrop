@@ -3925,14 +3925,34 @@ function updatePinSelectionCount(){
   const cnt = document.getElementById('pin-selected-count');
   if(cnt) cnt.textContent = _selectedPinIds.size + ' selected';
 }
-function bulkDeletePins(){
+async function bulkDeletePins(){
   if(!_selectedPinIds.size) return;
-  if(!confirm('Delete '+_selectedPinIds.size+' pinned home(s)? This cannot be undone.')) return;
   const ids = [..._selectedPinIds];
-  ids.forEach(id=>{ rmPin(id, true); });
+  if(!confirm('Delete '+ids.length+' pinned home(s)? This cannot be undone.')) return;
+  // Single confirm upfront, then delete all without calling rmPin (which has its own confirm)
+  let deleted = 0;
+  for(const id of ids){
+    try{
+      await sbDeletePin(id);
+      S.pins = S.pins.filter(p=>p.id!==id);
+      if(markers[id]){
+        if(clusterGroup) clusterGroup.removeLayer(markers[id]);
+        else if(map) map.removeLayer(markers[id]);
+        delete markers[id];
+      }
+      deleted++;
+    }catch(e){
+      console.warn('Bulk delete failed for pin',id,e);
+    }
+  }
   _selectedPinIds.clear();
   updatePinSelectionCount();
-  toast('Deleted '+ids.length+' pin(s)','info');
+  // Exit bulk mode after delete
+  if(_pinBulkMode) togglePinBulkMode();
+  save();
+  renderPinList();
+  refreshZoneOverlays();
+  toast('Deleted '+deleted+' pin(s)','info');
 }
 function bulkSetPinStatus(status){
   if(!_selectedPinIds.size) return;
