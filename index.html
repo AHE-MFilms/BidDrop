@@ -4511,7 +4511,7 @@ function togglePinBulkMode(){
   renderPinList();
 }
 function toggleAllPinSelect(checked){
-  const list = curFilter==='all' ? S.pins : S.pins.filter(p=>p.status===curFilter);
+  const list = (curFilter==='all' ? S.pins : S.pins.filter(p=>p.status===curFilter)).filter(p=>!p.deleted_at);
   if(checked) list.forEach(p=>_selectedPinIds.add(p.id));
   else _selectedPinIds.clear();
   updatePinSelectionCount();
@@ -4538,7 +4538,8 @@ async function bulkDeletePins(){
   for(const id of ids){
     try{
       await sbDeletePin(id);
-      S.pins = S.pins.filter(p=>p.id!==id);
+      const _bp = S.pins.find(p=>p.id===id);
+      if(_bp) _bp.deleted_at = new Date().toISOString();
       if(markers[id]){
         if(clusterGroup) clusterGroup.removeLayer(markers[id]);
         else if(map) map.removeLayer(markers[id]);
@@ -4709,20 +4710,26 @@ async function sendFollowUp(){
 }
 
 async function rmPin(id){
-  if(!confirm('Remove this pin?'))return;
+  if(!confirm('Move this pin to Trash?'))return;
   try{
     await sbDeletePin(id);
   }catch(e){
     toast('Delete failed: '+e.message,'error');
     return;
   }
-  S.pins=S.pins.filter(p=>p.id!==id);
+  // Soft-delete in memory: mark deleted_at so trash tab can show it
+  const pin = S.pins.find(p=>p.id===id);
+  if(pin) pin.deleted_at = new Date().toISOString();
+  // Remove from map
   if(markers[id]){
     if(clusterGroup) clusterGroup.removeLayer(markers[id]);
     else map.removeLayer(markers[id]);
     delete markers[id];
   }
-  renderPinList();save();toast('Pin removed','info');
+  renderPinList();
+  if(typeof renderEstimatesTab==='function') renderEstimatesTab();
+  save();
+  toast('Pin moved to Trash — recoverable for 30 days','info');
 }
 
 function confirmDeletePin(id){
@@ -4741,7 +4748,9 @@ async function doDeletePin(){
     toast('Delete failed: '+e.message,'error');
     return;
   }
-  S.pins=S.pins.filter(p=>p.id!==id);
+  // Soft-delete in memory
+  const _dp = S.pins.find(p=>p.id===id);
+  if(_dp) _dp.deleted_at = new Date().toISOString();
   if(markers[id]){
     if(clusterGroup) clusterGroup.removeLayer(markers[id]);
     else map.removeLayer(markers[id]);
@@ -5648,10 +5657,14 @@ function renderEstimatesTab(){
   const table = document.getElementById('estimates-table');
   const tbody = document.getElementById('estimates-tbody');
   if(!empty || !table || !tbody) return;
-  if(!list.length){
+  // Also collect trashed pins for the trash view
+  const trashedPins = _estView==='trash'
+    ? (S.pins||[]).filter(p=>p.deleted_at && (now - new Date(p.deleted_at).getTime() < 30*24*60*60*1000))
+    : [];
+  if(!list.length && !trashedPins.length){
     empty.style.display='block'; table.style.display='none';
-    const lbl = empty.querySelector('div:nth-child(2)');
-    if(lbl) lbl.textContent = _estView==='trash' ? 'Trash is empty' : 'No saved estimates yet';
+    const lbl2 = empty.querySelector('div:nth-child(2)');
+    if(lbl2) lbl2.textContent = _estView==='trash' ? 'Trash is empty' : 'No saved estimates yet';
     return;
   }
   empty.style.display='none'; table.style.display='table';
@@ -5692,6 +5705,22 @@ function renderEstimatesTab(){
       +'<td style="padding:12px;text-align:center;">'
         +'<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">'+actionBtns+'</div>'
       +'</td>'
+      +'</tr>';
+  }).join('') + trashedPins.map(function(pin){
+    const date = pin.deleted_at ? new Date(pin.deleted_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
+    const addr = pin.address || '—';
+    const shortAddr = addr.split(',')[0];
+    const pid = escHtml(pin.id);
+    const pinActionBtns = '<button onclick="restorePin('' + pid + '')" style="background:#1a7f4b;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#8629; Restore Pin</button>'
+      + '<button onclick="hardDeletePin('' + pid + '')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">&#10005; Purge</button>';
+    return '<tr style="border-bottom:1px solid var(--border);opacity:.75;">'
+      +'<td style="padding:10px 8px;"></td>'
+      +'<td style="padding:12px;font-size:14px;font-weight:600;color:var(--text);">'+escHtml(shortAddr)+'<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+escHtml(addr.split(',').slice(1).join(',').trim())+'</div><div style="margin-top:3px;"><span style="background:rgba(242,92,5,.1);color:var(--accent);border:1px solid rgba(242,92,5,.3);border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;">PIN ONLY</span></div></td>'
+      +'<td style="padding:12px;font-size:13px;color:var(--mid);">—</td>'
+      +'<td style="padding:12px;font-size:12px;color:var(--muted);">'+escHtml(pin.rep||'—')+'</td>'
+      +'<td style="padding:12px;text-align:right;font-family:var(--font-h);font-size:16px;font-weight:700;color:var(--muted);">—</td>'
+      +'<td style="padding:12px;font-size:12px;color:var(--muted);">'+date+'<div style="margin-top:4px;"><span style="background:rgba(239,68,68,.1);color:var(--danger);border:1px solid var(--danger);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;">DELETED</span></div></td>'
+      +'<td style="padding:12px;text-align:center;"><div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">'+pinActionBtns+'</div></td>'
       +'</tr>';
   }).join('');
 }
@@ -5851,6 +5880,32 @@ function bulkDeleteEstimates(){
 }
 
 // ── Restore from trash ────────────────────────────────────────────────────
+async function hardDeletePin(pinId){
+  if(!confirm('Permanently delete this pin? This cannot be undone.')) return;
+  if(!currentAccount) return;
+  try{
+    await sb.from('pins').delete().eq('id', pinId);
+    S.pins = S.pins.filter(p=>p.id!==pinId);
+    if(typeof renderEstimatesTab==='function') renderEstimatesTab();
+    toast('Pin permanently deleted','info');
+  }catch(e){
+    toast('Purge failed: '+e.message,'error');
+  }
+}
+async function restorePin(pinId){
+  const pin = (S.pins||[]).find(p=>p.id===pinId);
+  if(!pin) return;
+  try{
+    await sbRestorePin(pinId);
+    delete pin.deleted_at;
+    addMarker(pin);
+    renderPinList();
+    if(typeof renderEstimatesTab==='function') renderEstimatesTab();
+    toast('Pin restored','success');
+  }catch(e){
+    toast('Restore failed: '+e.message,'error');
+  }
+}
 function restoreEstimate(estId){
   const est = (S.estimates||[]).find(e=>e.id===estId);
   if(!est) return;
@@ -8844,7 +8899,13 @@ async function sbSavePin(pin){
 
 async function sbDeletePin(pinId){
   if(!currentAccount) return;
-  const {error} = await sb.from('pins').delete().eq('id', pinId);
+  // Soft-delete: set deleted_at so pin moves to Trash (recoverable for 30 days)
+  const {error} = await sb.from('pins').update({deleted_at: new Date().toISOString()}).eq('id', pinId);
+  if(error) throw new Error(error.message);
+}
+async function sbRestorePin(pinId){
+  if(!currentAccount) return;
+  const {error} = await sb.from('pins').update({deleted_at: null}).eq('id', pinId);
   if(error) throw new Error(error.message);
 }
 
@@ -9036,6 +9097,7 @@ async function loadPinsFromSupabase(){
   pinListPage = 0;
   // 2. Load the 500 most-recent pins so the sidebar and dashboard work immediately
   const {data, error} = await sb.from('pins').select('*').eq('account_id', currentAccount.id)
+    .is('deleted_at', null)
     .order('created_at', {ascending:false}).limit(500);
   if(error){console.error('Load pins error:', error); return;}
   S.pins = (data||[]).map(_rowToPin);
@@ -9065,6 +9127,7 @@ async function loadPinsForViewport(){
   const sw = b.getSouthWest(), ne = b.getNorthEast();
   const {data, error} = await sb.from('pins').select('*')
     .eq('account_id', currentAccount.id)
+    .is('deleted_at', null)
     .gte('lat', sw.lat).lte('lat', ne.lat)
     .gte('lng', sw.lng).lte('lng', ne.lng)
     .order('created_at', {ascending:false})
