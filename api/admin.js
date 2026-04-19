@@ -562,23 +562,28 @@ export default async function handler(req, res) {
           `ALTER TABLE pins ADD COLUMN IF NOT EXISTS source TEXT`
         ].join('; ');
         const results = [];
-        try {
-          // Use Supabase Management API with Personal Access Token
-          const r = await fetch(
-            `https://api.supabase.com/v1/projects/${projectRef}/database/query`,
-            {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${SUPABASE_PAT}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ query: batchSql })
-            }
-          );
-          const body = await r.text();
-          results.push({ sql: 'batch migration', status: r.status, ok: r.ok, body: body.substring(0, 300) });
-        } catch (sqlErr) {
-          results.push({ sql: 'batch migration', status: 0, ok: false, body: sqlErr.message });
+        // Run each DDL statement individually via Supabase pg_meta API (uses SERVICE_KEY)
+        const statements = batchSql.split('; ');
+        for (const stmt of statements) {
+          if (!stmt.trim()) continue;
+          try {
+            const r = await fetch(
+              `${SUPABASE_URL}/rest/v1/rpc/exec_sql`,
+              {
+                method: 'POST',
+                headers: {
+                  'apikey': SERVICE_KEY,
+                  'Authorization': `Bearer ${SERVICE_KEY}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ sql: stmt })
+              }
+            );
+            const body = await r.text();
+            results.push({ sql: stmt.substring(0, 80), status: r.status, ok: r.ok });
+          } catch (sqlErr) {
+            results.push({ sql: stmt.substring(0, 80), status: 0, ok: false, body: sqlErr.message });
+          }
         }
         return res.json({ results });
       }
