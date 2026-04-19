@@ -2235,22 +2235,16 @@ function loadEstFromPicker(){
   clearHomePhoto();
   ['a-sky','a-chim','a-gut'].forEach(function(id){var el=document.getElementById(id);if(el)el.checked=false;});
   // Try to load from S.estimates first (has photo_data), fall back to pin.estimate
-  const savedEst = (S.estimates||[]).find(function(e){return e.pinId === p.id;});
+  const savedEst = (S.estimates||[]).find(function(e){return e.pinId === p.id && !e.deletedAt;});
+  // Always reset _allPhotos before loading (prevents stale photos from previous pin)
+  _clearAllPhotos();
   if(savedEst){
     if(savedEst.owner) document.getElementById('e-owner').value = savedEst.owner;
     if(savedEst.email) document.getElementById('e-email').value = savedEst.email;
     if(savedEst.structures && savedEst.structures.length) structures = savedEst.structures.map(function(s){return normStruct(s);});
     else structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'1.15',mat:'1.3',complexity:'1.12',pts:null}];
-    // Restore photo from estimate record
-    const photoSrc = savedEst.photo_data || savedEst.photo_url || p.photo_url || null;
-    if(photoSrc){
-      window._homePhotoData = photoSrc;
-    window._damagePhotos = savedEst.damage_photos || p.damage_photos || [];
-      const prev = document.getElementById('home-photo-preview');
-      if(prev) prev.innerHTML = '<img src="'+photoSrc+'" style="width:100%;height:100%;object-fit:cover;">';
-      const clr = document.getElementById('clear-photo-btn');
-      if(clr) clr.style.display = 'block';
-    }
+    // Load all photos via unified system (migrates legacy fields automatically)
+    _loadAllPhotosFromEst(savedEst, p);
     window._editingEstimateId = savedEst.id;
   } else if(p.estimate){
     const est = typeof p.estimate === 'string' ? JSON.parse(p.estimate) : p.estimate;
@@ -2258,21 +2252,12 @@ function loadEstFromPicker(){
     if(est.email) document.getElementById('e-email').value = est.email;
     if(est.structures && est.structures.length) structures = est.structures.map(function(s){return normStruct(s);})
     else structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'1.15',mat:'1.3',complexity:'1.12',pts:null}];
-    // Load pin photo if available
-    if(p.photo_url){
-      const prev = document.getElementById('home-photo-preview');
-      if(prev) prev.innerHTML = '<img src="'+p.photo_url+'" style="width:100%;height:100%;object-fit:cover;">';
-      const clr = document.getElementById('clear-photo-btn');
-      if(clr) clr.style.display = 'block';
-    }
+    // Load all photos via unified system
+    _loadAllPhotosFromEst(est, p);
   } else {
     structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'1.15',mat:'1.3',complexity:'1.12',pts:null}];
-    if(p.photo_url){
-      const prev = document.getElementById('home-photo-preview');
-      if(prev) prev.innerHTML = '<img src="'+p.photo_url+'" style="width:100%;height:100%;object-fit:cover;">';
-      const clr = document.getElementById('clear-photo-btn');
-      if(clr) clr.style.display = 'block';
-    }
+    // Load photos from pin (no estimate yet)
+    _loadAllPhotosFromPin(p);
   }
   renderStructures(); calcP(); updatePreview();
   // Show cached equity data if already looked up previously
@@ -9614,7 +9599,13 @@ window.addEventListener('load', ()=>{
   sb.auth.onAuthStateChange((event, session) => {
     console.log('[Auth]', event, session ? session.user?.email : 'no-session');
     if(event === 'SIGNED_OUT'){
-      onSignedOut();
+      // Only clear state if we were actually logged in (_appInitialized=true).
+      // Supabase v2 fires SIGNED_OUT for the old session AFTER SIGNED_IN for the
+      // new session when the user logs out then logs back in. If we clear state
+      // here while the new onSignedIn is already running, pins/estimates disappear.
+      if(_appInitialized){
+        onSignedOut();
+      }
       return;
     }
     if(event === 'PASSWORD_RECOVERY'){
