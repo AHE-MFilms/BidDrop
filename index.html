@@ -588,7 +588,7 @@ tr:hover td{background:var(--card);}
     </div>
     <div class="frow">
       <div class="fg"><label class="fl">Company Name</label><input class="fi" id="ec-name" placeholder="Rapid Roof LLC"></div>
-      <div class="fg"><label class="fl">Company Phone</label><input class="fi" id="ec-phone" placeholder="(313) 555-0100"></div>
+      <div class="fg"><label class="fl">Company Phone</label><input class="fi" id="ec-phone" placeholder="(313) 555-0100" oninput="autoFormatPhone(this)"></div>
     </div>
     <div class="fg"><label class="fl">Company Address</label><input class="fi" id="ec-addr" placeholder="123 Main St, Detroit, MI 48000"></div>
     <div class="frow">
@@ -1307,7 +1307,7 @@ tr:hover td{background:var(--card);}
         <div class="stab-card-body" id="stab-body-company">
           <div class="frow">
             <div class="fg"><label class="fl">Company Name</label><input class="fi" id="s-co" placeholder="T&amp;M Roofing"></div>
-            <div class="fg"><label class="fl">Phone</label><input class="fi" id="s-ph" placeholder="(313) 555-0100"></div>
+            <div class="fg"><label class="fl">Phone</label><input class="fi" id="s-ph" placeholder="(313) 555-0100" oninput="autoFormatPhone(this)"></div>
           </div>
           <div class="frow">
             <div class="fg"><label class="fl">Company Address</label><input class="fi" id="s-addr" placeholder="123 Business Dr, Detroit MI 48000"></div>
@@ -1347,6 +1347,10 @@ tr:hover td{background:var(--card);}
                     &#128193; Upload Logo
                     <input type="file" accept="image/*" style="display:none;" onchange="handleLogoUpload(this)">
                   </label>
+                  <div style="font-size:10px;color:var(--muted);margin-top:5px;line-height:1.5;text-align:center;">
+                    PNG or SVG &bull; transparent background<br>
+                    <strong style="color:var(--mid);">400 &times; 200 px</strong> recommended &bull; max 2 MB
+                  </div>
                   <button onclick="clearLogo()" style="width:100%;margin-top:5px;background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-align:center;">Remove logo</button>
                 </div>
               </div>
@@ -1361,6 +1365,10 @@ tr:hover td{background:var(--card);}
                     &#128100; Upload Headshot
                     <input type="file" accept="image/*" style="display:none;" onchange="handleHeadshotUpload(this)">
                   </label>
+                  <div style="font-size:10px;color:var(--muted);margin-top:5px;line-height:1.5;text-align:center;">
+                    PNG preferred &bull; transparent background<br>
+                    <strong style="color:var(--mid);">400 &times; 500 px</strong> (portrait) &bull; max 2 MB
+                  </div>
                   <button onclick="clearHeadshot()" style="width:100%;margin-top:5px;background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-align:center;">Remove headshot</button>
                   <div style="margin-top:8px;">
                     <label class="fl" style="margin-bottom:4px;">Face Position</label>
@@ -1378,6 +1386,10 @@ tr:hover td{background:var(--card);}
               <label class="fl">Review Image 1 (Page 4)</label>
               <div id="review1-preview" style="width:100%;height:80px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);overflow:hidden;margin:6px 0 5px;">No image</div>
               <label style="display:block;background:var(--card);border:2px solid var(--border);border-radius:7px;padding:8px;text-align:center;cursor:pointer;color:var(--mid);font-size:11px;font-weight:600;">&#11088; Upload Review 1<input type="file" accept="image/*" style="display:none;" onchange="handleReviewUpload(this,1)"></label>
+              <div style="font-size:10px;color:var(--muted);margin-top:4px;line-height:1.5;text-align:center;">
+                Screenshot or JPG/PNG &bull; <strong style="color:var(--mid);">800 &times; 400 px</strong><br>
+                Landscape orientation &bull; max 2 MB
+              </div>
               <button onclick="clearReview(1)" style="width:100%;margin-top:4px;background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;text-align:center;">Remove</button>
             </div>
             <!-- Review 2 -->
@@ -1385,6 +1397,10 @@ tr:hover td{background:var(--card);}
               <label class="fl">Review Image 2 (Page 4)</label>
               <div id="review2-preview" style="width:100%;height:80px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);overflow:hidden;margin:6px 0 5px;">No image</div>
               <label style="display:block;background:var(--card);border:2px solid var(--border);border-radius:7px;padding:8px;text-align:center;cursor:pointer;color:var(--mid);font-size:11px;font-weight:600;">&#11088; Upload Review 2<input type="file" accept="image/*" style="display:none;" onchange="handleReviewUpload(this,2)"></label>
+              <div style="font-size:10px;color:var(--muted);margin-top:4px;line-height:1.5;text-align:center;">
+                Screenshot or JPG/PNG &bull; <strong style="color:var(--mid);">800 &times; 400 px</strong><br>
+                Landscape orientation &bull; max 2 MB
+              </div>
               <button onclick="clearReview(2)" style="width:100%;margin-top:4px;background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;text-align:center;">Remove</button>
             </div>
           </div>
@@ -1640,7 +1656,7 @@ tr:hover td{background:var(--card);}
     </div>
     <div class="fg"><label class="fl">Notes</label><input class="fi" id="p-notes" placeholder="e.g. Missing shingles, storm damage visible…"></div>
     <div class="fg"><label class="fl">Canvasser Name</label><input class="fi" id="p-rep" placeholder="Your name"></div>
-    <div class="fg"><label class="fl">Homeowner Phone <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);">(optional, for follow-up)</span></label><input class="fi" id="p-phone" type="tel" placeholder="+1 555 000 0000"></div>
+    <div class="fg"><label class="fl">Homeowner Phone <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);">(optional, for follow-up)</span></label><input class="fi" id="p-phone" type="tel" placeholder="(313) 555-0100" oninput="autoFormatPhone(this)"></div>
     <!-- Damage Photos -->
     <div class="dmg-section">
       <div class="dmg-section-title">📷 Damage Photos (up to 3)</div>
@@ -1692,7 +1708,7 @@ tr:hover td{background:var(--card);}
     <div class="modal-title">✉️ Homeowner Follow-Up</div>
     <div style="font-size:13px;color:var(--muted);margin-bottom:14px;">Send a quick follow-up to the homeowner via GHL (SMS or email).</div>
     <div class="fg"><label class="fl">Homeowner Name</label><input class="fi" id="fu-name" placeholder="e.g. John Smith"></div>
-    <div class="fg"><label class="fl">Phone (SMS)</label><input class="fi" id="fu-phone" type="tel" placeholder="+1 555 000 0000"></div>
+    <div class="fg"><label class="fl">Phone (SMS)</label><input class="fi" id="fu-phone" type="tel" placeholder="(313) 555-0100" oninput="autoFormatPhone(this)"></div>
     <div class="fg"><label class="fl">Email</label><input class="fi" id="fu-email" type="email" placeholder="homeowner@email.com"></div>
     <div class="fg"><label class="fl">Message</label><textarea class="fi" id="fu-message" rows="4" style="resize:vertical;" placeholder="Hi {name}, this is {rep} from {company}. Just following up about your roof..."></textarea></div>
     <div style="display:flex;gap:8px;margin-bottom:14px;">
@@ -3116,6 +3132,23 @@ function flyToResult(lat,lon,name){
   map.flyTo([parseFloat(lat),parseFloat(lon)],19,{duration:.8});
 }
 function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function formatPhone(raw){
+  const d=(raw||'').replace(/\D/g,'');
+  if(!d) return raw||'';
+  // Handle leading country code 1
+  const n=d.length>10&&d[0]==='1'?d.slice(1):d;
+  if(n.length<=3) return '('+n;
+  if(n.length<=6) return '('+n.slice(0,3)+') '+n.slice(3);
+  return '('+n.slice(0,3)+') '+n.slice(3,6)+'-'+n.slice(6,10);
+}
+function autoFormatPhone(el){
+  const pos=el.selectionStart;
+  const prev=el.value;
+  const formatted=formatPhone(prev);
+  el.value=formatted;
+  // Restore cursor approximately
+  try{el.setSelectionRange(Math.min(pos,formatted.length),Math.min(pos,formatted.length));}catch(e){}
+}
 
 document.addEventListener('click',e=>{
   if(!e.target.closest('#map-search-wrap'))
@@ -8396,7 +8429,7 @@ function renderSuperAdminPanel(accounts, allProfiles){
         '</div>' +
         '<div class="frow">' +
           '<div class="fg"><label class="fl">Temp Password *</label><input class="fi" id="new-acct-pass" placeholder="min 6 chars" type="password"></div>' +
-          '<div class="fg"><label class="fl">Company Phone</label><input class="fi" id="new-acct-phone" placeholder="(313) 555-0100"></div>' +
+          '<div class="fg"><label class="fl">Company Phone</label><input class="fi" id="new-acct-phone" placeholder="(313) 555-0100" oninput="autoFormatPhone(this)"></div>' +
         '</div>' +
         '<div class="frow">' +
           '<div class="fg"><label class="fl">Company Website</label><input class="fi" id="new-acct-website" placeholder="https://rapidroof.com" type="url"></div>' +
@@ -9501,7 +9534,7 @@ function renderManageTeam(accountId){
       '<div id="mt-edit-'+uid+'" style="display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">' +
         '<div class="frow">' +
           '<div class="fg"><label class="fl">Name</label><input class="fi" id="mt-e-name-'+uid+'" value="'+((u.name||'').replace(/"/g,'&quot;'))+'" placeholder="Full name"></div>' +
-          '<div class="fg"><label class="fl">Phone</label><input class="fi" id="mt-e-phone-'+uid+'" value="'+(u.phone||'')+'" placeholder="(313) 555-0100"></div>' +
+          '<div class="fg"><label class="fl">Phone</label><input class="fi" id="mt-e-phone-'+uid+'" value="'+(u.phone||'')+'" placeholder="(313) 555-0100" oninput="autoFormatPhone(this)"></div>' +
         '</div>' +
         '<div class="frow">' +
           '<div class="fg"><label class="fl">Email</label><input class="fi" id="mt-e-email-'+uid+'" value="'+((u.email||'').replace(/"/g,'&quot;'))+'" placeholder="email@company.com" type="email"></div>' +
