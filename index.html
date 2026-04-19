@@ -9587,39 +9587,51 @@ async function deleteUser(userId, displayName){
 window.addEventListener('load', ()=>{
   // Initialize Supabase client
   sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  // Show login screen immediately
+  // Show login screen immediately (hidden by onSignedIn if session exists)
   showLoginScreen();
 
-  // ── Auth state handler ───────────────────────────────────────────────
-  // CRITICAL: Never call getUser() or any sb.from() inside onAuthStateChange.
-  // Supabase v2 holds an internal auth mutex during the callback; any auth
-  // or DB call made inside it will deadlock. Instead, use the session object
-  // passed directly to the callback (it already has a valid access_token)
-  // and defer all work with setTimeout to release the mutex first.
+  // ── ROBUST INIT STRATEGY ─────────────────────────────────────────────────
+  // Supabase v2 fires auth events in unpredictable order on page load
+  // (INITIAL_SESSION, TOKEN_REFRESHED, SIGNED_OUT can interleave). Relying on
+  // event order caused pins/estimates to disappear after hard refresh or re-login.
+  //
+  // New approach:
+  //   1. Call getSession() directly on load — if a session exists, start the app
+  //      immediately without waiting for any event.
+  //   2. onAuthStateChange only handles two explicit user actions:
+  //        SIGNED_IN  → user just submitted the login form
+  //        SIGNED_OUT → user clicked Sign Out
+  //      All other events (INITIAL_SESSION, TOKEN_REFRESHED) are ignored.
+  //   3. Auto-reload pins every 60 s while the app is open.
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // Step 1 — bootstrap from existing session on every page load / hard refresh
+  sb.auth.getSession().then(({ data: { session } }) => {
+    if(session && session.user && !_appInitialized){
+      onSignedIn(session.user).catch(e => {
+        console.error('[Auth] onSignedIn error (getSession bootstrap):', e);
+        showLoginScreen();
+        sb.auth.signOut().catch(()=>{});
+      });
+    }
+  }).catch(e => console.warn('[Auth] getSession error:', e));
+
+  // Step 2 — listen only for explicit user-triggered events
   sb.auth.onAuthStateChange((event, session) => {
     console.log('[Auth]', event, session ? session.user?.email : 'no-session');
-    if(event === 'SIGNED_OUT'){
-      // Only clear state if we were actually logged in (_appInitialized=true).
-      // Supabase v2 fires SIGNED_OUT for the old session AFTER SIGNED_IN for the
-      // new session when the user logs out then logs back in. If we clear state
-      // here while the new onSignedIn is already running, pins/estimates disappear.
-      if(_appInitialized){
-        onSignedOut();
-      }
-      return;
-    }
+
     if(event === 'PASSWORD_RECOVERY'){
       window._inPasswordRecovery = true;
       showSetNewPassword();
       return;
     }
-    if((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session){
-      // Block auto-login if we're in the middle of a password reset flow
+
+    // New login from the sign-in form
+    if(event === 'SIGNED_IN' && session && !_appInitialized){
       if(window._inPasswordRecovery) return;
-      // Defer to next tick so Supabase releases its internal mutex before
-      // we make any DB queries. Without this, all .from() calls hang.
+      // Defer to release Supabase internal auth mutex before making DB calls
       setTimeout(() => {
-        if(_appInitialized) return; // already loaded — skip duplicate SIGNED_IN/INITIAL_SESSION events
+        if(_appInitialized) return;
         onSignedIn(session.user).catch(e => {
           console.error('[Auth] onSignedIn error:', e);
           const errEl = document.getElementById('login-error');
@@ -9630,8 +9642,22 @@ window.addEventListener('load', ()=>{
           sb.auth.signOut().catch(()=>{});
         });
       }, 0);
+      return;
+    }
+
+    // Explicit sign-out — only clear state if we were actually logged in
+    if(event === 'SIGNED_OUT' && _appInitialized){
+      onSignedOut();
+      return;
     }
   });
+
+  // Step 3 — auto-reload pins every 60 s (catches missed realtime events)
+  setInterval(() => {
+    if(_appInitialized && currentAccount){
+      loadPinsFromSupabase().catch(e => console.warn('[AutoReload] pins:', e));
+    }
+  }, 60000);
 });
 
 async function fetchMasterLobKey(){
