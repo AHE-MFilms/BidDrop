@@ -7077,10 +7077,31 @@ function previewQueueItem(id){
         </button>
       </div>
     </div>
-    <div style="width:100%;max-width:760px;background:#fff;border-radius:8px;overflow:hidden;" class="mailer">
+    <div id="letter-preview-pages" style="width:100%;max-width:760px;display:flex;flex-direction:column;gap:24px;">
       ${mailerHtml}
     </div>`;
   document.body.appendChild(modal);
+  // Scale each ml-page to fit the container width
+  setTimeout(function(){
+    const container = modal.querySelector('#letter-preview-pages');
+    if(!container) return;
+    const pages = container.querySelectorAll('.ml-page');
+    const containerW = container.offsetWidth;
+    // 7.5in at 96dpi = 720px
+    const pageNativeW = 720;
+    const scale = Math.min(1, containerW / pageNativeW);
+    pages.forEach(function(page){
+      page.style.transformOrigin = 'top left';
+      page.style.transform = 'scale(' + scale + ')';
+      page.style.marginBottom = Math.round((page.offsetHeight * scale) - page.offsetHeight) + 'px';
+      // Wrap each page in a sized container so layout flows correctly
+      const wrapper = document.createElement('div');
+      wrapper.style.cssText = 'width:' + Math.round(pageNativeW * scale) + 'px;height:' + Math.round(page.offsetHeight * scale) + 'px;overflow:hidden;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.5);';
+      page.parentNode.insertBefore(wrapper, page);
+      wrapper.appendChild(page);
+      page.style.marginBottom = '0';
+    });
+  }, 60);
   // Also keep queue-preview-content in sync for printQueuePreview()
   const qpc=document.getElementById('queue-preview-content');
   if(qpc) qpc.innerHTML=mailerHtml;
