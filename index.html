@@ -1067,7 +1067,7 @@ tr:hover td{background:var(--card);}
         <span style="font-size:24px;font-weight:800;color:var(--accent);" id="qcb-total">—</span>
         <div>
           <div style="font-size:13px;font-weight:700;color:var(--text);">Credits Available</div>
-          <div style="font-size:10px;color:var(--mid);">Each mailer = 1 credit ($4.00)</div>
+          <div style="font-size:10px;color:var(--mid);">Each mailer = 4 credits</div>
         </div>
       </div>
       <span id="qcb-free" style="display:none;">—</span>
@@ -6174,7 +6174,7 @@ async function sendLob(id){
     }});
     if(d && d.error === 'no_credits'){
       // Not enough credits — show Buy Credits modal
-      toast('Not enough credits to send a letter ($4.00 = 16 credits). Please purchase more credits.','error');
+      toast('Not enough credits to send a letter (4 credits required). Please purchase more credits.','error');
       if(d._credits) S.cfg._creditBalance = d._credits.paid_credits;
       updateCreditBadge();
       setTimeout(()=>showBuyCreditsModal(), 800);
@@ -6491,7 +6491,7 @@ async function sendLobPostcard6x9(id){
     }});
     if(d && d.error === 'no_credits'){
       // Not enough credits — show Buy Credits modal
-      toast('Not enough credits to send a postcard ($4.00 = 16 credits). Please purchase more credits.','error');
+      toast('Not enough credits to send a postcard (4 credits required). Please purchase more credits.','error');
       if(d._credits) S.cfg._creditBalance = d._credits.paid_credits;
       updateCreditBadge();
       setTimeout(()=>showBuyCreditsModal(), 800);
