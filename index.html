@@ -2412,10 +2412,69 @@ function saveEstimateNow(){
   // Fix F: auto-advance pin status to 'quoted' when an estimate is saved
   if(pin.status === 'needs_roof' || !pin.status){
     pin.status = 'quoted';
+    // Save to dedicated estimates table (primary persistence)
+    const estRow = {
+      id: estRecord.id,
+      account_id: currentAccount ? currentAccount.id : null,
+      pin_id: currentEstPinId,
+      addr: estRecord.addr,
+      owner: estRecord.owner,
+      email: estRecord.email,
+      rep: estRecord.rep,
+      total: estRecord.total,
+      structures: estRecord.structures,
+      photo_url: estRecord.photo_url || null,
+      photo_data: estRecord.photo_data || null,
+      all_photos: estRecord.all_photos || null,
+      damage_photos: estRecord.damage_photos || null,
+      skylight: estRecord.skylight || false,
+      skylight_qty: estRecord.skylightQty || 1,
+      chimney: estRecord.chimney || false,
+      gutters: estRecord.gutters || false,
+      gutter_lf: estRecord.gutterLf || 120,
+      version: estRecord.version || 1,
+      is_revision: estRecord.isRevision || false,
+      parent_id: estRecord.parentId || null,
+      saved_at: estRecord.savedAt,
+      deleted_at: null
+    };
+    sb.from('estimates').upsert(estRow, {onConflict:'id'}).then(({error})=>{
+      if(error) console.warn('[BidDrop] Save estimate to estimates table:', error.message);
+    });
+    // Also keep pin.estimate for map badge / backward compat
     sb.from('pins').update({ estimate: pin.estimate, status: 'quoted' }).eq('id', currentEstPinId).then(({error})=>{
       if(error) console.warn('Save estimate to pin:', error);
     });
   } else {
+    // Save to dedicated estimates table
+    const estRow2 = {
+      id: estRecord.id,
+      account_id: currentAccount ? currentAccount.id : null,
+      pin_id: currentEstPinId,
+      addr: estRecord.addr,
+      owner: estRecord.owner,
+      email: estRecord.email,
+      rep: estRecord.rep,
+      total: estRecord.total,
+      structures: estRecord.structures,
+      photo_url: estRecord.photo_url || null,
+      photo_data: estRecord.photo_data || null,
+      all_photos: estRecord.all_photos || null,
+      damage_photos: estRecord.damage_photos || null,
+      skylight: estRecord.skylight || false,
+      skylight_qty: estRecord.skylightQty || 1,
+      chimney: estRecord.chimney || false,
+      gutters: estRecord.gutters || false,
+      gutter_lf: estRecord.gutterLf || 120,
+      version: estRecord.version || 1,
+      is_revision: estRecord.isRevision || false,
+      parent_id: estRecord.parentId || null,
+      saved_at: estRecord.savedAt,
+      deleted_at: null
+    };
+    sb.from('estimates').upsert(estRow2, {onConflict:'id'}).then(({error})=>{
+      if(error) console.warn('[BidDrop] Save estimate to estimates table:', error.message);
+    });
     sb.from('pins').update({ estimate: pin.estimate }).eq('id', currentEstPinId).then(({error})=>{
       if(error) console.warn('Save estimate to pin:', error);
     });
@@ -5587,13 +5646,18 @@ function restoreRevision(revId, activeEstId){
 function deleteEstimate(estId){
   const est = (S.estimates||[]).find(e=>e.id===estId);
   if(!est) return;
-  est.deletedAt = new Date().toISOString();
+  const now = new Date().toISOString();
+  est.deletedAt = now;
+  // Soft-delete in the estimates table (30-day recovery)
+  if(sb) sb.from('estimates').update({deleted_at: now}).eq('id', estId).then(({error})=>{
+    if(error) console.warn('[BidDrop] deleteEstimate:', error.message);
+  });
   // Clear estimate data from the linked pin (keep pin, clear estimate)
   if(est.pinId){
     const pin = (S.pins||[]).find(p=>p.id===est.pinId);
     if(pin){ pin.estimate = null; pin.at_est = null;
       if(sb) sb.from('pins').update({estimate:null}).eq('id',est.pinId).then(()=>{});
-      // Fix C: refresh map marker so popup no longer shows stale estimate badge
+      // Refresh map marker so popup no longer shows stale estimate badge
       if(map && markers[est.pinId]){
         if(clusterGroup) clusterGroup.removeLayer(markers[est.pinId]);
         else map.removeLayer(markers[est.pinId]);
@@ -5602,7 +5666,7 @@ function deleteEstimate(estId){
       addMarker(pin);
     }
   }
-  save(); renderEstimatesTab();
+  renderEstimatesTab();
   toast('Moved to Trash — recoverable for 30 days','info');
 }
 function bulkDeleteEstimates(){
@@ -5631,13 +5695,17 @@ function restoreEstimate(estId){
   const est = (S.estimates||[]).find(e=>e.id===estId);
   if(!est) return;
   delete est.deletedAt;
+  // Restore in estimates table (clear deleted_at)
+  if(sb) sb.from('estimates').update({deleted_at: null}).eq('id', estId).then(({error})=>{
+    if(error) console.warn('[BidDrop] restoreEstimate:', error.message);
+  });
   if(est.pinId){
     const pin = (S.pins||[]).find(p=>p.id===est.pinId);
     if(pin){ pin.estimate = {owner:est.owner,email:est.email,total:est.total,structures:est.structures}; pin.at_est = est.savedAt;
       if(sb) sb.from('pins').update({estimate:pin.estimate}).eq('id',est.pinId).then(()=>{});
     }
   }
-  save(); renderEstimatesTab();
+  renderEstimatesTab();
   toast('Estimate restored','success');
 }
 function bulkRestoreEstimates(){
@@ -8650,12 +8718,105 @@ function _rowToPin(row){
 }
 
 // ── Helper: rebuild S.estimates from S.pins ───────────────────────────────────
+async function migrateEstimatesFromPins(){
+  // One-time migration: copy estimates from pins.estimate JSONB into the estimates table
+  // This runs silently on first login after the estimates table was created.
+  if(!currentAccount || !sb) return;
+  const pinsWithEstimates = (S.pins||[]).filter(p => p.estimate && p.estimate.structures && p.estimate.structures.length > 0);
+  if(!pinsWithEstimates.length) return;
+  // Check which ones are already in the estimates table
+  const {data: existing} = await sb.from('estimates').select('pin_id').eq('account_id', currentAccount.id);
+  const existingPinIds = new Set((existing||[]).map(e => e.pin_id));
+  const toMigrate = pinsWithEstimates.filter(p => !existingPinIds.has(p.id));
+  if(!toMigrate.length) return;
+  console.log('[BidDrop] Migrating', toMigrate.length, 'estimates from pins to estimates table...');
+  const rows = toMigrate.map(p => {
+    const est = p.estimate;
+    return {
+      id: est.id || ('est_' + p.id),
+      account_id: currentAccount.id,
+      pin_id: p.id,
+      addr: est.addr || p.addr || '',
+      owner: est.owner || 'Homeowner',
+      email: est.email || '',
+      rep: est.rep || '',
+      total: est.total || 0,
+      structures: est.structures || [],
+      photo_url: est.photo_url || p.photo_url || null,
+      photo_data: est.photo_data || p.photo_data || null,
+      all_photos: est.all_photos || p.all_photos || null,
+      damage_photos: est.damage_photos || null,
+      skylight: est.skylight || false,
+      skylight_qty: est.skylightQty || 1,
+      chimney: est.chimney || false,
+      gutters: est.gutters || false,
+      gutter_lf: est.gutterLf || 120,
+      version: est.version || 1,
+      is_revision: est.isRevision || false,
+      parent_id: est.parentId || null,
+      saved_at: est.savedAt || new Date().toISOString(),
+      deleted_at: est.deletedAt || null
+    };
+  });
+  const {error} = await sb.from('estimates').upsert(rows, {onConflict:'id'});
+  if(error) console.warn('[BidDrop] migrateEstimatesFromPins error:', error.message);
+  else console.log('[BidDrop] Migration complete:', rows.length, 'estimates migrated');
+}
+
+async function loadEstimatesFromSupabase(){
+  if(!currentAccount || !sb) return;
+  const {data, error} = await sb.from('estimates')
+    .select('*')
+    .eq('account_id', currentAccount.id)
+    .is('deleted_at', null)
+    .order('saved_at', {ascending: false})
+    .limit(2000);
+  if(error){ console.warn('[BidDrop] loadEstimatesFromSupabase error:', error.message); return; }
+  if(!data || !data.length) return;
+  // Map DB rows to in-memory estimate objects
+  const loaded = data.map(row => ({
+    id: row.id,
+    pinId: row.pin_id,
+    addr: row.addr || '',
+    owner: row.owner || '',
+    email: row.email || '',
+    rep: row.rep || '',
+    total: row.total || 0,
+    structures: (row.structures || []).map(normStruct),
+    photo_url: row.photo_url || null,
+    photo_data: row.photo_data || null,
+    all_photos: row.all_photos || null,
+    damage_photos: row.damage_photos || null,
+    skylight: row.skylight || false,
+    skylightQty: row.skylight_qty || 1,
+    chimney: row.chimney || false,
+    gutters: row.gutters || false,
+    gutterLf: row.gutter_lf || 120,
+    version: row.version || 1,
+    isRevision: row.is_revision || false,
+    parentId: row.parent_id || null,
+    savedAt: row.saved_at || row.created_at,
+    sentAt: row.sent_at || null,
+    deletedAt: row.deleted_at || null,
+    status: 'saved'
+  }));
+  // Merge: keep any in-memory estimates not yet in DB, replace those that are
+  const dbIds = new Set(loaded.map(e => e.id));
+  const memOnly = (S.estimates || []).filter(e => !dbIds.has(e.id));
+  S.estimates = [...loaded, ...memOnly];
+  console.log('[BidDrop] Loaded', loaded.length, 'estimates from Supabase');
+}
+
 function _rebuildEstimatesFromPins(){
-  S.estimates = [];
+  // Only add estimates from pins.estimate JSONB that aren't already in S.estimates
+  // (estimates table is the primary source; this is a fallback for legacy data)
+  const existingIds = new Set((S.estimates||[]).map(e=>e.id));
   S.pins.forEach(function(pin){
     if(pin.estimate){
       var est = typeof pin.estimate === 'string' ? JSON.parse(pin.estimate) : pin.estimate;
       if(est && est.structures){
+        const estId = est.id || ('est_' + pin.id);
+        if(existingIds.has(estId)) return; // already loaded from estimates table
         S.estimates.push({
           id: est.id || ('est_' + pin.id),
           pinId: pin.id,
@@ -8686,6 +8847,11 @@ async function loadPinsFromSupabase(){
     .order('created_at', {ascending:false}).limit(500);
   if(error){console.error('Load pins error:', error); return;}
   S.pins = (data||[]).map(_rowToPin);
+  // One-time migration: copy any estimates still only in pins.estimate into the estimates table
+  await migrateEstimatesFromPins();
+  // Load estimates from dedicated table (primary source of truth)
+  await loadEstimatesFromSupabase();
+  // Fall back: rebuild any estimates still only in pins.estimate JSONB
   _rebuildEstimatesFromPins();
   // 3. Clear and re-add all markers via cluster group
   if(clusterGroup) clusterGroup.clearLayers();
