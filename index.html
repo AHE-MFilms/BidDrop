@@ -4316,10 +4316,11 @@ function savePin(){
     rep:document.getElementById('p-rep').value.trim()||'Unknown',
     phone:document.getElementById('p-phone').value.trim()||null,
     at:new Date().toISOString(),
-    // Store first photo as primary; use photo_url for cloud URLs, photo_data for base64 fallback
-    photo_url: (dmgPhotos[0] && dmgPhotos[0].startsWith('http')) ? dmgPhotos[0] : null,
-    photo_data: (dmgPhotos[0] && !dmgPhotos[0].startsWith('http')) ? dmgPhotos[0] : null,
-    damage_photos: dmgPhotos.length ? [...dmgPhotos] : null
+    // Store first photo as primary; prefer all_photos.front[0] (from unified photo modal), fall back to _pinDamagePhotos
+    photo_url: ((window._allPhotos&&window._allPhotos.front&&window._allPhotos.front[0]&&window._allPhotos.front[0].startsWith('http'))?window._allPhotos.front[0]:null) || ((dmgPhotos[0]&&dmgPhotos[0].startsWith('http'))?dmgPhotos[0]:null),
+    photo_data: ((window._allPhotos&&window._allPhotos.front&&window._allPhotos.front[0]&&!window._allPhotos.front[0].startsWith('http'))?window._allPhotos.front[0]:null) || ((dmgPhotos[0]&&!dmgPhotos[0].startsWith('http'))?dmgPhotos[0]:null),
+    damage_photos: dmgPhotos.length ? [...dmgPhotos] : ((window._allPhotos&&(window._allPhotos.damage||[]).length)?[...(window._allPhotos.damage||[])]:null),
+    all_photos: (window._allPhotos && _allPhotosCount()>0) ? JSON.parse(JSON.stringify(window._allPhotos)) : null
   };
   S.pins.unshift(pin);
   addMarker(pin);
@@ -4331,7 +4332,9 @@ function savePin(){
   sbAddActivity('<strong>'+escHtml(pin.rep)+'</strong> pinned <strong>'+escHtml(pin.address)+'</strong>',pin.status);
   ghlAutoPushPin(pin).catch(e=>console.warn('GHL push:',e));
   window._pinDamagePhotos = [];
-  save();closeM('m-pin');toast('📍 Pin saved'+(dmgPhotos.length?' with '+dmgPhotos.length+' photo'+(dmgPhotos.length>1?'s':''):''),'success');
+  const _totalPhotos = _allPhotosCount() || dmgPhotos.length;
+  _clearAllPhotos(); // clear after saving so next pin starts fresh
+  save();closeM('m-pin');toast('📍 Pin saved'+(_totalPhotos?' with '+_totalPhotos+' photo'+(_totalPhotos>1?'s':''):''),'success');
 }
 
 // ── PIN DAMAGE PHOTOS ──────────────────────────────────────────────────────
@@ -4403,6 +4406,7 @@ function removePinPhoto(idx){
 
 function resetPinModal(){
   window._pinDamagePhotos = [];
+  _clearAllPhotos(); // prevent stale photos from previous pin bleeding into new pin drop
   renderPinPhotosRow();
 }
 
@@ -4457,10 +4461,20 @@ function handlePopupPhotoInput(e){
           if(markers[pinId]) markers[pinId].openPopup();
         }
       };
+      const _syncPinAllPhotos = (src)=>{
+        // Keep pin.all_photos in sync so goEstFromPin can load photos
+        if(!pin.all_photos) pin.all_photos = { front:[], damage:[], angles:[], other:[] };
+        if(!pin.all_photos.front) pin.all_photos.front = [];
+        if(!pin.all_photos.damage) pin.all_photos.damage = [];
+        // First photo goes to front (for mailer), rest go to damage
+        if(pin.all_photos.front.length === 0 && src) pin.all_photos.front.push(src);
+        else if(src && !pin.all_photos.front.includes(src) && !pin.all_photos.damage.includes(src) && pin.all_photos.damage.length < 3) pin.all_photos.damage.push(src);
+      };
       if(url){
         if(!pin.damage_photos) pin.damage_photos = [];
         if(pin.damage_photos.length < 3) pin.damage_photos.push(url);
         if(!pin.photo_url && !pin.photo_data) pin.photo_url = url;
+        _syncPinAllPhotos(url);
         doFinish();
       } else {
         // Fallback to base64
@@ -4477,6 +4491,7 @@ function handlePopupPhotoInput(e){
             if(!pin.damage_photos) pin.damage_photos = [];
             if(pin.damage_photos.length < 3) pin.damage_photos.push(data);
             if(!pin.photo_url && !pin.photo_data) pin.photo_data = data;
+            _syncPinAllPhotos(data);
             doFinish();
           };
           img.src=ev.target.result;
@@ -4808,7 +4823,11 @@ function goEstFromPin(id){
   }
   // Load all photos via unified system (estimates table → pin fallback)
   _clearAllPhotos();
-  _loadAllPhotosFromEst(est, p);
+  if(est){
+    _loadAllPhotosFromEst(est, p);
+  } else {
+    _loadAllPhotosFromPin(p); // no estimate yet — load directly from pin's all_photos/damage_photos
+  }
   // Restore home photo preview from the front photo
   const frontPhoto = (window._allPhotos.front||[])[0] || p.photo_url || p.photo_data || null;
   if(frontPhoto){
