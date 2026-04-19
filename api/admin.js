@@ -193,7 +193,7 @@ export default async function handler(req, res) {
       case 'agency-data': {
         if (!isSuperAdmin) { res.status(403).json({ error: 'Super admin only' }); return; }
         const [acctRes, profRes, pinsRes, logRes] = await Promise.all([
-          sbFetch('accounts?select=id,name,company_name,plan,active,mailer_rate,created_at,enable_postcard,enable_letter,lookup_credits,free_lookups_used,free_lookups_reset,free_lookups_limit&order=created_at.asc'),
+          sbFetch('accounts?select=id,name,company_name,plan,active,mailer_rate,created_at,enable_postcard,enable_letter,lookup_credits,free_lookups_used,free_lookups_reset,free_lookups_limit,slug&order=created_at.asc'),
           sbFetch('user_profiles?select=id,account_id,name,email,role'),
           sbFetch('pins?select=id,account_id,status,created_at,rep_name'),
           sbFetch('mailer_log?select=*&order=sent_at.desc&limit=500')
@@ -555,7 +555,11 @@ export default async function handler(req, res) {
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS drip4_subtext TEXT`,
           `CREATE INDEX IF NOT EXISTS idx_pins_account_created ON pins(account_id, created_at DESC)`,
           `CREATE INDEX IF NOT EXISTS idx_pins_account_latlon  ON pins(account_id, lat, lng)`,
-          `CREATE INDEX IF NOT EXISTS idx_queue_account_created ON queue(account_id, created_at DESC)`
+          `CREATE INDEX IF NOT EXISTS idx_queue_account_created ON queue(account_id, created_at DESC)`,
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS slug TEXT`,
+          `CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_slug ON accounts(slug) WHERE slug IS NOT NULL`,
+          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS source TEXT`,
+          `ALTER TABLE pins ADD COLUMN IF NOT EXISTS source TEXT`
         ].join('; ');
         const results = [];
         try {

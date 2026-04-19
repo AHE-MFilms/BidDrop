@@ -1,10 +1,14 @@
 {
   "rewrites": [
-    { "source": "/r/:id", "destination": "/api/r" }
+    { "source": "/r/:id", "destination": "/api/r" },
+    { "source": "/q/:slug", "destination": "/index.html" }
   ],
   "functions": {
     "api/credits.js": {
       "maxDuration": 30
+    },
+    "api/quote.js": {
+      "maxDuration": 15
     }
   },
   "headers": [
