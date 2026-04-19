@@ -6345,320 +6345,164 @@ async function sendLob(id){
 
 // Build the 6×9 postcard FRONT — full-bleed house photo with overlay
 function buildPostcard6x9FrontHtml(item){
-  const cfg    = S.cfg || {};
-  const addr   = item.addr  || '';
-  const owner  = item.owner || 'Homeowner';
-  const co     = cfg.companyName  || 'Your Roofing Co';
-  const ph     = cfg.companyPhone || cfg.phone || '(000) 000-0000';
-  const color  = cfg.brandColor   || '#F25C05';
-  const total  = item.total || 0;
-  const logoUrl= cfg.logoData || '';
-
-  // House photo: use stored photo_url/photo_data, or fall back to Mapbox satellite static image
-  const MB = window._mapboxToken || ['pk.eyJ1IjoibW9uZ29vc2VmaWxtcyIsImEiOiJjbW52M2kyNnMxM3pk','MnJvYTYxZnE1YW51In0.nC5GKWDHIAB4DTAP9hV3hQ'].join('');
-  // Geocode the address to get lat/lng for Mapbox static image
-  // We'll use a data URI approach: embed the photo if available, else use Mapbox static URL
-  const housePhoto = item.photo_url || item.photo_data || null;
-  // Mapbox static satellite image as fallback (geocoded inline via JS at send time)
-  const mapboxFallback = `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/[LON],[LAT],19,0/900x600@2x?access_token=${MB}`;
-
-  const shortAddr = addr.split(',')[0] || addr;
-  const cityState = addr.split(',').slice(1,3).join(',').trim();
-  const finEnabled = cfg.financingEnabled !== false;
-  const finApr  = parseFloat(cfg.financingApr)  || 9.99;
-  const finTerm = parseInt(cfg.financingTerm)   || 60;
-  const finDown = parseFloat(cfg.financingDown) || 0;
-  let finMo = 0;
-  if(finEnabled && total){
-    const loan = total * (1 - finDown/100);
-    const r = finApr / 100 / 12;
-    finMo = r===0 ? Math.round(loan/finTerm) : Math.round(loan * r * Math.pow(1+r,finTerm) / (Math.pow(1+r,finTerm)-1));
-  }
-
-  const photoStyle = housePhoto
-    ? `background-image:url('${housePhoto}');background-size:cover;background-position:center;`
-    : `background:#1a2333;`;
-
-  return `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=864">
-<style>
-  *{margin:0;padding:0;box-sizing:border-box;}
-  html,body{width:864px;height:576px;overflow:hidden;font-family:Arial,Helvetica,sans-serif;position:relative;}
-  .photo-bg{position:absolute;inset:0;${photoStyle}}
-  .photo-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.25) 0%,rgba(0,0,0,.1) 40%,rgba(0,0,0,.65) 75%,rgba(0,0,0,.85) 100%);}
-  .content{position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;justify-content:space-between;padding:34px 38px;}
-  .top-bar{display:flex;justify-content:space-between;align-items:flex-start;}
-  .logo-wrap img{max-height:53px;max-width:192px;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.6));}
-  .logo-wrap .co-name{font-size:22px;font-weight:900;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.7);letter-spacing:1px;}
-  .badge{background:${color};color:#fff;font-size:13px;font-weight:800;padding:8px 18px;border-radius:30px;letter-spacing:.5px;text-transform:uppercase;box-shadow:0 3px 12px rgba(0,0,0,.4);white-space:nowrap;}
-  .bottom{}
-  .headline{font-size:38px;font-weight:900;color:#fff;text-shadow:0 3px 12px rgba(0,0,0,.8);line-height:1.1;margin-bottom:10px;letter-spacing:-0.5px;}
-  .addr-line{font-size:18px;color:rgba(255,255,255,.92);text-shadow:0 2px 6px rgba(0,0,0,.7);margin-bottom:14px;font-weight:600;}
-  .price-strip{background:${color};display:inline-flex;align-items:center;gap:20px;padding:12px 24px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.5);}
-  .price-main{font-size:32px;font-weight:900;color:#fff;letter-spacing:-1px;}
-  .price-label{font-size:11px;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.5px;line-height:1.3;}
-  .price-divider{width:1px;height:36px;background:rgba(255,255,255,.3);}
-  .phone-line{margin-top:14px;font-size:16px;color:rgba(255,255,255,.85);font-weight:700;text-shadow:0 2px 6px rgba(0,0,0,.6);letter-spacing:.3px;}
-</style>
-</head>
-<body>
-  <div class="photo-bg"></div>
-  <div class="content">
-    <div class="top-bar">
-      <div class="logo-wrap">
-        ${logoUrl ? `<img src="${logoUrl}" alt="${escHtml(co)}">` : `<div class="co-name">${escHtml(co)}</div>`}
-      </div>
-      <div class="badge">Your Roof Estimate Is Ready</div>
-    </div>
-    <div class="bottom">
-      <div class="headline">We Assessed<br>Your Roof.</div>
-      <div class="addr-line">📍 ${escHtml(shortAddr)}${cityState ? ', '+escHtml(cityState) : ''}</div>
-      <div class="price-strip">
-        <div>
-          <div class="price-label">Estimated Total</div>
-          <div class="price-main">$${total.toLocaleString()}</div>
-        </div>
-        ${finMo ? `<div class="price-divider"></div><div><div class="price-label">As Low As</div><div class="price-main">$${finMo.toLocaleString()}<span style="font-size:16px;font-weight:600;">/mo</span></div></div>` : ''}
-      </div>
-      <div class="phone-line">📞 ${escHtml(ph)}</div>
-    </div>
-  </div>
-</body>
-</html>`;
+  const cfg=S.cfg||{};
+  const co=cfg.companyName||'Your Roofing Co';
+  const ph=cfg.companyPhone||cfg.phone||'(000) 000-0000';
+  const color=cfg.brandColor||'#F25C05';
+  const total=item.total||0;
+  const logoUrl=cfg.logoData||'';
+  const addr=item.addr||'';
+  const shortAddr=addr.split(',')[0]||addr;
+  const cityState=addr.split(',').slice(1,3).join(',').trim();
+  const housePhoto=item.photo_url||item.photo_data||null;
+  const finEnabled=cfg.financingEnabled!==false;
+  const finApr=parseFloat(cfg.financingApr)||9.99;
+  const finTerm=parseInt(cfg.financingTerm)||60;
+  const finDown=parseFloat(cfg.financingDown)||0;
+  let finMo=0;
+  if(finEnabled&&total){const loan=total*(1-finDown/100);const r=finApr/100/12;finMo=r===0?Math.round(loan/finTerm):Math.round(loan*r*Math.pow(1+r,finTerm)/(Math.pow(1+r,finTerm)-1));}
+  const bg=housePhoto?`background:url('${housePhoto}') center/cover`:'background:#1a2333';
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:864px;height:576px;overflow:hidden;font-family:Arial,sans-serif;position:relative}
+.bg{position:absolute;inset:0;${bg}}
+.bg::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.25) 0%,rgba(0,0,0,.1) 40%,rgba(0,0,0,.65) 75%,rgba(0,0,0,.85) 100%)}
+.c{position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;justify-content:space-between;padding:34px 38px}
+.tb{display:flex;justify-content:space-between;align-items:flex-start}
+.logo img{max-height:53px;max-width:192px;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.6))}
+.logo .cn{font-size:22px;font-weight:900;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.7);letter-spacing:1px}
+.bge{background:${color};color:#fff;font-size:13px;font-weight:800;padding:8px 18px;border-radius:30px;text-transform:uppercase;box-shadow:0 3px 12px rgba(0,0,0,.4);white-space:nowrap}
+.hl{font-size:38px;font-weight:900;color:#fff;text-shadow:0 3px 12px rgba(0,0,0,.8);line-height:1.1;margin-bottom:10px}
+.al{font-size:18px;color:rgba(255,255,255,.92);text-shadow:0 2px 6px rgba(0,0,0,.7);margin-bottom:14px;font-weight:600}
+.ps{background:${color};display:inline-flex;align-items:center;gap:20px;padding:12px 24px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.5)}
+.pm{font-size:32px;font-weight:900;color:#fff;letter-spacing:-1px}
+.pl{font-size:11px;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.5px;line-height:1.3}
+.pd{width:1px;height:36px;background:rgba(255,255,255,.3)}
+.ph{margin-top:14px;font-size:16px;color:rgba(255,255,255,.85);font-weight:700;text-shadow:0 2px 6px rgba(0,0,0,.6)}
+</style></head><body>
+<div class="bg"></div>
+<div class="c">
+<div class="tb">
+<div class="logo">${logoUrl?`<img src="${logoUrl}" alt="${escHtml(co)}">`:`<div class="cn">${escHtml(co)}</div>`}</div>
+<div class="bge">Your Roof Estimate Is Ready</div>
+</div>
+<div>
+<div class="hl">We Assessed<br>Your Roof.</div>
+<div class="al">&#128205; ${escHtml(shortAddr)}${cityState?', '+escHtml(cityState):''}</div>
+<div class="ps">
+<div><div class="pl">Estimated Total</div><div class="pm">$${total.toLocaleString()}</div></div>
+${finMo?`<div class="pd"></div><div><div class="pl">As Low As</div><div class="pm">$${finMo.toLocaleString()}<span style="font-size:16px;font-weight:600">/mo</span></div></div>`:''}
+</div>
+<div class="ph">&#128222; ${escHtml(ph)}</div>
+</div>
+</div>
+</body></html>`;
 }
-
-// Build the 6×9 postcard BACK — estimate summary + USPS address block
 function buildPostcard6x9BackHtml(item){
-  const cfg    = S.cfg || {};
-  const addr   = item.addr  || '';
-  const owner  = item.owner || 'Homeowner';
-  const co     = cfg.companyName  || 'Your Roofing Co';
-  const ph     = cfg.companyPhone || cfg.phone || '(000) 000-0000';
-  const color  = cfg.brandColor   || '#F25C05';
-  const total  = item.total || 0;
-  const logoUrl= cfg.logoData || '';
-  const fromRaw= cfg.companyAddr || cfg.companyAddress || '123 Main St, Detroit, MI 48000';
-  const bookingUrl = cfg.bookingUrl || '';
-  // Use tracked redirect URL if item has an ID, otherwise fall back to booking URL
-  const trackedUrl = item.id ? 'https://biddrop.americashomeexperts.com/r/'+encodeURIComponent(item.id) : bookingUrl;
-  const qrUrl = trackedUrl ? 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&margin=4&data='+encodeURIComponent(trackedUrl) : '';
-  const warr   = cfg.warrantyYears || '10';
-
-  // Structure summary
-  const structs = Array.isArray(item.structures) ? item.structures : [];
-  const mainS = structs[0] || {};
-  const matName = MATLBL[mainS.mat] || mainS.mat || 'Architectural Shingle';
-  const sqft = structs.reduce((s,x)=>s+(parseFloat(x.sqft)||0),0);
-
-  // Financing
-  const finEnabled = cfg.financingEnabled !== false;
-  const finApr  = parseFloat(cfg.financingApr)  || 9.99;
-  const finTerm = parseInt(cfg.financingTerm)   || 60;
-  const finDown = parseFloat(cfg.financingDown) || 0;
-  let finMo = 0;
-  if(finEnabled && total){
-    const loan = total * (1 - finDown/100);
-    const r = finApr / 100 / 12;
-    finMo = r===0 ? Math.round(loan/finTerm) : Math.round(loan * r * Math.pow(1+r,finTerm) / (Math.pow(1+r,finTerm)-1));
-  }
-
-  const pcHook = cfg.postcardHook || 'Most homeowners dread the pushy roofing salesman. I do things differently — I lead with my price, no pressure, no games. Your estimate is ready.';
-  const pcWhy  = cfg.postcardWhy  || 'We assessed your neighborhood and identified your home as a candidate for roof replacement. We look for things like missing shingles, moss, algae, buckling, granule loss, and age. The average roof lasts 18–20 years.';
-  const pcQuote = cfg.postcardQuote || '';
-  const pcGuarantee = cfg.postcardGuarantee || 'No door-knocking. No pressure. Just your price.';
-  const headshotData = cfg.headshot || '';
-  const repName = cfg.repName || '';
-  const repTitle = cfg.repTitle || 'Owner';
-  const badges = [cfg.diff1||'Licensed & Insured', cfg.diff2||'Manufacturer Certified', cfg.diff3||'Workmanship Warranty'].filter(Boolean).slice(0,3);
-  const urgencyDate = new Date(); urgencyDate.setDate(urgencyDate.getDate()+30);
-  const urgencyStr = urgencyDate.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
-
-  return `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=864">
-<style>
-  *{margin:0;padding:0;box-sizing:border-box;}
-  html,body{width:864px;height:576px;font-family:Arial,Helvetica,sans-serif;background:#fff;display:flex;overflow:hidden;}
-  .left{width:528px;height:576px;padding:28px 30px 28px 34px;display:flex;flex-direction:column;justify-content:space-between;border-right:2px solid #eee;}
-  .right{width:336px;height:576px;padding:26px 30px 26px 26px;display:flex;flex-direction:column;justify-content:space-between;}
-  .top-row{display:flex;align-items:center;gap:14px;margin-bottom:14px;}
-  .logo img{max-height:44px;max-width:150px;object-fit:contain;}
-  .logo .co-name{font-size:15px;font-weight:900;color:${color};}
-  .headshot{width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid ${color};flex-shrink:0;}
-  .rep-info{font-size:10px;color:#555;line-height:1.4;}
-  .rep-info strong{display:block;font-size:12px;color:#111;font-weight:800;}
-  .hook{font-size:11px;color:#333;line-height:1.5;margin-bottom:7px;font-style:italic;border-left:3px solid ${color};padding-left:9px;}
-  .why-hdr{font-size:8.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:${color};margin-bottom:3px;}
-  .why{font-size:10px;color:#444;line-height:1.45;margin-bottom:7px;}
-  .star-quote{font-size:10px;color:#333;font-style:italic;background:#fffbf0;border:1px solid #f0e0b0;border-radius:5px;padding:5px 8px;margin-bottom:7px;line-height:1.4;}
-  .star-row{color:#f59e0b;font-size:11px;letter-spacing:1px;margin-bottom:2px;}
-  .badges{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px;}
-  .badge{font-size:8px;font-weight:700;color:${color};border:1px solid ${color};border-radius:3px;padding:2px 5px;letter-spacing:.2px;white-space:nowrap;}
-  .urgency{font-size:9px;color:#888;margin-bottom:5px;}
-  .urgency strong{color:#c53030;}
-  .guarantee{font-size:9.5px;font-weight:800;color:#333;letter-spacing:.2px;margin-top:4px;text-align:center;}
-  .price-strip{background:${color};display:flex;align-items:center;gap:14px;padding:8px 14px;border-radius:8px;}
-  .price-main{font-size:22px;font-weight:900;color:#fff;line-height:1;}
-  .price-lbl{font-size:8.5px;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.4px;}
-  .price-div{width:1px;height:24px;background:rgba(255,255,255,.3);}
-  .ph-line{font-size:11px;color:#555;margin-top:6px;font-weight:700;}
-  .return-addr{font-size:9px;color:#333;line-height:1.6;}
-  .return-addr .co{font-weight:700;font-size:10px;}
-  .postage-box{border:1.5px solid #333;padding:6px 10px;text-align:center;font-size:9px;color:#333;line-height:1.5;width:106px;align-self:flex-end;}
-  .postage-box strong{display:block;font-size:11px;letter-spacing:.3px;}
-  .to-addr{font-size:13px;line-height:1.7;color:#111;}
-  .to-addr .name{font-weight:700;font-size:14px;}
-  .barcode{font-size:7px;color:#ccc;letter-spacing:2px;text-align:center;border-top:1px dashed #ddd;padding-top:5px;}
-</style>
-</head>
-<body>
-  <!-- LEFT: Personal message + price -->
-  <div class="left">
-    <div>
-      <div class="top-row">
-        <div class="logo">
-          ${logoUrl ? `<img src="${logoUrl}" alt="${escHtml(co)}">` : `<div class="co-name">${escHtml(co)}</div>`}
-        </div>
-        ${headshotData ? `<img src="${headshotData}" class="headshot" alt="${escHtml(repName)}"><div class="rep-info"><strong>${escHtml(repName||co)}</strong>${escHtml(repTitle)}</div>` : ''}
-      </div>
-      <div class="hook">${escHtml(pcHook)}</div>
-      <div class="why-hdr">Why Did You Receive This?</div>
-      <div class="why">${escHtml(pcWhy)}</div>
-      ${pcQuote ? `<div class="star-quote"><div class="star-row">★★★★★</div>${escHtml(pcQuote)}</div>` : ''}
-      <div class="badges">${badges.map(b=>`<span class="badge">✓ ${escHtml(b)}</span>`).join('')}</div>
-      <div class="urgency">⏰ Estimate valid until <strong>${urgencyStr}</strong></div>
-    </div>
-    <div>
-      <div class="price-strip">
-        <div><div class="price-lbl">Your Estimate</div><div class="price-main">$${total.toLocaleString()}</div></div>
-        ${finMo ? `<div class="price-div"></div><div><div class="price-lbl">As Low As</div><div class="price-main">$${finMo.toLocaleString()}<span style="font-size:13px;">/mo</span></div></div>` : ''}
-      </div>
-      <div style="display:flex;align-items:center;gap:12px;margin-top:8px;">
-        <div class="ph-line" style="margin-top:0;">📞 ${escHtml(ph)}</div>
-        ${qrUrl ? `<div style="text-align:center;">
-          <img src="${qrUrl}" style="width:52px;height:52px;border-radius:4px;background:#fff;display:block;">
-          <div style="font-size:7px;color:#888;letter-spacing:.5px;text-transform:uppercase;margin-top:2px;">Scan to Book</div>
-        </div>` : ''}
-      </div>
-      ${pcGuarantee ? `<div class="guarantee">${escHtml(pcGuarantee)}</div>` : ''}
-    </div>
-  </div>
-  <!-- RIGHT: USPS address block -->
-  <div class="right">
-    <div>
-      <div class="return-addr">
-        <div class="co">${escHtml(co)}</div>
-        ${fromRaw.split(',').map(l=>`<div>${escHtml(l.trim())}</div>`).join('')}
-        ${ph ? `<div>${escHtml(ph)}</div>` : ''}
-      </div>
-    </div>
-    <div class="postage-box"><strong>PRSRT STD</strong>U.S. POSTAGE<br>PAID<br>PERMIT #000</div>
-    <div class="to-addr">
-      <div class="name">${escHtml(owner)}</div>
-      <hr style="border:none;border-top:1px solid #eee;margin:4px 0;">
-      ${addr.split(',').map(l=>`<div>${escHtml(l.trim())}</div>`).join('')}
-    </div>
-    <div class="barcode">DELIVERY POINT BARCODE</div>
-  </div>
-</body>
-</html>`;
+  const cfg=S.cfg||{};
+  const addr=item.addr||'';
+  const owner=item.owner||'Homeowner';
+  const co=cfg.companyName||'Your Roofing Co';
+  const ph=cfg.companyPhone||cfg.phone||'(000) 000-0000';
+  const color=cfg.brandColor||'#F25C05';
+  const total=item.total||0;
+  const logoUrl=cfg.logoData||'';
+  const fromRaw=cfg.companyAddr||cfg.companyAddress||'123 Main St, Detroit, MI 48000';
+  const trackedUrl=item.id?'https://biddrop.americashomeexperts.com/r/'+encodeURIComponent(item.id):(cfg.bookingUrl||'');
+  const qrUrl=trackedUrl?'https://api.qrserver.com/v1/create-qr-code/?size=120x120&margin=4&data='+encodeURIComponent(trackedUrl):'';
+  const finEnabled=cfg.financingEnabled!==false;
+  const finApr=parseFloat(cfg.financingApr)||9.99;
+  const finTerm=parseInt(cfg.financingTerm)||60;
+  const finDown=parseFloat(cfg.financingDown)||0;
+  let finMo=0;
+  if(finEnabled&&total){const loan=total*(1-finDown/100);const r=finApr/100/12;finMo=r===0?Math.round(loan/finTerm):Math.round(loan*r*Math.pow(1+r,finTerm)/(Math.pow(1+r,finTerm)-1));}
+  const hook=cfg.postcardHook||'I lead with my price — no pressure, no games. Your estimate is ready.';
+  const why=cfg.postcardWhy||'We assessed your neighborhood and identified your home as a candidate for roof replacement based on age, condition, and storm history.';
+  const pcQuote=cfg.postcardQuote||'';
+  const guarantee=cfg.postcardGuarantee||'No door-knocking. No pressure. Just your price.';
+  const headshotData=cfg.headshot||'';
+  const repName=cfg.repName||'';
+  const repTitle=cfg.repTitle||'Owner';
+  const badges=[cfg.diff1||'Licensed & Insured',cfg.diff2||'Manufacturer Certified',cfg.diff3||'Workmanship Warranty'].filter(Boolean).slice(0,3);
+  const urgencyDate=new Date();urgencyDate.setDate(urgencyDate.getDate()+30);
+  const urgencyStr=urgencyDate.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:864px;height:576px;font-family:Arial,sans-serif;background:#fff;display:flex;overflow:hidden}
+.L{width:528px;height:576px;padding:24px 28px;display:flex;flex-direction:column;justify-content:space-between;border-right:2px solid #eee}
+.R{width:336px;height:576px;padding:22px 26px;display:flex;flex-direction:column;justify-content:space-between}
+.tr{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.logo img{max-height:40px;max-width:140px;object-fit:contain}
+.logo .cn{font-size:14px;font-weight:900;color:${color}}
+.hs{width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid ${color};flex-shrink:0}
+.ri{font-size:9px;color:#555;line-height:1.4}
+.ri strong{display:block;font-size:11px;color:#111;font-weight:800}
+.hook{font-size:10.5px;color:#333;line-height:1.5;margin-bottom:6px;font-style:italic;border-left:3px solid ${color};padding-left:8px}
+.wh{font-size:8px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:${color};margin-bottom:3px}
+.why{font-size:9.5px;color:#444;line-height:1.45;margin-bottom:6px}
+.sq{font-size:9.5px;color:#333;font-style:italic;background:#fffbf0;border:1px solid #f0e0b0;border-radius:4px;padding:4px 7px;margin-bottom:6px;line-height:1.4}
+.sr{color:#f59e0b;font-size:10px;letter-spacing:1px;margin-bottom:2px}
+.bdg{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px}
+.b{font-size:7.5px;font-weight:700;color:${color};border:1px solid ${color};border-radius:3px;padding:2px 4px;white-space:nowrap}
+.urg{font-size:8.5px;color:#888;margin-bottom:4px}
+.urg strong{color:#c53030}
+.ps{background:${color};display:flex;align-items:center;gap:12px;padding:7px 12px;border-radius:7px}
+.pm{font-size:20px;font-weight:900;color:#fff;line-height:1}
+.pl{font-size:8px;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.4px}
+.pd{width:1px;height:22px;background:rgba(255,255,255,.3)}
+.phl{font-size:10.5px;color:#555;margin-top:5px;font-weight:700}
+.gt{font-size:9px;font-weight:800;color:#333;margin-top:4px;text-align:center}
+.ra{font-size:8.5px;color:#333;line-height:1.6}
+.ra .rc{font-weight:700;font-size:9.5px}
+.pb{border:1.5px solid #333;padding:5px 8px;text-align:center;font-size:8.5px;color:#333;line-height:1.5;width:100px;align-self:flex-end}
+.pb strong{display:block;font-size:10px;letter-spacing:.3px}
+.ta{font-size:13px;line-height:1.7;color:#111}
+.ta .tn{font-weight:700;font-size:14px}
+.bc{font-size:7px;color:#ccc;letter-spacing:2px;text-align:center;border-top:1px dashed #ddd;padding-top:4px}
+</style></head><body>
+<div class="L">
+<div>
+<div class="tr">
+<div class="logo">${logoUrl?`<img src="${logoUrl}" alt="${escHtml(co)}">`:`<div class="cn">${escHtml(co)}</div>`}</div>
+${headshotData?`<img src="${headshotData}" class="hs" alt="${escHtml(repName)}"><div class="ri"><strong>${escHtml(repName||co)}</strong>${escHtml(repTitle)}</div>`:''}
+</div>
+<div class="hook">${escHtml(hook)}</div>
+<div class="wh">Why Did You Receive This?</div>
+<div class="why">${escHtml(why)}</div>
+${pcQuote?`<div class="sq"><div class="sr">&#9733;&#9733;&#9733;&#9733;&#9733;</div>${escHtml(pcQuote)}</div>`:''}
+<div class="bdg">${badges.map(b=>`<span class="b">&#10003; ${escHtml(b)}</span>`).join('')}</div>
+<div class="urg">&#9200; Estimate valid until <strong>${urgencyStr}</strong></div>
+</div>
+<div>
+<div class="ps">
+<div><div class="pl">Your Estimate</div><div class="pm">$${total.toLocaleString()}</div></div>
+${finMo?`<div class="pd"></div><div><div class="pl">As Low As</div><div class="pm">$${finMo.toLocaleString()}<span style="font-size:12px">/mo</span></div></div>`:''}
+</div>
+<div style="display:flex;align-items:center;gap:10px;margin-top:7px">
+<div class="phl">&#128222; ${escHtml(ph)}</div>
+${qrUrl?`<div style="text-align:center"><img src="${qrUrl}" style="width:46px;height:46px;border-radius:3px;display:block"><div style="font-size:6.5px;color:#888;text-transform:uppercase;margin-top:1px">Scan to Book</div></div>`:''}
+</div>
+${guarantee?`<div class="gt">${escHtml(guarantee)}</div>`:''}
+</div>
+</div>
+<div class="R">
+<div>
+<div class="ra">
+<div class="rc">${escHtml(co)}</div>
+${fromRaw.split(',').map(l=>`<div>${escHtml(l.trim())}</div>`).join('')}
+${ph?`<div>${escHtml(ph)}</div>`:''}
+</div>
+</div>
+<div class="pb"><strong>PRSRT STD</strong>U.S. POSTAGE<br>PAID<br>PERMIT #000</div>
+<div class="ta">
+<div class="tn">${escHtml(owner)}</div>
+<hr style="border:none;border-top:1px solid #eee;margin:4px 0">
+${addr.split(',').map(l=>`<div>${escHtml(l.trim())}</div>`).join('')}
+</div>
+<div class="bc">DELIVERY POINT BARCODE</div>
+</div>
+</body></html>`;
 }
-
-// Send a 6×9 postcard for a queue item
-async function sendLobPostcard6x9(id){
-  const item = S.queue.find(x=>x.id===id); if(!item) return;
-  if(!masterLobKey){
-    toast('Checking mailer service…','info');
-    await fetchMasterLobKey();
-  }
-  if(!masterLobKey){ toast('Mailer service not configured — contact your administrator','error'); return; }
-
-  const co     = S.cfg.companyName || 'Your Roofing Co';
-  const fromRaw= S.cfg.companyAddr || S.cfg.companyAddress || '123 Main St, Detroit, MI 48000';
-  const fp     = fromRaw.split(',').map(s=>s.trim());
-  const tp     = item.addr.split(',').map(s=>s.trim());
-  const toLine1= tp[0]||'';
-  const toCity = tp[1]||'';
-  let   toState= tp[2]||'MI';
-  let   toZip  = tp[3]||'';
-  if((!toZip||toZip==='00000') && toState && toState.includes(' ')){
-    const parts=toState.split(' '); toZip=parts.pop(); toState=parts.join(' ');
-  }
-  if(!toZip) toZip='00000';
-  toState = toStateAbbr(toState);
-
-  // If no house photo stored, try to geocode the address and use Mapbox satellite static image
-  let frontItem = {...item};
-  if(!frontItem.photo_url && !frontItem.photo_data){
-    try{
-      const MB = window._mapboxToken || ['pk.eyJ1IjoibW9uZ29vc2VmaWxtcyIsImEiOiJjbW52M2kyNnMxM3pk','MnJvYTYxZnE1YW51In0.nC5GKWDHIAB4DTAP9hV3hQ'].join('');
-      const geoRes = await fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/'+encodeURIComponent(item.addr)+'.json?country=us&types=address&limit=1&access_token='+MB);
-      const geoData = await geoRes.json();
-      if(geoData.features && geoData.features[0]){
-        const [lon, lat] = geoData.features[0].center;
-        frontItem.photo_url = `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/${lon},${lat},19,0/900x600@2x?access_token=${MB}`;
-      }
-    } catch(e){ console.warn('[BidDrop] Geocode for postcard failed:', e); }
-  }
-
-  const frontHtml = buildPostcard6x9FrontHtml(frontItem);
-  const backHtml  = buildPostcard6x9BackHtml(item);
-
-  toast('Sending postcard…','info');
-  try{
-    const d = await adminAPI('lob-postcard', { payload: {
-      description: 'Roof Estimate Postcard — '+item.addr,
-      to: { name:item.owner, address_line1:toLine1, address_city:toCity, address_state:toState, address_zip:toZip, address_country:'US' },
-      from: { name:co, address_line1:fp[0]||'123 Main St', address_city:fp[1]||'Detroit', address_state:fp[2]||'MI', address_zip:fp[3]||'48000', address_country:'US' },
-      front: frontHtml,
-      back: backHtml,
-      size: '6x9',
-      use_type: 'marketing'
-    }});
-    if(d && d.error === 'no_credits'){
-      // Not enough credits — show Buy Credits modal
-      toast('Not enough credits to send a postcard (4 credits required). Please purchase more credits.','error');
-      if(d._credits) S.cfg._creditBalance = d._credits.paid_credits;
-      updateCreditBadge();
-      setTimeout(()=>showBuyCreditsModal(), 800);
-      return;
-    }
-    if(d && d.id){
-      item.status='sent'; item.mailedAt=new Date().toISOString(); item.lobId=d.id;
-      // Update credit badge with new balance
-      if(d._credits){ S.cfg._creditBalance = d._credits.paid_credits; updateCreditBadge(); }
-      addAct('Estimate postcard mailed to <strong>'+escHtml(item.addr)+'</strong>','converted');
-      if(currentAccount && sb){
-        sb.from('mailer_log').insert({
-          account_id: currentAccount.id,
-          sent_by: currentUser?.id||null,
-          address: item.addr,
-          owner_name: item.owner,
-          estimate_total: item.total||0,
-          lob_id: d.id,
-          queue_item_id: item.id,
-          company_name: S.cfg.companyName||'',
-          sent_at: new Date().toISOString()
-        }).then(({error})=>{ if(error) console.warn('mailer_log insert:',error.message); });
-      }
-      save(); renderQueue(); toast('✅ Postcard queued for mailing!','success');
-    } else {
-      item.status='failed'; save(); renderQueue();
-      toast('Postcard error: '+(d.error?.message||'Check mail settings & address'),'error');
-    }
-  } catch(e){ item.status='failed'; save(); renderQueue(); toast('Network error — mailer service unavailable','error'); }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  buildLobMailerHtml(item)
-//  Generates a full 4-page, Lob-compatible HTML letter from a queue item.
-//  Uses item.structures, item.photo_url/photo_data, item.damage_photos, S.cfg.
-// ─────────────────────────────────────────────────────────────────────────────
 function buildLobMailerHtml(item){
   const cfg    = S.cfg;
   const owner  = item.owner || 'Homeowner';

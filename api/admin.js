@@ -270,6 +270,7 @@ export default async function handler(req, res) {
         // Deduct credits BEFORE sending (charge at time of order)
         await sbFetch(`accounts?id=eq.${profile.account_id}`, {
           method: 'PATCH',
+          headers: { 'Prefer': 'return=minimal' },
           body: JSON.stringify({ lookup_credits: pcAcct.lookup_credits - POSTCARD_CREDITS })
         });
 
@@ -288,6 +289,7 @@ export default async function handler(req, res) {
         if (!lobRes.ok) {
           await sbFetch(`accounts?id=eq.${profile.account_id}`, {
             method: 'PATCH',
+            headers: { 'Prefer': 'return=minimal' },
             body: JSON.stringify({ lookup_credits: pcAcct.lookup_credits })
           });
         }
@@ -326,6 +328,7 @@ export default async function handler(req, res) {
         // Deduct credits BEFORE sending (charge at time of order)
         await sbFetch(`accounts?id=eq.${profile.account_id}`, {
           method: 'PATCH',
+          headers: { 'Prefer': 'return=minimal' },
           body: JSON.stringify({ lookup_credits: ltAcct.lookup_credits - LETTER_CREDITS })
         });
 
@@ -344,6 +347,7 @@ export default async function handler(req, res) {
         if (!lobRes.ok) {
           await sbFetch(`accounts?id=eq.${profile.account_id}`, {
             method: 'PATCH',
+            headers: { 'Prefer': 'return=minimal' },
             body: JSON.stringify({ lookup_credits: ltAcct.lookup_credits })
           });
         }
