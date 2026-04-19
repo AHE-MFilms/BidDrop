@@ -3938,6 +3938,17 @@ function addMarker(pin){
 function savePin(){
   if(!tempLL)return;
   const dmgPhotos = window._pinDamagePhotos || [];
+  // ── Deduplicate: if a pin already exists at this address, offer to open it instead
+  const newAddr = (document.getElementById('p-addr').value.trim()||(tempLL.lat.toFixed(4)+', '+tempLL.lng.toFixed(4))).toLowerCase();
+  const dupPin = S.pins.find(p=>(p.address||'').toLowerCase()===newAddr);
+  if(dupPin){
+    closeM('m-pin');
+    toast('📍 A pin already exists at this address — opening it','info');
+    // Fly to existing pin and open its card
+    if(map && dupPin.lat && dupPin.lng) map.flyTo([dupPin.lat, dupPin.lng], Math.max(map.getZoom(), 17));
+    setTimeout(()=>{ const el=document.getElementById('pc-'+dupPin.id); if(el){ el.classList.add('open'); el.scrollIntoView({behavior:'smooth',block:'nearest'}); } }, 600);
+    return;
+  }
   const pin={
     id:'p'+Date.now(),
     lat:tempLL.lat,lng:tempLL.lng,
@@ -8410,16 +8421,30 @@ async function sbSavePin(pin){
       pin.estimate = existingEst;
     }
   }
-  const {error} = await sb.from('pins').upsert({
+  const {data: upsertData, error} = await sb.from('pins').upsert({
     id: pin.id, account_id: currentAccount.id,
     created_by: currentUser.id, rep_name: pin.rep,
     lat: pin.lat, lng: pin.lng, address: pin.address,
     status: pin.status, notes: pin.notes, pts: pin.pts||null,
     photo_url: photoUrl,
     estimate: pin.estimate || null,
+    all_photos: pin.all_photos || null,
     updated_at: new Date().toISOString()
-  });
-  if(error) console.error('Pin save error:', error);
+  }, {onConflict:'id'}).select('id').single();
+  if(error){ console.error('Pin save error:', error); return; }
+  // If Supabase assigned a different id (UUID auto-gen), reconcile local state
+  const savedId = upsertData && upsertData.id;
+  if(savedId && savedId !== pin.id){
+    const idx = S.pins.findIndex(p=>p.id===pin.id);
+    if(idx>=0){ S.pins[idx].id = savedId; }
+    if(markers[pin.id]){
+      const m = markers[pin.id];
+      delete markers[pin.id];
+      markers[savedId] = m;
+    }
+    pin.id = savedId;
+    renderPinList();
+  }
 }
 
 async function sbDeletePin(pinId){
@@ -8616,21 +8641,25 @@ function subscribeRealtime(){
           };
           const existing = S.pins.findIndex(p=>p.id===pin.id);
           if(existing>=0){
+            // UPDATE: refresh data but only re-add marker if status/photo changed
+            const hadMarker = !!markers[pin.id];
             S.pins[existing]=pin;
             if(markers[pin.id]){
               if(clusterGroup) clusterGroup.removeLayer(markers[pin.id]);
               else map.removeLayer(markers[pin.id]);
               delete markers[pin.id];
             }
+            addMarker(pin);
           } else {
+            // INSERT from another device/session — add it
             S.pins.unshift(pin);
             totalPinCount = Math.max(totalPinCount, S.pins.length);
+            addMarker(pin);
+            if(pin.rep!==currentProfile?.name)
+              toast('📍 '+pin.rep+' pinned '+pin.address.split(',')[0],'info');
           }
-          addMarker(pin);
           renderPinList();
           refreshZoneOverlays();
-          if(eventType==='INSERT'&&pin.rep!==currentProfile?.name)
-            toast('📍 '+pin.rep+' pinned '+pin.address.split(',')[0],'info');
         } else if(eventType==='DELETE'){
           S.pins = S.pins.filter(p=>p.id!==old.id);
           if(markers[old.id]){
