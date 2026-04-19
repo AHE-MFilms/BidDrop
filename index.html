@@ -38,7 +38,7 @@
 }
 html,body{height:100%;overflow:hidden;}
 body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:flex;flex-direction:column;font-size:15px;}
-.hdr{background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 12px;height:54px;flex-shrink:0;gap:4px;min-width:0;overflow:visible;position:relative;z-index:100;}
+.hdr{background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 12px;height:54px;flex-shrink:0;gap:4px;min-width:0;overflow:visible;position:relative;z-index:10001;}
 .logo{font-family:var(--font-h);font-size:20px;font-weight:700;color:var(--accent);letter-spacing:1.5px;margin-right:8px;display:flex;align-items:center;gap:8px;white-space:nowrap;flex-shrink:0;}
 .ahe-header-logo{height:44px;opacity:1;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(242,92,5,.25));max-width:160px;flex-shrink:0;}
 @media(max-width:1100px){.ahe-header-logo{max-width:110px;height:36px;}}
@@ -57,7 +57,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 #nav-menu-btn .nav-hamburger{display:flex;flex-direction:column;gap:4px;}
 #nav-menu-btn .nav-hamburger span{display:block;width:16px;height:2px;background:currentColor;border-radius:2px;}
 /* dropdown panel */
-#nav-menu-dropdown{position:fixed;top:54px;left:0;right:0;background:var(--panel);border-bottom:1px solid var(--border);z-index:9998;display:none;flex-direction:row;flex-wrap:wrap;padding:8px 12px;gap:4px;box-shadow:0 8px 24px rgba(0,0,0,.5);}
+#nav-menu-dropdown{position:fixed;top:54px;left:0;right:0;background:var(--panel);border-bottom:1px solid var(--border);z-index:10000;display:none;flex-direction:row;flex-wrap:wrap;padding:8px 12px;gap:4px;box-shadow:0 8px 24px rgba(0,0,0,.5);}
 #nav-menu-dropdown.open{display:flex;}
 .nav-menu-item{background:none;border:none;border-radius:8px;color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;padding:10px 14px;cursor:pointer;white-space:nowrap;transition:background .12s,color .12s;display:flex;align-items:center;gap:5px;}
 .nav-menu-item:hover{background:var(--card2);color:var(--text);}
@@ -313,7 +313,7 @@ tr:hover td{background:var(--card);}
 .leaflet-control-zoom a:hover{background:var(--card2) !important;}
 .leaflet-control-attribution{background:rgba(8,9,13,.7) !important;color:var(--muted) !important;font-size:9px !important;}
 .leaflet-control-attribution a{color:var(--muted) !important;}
-.map-toolbar{position:absolute;top:12px;left:12px;z-index:1000;display:flex;flex-direction:column;gap:7px;}
+.map-toolbar{position:absolute;top:12px;left:12px;z-index:1500;display:flex;flex-direction:column;gap:7px;}
 .map-search-wrap{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:1000;display:flex;gap:0;width:320px;max-width:calc(100vw - 200px);}
 .map-search-inp{flex:1;background:#fff;border:2px solid #CBD5E1;border-right:none;border-radius:9px 0 0 9px;padding:9px 14px;font-family:var(--font-b);font-size:14px;color:#1E293B;outline:none;}
 .map-search-inp::placeholder{color:#94A3B8;}
@@ -774,7 +774,7 @@ tr:hover td{background:var(--card);}
       <button class="mtool-btn" id="btn-storm-toggle" onclick="toggleStormEvents()">⛈ Storm Events</button>
     </div>
     <!-- Storm Events Panel -->
-    <div id="storm-panel" style="display:none;position:absolute;top:12px;left:12px;z-index:1001;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;width:260px;box-shadow:0 4px 20px rgba(0,0,0,.5);">
+    <div id="storm-panel" style="display:none;position:absolute;top:12px;left:12px;z-index:2000;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;width:260px;box-shadow:0 4px 20px rgba(0,0,0,.5);">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
         <div style="font-size:13px;font-weight:700;color:var(--text);">⛈ Hail Strike Map</div>
         <button onclick="toggleStormEvents()" style="background:none;border:none;color:var(--mid);font-size:16px;cursor:pointer;line-height:1;">✕</button>
