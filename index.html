@@ -2983,6 +2983,153 @@ function buildPostcardBack({ toName, toAddr, fromName, fromAddr, fromCity, fromP
 }
 
 
+// NEW: Preview the Step 1 (initial) postcard for a saved estimate
+async function previewEstimatePostcard(estId){
+  const est = (S.estimates||[]).find(e=>e.id===estId);
+  if(!est){ toast('Estimate not found','error'); return; }
+  const cfg = S.cfg || {};
+  // Resolve house photo: estimate -> pin all_photos.front[0] -> pin photo_url
+  const pin = (S.pins||[]).find(p=>p.id===est.pinId);
+  let photoUrl = est.photo_url || est.photo_data || null;
+  if(!photoUrl && pin){
+    const ap = pin.all_photos || {};
+    const fp = (ap.front||[])[0] || null;
+    if(fp) photoUrl = fp;
+    if(!photoUrl) photoUrl = pin.photo_url || null;
+  }
+  // Geocode fallback to satellite image
+  if(!photoUrl){
+    try{
+      const MB = window._mapboxToken || ['pk.eyJ1IjoibW9uZ29vc2VmaWxtcyIsImEiOiJjbW52M2kyNnMxM3pk','MnJvYTYxZnE1YW51In0.nC5GKWDHIAB4DTAP9hV3hQ'].join('');
+      const geoRes = await fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/'+encodeURIComponent(est.addr)+'.json?country=us&types=address&limit=1&access_token='+MB);
+      const geoData = await geoRes.json();
+      if(geoData.features && geoData.features[0]){
+        const [lon,lat] = geoData.features[0].center;
+        photoUrl = `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/${lon},${lat},19,0/900x600@2x?access_token=${MB}`;
+      }
+    } catch(e){ console.warn('[BidDrop] Geocode for postcard preview failed:',e); }
+  }
+  // Build a synthetic item compatible with buildPostcard6x9FrontHtml / BackHtml
+  const syntheticItem = {
+    addr:       est.addr  || '',
+    owner:      est.owner || 'Homeowner',
+    total:      est.total || 0,
+    finMo:      est.finMo || 0,
+    photo_url:  (photoUrl && photoUrl.startsWith('http')) ? photoUrl : null,
+    photo_data: (photoUrl && !photoUrl.startsWith('http')) ? photoUrl : null,
+  };
+  const frontHtml = buildPostcard6x9FrontHtml(syntheticItem);
+  const backHtml  = buildPostcard6x9BackHtml(syntheticItem);
+  const existing = document.getElementById('m-postcard6x9-preview');
+  if(existing) existing.remove();
+  const isMobile = window.innerWidth <= 768;
+  const modal = document.createElement('div');
+  modal.id = 'm-postcard6x9-preview';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(10,16,26,0.97);display:flex;flex-direction:column;';
+  if(isMobile){
+    const mHtml = [
+      '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;flex-shrink:0;border-bottom:1px solid #2E4060;">',
+        '<div style="font-family:Oswald,sans-serif;font-size:17px;font-weight:700;color:#F0F6FF;letter-spacing:.5px;">&#127968; Postcard Preview</div>',
+        '<button onclick="document.getElementById(\'m-postcard6x9-preview\').remove()" style="background:#2E4060;border:none;color:#F0F6FF;font-size:13px;font-weight:700;padding:8px 18px;border-radius:8px;cursor:pointer;-webkit-tap-highlight-color:transparent;">&times; Close</button>',
+      '</div>',
+      '<div style="display:flex;gap:0;padding:10px 16px 6px;flex-shrink:0;">',
+        '<button id="pc-tab-front" onclick="window._switchPcTab(\'front\')" style="flex:1;background:#F25C05;border:none;color:#fff;font-size:13px;font-weight:700;padding:10px;border-radius:8px 0 0 8px;cursor:pointer;">FRONT</button>',
+        '<button id="pc-tab-back"  onclick="window._switchPcTab(\'back\')"  style="flex:1;background:#1A2333;border:1px solid #2E4060;color:#6688A8;font-size:13px;font-weight:700;padding:10px;border-radius:0 8px 8px 0;cursor:pointer;">BACK</button>',
+      '</div>',
+      '<div style="flex:1;overflow:hidden;padding:0 12px 16px;display:flex;flex-direction:column;min-height:0;">',
+        '<div id="pc-card-container" style="flex:1;position:relative;border-radius:12px;overflow:hidden;border:2px solid #F25C05;min-height:0;">',
+          '<div id="pc-frame-wrap-front" style="position:absolute;inset:0;overflow:hidden;">',
+            '<iframe id="pc6x9-front-frame" frameborder="0" style="border:none;display:block;"></iframe>',
+          '</div>',
+          '<div id="pc-frame-wrap-back" style="position:absolute;inset:0;overflow:hidden;display:none;">',
+            '<iframe id="pc6x9-back-frame" frameborder="0" style="border:none;display:block;"></iframe>',
+          '</div>',
+        '</div>',
+        '<div style="text-align:center;margin-top:8px;font-size:11px;color:#6688A8;flex-shrink:0;">Actual print size: 9&Prime;&times;6&Prime; &middot; Tap FRONT / BACK to switch</div>',
+      '</div>'
+    ].join('');
+    modal.innerHTML = mHtml;
+    document.body.appendChild(modal);
+    window._switchPcTab = function(side){
+      const fw = document.getElementById('pc-frame-wrap-front');
+      const bw = document.getElementById('pc-frame-wrap-back');
+      const tf = document.getElementById('pc-tab-front');
+      const tb = document.getElementById('pc-tab-back');
+      if(!fw||!bw) return;
+      if(side==='front'){
+        fw.style.display=''; bw.style.display='none';
+        tf.style.background='#F25C05'; tf.style.color='#fff'; tf.style.border='none';
+        tb.style.background='#1A2333'; tb.style.color='#6688A8'; tb.style.border='1px solid #2E4060';
+      } else {
+        fw.style.display='none'; bw.style.display='';
+        tb.style.background='#F25C05'; tb.style.color='#fff'; tb.style.border='none';
+        tf.style.background='#1A2333'; tf.style.color='#6688A8'; tf.style.border='1px solid #2E4060';
+      }
+    };
+    setTimeout(function(){
+      const container = document.getElementById('pc-card-container');
+      if(!container) return;
+      const cW = container.offsetWidth, cH = container.offsetHeight;
+      const scale = Math.min(cW/864, cH/576);
+      ['front','back'].forEach(function(side){
+        const frame = document.getElementById('pc6x9-'+side+'-frame');
+        const html  = side==='front' ? frontHtml : backHtml;
+        if(!frame) return;
+        frame.style.width='864px'; frame.style.height='576px';
+        frame.style.transform='scale('+scale+')'; frame.style.transformOrigin='top left';
+        const blob = new Blob([html],{type:'text/html'});
+        const url = URL.createObjectURL(blob);
+        frame.onload=function(){ URL.revokeObjectURL(url); };
+        frame.src = url;
+      });
+    }, 200);
+  } else {
+    const dHtml = [
+      '<div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px 14px;flex-shrink:0;border-bottom:1px solid #2E4060;">',
+        '<div style="font-family:Oswald,sans-serif;font-size:20px;font-weight:700;color:#F0F6FF;letter-spacing:.5px;">&#127968; Postcard Preview</div>',
+        '<button onclick="document.getElementById(\'m-postcard6x9-preview\').remove()" style="background:#2E4060;border:none;color:#F0F6FF;font-size:13px;font-weight:700;padding:10px 22px;border-radius:8px;cursor:pointer;">&times; Close</button>',
+      '</div>',
+      '<div style="font-size:12px;color:#6688A8;padding:12px 24px 0;">Front (house photo) on the left &middot; Back (estimate + address) on the right. Actual print size: 9&Prime;&times;6&Prime;.</div>',
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:16px 24px 24px;flex:1;overflow:hidden;min-height:0;">',
+        '<div style="display:flex;flex-direction:column;min-height:0;">',
+          '<div style="font-size:11px;font-weight:700;color:#A8BECE;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">FRONT</div>',
+          '<div id="pc-front-scaler" style="position:relative;border-radius:10px;overflow:hidden;border:2px solid #2E4060;">',
+            '<iframe id="pc6x9-front-frame" frameborder="0" style="border:none;display:block;"></iframe>',
+          '</div>',
+        '</div>',
+        '<div style="display:flex;flex-direction:column;min-height:0;">',
+          '<div style="font-size:11px;font-weight:700;color:#A8BECE;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">BACK</div>',
+          '<div id="pc-back-scaler" style="position:relative;border-radius:10px;overflow:hidden;border:2px solid #2E4060;">',
+            '<iframe id="pc6x9-back-frame" frameborder="0" style="border:none;display:block;"></iframe>',
+          '</div>',
+        '</div>',
+      '</div>'
+    ].join('');
+    modal.innerHTML = dHtml;
+    document.body.appendChild(modal);
+    setTimeout(function(){
+      ['front','back'].forEach(function(side){
+        const scaler = document.getElementById('pc-'+side+'-scaler');
+        const frame  = document.getElementById('pc6x9-'+side+'-frame');
+        const html   = side==='front' ? frontHtml : backHtml;
+        if(!scaler||!frame) return;
+        const w = scaler.offsetWidth || 400;
+        const scale = w/864;
+        const h = Math.round(576*scale);
+        scaler.style.height = h+'px';
+        frame.style.width='864px'; frame.style.height='576px';
+        frame.style.transform='scale('+scale+')'; frame.style.transformOrigin='top left';
+        const blob = new Blob([html],{type:'text/html'});
+        const url = URL.createObjectURL(blob);
+        frame.onload=function(){ URL.revokeObjectURL(url); };
+        frame.src = url;
+      });
+    }, 200);
+  }
+  modal.addEventListener('click', e=>{ if(e.target===modal) modal.remove(); });
+}
+
+// LEGACY: old drip-sequence preview (Steps 2/3/4) kept for reference
 function showEstimatePostcards(estId){
   const est = (S.estimates||[]).find(e=>e.id===estId);
   if(!est){ toast('Estimate not found','error'); return; }
@@ -5317,7 +5464,7 @@ function renderEstimatesTab(){
             +`<button onclick="sendEstimateViaGHL('${eid}')" style="background:#1a7f4b;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#9889; GHL</button>`
             +`<button onclick="addEstimateToMailQueue('${eid}')" style="background:var(--accent);border:none;border-radius:6px;padding:5px 10px;color:#fff;font-weight:700;cursor:pointer;white-space:nowrap;display:flex;flex-direction:column;align-items:center;line-height:1.2;"><span style="font-size:9px;opacity:.85;">&#128228; Send to</span><span style="font-size:12px;">Mail Queue</span></button>`
             +(S.cfg && S.cfg.dripEnabled ? `<button onclick="openDripModal('${eid}')" style="background:#7C3AED;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128336; Drip</button>` : '')
-            +`<button onclick="showEstimatePostcards('${eid}')" style="background:#0e7490;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128247; Postcards</button>`
+            +`<button onclick="previewEstimatePostcard('${eid}')" style="background:#0e7490;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128247; Preview Postcard</button>`
             +`<button onclick="printEstimate('${eid}')" style="background:#1f3d68;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128424; Print</button>`
             +histBtn
             +`<button onclick="deleteEstimate('${eid}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">&#10005;</button>`;
