@@ -2075,11 +2075,16 @@ function toggleStabCard(name){
   if(chevron) chevron.classList.toggle('collapsed', !isCollapsed);
 }
 function goTab(t){
-  // Persist home photo before leaving estimator tab
+  // Auto-save estimate + photos when leaving the estimator tab
   const prevTab = document.querySelector('.tab-btn.active');
   const leavingEstimate = prevTab && prevTab.dataset.tab === 'estimate';
-  if(leavingEstimate && window._homePhotoData){
-    try{ sessionStorage.setItem('bd_home_photo_'+( currentEstPinId||'_'), window._homePhotoData); }catch(e){}
+  if(leavingEstimate && currentEstPinId){
+    // Persist home photo to sessionStorage (fast, survives tab switch)
+    if(window._homePhotoData){
+      try{ sessionStorage.setItem('bd_home_photo_'+(currentEstPinId||'_'), window._homePhotoData); }catch(e){}
+    }
+    // Auto-save the current estimate state to Supabase immediately
+    _autoSaveEstimateOnLeave();
   }
   document.querySelectorAll('.tab-btn,.bnav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
   document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active',p.id==='tab-'+t));
@@ -3283,6 +3288,7 @@ function handleHomePhoto(inp){
       if(clr)clr.style.display='block';
       updatePreview();
       if(window._previewMode==='postcard') _refreshPostcardPreview();
+      _persistHomePhotoToSupabase();
       toast('📷 Photo added to mailer!','success');
     } else {
       // Fallback to base64
@@ -3304,6 +3310,7 @@ function handleHomePhoto(inp){
           if(clr)clr.style.display='block';
           updatePreview();
           if(window._previewMode==='postcard') _refreshPostcardPreview();
+          _persistHomePhotoToSupabase();
           toast('📷 Photo added (local)','info');
         };
         img.src=ev.target.result;
@@ -3555,6 +3562,128 @@ function _persistAllPhotos(){
     }).eq('id', pinId).then(()=>{});
     save();
   }
+}
+
+// ── Auto-save helpers ────────────────────────────────────────────────────────
+
+// Save the home photo (window._homePhotoData) to the current pin AND estimate in Supabase
+function _persistHomePhotoToSupabase(){
+  const pinId = currentEstPinId;
+  if(!pinId || !sb || !window._homePhotoData) return;
+  const pin = (S.pins||[]).find(p=>p.id===pinId);
+  if(pin){
+    pin.photo_url = window._homePhotoData.startsWith('http') ? window._homePhotoData : pin.photo_url;
+    pin.photo_data = !window._homePhotoData.startsWith('http') ? window._homePhotoData : null;
+    sb.from('pins').update({
+      photo_url: pin.photo_url || null,
+      updated_at: new Date().toISOString()
+    }).eq('id', pinId).then(()=>{});
+  }
+  // Also update the estimate record if one exists
+  const est = (S.estimates||[]).find(e=>e.pinId===pinId && !e.deletedAt && !e.isRevision);
+  if(est){
+    const photoUrl = window._homePhotoData.startsWith('http') ? window._homePhotoData : null;
+    const photoData = !window._homePhotoData.startsWith('http') ? window._homePhotoData : null;
+    est.photo_url = photoUrl || est.photo_url;
+    est.photo_data = photoData || est.photo_data;
+    sb.from('estimates').update({
+      photo_url: est.photo_url || null,
+      photo_data: est.photo_data || null,
+      updated_at: new Date().toISOString()
+    }).eq('id', est.id).then(()=>{});
+  }
+}
+
+// Auto-save the current estimate form state to Supabase when leaving the estimator tab
+function _autoSaveEstimateOnLeave(){
+  if(!currentEstPinId || !sb || !currentAccount) return;
+  try{
+    const pin = (S.pins||[]).find(p=>p.id===currentEstPinId);
+    if(!pin) return;
+    const owner = (document.getElementById('e-owner')||{}).value||'';
+    const email = (document.getElementById('e-email')||{}).value||'';
+    const addr  = (document.getElementById('e-addr')||{}).value||pin.address||'';
+    const total = (structures||[]).reduce((sum,s)=>sum+(typeof calcStructPrice==='function'?calcStructPrice(s):0),0);
+    const photoUrl  = window._homePhotoData && window._homePhotoData.startsWith('http') ? window._homePhotoData : null;
+    const photoData = window._homePhotoData && !window._homePhotoData.startsWith('http') ? window._homePhotoData : null;
+    const allPhotos = window._allPhotos ? JSON.parse(JSON.stringify(window._allPhotos)) : null;
+    const dmgPhotos = (window._damagePhotos||[]).length ? [...window._damagePhotos] : null;
+    const sky  = (document.getElementById('a-sky')||{}).checked||false;
+    const skyQ = parseInt((document.getElementById('a-sky-q')||{}).value||1);
+    const chim = (document.getElementById('a-chim')||{}).checked||false;
+    const gut  = (document.getElementById('a-gut')||{}).checked||false;
+    const gutQ = parseInt((document.getElementById('a-gut-q')||{}).value||120);
+
+    // Update in-memory pin
+    pin.estimate = { owner, email, total, structures:(structures||[]).map(s=>({...s})) };
+    pin.at_est = new Date().toISOString();
+    if(photoUrl) pin.photo_url = photoUrl;
+    if(allPhotos) pin.all_photos = allPhotos;
+    if(dmgPhotos) pin.damage_photos = dmgPhotos;
+
+    // Upsert to estimates table (create or update existing draft)
+    const existing = (S.estimates||[]).find(e=>e.pinId===currentEstPinId && !e.deletedAt && !e.isRevision);
+    const estId = (existing && existing.id) || window._editingEstimateId || ('e'+Date.now());
+    const estRow = {
+      id: estId,
+      account_id: currentAccount.id,
+      pin_id: currentEstPinId,
+      addr, owner, email,
+      rep: (currentProfile&&currentProfile.name)||'',
+      total,
+      structures: (structures||[]).map(s=>({...s})),
+      photo_url: photoUrl||null,
+      photo_data: photoData||null,
+      all_photos: allPhotos||null,
+      damage_photos: dmgPhotos||null,
+      skylight: sky, skylight_qty: skyQ,
+      chimney: chim, gutters: gut, gutter_lf: gutQ,
+      version: (existing&&existing.version)||1,
+      is_revision: false,
+      saved_at: new Date().toISOString(),
+      deleted_at: null
+    };
+    sb.from('estimates').upsert(estRow, {onConflict:'id'}).then(({error})=>{
+      if(error) console.warn('[AutoSave] estimate:', error.message);
+      else{
+        // Keep in-memory S.estimates in sync
+        if(existing){
+          Object.assign(existing, {
+            addr, owner, email, total,
+            structures: estRow.structures,
+            photo_url: photoUrl||existing.photo_url,
+            photo_data: photoData||existing.photo_data,
+            all_photos: allPhotos||existing.all_photos,
+            damage_photos: dmgPhotos||existing.damage_photos,
+            skylight: sky, skylightQty: skyQ,
+            chimney: chim, gutters: gut, gutterLf: gutQ,
+            savedAt: estRow.saved_at
+          });
+        } else {
+          S.estimates.unshift({
+            id: estId, pinId: currentEstPinId,
+            addr, owner, email, total,
+            structures: estRow.structures,
+            photo_url: photoUrl||null, photo_data: photoData||null,
+            all_photos: allPhotos||null, damage_photos: dmgPhotos||null,
+            skylight: sky, skylightQty: skyQ,
+            chimney: chim, gutters: gut, gutterLf: gutQ,
+            version: 1, isRevision: false,
+            savedAt: estRow.saved_at
+          });
+          window._editingEstimateId = estId;
+        }
+      }
+    });
+    // Also keep pin.estimate in sync
+    sb.from('pins').update({
+      estimate: pin.estimate,
+      photo_url: photoUrl||null,
+      all_photos: allPhotos||null,
+      damage_photos: dmgPhotos||null,
+      updated_at: new Date().toISOString()
+    }).eq('id', currentEstPinId).then(()=>{});
+  }catch(e){ console.warn('[AutoSave] _autoSaveEstimateOnLeave error:', e); }
 }
 
 // ═══════════════════════════════
@@ -9658,6 +9787,20 @@ window.addEventListener('load', ()=>{
       loadPinsFromSupabase().catch(e => console.warn('[AutoReload] pins:', e));
     }
   }, 60000);
+
+  // Step 4 — save estimate when user switches browser tabs or minimizes the window
+  document.addEventListener('visibilitychange', () => {
+    if(document.hidden && _appInitialized && currentEstPinId){
+      _autoSaveEstimateOnLeave();
+    }
+  });
+
+  // Step 5 — save estimate when user closes/refreshes the page
+  window.addEventListener('beforeunload', () => {
+    if(_appInitialized && currentEstPinId){
+      _autoSaveEstimateOnLeave();
+    }
+  });
 });
 
 async function fetchMasterLobKey(){
