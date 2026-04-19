@@ -2983,12 +2983,13 @@ function buildPostcardBack({ toName, toAddr, fromName, fromAddr, fromCity, fromP
 }
 
 
-// NEW: Preview the Step 1 (initial) postcard for a saved estimate
+// Postcard Preview Lightbox — centered, properly scaled, FRONT/BACK toggle
 async function previewEstimatePostcard(estId){
   const est = (S.estimates||[]).find(e=>e.id===estId);
   if(!est){ toast('Estimate not found','error'); return; }
   const cfg = S.cfg || {};
-  // Resolve house photo: estimate -> pin all_photos.front[0] -> pin photo_url
+
+  // ── Resolve house photo ──────────────────────────────────────────────────
   const pin = (S.pins||[]).find(p=>p.id===est.pinId);
   let photoUrl = est.photo_url || est.photo_data || null;
   if(!photoUrl && pin){
@@ -2997,7 +2998,6 @@ async function previewEstimatePostcard(estId){
     if(fp) photoUrl = fp;
     if(!photoUrl) photoUrl = pin.photo_url || null;
   }
-  // Geocode fallback to satellite image
   if(!photoUrl){
     try{
       const MB = window._mapboxToken || ['pk.eyJ1IjoibW9uZ29vc2VmaWxtcyIsImEiOiJjbW52M2kyNnMxM3pk','MnJvYTYxZnE1YW51In0.nC5GKWDHIAB4DTAP9hV3hQ'].join('');
@@ -3009,7 +3009,8 @@ async function previewEstimatePostcard(estId){
       }
     } catch(e){ console.warn('[BidDrop] Geocode for postcard preview failed:',e); }
   }
-  // Build a synthetic item compatible with buildPostcard6x9FrontHtml / BackHtml
+
+  // ── Build HTML for both sides ────────────────────────────────────────────
   const syntheticItem = {
     addr:       est.addr  || '',
     owner:      est.owner || 'Homeowner',
@@ -3020,113 +3021,154 @@ async function previewEstimatePostcard(estId){
   };
   const frontHtml = buildPostcard6x9FrontHtml(syntheticItem);
   const backHtml  = buildPostcard6x9BackHtml(syntheticItem);
-  const existing = document.getElementById('m-postcard6x9-preview');
+
+  // ── Remove any existing preview ──────────────────────────────────────────
+  const existing = document.getElementById('m-est-pc-lightbox');
   if(existing) existing.remove();
-  const isMobile = window.innerWidth <= 768;
-  const modal = document.createElement('div');
-  modal.id = 'm-postcard6x9-preview';
-  modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(10,16,26,0.97);display:flex;flex-direction:column;';
-  if(isMobile){
-    const mHtml = [
-      '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;flex-shrink:0;border-bottom:1px solid #2E4060;">',
-        '<div style="font-family:Oswald,sans-serif;font-size:17px;font-weight:700;color:#F0F6FF;letter-spacing:.5px;">&#127968; Postcard Preview</div>',
-        '<button onclick="document.getElementById(\'m-postcard6x9-preview\').remove()" style="background:#2E4060;border:none;color:#F0F6FF;font-size:13px;font-weight:700;padding:8px 18px;border-radius:8px;cursor:pointer;-webkit-tap-highlight-color:transparent;">&times; Close</button>',
-      '</div>',
-      '<div style="display:flex;gap:0;padding:10px 16px 6px;flex-shrink:0;">',
-        '<button id="pc-tab-front" onclick="window._switchPcTab(\'front\')" style="flex:1;background:#F25C05;border:none;color:#fff;font-size:13px;font-weight:700;padding:10px;border-radius:8px 0 0 8px;cursor:pointer;">FRONT</button>',
-        '<button id="pc-tab-back"  onclick="window._switchPcTab(\'back\')"  style="flex:1;background:#1A2333;border:1px solid #2E4060;color:#6688A8;font-size:13px;font-weight:700;padding:10px;border-radius:0 8px 8px 0;cursor:pointer;">BACK</button>',
-      '</div>',
-      '<div style="flex:1;overflow:hidden;padding:0 12px 16px;display:flex;flex-direction:column;min-height:0;">',
-        '<div id="pc-card-container" style="flex:1;position:relative;border-radius:12px;overflow:hidden;border:2px solid #F25C05;min-height:0;">',
-          '<div id="pc-frame-wrap-front" style="position:absolute;inset:0;overflow:hidden;">',
-            '<iframe id="pc6x9-front-frame" frameborder="0" style="border:none;display:block;"></iframe>',
-          '</div>',
-          '<div id="pc-frame-wrap-back" style="position:absolute;inset:0;overflow:hidden;display:none;">',
-            '<iframe id="pc6x9-back-frame" frameborder="0" style="border:none;display:block;"></iframe>',
-          '</div>',
-        '</div>',
-        '<div style="text-align:center;margin-top:8px;font-size:11px;color:#6688A8;flex-shrink:0;">Actual print size: 9&Prime;&times;6&Prime; &middot; Tap FRONT / BACK to switch</div>',
-      '</div>'
-    ].join('');
-    modal.innerHTML = mHtml;
-    document.body.appendChild(modal);
-    window._switchPcTab = function(side){
-      const fw = document.getElementById('pc-frame-wrap-front');
-      const bw = document.getElementById('pc-frame-wrap-back');
-      const tf = document.getElementById('pc-tab-front');
-      const tb = document.getElementById('pc-tab-back');
-      if(!fw||!bw) return;
-      if(side==='front'){
-        fw.style.display=''; bw.style.display='none';
-        tf.style.background='#F25C05'; tf.style.color='#fff'; tf.style.border='none';
-        tb.style.background='#1A2333'; tb.style.color='#6688A8'; tb.style.border='1px solid #2E4060';
-      } else {
-        fw.style.display='none'; bw.style.display='';
-        tb.style.background='#F25C05'; tb.style.color='#fff'; tb.style.border='none';
-        tf.style.background='#1A2333'; tf.style.color='#6688A8'; tf.style.border='1px solid #2E4060';
-      }
-    };
-    setTimeout(function(){
-      const container = document.getElementById('pc-card-container');
-      if(!container) return;
-      const cW = container.offsetWidth, cH = container.offsetHeight;
-      const scale = Math.min(cW/864, cH/576);
-      ['front','back'].forEach(function(side){
-        const frame = document.getElementById('pc6x9-'+side+'-frame');
-        const html  = side==='front' ? frontHtml : backHtml;
-        if(!frame) return;
-        frame.style.width='864px'; frame.style.height='576px';
-        frame.style.transform='scale('+scale+')'; frame.style.transformOrigin='top left';
-        const blob = new Blob([html],{type:'text/html'});
-        const url = URL.createObjectURL(blob);
-        frame.onload=function(){ URL.revokeObjectURL(url); };
-        frame.src = url;
-      });
-    }, 200);
-  } else {
-    const dHtml = [
-      '<div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px 14px;flex-shrink:0;border-bottom:1px solid #2E4060;">',
-        '<div style="font-family:Oswald,sans-serif;font-size:20px;font-weight:700;color:#F0F6FF;letter-spacing:.5px;">&#127968; Postcard Preview</div>',
-        '<button onclick="document.getElementById(\'m-postcard6x9-preview\').remove()" style="background:#2E4060;border:none;color:#F0F6FF;font-size:13px;font-weight:700;padding:10px 22px;border-radius:8px;cursor:pointer;">&times; Close</button>',
-      '</div>',
-      '<div style="font-size:12px;color:#6688A8;padding:12px 24px 0;">Front (house photo) on the left &middot; Back (estimate + address) on the right. Actual print size: 9&Prime;&times;6&Prime;.</div>',
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:16px 24px 24px;flex:1;overflow:hidden;min-height:0;">',
-        '<div style="display:flex;flex-direction:column;min-height:0;">',
-          '<div style="font-size:11px;font-weight:700;color:#A8BECE;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">FRONT</div>',
-          '<div id="pc-front-scaler" style="position:relative;border-radius:10px;overflow:hidden;border:2px solid #2E4060;">',
-            '<iframe id="pc6x9-front-frame" frameborder="0" style="border:none;display:block;"></iframe>',
-          '</div>',
-        '</div>',
-        '<div style="display:flex;flex-direction:column;min-height:0;">',
-          '<div style="font-size:11px;font-weight:700;color:#A8BECE;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">BACK</div>',
-          '<div id="pc-back-scaler" style="position:relative;border-radius:10px;overflow:hidden;border:2px solid #2E4060;">',
-            '<iframe id="pc6x9-back-frame" frameborder="0" style="border:none;display:block;"></iframe>',
-          '</div>',
-        '</div>',
-      '</div>'
-    ].join('');
-    modal.innerHTML = dHtml;
-    document.body.appendChild(modal);
-    setTimeout(function(){
-      ['front','back'].forEach(function(side){
-        const scaler = document.getElementById('pc-'+side+'-scaler');
-        const frame  = document.getElementById('pc6x9-'+side+'-frame');
-        const html   = side==='front' ? frontHtml : backHtml;
-        if(!scaler||!frame) return;
-        const w = scaler.offsetWidth || 400;
-        const scale = w/864;
-        const h = Math.round(576*scale);
-        scaler.style.height = h+'px';
-        frame.style.width='864px'; frame.style.height='576px';
-        frame.style.transform='scale('+scale+')'; frame.style.transformOrigin='top left';
-        const blob = new Blob([html],{type:'text/html'});
-        const url = URL.createObjectURL(blob);
-        frame.onload=function(){ URL.revokeObjectURL(url); };
-        frame.src = url;
-      });
-    }, 200);
+
+  // ── Create lightbox overlay ──────────────────────────────────────────────
+  const overlay = document.createElement('div');
+  overlay.id = 'm-est-pc-lightbox';
+  overlay.style.cssText = [
+    'position:fixed;inset:0;z-index:10100;',
+    'background:rgba(5,10,20,0.92);',
+    'display:flex;flex-direction:column;align-items:center;justify-content:center;',
+    'padding:16px;',
+    '-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);'
+  ].join('');
+
+  // ── Inner card ───────────────────────────────────────────────────────────
+  const card = document.createElement('div');
+  card.style.cssText = [
+    'background:#0d1117;',
+    'border:1px solid #2E4060;',
+    'border-radius:16px;',
+    'box-shadow:0 24px 80px rgba(0,0,0,.8);',
+    'width:100%;max-width:960px;',
+    'display:flex;flex-direction:column;',
+    'overflow:hidden;',
+    'max-height:calc(100vh - 32px);'
+  ].join('');
+
+  // ── Header ───────────────────────────────────────────────────────────────
+  const header = document.createElement('div');
+  header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #1e2d42;flex-shrink:0;';
+  header.innerHTML = `
+    <div>
+      <div style="font-family:Oswald,sans-serif;font-size:18px;font-weight:700;color:#F0F6FF;letter-spacing:.5px;">&#127968; Postcard Preview</div>
+      <div style="font-size:12px;color:#6688A8;margin-top:2px;">${escHtml(est.owner||'Homeowner')} &mdash; ${escHtml(est.addr||'')}</div>
+    </div>
+    <button onclick="document.getElementById('m-est-pc-lightbox').remove()"
+      style="background:#1e2d42;border:1px solid #2E4060;color:#C8D8E8;font-size:13px;font-weight:700;
+             padding:8px 18px;border-radius:8px;cursor:pointer;transition:all .15s;white-space:nowrap;"
+      onmouseover="this.style.background='#F25C05';this.style.borderColor='#F25C05';this.style.color='#fff';"
+      onmouseout="this.style.background='#1e2d42';this.style.borderColor='#2E4060';this.style.color='#C8D8E8';">
+      &times; Close
+    </button>`;
+
+  // ── Tab bar ───────────────────────────────────────────────────────────────
+  const tabBar = document.createElement('div');
+  tabBar.style.cssText = 'display:flex;gap:8px;padding:12px 20px 0;flex-shrink:0;';
+  tabBar.innerHTML = `
+    <button id="pc-lb-tab-front" onclick="window._pcLbSwitch('front')"
+      style="background:#F25C05;border:none;color:#fff;font-size:12px;font-weight:700;
+             padding:8px 20px;border-radius:8px;cursor:pointer;letter-spacing:.5px;transition:all .15s;">
+      &#9650; FRONT
+    </button>
+    <button id="pc-lb-tab-back" onclick="window._pcLbSwitch('back')"
+      style="background:#1e2d42;border:1px solid #2E4060;color:#6688A8;font-size:12px;font-weight:700;
+             padding:8px 20px;border-radius:8px;cursor:pointer;letter-spacing:.5px;transition:all .15s;">
+      &#9660; BACK
+    </button>
+    <span style="margin-left:auto;font-size:11px;color:#4a6080;align-self:center;">Actual print size: 9&Prime;&times;6&Prime;</span>`;
+
+  // ── Postcard display area ─────────────────────────────────────────────────
+  const pcArea = document.createElement('div');
+  pcArea.style.cssText = 'padding:12px 20px 20px;flex:1;min-height:0;display:flex;flex-direction:column;';
+
+  // Front wrapper
+  const frontWrap = document.createElement('div');
+  frontWrap.id = 'pc-lb-front-wrap';
+  frontWrap.style.cssText = 'flex:1;min-height:0;position:relative;border-radius:10px;overflow:hidden;border:2px solid #F25C05;box-shadow:0 8px 32px rgba(242,92,5,.2);';
+  const frontFrame = document.createElement('iframe');
+  frontFrame.id = 'pc-lb-front-frame';
+  frontFrame.frameBorder = '0';
+  frontFrame.style.cssText = 'border:none;display:block;position:absolute;top:0;left:0;transform-origin:top left;';
+  frontWrap.appendChild(frontFrame);
+
+  // Back wrapper
+  const backWrap = document.createElement('div');
+  backWrap.id = 'pc-lb-back-wrap';
+  backWrap.style.cssText = 'flex:1;min-height:0;position:relative;border-radius:10px;overflow:hidden;border:2px solid #2E4060;box-shadow:0 8px 32px rgba(0,0,0,.4);display:none;';
+  const backFrame = document.createElement('iframe');
+  backFrame.id = 'pc-lb-back-frame';
+  backFrame.frameBorder = '0';
+  backFrame.style.cssText = 'border:none;display:block;position:absolute;top:0;left:0;transform-origin:top left;';
+  backWrap.appendChild(backFrame);
+
+  pcArea.appendChild(frontWrap);
+  pcArea.appendChild(backWrap);
+
+  card.appendChild(header);
+  card.appendChild(tabBar);
+  card.appendChild(pcArea);
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+
+  // ── Tab switch helper ─────────────────────────────────────────────────────
+  window._pcLbSwitch = function(side){
+    const fw = document.getElementById('pc-lb-front-wrap');
+    const bw = document.getElementById('pc-lb-back-wrap');
+    const tf = document.getElementById('pc-lb-tab-front');
+    const tb = document.getElementById('pc-lb-tab-back');
+    if(!fw||!bw) return;
+    if(side==='front'){
+      fw.style.display=''; bw.style.display='none';
+      tf.style.background='#F25C05'; tf.style.color='#fff'; tf.style.border='none';
+      tb.style.background='#1e2d42'; tb.style.color='#6688A8'; tb.style.border='1px solid #2E4060';
+    } else {
+      fw.style.display='none'; bw.style.display='';
+      tb.style.background='#F25C05'; tb.style.color='#fff'; tb.style.border='none';
+      tf.style.background='#1e2d42'; tf.style.color='#6688A8'; tf.style.border='1px solid #2E4060';
+    }
+  };
+
+  // ── Scale and load iframes ────────────────────────────────────────────────
+  function _loadPcFrames(){
+    // The postcard is 864×576 (3:2 ratio). Scale to fit the available width.
+    const areaW = pcArea.offsetWidth - 40; // 20px padding each side
+    // Max height: viewport minus header (~120px) minus tabs (~52px) minus padding (~32px)
+    const areaH = window.innerHeight - 120 - 52 - 32 - 32;
+    // Scale to fit width, but cap by height
+    let scale = areaW / 864;
+    const scaledH = 576 * scale;
+    if(scaledH > areaH) scale = areaH / 576;
+    const dispW = Math.round(864 * scale);
+    const dispH = Math.round(576 * scale);
+
+    [['front', frontWrap, frontFrame, frontHtml],
+     ['back',  backWrap,  backFrame,  backHtml]].forEach(function([side, wrap, frame, html]){
+      wrap.style.width  = dispW + 'px';
+      wrap.style.height = dispH + 'px';
+      frame.style.width  = '864px';
+      frame.style.height = '576px';
+      frame.style.transform = 'scale(' + scale + ')';
+      const blob = new Blob([html], {type:'text/html'});
+      const url = URL.createObjectURL(blob);
+      frame.onload = function(){ URL.revokeObjectURL(url); };
+      frame.src = url;
+    });
+    // Center the card horizontally
+    card.style.maxWidth = Math.min(dispW + 40, 960) + 'px';
   }
-  modal.addEventListener('click', e=>{ if(e.target===modal) modal.remove(); });
+
+  setTimeout(_loadPcFrames, 80);
+
+  // Close on overlay click
+  overlay.addEventListener('click', function(e){ if(e.target===overlay) overlay.remove(); });
+  // Close on Escape
+  function _pcEsc(e){ if(e.key==='Escape'){ overlay.remove(); document.removeEventListener('keydown',_pcEsc); } }
+  document.addEventListener('keydown', _pcEsc);
 }
 
 // LEGACY: old drip-sequence preview (Steps 2/3/4) kept for reference
