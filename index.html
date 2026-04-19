@@ -5711,8 +5711,8 @@ function renderEstimatesTab(){
     const addr = pin.address || '—';
     const shortAddr = addr.split(',')[0];
     const pid = escHtml(pin.id);
-    const pinActionBtns = '<button onclick="restorePin('' + pid + '')" style="background:#1a7f4b;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#8629; Restore Pin</button>'
-      + '<button onclick="hardDeletePin('' + pid + '')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">&#10005; Purge</button>';
+    const pinActionBtns = '<button data-pid="' + pid + '" onclick="restorePin(this.dataset.pid)" style="background:#1a7f4b;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#8629; Restore Pin</button>'
+      + '<button data-pid="' + pid + '" onclick="hardDeletePin(this.dataset.pid)" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">&#10005; Purge</button>';
     return '<tr style="border-bottom:1px solid var(--border);opacity:.75;">'
       +'<td style="padding:10px 8px;"></td>'
       +'<td style="padding:12px;font-size:14px;font-weight:600;color:var(--text);">'+escHtml(shortAddr)+'<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+escHtml(addr.split(',').slice(1).join(',').trim())+'</div><div style="margin-top:3px;"><span style="background:rgba(242,92,5,.1);color:var(--accent);border:1px solid rgba(242,92,5,.3);border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;">PIN ONLY</span></div></td>'
