@@ -2353,8 +2353,12 @@ function saveEstimateNow(){
   const owner = (document.getElementById('e-owner')||{}).value.trim()||'Homeowner';
   const email = (document.getElementById('e-email')||{}).value.trim()||'';
   const total = (structures||[]).reduce((sum,s)=>sum+(calcStructPrice?calcStructPrice(s):0),0);
-  const photoUrl = pin.photo_url || null;
-  const photoData = window._homePhotoData || null;
+  // Photo: prefer the current form state (_homePhotoData, _allPhotos.front) over the stale pin.photo_url
+  const frontFromAllPhotos = (window._allPhotos && (window._allPhotos.front||[])[0]) || null;
+  const photoUrl = (window._homePhotoData && window._homePhotoData.startsWith('http') ? window._homePhotoData : null)
+    || frontFromAllPhotos
+    || pin.photo_url || null;
+  const photoData = (window._homePhotoData && !window._homePhotoData.startsWith('http') ? window._homePhotoData : null) || null;
   const estRecord = {
     id: window._editingEstimateId || ('est_' + Date.now()),
     pinId: currentEstPinId,
@@ -2432,8 +2436,14 @@ function saveEstimateNow(){
     sb.from('estimates').upsert(estRow, {onConflict:'id'}).then(({error})=>{
       if(error) console.warn('[BidDrop] Save estimate to estimates table:', error.message);
     });
-    // Also keep pin.estimate for map badge / backward compat
-    sb.from('pins').update({ estimate: pin.estimate, status: 'quoted' }).eq('id', currentEstPinId).then(({error})=>{
+    // Also keep pin.estimate + photos in sync on the pin row (map badge + goEstFromPin fallback)
+    sb.from('pins').update({
+      estimate: pin.estimate, status: 'quoted',
+      photo_url: estRecord.photo_url || pin.photo_url || null,
+      all_photos: estRecord.all_photos || pin.all_photos || null,
+      damage_photos: estRecord.damage_photos || pin.damage_photos || null,
+      updated_at: new Date().toISOString()
+    }).eq('id', currentEstPinId).then(({error})=>{
       if(error) console.warn('Save estimate to pin:', error);
     });
   } else {
@@ -2466,7 +2476,13 @@ function saveEstimateNow(){
     sb.from('estimates').upsert(estRow2, {onConflict:'id'}).then(({error})=>{
       if(error) console.warn('[BidDrop] Save estimate to estimates table:', error.message);
     });
-    sb.from('pins').update({ estimate: pin.estimate }).eq('id', currentEstPinId).then(({error})=>{
+    sb.from('pins').update({
+      estimate: pin.estimate,
+      photo_url: estRecord.photo_url || pin.photo_url || null,
+      all_photos: estRecord.all_photos || pin.all_photos || null,
+      damage_photos: estRecord.damage_photos || pin.damage_photos || null,
+      updated_at: new Date().toISOString()
+    }).eq('id', currentEstPinId).then(({error})=>{
       if(error) console.warn('Save estimate to pin:', error);
     });
   }
@@ -4751,24 +4767,50 @@ function cycleStatus(id){
 function goEstFromPin(id){
   const p=S.pins.find(x=>x.id===id);if(!p)return;
   currentEstPinId = id;
-  if(!structures.length)addStructure(0,'Main House');
-  // Load saved estimate data if available
-  let _estDmgPhotos = null;
-  if(p.estimate){
-    const est = typeof p.estimate === 'string' ? JSON.parse(p.estimate) : p.estimate;
+  // ── SOURCE OF TRUTH: prefer S.estimates (estimates table) over pin.estimate JSONB ──
+  // The estimates table is always more up-to-date than the JSONB field on the pin.
+  const savedEst = (S.estimates||[]).find(e=>e.pinId===id && !e.deletedAt && !e.isRevision);
+  const legacyEst = p.estimate ? (typeof p.estimate==='string'?JSON.parse(p.estimate):p.estimate) : null;
+  const est = savedEst || legacyEst; // prefer estimates table
+  // Reset form
+  document.getElementById('e-owner').value = '';
+  document.getElementById('e-email').value = '';
+  document.getElementById('e-addr').value = p.address||'';
+  structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'1.15',mat:'1.3',complexity:'1.12',pts:null}];
+  if(est){
     if(est.owner) document.getElementById('e-owner').value = est.owner;
     if(est.email) document.getElementById('e-email').value = est.email;
-    if(est.structures && est.structures.length){
-      structures = est.structures.map(s=>normStruct(s));
+    if(est.structures && est.structures.length) structures = est.structures.map(s=>normStruct(s));
+    if(savedEst){
+      // Restore add-ons from estimates table record
+      const sky=document.getElementById('a-sky'); if(sky) sky.checked=!!savedEst.skylight;
+      const skyQ=document.getElementById('a-sky-q'); if(skyQ) skyQ.value=savedEst.skylightQty||1;
+      const chim=document.getElementById('a-chim'); if(chim) chim.checked=!!savedEst.chimney;
+      const gut=document.getElementById('a-gut'); if(gut) gut.checked=!!savedEst.gutters;
+      const gutQ=document.getElementById('a-gut-q'); if(gutQ) gutQ.value=savedEst.gutterLf||120;
+      window._editingEstimateId = savedEst.id;
+    } else {
+      window._editingEstimateId = null;
     }
-    if(est.damage_photos && est.damage_photos.length) _estDmgPhotos = est.damage_photos;
+  } else {
+    window._editingEstimateId = null;
   }
-  // Load all photos via unified system (migrates legacy fields automatically)
+  // Load all photos via unified system (estimates table → pin fallback)
   _clearAllPhotos();
-  const savedEst4pin = p.estimate ? (typeof p.estimate==='string'?JSON.parse(p.estimate):p.estimate) : null;
-  _loadAllPhotosFromEst(savedEst4pin, p);
+  _loadAllPhotosFromEst(est, p);
+  // Restore home photo preview from the front photo
+  const frontPhoto = (window._allPhotos.front||[])[0] || p.photo_url || p.photo_data || null;
+  if(frontPhoto){
+    window._homePhotoData = frontPhoto;
+    const prev=document.getElementById('home-photo-preview');
+    if(prev) prev.innerHTML='<img src="'+frontPhoto+'" style="width:100%;height:100%;object-fit:cover;">';
+    const clr=document.getElementById('clear-photo-btn');
+    if(clr) clr.style.display='block';
+  } else {
+    window._homePhotoData = null;
+    clearHomePhoto();
+  }
   goTab('estimate');
-  document.getElementById('e-addr').value=p.address||'';
   // Update picker to show this pin as selected
   const sel = document.getElementById('est-pin-picker');
   if(sel) sel.value = id;
@@ -4776,6 +4818,7 @@ function goEstFromPin(id){
   const hadDraft = restoreDraft(id);
   if(!hadDraft) clearDraftBanner();
   renderStructures();calcP();updatePreview();
+  if(p.equityData) showEquityBadge(p.equityData); else hideEquityBadge();
   toast('📋 '+p.address.split(',')[0],'info');
 }
 // ═══════════════════════════════
@@ -8920,6 +8963,38 @@ async function loadEstimatesFromSupabase(){
   const memOnly = (S.estimates || []).filter(e => !dbIds.has(e.id));
   S.estimates = [...loaded, ...memOnly];
   console.log('[BidDrop] Loaded', loaded.length, 'estimates from Supabase');
+  // Backfill pin.estimate JSONB so map badges and goEstFromPin always have fresh data
+  _backfillPinEstimatesFromTable();
+}
+function _backfillPinEstimatesFromTable(){
+  // For each pin in S.pins, find its latest non-revision estimate and sync pin.estimate
+  (S.pins||[]).forEach(pin => {
+    const est = (S.estimates||[]).find(e => e.pinId === pin.id && !e.deletedAt && !e.isRevision);
+    if(est){
+      pin.estimate = {
+        id: est.id,
+        owner: est.owner || '',
+        email: est.email || '',
+        total: est.total || 0,
+        structures: est.structures || [],
+        photo_url: est.photo_url || null,
+        photo_data: est.photo_data || null,
+        all_photos: est.all_photos || null,
+        damage_photos: est.damage_photos || null,
+        skylight: est.skylight || false,
+        skylightQty: est.skylightQty || 1,
+        chimney: est.chimney || false,
+        gutters: est.gutters || false,
+        gutterLf: est.gutterLf || 120,
+        savedAt: est.savedAt || new Date().toISOString(),
+        rep: est.rep || ''
+      };
+      // Also sync photo fields on the pin itself
+      if(est.photo_url && !pin.photo_url) pin.photo_url = est.photo_url;
+      if(est.all_photos && !pin.all_photos) pin.all_photos = est.all_photos;
+      if(est.damage_photos && !pin.damage_photos) pin.damage_photos = est.damage_photos;
+    }
+  });
 }
 
 function _rebuildEstimatesFromPins(){
