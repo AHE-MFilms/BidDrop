@@ -8231,37 +8231,41 @@ async function renderAdminPanel(){
 function renderSuperAdminPanel(accounts, allProfiles){
   const clientAccounts = accounts.filter(a=>a.id!==AGENCY_ACCOUNT_ID);
   return (
-    '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">Client Accounts ('+clientAccounts.length+')</div>' +
+    '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin-bottom:14px;">Client Accounts ('+clientAccounts.length+')</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-bottom:24px;">' +
     clientAccounts.map(a=>{
       const users = allProfiles.filter(p=>p.account_id===a.id);
       const planColor = {starter:'#3B82F6',pro:'#8B5CF6',agency:'#F25C05'}[a.plan]||'#6688A8';
       const activeColor = a.active!==false ? '#22C55E' : '#EF4444';
-      return '<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;">' +
+      const rate = parseFloat(a.mailer_rate)||2.50;
+      return '<div class="ag-acct-card">' +
         '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">' +
-        '<div>' +
-          '<div style="font-weight:700;font-size:14px;">'+(a.company_name||a.name)+'</div>' +
-          '<div style="font-size:10px;color:var(--muted);margin-top:2px;">'+users.length+' user'+(users.length!==1?'s':'')+
-            (a.mailer_rate?' · $'+parseFloat(a.mailer_rate).toFixed(2)+'/mailer':'')+
+          '<div class="ag-acct-name">'+(a.company_name||a.name)+'</div>' +
+          '<div style="display:flex;gap:4px;">' +
+            '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;background:'+planColor+'22;color:'+planColor+';border:1px solid '+planColor+'44;text-transform:uppercase;">'+(a.plan||'starter')+'</span>' +
+            '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;background:'+activeColor+'22;color:'+activeColor+';border:1px solid '+activeColor+'44;">'+(a.active!==false?'Active':'Inactive')+'</span>' +
           '</div>' +
         '</div>' +
-        '<div style="display:flex;gap:5px;align-items:center;">' +
-          '<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:8px;background:'+planColor+'22;color:'+planColor+';border:1px solid '+planColor+'44;text-transform:uppercase;">'+(a.plan||'starter')+'</span>' +
-          '<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:8px;background:'+activeColor+'22;color:'+activeColor+';border:1px solid '+activeColor+'44;">'+(a.active!==false?'Active':'Inactive')+'</span>' +
+        '<div class="ag-acct-meta">'+users.length+' user'+(users.length!==1?'s':'')+
+          (a.mailer_rate?' · $'+rate.toFixed(2)+'/mailer':'')+
         '</div>' +
-        '</div>' +
-        users.map(u=>'<div style="font-size:11px;color:var(--mid);padding:4px 0;display:flex;align-items:center;justify-content:space-between;gap:6px;">' +
-          '<div style="flex:1;min-width:0;">' +
-          '👤 '+(u.name||u.email||u.id.slice(0,8))+ ' — <span style="color:var(--accent);">'+u.role+'</span>' +
-          (u.email?' <span style="color:var(--muted);font-size:10px;">'+escHtml(u.email)+'</span>':'')+
-          '</div>' +
-          '<div style="display:flex;gap:4px;flex-shrink:0;">' +
-            '<button onclick="editUser(\''+u.id+'\',\''+escHtml(u.name||'')+'\',\''+escHtml(u.email||'')+'\',\''+u.role+'\',\''+a.id+'\')" style="background:none;border:1px solid var(--border);border-radius:5px;padding:2px 8px;color:var(--mid);font-size:10px;cursor:pointer;" title="Edit user">✏️ Edit</button>' +
-            '<button onclick="deleteUser(\''+u.id+'\',\''+escHtml(u.name||u.email||'user')+'\')" style="background:none;border:1px solid var(--danger);border-radius:5px;padding:2px 8px;color:var(--danger);font-size:10px;cursor:pointer;" title="Delete user">🗑 Delete</button>' +
-          '</div>' +
+        '<div style="margin:10px 0 6px;border-top:1px solid var(--border);padding-top:8px;">' +
+          users.map(u=>'<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 0;">' +
+            '<div style="font-size:11px;color:var(--mid);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' +
+              '👤 <span style="font-weight:600;">'+(u.name||u.email||u.id.slice(0,8))+'</span>' +
+              ' — <span style="color:var(--accent);font-weight:700;">'+u.role+'</span>' +
+              (u.email?' <span style="color:var(--muted);font-size:10px;">'+escHtml(u.email)+'</span>':'')+
+            '</div>' +
+            '<div style="display:flex;gap:4px;flex-shrink:0;">' +
+              '<button onclick="editUser(\''+u.id+'\',\''+escHtml(u.name||'')+'\'\,\''+escHtml(u.email||'')+'\'\,\''+u.role+'\'\,\''+a.id+'\')" style="background:none;border:1px solid var(--border);border-radius:5px;padding:2px 8px;color:var(--mid);font-size:10px;cursor:pointer;" title="Edit user">✏️ Edit</button>' +
+              '<button onclick="deleteUser(\''+u.id+'\',\''+escHtml(u.name||u.email||'user')+'\')" style="background:none;border:1px solid var(--danger);border-radius:5px;padding:2px 8px;color:var(--danger);font-size:10px;cursor:pointer;" title="Delete user">🗑 Delete</button>' +
+            '</div>' +
           '</div>').join('') +
+        '</div>' +
         (a.notes?'<div style="font-size:10px;color:var(--muted);margin-top:4px;font-style:italic;">'+escHtml(a.notes)+'</div>':'')+
         '</div>';
     }).join('') +
+    '</div>' +
     '<div style="margin-top:18px;">' +
     '<button onclick="showAddAccountForm()" class="btn-primary" style="margin-bottom:12px;">+ Onboard New Client</button>' +
     '<div id="add-account-form" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:16px;margin-bottom:14px;">' +
