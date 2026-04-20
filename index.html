@@ -6432,7 +6432,7 @@ async function sendLobPostcard6x9(id){
     item.status='failed';save();renderQueue();
     const msg=typeof e?.message==='string'?e.message:(typeof e==='object'?JSON.stringify(e):String(e));
     toast('Postcard error: '+msg,'error');
-  }}}
+  }}
 // Build the 6×9 postcard FRONT — full-bleed house photo with overlay
 function buildPostcard6x9FrontHtml(item){
   const cfg=S.cfg||{};
