@@ -6983,7 +6983,7 @@ async function renderPostcard6x9FrontCanvasD2(item){
   return canvas.toDataURL('image/jpeg',0.92);
 }
 
-async function renderPostcard6x9BackCanvas(item){{
+async function renderPostcard6x9BackCanvas(item){
   // Lob 6x9 back: 2775x1875px landscape (9.25"x6.25" bleed at 300dpi)
   // Lob ink-free zone: bottom-right 1200x712px — MUST stay blank/white
   const W=2775, H=1875;
@@ -7371,7 +7371,7 @@ ${site?`<div class="bar-web">${escHtml(site.replace(/^https?:\/\//,''))}</div>`:
 </div>
 </div>
 </div>
-</body></html>`;
+<\/body><\/html>`;
 }
 
 function buildPostcard6x9BackHtml(item){
