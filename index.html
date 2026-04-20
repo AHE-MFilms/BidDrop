@@ -9690,12 +9690,14 @@ function _rebuildEstimatesFromPins(){
   // Only add estimates from pins.estimate JSONB that aren't already in S.estimates
   // (estimates table is the primary source; this is a fallback for legacy data)
   const existingIds = new Set((S.estimates||[]).map(e=>e.id));
+  const existingPinIds = new Set((S.estimates||[]).map(e=>e.pinId).filter(Boolean));
   S.pins.forEach(function(pin){
     if(pin.estimate){
       var est = typeof pin.estimate === 'string' ? JSON.parse(pin.estimate) : pin.estimate;
       if(est && est.structures){
         const estId = est.id || ('est_' + pin.id);
         if(existingIds.has(estId)) return; // already loaded from estimates table
+        if(existingPinIds.has(pin.id)) return; // a DB estimate for this pin already loaded — skip to prevent duplicates
         S.estimates.push({
           id: est.id || ('est_' + pin.id),
           pinId: pin.id,
