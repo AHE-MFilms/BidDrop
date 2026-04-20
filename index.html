@@ -107,7 +107,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 .fchip.active[data-s="quoted"]{background:rgba(59,130,246,.15);border-color:var(--info);color:var(--info);}
 .fchip.active[data-s="signed"]{background:rgba(34,197,94,.15);border-color:var(--success);color:var(--success);}
 .fchip.active[data-s="lost"]{background:rgba(239,68,68,.15);border-color:#EF4444;color:#EF4444;}
-.map-tip{background:var(--accent-dim);border:1px solid rgba(242,92,5,.2);border-radius:7px;padding:10px 14px;margin:8px;font-size:13px;color:var(--accent);font-weight:600;text-align:center;}
+.map-tip{background:var(--accent-dim);border:1px solid rgba(242,92,5,.2);border-radius:7px;padding:10px 14px;margin:8px;font-size:13px;color:var(--accent-text);font-weight:600;text-align:center;}
 .pin-list{flex:1;overflow-y:auto;padding:6px;}
 .pin-list::-webkit-scrollbar{width:3px;}
 .pin-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
@@ -1597,6 +1597,23 @@ tr:hover td{background:var(--card);}
       <button onclick="saveSettings()" class="stab-save-btn stab-save-lg">&#128190; Save Settings</button>
       <button onclick="doLogout()" class="stab-signout-btn">Sign Out</button>
     </div>
+  </div>
+  <!-- CANVASS AREAS TAB -->
+  <div class="tab-pane" id="tab-zones" style="flex-direction:row;overflow:hidden;">
+    <!-- Sidebar -->
+    <div style="width:280px;min-width:220px;max-width:320px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid var(--border);overflow:hidden;">
+      <div style="padding:14px 16px 10px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <div style="font-family:var(--font-h);font-size:15px;font-weight:700;letter-spacing:.4px;">🗂 Canvass Areas</div>
+        <div style="display:flex;gap:6px;">
+          <button id="btn-draw-zone" onclick="startDrawZone()" style="display:none;background:var(--accent);border:none;border-radius:7px;padding:7px 12px;color:#fff;font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">+ Draw Zone</button>
+          <button id="btn-cancel-draw" onclick="cancelDrawZone()" style="display:none;background:var(--danger);border:none;border-radius:7px;padding:7px 12px;color:#fff;font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">✕ Cancel</button>
+        </div>
+      </div>
+      <div id="zones-draw-tip" style="display:none;padding:8px 14px;background:var(--accent-dim);border-bottom:1px solid var(--border);font-size:11px;color:var(--accent-text);font-weight:600;">Click map corners to draw zone boundary. Double-click to finish.</div>
+      <div id="zones-list" style="flex:1;overflow-y:auto;padding:8px;"></div>
+    </div>
+    <!-- Map -->
+    <div id="zones-map" style="flex:1;min-width:0;"></div>
   </div>
   <!-- ADMIN TAB -->
   <div class="tab-pane" id="tab-admin" style="flex-direction:column;overflow-y:auto;padding:28px;gap:0;">
