@@ -6342,7 +6342,92 @@ async function sendLob(id){
 // ─────────────────────────────────────────────────────────────────────────────
 //  6×9 Postcard — Front & Back HTML builders + send function
 // ─────────────────────────────────────────────────────────────────────────────
-
+async function sendLobPostcard6x9(id){
+  const item=S.queue.find(x=>x.id===id);if(!item)return;
+  if(!masterLobKey){
+    toast('Checking mailer service…','info');
+    await fetchMasterLobKey();
+  }
+  if(!masterLobKey){toast('Mailer service not configured — contact your administrator','error');return;}
+  const co=S.cfg.companyName||'Your Roofing Co';
+  const fromRaw=S.cfg.companyAddr||'123 Main St, Detroit, MI, 48000';
+  const fp=fromRaw.split(',').map(s=>s.trim());
+  // Parse recipient address
+  const tp=item.addr.split(',').map(s=>s.trim());
+  const toLine1=tp[0]||'';
+  const toCity=tp[1]||'';
+  let toState=tp[2]||'MI';
+  let toZip=tp[3]||'';
+  if((!toZip||toZip==='00000')&&toState&&toState.includes(' ')){
+    const parts=toState.split(' ');toZip=parts.pop();toState=parts.join(' ');
+  }
+  if(!toZip)toZip='00000';
+  toState=toStateAbbr(toState);
+  // Parse from address — handle 'City State Zip' in one field (e.g. 'Detroit MI 48227')
+  let fromCity=fp[1]||'Detroit';
+  let fromState=fp[2]||'MI';
+  let fromZip=fp[3]||'';
+  if((!fromZip||fromZip==='00000')&&fromState&&fromState.includes(' ')){
+    const parts=fromState.split(' ');fromZip=parts.pop();fromState=parts.join(' ');
+  }
+  if(!fromZip)fromZip='48000';
+  fromState=toStateAbbr(fromState);
+  // Build a synthetic item with all config fields for the HTML builders
+  const syntheticItem=Object.assign({},item,{
+    companyName:co,companyAddr:fromRaw,companyPhone:S.cfg.companyPhone||'',
+    logoData:S.cfg.logoData||'',headshotData:S.cfg.headshotData||'',
+    repName:S.cfg.repName||'',repTitle:S.cfg.repTitle||'',
+    pcHook:S.cfg.pcHook||'',pcWhy:S.cfg.pcWhy||'',pcQuote:S.cfg.pcQuote||'',
+    pcGuarantee:S.cfg.pcGuarantee||'',
+    diff1:S.cfg.diff1||'',diff2:S.cfg.diff2||'',diff3:S.cfg.diff3||'',
+    diff4:S.cfg.diff4||'',diff5:S.cfg.diff5||'',diff6:S.cfg.diff6||'',
+    yrsInBusiness:S.cfg.yrsInBusiness||'',warrantyYrs:S.cfg.warrantyYrs||'',
+    finEnabled:S.cfg.finEnabled,finApr:S.cfg.finApr,finTerm:S.cfg.finTerm,finDown:S.cfg.finDown,
+    bookingUrl:S.cfg.bookingUrl||''
+  });
+  const frontHtml=buildPostcard6x9FrontHtml(syntheticItem);
+  const backHtml=buildPostcard6x9BackHtml(syntheticItem);
+  toast('Sending postcard…','info');
+  try{
+    const d=await adminAPI('lob-postcard',{payload:{
+      description:'Roof Bid Postcard — '+item.addr,
+      to:{name:item.owner||'Homeowner',address_line1:toLine1,address_city:toCity,address_state:toState,address_zip:toZip,address_country:'US'},
+      from:{name:co,address_line1:fp[0]||'123 Main St',address_city:fromCity,address_state:fromState,address_zip:fromZip,address_country:'US'},
+      front:frontHtml,
+      back:backHtml,
+      size:'6x9_postcard',
+      use_type:'marketing'
+    }});
+    if(d&&d.error==='no_credits'){
+      toast('Not enough credits to send a postcard (4 credits required). Please purchase more credits.','error');
+      if(d._credits)S.cfg._creditBalance=d._credits.paid_credits;
+      updateCreditBadge();
+      setTimeout(()=>showBuyCreditsModal(),800);
+      return;
+    }
+    if(d&&d.id){
+      item.status='sent';item.mailedAt=new Date().toISOString();item.lobId=d.id;
+      if(d._credits){S.cfg._creditBalance=d._credits.paid_credits;updateCreditBadge();}
+      addAct('6×9 postcard mailed to <strong>'+escHtml(item.addr)+'</strong>','converted');
+      if(currentAccount&&sb){
+        sb.from('mailer_log').insert({
+          account_id:currentAccount.id,
+          sent_by:currentUser?.id||null,
+          address:item.addr,
+          owner_name:item.owner,
+          estimate_total:item.total||0,
+          lob_id:d.id,
+          queue_item_id:item.id,
+          company_name:S.cfg.companyName||'',
+          sent_at:new Date().toISOString()
+        }).then(({error})=>{if(error)console.warn('mailer_log insert:',error.message);});
+      }
+      save();renderQueue();toast('✅ Postcard queued for mailing!','success');
+    } else {
+      item.status='failed';save();renderQueue();toast('Postcard error: '+(d?.error?.message||'Check mail settings & address'),'error');
+    }
+  } catch(e){item.status='failed';save();renderQueue();toast('Network error — mailer service unavailable','error');}
+}
 // Build the 6×9 postcard FRONT — full-bleed house photo with overlay
 function buildPostcard6x9FrontHtml(item){
   const cfg=S.cfg||{};
