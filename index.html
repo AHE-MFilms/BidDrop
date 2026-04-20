@@ -1072,7 +1072,7 @@ tr:hover td{background:var(--card);}
         <span style="font-size:24px;font-weight:800;color:var(--accent);" id="qcb-total">—</span>
         <div>
           <div style="font-size:13px;font-weight:700;color:var(--text);">Credits Available</div>
-          <div style="font-size:10px;color:var(--mid);">Each mailer = 4 credits</div>
+          <div style="font-size:10px;color:var(--mid);">1 postcard = 15 credits • 1 lookup = 1 credit</div>
         </div>
       </div>
       <span id="qcb-free" style="display:none;">—</span>
@@ -12573,10 +12573,10 @@ function spmSelect(choice){
   const btn = document.getElementById('spm-confirm-btn');
   if(btn){
     if(choice==='single'){
-      btn.textContent='🏠 Send 1 Postcard — 15 Credits ($3.75)';
+      btn.textContent='🏠 Send 1 Postcard — 15 Credits';
       btn.style.background='var(--accent)';
     } else {
-      btn.textContent='🔥 Start Follow-Up Blitz — 45 Credits ($11.25)';
+      btn.textContent='🔥 Start Follow-Up Blitz — 45 Credits';
       btn.style.background='#7C3AED';
     }
     btn.style.opacity='1'; btn.style.pointerEvents='auto';
