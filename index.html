@@ -6349,8 +6349,7 @@ function renderQueue(){
       '<td><span class="spill" style="background:'+sc+'22;color:'+sc+';border:1px solid '+sc+'44;">'+sl+'</span></td>'+
       '<td style="display:flex;gap:5px;align-items:center;">'+
       (i.status==='pending' && S.cfg.enableLetter!==false ?'<button class="btn-xs pr" onclick="sendLob(\''+qid+'\')" title="Send 4-page letter">📬 Order Letter</button>':'')+
-      (i.status==='pending' && S.cfg.enablePostcard!==false?'<button class="btn-xs" onclick="sendLobPostcard6x9(\''+qid+'\')" style="background:#0e7490;border-color:#0e7490;color:#fff;" title="Send 6×9 house photo postcard">🏠 Order Postcard</button>':'')+
-      (i.status==='pending' && S.cfg.enablePostcard!==false?'<button class="btn-xs" onclick="openBlitzFromQueue(\''+qid+'\')" style="background:#7C3AED;border-color:#7C3AED;color:#fff;" title="Follow-Up Blitz — 4 postcards, 4th free (45 credits)">🔥 Follow-Up Blitz</button>':'')+
+      (i.status==='pending' && S.cfg.enablePostcard!==false?'<button class="btn-xs" onclick="openSendPostcardModal(\''+qid+'\')" style="background:#0e7490;border-color:#0e7490;color:#fff;" title="Send postcard — choose single or Follow-Up Blitz">📬 Send Postcard</button>':'')+
       (i.status==='sent'?'<span style="font-size:10px;color:var(--muted);">'+fmtDate(i.mailedAt)+'</span>':'')+
       (i.status==='failed' && S.cfg.enableLetter!==false ?'<button class="btn-xs" onclick="sendLob(\''+qid+'\')">' + 'Retry Letter</button>':'')+
       (i.status==='failed' && S.cfg.enablePostcard!==false?'<button class="btn-xs" onclick="sendLobPostcard6x9(\''+qid+'\')" style="background:#0e7490;border-color:#0e7490;color:#fff;">Retry Card</button>':'')+
@@ -12503,13 +12502,100 @@ async function initQuotePage(slug) {
       errEl.textContent = 'Something went wrong. Please try again or call us directly.';
       errEl.style.display = 'block';
       btn.disabled = false;
-      spinEl.style.display = 'none';
+       spinEl.style.display = 'none';
     }
   };
 }
 
+// ── SEND POSTCARD CHOICE MODAL ───────────────────────────────────────────────
+let _spmQueueId = null;
+let _spmChoice  = null;
+
+function openSendPostcardModal(queueId){
+  _spmQueueId = queueId;
+  _spmChoice  = null;
+  const item = (S.queue||[]).find(x=>x.id===queueId);
+  const lbl = document.getElementById('spm-homeowner');
+  if(lbl && item) lbl.textContent = item.owner + ' — ' + item.addr;
+  // Reset selection
+  ['single','blitz'].forEach(k=>{
+    const el = document.getElementById('spm-opt-'+k);
+    if(el){ el.style.borderColor='var(--border)'; el.style.background=''; }
+  });
+  const btn = document.getElementById('spm-confirm-btn');
+  if(btn){ btn.textContent='Select an option above'; btn.style.opacity='.4'; btn.style.pointerEvents='none'; }
+  openM('m-send-postcard');
+}
+
+function spmSelect(choice){
+  _spmChoice = choice;
+  ['single','blitz'].forEach(k=>{
+    const el = document.getElementById('spm-opt-'+k);
+    if(!el) return;
+    if(k===choice){
+      el.style.borderColor = choice==='blitz' ? '#a855f7' : 'var(--accent)';
+      el.style.background  = choice==='blitz' ? 'rgba(168,85,247,.08)' : 'rgba(249,115,22,.08)';
+    } else {
+      el.style.borderColor='var(--border)'; el.style.background='';
+    }
+  });
+  const btn = document.getElementById('spm-confirm-btn');
+  if(btn){
+    if(choice==='single'){
+      btn.textContent='🏠 Send 1 Postcard — 15 Credits ($3.75)';
+      btn.style.background='var(--accent)';
+    } else {
+      btn.textContent='🔥 Start Follow-Up Blitz — 45 Credits ($11.25)';
+      btn.style.background='#7C3AED';
+    }
+    btn.style.opacity='1'; btn.style.pointerEvents='auto';
+  }
+}
+
+function spmConfirm(){
+  if(!_spmChoice || !_spmQueueId) return;
+  closeM('m-send-postcard');
+  if(_spmChoice==='single'){
+    sendLobPostcard6x9(_spmQueueId);
+  } else {
+    openBlitzFromQueue(_spmQueueId);
+  }
+}
 </script>
 <!-- ── DRIP SEQUENCE MODAL ─────────────────────────────────────────────── -->
+<!-- SEND POSTCARD CHOICE MODAL -->
+<div id="m-send-postcard" class="modal-overlay" onclick="if(event.target===this)closeM('m-send-postcard')" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:28px;width:min(520px,94vw);box-shadow:0 24px 60px rgba(0,0,0,.5);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <div style="font-family:var(--font-h);font-size:17px;font-weight:700;letter-spacing:.6px;">📬 Send Postcard</div>
+      <button onclick="closeM('m-send-postcard')" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;">✕</button>
+    </div>
+    <div id="spm-homeowner" style="font-size:12px;color:var(--muted);margin-bottom:20px;"></div>
+    <!-- Two option cards -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px;">
+      <!-- Single Send -->
+      <div onclick="spmSelect('single')" id="spm-opt-single" style="cursor:pointer;border:2px solid var(--border);border-radius:12px;padding:18px 14px;text-align:center;transition:border-color .15s,background .15s;">
+        <div style="font-size:28px;margin-bottom:8px;">🏠</div>
+        <div style="font-family:var(--font-h);font-size:14px;font-weight:700;margin-bottom:4px;">Single Send</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">1 postcard, sent today</div>
+        <div style="font-size:20px;font-weight:700;color:var(--accent);font-family:var(--font-h);">15 credits</div>
+        <div style="font-size:11px;color:var(--muted);">$3.75</div>
+      </div>
+      <!-- Follow-Up Blitz -->
+      <div onclick="spmSelect('blitz')" id="spm-opt-blitz" style="cursor:pointer;border:2px solid var(--border);border-radius:12px;padding:18px 14px;text-align:center;transition:border-color .15s,background .15s;">
+        <div style="font-size:28px;margin-bottom:8px;">🔥</div>
+        <div style="font-family:var(--font-h);font-size:14px;font-weight:700;margin-bottom:4px;">Follow-Up Blitz</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">4 postcards over 5 weeks<br>to the same homeowner</div>
+        <div style="font-size:20px;font-weight:700;color:#a855f7;font-family:var(--font-h);">45 credits</div>
+        <div style="font-size:11px;color:#22C55E;font-weight:600;">4th postcard FREE — save 25%</div>
+      </div>
+    </div>
+    <!-- Confirm button -->
+    <button id="spm-confirm-btn" onclick="spmConfirm()" style="width:100%;background:var(--accent);border:none;border-radius:10px;padding:14px;color:#fff;font-family:var(--font-b);font-size:14px;font-weight:700;cursor:pointer;opacity:.4;pointer-events:none;">Select an option above</button>
+    <button onclick="closeM('m-send-postcard')" style="width:100%;margin-top:8px;background:none;border:1px solid var(--border);border-radius:10px;padding:10px;color:var(--muted);font-family:var(--font-b);font-size:13px;cursor:pointer;">Cancel</button>
+  </div>
+</div>
+
 <div id="m-drip" class="modal-overlay" onclick="if(event.target===this)closeM('m-drip')" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:none;align-items:center;justify-content:center;">
   <div style="background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
