@@ -181,7 +181,7 @@ export default async function handler(req, res) {
       // ── Fetch all accounts (super_admin only) ─────────────────────────────
       case 'list-accounts': {
         if (!isSuperAdmin) { res.status(403).json({ error: 'Super admin only' }); return; }
-        const { select = 'id,name,company_name,plan,active,mailer_rate,created_at' } = req.query;
+        const { select = 'id,name,company_name,company_phone,company_addr,notes,plan,active,mailer_rate,created_at' } = req.query;
         const r = await sbFetch(`accounts?select=${select}&order=created_at.asc`);
         const d = await r.json();
         if (!r.ok) { res.status(r.status).json({ error: d.message || 'List accounts failed' }); return; }
@@ -193,7 +193,7 @@ export default async function handler(req, res) {
       case 'agency-data': {
         if (!isSuperAdmin) { res.status(403).json({ error: 'Super admin only' }); return; }
         const [acctRes, profRes, pinsRes, logRes] = await Promise.all([
-          sbFetch('accounts?select=id,name,company_name,plan,active,mailer_rate,created_at,enable_postcard,enable_letter,lookup_credits,free_lookups_used,free_lookups_reset,free_lookups_limit,slug&order=created_at.asc'),
+          sbFetch('accounts?select=id,name,company_name,company_phone,company_addr,notes,plan,active,mailer_rate,created_at,enable_postcard,enable_letter,lookup_credits,free_lookups_used,free_lookups_reset,free_lookups_limit,slug&order=created_at.asc'),
           sbFetch('user_profiles?select=id,account_id,name,email,role'),
           sbFetch('pins?select=id,account_id,status,created_at,rep_name'),
           sbFetch('mailer_log?select=*&order=sent_at.desc&limit=500')
