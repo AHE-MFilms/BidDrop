@@ -6995,19 +6995,6 @@ async function renderPostcard6x9BackCanvas(item){
   const RIGHT_COL_X=LEFT_COL_W+SAFE*2;             // ~1050px
   const RIGHT_COL_W=CONTENT_RIGHT-LEFT_COL_W-SAFE*2; // ~375px
 
-  // Logo watermark bottom-left (small, subtle)
-  if(logoImg){
-    const lh=100;const lw=Math.round(logoImg.width*(lh/logoImg.height));
-    const lx=SAFE;
-    const ly=H-lh-SAFE;
-    // Only draw if it won't overlap Lob zone
-    if(lx+lw < W-LOB_ADDR_W){
-      ctx.globalAlpha=0.18;
-      ctx.drawImage(logoImg,lx,ly,Math.min(lw,300),lh);
-      ctx.globalAlpha=1.0;
-    }
-  }
-
   let by=BOTTOM_Y+SAFE;
 
   // WHY DID YOU RECEIVE THIS?
@@ -7040,24 +7027,39 @@ async function renderPostcard6x9BackCanvas(item){
   ctx.font='bold 30px Arial';ctx.fillStyle='#dc2626';
   ctx.fillText(urgencyStr,SAFE+uw,by+30);
 
-  // RIGHT COLUMN: QR + phone + guarantee
+  // RIGHT COLUMN: QR stacked vertically + phone + guarantee
   let ry2=BOTTOM_Y+SAFE;
   if(qrImg){
-    const QR_SIZE=260;
+    const QR_SIZE=240;
     ctx.drawImage(qrImg,RIGHT_COL_X,ry2,QR_SIZE,QR_SIZE);
-    ctx.font='bold 32px Arial';ctx.fillStyle='#111827';
-    ctx.fillText('SCAN TO BOOK',RIGHT_COL_X+QR_SIZE+18,ry2+60);
-    ctx.font='26px Arial';ctx.fillStyle='#6b7280';
-    ctx.fillText('No-pressure booking',RIGHT_COL_X+QR_SIZE+18,ry2+96);
-    ry2+=QR_SIZE+28;
+    ry2+=QR_SIZE+14;
+    ctx.font='bold 30px Arial';ctx.fillStyle='#111827';
+    ctx.fillText('SCAN TO BOOK',RIGHT_COL_X,ry2+30);
+    ry2+=44;
+    ctx.font='24px Arial';ctx.fillStyle='#6b7280';
+    ctx.fillText('No-pressure booking',RIGHT_COL_X,ry2+26);
+    ry2+=44;
   }
-  ctx.font='bold 50px Arial';ctx.fillStyle='#111827';
-  ctx.fillText(ph,RIGHT_COL_X,ry2+50);ry2+=74;
-  ctx.font='bold 32px Arial';ctx.fillStyle=color;
+  ctx.font='bold 46px Arial';ctx.fillStyle='#111827';
+  ctx.fillText(ph,RIGHT_COL_X,ry2+46);ry2+=68;
+  ctx.font='bold 28px Arial';ctx.fillStyle=color;
   const gLines=wrapText(ctx,guarantee,RIGHT_COL_W+200);
-  gLines.forEach((l,i)=>{ctx.fillText(l,RIGHT_COL_X,ry2+34+i*44);});
-
-  // ── LOB ADDRESS ZONE: pure white ─────────────────────────────
+  gLines.forEach((l,i)=>{ctx.fillText(l,RIGHT_COL_X,ry2+30+i*40);});
+  // LEFT COLUMN: logo in remaining white space below urgency
+  if(logoImg){
+    const logoMaxH=140;const logoMaxW=500;
+    const logoAspect=logoImg.width/logoImg.height;
+    let lw=Math.min(logoMaxW,logoMaxH*logoAspect);
+    let lh=Math.round(lw/logoAspect);
+    if(lh>logoMaxH){lh=logoMaxH;lw=Math.round(lh*logoAspect);}
+    const logoY=by+40;
+    if(logoY+lh < H-SAFE){
+      ctx.globalAlpha=1.0;
+      ctx.drawImage(logoImg,SAFE,logoY,lw,lh);
+      ctx.globalAlpha=1.0;
+    }
+  }
+  // ── LOB ADDRESS ZONE: pure white ──────────────────────────────
   ctx.fillStyle='#ffffff';
   ctx.fillRect(W-LOB_ADDR_W, H-LOB_ADDR_H, LOB_ADDR_W, LOB_ADDR_H);
 
