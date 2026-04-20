@@ -6591,7 +6591,6 @@ async function renderPostcard6x9BackCanvas(item){
   // Lob ink-free zone: bottom-right 1200x712px — MUST stay blank
   const W=2775, H=1875;
   const LOB_ADDR_W=1200, LOB_ADDR_H=712;
-  const CONTENT_W=W-LOB_ADDR_W; // 1575px — left content column (safe for all content)
   const SAFE=75; // ~0.25" safe zone from edges
 
   const cfg=S.cfg||{};
@@ -6599,6 +6598,8 @@ async function renderPostcard6x9BackCanvas(item){
   const darkColor='#1a1a1a';
   const co=cfg.companyName||'Your Roofing Co';
   const ph=cfg.companyPhone||'(000) 000-0000';
+  const repName=cfg.repName||'';
+  const repTitle=cfg.repTitle||'';
   const total=item.total||0;
   const finEnabled=cfg.financingEnabled!==false;
   const finApr=parseFloat(cfg.financingApr)||9.99;
@@ -6617,7 +6618,7 @@ async function renderPostcard6x9BackCanvas(item){
   const headshotPos=parseFloat(cfg.headshotPos||'30')/100;
   const logoUrl=(cfg.logoData&&cfg.logoData.startsWith('http'))?cfg.logoData:null;
   const trackedUrl=item.id?'https://biddrop.americashomeexperts.com/r/'+encodeURIComponent(item.id):(cfg.bookingUrl||'');
-  const qrUrl=trackedUrl?'https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=4&data='+encodeURIComponent(trackedUrl):'';
+  const qrUrl=trackedUrl?'https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=4&data='+encodeURIComponent(trackedUrl):'';
 
   const [headshotImg,logoImg,qrImg]=await Promise.all([loadImg(headshotUrl),loadImg(logoUrl),loadImg(qrUrl)]);
 
@@ -6626,186 +6627,211 @@ async function renderPostcard6x9BackCanvas(item){
   const ctx=canvas.getContext('2d');
 
   // ═══════════════════════════════════════════════════════════════
-  // ZONE LAYOUT (landscape 2775x1875):
-  //
-  //  ┌──────────────────────────────────────────┬──────────────────┐
-  //  │  TOP HERO (dark bg, full width, H*0.52)  │                  │
-  //  │  [HEADSHOT left] [HEADLINE + PRICE right]│  LOB ADDR ZONE   │
-  //  ├──────────────────────────────────────────┤  (right 1200px,  │
-  //  │  BOTTOM CONTENT (white bg)               │   bottom 712px)  │
-  //  │  [WHY text] [stars+quote] [badges]       │                  │
-  //  │  [QR BIG] [phone] [guarantee]            │                  │
-  //  └──────────────────────────────────────────┴──────────────────┘
-  //
-  // The LOB ADDR ZONE overlaps the right 1200px × bottom 712px.
-  // We keep that area WHITE and put NO content there.
+  // LAYOUT:
+  //  ┌─────────────────────────────────────────────────────────────┐
+  //  │  HERO (dark, H*0.52 tall, full width)                       │
+  //  │  [HEADSHOT left 30%] [HEADLINE + PRICE BAR right 70%]       │
+  //  │  [lower third name/title over headshot bottom]              │
+  //  ├─────────────────────────────────────────────────────────────┤
+  //  │  BOTTOM WHITE (H*0.48 tall)                                 │
+  //  │  [LOGO bottom-left] [WHY text] [badges] [urgency]           │
+  //  │  [BIG QR] [phone] [guarantee]     | LOB ADDR ZONE (blank)   │
+  //  └─────────────────────────────────────────────────────────────┘
   // ═══════════════════════════════════════════════════════════════
 
-  const HERO_H=Math.round(H*0.52); // ~975px tall hero
+  const HERO_H=Math.round(H*0.52); // ~975px
   const BOTTOM_Y=HERO_H;
   const BOTTOM_H=H-HERO_H; // ~900px
-  // Safe content width: avoid the right 1200px in the bottom section
-  const BOTTOM_CONTENT_W=W-LOB_ADDR_W-SAFE; // ~1500px
+  const HS_W=Math.round(W*0.30); // ~832px headshot column width
+  // Safe bottom content width (avoid Lob address zone on right)
+  const BOTTOM_SAFE_W=W-LOB_ADDR_W-SAFE; // ~1500px
 
-  // ── HERO BACKGROUND ─────────────────────────────────────────────
+  // ── HERO BACKGROUND ──────────────────────────────────────────────
   ctx.fillStyle=darkColor;
   ctx.fillRect(0,0,W,HERO_H);
-  // Brand color bottom edge strip on hero
   ctx.fillStyle=color;
-  ctx.fillRect(0,HERO_H-8,W,8);
+  ctx.fillRect(0,HERO_H-10,W,10); // brand color bottom strip
 
-  // ── HEADSHOT (left side of hero, bleeds to bottom) ──────────────
-  const HS_W=Math.round(W*0.30); // ~832px wide
+  // ── HEADSHOT ─────────────────────────────────────────────────────
   if(headshotImg){
-    // Draw headshot: cover-fit into left portion of hero, vertically positioned by headshotPos
     const scale=Math.max(HS_W/headshotImg.width, HERO_H/headshotImg.height);
     const dw=Math.round(headshotImg.width*scale);
     const dh=Math.round(headshotImg.height*scale);
-    const dx=0;
     const dy=Math.round((HERO_H-dh)*headshotPos);
-    // Clip to headshot zone
     ctx.save();
     ctx.beginPath();ctx.rect(0,0,HS_W,HERO_H);ctx.clip();
-    ctx.drawImage(headshotImg,dx,dy,dw,dh);
-    // Gradient fade right edge of headshot into dark bg
-    const grad=ctx.createLinearGradient(HS_W-160,0,HS_W,0);
+    ctx.drawImage(headshotImg,0,dy,dw,dh);
+    // Fade right edge into dark bg
+    const grad=ctx.createLinearGradient(HS_W-200,0,HS_W,0);
     grad.addColorStop(0,'rgba(26,26,26,0)');
     grad.addColorStop(1,'rgba(26,26,26,1)');
     ctx.fillStyle=grad;
-    ctx.fillRect(HS_W-160,0,160,HERO_H);
+    ctx.fillRect(HS_W-200,0,200,HERO_H);
     ctx.restore();
+
+    // ── LOWER THIRD (name + title over headshot bottom) ──────────
+    if(repName){
+      const LT_H=repTitle?130:90;
+      const LT_Y=HERO_H-LT_H-10;
+      // Semi-transparent dark bar
+      ctx.fillStyle='rgba(0,0,0,0.72)';
+      ctx.fillRect(0,LT_Y,HS_W-200,LT_H); // stop before the fade zone
+      // Brand color left accent bar
+      ctx.fillStyle=color;
+      ctx.fillRect(0,LT_Y,8,LT_H);
+      // Name
+      ctx.font='bold 52px Arial';ctx.fillStyle='#ffffff';
+      ctx.fillText(repName,20,LT_Y+62);
+      // Title
+      if(repTitle){
+        ctx.font='36px Arial';ctx.fillStyle='rgba(255,255,255,0.75)';
+        ctx.fillText(repTitle,20,LT_Y+108);
+      }
+    }
   }
 
-  // ── HERO RIGHT: HEADLINE + PRICE BAR ────────────────────────────
-  const HR_X=HS_W+40;
+  // ── HERO RIGHT: LOGO + BADGE + HOOK + PRICE BAR + STARS ──────────
+  const HR_X=HS_W+50;
   const HR_W=W-HR_X-SAFE;
-  let hy=SAFE+20;
+  let hy=SAFE+10;
 
-  // Logo or company name top-right
+  // Logo top-right of hero
   if(logoImg){
-    const lh=60; const lw=Math.round(logoImg.width*(lh/logoImg.height));
-    ctx.drawImage(logoImg,HR_X,hy,Math.min(lw,300),lh);
-    hy+=lh+20;
+    const lh=72; const lw=Math.round(logoImg.width*(lh/logoImg.height));
+    ctx.drawImage(logoImg,HR_X,hy,Math.min(lw,340),lh);
+    hy+=lh+24;
   } else {
-    ctx.font='bold 44px Arial';ctx.fillStyle='#ffffff';
-    ctx.fillText(co,HR_X,hy+44);hy+=64;
+    ctx.font='bold 52px Arial';ctx.fillStyle='#ffffff';
+    ctx.fillText(co,HR_X,hy+52);hy+=76;
   }
 
-  // "YOUR ROOF ESTIMATE IS READY" badge pill
-  const badgeLabel='YOUR ROOF ESTIMATE IS READY';
-  ctx.font='bold 30px Arial';
-  const bw=ctx.measureText(badgeLabel).width+40;
+  // "YOUR ROOF ESTIMATE IS READY" orange pill
+  ctx.font='bold 36px Arial';
+  const pillLabel='YOUR ROOF ESTIMATE IS READY';
+  const pillW=ctx.measureText(pillLabel).width+48;
   ctx.fillStyle=color;
-  roundRect(ctx,HR_X,hy,bw,52,8);ctx.fill();
-  ctx.fillStyle='#fff';ctx.fillText(badgeLabel,HR_X+20,hy+36);
-  hy+=72;
+  roundRect(ctx,HR_X,hy,pillW,60,10);ctx.fill();
+  ctx.fillStyle='#fff';ctx.fillText(pillLabel,HR_X+24,hy+42);
+  hy+=80;
 
   // Hook quote
-  ctx.font='italic 32px Georgia, serif';ctx.fillStyle='rgba(255,255,255,0.88)';
+  ctx.font='italic 36px Georgia, serif';ctx.fillStyle='rgba(255,255,255,0.88)';
   const hookLines=wrapText(ctx,hook,HR_W);
-  hookLines.slice(0,3).forEach((l,i)=>{ctx.fillText(l,HR_X,hy+36+i*44);});
-  hy+=Math.min(hookLines.length,3)*44+24;
+  hookLines.slice(0,3).forEach((l,i)=>{ctx.fillText(l,HR_X,hy+40+i*50);});
+  hy+=Math.min(hookLines.length,3)*50+28;
 
   // BIG PRICE BAR
-  const PB_H=finMo?180:140;
+  const PB_H=finMo?200:160;
   ctx.fillStyle=color;
-  roundRect(ctx,HR_X,hy,HR_W,PB_H,16);ctx.fill();
+  roundRect(ctx,HR_X,hy,HR_W,PB_H,18);ctx.fill();
   if(finMo){
-    // Two columns
     const col2X=HR_X+Math.round(HR_W/2)+10;
-    ctx.fillStyle='rgba(255,255,255,0.65)';ctx.font='bold 26px Arial';
-    ctx.fillText('ESTIMATED TOTAL',HR_X+20,hy+36);
-    ctx.fillStyle='#fff';ctx.font='bold 88px Arial';
-    ctx.fillText('$'+total.toLocaleString(),HR_X+20,hy+136);
-    // divider
-    ctx.fillStyle='rgba(255,255,255,0.25)';ctx.fillRect(col2X-10,hy+16,3,PB_H-32);
-    ctx.fillStyle='rgba(255,255,255,0.65)';ctx.font='bold 26px Arial';
-    ctx.fillText('AS LOW AS',col2X,hy+36);
-    ctx.fillStyle='#fff';ctx.font='bold 88px Arial';
-    ctx.fillText('$'+finMo.toLocaleString()+'/mo',col2X,hy+136);
-  } else {
-    ctx.fillStyle='rgba(255,255,255,0.65)';ctx.font='bold 28px Arial';
-    ctx.fillText('YOUR ESTIMATE',HR_X+20,hy+40);
+    ctx.fillStyle='rgba(255,255,255,0.65)';ctx.font='bold 30px Arial';
+    ctx.fillText('ESTIMATED TOTAL',HR_X+24,hy+42);
     ctx.fillStyle='#fff';ctx.font='bold 100px Arial';
-    ctx.fillText('$'+total.toLocaleString(),HR_X+20,hy+148);
+    ctx.fillText('$'+total.toLocaleString(),HR_X+24,hy+158);
+    ctx.fillStyle='rgba(255,255,255,0.25)';ctx.fillRect(col2X-10,hy+18,3,PB_H-36);
+    ctx.fillStyle='rgba(255,255,255,0.65)';ctx.font='bold 30px Arial';
+    ctx.fillText('AS LOW AS',col2X,hy+42);
+    ctx.fillStyle='#fff';ctx.font='bold 100px Arial';
+    ctx.fillText('$'+finMo.toLocaleString()+'/mo',col2X,hy+158);
+  } else {
+    ctx.fillStyle='rgba(255,255,255,0.65)';ctx.font='bold 32px Arial';
+    ctx.fillText('YOUR ESTIMATE',HR_X+24,hy+46);
+    ctx.fillStyle='#fff';ctx.font='bold 110px Arial';
+    ctx.fillText('$'+total.toLocaleString(),HR_X+24,hy+164);
   }
-  hy+=PB_H+20;
+  hy+=PB_H+24;
 
-  // Stars + review quote (hero bottom)
-  ctx.font='40px Arial';ctx.fillStyle='#f59e0b';
-  ctx.fillText('\u2605\u2605\u2605\u2605\u2605',HR_X,hy+40);hy+=56;
+  // Stars + review quote
+  ctx.font='46px Arial';ctx.fillStyle='#f59e0b';
+  ctx.fillText('\u2605\u2605\u2605\u2605\u2605',HR_X,hy+46);hy+=64;
   if(pcQuote){
-    ctx.font='italic 28px Georgia, serif';ctx.fillStyle='rgba(255,255,255,0.80)';
+    ctx.font='italic 32px Georgia, serif';ctx.fillStyle='rgba(255,255,255,0.80)';
     const qLines=wrapText(ctx,pcQuote,HR_W);
-    qLines.slice(0,2).forEach((l,i)=>{ctx.fillText(l,HR_X,hy+30+i*38);});
+    qLines.slice(0,2).forEach((l,i)=>{ctx.fillText(l,HR_X,hy+34+i*44);});
   }
 
-  // ── BOTTOM SECTION (white background) ───────────────────────────
+  // ── BOTTOM SECTION (white) ────────────────────────────────────────
   ctx.fillStyle='#ffffff';
   ctx.fillRect(0,BOTTOM_Y,W,BOTTOM_H);
-  // Brand color top edge strip
-  ctx.fillStyle=color;ctx.fillRect(0,BOTTOM_Y,W,6);
+  ctx.fillStyle=color;ctx.fillRect(0,BOTTOM_Y,W,8); // brand strip
 
-  // Bottom content: two columns
-  // Left col: WHY + badges + urgency
-  // Right col (within safe zone): QR + phone + guarantee
-  const LEFT_COL_W=Math.round(BOTTOM_CONTENT_W*0.56);
-  const RIGHT_COL_X=LEFT_COL_W+SAFE*2;
-  const RIGHT_COL_W=BOTTOM_CONTENT_W-LEFT_COL_W-SAFE*2;
+  // Bottom layout: headshot column below = logo zone | right = WHY + QR + phone
+  // Logo in bottom-left (below headshot column)
+  const LOGO_ZONE_W=HS_W; // same width as headshot above
+  const LOGO_ZONE_PAD=40;
+  if(logoImg){
+    const maxLH=Math.min(160, BOTTOM_H-LOGO_ZONE_PAD*2);
+    const maxLW=LOGO_ZONE_W-LOGO_ZONE_PAD*2;
+    const scale=Math.min(maxLW/logoImg.width, maxLH/logoImg.height);
+    const lw=Math.round(logoImg.width*scale);
+    const lh=Math.round(logoImg.height*scale);
+    const lx=Math.round((LOGO_ZONE_W-lw)/2);
+    const ly=BOTTOM_Y+Math.round((BOTTOM_H-lh)/2);
+    ctx.drawImage(logoImg,lx,ly,lw,lh);
+  }
+
+  // Vertical divider between logo zone and content
+  ctx.strokeStyle='#e5e7eb';ctx.lineWidth=3;
+  ctx.beginPath();ctx.moveTo(LOGO_ZONE_W,BOTTOM_Y+SAFE);ctx.lineTo(LOGO_ZONE_W,H-SAFE);ctx.stroke();
+
+  // Right content: WHY + badges + urgency | QR + phone + guarantee
+  const RC_X=LOGO_ZONE_W+SAFE;
+  const RC_W=BOTTOM_SAFE_W-LOGO_ZONE_W-SAFE;
+  const LEFT_COL_W=Math.round(RC_W*0.55);
+  const RIGHT_COL_X=RC_X+LEFT_COL_W+SAFE;
+  const RIGHT_COL_W=RC_W-LEFT_COL_W-SAFE;
   let by=BOTTOM_Y+SAFE;
 
   // WHY DID YOU RECEIVE THIS?
-  ctx.font='bold 28px Arial';ctx.fillStyle=color;
-  ctx.fillText('WHY DID YOU RECEIVE THIS?',SAFE,by+28);by+=44;
-  ctx.font='26px Arial';ctx.fillStyle='#374151';
-  const whyLines=wrapText(ctx,why,LEFT_COL_W-SAFE);
-  whyLines.slice(0,4).forEach((l,i)=>{ctx.fillText(l,SAFE,by+28+i*36);});
-  by+=Math.min(whyLines.length,4)*36+20;
+  ctx.font='bold 34px Arial';ctx.fillStyle=color;
+  ctx.fillText('WHY DID YOU RECEIVE THIS?',RC_X,by+34);by+=52;
+  ctx.font='30px Arial';ctx.fillStyle='#374151';
+  const whyLines=wrapText(ctx,why,LEFT_COL_W);
+  whyLines.slice(0,4).forEach((l,i)=>{ctx.fillText(l,RC_X,by+32+i*42);});
+  by+=Math.min(whyLines.length,4)*42+24;
 
-  // Badges row
-  ctx.font='bold 24px Arial';
-  let bx2=SAFE;
+  // Badges
+  ctx.font='bold 28px Arial';
+  let bx2=RC_X;
   badges.forEach(b=>{
     const label='\u2713 '+b;
-    const bw2=ctx.measureText(label).width+22;
-    if(bx2+bw2>LEFT_COL_W){return;}
+    const bw2=ctx.measureText(label).width+26;
+    if(bx2+bw2>RC_X+LEFT_COL_W+20){return;}
     ctx.fillStyle='#fff7ed';ctx.strokeStyle=color;ctx.lineWidth=2;
-    roundRect(ctx,bx2,by,bw2,40,6);ctx.fill();ctx.stroke();
-    ctx.fillStyle=color;ctx.fillText(label,bx2+11,by+29);
-    bx2+=bw2+10;
+    roundRect(ctx,bx2,by,bw2,46,7);ctx.fill();ctx.stroke();
+    ctx.fillStyle=color;ctx.fillText(label,bx2+13,by+33);
+    bx2+=bw2+12;
   });
-  by+=52;
+  by+=60;
 
   // Urgency
-  ctx.font='26px Arial';ctx.fillStyle='#6b7280';
+  ctx.font='30px Arial';ctx.fillStyle='#6b7280';
   const urgPrefix='\u23F0 Estimate valid until ';
-  ctx.fillText(urgPrefix,SAFE,by+26);
+  ctx.fillText(urgPrefix,RC_X,by+30);
   const uw=ctx.measureText(urgPrefix).width;
-  ctx.font='bold 26px Arial';ctx.fillStyle='#dc2626';
-  ctx.fillText(urgencyStr,SAFE+uw,by+26);
+  ctx.font='bold 30px Arial';ctx.fillStyle='#dc2626';
+  ctx.fillText(urgencyStr,RC_X+uw,by+30);
 
-  // RIGHT COLUMN: QR + phone + guarantee
+  // RIGHT COLUMN: BIG QR + phone + guarantee
   let ry2=BOTTOM_Y+SAFE;
   if(qrImg){
-    const QR_SIZE=220;
+    const QR_SIZE=270;
     ctx.drawImage(qrImg,RIGHT_COL_X,ry2,QR_SIZE,QR_SIZE);
-    ctx.font='bold 28px Arial';ctx.fillStyle='#111827';
-    ctx.fillText('SCAN TO BOOK',RIGHT_COL_X+QR_SIZE+20,ry2+60);
-    ctx.font='24px Arial';ctx.fillStyle='#6b7280';
-    ctx.fillText('No-pressure booking',RIGHT_COL_X+QR_SIZE+20,ry2+96);
-    ry2+=QR_SIZE+24;
+    ctx.font='bold 34px Arial';ctx.fillStyle='#111827';
+    ctx.fillText('SCAN TO BOOK',RIGHT_COL_X+QR_SIZE+20,ry2+70);
+    ctx.font='28px Arial';ctx.fillStyle='#6b7280';
+    ctx.fillText('No-pressure booking',RIGHT_COL_X+QR_SIZE+20,ry2+110);
+    ry2+=QR_SIZE+28;
   }
+  ctx.font='bold 52px Arial';ctx.fillStyle='#111827';
+  ctx.fillText(ph,RIGHT_COL_X,ry2+52);ry2+=76;
+  ctx.font='bold 34px Arial';ctx.fillStyle=color;
+  const gLines=wrapText(ctx,guarantee,RIGHT_COL_W+120);
+  gLines.forEach((l,i)=>{ctx.fillText(l,RIGHT_COL_X,ry2+36+i*44);});
 
-  // Phone — BIG
-  ctx.font='bold 44px Arial';ctx.fillStyle='#111827';
-  ctx.fillText(ph,RIGHT_COL_X,ry2+44);ry2+=64;
-
-  // Guarantee tagline
-  ctx.font='bold 28px Arial';ctx.fillStyle=color;
-  const gLines=wrapText(ctx,guarantee,RIGHT_COL_W+100);
-  gLines.forEach((l,i)=>{ctx.fillText(l,RIGHT_COL_X,ry2+30+i*38);});
-
-  // ── LOB ADDRESS ZONE: ensure bottom-right is pure white ─────────
+  // ── LOB ADDRESS ZONE: pure white ─────────────────────────────────
   ctx.fillStyle='#ffffff';
   ctx.fillRect(W-LOB_ADDR_W, H-LOB_ADDR_H, LOB_ADDR_W, LOB_ADDR_H);
 
