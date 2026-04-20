@@ -7121,36 +7121,36 @@ function buildPostcard6x9BackHtml(item){
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:864px;height:576px;font-family:Arial,sans-serif;background:#fff;display:flex;overflow:hidden}
-.L{width:528px;height:576px;padding:24px 28px;display:flex;flex-direction:column;justify-content:space-between;border-right:2px solid #eee}
-.R{width:336px;height:576px;padding:22px 26px;display:flex;flex-direction:column;justify-content:space-between}
-.tr{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-.logo img{max-height:40px;max-width:140px;object-fit:contain}
-.logo .cn{font-size:14px;font-weight:900;color:${color}}
-.hs{width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid ${color};flex-shrink:0}
-.ri{font-size:9px;color:#555;line-height:1.4}
-.ri strong{display:block;font-size:11px;color:#111;font-weight:800}
-.hook{font-size:10.5px;color:#333;line-height:1.5;margin-bottom:6px;font-style:italic;border-left:3px solid ${color};padding-left:8px}
-.wh{font-size:8px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:${color};margin-bottom:3px}
-.why{font-size:9.5px;color:#444;line-height:1.45;margin-bottom:6px}
-.sq{font-size:9.5px;color:#333;font-style:italic;background:#fffbf0;border:1px solid #f0e0b0;border-radius:4px;padding:4px 7px;margin-bottom:6px;line-height:1.4}
-.sr{color:#f59e0b;font-size:10px;letter-spacing:1px;margin-bottom:2px}
-.bdg{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px}
-.b{font-size:7.5px;font-weight:700;color:${color};border:1px solid ${color};border-radius:3px;padding:2px 4px;white-space:nowrap}
-.urg{font-size:8.5px;color:#888;margin-bottom:4px}
+.L{width:528px;height:576px;padding:18px 22px;display:flex;flex-direction:column;justify-content:space-between;border-right:2px solid #eee;overflow:hidden}
+.R{width:336px;height:576px;padding:18px 22px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
+.tr{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.logo img{max-height:36px;max-width:130px;object-fit:contain}
+.logo .cn{font-size:13px;font-weight:900;color:${color}}
+.hs{width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid ${color};flex-shrink:0}
+.ri{font-size:8.5px;color:#555;line-height:1.3}
+.ri strong{display:block;font-size:10px;color:#111;font-weight:800}
+.hook{font-size:9.5px;color:#333;line-height:1.4;margin-bottom:4px;font-style:italic;border-left:3px solid ${color};padding-left:7px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.wh{font-size:7.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:${color};margin-bottom:2px}
+.why{font-size:8.5px;color:#444;line-height:1.4;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.sq{font-size:8.5px;color:#333;font-style:italic;background:#fffbf0;border:1px solid #f0e0b0;border-radius:4px;padding:3px 6px;margin-bottom:4px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sr{color:#f59e0b;font-size:9px;letter-spacing:1px;margin-bottom:1px}
+.bdg{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:4px}
+.b{font-size:7px;font-weight:700;color:${color};border:1px solid ${color};border-radius:3px;padding:1px 4px;white-space:nowrap}
+.urg{font-size:8px;color:#888;margin-bottom:3px}
 .urg strong{color:#c53030}
-.ps{background:${color};display:flex;align-items:center;gap:12px;padding:7px 12px;border-radius:7px}
-.pm{font-size:20px;font-weight:900;color:#fff;line-height:1}
-.pl{font-size:8px;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.4px}
-.pd{width:1px;height:22px;background:rgba(255,255,255,.3)}
-.phl{font-size:10.5px;color:#555;margin-top:5px;font-weight:700}
-.gt{font-size:9px;font-weight:800;color:#333;margin-top:4px;text-align:center}
-.ra{font-size:8.5px;color:#333;line-height:1.6}
-.ra .rc{font-weight:700;font-size:9.5px}
-.pb{border:1.5px solid #333;padding:5px 8px;text-align:center;font-size:8.5px;color:#333;line-height:1.5;width:100px;align-self:flex-end}
-.pb strong{display:block;font-size:10px;letter-spacing:.3px}
-.ta{font-size:13px;line-height:1.7;color:#111}
-.ta .tn{font-weight:700;font-size:14px}
-.bc{font-size:7px;color:#ccc;letter-spacing:2px;text-align:center;border-top:1px dashed #ddd;padding-top:4px}
+.ps{background:${color};display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:6px}
+.pm{font-size:18px;font-weight:900;color:#fff;line-height:1}
+.pl{font-size:7.5px;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.4px}
+.pd{width:1px;height:20px;background:rgba(255,255,255,.3)}
+.phl{font-size:10px;color:#555;margin-top:4px;font-weight:700}
+.gt{font-size:8.5px;font-weight:700;color:#555;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ra{font-size:8px;color:#333;line-height:1.5}
+.ra .rc{font-weight:700;font-size:9px}
+.pb{border:1.5px solid #333;padding:4px 7px;text-align:center;font-size:8px;color:#333;line-height:1.4;width:96px;align-self:flex-end}
+.pb strong{display:block;font-size:9.5px;letter-spacing:.3px}
+.ta{font-size:12px;line-height:1.6;color:#111}
+.ta .tn{font-weight:700;font-size:13px}
+.bc{font-size:7px;color:#ccc;letter-spacing:2px;text-align:center;border-top:1px dashed #ddd;padding-top:3px}
 </style></head><body>
 <div class="L">
 <div>
