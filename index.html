@@ -6501,8 +6501,9 @@ function wrapText(ctx,text,maxWidth){
 
 async function renderPostcard6x9FrontCanvas(item){
   const cfg=S.cfg||{};
-  const W=1875,H=1275; // 6.25"x4.25" bleed at 300dpi — landscape 6x9
-  const PAD=75; // safe zone ~0.25"
+  // Lob 6x9 postcard: 2775x1875px portrait at 300dpi (9.25"x6.25" bleed)
+  const W=2775,H=1875;
+  const PAD=94; // safe zone ~0.31" (slightly more than 1/4")
   const color=cfg.brandColor||'#F25C05';
   const co=cfg.companyName||'Your Roofing Co';
   const ph=cfg.companyPhone||'(000) 000-0000';
@@ -6519,78 +6520,77 @@ async function renderPostcard6x9FrontCanvas(item){
   if(finEnabled&&total){const loan=total*(1-finDown/100);const r=finApr/100/12;finMo=r===0?Math.round(loan/finTerm):Math.round(loan*r*Math.pow(1+r,finTerm)/(Math.pow(1+r,finTerm)-1));}
   const housePhotoUrl=item.photo_url||(item.photo_data&&item.photo_data.startsWith('http')?item.photo_data:null);
   const logoUrl=(cfg.logoData&&cfg.logoData.startsWith('http'))?cfg.logoData:null;
-  // Load images
   const [houseImg,logoImg]=await Promise.all([loadImg(housePhotoUrl),loadImg(logoUrl)]);
   const canvas=document.createElement('canvas');
   canvas.width=W;canvas.height=H;
   const ctx=canvas.getContext('2d');
-  // Background
+  // Background: house photo cover-fit
   if(houseImg){
-    // Draw house photo cover
     const scale=Math.max(W/houseImg.width,H/houseImg.height);
     const sw=houseImg.width*scale,sh=houseImg.height*scale;
     ctx.drawImage(houseImg,(W-sw)/2,(H-sh)/2,sw,sh);
   } else {
     ctx.fillStyle='#1a2333';ctx.fillRect(0,0,W,H);
   }
-  // Dark gradient overlay
+  // Dark gradient overlay (top light, bottom dark)
   const grad=ctx.createLinearGradient(0,0,0,H);
-  grad.addColorStop(0,'rgba(0,0,0,0.25)');
-  grad.addColorStop(0.4,'rgba(0,0,0,0.1)');
-  grad.addColorStop(0.75,'rgba(0,0,0,0.65)');
-  grad.addColorStop(1,'rgba(0,0,0,0.85)');
+  grad.addColorStop(0,'rgba(0,0,0,0.3)');
+  grad.addColorStop(0.4,'rgba(0,0,0,0.15)');
+  grad.addColorStop(0.72,'rgba(0,0,0,0.6)');
+  grad.addColorStop(1,'rgba(0,0,0,0.88)');
   ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
-  // TOP ROW: company name/logo + badge
-  const topY=PAD+10;
+  // TOP ROW: logo/company name (left) + badge pill (right)
+  const topY=PAD+8;
   if(logoImg){
-    const lh=Math.min(90,logoImg.height);const lw=Math.round(logoImg.width*(lh/logoImg.height));
+    const lh=Math.min(110,logoImg.height);const lw=Math.round(logoImg.width*(lh/logoImg.height));
     ctx.drawImage(logoImg,PAD,topY,lw,lh);
   } else {
-    ctx.fillStyle='#fff';ctx.font='bold 52px Arial';
-    ctx.fillText(co,PAD,topY+52);
+    ctx.fillStyle='#fff';ctx.font='bold 70px Arial';
+    ctx.fillText(co,PAD,topY+70);
   }
-  // Badge pill top-right
+  // Badge pill
   const badgeTxt='YOUR ROOF ESTIMATE IS READY';
-  ctx.font='bold 30px Arial';
+  ctx.font='bold 42px Arial';
   const btw=ctx.measureText(badgeTxt).width;
-  const bx=W-PAD-btw-40,by=topY,bw=btw+40,bh=52,br=26;
+  const bx=W-PAD-btw-56,by=topY,bw=btw+56,bh=72,br=36;
   ctx.fillStyle=color;
   roundRect(ctx,bx,by,bw,bh,br);ctx.fill();
   ctx.fillStyle='#fff';ctx.textBaseline='middle';
-  ctx.fillText(badgeTxt,bx+20,by+bh/2);
-  // HEADLINE
+  ctx.fillText(badgeTxt,bx+28,by+bh/2);
   ctx.textBaseline='alphabetic';
-  ctx.fillStyle='#fff';ctx.font='bold 110px Arial';
-  ctx.fillText('We Assessed',PAD,H-380);
-  ctx.fillText('Your Roof.',PAD,H-255);
+  // HEADLINE (bottom-left area)
+  ctx.fillStyle='#fff';ctx.font='bold 160px Arial';
+  ctx.fillText('We Assessed',PAD,H-530);
+  ctx.fillText('Your Roof.',PAD,H-350);
   // Address line
-  ctx.font='bold 44px Arial';ctx.fillStyle='rgba(255,255,255,0.92)';
-  ctx.fillText('\u{1F4CD} '+addrLine,PAD,H-195);
-  // Price pill
-  const priceBoxW=finMo?560:280,priceBoxH=100,priceBoxY=H-PAD-priceBoxH;
-  ctx.fillStyle=color;
-  roundRect(ctx,PAD,priceBoxY,priceBoxW,priceBoxH,14);ctx.fill();
-  ctx.fillStyle='rgba(255,255,255,0.8)';ctx.font='24px Arial';
-  ctx.fillText('ESTIMATED TOTAL',PAD+20,priceBoxY+28);
-  ctx.fillStyle='#fff';ctx.font='bold 56px Arial';
-  ctx.fillText('$'+total.toLocaleString(),PAD+20,priceBoxY+84);
-  if(finMo){
-    // Divider
-    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.fillRect(PAD+280,priceBoxY+15,2,70);
-    ctx.fillStyle='rgba(255,255,255,0.8)';ctx.font='24px Arial';
-    ctx.fillText('AS LOW AS',PAD+300,priceBoxY+28);
-    ctx.fillStyle='#fff';ctx.font='bold 56px Arial';
-    ctx.fillText('$'+finMo.toLocaleString()+'/mo',PAD+300,priceBoxY+84);
-  }
+  ctx.font='bold 62px Arial';ctx.fillStyle='rgba(255,255,255,0.92)';
+  ctx.fillText('\u{1F4CD} '+addrLine,PAD,H-268);
   // Phone
-  ctx.fillStyle='rgba(255,255,255,0.85)';ctx.font='bold 38px Arial';
-  ctx.fillText('\u{1F4DE} '+ph,PAD,priceBoxY-18);
+  ctx.fillStyle='rgba(255,255,255,0.85)';ctx.font='bold 52px Arial';
+  ctx.fillText('\u{1F4DE} '+ph,PAD,H-196);
+  // Price pill
+  const priceBoxW=finMo?820:420,priceBoxH=140,priceBoxY=H-PAD-priceBoxH;
+  ctx.fillStyle=color;
+  roundRect(ctx,PAD,priceBoxY,priceBoxW,priceBoxH,18);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.8)';ctx.font='32px Arial';
+  ctx.fillText('ESTIMATED TOTAL',PAD+28,priceBoxY+38);
+  ctx.fillStyle='#fff';ctx.font='bold 78px Arial';
+  ctx.fillText('$'+total.toLocaleString(),PAD+28,priceBoxY+118);
+  if(finMo){
+    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.fillRect(PAD+410,priceBoxY+18,3,104);
+    ctx.fillStyle='rgba(255,255,255,0.8)';ctx.font='32px Arial';
+    ctx.fillText('AS LOW AS',PAD+438,priceBoxY+38);
+    ctx.fillStyle='#fff';ctx.font='bold 78px Arial';
+    ctx.fillText('$'+finMo.toLocaleString()+'/mo',PAD+438,priceBoxY+118);
+  }
   return canvas.toDataURL('image/jpeg',0.92);
 }
 
 async function renderPostcard6x9BackCanvas(item){
   const cfg=S.cfg||{};
-  const W=1875,H=1275;
+  // Lob 6x9 postcard back: 2775x1875px portrait at 300dpi
+  const W=2775,H=1875;
+  const PAD=94;
   const color=cfg.brandColor||'#F25C05';
   const co=cfg.companyName||'Your Roofing Co';
   const ph=cfg.companyPhone||'(000) 000-0000';
@@ -6613,134 +6613,132 @@ async function renderPostcard6x9BackCanvas(item){
   const urgencyStr=urgencyDate.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
   const logoUrl=(cfg.logoData&&cfg.logoData.startsWith('http'))?cfg.logoData:null;
   const trackedUrl=item.id?'https://biddrop.americashomeexperts.com/r/'+encodeURIComponent(item.id):(cfg.bookingUrl||'');
-  const qrUrl=trackedUrl?'https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=4&data='+encodeURIComponent(trackedUrl):'';
+  const qrUrl=trackedUrl?'https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=4&data='+encodeURIComponent(trackedUrl):'';
   const [logoImg,qrImg]=await Promise.all([loadImg(logoUrl),loadImg(qrUrl)]);
   const canvas=document.createElement('canvas');
   canvas.width=W;canvas.height=H;
   const ctx=canvas.getContext('2d');
-  // White background
   ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
-  // Divider line between left content and right address panel
+  // Left content panel | Right address panel divider at ~61% width
   const divX=Math.round(W*0.61);
-  ctx.strokeStyle='#e5e7eb';ctx.lineWidth=3;
-  ctx.beginPath();ctx.moveTo(divX,30);ctx.lineTo(divX,H-30);ctx.stroke();
-  // ── LEFT PANEL ──
-  const LP=50,LW=divX-LP-30;
-  let y=LP;
-  // Logo / company name
+  ctx.strokeStyle='#e5e7eb';ctx.lineWidth=4;
+  ctx.beginPath();ctx.moveTo(divX,40);ctx.lineTo(divX,H-40);ctx.stroke();
+  // LEFT PANEL
+  const LP=PAD,LW=divX-LP-40;
+  let y=PAD;
   if(logoImg){
-    const lh=Math.min(70,logoImg.height);const lw=Math.round(logoImg.width*(lh/logoImg.height));
-    ctx.drawImage(logoImg,LP,y,lw,lh);y+=lh+22;
+    const lh=Math.min(90,logoImg.height);const lw=Math.round(logoImg.width*(lh/logoImg.height));
+    ctx.drawImage(logoImg,LP,y,lw,lh);y+=lh+28;
   } else {
-    ctx.fillStyle=color;ctx.font='bold 38px Arial';
-    ctx.fillText(co,LP,y+38);y+=60;
+    ctx.fillStyle=color;ctx.font='bold 52px Arial';
+    ctx.fillText(co,LP,y+52);y+=76;
   }
-  // Hook quote
-  ctx.font='italic 28px Arial';ctx.fillStyle='#333';
-  const hookLines=wrapText(ctx,hook,LW-20);
-  // Left border bar
-  ctx.fillStyle=color;ctx.fillRect(LP,y,5,hookLines.length*36+8);
-  hookLines.forEach((l,i)=>{ctx.fillStyle='#333';ctx.fillText(l,LP+16,y+32+i*36);});
-  y+=hookLines.length*36+22;
-  // WHY DID YOU RECEIVE THIS?
-  ctx.font='bold 22px Arial';ctx.fillStyle=color;
-  ctx.fillText('WHY DID YOU RECEIVE THIS?',LP,y+22);y+=36;
-  // Why text
-  ctx.font='26px Arial';ctx.fillStyle='#444';
+  // Hook quote with left bar
+  ctx.font='italic 36px Arial';ctx.fillStyle='#333';
+  const hookLines=wrapText(ctx,hook,LW-24);
+  ctx.fillStyle=color;ctx.fillRect(LP,y,6,hookLines.length*46+10);
+  hookLines.forEach((l,i)=>{ctx.fillStyle='#333';ctx.fillText(l,LP+20,y+40+i*46);});
+  y+=hookLines.length*46+28;
+  // WHY section
+  ctx.font='bold 30px Arial';ctx.fillStyle=color;
+  ctx.fillText('WHY DID YOU RECEIVE THIS?',LP,y+30);y+=46;
+  ctx.font='34px Arial';ctx.fillStyle='#444';
   const whyLines=wrapText(ctx,why,LW);
-  whyLines.forEach((l,i)=>{ctx.fillText(l,LP,y+26+i*32);});
-  y+=whyLines.length*32+18;
+  whyLines.forEach((l,i)=>{ctx.fillText(l,LP,y+34+i*42);});
+  y+=whyLines.length*42+24;
   // Stars
-  ctx.font='28px Arial';ctx.fillStyle='#f59e0b';
-  ctx.fillText('\u2605\u2605\u2605\u2605\u2605',LP,y+28);y+=40;
-  // Quote
+  ctx.font='36px Arial';ctx.fillStyle='#f59e0b';
+  ctx.fillText('★★★★★',LP,y+36);y+=52;
+  // Quote box
   if(pcQuote){
     ctx.fillStyle='#fffbf0';ctx.strokeStyle='#f0e0b0';ctx.lineWidth=2;
-    const qLines=wrapText(ctx,pcQuote,LW-20);
-    const qh=qLines.length*30+20;
-    roundRect(ctx,LP,y,LW,qh,6);ctx.fill();ctx.stroke();
-    ctx.font='italic 24px Arial';ctx.fillStyle='#333';
-    qLines.forEach((l,i)=>{ctx.fillText(l,LP+10,y+28+i*30);});
-    y+=qh+14;
+    const qLines=wrapText(ctx,pcQuote,LW-24);
+    const qh=qLines.length*38+24;
+    roundRect(ctx,LP,y,LW,qh,8);ctx.fill();ctx.stroke();
+    ctx.font='italic 32px Arial';ctx.fillStyle='#333';
+    qLines.forEach((l,i)=>{ctx.fillText(l,LP+12,y+36+i*38);});
+    y+=qh+18;
   }
   // Badges
-  ctx.font='bold 22px Arial';
+  ctx.font='bold 28px Arial';
   let bx=LP;
   badges.forEach(b=>{
-    const bw=ctx.measureText('\u2713 '+b).width+20;
+    const bw=ctx.measureText('\u2713 '+b).width+24;
     ctx.strokeStyle=color;ctx.lineWidth=2;ctx.fillStyle='#fff';
-    roundRect(ctx,bx,y,bw,36,5);ctx.fill();ctx.stroke();
-    ctx.fillStyle=color;ctx.fillText('\u2713 '+b,bx+10,y+26);
-    bx+=bw+10;
-    if(bx>LP+LW-100){bx=LP;y+=44;}
+    roundRect(ctx,bx,y,bw,46,6);ctx.fill();ctx.stroke();
+    ctx.fillStyle=color;ctx.fillText('\u2713 '+b,bx+12,y+34);
+    bx+=bw+12;
+    if(bx>LP+LW-120){bx=LP;y+=56;}
   });
-  y+=50;
+  y+=62;
   // Urgency
-  ctx.font='24px Arial';ctx.fillStyle='#888';
-  ctx.fillText('\u23F0 Estimate valid until ',LP,y+24);
-  const uw=ctx.measureText('\u23F0 Estimate valid until ').width;
-  ctx.font='bold 24px Arial';ctx.fillStyle='#c53030';
-  ctx.fillText(urgencyStr,LP+uw,y+24);y+=40;
+  ctx.font='30px Arial';ctx.fillStyle='#888';
+  const urgPrefix='\u23F0 Estimate valid until ';
+  ctx.fillText(urgPrefix,LP,y+30);
+  const uw=ctx.measureText(urgPrefix).width;
+  ctx.font='bold 30px Arial';ctx.fillStyle='#c53030';
+  ctx.fillText(urgencyStr,LP+uw,y+30);y+=50;
   // Price bar
-  const pbW=Math.min(LW,finMo?520:280),pbH=90;
+  const pbW=Math.min(LW,finMo?760:420),pbH=120;
   ctx.fillStyle=color;
-  roundRect(ctx,LP,y,pbW,pbH,10);ctx.fill();
-  ctx.fillStyle='rgba(255,255,255,0.8)';ctx.font='20px Arial';
-  ctx.fillText('YOUR ESTIMATE',LP+16,y+24);
-  ctx.fillStyle='#fff';ctx.font='bold 46px Arial';
-  ctx.fillText('$'+total.toLocaleString(),LP+16,y+76);
+  roundRect(ctx,LP,y,pbW,pbH,14);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.8)';ctx.font='26px Arial';
+  ctx.fillText('YOUR ESTIMATE',LP+20,y+32);
+  ctx.fillStyle='#fff';ctx.font='bold 62px Arial';
+  ctx.fillText('$'+total.toLocaleString(),LP+20,y+102);
   if(finMo){
-    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.fillRect(LP+270,y+12,2,66);
-    ctx.fillStyle='rgba(255,255,255,0.8)';ctx.font='20px Arial';
-    ctx.fillText('AS LOW AS',LP+286,y+24);
-    ctx.fillStyle='#fff';ctx.font='bold 46px Arial';
-    ctx.fillText('$'+finMo.toLocaleString()+'/mo',LP+286,y+76);
+    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.fillRect(LP+390,y+16,3,88);
+    ctx.fillStyle='rgba(255,255,255,0.8)';ctx.font='26px Arial';
+    ctx.fillText('AS LOW AS',LP+414,y+32);
+    ctx.fillStyle='#fff';ctx.font='bold 62px Arial';
+    ctx.fillText('$'+finMo.toLocaleString()+'/mo',LP+414,y+102);
   }
-  y+=pbH+18;
+  y+=pbH+22;
   // Phone + QR
-  ctx.font='bold 28px Arial';ctx.fillStyle='#555';
-  ctx.fillText('\u{1F4DE} '+ph,LP,y+28);
-  if(qrImg){ctx.drawImage(qrImg,LP+ctx.measureText('\u{1F4DE} '+ph).width+20,y,80,80);}
-  y+=90;
+  ctx.font='bold 36px Arial';ctx.fillStyle='#555';
+  ctx.fillText('\u{1F4DE} '+ph,LP,y+36);
+  if(qrImg){ctx.drawImage(qrImg,LP+ctx.measureText('\u{1F4DE} '+ph).width+24,y,110,110);}
+  y+=120;
   if(guarantee){
-    ctx.font='bold 24px Arial';ctx.fillStyle='#333';ctx.textAlign='center';
-    ctx.fillText(guarantee,LP+LW/2,y+24);ctx.textAlign='left';
+    ctx.font='bold 30px Arial';ctx.fillStyle='#333';ctx.textAlign='center';
+    ctx.fillText(guarantee,LP+LW/2,y+30);ctx.textAlign='left';
   }
-  // ── RIGHT PANEL (address block) ──
-  const RP=divX+40;
-  let ry=LP;
+  // RIGHT PANEL (address block)
+  const RP=divX+PAD;
+  const RW=W-RP-PAD;
+  let ry=PAD;
   // Return address
-  ctx.font='bold 28px Arial';ctx.fillStyle='#333';
-  ctx.fillText(co,RP,ry+28);ry+=40;
+  ctx.font='bold 36px Arial';ctx.fillStyle='#333';
+  ctx.fillText(co,RP,ry+36);ry+=52;
   fromRaw.split(',').forEach(l=>{
-    ctx.font='24px Arial';ctx.fillStyle='#555';
-    ctx.fillText(l.trim(),RP,ry+24);ry+=32;
+    ctx.font='30px Arial';ctx.fillStyle='#555';
+    ctx.fillText(l.trim(),RP,ry+30);ry+=42;
   });
-  if(ph){ctx.fillText(ph,RP,ry+24);ry+=32;}
-  // Postage box
-  const pgX=W-200,pgY=LP;
+  if(ph){ctx.font='30px Arial';ctx.fillStyle='#555';ctx.fillText(ph,RP,ry+30);ry+=42;}
+  // Postage box (top-right)
+  const pgW=190,pgH=100;
+  const pgX=W-PAD-pgW,pgY=PAD;
   ctx.strokeStyle='#333';ctx.lineWidth=2;ctx.fillStyle='#fff';
-  ctx.strokeRect(pgX,pgY,150,80);
-  ctx.font='bold 22px Arial';ctx.fillStyle='#333';ctx.textAlign='center';
-  ctx.fillText('POSTAGE',pgX+75,pgY+28);
-  ctx.fillText('INDICIA',pgX+75,pgY+56);
+  roundRect(ctx,pgX,pgY,pgW,pgH,4);ctx.fill();ctx.stroke();
+  ctx.font='bold 28px Arial';ctx.fillStyle='#333';ctx.textAlign='center';
+  ctx.fillText('POSTAGE',pgX+pgW/2,pgY+36);
+  ctx.fillText('INDICIA',pgX+pgW/2,pgY+72);
   ctx.textAlign='left';
-  // Recipient address
-  const raY=H-260;
-  ctx.font='bold 34px Arial';ctx.fillStyle='#111';
+  // Recipient address (bottom of right panel)
+  const raY=H-320;
+  ctx.font='bold 44px Arial';ctx.fillStyle='#111';
   ctx.fillText(owner,RP,raY);
   ctx.fillStyle='#555';
   addr.split(',').forEach((l,i)=>{
-    ctx.font='28px Arial';
-    ctx.fillText(l.trim(),RP,raY+40+i*36);
+    ctx.font='36px Arial';
+    ctx.fillText(l.trim(),RP,raY+52+i*46);
   });
   // Barcode placeholder
-  ctx.font='18px Arial';ctx.fillStyle='#ccc';ctx.textAlign='center';
-  ctx.fillText('DELIVERY POINT BARCODE',W-((W-divX)/2),H-20);
+  ctx.font='22px Arial';ctx.fillStyle='#ccc';ctx.textAlign='center';
+  ctx.fillText('DELIVERY POINT BARCODE',divX+(W-divX)/2,H-PAD/2);
   ctx.textAlign='left';
   return canvas.toDataURL('image/jpeg',0.92);
 }
-
 // Build the 6×9 postcard FRONT — full-bleed house photo with overlay
 function buildPostcard6x9FrontHtml(item){
   const cfg=S.cfg||{};
