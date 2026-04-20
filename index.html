@@ -6424,10 +6424,15 @@ async function sendLobPostcard6x9(id){
       }
       save();renderQueue();toast('✅ Postcard queued for mailing!','success');
     } else {
-      item.status='failed';save();renderQueue();toast('Postcard error: '+(d?.error?.message||'Check mail settings & address'),'error');
+      item.status='failed';save();renderQueue();
+      const errMsg=typeof d?.error==='string'?d.error:(d?.error?.message||d?.error?.status_code||JSON.stringify(d?.error)||'Check mail settings & address');
+      toast('Postcard error: '+errMsg,'error');
     }
-  } catch(e){item.status='failed';save();renderQueue();toast('Network error — mailer service unavailable','error');}
-}
+  } catch(e){
+    item.status='failed';save();renderQueue();
+    const msg=typeof e?.message==='string'?e.message:(typeof e==='object'?JSON.stringify(e):String(e));
+    toast('Postcard error: '+msg,'error');
+  }}}
 // Build the 6×9 postcard FRONT — full-bleed house photo with overlay
 function buildPostcard6x9FrontHtml(item){
   const cfg=S.cfg||{};

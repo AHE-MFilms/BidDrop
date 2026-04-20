@@ -294,10 +294,18 @@ export default async function handler(req, res) {
           });
         }
 
-        res.status(lobRes.status).json({
-          ...lobData,
-          _credits: { paid_credits: lobRes.ok ? pcAcct.lookup_credits - POSTCARD_CREDITS : pcAcct.lookup_credits }
-        });
+        if (lobRes.ok) {
+          res.status(200).json({
+            ...lobData,
+            _credits: { paid_credits: pcAcct.lookup_credits - POSTCARD_CREDITS }
+          });
+        } else {
+          res.status(200).json({
+            error: lobData.error || lobData,
+            _lobStatus: lobRes.status,
+            _credits: { paid_credits: pcAcct.lookup_credits }
+          });
+        }
         break;
       }
 
