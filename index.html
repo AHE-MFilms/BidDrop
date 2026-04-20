@@ -1007,7 +1007,7 @@ tr:hover td{background:var(--card);}
       <!-- Preview mode toggle tabs (sticky inside panel) -->
       <div id="preview-mode-bar" style="width:100%;max-width:680px;display:flex;gap:0;margin-bottom:20px;border-radius:8px;overflow:hidden;border:1px solid var(--border);flex-shrink:0;">
         <button id="preview-tab-letter" onclick="setPreviewMode('letter')" style="flex:1;padding:10px 0;font-family:var(--font-b);font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--accent);color:#fff;letter-spacing:.4px;">&#128228; Letter Preview</button>
-        <button id="preview-tab-postcard" onclick="setPreviewMode('postcard')" style="flex:1;padding:10px 0;font-family:var(--font-b);font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--card2);color:var(--muted);letter-spacing:.4px;">&#127968; Postcard Preview</button>
+        <button id="preview-tab-postcard" onclick="previewEstimatorPostcardFullscreen()" style="flex:1;padding:10px 0;font-family:var(--font-b);font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--card2);color:var(--muted);letter-spacing:.4px;">&#127968; Postcard Preview</button>
       </div>
       <!-- Letter preview -->
       <div class="mailer" id="mailer-preview"></div>
@@ -5558,6 +5558,36 @@ async function _showPostcardCanvasModal(modalId, ownerLabel, addrLabel, item){
   if(backEl && backDataUrl){
     backEl.innerHTML = '<img src="'+backDataUrl+'" style="width:100%;height:auto;display:block;">';
   }
+}
+
+async function previewEstimatorPostcardFullscreen(){
+  // Build a synthetic item from current estimator state (same as _refreshPostcardPreview)
+  const addr  = document.getElementById('e-addr')  ? document.getElementById('e-addr').value.trim()  : '';
+  const owner = document.getElementById('e-owner') ? document.getElementById('e-owner').value.trim() : 'Homeowner';
+  const grand = calcP ? calcP() : 0;
+  const _frontPhoto = ((window._allPhotos && window._allPhotos.front)||[])[0] || window._homePhotoData || null;
+  const fakeItem = {
+    addr, owner,
+    total: grand,
+    structures: JSON.parse(JSON.stringify(structures||[])),
+    photo_url:  (_frontPhoto && _frontPhoto.startsWith('http'))  ? _frontPhoto : null,
+    photo_data: (_frontPhoto && !_frontPhoto.startsWith('http')) ? _frontPhoto : null,
+    damage_photos: window._damagePhotos || [],
+    all_photos: window._allPhotos ? JSON.parse(JSON.stringify(window._allPhotos)) : null
+  };
+  // If no house photo, try geocoding
+  if(!fakeItem.photo_url && !fakeItem.photo_data && addr){
+    try{
+      const MB = window._mapboxToken || ['pk.eyJ1IjoibW9uZ29vc2VmaWxtcyIsImEiOiJjbW52M2kyNnMxM3pk','MnJvYTYxZnE1YW51In0.nC5GKWDHIAB4DTAP9hV3hQ'].join('');
+      const geoRes = await fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/'+encodeURIComponent(addr)+'.json?country=us&types=address&limit=1&access_token='+MB);
+      const geoData = await geoRes.json();
+      if(geoData.features && geoData.features[0]){
+        const [lon,lat] = geoData.features[0].center;
+        fakeItem.photo_url = `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/${lon},${lat},19,0/900x600@2x?access_token=${MB}`;
+      }
+    } catch(e){}
+  }
+  await _showPostcardCanvasModal('m-est-postcard-fullscreen', owner||'Homeowner', addr||'', fakeItem);
 }
 
 async function _refreshPostcardPreview(){
