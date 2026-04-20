@@ -528,7 +528,7 @@ tr:hover td{background:var(--card);}
     <div id="credits-balance-box" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:18px;display:flex;gap:20px;">
       <div style="flex:1;text-align:center;">
         <div style="font-size:22px;font-weight:800;color:var(--accent);" id="cb-free-remaining">—</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px;">Free Left This Month</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">Free Credits This Month</div>
       </div>
       <div style="width:1px;background:var(--border);"></div>
       <div style="flex:1;text-align:center;">
@@ -538,27 +538,31 @@ tr:hover td{background:var(--card);}
     </div>
 
     <!-- Credit packs -->
-    <div style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Buy Credits — $0.25 each</div>
+    <div style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Buy Credits — 1 Postcard = 16 Credits ($4.00) &bull; 1 Lookup = 1 Credit ($0.25)</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;">
       <button class="credit-pack-btn" onclick="buyCredits('pack_50')" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;text-align:center;transition:border-color .2s;">
         <div style="font-size:20px;font-weight:800;color:var(--text);">50</div>
-        <div style="font-size:11px;color:var(--muted);margin:2px 0 6px;">credits</div>
+        <div style="font-size:11px;color:var(--muted);margin:2px 0 2px;">credits</div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:6px;">~3 postcards</div>
         <div style="font-size:15px;font-weight:700;color:var(--accent);">$12.50</div>
       </button>
       <button class="credit-pack-btn" onclick="buyCredits('pack_200')" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;text-align:center;transition:border-color .2s;">
         <div style="font-size:20px;font-weight:800;color:var(--text);">200</div>
-        <div style="font-size:11px;color:var(--muted);margin:2px 0 6px;">credits</div>
+        <div style="font-size:11px;color:var(--muted);margin:2px 0 2px;">credits</div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:6px;">12 postcards</div>
         <div style="font-size:15px;font-weight:700;color:var(--accent);">$50.00</div>
       </button>
       <button class="credit-pack-btn" onclick="buyCredits('pack_500')" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;text-align:center;position:relative;border-color:var(--accent);">
         <div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;white-space:nowrap;">BEST VALUE</div>
         <div style="font-size:20px;font-weight:800;color:var(--text);">500</div>
-        <div style="font-size:11px;color:var(--muted);margin:2px 0 6px;">credits</div>
+        <div style="font-size:11px;color:var(--muted);margin:2px 0 2px;">credits</div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:6px;">31 postcards</div>
         <div style="font-size:15px;font-weight:700;color:var(--accent);">$125.00</div>
       </button>
       <button class="credit-pack-btn" onclick="buyCredits('pack_1000')" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;text-align:center;">
         <div style="font-size:20px;font-weight:800;color:var(--text);">1,000</div>
-        <div style="font-size:11px;color:var(--muted);margin:2px 0 6px;">credits</div>
+        <div style="font-size:11px;color:var(--muted);margin:2px 0 2px;">credits</div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:6px;">62 postcards</div>
         <div style="font-size:15px;font-weight:700;color:var(--accent);">$250.00</div>
       </button>
     </div>
@@ -705,7 +709,7 @@ tr:hover td{background:var(--card);}
     <button class="tab-btn" onclick="goTab('history')" data-tab="history" style="display:none;">📑 History</button>
     <button class="tab-btn" onclick="goTab('dashboard')" data-tab="dashboard" style="display:none;">📊 Dashboard</button>
     <button class="tab-btn" id="agency-tab-btn" onclick="goTab('agency')" data-tab="agency" style="display:none;">🏢 Agency</button>
-    <button class="tab-btn" onclick="goTab('followup')" data-tab="followup" style="display:none;">📮 Follow-Up Mail</button>
+    <button class="tab-btn" onclick="goTab('followup')" data-tab="followup" style="display:none;">🔥 Follow-Up Blitz</button>
     <button class="tab-btn" id="zones-tab-btn" onclick="goTab('zones')" data-tab="zones" style="display:none;">🗂 Canvass Areas</button>
     <button class="tab-btn" id="settings-tab-btn" onclick="goTab('settings')" data-tab="settings" style="display:none;">⚙️ Settings</button>
     <button class="tab-btn" id="admin-panel-tab-btn" onclick="openAdminPanel()" data-tab="admin" style="display:none;">🛡 Admin</button>
@@ -730,7 +734,7 @@ tr:hover td{background:var(--card);}
     <button class="nav-menu-item" onclick="navGo('history')" data-nav="history">📑 History</button>
     <button class="nav-menu-item" onclick="navGo('dashboard')" data-nav="dashboard">📊 Dashboard</button>
     <button class="nav-menu-item" id="agency-nav-item" onclick="navGo('agency')" data-nav="agency" style="display:none;">🏢 Agency</button>
-    <button class="nav-menu-item" onclick="navGo('followup')" data-nav="followup">📮 Follow-Up Mail</button>
+    <button class="nav-menu-item" onclick="navGo('followup')" data-nav="followup">🔥 Follow-Up Blitz</button>
     <button class="nav-menu-item" id="zones-nav-item" onclick="navGo('zones')" data-nav="zones">🗂 Canvass Areas</button>
     <button class="nav-menu-item" id="settings-nav-item" onclick="navGo('settings')" data-nav="settings">⚙️ Settings</button>
     <button class="nav-menu-item admin-item" id="admin-nav-item" onclick="navGo('admin')" data-nav="admin" style="display:none;">🛡 Admin Panel</button>
@@ -755,7 +759,7 @@ tr:hover td{background:var(--card);}
   <button class="bnav-btn" onclick="goTab('mailqueue')" data-tab="mailqueue"><span class="bicon">📬</span>Mail</button>
   <button class="bnav-btn" onclick="goTab('history')" data-tab="history"><span class="bicon">📑</span>History</button>
   <button class="bnav-btn" onclick="goTab('dashboard')" data-tab="dashboard"><span class="bicon">📊</span>Stats</button>
-  <button class="bnav-btn" onclick="goTab('followup')" data-tab="followup"><span class="bicon">📮</span>Follow-Up</button>
+  <button class="bnav-btn" onclick="goTab('followup')" data-tab="followup"><span class="bicon">🔥</span>Blitz</button>
   <button class="bnav-btn" id="zones-bnav-btn" onclick="goTab('zones')" data-tab="zones"><span class="bicon">🗂</span>Zones</button>
   <button class="bnav-btn" id="settings-bnav-btn" onclick="goTab('settings')" data-tab="settings"><span class="bicon">⚙️</span>Settings</button>
 </nav>
@@ -2105,7 +2109,7 @@ function accountRowToCfg(row){
     lookupCredits:    row.lookup_credits    || 0,
     freeLookupsUsed:  row.free_lookups_used || 0,
     freeLookupsReset: row.free_lookups_reset|| null,
-    freeLookupsLimit: row.free_lookups_limit || 10,
+    freeLookupsLimit: row.free_lookups_limit || 20,
   };
 }
 
@@ -5674,9 +5678,13 @@ const HIST_PAGE_SIZE = 25;
 
 async function loadHistory(){
   // Update balance display
-  const bal = currentAccount?.lookup_credits ?? 0;
+  // Show total credits: free remaining + paid (same as header badge)
+  const freeLimit = S.cfg.freeLookupsLimit || 20;
+  const freeLeft  = Math.max(0, freeLimit - (S.cfg.freeLookupsUsed || 0));
+  const paid      = S.cfg.lookupCredits || 0;
+  const totalBal  = freeLeft + paid;
   const el = document.getElementById('hist-credits-balance');
-  if(el) el.textContent = bal + ' credits';
+  if(el) el.textContent = totalBal + ' credits';
 
   // Load mailer_log
   const mailRes = await sb.from('mailer_log')
@@ -5761,7 +5769,7 @@ function renderHistMailers(){
       <td style="padding:11px 16px;color:var(--muted);">${escHtml(r.address||'—')}</td>
       <td style="padding:11px 16px;text-align:right;color:var(--accent);font-weight:600;">${est}</td>
       <td style="padding:11px 16px;text-align:center;"><span style="background:${typeColor}22;color:${typeColor};border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;">${type}</span></td>
-      <td style="padding:11px 16px;text-align:center;color:var(--muted);">4</td>
+      <td style="padding:11px 16px;text-align:center;color:var(--muted);">${r.credits_used ?? (r.mailer_type === 'lookup' ? 1 : 16)}</td>
     </tr>`;
   });
 
@@ -5959,7 +5967,7 @@ function renderEstimatesTab(){
               ? `<button onclick="goTab('mailqueue')" title="Already in Mail Queue — click to view" style="background:#0e7490;border:none;border-radius:6px;padding:5px 10px;color:#fff;font-weight:700;cursor:pointer;white-space:nowrap;display:flex;flex-direction:column;align-items:center;line-height:1.2;"><span style="font-size:9px;opacity:.85;">&#10003; In</span><span style="font-size:12px;">Queue</span></button>`
               : `<button onclick="addEstimateToMailQueue('${eid}')" style="background:var(--accent);border:none;border-radius:6px;padding:5px 10px;color:#fff;font-weight:700;cursor:pointer;white-space:nowrap;display:flex;flex-direction:column;align-items:center;line-height:1.2;"><span style="font-size:9px;opacity:.85;">&#128228; Send to</span><span style="font-size:12px;">Mail Queue</span></button>`;
           })()
-            +(S.cfg && S.cfg.dripEnabled ? `<button onclick="openDripModal('${eid}')" style="background:#7C3AED;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128336; Drip</button>` : '')
+            +(S.cfg && S.cfg.dripEnabled ? `<button onclick="openDripModal('${eid}')" style="background:#7C3AED;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🔥 Blitz</button>` : '')
             +`<button onclick="previewEstimatePostcard('${eid}')" style="background:#0e7490;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128247; Preview Postcard</button>`
             +`<button onclick="printEstimate('${eid}')" style="background:#1f3d68;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128424; Print</button>`
             +histBtn
@@ -6513,8 +6521,8 @@ async function sendLob(id){
     }});
     if(d && d.error === 'no_credits'){
       // Not enough credits — show Buy Credits modal
-      toast('Not enough credits to send a letter (4 credits required). Please purchase more credits.','error');
-      if(d._credits) S.cfg._creditBalance = d._credits.paid_credits;
+      toast('Not enough credits to send a letter (16 credits = $4.00). Please purchase more credits.','error');
+      if(d._credits){ S.cfg.lookupCredits = d._credits.paid_credits ?? S.cfg.lookupCredits; if(d._credits.free_used !== undefined) S.cfg.freeLookupsUsed = d._credits.free_used; }
       updateCreditBadge();
       setTimeout(()=>showBuyCreditsModal(), 800);
       return;
@@ -6522,7 +6530,7 @@ async function sendLob(id){
     if(d && d.id){
       item.status='sent';item.mailedAt=new Date().toISOString();item.lobId=d.id;
       // Update credit badge with new balance
-      if(d._credits){ S.cfg._creditBalance = d._credits.paid_credits; updateCreditBadge(); }
+      if(d._credits){ S.cfg.lookupCredits = d._credits.paid_credits ?? S.cfg.lookupCredits; if(d._credits.free_used !== undefined) S.cfg.freeLookupsUsed = d._credits.free_used; updateCreditBadge(); }
       addAct('Bid letter mailed to <strong>'+escHtml(item.addr)+'</strong>','converted');
       // If this is a drip step, log it to GHL contact timeline
       if(item.drip_step) ghlAddDripNote(item.owner, item.addr, item.drip_step, item.mailedAt).catch(e=>console.warn('[GHL drip note]',e));
@@ -6639,15 +6647,15 @@ async function sendLobPostcard6x9(id){
       use_type:'marketing'
     }});
     if(d&&d.error==='no_credits'){
-      toast('Not enough credits to send a postcard (4 credits required). Please purchase more credits.','error');
-      if(d._credits)S.cfg._creditBalance=d._credits.paid_credits;
+      toast('Not enough credits to send a postcard (16 credits = $4.00). Please purchase more credits.','error');
+      if(d._credits){ S.cfg.lookupCredits = d._credits.paid_credits ?? S.cfg.lookupCredits; if(d._credits.free_used !== undefined) S.cfg.freeLookupsUsed = d._credits.free_used; }
       updateCreditBadge();
       setTimeout(()=>showBuyCreditsModal(),800);
       return;
     }
     if(d&&d.id){
       item.status='sent';item.mailedAt=new Date().toISOString();item.lobId=d.id;
-      if(d._credits){S.cfg._creditBalance=d._credits.paid_credits;updateCreditBadge();}
+      if(d._credits){ S.cfg.lookupCredits = d._credits.paid_credits ?? S.cfg.lookupCredits; if(d._credits.free_used !== undefined) S.cfg.freeLookupsUsed = d._credits.free_used; updateCreditBadge(); }
       addAct('6×9 postcard mailed to <strong>'+escHtml(item.addr)+'</strong>','converted');
       if(currentAccount&&sb){
         sb.from('mailer_log').insert({
@@ -8840,7 +8848,7 @@ function toast(msg,type='info'){
 function updateCreditBadge(){
   const badge = document.getElementById('credit-badge-label');
   if(!badge) return;
-  const freeLimit = S.cfg.freeLookupsLimit || 10;
+  const freeLimit = S.cfg.freeLookupsLimit || 20;
   const freeLeft = Math.max(0, freeLimit - (S.cfg.freeLookupsUsed||0));
   const paid     = S.cfg.lookupCredits || 0;
   const total    = freeLeft + paid;
@@ -8881,7 +8889,7 @@ async function showBuyCreditsModal(){
       }
     }
   }catch(_){}
-  const freeLimit2 = S.cfg.freeLookupsLimit || 10;
+  const freeLimit2 = S.cfg.freeLookupsLimit || 20;
   const freeLeft = Math.max(0, freeLimit2 - (S.cfg.freeLookupsUsed||0));
   const paid     = S.cfg.lookupCredits || 0;
   const fEl = document.getElementById('cb-free-remaining');
@@ -11385,6 +11393,17 @@ function openDripModal(estId){
 function startDripSequence(){
   const est = (S.estimates||[]).find(e=>e.id===_dripEstId);
   if(!est){ toast('Estimate not found','error'); return; }
+  // Credit pre-check: Follow-Up Blitz costs 48 credits (4 mailers × 16, but 4th is free = 3×16)
+  const BLITZ_CREDITS = 48;
+  const freeLimit = S.cfg.freeLookupsLimit || 20;
+  const freeLeft  = Math.max(0, freeLimit - (S.cfg.freeLookupsUsed || 0));
+  const paid      = S.cfg.lookupCredits || 0;
+  const total     = freeLeft + paid;
+  if(total < BLITZ_CREDITS){
+    toast(`Not enough credits for Follow-Up Blitz. Need 48 credits ($12.00), you have ${total}. Please purchase more credits.`,'error');
+    setTimeout(()=>showBuyCreditsModal(), 800);
+    return;
+  }
   const d2 = parseInt(document.getElementById('drip-delay-2').value)||14;
   const d3 = parseInt(document.getElementById('drip-delay-3').value)||21;
   const d4 = parseInt(document.getElementById('drip-delay-4').value)||35;
@@ -11392,11 +11411,12 @@ function startDripSequence(){
   const msDay = 86400000;
   est.drip = {
     startedAt: now.toISOString(),
+    blitz: true, // marks this as a Follow-Up Blitz (discount pricing)
     steps: [
-      { step:1, type:'letter',   label:'4-Page Letter',       sendAt: now.toISOString(),                              sentAt:null, queueId:null },
+      { step:1, type:'postcard', label:'First Postcard',      sendAt: now.toISOString(),                              sentAt:null, queueId:null },
       { step:2, type:'postcard', label:'Follow-Up Postcard',  sendAt: new Date(now.getTime()+d2*msDay).toISOString(), sentAt:null, queueId:null },
       { step:3, type:'postcard', label:'Urgency Postcard',    sendAt: new Date(now.getTime()+d3*msDay).toISOString(), sentAt:null, queueId:null },
-      { step:4, type:'postcard', label:'Final Postcard',      sendAt: new Date(now.getTime()+d4*msDay).toISOString(), sentAt:null, queueId:null }
+      { step:4, type:'postcard', label:'Final Postcard (Free)',sendAt: new Date(now.getTime()+d4*msDay).toISOString(), sentAt:null, queueId:null }
     ]
   };
   // Add step 1 to mail queue immediately
@@ -11409,7 +11429,7 @@ function startDripSequence(){
   save();
   closeM('m-drip');
   renderEstimatesTab();
-  toast('Drip sequence started! Step 1 added to Mail Queue now. Steps 2–4 scheduled.','success');
+  toast('🔥 Follow-Up Blitz started! Step 1 added to Mail Queue. Steps 2–4 scheduled automatically.','success');
 }
 
 function addEstimateToMailQueueWithDripTag(est, stepNum){
@@ -11544,6 +11564,7 @@ async function sendDripPostcard(id){
     }});
     if(d && d.id){
       item.status='sent'; item.mailedAt=new Date().toISOString(); item.lobId=d.id;
+      if(d._credits){ S.cfg.lookupCredits = d._credits.paid_credits ?? S.cfg.lookupCredits; if(d._credits.free_used !== undefined) S.cfg.freeLookupsUsed = d._credits.free_used; updateCreditBadge(); }
       addAct('Drip Step '+item.drip_step+' postcard mailed to <strong>'+escHtml(item.addr)+'</strong>','converted');
       if(currentAccount && sb){
         sb.from('mailer_log').insert({
@@ -12586,7 +12607,7 @@ async function initQuotePage(slug) {
 <div id="m-drip" class="modal-overlay" onclick="if(event.target===this)closeM('m-drip')" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:none;align-items:center;justify-content:center;">
   <div style="background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <div style="font-family:var(--font-h);font-size:18px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;">🗓 Mail Drip Sequence</div>
+      <div style="font-family:var(--font-h);font-size:18px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;">🔥 Follow-Up Blitz</div>
       <button onclick="closeM('m-drip')" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;">✕</button>
     </div>
     <div id="drip-est-label" style="font-size:13px;color:var(--muted);margin-bottom:18px;"></div>
@@ -12596,16 +12617,16 @@ async function initQuotePage(slug) {
       <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
           <div style="background:var(--accent);color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 1</div>
-          <div style="font-size:13px;font-weight:600;color:var(--text);">4-Page Letter</div>
-          <div style="margin-left:auto;font-size:12px;color:var(--muted);">Send immediately</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);">First Postcard</div>
+          <div style="margin-left:auto;font-size:12px;color:var(--muted);">Send immediately &bull; 16 credits</div>
         </div>
-        <div style="font-size:12px;color:var(--muted);">Full estimate mailer — 4 pages with pricing, financing, and call-to-action.</div>
+        <div style="font-size:12px;color:var(--muted);">Opening postcard — introduces your estimate and invites the homeowner to call.</div>
       </div>
       <!-- Step 2 -->
       <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
           <div style="background:#7C3AED;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 2</div>
-          <div style="font-size:13px;font-weight:600;color:var(--text);">Follow-Up Postcard</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);">Follow-Up Postcard <span style="font-size:11px;color:var(--muted);">16 credits</span></div>
           <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
             <input type="number" id="drip-delay-2" value="14" min="1" max="90" style="width:52px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 6px;color:var(--text);font-size:12px;text-align:center;">
             <span style="font-size:12px;color:var(--muted);">days after step 1</span>
@@ -12665,7 +12686,7 @@ async function initQuotePage(slug) {
       <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
           <div style="background:#7C3AED;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 4</div>
-          <div style="font-size:13px;font-weight:600;color:var(--text);">Final Postcard</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);">Final Postcard <span style="font-size:11px;background:#22C55E22;color:#22C55E;border-radius:8px;padding:1px 7px;font-weight:700;">FREE</span></div>
           <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
             <input type="number" id="drip-delay-4" value="35" min="1" max="90" style="width:52px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 6px;color:var(--text);font-size:12px;text-align:center;">
             <span style="font-size:12px;color:var(--muted);">days after step 1</span>
@@ -12694,10 +12715,10 @@ async function initQuotePage(slug) {
     </div>
     <!-- Info note -->
     <div style="background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:10px 14px;font-size:12px;color:#C4B5FD;margin-bottom:18px;">
-      <strong>How it works:</strong> Step 1 is added to your Mail Queue immediately. Steps 2–4 are scheduled and will appear in your Mail Queue automatically on their send dates. You can cancel the sequence at any time from the Estimates tab.
+      <strong>Follow-Up Blitz:</strong> 4 postcards sent to the same homeowner over time. Step 1 goes out immediately — Steps 2–4 are scheduled automatically. <strong style="color:#4ade80;">Save 25% vs. single sends — 48 credits total ($12) instead of 64 ($16).</strong> Cancel anytime from the Estimates tab.
     </div>
     <div style="display:flex;gap:10px;">
-      <button onclick="startDripSequence()" style="flex:1;background:#7C3AED;border:none;border-radius:8px;padding:14px;color:#fff;font-family:var(--font-b);font-size:14px;font-weight:700;cursor:pointer;">🗓 Start Drip Sequence</button>
+      <button onclick="startDripSequence()" style="flex:1;background:#7C3AED;border:none;border-radius:8px;padding:14px;color:#fff;font-family:var(--font-b);font-size:14px;font-weight:700;cursor:pointer;">🔥 Start Follow-Up Blitz — 48 Credits</button>
       <button onclick="closeM('m-drip')" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:14px 20px;color:var(--muted);font-family:var(--font-b);font-size:14px;cursor:pointer;">Cancel</button>
     </div>
   </div>

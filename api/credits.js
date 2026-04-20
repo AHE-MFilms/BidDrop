@@ -32,11 +32,12 @@ const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 const APP_URL      = process.env.APP_URL || 'https://biddrop.americashomeexperts.com';
 
 // Credit packs: { id, credits, amount_cents, label }
+// 1 credit = $0.25 | 1 postcard/letter = 16 credits ($4.00) | Follow-Up Blitz (4 postcards) = 48 credits ($12.00)
 const CREDIT_PACKS = {
-  pack_50:   { credits: 50,   amount_cents: 1250, label: '50 Lookup Credits'    },
-  pack_200:  { credits: 200,  amount_cents: 5000, label: '200 Lookup Credits'   },
-  pack_500:  { credits: 500,  amount_cents: 12500, label: '500 Lookup Credits'  },
-  pack_1000: { credits: 1000, amount_cents: 25000, label: '1,000 Lookup Credits' },
+  pack_50:   { credits: 50,   amount_cents: 1250,  label: '50 BidDrop Credits (~3 postcards)'    },
+  pack_200:  { credits: 200,  amount_cents: 5000,  label: '200 BidDrop Credits (12 postcards)'   },
+  pack_500:  { credits: 500,  amount_cents: 12500, label: '500 BidDrop Credits (31 postcards)'   },
+  pack_1000: { credits: 1000, amount_cents: 25000, label: '1,000 BidDrop Credits (62 postcards)' },
 };
 
 // ── CORS helper ───────────────────────────────────────────────────────────────
@@ -187,7 +188,7 @@ export default async function handler(req, res) {
               currency: 'usd',
               product_data: {
                 name: `BidDrop — ${pack.label}`,
-                description: `Homeowner lookup credits for BidDrop. $0.25 per lookup.`,
+                description: `BidDrop mailer credits. 1 postcard = 16 credits ($4.00). Follow-Up Blitz (4 postcards) = 48 credits ($12.00). 1 property lookup = 1 credit ($0.25).`,
               },
               unit_amount: pack.amount_cents,
             },
@@ -241,8 +242,8 @@ export default async function handler(req, res) {
         res.status(200).json({
           paid_credits:  acct.lookup_credits,
           free_used:     freeUsed,
-          free_limit:    acct.free_lookups_limit ?? 10,
-          free_remaining: Math.max(0, (acct.free_lookups_limit ?? 10) - freeUsed),
+          free_limit:    acct.free_lookups_limit ?? 20,
+          free_remaining: Math.max(0, (acct.free_lookups_limit ?? 20) - freeUsed),
           packs: CREDIT_PACKS
         });
         break;

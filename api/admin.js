@@ -248,32 +248,46 @@ export default async function handler(req, res) {
         const POSTCARD_CREDITS = 16; // 16 credits = $4.00
         const { payload } = req.body;
         if (!payload) { res.status(400).json({ error: 'payload required' }); return; }
-
-        // Enforce credit balance before sending
+        // Enforce credit balance — fetch free + paid totals
         const pcAcctRes = await sbFetch(
-          `accounts?id=eq.${profile.account_id}&select=id,lookup_credits`
+          `accounts?id=eq.${profile.account_id}&select=id,lookup_credits,free_lookups_used,free_lookups_reset,free_lookups_limit`
         );
         if (!pcAcctRes.ok) { res.status(500).json({ error: 'Failed to fetch account credits' }); return; }
         const pcAcctRows = await pcAcctRes.json();
         if (!pcAcctRows.length) { res.status(404).json({ error: 'Account not found' }); return; }
         const pcAcct = pcAcctRows[0];
-        if ((pcAcct.lookup_credits || 0) < POSTCARD_CREDITS) {
+        // Monthly reset for free credits
+        const pcToday = new Date().toISOString().slice(0, 10);
+        if ((pcAcct.free_lookups_reset || '').slice(0, 7) !== pcToday.slice(0, 7)) {
+          await sbFetch(`accounts?id=eq.${profile.account_id}`, {
+            method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ free_lookups_used: 0, free_lookups_reset: pcToday })
+          });
+          pcAcct.free_lookups_used = 0;
+        }
+        const pcFreeLimit = pcAcct.free_lookups_limit ?? 20;
+        const pcFreeLeft  = Math.max(0, pcFreeLimit - (pcAcct.free_lookups_used || 0));
+        const pcPaid      = pcAcct.lookup_credits || 0;
+        const pcTotal     = pcFreeLeft + pcPaid;
+        if (pcTotal < POSTCARD_CREDITS) {
           res.status(402).json({
             error: 'no_credits',
-            message: `Sending a postcard costs ${POSTCARD_CREDITS} credits ($4.00). You have ${pcAcct.lookup_credits || 0} credits. Please purchase more credits to continue.`,
+            message: `Sending a postcard costs ${POSTCARD_CREDITS} credits ($4.00). You have ${pcTotal} credits (${pcFreeLeft} free + ${pcPaid} paid). Please purchase more credits to continue.`,
             credits_needed: POSTCARD_CREDITS,
-            credits_available: pcAcct.lookup_credits || 0
+            credits_available: pcTotal
           });
           return;
         }
-
-        // Deduct credits BEFORE sending (charge at time of order)
+        // Deduct credits BEFORE sending — use free first, then paid
+        const pcFreeToUse = Math.min(pcFreeLeft, POSTCARD_CREDITS);
+        const pcPaidToUse = POSTCARD_CREDITS - pcFreeToUse;
+        const pcUpdates = {};
+        if (pcFreeToUse > 0) pcUpdates.free_lookups_used = (pcAcct.free_lookups_used || 0) + pcFreeToUse;
+        if (pcPaidToUse > 0) pcUpdates.lookup_credits = pcPaid - pcPaidToUse;
         await sbFetch(`accounts?id=eq.${profile.account_id}`, {
-          method: 'PATCH',
-          headers: { 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ lookup_credits: pcAcct.lookup_credits - POSTCARD_CREDITS })
+          method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
+          body: JSON.stringify(pcUpdates)
         });
-
         // Send the postcard
         const lobRes = await fetch('https://api.lob.com/v1/postcards', {
           method: 'POST',
@@ -284,26 +298,28 @@ export default async function handler(req, res) {
           body: JSON.stringify(payload)
         });
         const lobData = await lobRes.json();
-
         // If Lob failed, refund the credits
         if (!lobRes.ok) {
+          const pcRefund = {};
+          if (pcFreeToUse > 0) pcRefund.free_lookups_used = pcAcct.free_lookups_used || 0;
+          if (pcPaidToUse > 0) pcRefund.lookup_credits = pcPaid;
           await sbFetch(`accounts?id=eq.${profile.account_id}`, {
-            method: 'PATCH',
-            headers: { 'Prefer': 'return=minimal' },
-            body: JSON.stringify({ lookup_credits: pcAcct.lookup_credits })
+            method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
+            body: JSON.stringify(pcRefund)
           });
         }
-
+        const pcNewPaid     = lobRes.ok ? pcPaid - pcPaidToUse : pcPaid;
+        const pcNewFreeUsed = lobRes.ok ? (pcAcct.free_lookups_used || 0) + pcFreeToUse : (pcAcct.free_lookups_used || 0);
         if (lobRes.ok) {
           res.status(200).json({
             ...lobData,
-            _credits: { paid_credits: pcAcct.lookup_credits - POSTCARD_CREDITS }
+            _credits: { paid_credits: pcNewPaid, free_used: pcNewFreeUsed, free_limit: pcFreeLimit }
           });
         } else {
           res.status(200).json({
             error: lobData.error || lobData,
             _lobStatus: lobRes.status,
-            _credits: { paid_credits: pcAcct.lookup_credits }
+            _credits: { paid_credits: pcPaid, free_used: pcAcct.free_lookups_used || 0, free_limit: pcFreeLimit }
           });
         }
         break;
@@ -312,58 +328,82 @@ export default async function handler(req, res) {
       // ── Lob letter proxy ──────────────────────────────────────────────────
       case 'lob-letter': {
         const LETTER_CREDITS = 16; // 16 credits = $4.00
-        const { payload } = req.body;
-        if (!payload) { res.status(400).json({ error: 'payload required' }); return; }
-
-        // Enforce credit balance before sending
+        const { payload: ltPayload } = req.body;
+        if (!ltPayload) { res.status(400).json({ error: 'payload required' }); return; }
+        // Enforce credit balance — fetch free + paid totals
         const ltAcctRes = await sbFetch(
-          `accounts?id=eq.${profile.account_id}&select=id,lookup_credits`
+          `accounts?id=eq.${profile.account_id}&select=id,lookup_credits,free_lookups_used,free_lookups_reset,free_lookups_limit`
         );
         if (!ltAcctRes.ok) { res.status(500).json({ error: 'Failed to fetch account credits' }); return; }
         const ltAcctRows = await ltAcctRes.json();
         if (!ltAcctRows.length) { res.status(404).json({ error: 'Account not found' }); return; }
         const ltAcct = ltAcctRows[0];
-        if ((ltAcct.lookup_credits || 0) < LETTER_CREDITS) {
+        // Monthly reset for free credits
+        const ltToday = new Date().toISOString().slice(0, 10);
+        if ((ltAcct.free_lookups_reset || '').slice(0, 7) !== ltToday.slice(0, 7)) {
+          await sbFetch(`accounts?id=eq.${profile.account_id}`, {
+            method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ free_lookups_used: 0, free_lookups_reset: ltToday })
+          });
+          ltAcct.free_lookups_used = 0;
+        }
+        const ltFreeLimit = ltAcct.free_lookups_limit ?? 20;
+        const ltFreeLeft  = Math.max(0, ltFreeLimit - (ltAcct.free_lookups_used || 0));
+        const ltPaid      = ltAcct.lookup_credits || 0;
+        const ltTotal     = ltFreeLeft + ltPaid;
+        if (ltTotal < LETTER_CREDITS) {
           res.status(402).json({
             error: 'no_credits',
-            message: `Sending a letter costs ${LETTER_CREDITS} credits ($4.00). You have ${ltAcct.lookup_credits || 0} credits. Please purchase more credits to continue.`,
+            message: `Sending a letter costs ${LETTER_CREDITS} credits ($4.00). You have ${ltTotal} credits (${ltFreeLeft} free + ${ltPaid} paid). Please purchase more credits to continue.`,
             credits_needed: LETTER_CREDITS,
-            credits_available: ltAcct.lookup_credits || 0
+            credits_available: ltTotal
           });
           return;
         }
-
-        // Deduct credits BEFORE sending (charge at time of order)
+        // Deduct credits BEFORE sending — use free first, then paid
+        const ltFreeToUse = Math.min(ltFreeLeft, LETTER_CREDITS);
+        const ltPaidToUse = LETTER_CREDITS - ltFreeToUse;
+        const ltUpdates = {};
+        if (ltFreeToUse > 0) ltUpdates.free_lookups_used = (ltAcct.free_lookups_used || 0) + ltFreeToUse;
+        if (ltPaidToUse > 0) ltUpdates.lookup_credits = ltPaid - ltPaidToUse;
         await sbFetch(`accounts?id=eq.${profile.account_id}`, {
-          method: 'PATCH',
-          headers: { 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ lookup_credits: ltAcct.lookup_credits - LETTER_CREDITS })
+          method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
+          body: JSON.stringify(ltUpdates)
         });
-
         // Send the letter
-        const lobRes = await fetch('https://api.lob.com/v1/letters', {
+        const ltLobRes = await fetch('https://api.lob.com/v1/letters', {
           method: 'POST',
           headers: {
             'Authorization': 'Basic ' + Buffer.from(LOB_KEY + ':').toString('base64'),
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(ltPayload)
         });
-        const lobData = await lobRes.json();
-
+        const ltLobData = await ltLobRes.json();
         // If Lob failed, refund the credits
-        if (!lobRes.ok) {
+        if (!ltLobRes.ok) {
+          const ltRefund = {};
+          if (ltFreeToUse > 0) ltRefund.free_lookups_used = ltAcct.free_lookups_used || 0;
+          if (ltPaidToUse > 0) ltRefund.lookup_credits = ltPaid;
           await sbFetch(`accounts?id=eq.${profile.account_id}`, {
-            method: 'PATCH',
-            headers: { 'Prefer': 'return=minimal' },
-            body: JSON.stringify({ lookup_credits: ltAcct.lookup_credits })
+            method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
+            body: JSON.stringify(ltRefund)
           });
         }
-
-        res.status(lobRes.status).json({
-          ...lobData,
-          _credits: { paid_credits: lobRes.ok ? ltAcct.lookup_credits - LETTER_CREDITS : ltAcct.lookup_credits }
-        });
+        const ltNewPaid     = ltLobRes.ok ? ltPaid - ltPaidToUse : ltPaid;
+        const ltNewFreeUsed = ltLobRes.ok ? (ltAcct.free_lookups_used || 0) + ltFreeToUse : (ltAcct.free_lookups_used || 0);
+        if (ltLobRes.ok) {
+          res.status(200).json({
+            ...ltLobData,
+            _credits: { paid_credits: ltNewPaid, free_used: ltNewFreeUsed, free_limit: ltFreeLimit }
+          });
+        } else {
+          res.status(200).json({
+            error: ltLobData.error || ltLobData,
+            _lobStatus: ltLobRes.status,
+            _credits: { paid_credits: ltPaid, free_used: ltAcct.free_lookups_used || 0, free_limit: ltFreeLimit }
+          });
+        }
         break;
       }
 
@@ -380,7 +420,7 @@ export default async function handler(req, res) {
         const acctRows = await acctRes.json();
         if (!acctRows.length) { res.status(404).json({ error: 'Account not found' }); return; }
         let acct = acctRows[0];
-        const FREE_LOOKUPS_PER_MONTH = acct.free_lookups_limit ?? 10;
+        const FREE_LOOKUPS_PER_MONTH = acct.free_lookups_limit ?? 20;
 
         // Check if free lookup counter needs monthly reset
         const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
