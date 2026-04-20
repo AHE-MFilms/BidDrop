@@ -6440,7 +6440,7 @@ function buildPostcard6x9FrontHtml(item){
   const ph=cfg.companyPhone||cfg.phone||'(000) 000-0000';
   const color=cfg.brandColor||'#F25C05';
   const total=item.total||0;
-  const logoUrl=cfg.logoData||'';
+  const logoUrl=(cfg.logoData&&!cfg.logoData.startsWith('data:'))?cfg.logoData:'';
   const addr=item.addr||'';
   const shortAddr=addr.split(',')[0]||addr;
   const cityState=addr.split(',').slice(1,3).join(',').trim();
@@ -6496,7 +6496,7 @@ function buildPostcard6x9BackHtml(item){
   const ph=cfg.companyPhone||cfg.phone||'(000) 000-0000';
   const color=cfg.brandColor||'#F25C05';
   const total=item.total||0;
-  const logoUrl=cfg.logoData||'';
+  const logoUrl=(cfg.logoData&&!cfg.logoData.startsWith('data:'))?cfg.logoData:'';
   const fromRaw=cfg.companyAddr||cfg.companyAddress||'123 Main St, Detroit, MI 48000';
   const trackedUrl=item.id?'https://biddrop.americashomeexperts.com/r/'+encodeURIComponent(item.id):(cfg.bookingUrl||'');
   const qrUrl=trackedUrl?'https://api.qrserver.com/v1/create-qr-code/?size=120x120&margin=4&data='+encodeURIComponent(trackedUrl):'';
@@ -6510,7 +6510,7 @@ function buildPostcard6x9BackHtml(item){
   const why=cfg.postcardWhy||'We assessed your neighborhood and identified your home as a candidate for roof replacement based on age, condition, and storm history.';
   const pcQuote=cfg.postcardQuote||'';
   const guarantee=cfg.postcardGuarantee||'No door-knocking. No pressure. Just your price.';
-  const headshotData=cfg.headshot||'';
+  const headshotData=(cfg.headshot&&!cfg.headshot.startsWith('data:'))?cfg.headshot:'';
   const repName=cfg.repName||'';
   const repTitle=cfg.repTitle||'Owner';
   const badges=[cfg.diff1||'Licensed & Insured',cfg.diff2||'Manufacturer Certified',cfg.diff3||'Workmanship Warranty'].filter(Boolean).slice(0,3);
