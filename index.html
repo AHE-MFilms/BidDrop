@@ -594,7 +594,12 @@ tr:hover td{background:var(--card);}
       <div class="fg"><label class="fl">Company Name</label><input class="fi" id="ec-name" placeholder="Rapid Roof LLC"></div>
       <div class="fg"><label class="fl">Company Phone</label><input class="fi" id="ec-phone" placeholder="(313) 555-0100" oninput="autoFormatPhone(this)"></div>
     </div>
-    <div class="fg"><label class="fl">Company Address</label><input class="fi" id="ec-addr" placeholder="123 Main St, Detroit, MI 48000"></div>
+    <div class="fg"><label class="fl">Street Address</label><input class="fi" id="ec-addr-street" placeholder="43665 Antietam Court"></div>
+    <div class="frow">
+      <div class="fg" style="flex:2"><label class="fl">City</label><input class="fi" id="ec-addr-city" placeholder="Detroit"></div>
+      <div class="fg" style="flex:1"><label class="fl">State</label><input class="fi" id="ec-addr-state" placeholder="MI" maxlength="2" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div>
+      <div class="fg" style="flex:1"><label class="fl">ZIP</label><input class="fi" id="ec-addr-zip" placeholder="48000" maxlength="10"></div>
+    </div>
     <div class="frow">
       <div class="fg"><label class="fl">Plan</label>
         <select class="fs" id="ec-plan">
@@ -7969,7 +7974,15 @@ function editClientAccount(accountId){
   // Populate fields
   document.getElementById('ec-name').value  = a.company_name||a.name||'';
   document.getElementById('ec-phone').value = a.company_phone||'';
-  document.getElementById('ec-addr').value  = a.company_addr||'';
+  // Split stored address ("Street, City, State, ZIP") into parts
+  (function(){
+    const raw = a.company_addr||'';
+    const parts = raw.split(',').map(s=>s.trim());
+    document.getElementById('ec-addr-street').value = parts[0]||'';
+    document.getElementById('ec-addr-city').value   = parts[1]||'';
+    document.getElementById('ec-addr-state').value  = parts[2]||'';
+    document.getElementById('ec-addr-zip').value    = parts[3]||'';
+  })();
   document.getElementById('ec-plan').value  = a.plan||'starter';
   document.getElementById('ec-rate').value  = parseFloat(a.mailer_rate)||2.50;
   document.getElementById('ec-notes').value = a.notes||'';
@@ -7987,7 +8000,12 @@ async function saveClientAccount(){
   if(!accountId){ toast('No account selected','error'); return; }
   const name   = document.getElementById('ec-name').value.trim();
   const phone  = document.getElementById('ec-phone').value.trim();
-  const addr   = document.getElementById('ec-addr').value.trim();
+  // Reassemble address from split fields
+  const addrStreet = document.getElementById('ec-addr-street').value.trim();
+  const addrCity   = document.getElementById('ec-addr-city').value.trim();
+  const addrState  = document.getElementById('ec-addr-state').value.trim();
+  const addrZip    = document.getElementById('ec-addr-zip').value.trim();
+  const addr = [addrStreet, addrCity, addrState, addrZip].filter(Boolean).join(', ');
   const plan   = document.getElementById('ec-plan').value;
   const rate   = parseFloat(document.getElementById('ec-rate').value)||2.50;
   const notes  = document.getElementById('ec-notes').value.trim();
