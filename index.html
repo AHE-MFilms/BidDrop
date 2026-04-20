@@ -68,8 +68,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 .icon-btn{background:var(--card);border:1px solid var(--border);color:var(--mid);width:34px;height:34px;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s;}
 .icon-btn:hover{border-color:var(--accent);color:var(--accent);}
 .main{flex:1;overflow:hidden;display:flex;flex-direction:column;position:relative;}
-.tab-pane{display:none;flex:1;overflow:hidden;}
+.tab-pane{display:none;flex:1;overflow:hidden;min-height:0;}
 .tab-pane.active{display:flex;}
+#tab-agency,#tab-history,#tab-admin,#tab-dashboard{overflow-y:auto;overflow-x:hidden;}
 #tab-settings{display:none;flex-direction:column;overflow-y:auto;padding:22px;gap:14px;}
   #tab-settings.active{display:flex;}
   .stab-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
@@ -611,6 +612,15 @@ tr:hover td{background:var(--card);}
       <div class="fg"><label class="fl">Mailer Rate ($/piece)</label><input class="fi" id="ec-rate" type="number" step="0.01" placeholder="2.50"></div>
     </div>
     <div class="fg"><label class="fl">Notes (internal)</label><input class="fi" id="ec-notes" placeholder="e.g. Net 30 billing, referral from..."></div>
+    <!-- GHL Integration -->
+    <div style="margin-top:12px;padding:12px 14px;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:9px;">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#22C55E;margin-bottom:10px;">🔗 GoHighLevel Integration</div>
+      <div class="fg" style="margin-bottom:8px;"><label class="fl">GHL Location API Key</label><input class="fi" id="ec-ghl-key" placeholder="eyJhbGci..." type="password" autocomplete="off"></div>
+      <div class="frow">
+        <div class="fg"><label class="fl">GHL Location ID</label><input class="fi" id="ec-ghl-loc" placeholder="gz85VU6SxGXS7lqHAQGx"></div>
+        <div class="fg"><label class="fl">GHL Pipeline ID</label><input class="fi" id="ec-ghl-pipe" placeholder="bxskBIBdbklHry0B63qx"></div>
+      </div>
+    </div>
     <!-- Mailer type toggles -->
     <div style="margin-top:10px;">
       <label class="fl" style="margin-bottom:8px;">Mailer Types Enabled</label>
@@ -7986,6 +7996,9 @@ function editClientAccount(accountId){
   document.getElementById('ec-plan').value  = a.plan||'starter';
   document.getElementById('ec-rate').value  = parseFloat(a.mailer_rate)||2.50;
   document.getElementById('ec-notes').value = a.notes||'';
+  document.getElementById('ec-ghl-key').value  = a.ghl_api_key||'';
+  document.getElementById('ec-ghl-loc').value  = a.ghl_location_id||'';
+  document.getElementById('ec-ghl-pipe').value = a.ghl_pipeline_id||'';
   document.getElementById('ec-active').checked = a.active!==false;
   document.getElementById('ec-enable-postcard').checked = a.enable_postcard!==false;
   document.getElementById('ec-enable-letter').checked   = a.enable_letter!==false;
@@ -8009,6 +8022,9 @@ async function saveClientAccount(){
   const plan   = document.getElementById('ec-plan').value;
   const rate   = parseFloat(document.getElementById('ec-rate').value)||2.50;
   const notes  = document.getElementById('ec-notes').value.trim();
+  const ghlKey  = document.getElementById('ec-ghl-key').value.trim();
+  const ghlLoc  = document.getElementById('ec-ghl-loc').value.trim();
+  const ghlPipe = document.getElementById('ec-ghl-pipe').value.trim();
   const active          = document.getElementById('ec-active').checked;
   const enablePostcard  = document.getElementById('ec-enable-postcard').checked;
   const enableLetter    = document.getElementById('ec-enable-letter').checked;
@@ -8020,11 +8036,11 @@ async function saveClientAccount(){
   try {
     const updated = await adminAPI('patch-account', {
       accountId,
-      updates: { name, company_name:name, company_phone:phone||null, company_addr:addr||null, plan, mailer_rate:rate, notes:notes||null, active, enable_postcard:enablePostcard, enable_letter:enableLetter }
+      updates: { name, company_name:name, company_phone:phone||null, company_addr:addr||null, plan, mailer_rate:rate, notes:notes||null, active, enable_postcard:enablePostcard, enable_letter:enableLetter, ghl_api_key:ghlKey||null, ghl_location_id:ghlLoc||null, ghl_pipeline_id:ghlPipe||null }
     });
     // Update local cache
     const idx = _agencyData.accounts.findIndex(x=>x.id===accountId);
-    if(idx>=0) _agencyData.accounts[idx] = {..._agencyData.accounts[idx], name, company_name:name, company_phone:phone, company_addr:addr, plan, mailer_rate:rate, notes, active, enable_postcard:enablePostcard, enable_letter:enableLetter};
+    if(idx>=0) _agencyData.accounts[idx] = {..._agencyData.accounts[idx], name, company_name:name, company_phone:phone, company_addr:addr, plan, mailer_rate:rate, notes, active, enable_postcard:enablePostcard, enable_letter:enableLetter, ghl_api_key:ghlKey, ghl_location_id:ghlLoc, ghl_pipeline_id:ghlPipe};
     resultEl.innerHTML = '✅ Saved!'; resultEl.style.color='var(--success)';
     toast('✅ '+name+' updated','success');
     renderAgencyAccounts();
