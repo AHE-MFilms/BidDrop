@@ -3090,7 +3090,6 @@ async function previewEstimatePostcard(estId){
   const est = (S.estimates||[]).find(e=>e.id===estId);
   if(!est){ toast('Estimate not found','error'); return; }
 
-  // ── Resolve house photo ──────────────────────────────────────────────────
   const pin = (S.pins||[]).find(p=>p.id===est.pinId);
   let photoUrl = est.photo_url || est.photo_data || null;
   if(!photoUrl && pin){
@@ -3119,8 +3118,9 @@ async function previewEstimatePostcard(estId){
     photo_url:  (photoUrl && photoUrl.startsWith('http')) ? photoUrl : null,
     photo_data: (photoUrl && !photoUrl.startsWith('http')) ? photoUrl : null,
   };
-  const frontHtml = buildPostcard6x9FrontHtml(syntheticItem);
-  const backHtml  = buildPostcard6x9BackHtml(syntheticItem);
+
+  await _showPostcardCanvasModal('m-est-pc-modal', est.owner||'Homeowner', est.addr||'', syntheticItem);
+}
 
   // ── Remove any existing preview ──────────────────────────────────────────
   const existing = document.getElementById('m-est-pc-modal');
@@ -5561,12 +5561,89 @@ function _scalePostcardPreviews(){
   [frontScaler, backScaler].forEach(s=>{ if(s){ s.style.height = scaledH + 'px'; } });
 }
 
-function _refreshPostcardPreview(){
+
+// ── Shared canvas postcard preview modal ──────────────────────────────────────
+async function _showPostcardCanvasModal(modalId, ownerLabel, addrLabel, item){
+  const existing = document.getElementById(modalId);
+  if(existing) existing.remove();
+
+  // Show loading modal immediately
+  const modal = document.createElement('div');
+  modal.id = modalId;
+  modal.style.cssText = [
+    'position:fixed;inset:0;z-index:10100;',
+    'background:rgba(5,10,20,0.95);',
+    'display:flex;flex-direction:column;align-items:center;',
+    'overflow-y:auto;padding:20px 16px 40px;',
+    '-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);'
+  ].join('');
+  modal.innerHTML = `
+    <div style="width:100%;max-width:780px;display:flex;align-items:center;justify-content:space-between;
+                margin-bottom:16px;flex-shrink:0;">
+      <div>
+        <div style="font-family:Oswald,sans-serif;font-size:18px;font-weight:700;color:#F0F6FF;letter-spacing:.5px;">
+          &#127968; Postcard Preview
+        </div>
+        <div style="font-size:12px;color:#6688A8;margin-top:2px;">
+          ${escHtml(ownerLabel)} &mdash; ${escHtml(addrLabel)}
+        </div>
+      </div>
+      <button onclick="document.getElementById('${modalId}').remove()"
+        style="background:#1e2d42;border:1px solid #2E4060;color:#C8D8E8;font-size:13px;font-weight:700;
+               padding:9px 20px;border-radius:8px;cursor:pointer;white-space:nowrap;flex-shrink:0;"
+        onmouseover="this.style.background='#F25C05';this.style.borderColor='#F25C05';this.style.color='#fff';"
+        onmouseout="this.style.background='#1e2d42';this.style.borderColor='#2E4060';this.style.color='#C8D8E8';">
+        &times; Close
+      </button>
+    </div>
+    <div style="width:100%;max-width:780px;font-size:11px;color:#96B0C8;
+                margin-bottom:16px;text-align:center;flex-shrink:0;">
+      6&times;9 postcard &mdash; front on top, back below. Actual print size: 9&Prime;&times;6&Prime;.
+    </div>
+    <div style="width:100%;max-width:780px;margin-bottom:18px;flex-shrink:0;">
+      <div style="font-size:10px;font-weight:700;color:#C8D8E8;text-transform:uppercase;
+                  letter-spacing:.5px;margin-bottom:8px;">Front &mdash; House Photo</div>
+      <div id="${modalId}-front" style="width:100%;border-radius:8px;border:1px solid #2E4060;
+                                        overflow:hidden;background:#1a2333;min-height:80px;
+                                        display:flex;align-items:center;justify-content:center;">
+        <div style="color:#6688A8;font-size:13px;">Rendering&hellip;</div>
+      </div>
+    </div>
+    <div style="width:100%;max-width:780px;flex-shrink:0;">
+      <div style="font-size:10px;font-weight:700;color:#C8D8E8;text-transform:uppercase;
+                  letter-spacing:.5px;margin-bottom:8px;">Back &mdash; Estimate Summary</div>
+      <div id="${modalId}-back" style="width:100%;border-radius:8px;border:1px solid #2E4060;
+                                       overflow:hidden;background:#fff;min-height:80px;
+                                       display:flex;align-items:center;justify-content:center;">
+        <div style="color:#6688A8;font-size:13px;">Rendering&hellip;</div>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', function(e){ if(e.target===modal) modal.remove(); });
+  function _esc(e){ if(e.key==='Escape'){ modal.remove(); document.removeEventListener('keydown',_esc); } }
+  document.addEventListener('keydown', _esc);
+
+  // Render canvases
+  const [frontDataUrl, backDataUrl] = await Promise.all([
+    renderPostcard6x9FrontCanvas(item),
+    renderPostcard6x9BackCanvas(item)
+  ]);
+
+  const frontEl = document.getElementById(modalId+'-front');
+  const backEl  = document.getElementById(modalId+'-back');
+  if(frontEl && frontDataUrl){
+    frontEl.innerHTML = '<img src="'+frontDataUrl+'" style="width:100%;height:auto;display:block;">';
+  }
+  if(backEl && backDataUrl){
+    backEl.innerHTML = '<img src="'+backDataUrl+'" style="width:100%;height:auto;display:block;">';
+  }
+}
+
+async function _refreshPostcardPreview(){
   // Build a synthetic queue item from current estimator state
   const addr  = document.getElementById('e-addr')  ? document.getElementById('e-addr').value.trim()  : '';
   const owner = document.getElementById('e-owner') ? document.getElementById('e-owner').value.trim() : 'Homeowner';
   const grand = calcP ? calcP() : 0;
-  // Resolve photo: prefer all_photos.front[0], fall back to legacy _homePhotoData
   const _frontPhoto = ((window._allPhotos && window._allPhotos.front)||[])[0] || window._homePhotoData || null;
   const fakeItem = {
     addr, owner,
@@ -5578,41 +5655,66 @@ function _refreshPostcardPreview(){
     all_photos: window._allPhotos ? JSON.parse(JSON.stringify(window._allPhotos)) : null
   };
 
-  const frontHtml = buildPostcard6x9FrontHtml(fakeItem);
-  const backHtml  = buildPostcard6x9BackHtml(fakeItem);
+  // If no house photo, try geocoding first
+  if(!fakeItem.photo_url && !fakeItem.photo_data && addr){
+    try{
+      const MB = window._mapboxToken || ['pk.eyJ1IjoibW9uZ29vc2VmaWxtcyIsImEiOiJjbW52M2kyNnMxM3pk','MnJvYTYxZnE1YW51In0.nC5GKWDHIAB4DTAP9hV3hQ'].join('');
+      const geoRes = await fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/'+encodeURIComponent(addr)+'.json?country=us&types=address&limit=1&access_token='+MB);
+      const geoData = await geoRes.json();
+      if(geoData.features && geoData.features[0]){
+        const [lon,lat] = geoData.features[0].center;
+        fakeItem.photo_url = `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/${lon},${lat},19,0/900x600@2x?access_token=${MB}`;
+      }
+    } catch(e){}
+  }
 
   const frontFrame = document.getElementById('pc-front-preview');
   const backFrame  = document.getElementById('pc-back-preview');
-  function _writeFrame(frame, html){
-    if(!frame) return;
-    const blob = new Blob([html], {type:'text/html'});
-    const url = URL.createObjectURL(blob);
-    frame.onload = function(){ URL.revokeObjectURL(url); };
-    frame.src = url;
-  }
-  _writeFrame(frontFrame, frontHtml);
-  _writeFrame(backFrame, backHtml);
-  setTimeout(_scalePostcardPreviews, 80);
+  if(!frontFrame && !backFrame) return;
 
-  // If no house photo, asynchronously geocode and refresh front
-  if(!fakeItem.photo_url && !fakeItem.photo_data && addr){
-    const MB = window._mapboxToken || ['pk.eyJ1IjoibW9uZ29vc2VmaWxtcyIsImEiOiJjbW52M2kyNnMxM3pk','MnJvYTYxZnE1YW51In0.nC5GKWDHIAB4DTAP9hV3hQ'].join('');
-    fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/'+encodeURIComponent(addr)+'.json?country=us&types=address&limit=1&access_token='+MB)
-      .then(r=>r.json())
-      .then(data=>{
-        if(data.features && data.features[0]){
-          const [lon, lat] = data.features[0].center;
-          fakeItem.photo_url = `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/${lon},${lat},19,0/900x600@2x?access_token=${MB}`;
-          const updatedFront = buildPostcard6x9FrontHtml(fakeItem);
-          if(frontFrame && _previewMode==='postcard'){
-            const blob2 = new Blob([updatedFront], {type:'text/html'});
-            const url2 = URL.createObjectURL(blob2);
-            frontFrame.onload = function(){ URL.revokeObjectURL(url2); setTimeout(_scalePostcardPreviews, 80); };
-            frontFrame.src = url2;
-          }
-        }
-      }).catch(()=>{});
+  // Show loading state
+  if(frontFrame) frontFrame.style.opacity='0.4';
+  if(backFrame)  backFrame.style.opacity='0.4';
+
+  const [frontDataUrl, backDataUrl] = await Promise.all([
+    renderPostcard6x9FrontCanvas(fakeItem),
+    renderPostcard6x9BackCanvas(fakeItem)
+  ]);
+
+  // pc-front-preview and pc-back-preview are iframes in the estimator panel.
+  // Replace them with img tags inside their parent containers.
+  if(frontFrame){
+    const parent = frontFrame.parentElement;
+    if(parent && frontDataUrl){
+      // Replace iframe with img if not already done
+      if(frontFrame.tagName === 'IFRAME'){
+        const img = document.createElement('img');
+        img.id = 'pc-front-preview';
+        img.style.cssText = 'width:100%;height:auto;display:block;border-radius:5px;';
+        img.src = frontDataUrl;
+        parent.replaceChild(img, frontFrame);
+      } else {
+        frontFrame.src = frontDataUrl;
+        frontFrame.style.opacity='1';
+      }
+    }
   }
+  if(backFrame){
+    const parent = backFrame.parentElement;
+    if(parent && backDataUrl){
+      if(backFrame.tagName === 'IFRAME'){
+        const img = document.createElement('img');
+        img.id = 'pc-back-preview';
+        img.style.cssText = 'width:100%;height:auto;display:block;border-radius:5px;';
+        img.src = backDataUrl;
+        parent.replaceChild(img, backFrame);
+      } else {
+        backFrame.src = backDataUrl;
+        backFrame.style.opacity='1';
+      }
+    }
+  }
+  setTimeout(_scalePostcardPreviews, 80);
 }
 
 // ═══════════════════════════════
@@ -7494,8 +7596,6 @@ function previewQueueItem(id){
 // Preview the 6x9 postcard front and back in a modal
 async function previewPostcard6x9(id){
   const item = S.queue.find(x=>x.id===id); if(!item) return;
-  // Build a synthetic estimate-like object so we can reuse previewEstimatePostcard's modal
-  // First resolve the photo (same logic as before)
   let photoUrl = item.photo_url || item.photo_data || null;
   if(!photoUrl){
     const ap = item.all_photos || {};
@@ -7521,92 +7621,9 @@ async function previewPostcard6x9(id){
     photo_url:  (photoUrl && photoUrl.startsWith('http')) ? photoUrl : null,
     photo_data: (photoUrl && !photoUrl.startsWith('http')) ? photoUrl : null,
   };
-  const frontHtml = buildPostcard6x9FrontHtml(syntheticItem);
-  const backHtml  = buildPostcard6x9BackHtml(syntheticItem);
-  // ── Reuse the same modal as previewEstimatePostcard ──────────────────────
-  const existing = document.getElementById('m-postcard6x9-preview');
-  if(existing) existing.remove();
-  const modal = document.createElement('div');
-  modal.id = 'm-postcard6x9-preview';
-  modal.style.cssText = [
-    'position:fixed;inset:0;z-index:10100;',
-    'background:rgba(5,10,20,0.95);',
-    'display:flex;flex-direction:column;align-items:center;',
-    'overflow-y:auto;padding:20px 16px 40px;',
-    '-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);'
-  ].join('');
-  modal.innerHTML = `
-    <div style="width:100%;max-width:680px;display:flex;align-items:center;justify-content:space-between;
-                margin-bottom:16px;flex-shrink:0;">
-      <div>
-        <div style="font-family:Oswald,sans-serif;font-size:18px;font-weight:700;color:#F0F6FF;letter-spacing:.5px;">
-          &#127968; Postcard Preview
-        </div>
-        <div style="font-size:12px;color:#6688A8;margin-top:2px;">
-          ${escHtml(item.owner||'Homeowner')} &mdash; ${escHtml(item.addr||'')}
-        </div>
-      </div>
-      <button onclick="document.getElementById('m-postcard6x9-preview').remove()"
-        style="background:#1e2d42;border:1px solid #2E4060;color:#C8D8E8;font-size:13px;font-weight:700;
-               padding:9px 20px;border-radius:8px;cursor:pointer;white-space:nowrap;flex-shrink:0;"
-        onmouseover="this.style.background='#F25C05';this.style.borderColor='#F25C05';this.style.color='#fff';"
-        onmouseout="this.style.background='#1e2d42';this.style.borderColor='#2E4060';this.style.color='#C8D8E8';">
-        &times; Close
-      </button>
-    </div>
-    <div style="width:100%;max-width:680px;font-size:11px;color:var(--muted,#96B0C8);
-                margin-bottom:16px;text-align:center;flex-shrink:0;">
-      6&times;9 postcard &mdash; front on top, back below. Actual print size: 9&Prime;&times;6&Prime;.
-    </div>
-    <div style="width:100%;max-width:680px;margin-bottom:18px;flex-shrink:0;">
-      <div style="font-size:10px;font-weight:700;color:#C8D8E8;text-transform:uppercase;
-                  letter-spacing:.5px;margin-bottom:8px;">Front &mdash; House Photo</div>
-      <div id="q-pc-front-scaler" style="width:100%;overflow:hidden;border-radius:8px;
-                                           border:1px solid #2E4060;position:relative;">
-        <iframe id="q-pc-front-frame" frameborder="0"
-          style="width:864px;height:576px;border:none;background:#1a2333;
-                 transform-origin:top left;display:block;"></iframe>
-      </div>
-    </div>
-    <div style="width:100%;max-width:680px;flex-shrink:0;">
-      <div style="font-size:10px;font-weight:700;color:#C8D8E8;text-transform:uppercase;
-                  letter-spacing:.5px;margin-bottom:8px;">Back &mdash; Estimate Summary</div>
-      <div id="q-pc-back-scaler" style="width:100%;overflow:hidden;border-radius:8px;
-                                          border:1px solid #2E4060;position:relative;">
-        <iframe id="q-pc-back-frame" frameborder="0"
-          style="width:864px;height:576px;border:none;background:#fff;
-                 transform-origin:top left;display:block;"></iframe>
-      </div>
-    </div>`;
-  document.body.appendChild(modal);
-  function _scaleQPcFrames(){
-    [['front'], ['back']].forEach(function([side]){
-      const scaler = document.getElementById('q-pc-'+side+'-scaler');
-      const frame  = document.getElementById('q-pc-'+side+'-frame');
-      if(!scaler || !frame) return;
-      const w = scaler.offsetWidth;
-      if(!w) return;
-      const scale = w / 864;
-      const h = Math.round(576 * scale);
-      scaler.style.height = h + 'px';
-      frame.style.transform = 'scale(' + scale + ')';
-    });
-  }
-  function _writeQPcFrame(frame, html){
-    const blob = new Blob([html], {type:'text/html'});
-    const url = URL.createObjectURL(blob);
-    frame.onload = function(){ URL.revokeObjectURL(url); };
-    frame.src = url;
-  }
-  setTimeout(function(){
-    _scaleQPcFrames();
-    _writeQPcFrame(document.getElementById('q-pc-front-frame'), frontHtml);
-    _writeQPcFrame(document.getElementById('q-pc-back-frame'),  backHtml);
-  }, 60);
-  modal.addEventListener('click', function(e){ if(e.target===modal) modal.remove(); });
-  function _qPcEsc(e){ if(e.key==='Escape'){ modal.remove(); document.removeEventListener('keydown',_qPcEsc); } }
-  document.addEventListener('keydown', _qPcEsc);
+  await _showPostcardCanvasModal('m-postcard6x9-preview', item.owner||'Homeowner', item.addr||'', syntheticItem);
 }
+
 function printQueuePreview(){
   const content=document.getElementById('queue-preview-content');
   if(!content)return;
