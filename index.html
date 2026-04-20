@@ -772,6 +772,7 @@ tr:hover td{background:var(--card);}
       <div class="map-search-results" id="map-search-results"></div>
     </div>
     <div class="map-toolbar">
+      <button class="mtool-btn" id="btn-locate" onclick="locateMe()" title="Center map on my location">📍 Locate Me</button>
       <button class="mtool-btn" id="btn-satellite" onclick="toggleSatellite()">🛰 Satellite</button>
       <button class="mtool-btn" id="btn-measure" onclick="toggleMeasure()">📐 Measure Roof</button>
       <button class="mtool-btn" id="btn-zones-toggle" onclick="toggleZonesOnMap()">🗂 Zones</button>
@@ -3714,6 +3715,36 @@ function initMap(){
       {enableHighAccuracy:true, timeout:10000, maximumAge:60000}
     );
   }
+}
+
+function locateMe(){
+  const btn = document.getElementById('btn-locate');
+  if(!navigator.geolocation){
+    toast('Geolocation is not supported by your browser.','error');
+    return;
+  }
+  if(btn){ btn.textContent='⏳ Locating...'; btn.disabled=true; }
+  navigator.geolocation.getCurrentPosition(
+    p=>{
+      const lat=p.coords.latitude, lng=p.coords.longitude;
+      localStorage.setItem('bd_last_loc',JSON.stringify([lat,lng]));
+      map.setView([lat,lng],17);
+      // Show a temporary pulse marker at user location
+      if(window._locateMeMarker){ try{ map.removeLayer(window._locateMeMarker); }catch(e){} }
+      window._locateMeMarker = L.circleMarker([lat,lng],{
+        radius:10, color:'#3B82F6', fillColor:'#3B82F6', fillOpacity:0.35,
+        weight:3, opacity:0.9
+      }).addTo(map).bindPopup('📍 Your current location').openPopup();
+      setTimeout(()=>{ try{ map.removeLayer(window._locateMeMarker); }catch(e){} }, 8000);
+      if(btn){ btn.textContent='📍 Locate Me'; btn.disabled=false; }
+    },
+    err=>{
+      if(btn){ btn.textContent='📍 Locate Me'; btn.disabled=false; }
+      if(err.code===1) toast('Location access denied. Please allow location in your browser settings.','error');
+      else toast('Could not get your location. Please try again.','error');
+    },
+    {enableHighAccuracy:true, timeout:10000, maximumAge:0}
+  );
 }
 
 function toggleSatellite(){
