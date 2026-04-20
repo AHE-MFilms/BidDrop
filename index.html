@@ -709,7 +709,6 @@ tr:hover td{background:var(--card);}
     <button class="tab-btn" onclick="goTab('history')" data-tab="history" style="display:none;">📑 History</button>
     <button class="tab-btn" onclick="goTab('dashboard')" data-tab="dashboard" style="display:none;">📊 Dashboard</button>
     <button class="tab-btn" id="agency-tab-btn" onclick="goTab('agency')" data-tab="agency" style="display:none;">🏢 Agency</button>
-    <button class="tab-btn" onclick="goTab('followup')" data-tab="followup" style="display:none;">🔥 Follow-Up Blitz</button>
     <button class="tab-btn" id="zones-tab-btn" onclick="goTab('zones')" data-tab="zones" style="display:none;">🗂 Canvass Areas</button>
     <button class="tab-btn" id="settings-tab-btn" onclick="goTab('settings')" data-tab="settings" style="display:none;">⚙️ Settings</button>
     <button class="tab-btn" id="admin-panel-tab-btn" onclick="openAdminPanel()" data-tab="admin" style="display:none;">🛡 Admin</button>
@@ -734,7 +733,6 @@ tr:hover td{background:var(--card);}
     <button class="nav-menu-item" onclick="navGo('history')" data-nav="history">📑 History</button>
     <button class="nav-menu-item" onclick="navGo('dashboard')" data-nav="dashboard">📊 Dashboard</button>
     <button class="nav-menu-item" id="agency-nav-item" onclick="navGo('agency')" data-nav="agency" style="display:none;">🏢 Agency</button>
-    <button class="nav-menu-item" onclick="navGo('followup')" data-nav="followup">🔥 Follow-Up Blitz</button>
     <button class="nav-menu-item" id="zones-nav-item" onclick="navGo('zones')" data-nav="zones">🗂 Canvass Areas</button>
     <button class="nav-menu-item" id="settings-nav-item" onclick="navGo('settings')" data-nav="settings">⚙️ Settings</button>
     <button class="nav-menu-item admin-item" id="admin-nav-item" onclick="navGo('admin')" data-nav="admin" style="display:none;">🛡 Admin Panel</button>
@@ -759,7 +757,6 @@ tr:hover td{background:var(--card);}
   <button class="bnav-btn" onclick="goTab('mailqueue')" data-tab="mailqueue"><span class="bicon">📬</span>Mail</button>
   <button class="bnav-btn" onclick="goTab('history')" data-tab="history"><span class="bicon">📑</span>History</button>
   <button class="bnav-btn" onclick="goTab('dashboard')" data-tab="dashboard"><span class="bicon">📊</span>Stats</button>
-  <button class="bnav-btn" onclick="goTab('followup')" data-tab="followup"><span class="bicon">🔥</span>Blitz</button>
   <button class="bnav-btn" id="zones-bnav-btn" onclick="goTab('zones')" data-tab="zones"><span class="bicon">🗂</span>Zones</button>
   <button class="bnav-btn" id="settings-bnav-btn" onclick="goTab('settings')" data-tab="settings"><span class="bicon">⚙️</span>Settings</button>
 </nav>
@@ -1244,112 +1241,6 @@ tr:hover td{background:var(--card);}
     </div>
   </div>
   <!-- END HISTORY -->
-  <!-- FOLLOW-UP MAIL -->
-  <div class="tab-pane" id="tab-followup" style="flex-direction:column;overflow-y:auto;padding:24px;gap:24px;">
-
-    <!-- Header -->
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
-      <div>
-        <div style="font-family:var(--font-h);font-size:20px;font-weight:700;color:var(--text);">📮 Drip Postcard Designs</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:4px;">Each postcard uses the same BidDrop template with step-specific messaging — auto-generated, no design needed. Optionally upload custom artwork in Settings to override any step.</div>
-      </div>
-      <button onclick="openSettings()" style="background:var(--accent);border:none;border-radius:8px;padding:9px 18px;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">⚙️ Upload Designs</button>
-    </div>
-
-    <!-- 3-column postcard grid -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;align-items:start;">
-
-      <!-- STEP 2 -->
-      <div style="border-radius:12px;overflow:hidden;border:1px solid var(--border);background:var(--card);">
-        <div style="background:#7C3AED;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;">
-          <div style="color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;">Step 2 — Day 7</div>
-          <div style="color:rgba(255,255,255,.7);font-size:11px;">Follow-Up</div>
-        </div>
-        <!-- Front -->
-        <div style="padding:12px;border-bottom:1px solid var(--border);">
-          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">▲ FRONT</div>
-          <div id="fu-pc2-front" style="width:100%;border-radius:6px;background:var(--card2);border:1px solid var(--border);min-height:120px;display:flex;align-items:center;justify-content:center;">
-            <div style="text-align:center;padding:16px;color:var(--muted);font-size:11px;">📭 No design yet<br><button onclick="openSettings()" style="margin-top:8px;background:var(--accent);border:none;border-radius:6px;padding:6px 14px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">Upload</button></div>
-          </div>
-        </div>
-        <!-- Back -->
-        <div style="padding:12px;">
-          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">▼ BACK (Auto-Generated)</div>
-          <div id="fu-pc2-back" style="width:100%;aspect-ratio:3/2;border-radius:6px;border:1px solid #ddd;background:#fff;overflow:hidden;position:relative;"></div>
-        </div>
-      </div>
-
-      <!-- STEP 3 -->
-      <div style="border-radius:12px;overflow:hidden;border:1px solid var(--border);background:var(--card);">
-        <div style="background:#7C3AED;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;">
-          <div style="color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;">Step 3 — Day 14</div>
-          <div style="color:rgba(255,255,255,.7);font-size:11px;">Urgency</div>
-        </div>
-        <!-- Front -->
-        <div style="padding:12px;border-bottom:1px solid var(--border);">
-          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">▲ FRONT</div>
-          <div id="fu-pc3-front" style="width:100%;border-radius:6px;background:var(--card2);border:1px solid var(--border);min-height:120px;display:flex;align-items:center;justify-content:center;">
-            <div style="text-align:center;padding:16px;color:var(--muted);font-size:11px;">📭 No design yet<br><button onclick="openSettings()" style="margin-top:8px;background:var(--accent);border:none;border-radius:6px;padding:6px 14px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">Upload</button></div>
-          </div>
-        </div>
-        <!-- Back -->
-        <div style="padding:12px;">
-          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">▼ BACK (Auto-Generated)</div>
-          <div id="fu-pc3-back" style="width:100%;aspect-ratio:3/2;border-radius:6px;border:1px solid #ddd;background:#fff;overflow:hidden;position:relative;"></div>
-        </div>
-      </div>
-
-      <!-- STEP 4 -->
-      <div style="border-radius:12px;overflow:hidden;border:1px solid var(--border);background:var(--card);">
-        <div style="background:#7C3AED;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;">
-          <div style="color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;">Step 4 — Day 35</div>
-          <div style="color:rgba(255,255,255,.7);font-size:11px;">Final</div>
-        </div>
-        <!-- Front -->
-        <div style="padding:12px;border-bottom:1px solid var(--border);">
-          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">▲ FRONT</div>
-          <div id="fu-pc4-front" style="width:100%;border-radius:6px;background:var(--card2);border:1px solid var(--border);min-height:120px;display:flex;align-items:center;justify-content:center;">
-            <div style="text-align:center;padding:16px;color:var(--muted);font-size:11px;">📭 No design yet<br><button onclick="openSettings()" style="margin-top:8px;background:var(--accent);border:none;border-radius:6px;padding:6px 14px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">Upload</button></div>
-          </div>
-        </div>
-        <!-- Back -->
-        <div style="padding:12px;">
-          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">▼ BACK (Auto-Generated)</div>
-          <div id="fu-pc4-back" style="width:100%;aspect-ratio:3/2;border-radius:6px;border:1px solid #ddd;background:#fff;overflow:hidden;position:relative;"></div>
-        </div>
-      </div>
-
-    </div><!-- /grid -->
-  </div>
-  <!-- CANVASS AREAS -->
-  <div class="tab-pane" id="tab-zones" style="flex-direction:row;">
-    <div id="zones-map" style="flex:1;height:100%;min-width:0;"></div>
-    <div class="map-panel" id="zones-panel">
-      <div class="mp-hdr">
-        <div class="mp-title">Canvass Areas <span class="badge" id="zones-count">0</span></div>
-        <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">
-          <button id="btn-draw-zone" class="btn-xs pr" onclick="startDrawZone()" style="display:none;">+ Draw Zone</button>
-          <button id="btn-cancel-draw" class="btn-xs danger" onclick="cancelDrawZone()" style="display:none;">✕ Cancel Draw</button>
-        </div>
-        <div id="zones-draw-tip" style="display:none;margin-top:8px;font-size:12px;color:var(--accent);background:var(--accent-dim);border:1px solid rgba(242,92,5,.2);border-radius:6px;padding:8px 10px;">Click on the map to draw your zone. Click the first point to close the polygon.</div>
-      </div>
-      <div class="pin-list" id="zones-list" style="padding:10px;"></div>
-      <!-- Pin detail panel (shown when a pin dot is clicked) -->
-      <div id="zones-pin-detail" style="display:none;border-top:1px solid var(--border);padding:14px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-          <div style="font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.5px;">PIN DETAIL</div>
-          <button onclick="closeZonePinDetail()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;">×</button>
-        </div>
-        <div id="zpd-address" style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;"></div>
-        <div id="zpd-meta" style="font-size:12px;color:var(--muted);margin-bottom:10px;"></div>
-        <div id="zpd-estimate" style="font-size:13px;color:var(--accent);font-weight:700;margin-bottom:12px;"></div>
-        <div style="display:flex;gap:8px;">
-          <button id="zpd-preview-btn" onclick="previewZonePin()" class="btn-sec" style="flex:1;font-size:12px;padding:9px;background:var(--card2);border-color:var(--border);color:var(--mid);">&#128065; Preview</button>
-          <button id="zpd-edit-btn" onclick="openPinInEstimator()" class="btn-ok" style="flex:1;font-size:12px;padding:9px;">&#9998; Edit</button>
-        </div>
-      </div>
-    </div>
-  </div>
   <div class="tab-pane" id="tab-settings">
     <!-- ── SETTINGS HEADER ── -->
     <div class="stab-header-row">
@@ -2165,7 +2056,6 @@ function goTab(t){
   if(t==='zones')initZonesTab();
   if(t==='agency')renderAgencyView();
   if(t==='history')loadHistory();
-  if(t==='followup')renderFollowUpTab();
   if(t==='settings')renderSettingsTab();
   if(t==='admin')renderAdminPanel();
 }
@@ -6460,6 +6350,7 @@ function renderQueue(){
       '<td style="display:flex;gap:5px;align-items:center;">'+
       (i.status==='pending' && S.cfg.enableLetter!==false ?'<button class="btn-xs pr" onclick="sendLob(\''+qid+'\')" title="Send 4-page letter">📬 Order Letter</button>':'')+
       (i.status==='pending' && S.cfg.enablePostcard!==false?'<button class="btn-xs" onclick="sendLobPostcard6x9(\''+qid+'\')" style="background:#0e7490;border-color:#0e7490;color:#fff;" title="Send 6×9 house photo postcard">🏠 Order Postcard</button>':'')+
+      (i.status==='pending' && S.cfg.enablePostcard!==false?'<button class="btn-xs" onclick="openBlitzFromQueue(\''+qid+'\')" style="background:#7C3AED;border-color:#7C3AED;color:#fff;" title="Follow-Up Blitz — 4 postcards, 4th free (45 credits)">🔥 Follow-Up Blitz</button>':'')+
       (i.status==='sent'?'<span style="font-size:10px;color:var(--muted);">'+fmtDate(i.mailedAt)+'</span>':'')+
       (i.status==='failed' && S.cfg.enableLetter!==false ?'<button class="btn-xs" onclick="sendLob(\''+qid+'\')">' + 'Retry Letter</button>':'')+
       (i.status==='failed' && S.cfg.enablePostcard!==false?'<button class="btn-xs" onclick="sendLobPostcard6x9(\''+qid+'\')" style="background:#0e7490;border-color:#0e7490;color:#fff;">Retry Card</button>':'')+
@@ -11374,6 +11265,19 @@ async function mtAddMember(accountId){
 // ── DRIP SEQUENCE ────────────────────────────────────────────────────────
 let _dripEstId = null;
 
+// Open the Follow-Up Blitz modal from a mail queue item
+function openBlitzFromQueue(queueId){
+  const item = (S.queue||[]).find(x=>x.id===queueId);
+  if(!item){ toast('Queue item not found','error'); return; }
+  // Find the estimate: try estId first, then drip_est_id, then address match
+  const est = (S.estimates||[]).find(e=>
+    e.id===item.estId ||
+    e.id===item.drip_est_id ||
+    (item.addr && e.addr && e.addr.trim().toLowerCase()===item.addr.trim().toLowerCase())
+  );
+  if(!est){ toast('Estimate not found — please open the estimate directly and use the Follow-Up Blitz button there.','error'); return; }
+  openDripModal(est.id);
+}
 function openDripModal(estId){
   const est = (S.estimates||[]).find(e=>e.id===estId);
   if(!est){ toast('Estimate not found','error'); return; }
@@ -12720,7 +12624,7 @@ async function initQuotePage(slug) {
       <strong>Follow-Up Blitz:</strong> 4 postcards sent to the same homeowner over time. Step 1 goes out immediately — Steps 2–4 are scheduled automatically. <strong style="color:#4ade80;">Save 25% vs. single sends — 45 credits total ($11.25) instead of 60 ($15).</strong> Cancel anytime from the Estimates tab.
     </div>
     <div style="display:flex;gap:10px;">
-      <button onclick="startDripSequence()" style="flex:1;background:#7C3AED;border:none;border-radius:8px;padding:14px;color:#fff;font-family:var(--font-b);font-size:14px;font-weight:700;cursor:pointer;">🔥 Start Follow-Up Blitz — 48 Credits</button>
+      <button onclick="startDripSequence()" style="flex:1;background:#7C3AED;border:none;border-radius:8px;padding:14px;color:#fff;font-family:var(--font-b);font-size:14px;font-weight:700;cursor:pointer;">🔥 Start Follow-Up Blitz — 45 Credits ($11.25)</button>
       <button onclick="closeM('m-drip')" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:14px 20px;color:var(--muted);font-family:var(--font-b);font-size:14px;cursor:pointer;">Cancel</button>
     </div>
   </div>
