@@ -519,10 +519,10 @@ tr:hover td{background:var(--card);}
 <div class="overlay" id="m-buy-credits" style="display:none;">
   <div class="modal" style="max-width:480px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-      <div class="modal-title" style="margin-bottom:0;">🔍 Lookup Credits</div>
+      <div class="modal-title" style="margin-bottom:0;">💳 BidDrop Credits</div>
       <button onclick="closeM('m-buy-credits')" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;">&times;</button>
     </div>
-    <p style="color:var(--muted);font-size:13px;margin:0 0 16px;">Look up homeowner names &amp; property data. Each account gets <strong>10 free lookups/month</strong> that reset on the 1st.</p>
+    <p style="color:var(--muted);font-size:13px;margin:0 0 16px;">Send postcards &amp; look up homeowner data. Each account gets <strong>20 free credits/month</strong> (1 postcard or 20 lookups) that reset on the 1st.</p>
 
     <!-- Current balance -->
     <div id="credits-balance-box" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:18px;display:flex;gap:20px;">
@@ -540,26 +540,26 @@ tr:hover td{background:var(--card);}
     <!-- Credit packs -->
     <div style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Buy Credits — 1 Postcard = 15 Credits ($3.75) &bull; 1 Lookup = 1 Credit ($0.25)</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;">
-      <button class="credit-pack-btn" onclick="buyCredits('pack_50')" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;text-align:center;transition:border-color .2s;">
+      <button class="credit-pack-btn" onclick="buyCredits('pack_50',this)" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;text-align:center;transition:border-color .2s;">
         <div style="font-size:20px;font-weight:800;color:var(--text);">50</div>
         <div style="font-size:11px;color:var(--muted);margin:2px 0 2px;">credits</div>
         <div style="font-size:10px;color:var(--muted);margin-bottom:6px;">~3 postcards</div>
         <div style="font-size:15px;font-weight:700;color:var(--accent);">$12.50</div>
       </button>
-      <button class="credit-pack-btn" onclick="buyCredits('pack_200')" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;text-align:center;transition:border-color .2s;">
+      <button class="credit-pack-btn" onclick="buyCredits('pack_200',this)" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;text-align:center;transition:border-color .2s;">
         <div style="font-size:20px;font-weight:800;color:var(--text);">200</div>
         <div style="font-size:11px;color:var(--muted);margin:2px 0 2px;">credits</div>
         <div style="font-size:10px;color:var(--muted);margin-bottom:6px;">12 postcards</div>
         <div style="font-size:15px;font-weight:700;color:var(--accent);">$50.00</div>
       </button>
-      <button class="credit-pack-btn" onclick="buyCredits('pack_500')" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;text-align:center;position:relative;border-color:var(--accent);">
+      <button class="credit-pack-btn" onclick="buyCredits('pack_500',this)" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;text-align:center;position:relative;border-color:var(--accent);">
         <div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;white-space:nowrap;">BEST VALUE</div>
         <div style="font-size:20px;font-weight:800;color:var(--text);">500</div>
         <div style="font-size:11px;color:var(--muted);margin:2px 0 2px;">credits</div>
         <div style="font-size:10px;color:var(--muted);margin-bottom:6px;">31 postcards</div>
         <div style="font-size:15px;font-weight:700;color:var(--accent);">$125.00</div>
       </button>
-      <button class="credit-pack-btn" onclick="buyCredits('pack_1000')" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;text-align:center;">
+      <button class="credit-pack-btn" onclick="buyCredits('pack_1000',this)" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;text-align:center;">
         <div style="font-size:20px;font-weight:800;color:var(--text);">1,000</div>
         <div style="font-size:11px;color:var(--muted);margin:2px 0 2px;">credits</div>
         <div style="font-size:10px;color:var(--muted);margin-bottom:6px;">62 postcards</div>
@@ -8899,11 +8899,11 @@ async function showBuyCreditsModal(){
   openM('m-buy-credits');
 }
 
-async function buyCredits(packId){
+async function buyCredits(packId, btn){
   try{
     const sess = (await sb.auth.getSession()).data.session;
     if(!sess){ toast('Please sign in first.','error'); return; }
-    const btn = event.currentTarget;
+    if(!btn) btn = document.querySelector(`[onclick*="'${packId}'"]`);
     const origText = btn.innerHTML;
     btn.innerHTML = '<span style="opacity:.5;">Loading...</span>';
     btn.disabled = true;
