@@ -6395,7 +6395,7 @@ async function sendLobPostcard6x9(id){
       from:{name:co,address_line1:fp[0]||'123 Main St',address_city:fromCity,address_state:fromState,address_zip:fromZip,address_country:'US'},
       front:frontHtml,
       back:backHtml,
-      size:'6x9_postcard',
+      size:'6x9',
       use_type:'marketing'
     }});
     if(d&&d.error==='no_credits'){
@@ -11002,7 +11002,7 @@ async function sendDripPostcard(id){
       from:{name:co,address_line1:fp[0]||'123 Main St',address_city:fp[1]||'Detroit',address_state:fp[2]||'MI',address_zip:fp[3]||'48000',address_country:'US'},
       front: frontHtml,
       back: backHtml,
-      size: '6x9_postcard',
+      size: '6x9',
       use_type: 'marketing'
     }});
     if(d && d.id){
