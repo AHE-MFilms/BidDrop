@@ -6587,19 +6587,19 @@ async function renderPostcard6x9FrontCanvas(item){
 }
 
 async function renderPostcard6x9BackCanvas(item){
+  // ─── Lob 6x9 back: 2775x1875px landscape (9.25"x6.25" bleed at 300dpi) ───
+  // Lob ink-free zone: bottom-right 1200x712px — MUST stay blank
+  const W=2775, H=1875;
+  const LOB_ADDR_W=1200, LOB_ADDR_H=712;
+  const CONTENT_W=W-LOB_ADDR_W; // 1575px — left content column (safe for all content)
+  const SAFE=75; // ~0.25" safe zone from edges
+
   const cfg=S.cfg||{};
-  // Lob 6x9 postcard back: 2775x1875px landscape at 300dpi (9.25"x6.25" bleed)
-  // IMPORTANT: bottom-right 1200x712px is Lob's ink-free address zone — keep blank
-  const W=2775,H=1875;
-  const PAD=94; // ~0.31" safe zone padding
-  const LOB_ADDR_W=1200; // 4" x 300dpi
-  const LOB_ADDR_H=712;  // 2.375" x 300dpi
   const color=cfg.brandColor||'#F25C05';
+  const darkColor='#1a1a1a';
   const co=cfg.companyName||'Your Roofing Co';
   const ph=cfg.companyPhone||'(000) 000-0000';
   const total=item.total||0;
-  const addr=item.addr||'';
-  const fromRaw=cfg.companyAddr||cfg.companyAddress||'123 Main St, Detroit, MI 48000';
   const finEnabled=cfg.financingEnabled!==false;
   const finApr=parseFloat(cfg.financingApr)||9.99;
   const finTerm=parseInt(cfg.financingTerm)||60;
@@ -6613,154 +6613,201 @@ async function renderPostcard6x9BackCanvas(item){
   const badges=[cfg.diff1||'Licensed, Bonded & Insured',cfg.diff2||'Manufacturer Certified',cfg.diff3||'Itemized Pricing'].filter(Boolean).slice(0,3);
   const urgencyDate=new Date();urgencyDate.setDate(urgencyDate.getDate()+30);
   const urgencyStr=urgencyDate.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  const headshotUrl=cfg.headshot||null;
+  const headshotPos=parseFloat(cfg.headshotPos||'30')/100;
   const logoUrl=(cfg.logoData&&cfg.logoData.startsWith('http'))?cfg.logoData:null;
   const trackedUrl=item.id?'https://biddrop.americashomeexperts.com/r/'+encodeURIComponent(item.id):(cfg.bookingUrl||'');
-  const qrUrl=trackedUrl?'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=4&data='+encodeURIComponent(trackedUrl):'';
-  const [logoImg,qrImg]=await Promise.all([loadImg(logoUrl),loadImg(qrUrl)]);
+  const qrUrl=trackedUrl?'https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=4&data='+encodeURIComponent(trackedUrl):'';
+
+  const [headshotImg,logoImg,qrImg]=await Promise.all([loadImg(headshotUrl),loadImg(logoUrl),loadImg(qrUrl)]);
+
   const canvas=document.createElement('canvas');
-  canvas.width=W;canvas.height=H;
+  canvas.width=W; canvas.height=H;
   const ctx=canvas.getContext('2d');
 
-  // ── BACKGROUND ──────────────────────────────────────────────────────────
-  ctx.fillStyle='#ffffff';ctx.fillRect(0,0,W,H);
-  // Subtle left accent bar (brand color strip, 12px wide)
-  ctx.fillStyle=color;ctx.fillRect(0,0,12,H);
-  // Light gray tinted background on left panel
-  ctx.fillStyle='#fafafa';ctx.fillRect(12,0,Math.round(W*0.52)-12,H);
+  // ═══════════════════════════════════════════════════════════════
+  // ZONE LAYOUT (landscape 2775x1875):
+  //
+  //  ┌──────────────────────────────────────────┬──────────────────┐
+  //  │  TOP HERO (dark bg, full width, H*0.52)  │                  │
+  //  │  [HEADSHOT left] [HEADLINE + PRICE right]│  LOB ADDR ZONE   │
+  //  ├──────────────────────────────────────────┤  (right 1200px,  │
+  //  │  BOTTOM CONTENT (white bg)               │   bottom 712px)  │
+  //  │  [WHY text] [stars+quote] [badges]       │                  │
+  //  │  [QR BIG] [phone] [guarantee]            │                  │
+  //  └──────────────────────────────────────────┴──────────────────┘
+  //
+  // The LOB ADDR ZONE overlaps the right 1200px × bottom 712px.
+  // We keep that area WHITE and put NO content there.
+  // ═══════════════════════════════════════════════════════════════
 
-  // ── LAYOUT ZONES ────────────────────────────────────────────────────────
-  // Left panel: 0 to ~52% width = content zone A (logo, hook, why, stars, quote, badges, urgency)
-  // Right panel top: 52% to 100% width, top to (H - LOB_ADDR_H) = content zone B (price, phone, QR, guarantee)
-  // Right panel bottom: 52% to 100% width, (H - LOB_ADDR_H) to H = LOB ADDRESS ZONE (keep blank/white)
-  const splitX=Math.round(W*0.52); // ~1443px
-  const contentRightBottom=H-LOB_ADDR_H; // 1875-712=1163px
+  const HERO_H=Math.round(H*0.52); // ~975px tall hero
+  const BOTTOM_Y=HERO_H;
+  const BOTTOM_H=H-HERO_H; // ~900px
+  // Safe content width: avoid the right 1200px in the bottom section
+  const BOTTOM_CONTENT_W=W-LOB_ADDR_W-SAFE; // ~1500px
 
-  // Vertical divider
-  ctx.strokeStyle='#e2e8f0';ctx.lineWidth=3;
-  ctx.beginPath();ctx.moveTo(splitX,PAD);ctx.lineTo(splitX,H-PAD);ctx.stroke();
+  // ── HERO BACKGROUND ─────────────────────────────────────────────
+  ctx.fillStyle=darkColor;
+  ctx.fillRect(0,0,W,HERO_H);
+  // Brand color bottom edge strip on hero
+  ctx.fillStyle=color;
+  ctx.fillRect(0,HERO_H-8,W,8);
 
-  // ── LEFT PANEL ──────────────────────────────────────────────────────────
-  const LP=PAD+16; // left padding (after accent bar)
-  const LW=splitX-LP-PAD;
-  let y=PAD;
-
-  // Logo or company name
-  if(logoImg){
-    const lh=Math.min(80,logoImg.height);const lw=Math.round(logoImg.width*(lh/logoImg.height));
-    ctx.drawImage(logoImg,LP,y,lw,lh);y+=lh+22;
-  } else {
-    ctx.fillStyle=color;ctx.font='bold 48px Arial';
-    ctx.fillText(co,LP,y+48);y+=68;
+  // ── HEADSHOT (left side of hero, bleeds to bottom) ──────────────
+  const HS_W=Math.round(W*0.30); // ~832px wide
+  if(headshotImg){
+    // Draw headshot: cover-fit into left portion of hero, vertically positioned by headshotPos
+    const scale=Math.max(HS_W/headshotImg.width, HERO_H/headshotImg.height);
+    const dw=Math.round(headshotImg.width*scale);
+    const dh=Math.round(headshotImg.height*scale);
+    const dx=0;
+    const dy=Math.round((HERO_H-dh)*headshotPos);
+    // Clip to headshot zone
+    ctx.save();
+    ctx.beginPath();ctx.rect(0,0,HS_W,HERO_H);ctx.clip();
+    ctx.drawImage(headshotImg,dx,dy,dw,dh);
+    // Gradient fade right edge of headshot into dark bg
+    const grad=ctx.createLinearGradient(HS_W-160,0,HS_W,0);
+    grad.addColorStop(0,'rgba(26,26,26,0)');
+    grad.addColorStop(1,'rgba(26,26,26,1)');
+    ctx.fillStyle=grad;
+    ctx.fillRect(HS_W-160,0,160,HERO_H);
+    ctx.restore();
   }
 
-  // Hook quote with left orange bar
-  ctx.font='italic 32px Georgia, serif';ctx.fillStyle='#2d3748';
-  const hookLines=wrapText(ctx,hook,LW-20);
-  const hookBlockH=hookLines.length*44+12;
-  ctx.fillStyle=color;ctx.fillRect(LP,y,5,hookBlockH);
-  hookLines.forEach((l,i)=>{ctx.fillStyle='#2d3748';ctx.fillText(l,LP+18,y+38+i*44);});
-  y+=hookBlockH+22;
+  // ── HERO RIGHT: HEADLINE + PRICE BAR ────────────────────────────
+  const HR_X=HS_W+40;
+  const HR_W=W-HR_X-SAFE;
+  let hy=SAFE+20;
+
+  // Logo or company name top-right
+  if(logoImg){
+    const lh=60; const lw=Math.round(logoImg.width*(lh/logoImg.height));
+    ctx.drawImage(logoImg,HR_X,hy,Math.min(lw,300),lh);
+    hy+=lh+20;
+  } else {
+    ctx.font='bold 44px Arial';ctx.fillStyle='#ffffff';
+    ctx.fillText(co,HR_X,hy+44);hy+=64;
+  }
+
+  // "YOUR ROOF ESTIMATE IS READY" badge pill
+  const badgeLabel='YOUR ROOF ESTIMATE IS READY';
+  ctx.font='bold 30px Arial';
+  const bw=ctx.measureText(badgeLabel).width+40;
+  ctx.fillStyle=color;
+  roundRect(ctx,HR_X,hy,bw,52,8);ctx.fill();
+  ctx.fillStyle='#fff';ctx.fillText(badgeLabel,HR_X+20,hy+36);
+  hy+=72;
+
+  // Hook quote
+  ctx.font='italic 32px Georgia, serif';ctx.fillStyle='rgba(255,255,255,0.88)';
+  const hookLines=wrapText(ctx,hook,HR_W);
+  hookLines.slice(0,3).forEach((l,i)=>{ctx.fillText(l,HR_X,hy+36+i*44);});
+  hy+=Math.min(hookLines.length,3)*44+24;
+
+  // BIG PRICE BAR
+  const PB_H=finMo?180:140;
+  ctx.fillStyle=color;
+  roundRect(ctx,HR_X,hy,HR_W,PB_H,16);ctx.fill();
+  if(finMo){
+    // Two columns
+    const col2X=HR_X+Math.round(HR_W/2)+10;
+    ctx.fillStyle='rgba(255,255,255,0.65)';ctx.font='bold 26px Arial';
+    ctx.fillText('ESTIMATED TOTAL',HR_X+20,hy+36);
+    ctx.fillStyle='#fff';ctx.font='bold 88px Arial';
+    ctx.fillText('$'+total.toLocaleString(),HR_X+20,hy+136);
+    // divider
+    ctx.fillStyle='rgba(255,255,255,0.25)';ctx.fillRect(col2X-10,hy+16,3,PB_H-32);
+    ctx.fillStyle='rgba(255,255,255,0.65)';ctx.font='bold 26px Arial';
+    ctx.fillText('AS LOW AS',col2X,hy+36);
+    ctx.fillStyle='#fff';ctx.font='bold 88px Arial';
+    ctx.fillText('$'+finMo.toLocaleString()+'/mo',col2X,hy+136);
+  } else {
+    ctx.fillStyle='rgba(255,255,255,0.65)';ctx.font='bold 28px Arial';
+    ctx.fillText('YOUR ESTIMATE',HR_X+20,hy+40);
+    ctx.fillStyle='#fff';ctx.font='bold 100px Arial';
+    ctx.fillText('$'+total.toLocaleString(),HR_X+20,hy+148);
+  }
+  hy+=PB_H+20;
+
+  // Stars + review quote (hero bottom)
+  ctx.font='40px Arial';ctx.fillStyle='#f59e0b';
+  ctx.fillText('\u2605\u2605\u2605\u2605\u2605',HR_X,hy+40);hy+=56;
+  if(pcQuote){
+    ctx.font='italic 28px Georgia, serif';ctx.fillStyle='rgba(255,255,255,0.80)';
+    const qLines=wrapText(ctx,pcQuote,HR_W);
+    qLines.slice(0,2).forEach((l,i)=>{ctx.fillText(l,HR_X,hy+30+i*38);});
+  }
+
+  // ── BOTTOM SECTION (white background) ───────────────────────────
+  ctx.fillStyle='#ffffff';
+  ctx.fillRect(0,BOTTOM_Y,W,BOTTOM_H);
+  // Brand color top edge strip
+  ctx.fillStyle=color;ctx.fillRect(0,BOTTOM_Y,W,6);
+
+  // Bottom content: two columns
+  // Left col: WHY + badges + urgency
+  // Right col (within safe zone): QR + phone + guarantee
+  const LEFT_COL_W=Math.round(BOTTOM_CONTENT_W*0.56);
+  const RIGHT_COL_X=LEFT_COL_W+SAFE*2;
+  const RIGHT_COL_W=BOTTOM_CONTENT_W-LEFT_COL_W-SAFE*2;
+  let by=BOTTOM_Y+SAFE;
 
   // WHY DID YOU RECEIVE THIS?
-  ctx.font='bold 26px Arial';ctx.fillStyle=color;
-  ctx.fillText('WHY DID YOU RECEIVE THIS?',LP,y+26);y+=40;
-  ctx.font='28px Arial';ctx.fillStyle='#4a5568';
-  const whyLines=wrapText(ctx,why,LW);
-  whyLines.forEach((l,i)=>{ctx.fillText(l,LP,y+30+i*38);});
-  y+=whyLines.length*38+20;
+  ctx.font='bold 28px Arial';ctx.fillStyle=color;
+  ctx.fillText('WHY DID YOU RECEIVE THIS?',SAFE,by+28);by+=44;
+  ctx.font='26px Arial';ctx.fillStyle='#374151';
+  const whyLines=wrapText(ctx,why,LEFT_COL_W-SAFE);
+  whyLines.slice(0,4).forEach((l,i)=>{ctx.fillText(l,SAFE,by+28+i*36);});
+  by+=Math.min(whyLines.length,4)*36+20;
 
-  // Stars
-  ctx.font='32px Arial';ctx.fillStyle='#f59e0b';
-  ctx.fillText('\u2605\u2605\u2605\u2605\u2605',LP,y+32);y+=46;
-
-  // Review quote box
-  if(pcQuote){
-    const qLines=wrapText(ctx,pcQuote,LW-20);
-    const qh=qLines.length*36+24;
-    ctx.fillStyle='#fff8f0';ctx.strokeStyle='#fbd38d';ctx.lineWidth=2;
-    roundRect(ctx,LP,y,LW,qh,8);ctx.fill();ctx.stroke();
-    ctx.font='italic 28px Georgia, serif';ctx.fillStyle='#744210';
-    qLines.forEach((l,i)=>{ctx.fillText(l,LP+12,y+34+i*36);});
-    y+=qh+18;
-  }
-
-  // Badges (pill style)
+  // Badges row
   ctx.font='bold 24px Arial';
-  let bx=LP;let badgeRowY=y;
+  let bx2=SAFE;
   badges.forEach(b=>{
     const label='\u2713 '+b;
-    const bw=ctx.measureText(label).width+22;
-    if(bx+bw>LP+LW){bx=LP;badgeRowY+=46;}
-    ctx.fillStyle='#fff';ctx.strokeStyle=color;ctx.lineWidth=2;
-    roundRect(ctx,bx,badgeRowY,bw,40,6);ctx.fill();ctx.stroke();
-    ctx.fillStyle=color;ctx.fillText(label,bx+11,badgeRowY+29);
-    bx+=bw+10;
+    const bw2=ctx.measureText(label).width+22;
+    if(bx2+bw2>LEFT_COL_W){return;}
+    ctx.fillStyle='#fff7ed';ctx.strokeStyle=color;ctx.lineWidth=2;
+    roundRect(ctx,bx2,by,bw2,40,6);ctx.fill();ctx.stroke();
+    ctx.fillStyle=color;ctx.fillText(label,bx2+11,by+29);
+    bx2+=bw2+10;
   });
-  y=badgeRowY+56;
+  by+=52;
 
-  // Urgency line
-  ctx.font='26px Arial';ctx.fillStyle='#718096';
+  // Urgency
+  ctx.font='26px Arial';ctx.fillStyle='#6b7280';
   const urgPrefix='\u23F0 Estimate valid until ';
-  ctx.fillText(urgPrefix,LP,y+26);
+  ctx.fillText(urgPrefix,SAFE,by+26);
   const uw=ctx.measureText(urgPrefix).width;
-  ctx.font='bold 26px Arial';ctx.fillStyle='#c53030';
-  ctx.fillText(urgencyStr,LP+uw,y+26);
+  ctx.font='bold 26px Arial';ctx.fillStyle='#dc2626';
+  ctx.fillText(urgencyStr,SAFE+uw,by+26);
 
-  // ── RIGHT PANEL (top zone — above Lob address block) ────────────────────
-  const RP=splitX+PAD;
-  const RW=W-RP-PAD;
-  let ry=PAD;
-
-  // "YOUR ESTIMATE IS READY" header
-  ctx.font='bold 30px Arial';ctx.fillStyle=color;
-  ctx.fillText('YOUR ESTIMATE IS READY',RP,ry+30);ry+=48;
-
-  // Price bar (full width of right panel)
-  const pbH=finMo?160:120;
-  ctx.fillStyle=color;
-  roundRect(ctx,RP,ry,RW,pbH,14);ctx.fill();
-  // Estimated total
-  ctx.fillStyle='rgba(255,255,255,0.75)';ctx.font='24px Arial';
-  ctx.fillText('ESTIMATED TOTAL',RP+20,ry+30);
-  ctx.fillStyle='#fff';ctx.font='bold 72px Arial';
-  ctx.fillText('$'+total.toLocaleString(),RP+20,ry+108);
-  if(finMo){
-    // Divider
-    ctx.fillStyle='rgba(255,255,255,0.25)';ctx.fillRect(RP+RW/2,ry+16,3,128);
-    ctx.fillStyle='rgba(255,255,255,0.75)';ctx.font='24px Arial';
-    ctx.fillText('AS LOW AS',RP+RW/2+16,ry+30);
-    ctx.fillStyle='#fff';ctx.font='bold 72px Arial';
-    ctx.fillText('$'+finMo.toLocaleString()+'/mo',RP+RW/2+16,ry+108);
-  }
-  ry+=pbH+28;
-
-  // Phone number
-  ctx.font='bold 38px Arial';ctx.fillStyle='#2d3748';
-  ctx.fillText('\u{1F4DE} '+ph,RP,ry+38);ry+=58;
-
-  // QR code + scan label
+  // RIGHT COLUMN: QR + phone + guarantee
+  let ry2=BOTTOM_Y+SAFE;
   if(qrImg){
-    ctx.drawImage(qrImg,RP,ry,130,130);
-    ctx.font='bold 24px Arial';ctx.fillStyle='#4a5568';
-    ctx.fillText('SCAN TO BOOK',RP+148,ry+52);
-    ctx.font='22px Arial';ctx.fillStyle='#718096';
-    ctx.fillText('No-pressure estimate',RP+148,ry+82);
-    ctx.fillText('booking',RP+148,ry+110);
-    ry+=148;
+    const QR_SIZE=220;
+    ctx.drawImage(qrImg,RIGHT_COL_X,ry2,QR_SIZE,QR_SIZE);
+    ctx.font='bold 28px Arial';ctx.fillStyle='#111827';
+    ctx.fillText('SCAN TO BOOK',RIGHT_COL_X+QR_SIZE+20,ry2+60);
+    ctx.font='24px Arial';ctx.fillStyle='#6b7280';
+    ctx.fillText('No-pressure booking',RIGHT_COL_X+QR_SIZE+20,ry2+96);
+    ry2+=QR_SIZE+24;
   }
+
+  // Phone — BIG
+  ctx.font='bold 44px Arial';ctx.fillStyle='#111827';
+  ctx.fillText(ph,RIGHT_COL_X,ry2+44);ry2+=64;
 
   // Guarantee tagline
-  if(guarantee){
-    ctx.font='bold 28px Arial';ctx.fillStyle='#2d3748';
-    const gLines=wrapText(ctx,guarantee,RW);
-    gLines.forEach((l,i)=>{ctx.fillText(l,RP,ry+32+i*38);});
-    ry+=gLines.length*38+20;
-  }
+  ctx.font='bold 28px Arial';ctx.fillStyle=color;
+  const gLines=wrapText(ctx,guarantee,RIGHT_COL_W+100);
+  gLines.forEach((l,i)=>{ctx.fillText(l,RIGHT_COL_X,ry2+30+i*38);});
 
-  // Subtle "Lob address zone" indicator (white fill — keeps it clean)
-  // Bottom-right: x from splitX to W, y from contentRightBottom to H
+  // ── LOB ADDRESS ZONE: ensure bottom-right is pure white ─────────
   ctx.fillStyle='#ffffff';
-  ctx.fillRect(splitX,contentRightBottom,W-splitX,LOB_ADDR_H);
+  ctx.fillRect(W-LOB_ADDR_W, H-LOB_ADDR_H, LOB_ADDR_W, LOB_ADDR_H);
 
   return canvas.toDataURL('image/jpeg',0.92);
 }
