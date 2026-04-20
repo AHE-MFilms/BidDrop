@@ -7028,23 +7028,31 @@ async function renderPostcard6x9BackCanvas(item){
   ctx.fillText(urgencyStr,SAFE+uw,by+30);
 
   // RIGHT COLUMN: QR stacked vertically + phone + guarantee
+  // Safe bottom = H - SAFE = 1800px. Budget: QR(180)+labels(70)+phone(60)+guarantee(50) = 360px → fits in 900px bottom section
+  const BOTTOM_SAFE=H-SAFE; // 1800px
   let ry2=BOTTOM_Y+SAFE;
   if(qrImg){
-    const QR_SIZE=240;
+    const QR_SIZE=180; // reduced from 240 to save vertical space
     ctx.drawImage(qrImg,RIGHT_COL_X,ry2,QR_SIZE,QR_SIZE);
-    ry2+=QR_SIZE+14;
-    ctx.font='bold 30px Arial';ctx.fillStyle='#111827';
-    ctx.fillText('SCAN TO BOOK',RIGHT_COL_X,ry2+30);
-    ry2+=44;
-    ctx.font='24px Arial';ctx.fillStyle='#6b7280';
-    ctx.fillText('No-pressure booking',RIGHT_COL_X,ry2+26);
-    ry2+=44;
+    ry2+=QR_SIZE+10;
+    ctx.font='bold 28px Arial';ctx.fillStyle='#111827';
+    ctx.fillText('SCAN TO BOOK',RIGHT_COL_X,ry2+28);
+    ry2+=38;
+    ctx.font='22px Arial';ctx.fillStyle='#6b7280';
+    ctx.fillText('No-pressure booking',RIGHT_COL_X,ry2+24);
+    ry2+=36;
   }
-  ctx.font='bold 46px Arial';ctx.fillStyle='#111827';
-  ctx.fillText(ph,RIGHT_COL_X,ry2+46);ry2+=68;
-  ctx.font='bold 28px Arial';ctx.fillStyle=color;
-  const gLines=wrapText(ctx,guarantee,RIGHT_COL_W+200);
-  gLines.forEach((l,i)=>{ctx.fillText(l,RIGHT_COL_X,ry2+30+i*40);});
+  ctx.font='bold 42px Arial';ctx.fillStyle='#111827';
+  ctx.fillText(ph,RIGHT_COL_X,ry2+42);ry2+=58;
+  // Guarantee — clamp to RIGHT_COL_W so it never bleeds into Lob address zone
+  if(ry2+50 < BOTTOM_SAFE){
+    ctx.font='bold 26px Arial';ctx.fillStyle=color;
+    const gLines=wrapText(ctx,guarantee,RIGHT_COL_W);
+    gLines.forEach((l,i)=>{
+      const lineY=ry2+28+i*38;
+      if(lineY < BOTTOM_SAFE){ctx.fillText(l,RIGHT_COL_X,lineY);}
+    });
+  }
   // LEFT COLUMN: logo in remaining white space below urgency
   if(logoImg){
     const logoMaxH=140;const logoMaxW=500;
