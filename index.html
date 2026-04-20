@@ -31,7 +31,7 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
   --bg:#0F1623;--panel:#1A2333;--card:#1F2C3E;--card2:#243347;
-  --border:#2E4060;--accent:#F25C05;--accent-dim:rgba(242,92,5,0.12);--accent-text:#F25C05;
+  --border:#2E4060;--accent:#F25C05;--accent-dim:rgba(242,92,5,0.12);
   --success:#22C55E;--warning:#F59E0B;--info:#3B82F6;--danger:#EF4444;
   --text:#F0F6FF;--mid:#C8D8E8;--muted:#96B0C8;
   --font-h:'Oswald',sans-serif;--font-b:'Barlow',sans-serif;--font-m:'DM Mono',monospace;
@@ -39,7 +39,7 @@
 html,body{height:100%;overflow:hidden;}
 body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:flex;flex-direction:column;font-size:15px;}
 .hdr{background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 12px;height:54px;flex-shrink:0;gap:4px;min-width:0;overflow:visible;position:relative;z-index:10001;}
-.logo{font-family:var(--font-h);font-size:20px;font-weight:700;color:var(--accent-text);letter-spacing:1.5px;margin-right:8px;display:flex;align-items:center;gap:8px;white-space:nowrap;flex-shrink:0;}
+.logo{font-family:var(--font-h);font-size:20px;font-weight:700;color:var(--accent);letter-spacing:1.5px;margin-right:8px;display:flex;align-items:center;gap:8px;white-space:nowrap;flex-shrink:0;}
 .ahe-header-logo{height:44px;opacity:1;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(242,92,5,.25));max-width:160px;flex-shrink:0;}
 @media(max-width:1100px){.ahe-header-logo{max-width:110px;height:36px;}}
 @media(max-width:900px){#ahe-logo-wrap{display:none!important;}}
@@ -80,7 +80,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
   .stab-card-body.collapsed{display:none;}
   .stab-chevron{font-size:14px;color:var(--muted);transition:transform .2s;}
   .stab-chevron.collapsed{transform:rotate(-90deg);}
-  .stab-section-hdr{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent-text);margin-bottom:10px;}
+  .stab-section-hdr{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;}
   .stab-header-row{display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
   .stab-save-btn{background:var(--accent);border:none;border-radius:9px;padding:10px 28px;color:#fff;font-family:var(--font-h);font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 14px rgba(242,92,5,.35);}
   .stab-save-lg{font-size:16px;padding:14px 48px;border-radius:10px;box-shadow:0 4px 18px rgba(242,92,5,.4);}
@@ -107,7 +107,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 .fchip.active[data-s="quoted"]{background:rgba(59,130,246,.15);border-color:var(--info);color:var(--info);}
 .fchip.active[data-s="signed"]{background:rgba(34,197,94,.15);border-color:var(--success);color:var(--success);}
 .fchip.active[data-s="lost"]{background:rgba(239,68,68,.15);border-color:#EF4444;color:#EF4444;}
-.map-tip{background:var(--accent-dim);border:1px solid rgba(242,92,5,.2);border-radius:7px;padding:10px 14px;margin:8px;font-size:13px;color:var(--accent-text);font-weight:600;text-align:center;}
+.map-tip{background:var(--accent-dim);border:1px solid rgba(242,92,5,.2);border-radius:7px;padding:10px 14px;margin:8px;font-size:13px;color:var(--accent);font-weight:600;text-align:center;}
 .pin-list{flex:1;overflow-y:auto;padding:6px;}
 .pin-list::-webkit-scrollbar{width:3px;}
 .pin-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
@@ -267,7 +267,7 @@ tr:hover td{background:var(--card);}
 .dmg-add-btn{width:80px;height:80px;border-radius:8px;border:2px dashed var(--border);background:var(--card2);color:var(--muted);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color .15s;}
 .dmg-add-btn:hover{border-color:var(--accent);color:var(--accent);}
 .dmg-section{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-top:10px;}
-.dmg-section-title{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent-text);margin-bottom:6px;}
+.dmg-section-title{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin-bottom:6px;}
 .ag-acct-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;transition:border-color .15s;}
 .ag-acct-card:hover{border-color:var(--accent);}
 .ag-acct-name{font-family:var(--font-h);font-size:15px;font-weight:700;letter-spacing:.5px;margin-bottom:4px;}
@@ -331,7 +331,7 @@ tr:hover td{background:var(--card);}
 .mtool-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
 .measure-hud{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);z-index:1000;background:var(--panel);border:1px solid var(--accent);border-radius:10px;padding:12px 20px;text-align:center;box-shadow:0 6px 24px rgba(0,0,0,.5);display:none;}
 .measure-hud.show{display:block;}
-.mhud-sqft{font-family:var(--font-h);font-size:28px;font-weight:700;color:var(--accent-text);}
+.mhud-sqft{font-family:var(--font-h);font-size:28px;font-weight:700;color:var(--accent);}
 .mhud-lbl{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);margin-bottom:2px;}
 .mhud-hint{font-size:10px;color:var(--mid);margin-top:5px;}
 .mhud-btn{flex:1;padding:7px 14px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;}
@@ -348,7 +348,7 @@ tr:hover td{background:var(--card);}
 .struct-del-btn:hover{border-color:var(--danger);background:rgba(239,68,68,.1);}
 .struct-meas-btn{background:var(--accent-dim);border:1px solid rgba(242,92,5,.35);border-radius:7px;padding:6px 12px;color:var(--accent);cursor:pointer;font-size:12px;font-weight:700;font-family:var(--font-b);flex:1;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px;}
 .struct-meas-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
-.struct-price{font-family:var(--font-m);font-size:15px;font-weight:700;color:var(--accent-text);white-space:nowrap;margin-left:auto;}
+.struct-price{font-family:var(--font-m);font-size:15px;font-weight:700;color:var(--accent);white-space:nowrap;margin-left:auto;}
 ::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
@@ -388,7 +388,7 @@ tr:hover td{background:var(--card);}
   .bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--panel);border-top:1px solid var(--border);z-index:2000;height:62px;padding-bottom:env(safe-area-inset-bottom);}
   .bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;color:var(--muted);cursor:pointer;font-family:var(--font-b);font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;transition:color .15s;-webkit-tap-highlight-color:transparent;}
   .bnav-btn .bicon{font-size:22px;line-height:1;}
-  .bnav-btn.active{color:var(--accent-text);}
+  .bnav-btn.active{color:var(--accent);}
   .main{padding-bottom:62px;}
   #tab-map{flex-direction:column;position:relative;}
   #the-map{flex:1;width:100%;height:100%;}
@@ -1609,7 +1609,7 @@ tr:hover td{background:var(--card);}
           <button id="btn-cancel-draw" onclick="cancelDrawZone()" style="display:none;background:var(--danger);border:none;border-radius:7px;padding:7px 12px;color:#fff;font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">✕ Cancel</button>
         </div>
       </div>
-      <div id="zones-draw-tip" style="display:none;padding:8px 14px;background:var(--accent-dim);border-bottom:1px solid var(--border);font-size:11px;color:var(--accent-text);font-weight:600;">Click map corners to draw zone boundary. Double-click to finish.</div>
+      <div id="zones-draw-tip" style="display:none;padding:8px 14px;background:var(--accent-dim);border-bottom:1px solid var(--border);font-size:11px;color:var(--accent);font-weight:600;">Click map corners to draw zone boundary. Double-click to finish.</div>
       <div id="zones-list" style="flex:1;overflow-y:auto;padding:8px;"></div>
     </div>
     <!-- Map -->
@@ -8657,16 +8657,6 @@ function saveSettings(){
   toast('Settings saved!','success');
 }
 
-function hexLuminance(hex){
-  // Returns relative luminance 0-1 (WCAG formula)
-  const r=parseInt(hex.slice(1,3),16)/255,g=parseInt(hex.slice(3,5),16)/255,b=parseInt(hex.slice(5,7),16)/255;
-  const toL=v=>v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4);
-  return .2126*toL(r)+.7152*toL(g)+.0722*toL(b);
-}
-function accentTextColor(hex){
-  // Returns '#fff' if color is dark enough, '#111' if too light
-  return hexLuminance(hex||'#F25C05') < 0.35 ? '#fff' : '#111';
-}
 function applyBrand(){
   const aheImg = document.getElementById('ahe-hdr-logo');
   if(aheImg) aheImg.src = AHE_LOGO;
@@ -8674,32 +8664,9 @@ function applyBrand(){
   if(loginLogo) loginLogo.src = AHE_LOGO;
   const loginLogoTop = document.getElementById('ahe-login-logo-top');
   if(loginLogoTop) loginLogoTop.src = AHE_LOGO;
-  const c=S.cfg.brandColor||'#F25C05';
-  document.documentElement.style.setProperty('--accent',c);
-  document.documentElement.style.setProperty('--accent-dim',hexToRgba(c,.1));
-  // Auto-contrast: ensure brand color is readable as text on the dark background (#0F1623)
-  // WCAG contrast ratio = (L_lighter + 0.05) / (L_darker + 0.05)
-  // We need at least 3.5:1 contrast against --bg (#0F1623, luminance ≈ 0.005)
-  // Iteratively lighten the color until contrast is sufficient
-  const BG_LUM = 0.005; // luminance of --bg #0F1623
-  const MIN_CONTRAST = 3.5;
-  function contrastRatio(lum1, lum2){
-    const l = Math.max(lum1, lum2), d = Math.min(lum1, lum2);
-    return (l + 0.05) / (d + 0.05);
-  }
-  let tr = parseInt(c.slice(1,3),16), tg = parseInt(c.slice(3,5),16), tb = parseInt(c.slice(5,7),16);
-  // Blend toward white in steps until contrast is sufficient
-  for(let i=0; i<20; i++){
-    const hex6 = '#'+[tr,tg,tb].map(v=>v.toString(16).padStart(2,'0')).join('');
-    const lum = hexLuminance(hex6);
-    if(contrastRatio(lum, BG_LUM) >= MIN_CONTRAST) break;
-    // Lighten by 12% toward white each step
-    tr = Math.round(tr + (255-tr)*0.12);
-    tg = Math.round(tg + (255-tg)*0.12);
-    tb = Math.round(tb + (255-tb)*0.12);
-  }
-  const textSafe = '#'+[tr,tg,tb].map(v=>v.toString(16).padStart(2,'0')).join('');
-  document.documentElement.style.setProperty('--accent-text',textSafe);
+  // NOTE: --accent is always fixed BidDrop orange (#F25C05) for the app UI.
+  // Brand color (S.cfg.brandColor) is only used in postcard/letter print output.
+  // Do NOT change --accent here.
   const coSubEl = document.getElementById('co-sub');
   if(coSubEl){
     if(isSuperAdmin()){
