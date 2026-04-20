@@ -6451,13 +6451,12 @@ function buildPostcard6x9FrontHtml(item){
   const finDown=parseFloat(cfg.financingDown)||0;
   let finMo=0;
   if(finEnabled&&total){const loan=total*(1-finDown/100);const r=finApr/100/12;finMo=r===0?Math.round(loan/finTerm):Math.round(loan*r*Math.pow(1+r,finTerm)/(Math.pow(1+r,finTerm)-1));}
-  const bg=housePhoto?`background:url('${housePhoto}') center/cover`:'background:#1a2333';
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{width:864px;height:576px;overflow:hidden;font-family:Arial,sans-serif;position:relative}
-.bg{position:absolute;inset:0;${bg}}
-.bg::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.25) 0%,rgba(0,0,0,.1) 40%,rgba(0,0,0,.65) 75%,rgba(0,0,0,.85) 100%)}
-.c{position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;justify-content:space-between;padding:34px 38px}
+html,body{width:864px;height:576px;overflow:hidden;font-family:Arial,sans-serif;position:relative;background:#1a2333}
+.bg-img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block;z-index:0}
+.bg-overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(to bottom,rgba(0,0,0,.25) 0%,rgba(0,0,0,.1) 40%,rgba(0,0,0,.65) 75%,rgba(0,0,0,.85) 100%);z-index:1}
+.c{position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;justify-content:space-between;padding:40px 44px}
 .tb{display:flex;justify-content:space-between;align-items:flex-start}
 .logo img{max-height:53px;max-width:192px;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.6))}
 .logo .cn{font-size:22px;font-weight:900;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.7);letter-spacing:1px}
@@ -6470,7 +6469,8 @@ html,body{width:864px;height:576px;overflow:hidden;font-family:Arial,sans-serif;
 .pd{width:1px;height:36px;background:rgba(255,255,255,.3)}
 .ph{margin-top:14px;font-size:16px;color:rgba(255,255,255,.85);font-weight:700;text-shadow:0 2px 6px rgba(0,0,0,.6)}
 </style></head><body>
-<div class="bg"></div>
+${housePhoto?`<img class="bg-img" src="${housePhoto}" alt="">`:''}
+<div class="bg-overlay"></div>
 <div class="c">
 <div class="tb">
 <div class="logo">${logoUrl?`<img src="${logoUrl}" alt="${escHtml(co)}">`:`<div class="cn">${escHtml(co)}</div>`}</div>
