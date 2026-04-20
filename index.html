@@ -6587,11 +6587,11 @@ async function renderPostcard6x9FrontCanvas(item){
 }
 
 async function renderPostcard6x9BackCanvas(item){
-  // ─── Lob 6x9 back: 2775x1875px landscape (9.25"x6.25" bleed at 300dpi) ───
-  // Lob ink-free zone: bottom-right 1200x712px — MUST stay blank
+  // Lob 6x9 back: 2775x1875px landscape (9.25"x6.25" bleed at 300dpi)
+  // Lob ink-free zone: bottom-right 1200x712px — MUST stay blank/white
   const W=2775, H=1875;
   const LOB_ADDR_W=1200, LOB_ADDR_H=712;
-  const SAFE=75; // ~0.25" safe zone from edges
+  const SAFE=75;
 
   const cfg=S.cfg||{};
   const color=cfg.brandColor||'#F25C05';
@@ -6626,33 +6626,33 @@ async function renderPostcard6x9BackCanvas(item){
   canvas.width=W; canvas.height=H;
   const ctx=canvas.getContext('2d');
 
-  // ═══════════════════════════════════════════════════════════════
-  // LAYOUT:
-  //  ┌─────────────────────────────────────────────────────────────┐
-  //  │  HERO (dark, H*0.52 tall, full width)                       │
-  //  │  [HEADSHOT left 30%] [HEADLINE + PRICE BAR right 70%]       │
-  //  │  [lower third name/title over headshot bottom]              │
-  //  ├─────────────────────────────────────────────────────────────┤
-  //  │  BOTTOM WHITE (H*0.48 tall)                                 │
-  //  │  [LOGO bottom-left] [WHY text] [badges] [urgency]           │
-  //  │  [BIG QR] [phone] [guarantee]     | LOB ADDR ZONE (blank)   │
-  //  └─────────────────────────────────────────────────────────────┘
-  // ═══════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════
+  // LAYOUT (2775 x 1875):
+  //
+  //  ┌──────────────────────────────────────────────────────────┐
+  //  │  HERO dark bg  (full width, top 52%)                     │
+  //  │  [HEADSHOT left 30%]  [LOGO+BADGE+HOOK+PRICE right 70%]  │
+  //  │  [lower-third name right-aligned over headshot bottom]   │
+  //  ├──────────────────────────────────────────────────────────┤
+  //  │  BOTTOM white (full width, bottom 48%)                   │
+  //  │  LEFT col (0..~1400px): WHY + badges + urgency           │
+  //  │  MID col (~1400..~1575px): QR + phone + guarantee        │
+  //  │  RIGHT 1200px bottom 712px = LOB ADDR ZONE (blank)       │
+  //  └──────────────────────────────────────────────────────────┘
+  // ═══════════════════════════════════════════════════════════
 
-  const HERO_H=Math.round(H*0.52); // ~975px
+  const HERO_H=Math.round(H*0.52); // 975px
   const BOTTOM_Y=HERO_H;
-  const BOTTOM_H=H-HERO_H; // ~900px
-  const HS_W=Math.round(W*0.30); // ~832px headshot column width
-  // Safe bottom content width (avoid Lob address zone on right)
-  const BOTTOM_SAFE_W=W-LOB_ADDR_W-SAFE; // ~1500px
+  const BOTTOM_H=H-HERO_H;         // 900px
+  const HS_W=Math.round(W*0.30);   // 832px headshot column
 
-  // ── HERO BACKGROUND ──────────────────────────────────────────────
+  // ── HERO BACKGROUND ──────────────────────────────────────────
   ctx.fillStyle=darkColor;
   ctx.fillRect(0,0,W,HERO_H);
   ctx.fillStyle=color;
-  ctx.fillRect(0,HERO_H-10,W,10); // brand color bottom strip
+  ctx.fillRect(0,HERO_H-10,W,10);
 
-  // ── HEADSHOT ─────────────────────────────────────────────────────
+  // ── HEADSHOT ─────────────────────────────────────────────────
   if(headshotImg){
     const scale=Math.max(HS_W/headshotImg.width, HERO_H/headshotImg.height);
     const dw=Math.round(headshotImg.width*scale);
@@ -6662,42 +6662,52 @@ async function renderPostcard6x9BackCanvas(item){
     ctx.beginPath();ctx.rect(0,0,HS_W,HERO_H);ctx.clip();
     ctx.drawImage(headshotImg,0,dy,dw,dh);
     // Fade right edge into dark bg
-    const grad=ctx.createLinearGradient(HS_W-200,0,HS_W,0);
+    const grad=ctx.createLinearGradient(HS_W-220,0,HS_W,0);
     grad.addColorStop(0,'rgba(26,26,26,0)');
     grad.addColorStop(1,'rgba(26,26,26,1)');
     ctx.fillStyle=grad;
-    ctx.fillRect(HS_W-200,0,200,HERO_H);
+    ctx.fillRect(HS_W-220,0,220,HERO_H);
     ctx.restore();
 
-    // ── LOWER THIRD (name + title over headshot bottom) ──────────
+    // ── LOWER THIRD: right-aligned inside headshot, above fade ──
     if(repName){
+      const FADE_START=HS_W-220; // where the fade begins — stay left of this
+      const LT_RIGHT=FADE_START-20; // right edge of lower third bar
       const LT_H=repTitle?130:90;
-      const LT_Y=HERO_H-LT_H-10;
+      const LT_Y=HERO_H-LT_H-16;
+      // Measure text to size the bar
+      ctx.font='bold 52px Arial';
+      const nameW=ctx.measureText(repName).width;
+      ctx.font='36px Arial';
+      const titleW=repTitle?ctx.measureText(repTitle).width:0;
+      const barW=Math.max(nameW,titleW)+60;
+      const LT_X=LT_RIGHT-barW;
       // Semi-transparent dark bar
-      ctx.fillStyle='rgba(0,0,0,0.72)';
-      ctx.fillRect(0,LT_Y,HS_W-200,LT_H); // stop before the fade zone
-      // Brand color left accent bar
+      ctx.fillStyle='rgba(0,0,0,0.75)';
+      roundRect(ctx,LT_X,LT_Y,barW,LT_H,8);ctx.fill();
+      // Orange left accent
       ctx.fillStyle=color;
-      ctx.fillRect(0,LT_Y,8,LT_H);
-      // Name
+      ctx.fillRect(LT_X,LT_Y,8,LT_H);
+      // Name — right-aligned
       ctx.font='bold 52px Arial';ctx.fillStyle='#ffffff';
-      ctx.fillText(repName,20,LT_Y+62);
-      // Title
+      ctx.textAlign='right';
+      ctx.fillText(repName,LT_RIGHT-10,LT_Y+62);
       if(repTitle){
         ctx.font='36px Arial';ctx.fillStyle='rgba(255,255,255,0.75)';
-        ctx.fillText(repTitle,20,LT_Y+108);
+        ctx.fillText(repTitle,LT_RIGHT-10,LT_Y+108);
       }
+      ctx.textAlign='left';
     }
   }
 
-  // ── HERO RIGHT: LOGO + BADGE + HOOK + PRICE BAR + STARS ──────────
+  // ── HERO RIGHT: LOGO + BADGE + HOOK + PRICE + STARS ──────────
   const HR_X=HS_W+50;
   const HR_W=W-HR_X-SAFE;
   let hy=SAFE+10;
 
-  // Logo top-right of hero
+  // Logo
   if(logoImg){
-    const lh=72; const lw=Math.round(logoImg.width*(lh/logoImg.height));
+    const lh=72;const lw=Math.round(logoImg.width*(lh/logoImg.height));
     ctx.drawImage(logoImg,HR_X,hy,Math.min(lw,340),lh);
     hy+=lh+24;
   } else {
@@ -6705,7 +6715,7 @@ async function renderPostcard6x9BackCanvas(item){
     ctx.fillText(co,HR_X,hy+52);hy+=76;
   }
 
-  // "YOUR ROOF ESTIMATE IS READY" orange pill
+  // Badge pill
   ctx.font='bold 36px Arial';
   const pillLabel='YOUR ROOF ESTIMATE IS READY';
   const pillW=ctx.measureText(pillLabel).width+48;
@@ -6720,7 +6730,7 @@ async function renderPostcard6x9BackCanvas(item){
   hookLines.slice(0,3).forEach((l,i)=>{ctx.fillText(l,HR_X,hy+40+i*50);});
   hy+=Math.min(hookLines.length,3)*50+28;
 
-  // BIG PRICE BAR
+  // Price bar
   const PB_H=finMo?200:160;
   ctx.fillStyle=color;
   roundRect(ctx,HR_X,hy,HR_W,PB_H,18);ctx.fill();
@@ -6743,7 +6753,7 @@ async function renderPostcard6x9BackCanvas(item){
   }
   hy+=PB_H+24;
 
-  // Stars + review quote
+  // Stars + review
   ctx.font='46px Arial';ctx.fillStyle='#f59e0b';
   ctx.fillText('\u2605\u2605\u2605\u2605\u2605',HR_X,hy+46);hy+=64;
   if(pcQuote){
@@ -6752,53 +6762,51 @@ async function renderPostcard6x9BackCanvas(item){
     qLines.slice(0,2).forEach((l,i)=>{ctx.fillText(l,HR_X,hy+34+i*44);});
   }
 
-  // ── BOTTOM SECTION (white) ────────────────────────────────────────
+  // ── BOTTOM SECTION (white) ────────────────────────────────────
   ctx.fillStyle='#ffffff';
   ctx.fillRect(0,BOTTOM_Y,W,BOTTOM_H);
-  ctx.fillStyle=color;ctx.fillRect(0,BOTTOM_Y,W,8); // brand strip
+  ctx.fillStyle=color;ctx.fillRect(0,BOTTOM_Y,W,8);
 
-  // Bottom layout: headshot column below = logo zone | right = WHY + QR + phone
-  // Logo in bottom-left (below headshot column)
-  const LOGO_ZONE_W=HS_W; // same width as headshot above
-  const LOGO_ZONE_PAD=40;
+  // Bottom content safe width (avoid Lob address zone)
+  // Lob addr zone: right 1200px, bottom 712px
+  // So content can use full width above (H - LOB_ADDR_H) = above y=1163
+  // And left (W - LOB_ADDR_W) = left of x=1575 in the bottom 712px
+  // Strategy: two columns within x=SAFE..x=1500 (safe left of Lob zone)
+  const CONTENT_RIGHT=W-LOB_ADDR_W-SAFE; // x=1500
+  const LEFT_COL_W=Math.round(CONTENT_RIGHT*0.60); // ~900px
+  const RIGHT_COL_X=LEFT_COL_W+SAFE*2;             // ~1050px
+  const RIGHT_COL_W=CONTENT_RIGHT-LEFT_COL_W-SAFE*2; // ~375px
+
+  // Logo watermark bottom-left (small, subtle)
   if(logoImg){
-    const maxLH=Math.min(160, BOTTOM_H-LOGO_ZONE_PAD*2);
-    const maxLW=LOGO_ZONE_W-LOGO_ZONE_PAD*2;
-    const scale=Math.min(maxLW/logoImg.width, maxLH/logoImg.height);
-    const lw=Math.round(logoImg.width*scale);
-    const lh=Math.round(logoImg.height*scale);
-    const lx=Math.round((LOGO_ZONE_W-lw)/2);
-    const ly=BOTTOM_Y+Math.round((BOTTOM_H-lh)/2);
-    ctx.drawImage(logoImg,lx,ly,lw,lh);
+    const lh=100;const lw=Math.round(logoImg.width*(lh/logoImg.height));
+    const lx=SAFE;
+    const ly=H-lh-SAFE;
+    // Only draw if it won't overlap Lob zone
+    if(lx+lw < W-LOB_ADDR_W){
+      ctx.globalAlpha=0.18;
+      ctx.drawImage(logoImg,lx,ly,Math.min(lw,300),lh);
+      ctx.globalAlpha=1.0;
+    }
   }
 
-  // Vertical divider between logo zone and content
-  ctx.strokeStyle='#e5e7eb';ctx.lineWidth=3;
-  ctx.beginPath();ctx.moveTo(LOGO_ZONE_W,BOTTOM_Y+SAFE);ctx.lineTo(LOGO_ZONE_W,H-SAFE);ctx.stroke();
-
-  // Right content: WHY + badges + urgency | QR + phone + guarantee
-  const RC_X=LOGO_ZONE_W+SAFE;
-  const RC_W=BOTTOM_SAFE_W-LOGO_ZONE_W-SAFE;
-  const LEFT_COL_W=Math.round(RC_W*0.55);
-  const RIGHT_COL_X=RC_X+LEFT_COL_W+SAFE;
-  const RIGHT_COL_W=RC_W-LEFT_COL_W-SAFE;
   let by=BOTTOM_Y+SAFE;
 
   // WHY DID YOU RECEIVE THIS?
   ctx.font='bold 34px Arial';ctx.fillStyle=color;
-  ctx.fillText('WHY DID YOU RECEIVE THIS?',RC_X,by+34);by+=52;
+  ctx.fillText('WHY DID YOU RECEIVE THIS?',SAFE,by+34);by+=52;
   ctx.font='30px Arial';ctx.fillStyle='#374151';
-  const whyLines=wrapText(ctx,why,LEFT_COL_W);
-  whyLines.slice(0,4).forEach((l,i)=>{ctx.fillText(l,RC_X,by+32+i*42);});
+  const whyLines=wrapText(ctx,why,LEFT_COL_W-SAFE);
+  whyLines.slice(0,4).forEach((l,i)=>{ctx.fillText(l,SAFE,by+32+i*42);});
   by+=Math.min(whyLines.length,4)*42+24;
 
   // Badges
   ctx.font='bold 28px Arial';
-  let bx2=RC_X;
+  let bx2=SAFE;
   badges.forEach(b=>{
     const label='\u2713 '+b;
     const bw2=ctx.measureText(label).width+26;
-    if(bx2+bw2>RC_X+LEFT_COL_W+20){return;}
+    if(bx2+bw2>LEFT_COL_W+SAFE){return;}
     ctx.fillStyle='#fff7ed';ctx.strokeStyle=color;ctx.lineWidth=2;
     roundRect(ctx,bx2,by,bw2,46,7);ctx.fill();ctx.stroke();
     ctx.fillStyle=color;ctx.fillText(label,bx2+13,by+33);
@@ -6809,29 +6817,29 @@ async function renderPostcard6x9BackCanvas(item){
   // Urgency
   ctx.font='30px Arial';ctx.fillStyle='#6b7280';
   const urgPrefix='\u23F0 Estimate valid until ';
-  ctx.fillText(urgPrefix,RC_X,by+30);
+  ctx.fillText(urgPrefix,SAFE,by+30);
   const uw=ctx.measureText(urgPrefix).width;
   ctx.font='bold 30px Arial';ctx.fillStyle='#dc2626';
-  ctx.fillText(urgencyStr,RC_X+uw,by+30);
+  ctx.fillText(urgencyStr,SAFE+uw,by+30);
 
-  // RIGHT COLUMN: BIG QR + phone + guarantee
+  // RIGHT COLUMN: QR + phone + guarantee
   let ry2=BOTTOM_Y+SAFE;
   if(qrImg){
-    const QR_SIZE=270;
+    const QR_SIZE=260;
     ctx.drawImage(qrImg,RIGHT_COL_X,ry2,QR_SIZE,QR_SIZE);
-    ctx.font='bold 34px Arial';ctx.fillStyle='#111827';
-    ctx.fillText('SCAN TO BOOK',RIGHT_COL_X+QR_SIZE+20,ry2+70);
-    ctx.font='28px Arial';ctx.fillStyle='#6b7280';
-    ctx.fillText('No-pressure booking',RIGHT_COL_X+QR_SIZE+20,ry2+110);
+    ctx.font='bold 32px Arial';ctx.fillStyle='#111827';
+    ctx.fillText('SCAN TO BOOK',RIGHT_COL_X+QR_SIZE+18,ry2+60);
+    ctx.font='26px Arial';ctx.fillStyle='#6b7280';
+    ctx.fillText('No-pressure booking',RIGHT_COL_X+QR_SIZE+18,ry2+96);
     ry2+=QR_SIZE+28;
   }
-  ctx.font='bold 52px Arial';ctx.fillStyle='#111827';
-  ctx.fillText(ph,RIGHT_COL_X,ry2+52);ry2+=76;
-  ctx.font='bold 34px Arial';ctx.fillStyle=color;
-  const gLines=wrapText(ctx,guarantee,RIGHT_COL_W+120);
-  gLines.forEach((l,i)=>{ctx.fillText(l,RIGHT_COL_X,ry2+36+i*44);});
+  ctx.font='bold 50px Arial';ctx.fillStyle='#111827';
+  ctx.fillText(ph,RIGHT_COL_X,ry2+50);ry2+=74;
+  ctx.font='bold 32px Arial';ctx.fillStyle=color;
+  const gLines=wrapText(ctx,guarantee,RIGHT_COL_W+200);
+  gLines.forEach((l,i)=>{ctx.fillText(l,RIGHT_COL_X,ry2+34+i*44);});
 
-  // ── LOB ADDRESS ZONE: pure white ─────────────────────────────────
+  // ── LOB ADDRESS ZONE: pure white ─────────────────────────────
   ctx.fillStyle='#ffffff';
   ctx.fillRect(W-LOB_ADDR_W, H-LOB_ADDR_H, LOB_ADDR_W, LOB_ADDR_H);
 
