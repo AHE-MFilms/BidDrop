@@ -32,7 +32,7 @@ const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 const APP_URL      = process.env.APP_URL || 'https://biddrop.americashomeexperts.com';
 
 // Credit packs: { id, credits, amount_cents, label }
-// 1 credit = $0.25 | 1 postcard/letter = 16 credits ($4.00) | Follow-Up Blitz (4 postcards) = 48 credits ($12.00)
+// 1 credit = $0.25 | 1 postcard/letter = 15 credits ($3.75) | Follow-Up Blitz (4 postcards) = 45 credits ($11.25)
 const CREDIT_PACKS = {
   pack_50:   { credits: 50,   amount_cents: 1250,  label: '50 BidDrop Credits (~3 postcards)'    },
   pack_200:  { credits: 200,  amount_cents: 5000,  label: '200 BidDrop Credits (12 postcards)'   },
@@ -188,7 +188,7 @@ export default async function handler(req, res) {
               currency: 'usd',
               product_data: {
                 name: `BidDrop — ${pack.label}`,
-                description: `BidDrop mailer credits. 1 postcard = 16 credits ($4.00). Follow-Up Blitz (4 postcards) = 48 credits ($12.00). 1 property lookup = 1 credit ($0.25).`,
+                description: `BidDrop mailer credits. 1 postcard = 15 credits ($3.75). Follow-Up Blitz (4 postcards) = 45 credits ($11.25). 1 property lookup = 1 credit ($0.25).`,
               },
               unit_amount: pack.amount_cents,
             },

@@ -538,7 +538,7 @@ tr:hover td{background:var(--card);}
     </div>
 
     <!-- Credit packs -->
-    <div style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Buy Credits — 1 Postcard = 16 Credits ($4.00) &bull; 1 Lookup = 1 Credit ($0.25)</div>
+    <div style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Buy Credits — 1 Postcard = 15 Credits ($3.75) &bull; 1 Lookup = 1 Credit ($0.25)</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;">
       <button class="credit-pack-btn" onclick="buyCredits('pack_50')" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;text-align:center;transition:border-color .2s;">
         <div style="font-size:20px;font-weight:800;color:var(--text);">50</div>
@@ -6521,7 +6521,7 @@ async function sendLob(id){
     }});
     if(d && d.error === 'no_credits'){
       // Not enough credits — show Buy Credits modal
-      toast('Not enough credits to send a letter (16 credits = $4.00). Please purchase more credits.','error');
+      toast('Not enough credits to send a letter (15 credits = $3.75). Please purchase more credits.','error');
       if(d._credits){ S.cfg.lookupCredits = d._credits.paid_credits ?? S.cfg.lookupCredits; if(d._credits.free_used !== undefined) S.cfg.freeLookupsUsed = d._credits.free_used; }
       updateCreditBadge();
       setTimeout(()=>showBuyCreditsModal(), 800);
@@ -6647,7 +6647,7 @@ async function sendLobPostcard6x9(id){
       use_type:'marketing'
     }});
     if(d&&d.error==='no_credits'){
-      toast('Not enough credits to send a postcard (16 credits = $4.00). Please purchase more credits.','error');
+      toast('Not enough credits to send a postcard (15 credits = $3.75). Please purchase more credits.','error');
       if(d._credits){ S.cfg.lookupCredits = d._credits.paid_credits ?? S.cfg.lookupCredits; if(d._credits.free_used !== undefined) S.cfg.freeLookupsUsed = d._credits.free_used; }
       updateCreditBadge();
       setTimeout(()=>showBuyCreditsModal(),800);
@@ -11394,13 +11394,13 @@ function startDripSequence(){
   const est = (S.estimates||[]).find(e=>e.id===_dripEstId);
   if(!est){ toast('Estimate not found','error'); return; }
   // Credit pre-check: Follow-Up Blitz costs 48 credits (4 mailers × 16, but 4th is free = 3×16)
-  const BLITZ_CREDITS = 48;
+  const BLITZ_CREDITS = 45;
   const freeLimit = S.cfg.freeLookupsLimit || 20;
   const freeLeft  = Math.max(0, freeLimit - (S.cfg.freeLookupsUsed || 0));
   const paid      = S.cfg.lookupCredits || 0;
   const total     = freeLeft + paid;
   if(total < BLITZ_CREDITS){
-    toast(`Not enough credits for Follow-Up Blitz. Need 48 credits ($12.00), you have ${total}. Please purchase more credits.`,'error');
+    toast(`Not enough credits for Follow-Up Blitz. Need 45 credits ($11.25), you have ${total}. Please purchase more credits.`,'error');
     setTimeout(()=>showBuyCreditsModal(), 800);
     return;
   }
@@ -12618,7 +12618,7 @@ async function initQuotePage(slug) {
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
           <div style="background:var(--accent);color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 1</div>
           <div style="font-size:13px;font-weight:600;color:var(--text);">First Postcard</div>
-          <div style="margin-left:auto;font-size:12px;color:var(--muted);">Send immediately &bull; 16 credits</div>
+          <div style="margin-left:auto;font-size:12px;color:var(--muted);">Send immediately &bull; 15 credits</div>
         </div>
         <div style="font-size:12px;color:var(--muted);">Opening postcard — introduces your estimate and invites the homeowner to call.</div>
       </div>
@@ -12626,7 +12626,7 @@ async function initQuotePage(slug) {
       <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
           <div style="background:#7C3AED;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 2</div>
-          <div style="font-size:13px;font-weight:600;color:var(--text);">Follow-Up Postcard <span style="font-size:11px;color:var(--muted);">16 credits</span></div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);">Follow-Up Postcard <span style="font-size:11px;color:var(--muted);">15 credits</span></div>
           <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
             <input type="number" id="drip-delay-2" value="14" min="1" max="90" style="width:52px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 6px;color:var(--text);font-size:12px;text-align:center;">
             <span style="font-size:12px;color:var(--muted);">days after step 1</span>
@@ -12715,7 +12715,7 @@ async function initQuotePage(slug) {
     </div>
     <!-- Info note -->
     <div style="background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:10px 14px;font-size:12px;color:#C4B5FD;margin-bottom:18px;">
-      <strong>Follow-Up Blitz:</strong> 4 postcards sent to the same homeowner over time. Step 1 goes out immediately — Steps 2–4 are scheduled automatically. <strong style="color:#4ade80;">Save 25% vs. single sends — 48 credits total ($12) instead of 64 ($16).</strong> Cancel anytime from the Estimates tab.
+      <strong>Follow-Up Blitz:</strong> 4 postcards sent to the same homeowner over time. Step 1 goes out immediately — Steps 2–4 are scheduled automatically. <strong style="color:#4ade80;">Save 25% vs. single sends — 45 credits total ($11.25) instead of 60 ($15).</strong> Cancel anytime from the Estimates tab.
     </div>
     <div style="display:flex;gap:10px;">
       <button onclick="startDripSequence()" style="flex:1;background:#7C3AED;border:none;border-radius:8px;padding:14px;color:#fff;font-family:var(--font-b);font-size:14px;font-weight:700;cursor:pointer;">🔥 Start Follow-Up Blitz — 48 Credits</button>
