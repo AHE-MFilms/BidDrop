@@ -2,7 +2,11 @@
  * BidDrop QR Code Redirect + Tracking
  * Route: /r/:id  (rewritten from vercel.json)
  *
- * Logs the scan to the postcard_scans table, then redirects to the booking URL.
+ * Logs the scan to the postcard_scans table, then redirects to:
+ *   1. /e/[estimate-id]  — if an estimate exists for this address (personalized estimate page)
+ *   2. booking URL       — if no estimate but booking URL is set
+ *   3. fallback homepage — otherwise
+ *
  * No auth required — this is a public endpoint hit by homeowners scanning the postcard.
  */
 
@@ -30,20 +34,22 @@ export default async function handler(req, res) {
     return;
   }
 
-  // Look up the queue item to get the booking URL and account info
+  // Look up the queue item to get the address and account info
   let bookingUrl = null;
   let accountId  = null;
   let ownerName  = null;
   let addr       = null;
+  let estimateId = null;
 
   try {
-    const r = await sbFetch(`queue?id=eq.${encodeURIComponent(id)}&select=id,addr,owner,account_id`);
+    const r = await sbFetch(`queue?id=eq.${encodeURIComponent(id)}&select=id,addr,owner,account_id,estimate_id`);
     if (r.ok) {
       const rows = await r.json();
       if (rows && rows[0]) {
-        accountId = rows[0].account_id;
-        ownerName = rows[0].owner;
-        addr      = rows[0].addr;
+        accountId  = rows[0].account_id;
+        ownerName  = rows[0].owner;
+        addr       = rows[0].addr;
+        estimateId = rows[0].estimate_id || null;
       }
     }
   } catch (e) {
@@ -61,6 +67,19 @@ export default async function handler(req, res) {
     } catch (e) {
       console.error('[r] account lookup error:', e);
     }
+
+    // If no estimate_id on the queue item, look up the most recent estimate for this address
+    if (!estimateId && addr) {
+      try {
+        const r = await sbFetch(`estimates?account_id=eq.${encodeURIComponent(accountId)}&addr=eq.${encodeURIComponent(addr)}&select=id&order=saved_at.desc&limit=1`);
+        if (r.ok) {
+          const rows = await r.json();
+          if (rows && rows[0]) estimateId = rows[0].id;
+        }
+      } catch (e) {
+        console.error('[r] estimate lookup error:', e);
+      }
+    }
   }
 
   // Log the scan
@@ -73,6 +92,7 @@ export default async function handler(req, res) {
         account_id:    accountId,
         owner_name:    ownerName,
         address:       addr,
+        estimate_id:   estimateId || null,
         scanned_at:    new Date().toISOString(),
         ip:            req.headers['x-forwarded-for'] || req.socket?.remoteAddress || null,
         user_agent:    req.headers['user-agent'] || null
@@ -82,8 +102,19 @@ export default async function handler(req, res) {
     console.error('[r] scan log error:', e);
   }
 
-  // Redirect to booking URL or a fallback
-  const dest = bookingUrl || 'https://biddrop.americashomeexperts.com';
+  // Redirect priority:
+  //   1. Personalized estimate page /e/[id]
+  //   2. Booking URL (Calendly, etc.)
+  //   3. Fallback homepage
+  let dest;
+  if (estimateId) {
+    dest = `https://biddrop.americashomeexperts.com/e/${estimateId}`;
+  } else if (bookingUrl) {
+    dest = bookingUrl;
+  } else {
+    dest = 'https://biddrop.americashomeexperts.com';
+  }
+
   res.setHeader('Location', dest);
   res.status(302).end();
 }

@@ -939,6 +939,20 @@ tr:hover td{background:var(--card);}
         <label class="fl">Homeowner Email <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— required to Send via GHL</span></label>
         <input class="fi" id="e-email" placeholder="jane@email.com" type="email">
       </div>
+      <div class="fg" style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:12px;">
+        <label class="fl" style="color:#10b981;">&#127758; Estimate Page Settings</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px;">
+          <div>
+            <label style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Offer Expires</label>
+            <input class="fi" id="e-expires" type="date" style="margin-top:3px;font-size:12px;" title="Optional: set an expiration date shown as a countdown on the estimate page">
+          </div>
+          <div>
+            <label style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Rep Video URL</label>
+            <input class="fi" id="e-video" type="url" placeholder="https://..." style="margin-top:3px;font-size:12px;" title="Optional: link to a short video message from the rep">
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--muted);">&#128065; Homeowners see this page when they scan the postcard QR code. <a href="#" onclick="if(currentEstRecord)window.open('/e/'+currentEstRecord.id,'_blank');return false;" style="color:#10b981;">Preview page &#8599;</a></div>
+      </div>
       <div class="fg">
         <label class="fl">Property Photos <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:10px;">— first Front of Home photo appears on mailer</span></label>
         <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;">
@@ -1071,6 +1085,7 @@ tr:hover td{background:var(--card);}
             <th style="text-align:left;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">Rep</th>
             <th style="text-align:right;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">Total</th>
             <th style="text-align:left;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">Saved</th>
+            <th style="text-align:center;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">&#128065; Page</th>
             <th style="text-align:center;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">Actions</th>
           </tr>
         </thead>
@@ -2425,7 +2440,9 @@ function saveEstimateNow(){
     gutterLf: parseInt((document.getElementById('a-gut-q')||{}).value||120),
     savedAt: new Date().toISOString(),
     sentAt: null, status: 'saved',
-    rep: pin.rep || (currentUser && currentUser.email ? currentUser.email.split('@')[0] : '')
+    rep: pin.rep || (currentUser && currentUser.email ? currentUser.email.split('@')[0] : ''),
+    expiresAt: (document.getElementById('e-expires')||{}).value ? new Date((document.getElementById('e-expires')||{}).value).toISOString() : null,
+    repVideoUrl: (document.getElementById('e-video')||{}).value.trim() || null
   };
   const editingId = window._editingEstimateId || null;
   window._editingEstimateId = null;
@@ -2487,7 +2504,9 @@ function saveEstimateNow(){
       is_revision: estRecord.isRevision || false,
       parent_id: estRecord.parentId || null,
       saved_at: estRecord.savedAt,
-      deleted_at: null
+      deleted_at: null,
+      expires_at: estRecord.expiresAt || null,
+      rep_video_url: estRecord.repVideoUrl || null
     };
     sb.from('estimates').upsert(estRow, {onConflict:'id'}).then(({error})=>{
       if(error) console.warn('[BidDrop] Save estimate to estimates table:', error.message);
@@ -2527,7 +2546,9 @@ function saveEstimateNow(){
       is_revision: estRecord.isRevision || false,
       parent_id: estRecord.parentId || null,
       saved_at: estRecord.savedAt,
-      deleted_at: null
+      deleted_at: null,
+      expires_at: estRecord.expiresAt || null,
+      rep_video_url: estRecord.repVideoUrl || null
     };
     sb.from('estimates').upsert(estRow2, {onConflict:'id'}).then(({error})=>{
       if(error) console.warn('[BidDrop] Save estimate to estimates table:', error.message);
@@ -6014,6 +6035,7 @@ function renderEstimatesTab(){
             +(S.cfg && S.cfg.dripEnabled ? `<button onclick="openDripModal('${eid}')" style="background:#7C3AED;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🔥 Blitz</button>` : '')
             +`<button onclick="previewEstimatePostcard('${eid}')" style="background:#0e7490;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128247; Preview Postcard</button>`
             +`<button onclick="printEstimate('${eid}')" style="background:#1f3d68;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128424; Print</button>`
+            +`<a href="/e/${eid}" target="_blank" style="text-decoration:none;"><button style="background:#065f46;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#127758; View Page</button></a>`
             +histBtn
             +`<button onclick="deleteEstimate('${eid}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">&#10005;</button>`;
         })()
@@ -6023,6 +6045,21 @@ function renderEstimatesTab(){
       +'<td style="padding:12px;font-size:12px;color:var(--muted);">'+escHtml(rep)+'</td>'
       +'<td style="padding:12px;text-align:right;font-family:var(--font-h);font-size:16px;font-weight:700;color:var(--accent);">'+total+'</td>'
       +'<td style="padding:12px;font-size:12px;color:var(--muted);">'+date+(est.version&&est.version>1?'<div style="margin-top:3px;"><span style="background:rgba(249,115,22,.15);color:#F97316;border:1px solid rgba(249,115,22,.4);border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;">v'+est.version+'</span></div>':'')+'<div style="margin-top:4px;">'+sentBadge+'</div></td>'
+      +(()=>{
+        const views = est.page_views || 0;
+        const firstSeen = est.page_first_viewed_at ? new Date(est.page_first_viewed_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : null;
+        const timeSpent = est.page_time_spent ? (est.page_time_spent >= 60 ? Math.round(est.page_time_spent/60)+'m' : est.page_time_spent+'s') : null;
+        const matClicks = est.page_mat_clicks && typeof est.page_mat_clicks === 'object' ? Object.entries(est.page_mat_clicks).map(([k,v])=>({key:k,count:v})).sort((a,b)=>b.count-a.count) : [];
+        const topMat = matClicks.length ? {'1.0':'3-Tab','1.3':'Arch','1.8':'Designer','2.5':'Metal'}[matClicks[0].key]||matClicks[0].key : null;
+        if(!views) return '<td style="padding:12px;text-align:center;"><span style="font-size:11px;color:var(--muted);opacity:.4;">Not viewed</span></td>';
+        return '<td style="padding:12px;text-align:center;">'
+          +'<div style="font-size:16px;font-weight:800;color:#10b981;">'+views+'</div>'
+          +'<div style="font-size:10px;color:var(--muted);">'+(firstSeen?'First: '+firstSeen:'')+'</div>'
+          +(timeSpent?'<div style="font-size:10px;color:var(--muted);">'+timeSpent+' spent</div>':'')
+          +(topMat?'<div style="font-size:10px;color:#F25C05;font-weight:700;">&#9654; '+topMat+'</div>':'')
+          +(est.page_share_clicks?'<div style="font-size:10px;color:#7c3aed;">&#x1F4E4; Shared</div>':'')
+          +'</td>';
+      })()
       +'<td style="padding:12px;text-align:center;">'
         +'<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">'+actionBtns+'</div>'
       +'</td>'
@@ -6381,6 +6418,11 @@ function loadEstimateIntoEstimator(estId){
   const chim = document.getElementById('a-chim'); if(chim) chim.checked = !!est.chimney;
   const gut = document.getElementById('a-gut'); if(gut) gut.checked = !!est.gutters;
   const gutQ = document.getElementById('a-gut-q'); if(gutQ) gutQ.value = est.gutterLf||120;
+  // Restore estimate page settings
+  const expiresEl = document.getElementById('e-expires');
+  if(expiresEl) expiresEl.value = est.expiresAt ? new Date(est.expiresAt).toISOString().split('T')[0] : '';
+  const videoEl = document.getElementById('e-video');
+  if(videoEl) videoEl.value = est.repVideoUrl || '';
   // Set the pin picker
   const sel = document.getElementById('est-pin-picker');
   if(sel && est.pinId) sel.value = est.pinId;
@@ -10849,6 +10891,9 @@ window.addEventListener('load', ()=>{
   // Must run BEFORE Supabase init so homeowners never see the app login screen
   const _qSlug = (location.pathname.match(/^\/q\/([a-z0-9_-]+)/i)||[])[1];
   if (_qSlug) { initQuotePage(_qSlug); return; }
+  // ── ESTIMATE PAGE ROUTE INTERCEPT ────────────────────────────────────────
+  const _eId = (location.pathname.match(/^\/e\/([a-zA-Z0-9_-]+)/)||[])[1];
+  if (_eId) { initEstimatePage(_eId); return; }
   // Initialize Supabase client
   sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   // Show login screen immediately (hidden by onSignedIn if session exists)
@@ -13037,6 +13082,402 @@ function spmConfirm(){
     openBlitzFromQueue(_spmQueueId);
   }
 }
+
+
+// ═════════════════════════════════════════════════════════════════════════
+//  HOMEOWNER ESTIMATE PAGE  /e/[id]
+// ═════════════════════════════════════════════════════════════════════════
+async function initEstimatePage(estId) {
+  // Hide the main app shell entirely
+  document.body.innerHTML = '';
+  document.body.style.cssText = 'margin:0;padding:0;background:#0f1923;font-family:system-ui,sans-serif;color:#fff;min-height:100vh;';
+
+  // Loading screen
+  const loader = document.createElement('div');
+  loader.id = 'ep-loader';
+  loader.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:16px;';
+  loader.innerHTML = '<div style="width:48px;height:48px;border:4px solid rgba(255,255,255,.15);border-top-color:#F25C05;border-radius:50%;animation:ep-spin 0.8s linear infinite;"></div><div style="color:rgba(255,255,255,.5);font-size:14px;">Loading your estimate\u2026</div>';
+  document.body.appendChild(loader);
+
+  // Inject keyframes + component styles
+  const style = document.createElement('style');
+  style.textContent = [
+    '@keyframes ep-spin{to{transform:rotate(360deg)}}',
+    '@keyframes ep-fade{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}',
+    '.ep-fade{animation:ep-fade 0.4s ease forwards}',
+    '.ep-mat-tab{cursor:pointer;border:2px solid transparent;border-radius:12px;padding:14px 16px;background:rgba(255,255,255,.06);transition:all .2s;text-align:center;}',
+    '.ep-mat-tab:hover{background:rgba(255,255,255,.1);}',
+    '.ep-mat-tab.active{border-color:var(--ep-brand,#F25C05);background:rgba(242,92,5,.12);}',
+    '.ep-photo{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;cursor:pointer;transition:transform .2s;}',
+    '.ep-photo:hover{transform:scale(1.02);}',
+    '.ep-section{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:24px;margin-bottom:20px;}',
+    '.ep-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;}',
+    '.ep-btn-primary{display:block;width:100%;padding:16px;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:.3px;transition:opacity .2s;}',
+    '.ep-btn-primary:hover{opacity:.88;}',
+    '.ep-btn-secondary{display:block;width:100%;padding:14px;border:2px solid rgba(255,255,255,.2);border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;background:transparent;color:#fff;transition:all .2s;}',
+    '.ep-btn-secondary:hover{border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.06);}',
+    '.ep-breakdown-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px;}',
+    '.ep-breakdown-row:last-child{border-bottom:none;}',
+    '.ep-countdown{background:linear-gradient(135deg,#7c1010,#b91c1c);border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px;}',
+    '@media(max-width:640px){.ep-mat-grid{grid-template-columns:1fr 1fr !important;}}',
+    '.ep-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;align-items:center;justify-content:center;}',
+    '.ep-lightbox.open{display:flex;}',
+    '.ep-lightbox img{max-width:94vw;max-height:90vh;border-radius:8px;object-fit:contain;}',
+  ].join('');
+  document.head.appendChild(style);
+
+  // Fetch estimate data
+  let data;
+  try {
+    const r = await fetch('/api/estimate?action=get&id=' + encodeURIComponent(estId));
+    if (!r.ok) throw new Error('Not found');
+    data = await r.json();
+  } catch(e) {
+    loader.innerHTML = '<div style="text-align:center;padding:40px 20px;"><div style="font-size:48px;margin-bottom:16px;">\uD83C\uDFE0</div><div style="font-size:20px;font-weight:700;margin-bottom:8px;">Estimate Not Found</div><div style="color:rgba(255,255,255,.5);font-size:14px;">This estimate link may have expired or been removed.</div></div>';
+    return;
+  }
+
+  const est = data.estimate;
+  const acct = data.account;
+  const brand = acct.brandColor || '#F25C05';
+
+  // Set brand CSS variable
+  document.documentElement.style.setProperty('--ep-brand', brand);
+
+  // Pricing engine (mirrors calcStructPrice from the app)
+  function calcStructPrice(s, cfg) {
+    const sqft = parseFloat(s.sqft) || 0; if (!sqft) return 0;
+    const pitchMult = parseFloat(s.pitch) || 1.31;
+    const complexity = parseFloat(s.complexity) || 1.12;
+    const stories = parseFloat(s.stories) || 1;
+    const sq = sqft / 100 * 1.12 * pitchMult;
+    const stMult = stories <= 1 ? 1 : stories <= 1.5 ? 1.08 : stories <= 2 ? 1.16 : 1.25;
+    const matCostMap = { '1.0': cfg.cost3Tab, '1.3': cfg.costArchitectural, '1.8': cfg.costDesigner, '2.5': cfg.costMetal };
+    const matCost = matCostMap[String(s.mat)] || cfg.costArchitectural;
+    const tearoff = cfg.costTearoff * sq;
+    const iceWater = cfg.costIceWater * sq;
+    const felts = cfg.costFelts * sq;
+    const dumpster = cfg.costDumpster;
+    const labor = matCost * sq * stMult * complexity;
+    const sub = labor + tearoff + iceWater + felts + dumpster;
+    const ovh = sub * cfg.overhead / 100;
+    const mgn = (sub + ovh) * cfg.margin / 100;
+    return Math.round(sub + ovh + mgn);
+  }
+
+  function calcTotal(matKey, cfg) {
+    const structs = (est.structures || []).map(s => ({ ...s, mat: matKey }));
+    return structs.reduce((sum, s) => sum + calcStructPrice(s, cfg), 0);
+  }
+
+  const cfg = {
+    cost3Tab: acct.cost3Tab || 350,
+    costArchitectural: acct.costArchitectural || 450,
+    costDesigner: acct.costDesigner || 620,
+    costMetal: acct.costMetal || 950,
+    costTearoff: acct.costTearoff || 75,
+    costIceWater: acct.costIceWater || 42,
+    costFelts: acct.costFelts || 22,
+    costDumpster: acct.costDumpster || 450,
+    overhead: acct.overhead || 15,
+    margin: acct.margin || 20,
+  };
+
+  const MAT_OPTIONS = [
+    { key: '1.0', label: '3-Tab Shingle', desc: 'Economy', icon: '\uD83C\uDFE0' },
+    { key: '1.3', label: 'Architectural', desc: 'Most Popular', icon: '\u2B50', popular: true },
+    { key: '1.8', label: 'Designer', desc: 'Premium', icon: '\uD83D\uDC8E' },
+    { key: '2.5', label: 'Metal Roofing', desc: 'Lifetime', icon: '\uD83D\uDEE1\uFE0F' },
+  ];
+
+  // Determine current material from first structure
+  let currentMat = (est.structures && est.structures[0] && est.structures[0].mat) || '1.3';
+
+  // Collect all photos
+  const allPhotos = [];
+  if (est.photoUrl) allPhotos.push({ url: est.photoUrl, label: 'Home' });
+  if (est.allPhotos) {
+    const ap = est.allPhotos;
+    if (ap.front && ap.front.length) ap.front.forEach(u => allPhotos.push({ url: u, label: 'Home' }));
+    if (ap.roof && ap.roof.length) ap.roof.forEach(u => allPhotos.push({ url: u, label: 'Roof' }));
+    if (ap.damage && ap.damage.length) ap.damage.forEach(u => allPhotos.push({ url: u, label: 'Damage' }));
+    if (ap.extra && ap.extra.length) ap.extra.forEach(u => allPhotos.push({ url: u, label: 'Additional' }));
+  }
+  if (est.damagePhotos && est.damagePhotos.length) {
+    est.damagePhotos.forEach(u => { if (!allPhotos.find(p => p.url === u)) allPhotos.push({ url: u, label: 'Damage' }); });
+  }
+
+  // Financing calc
+  function monthlyPayment(total) {
+    if (!acct.financingEnabled) return null;
+    const apr = (acct.financingApr || 9.99) / 100 / 12;
+    const n = acct.financingTerm || 60;
+    const principal = total - (total * (acct.financingDown || 0) / 100);
+    if (apr === 0) return Math.round(principal / n);
+    return Math.round(principal * apr * Math.pow(1 + apr, n) / (Math.pow(1 + apr, n) - 1));
+  }
+
+  // Build page HTML
+  function buildPage() {
+    const total = calcTotal(currentMat, cfg);
+    const monthly = monthlyPayment(total);
+    const matLabel = (MAT_OPTIONS.find(m => m.key === currentMat) || {}).label || 'Architectural';
+
+    // Pitch label
+    const pitchMap = { '1.0': 'Flat (0-2/12)', '1.05': 'Low (2-4/12)', '1.15': 'Standard (4-6/12)', '1.31': 'Steep (6-9/12)', '1.5': 'Very Steep (9-12/12)', '1.7': 'Extreme (12+/12)' };
+    const firstStruct = (est.structures || [])[0] || {};
+    const pitchLabel = pitchMap[String(firstStruct.pitch)] || 'Standard';
+    const sqft = (est.structures || []).reduce((s, st) => s + (parseFloat(st.sqft) || 0), 0);
+
+    // Countdown
+    let countdownHtml = '';
+    if (est.expiresAt) {
+      const exp = new Date(est.expiresAt);
+      const now = new Date();
+      const diff = exp - now;
+      if (diff > 0) {
+        const days = Math.floor(diff / 86400000);
+        const hrs = Math.floor((diff % 86400000) / 3600000);
+        countdownHtml = `<div class="ep-countdown"><span style="font-size:24px;">\u23F0</span><div><div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.8;">This Estimate Expires In</div><div id="ep-countdown-val" style="font-size:22px;font-weight:800;">${days}d ${hrs}h</div></div></div>`;
+      }
+    }
+
+    // Hero photo
+    const heroPhoto = allPhotos.length ? allPhotos[0].url : null;
+    const heroHtml = heroPhoto
+      ? `<div style="position:relative;width:100%;height:260px;overflow:hidden;border-radius:0 0 24px 24px;margin-bottom:24px;"><img src="${heroPhoto}" style="width:100%;height:100%;object-fit:cover;" alt="Your Home"><div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(15,25,35,.1),rgba(15,25,35,.7));"></div><div style="position:absolute;bottom:20px;left:20px;right:20px;"><div style="font-size:13px;opacity:.7;margin-bottom:4px;">\uD83D\uDCCB Your Personalized Estimate</div><div style="font-size:20px;font-weight:800;">${est.addr || 'Your Property'}</div></div></div>`
+      : `<div style="background:rgba(255,255,255,.04);border-radius:0 0 24px 24px;padding:32px 20px;margin-bottom:24px;text-align:center;"><div style="font-size:13px;opacity:.7;margin-bottom:4px;">\uD83D\uDCCB Your Personalized Estimate</div><div style="font-size:20px;font-weight:800;">${est.addr || 'Your Property'}</div></div>`;
+
+    // Rep video
+    const videoHtml = est.repVideoUrl
+      ? `<div class="ep-section ep-fade" style="padding:0;overflow:hidden;"><video src="${est.repVideoUrl}" controls playsinline style="width:100%;border-radius:16px;display:block;"></video></div>`
+      : '';
+
+    // Material tabs
+    const matTabsHtml = `
+      <div class="ep-section ep-fade">
+        <div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;opacity:.6;margin-bottom:16px;">Choose Your Material</div>
+        <div class="ep-mat-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;">
+          ${MAT_OPTIONS.map(m => `
+            <div class="ep-mat-tab${m.key === currentMat ? ' active' : ''}" onclick="epSelectMat('${m.key}')" data-mat="${m.key}">
+              <div style="font-size:20px;margin-bottom:6px;">${m.icon}</div>
+              <div style="font-size:12px;font-weight:700;line-height:1.3;">${m.label}</div>
+              <div style="font-size:10px;opacity:.6;margin-top:2px;">${m.desc}</div>
+              ${m.popular ? `<div style="font-size:9px;background:${brand};color:#fff;border-radius:8px;padding:2px 6px;margin-top:4px;font-weight:700;">POPULAR</div>` : ''}
+              <div style="font-size:14px;font-weight:800;margin-top:8px;color:${brand};">$${calcTotal(m.key, cfg).toLocaleString()}</div>
+            </div>
+          `).join('')}
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:13px;opacity:.5;margin-bottom:4px;">Selected: ${matLabel}</div>
+          <div id="ep-total" style="font-size:42px;font-weight:900;color:${brand};">$${total.toLocaleString()}</div>
+          ${monthly ? `<div style="font-size:14px;opacity:.6;margin-top:4px;">or ~<span id="ep-monthly">$${monthly}</span>/mo with financing</div>` : ''}
+        </div>
+      </div>`;
+
+    // Roof details
+    const detailsHtml = `
+      <div class="ep-section ep-fade">
+        <div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;opacity:.6;margin-bottom:16px;">Roof Details</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:14px;text-align:center;">
+            <div style="font-size:11px;opacity:.5;text-transform:uppercase;letter-spacing:.5px;">Roof Area</div>
+            <div style="font-size:22px;font-weight:800;color:${brand};">${sqft.toLocaleString()}</div>
+            <div style="font-size:11px;opacity:.5;">sq ft</div>
+          </div>
+          <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:14px;text-align:center;">
+            <div style="font-size:11px;opacity:.5;text-transform:uppercase;letter-spacing:.5px;">Pitch</div>
+            <div style="font-size:16px;font-weight:800;">${pitchLabel}</div>
+          </div>
+          ${est.structures && est.structures.length > 1 ? est.structures.map(s => `
+            <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:14px;grid-column:span 2;">
+              <div style="font-size:11px;opacity:.5;text-transform:uppercase;letter-spacing:.5px;">${s.name || 'Structure'}</div>
+              <div style="font-size:15px;font-weight:700;">${(parseFloat(s.sqft)||0).toLocaleString()} sq ft &mdash; $${calcStructPrice({...s,mat:currentMat},cfg).toLocaleString()}</div>
+            </div>
+          `).join('') : ''}
+          ${est.skylight ? `<div style="background:rgba(255,255,255,.04);border-radius:10px;padding:14px;text-align:center;"><div style="font-size:11px;opacity:.5;">Skylights</div><div style="font-size:18px;font-weight:800;">${est.skylightQty || 1}</div></div>` : ''}
+          ${est.chimney ? `<div style="background:rgba(255,255,255,.04);border-radius:10px;padding:14px;text-align:center;"><div style="font-size:11px;opacity:.5;">Chimney</div><div style="font-size:18px;">&#x2713;</div></div>` : ''}
+          ${est.gutters ? `<div style="background:rgba(255,255,255,.04);border-radius:10px;padding:14px;text-align:center;"><div style="font-size:11px;opacity:.5;">Gutters</div><div style="font-size:14px;font-weight:700;">${est.gutterLf || 120} LF</div></div>` : ''}
+        </div>
+      </div>`;
+
+    // Photos gallery
+    const photosHtml = allPhotos.length > 1 ? `
+      <div class="ep-section ep-fade">
+        <div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;opacity:.6;margin-bottom:16px;">\uD83D\uDCF8 Property Photos</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;">
+          ${allPhotos.map((p, i) => `
+            <div>
+              <img src="${p.url}" class="ep-photo" alt="${p.label}" onclick="epOpenLightbox(${i})" loading="lazy">
+              <div style="font-size:10px;opacity:.4;text-align:center;margin-top:4px;">${p.label}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>` : '';
+
+    // Trust badges
+    const badges = [acct.diff1, acct.diff2, acct.diff3, acct.diff4, acct.diff5, acct.diff6].filter(Boolean);
+    const badgesHtml = `
+      <div class="ep-section ep-fade">
+        <div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;opacity:.6;margin-bottom:16px;">\uD83C\uDFC6 Why Choose Us</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          ${badges.map(b => `<span class="ep-badge">\u2713 ${b}</span>`).join('')}
+        </div>
+        <div style="display:flex;gap:16px;margin-top:16px;flex-wrap:wrap;">
+          <div style="text-align:center;flex:1;min-width:80px;"><div style="font-size:24px;font-weight:900;color:${brand};">${acct.yearsInBusiness}</div><div style="font-size:11px;opacity:.5;">Years in Business</div></div>
+          <div style="text-align:center;flex:1;min-width:80px;"><div style="font-size:24px;font-weight:900;color:${brand};">${acct.warrantyYears}</div><div style="font-size:11px;opacity:.5;">Year Warranty</div></div>
+        </div>
+      </div>`;
+
+    // Rep card
+    const repHtml = `
+      <div class="ep-section ep-fade" style="display:flex;align-items:center;gap:16px;">
+        ${acct.headshot ? `<img src="${acct.headshot}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid ${brand};" alt="Rep">` : `<div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:28px;">\uD83D\uDC64</div>`}
+        <div>
+          <div style="font-size:16px;font-weight:700;">${acct.repName || est.rep || 'Your Rep'}</div>
+          <div style="font-size:13px;opacity:.5;">${acct.repTitle || 'Roofing Specialist'}</div>
+          <div style="font-size:12px;opacity:.4;">${acct.companyName}</div>
+        </div>
+      </div>`;
+
+    // CTA buttons
+    const ctaHtml = `
+      <div class="ep-fade" style="margin-bottom:20px;">
+        ${acct.companyPhone ? `<a href="tel:${acct.companyPhone}" onclick="epTrackEvent('call')" style="text-decoration:none;"><button class="ep-btn-primary" style="background:${brand};color:#fff;margin-bottom:12px;">\uD83D\uDCDE Call Us: ${acct.companyPhone}</button></a>` : ''}
+        ${acct.bookingUrl ? `<a href="${acct.bookingUrl}" target="_blank" style="text-decoration:none;"><button class="ep-btn-secondary" style="margin-bottom:12px;">\uD83D\uDCC5 Schedule a Callback</button></a>` : ''}
+        <button class="ep-btn-secondary" onclick="epShare()">&#x1F4E4; Share This Estimate</button>
+      </div>`;
+
+    // Company footer
+    const footerHtml = `
+      <div style="text-align:center;padding:24px 0 40px;opacity:.3;font-size:12px;">
+        ${acct.logoData ? `<img src="${acct.logoData}" style="height:32px;object-fit:contain;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto;" alt="Logo">` : ''}
+        <div>${acct.companyName}</div>
+        ${acct.companyAddr ? `<div>${acct.companyAddr}</div>` : ''}
+        <div style="margin-top:8px;">Estimate prepared ${new Date(est.savedAt).toLocaleDateString()}</div>
+        <div style="margin-top:4px;font-size:10px;">Powered by BidDrop</div>
+      </div>`;
+
+    return `
+      <div style="max-width:600px;margin:0 auto;padding:0 0 20px;">
+        ${heroHtml}
+        <div style="padding:0 16px;">
+          ${countdownHtml}
+          ${videoHtml}
+          ${matTabsHtml}
+          ${detailsHtml}
+          ${photosHtml}
+          ${badgesHtml}
+          ${repHtml}
+          <div style="height:20px;"></div>
+          ${ctaHtml}
+          ${footerHtml}
+        </div>
+      </div>
+      <div class="ep-lightbox" id="ep-lightbox" onclick="epCloseLightbox()">
+        <img id="ep-lightbox-img" src="" alt="Photo">
+      </div>`;
+  }
+
+  // Remove loader and render page
+  loader.remove();
+  document.body.innerHTML = buildPage();
+
+  // Track page view (fire and forget)
+  const _epStart = Date.now();
+  fetch('/api/estimate?action=track_view', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'track_view', id: estId, seconds: 0 }) }).catch(() => {});
+
+  // Track time on unload
+  window.addEventListener('beforeunload', () => {
+    const secs = Math.round((Date.now() - _epStart) / 1000);
+    navigator.sendBeacon('/api/estimate', JSON.stringify({ action: 'track_view', id: estId, seconds: secs }));
+  });
+
+  // Countdown timer live update
+  if (est.expiresAt) {
+    setInterval(() => {
+      const el = document.getElementById('ep-countdown-val');
+      if (!el) return;
+      const diff = new Date(est.expiresAt) - new Date();
+      if (diff <= 0) { el.textContent = 'Expired'; return; }
+      const days = Math.floor(diff / 86400000);
+      const hrs = Math.floor((diff % 86400000) / 3600000);
+      const mins = Math.floor((diff % 3600000) / 60000);
+      el.textContent = days > 0 ? `${days}d ${hrs}h` : `${hrs}h ${mins}m`;
+    }, 60000);
+  }
+
+  // Global functions for event handlers
+  window.epSelectMat = function(matKey) {
+    currentMat = matKey;
+    // Track event
+    fetch('/api/estimate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'track_event', id: estId, event: 'mat_click', data: { mat: matKey } }) }).catch(() => {});
+    // Rebuild page preserving scroll
+    const scrollY = window.scrollY;
+    document.body.innerHTML = buildPage();
+    window.scrollTo(0, scrollY);
+    // Re-attach countdown
+    if (est.expiresAt) {
+      const el = document.getElementById('ep-countdown-val');
+      if (el) {
+        const diff = new Date(est.expiresAt) - new Date();
+        if (diff > 0) {
+          const days = Math.floor(diff / 86400000);
+          const hrs = Math.floor((diff % 86400000) / 3600000);
+          el.textContent = `${days}d ${hrs}h`;
+        }
+      }
+    }
+  };
+
+  window.epTrackEvent = function(event) {
+    fetch('/api/estimate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'track_event', id: estId, event }) }).catch(() => {});
+  };
+
+  window.epShare = function() {
+    epTrackEvent('share');
+    const url = window.location.href;
+    const text = `Check out my roofing estimate from ${acct.companyName}: ${url}`;
+    if (navigator.share) {
+      navigator.share({ title: 'My Roofing Estimate', text, url }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url).then(() => {
+        alert('Link copied to clipboard! Share it with anyone.');
+      }).catch(() => {
+        prompt('Copy this link:', url);
+      });
+    }
+  };
+
+  // Photo lightbox
+  const _epPhotos = (() => {
+    const allPhotos = [];
+    if (est.photoUrl) allPhotos.push(est.photoUrl);
+    if (est.allPhotos) {
+      const ap = est.allPhotos;
+      if (ap.front) ap.front.forEach(u => allPhotos.push(u));
+      if (ap.roof) ap.roof.forEach(u => allPhotos.push(u));
+      if (ap.damage) ap.damage.forEach(u => allPhotos.push(u));
+      if (ap.extra) ap.extra.forEach(u => allPhotos.push(u));
+    }
+    if (est.damagePhotos) est.damagePhotos.forEach(u => { if (!allPhotos.includes(u)) allPhotos.push(u); });
+    return allPhotos;
+  })();
+
+  window.epOpenLightbox = function(idx) {
+    const lb = document.getElementById('ep-lightbox');
+    const img = document.getElementById('ep-lightbox-img');
+    if (!lb || !img || !_epPhotos[idx]) return;
+    img.src = _epPhotos[idx];
+    lb.classList.add('open');
+  };
+
+  window.epCloseLightbox = function() {
+    const lb = document.getElementById('ep-lightbox');
+    if (lb) lb.classList.remove('open');
+  };
+}
+
 </script>
 <!-- ── DRIP SEQUENCE MODAL ─────────────────────────────────────────────── -->
 <!-- SEND POSTCARD CHOICE MODAL -->
