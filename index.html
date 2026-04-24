@@ -1234,12 +1234,18 @@ tr:hover td{background:var(--card);}
           <select id="ag-log-filter" class="fs" style="padding:5px 10px;font-size:11px;width:auto;" onchange="renderAgencyMailerLog()">
             <option value="all">All Clients</option>
           </select>
-          <select id="ag-log-period" class="fs" style="padding:5px 10px;font-size:11px;width:auto;" onchange="renderAgencyMailerLog()">
+          <select id="ag-log-period" class="fs" style="padding:5px 10px;font-size:11px;width:auto;" onchange="agMailerLogPeriodChange()">
             <option value="30">Last 30 days</option>
             <option value="60">Last 60 days</option>
             <option value="90">Last 90 days</option>
             <option value="0">All time</option>
+            <option value="custom">Custom Range...</option>
           </select>
+          <span id="ag-log-custom-range" style="display:none;align-items:center;gap:4px;">
+            <input type="date" id="ag-log-date-from" onchange="renderAgencyMailerLog()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:4px 8px;color:var(--text);font-size:11px;cursor:pointer;" />
+            <span style="color:var(--muted);font-size:11px;">to</span>
+            <input type="date" id="ag-log-date-to" onchange="renderAgencyMailerLog()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:4px 8px;color:var(--text);font-size:11px;cursor:pointer;" />
+          </span>
           <button onclick="exportInvoicePDF()" style="background:var(--accent);border:none;border-radius:7px;padding:6px 14px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font-b);white-space:nowrap;">📄 Export Invoice PDF</button>
         </div>
       </div>
@@ -8578,20 +8584,43 @@ async function exportInvoicePDF(){
   }
 }
 
+function agMailerLogPeriodChange(){
+  const sel = document.getElementById('ag-log-period');
+  const customSpan = document.getElementById('ag-log-custom-range');
+  if(!sel||!customSpan) return;
+  if(sel.value==='custom'){
+    customSpan.style.display='flex';
+    // Default to current month
+    const now = new Date();
+    const fromEl = document.getElementById('ag-log-date-from');
+    const toEl = document.getElementById('ag-log-date-to');
+    if(fromEl && !fromEl.value) fromEl.value = new Date(now.getFullYear(),now.getMonth(),1).toISOString().slice(0,10);
+    if(toEl && !toEl.value) toEl.value = now.toISOString().slice(0,10);
+  } else {
+    customSpan.style.display='none';
+  }
+  renderAgencyMailerLog();
+}
 function renderAgencyMailerLog(){
   if(!_agencyData) return;
   const {accounts, mailerLog} = _agencyData;
   const el = document.getElementById('agency-mailer-log');
   if(!el) return;
-
   const filterAcct = document.getElementById('ag-log-filter')?.value||'all';
-  const periodDays = parseInt(document.getElementById('ag-log-period')?.value||'30');
-  const cutoff = periodDays > 0
-    ? new Date(Date.now() - periodDays*24*60*60*1000).toISOString()
-    : '2000-01-01T00:00:00Z';
-
-  let rows = mailerLog.filter(m=>m.sent_at>=cutoff);
-  if(filterAcct!=='all') rows = rows.filter(m=>m.account_id===filterAcct);
+  const periodVal = document.getElementById('ag-log-period')?.value||'30';
+  let cutoffFrom, cutoffTo;
+  if(periodVal==='custom'){
+    const fromVal = document.getElementById('ag-log-date-from')?.value;
+    const toVal = document.getElementById('ag-log-date-to')?.value;
+    cutoffFrom = fromVal ? fromVal+'T00:00:00Z' : '2000-01-01T00:00:00Z';
+    cutoffTo = toVal ? toVal+'T23:59:59Z' : new Date().toISOString();
+  } else {
+    const days = parseInt(periodVal);
+    cutoffFrom = days > 0 ? new Date(Date.now()-days*24*60*60*1000).toISOString() : '2000-01-01T00:00:00Z';
+    cutoffTo = new Date().toISOString();
+  }
+  let rows = mailerLog.filter(m=>m.sent_at>=cutoffFrom && m.sent_at<=cutoffTo);
+  if(filterAcct!=='all') rows = rows.filter(m=>m.account_id===filterAcct);;
 
   if(!rows.length){
     el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">No mailers found for this filter.</div>';
