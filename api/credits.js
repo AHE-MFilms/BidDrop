@@ -30,11 +30,11 @@ const APP_URL        = process.env.APP_URL || 'https://biddrop.americashomeexper
 
 // 1 credit = $4.00 = 1 postcard mailed. Bulk packs give volume discount.
 const CREDIT_PACKS = {
-  pack_10:  { credits: 10,  amount_cents:  4000, label: '10 Credits',  description: '10 postcards — $4.00 each',             savings: null  },
-  pack_25:  { credits: 25,  amount_cents:  9000, label: '25 Credits',  description: '25 postcards — $3.60 each — Save $10',  savings: 1000  },
-  pack_50:  { credits: 50,  amount_cents: 17000, label: '50 Credits',  description: '50 postcards — $3.40 each — Save $30',  savings: 3000  },
-  pack_100: { credits: 100, amount_cents: 32000, label: '100 Credits', description: '100 postcards — $3.20 each — Save $80', savings: 8000  },
-  pack_250: { credits: 250, amount_cents: 75000, label: '250 Credits', description: '250 postcards — $3.00 each — Save $250',savings: 25000 },
+  pack_10:  { credits:    10, amount_cents:   4000, label: '10 Credits',    description: '10 postcards — $4.00 each',                    savings: null   },
+  pack_50:  { credits:    50, amount_cents:  17500, label: '50 Credits',    description: '50 postcards — $3.50 each — Save $12.50',      savings:  1250  },
+  pack_100: { credits:   100, amount_cents:  33000, label: '100 Credits',   description: '100 postcards — $3.30 each — Save $70',        savings:  7000  },
+  pack_500: { credits:   500, amount_cents: 150000, label: '500 Credits',   description: '500 postcards — $3.00 each — Save $500',       savings: 50000  },
+  pack_1k:  { credits:  1000, amount_cents: 275000, label: '1,000 Credits', description: '1,000 postcards — $2.75 each — Save $1,250',   savings: 125000 },
 };
 
 // Free mailer credits per month by plan
