@@ -4,18 +4,15 @@
  * Handles:
  *  - POST ?action=checkout  → Create Stripe Checkout session for a credit pack
  *  - POST ?action=webhook   → Stripe webhook to fulfil credit purchases
+ *  - GET  ?action=balance   → Return current credit balance
+ *
+ * Credit model: 1 credit = $4.00 = 1 postcard mailed
+ * Bulk packs give more credits for less money (volume discount).
  */
-
 import Stripe from 'stripe';
 
-// Vercel: disable body parsing so we get the raw body for Stripe webhook signature verification
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+export const config = { api: { bodyParser: false } };
 
-// Helper to read raw body from Vercel request
 async function getRawBody(req) {
   return new Promise((resolve, reject) => {
     const chunks = [];
@@ -25,29 +22,30 @@ async function getRawBody(req) {
   });
 }
 
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://gtwbhxnrmfmdenogzuea.supabase.co';
-const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
-const STRIPE_KEY   = process.env.STRIPE_SECRET_KEY;
+const SUPABASE_URL   = process.env.SUPABASE_URL || 'https://gtwbhxnrmfmdenogzuea.supabase.co';
+const SERVICE_KEY    = process.env.SUPABASE_SERVICE_KEY;
+const STRIPE_KEY     = process.env.STRIPE_SECRET_KEY;
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
-const APP_URL      = process.env.APP_URL || 'https://biddrop.americashomeexperts.com';
+const APP_URL        = process.env.APP_URL || 'https://biddrop.americashomeexperts.com';
 
-// Credit packs: { id, credits, amount_cents, label }
-// 1 credit = $0.25 | 1 postcard/letter = 15 credits ($3.75) | Follow-Up Blitz (4 postcards) = 45 credits ($11.25)
+// 1 credit = $4.00 = 1 postcard mailed. Bulk packs give volume discount.
 const CREDIT_PACKS = {
-  pack_50:   { credits: 50,   amount_cents: 1250,  label: '50 BidDrop Credits (~3 postcards)'    },
-  pack_200:  { credits: 200,  amount_cents: 5000,  label: '200 BidDrop Credits (12 postcards)'   },
-  pack_500:  { credits: 500,  amount_cents: 12500, label: '500 BidDrop Credits (31 postcards)'   },
-  pack_1000: { credits: 1000, amount_cents: 25000, label: '1,000 BidDrop Credits (62 postcards)' },
+  pack_10:  { credits: 10,  amount_cents:  4000, label: '10 Credits',  description: '10 postcards — $4.00 each',             savings: null  },
+  pack_25:  { credits: 25,  amount_cents:  9000, label: '25 Credits',  description: '25 postcards — $3.60 each — Save $10',  savings: 1000  },
+  pack_50:  { credits: 50,  amount_cents: 17000, label: '50 Credits',  description: '50 postcards — $3.40 each — Save $30',  savings: 3000  },
+  pack_100: { credits: 100, amount_cents: 32000, label: '100 Credits', description: '100 postcards — $3.20 each — Save $80', savings: 8000  },
+  pack_250: { credits: 250, amount_cents: 75000, label: '250 Credits', description: '250 postcards — $3.00 each — Save $250',savings: 25000 },
 };
 
-// ── CORS helper ───────────────────────────────────────────────────────────────
+// Free mailer credits per month by plan
+const PLAN_FREE_CREDITS = { starter: 5, pro: 15, agency: 30, enterprise: 60 };
+
 function cors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
 
-// ── Supabase REST helper ──────────────────────────────────────────────────────
 async function sbFetch(path, opts = {}) {
   const url = `${SUPABASE_URL}/rest/v1/${path}`;
   const headers = {
@@ -60,7 +58,6 @@ async function sbFetch(path, opts = {}) {
   return fetch(url, { ...opts, headers });
 }
 
-// ── Verify caller JWT ─────────────────────────────────────────────────────────
 async function verifyCallerJwt(req) {
   const token = (req.headers['authorization'] || '').replace(/^Bearer\s+/i, '').trim();
   if (!token) return null;
@@ -78,96 +75,77 @@ async function getCallerProfile(userId) {
   return rows[0] || null;
 }
 
-// ── Main handler ──────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   cors(res);
   if (req.method === 'OPTIONS') { res.status(200).end(); return; }
-
   const { action } = req.query;
 
-  // ── Stripe Webhook (no auth — verified by signature) ─────────────────────
+  // ── Stripe Webhook ────────────────────────────────────────────────────────
   if (action === 'webhook') {
     if (req.method !== 'POST') { res.status(405).end(); return; }
-
+    const rawBody = await getRawBody(req);
     const stripe = new Stripe(STRIPE_KEY);
     const sig = req.headers['stripe-signature'];
     let event;
-
     try {
-      const rawBody = await getRawBody(req);
       event = stripe.webhooks.constructEvent(rawBody, sig, WEBHOOK_SECRET);
     } catch (err) {
-      console.error('[webhook] signature verification failed:', err.message);
-      res.status(400).json({ error: `Webhook error: ${err.message}` });
+      console.error('[webhook] Signature verification failed:', err.message);
+      res.status(400).json({ error: `Webhook Error: ${err.message}` });
       return;
     }
-
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
-      const accountId = session.metadata?.account_id;
-      const packId    = session.metadata?.pack_id;
-      const pack      = CREDIT_PACKS[packId];
-
-      if (!accountId || !pack) {
-        console.error('[webhook] missing metadata', session.metadata);
-        res.status(200).json({ received: true }); // Still 200 to prevent retries
+      const { account_id, pack_id, purchase_id } = session.metadata || {};
+      const pack = CREDIT_PACKS[pack_id];
+      if (!pack || !account_id) {
+        console.error('[webhook] Missing metadata', session.metadata);
+        res.status(200).json({ received: true });
         return;
       }
-
-      // Mark purchase as completed
-      await sbFetch(
-        `credit_purchases?stripe_session_id=eq.${session.id}`,
-        {
+      if (purchase_id) {
+        await sbFetch(`credit_purchases?id=eq.${purchase_id}`, {
           method: 'PATCH',
           body: JSON.stringify({
             status: 'completed',
             stripe_payment_id: session.payment_intent,
             completed_at: new Date().toISOString()
           })
-        }
-      );
-
-      // Add credits to account
-      // Use a safe increment: fetch current, add, update
-      const acctRes = await sbFetch(`accounts?id=eq.${accountId}&select=id,lookup_credits`);
+        });
+      }
+      // Add mailer credits to account
+      const acctRes = await sbFetch(`accounts?id=eq.${account_id}&select=id,mailer_credits`);
       if (acctRes.ok) {
         const accts = await acctRes.json();
         if (accts.length) {
-          const current = accts[0].lookup_credits || 0;
-          await sbFetch(`accounts?id=eq.${accountId}`, {
+          const current = accts[0].mailer_credits || 0;
+          await sbFetch(`accounts?id=eq.${account_id}`, {
             method: 'PATCH',
-            body: JSON.stringify({ lookup_credits: current + pack.credits })
+            body: JSON.stringify({ mailer_credits: current + pack.credits })
           });
-          console.log(`[webhook] Added ${pack.credits} credits to account ${accountId}`);
+          console.log(`[webhook] Added ${pack.credits} mailer credits to account ${account_id}`);
         }
       }
     }
-
     res.status(200).json({ received: true });
     return;
   }
 
-  // ── All other actions require authentication ──────────────────────────────
+  // ── Authenticated actions ─────────────────────────────────────────────────
   const caller = await verifyCallerJwt(req);
   if (!caller) { res.status(401).json({ error: 'Unauthorized' }); return; }
-
   const profile = await getCallerProfile(caller.id);
   if (!profile) { res.status(403).json({ error: 'No profile found' }); return; }
-
   const stripe = new Stripe(STRIPE_KEY);
 
   try {
     switch (action) {
 
-      // ── Create Stripe Checkout session ──────────────────────────────────
       case 'checkout': {
         if (req.method !== 'POST') { res.status(405).end(); return; }
-
         const { pack_id } = req.body;
         const pack = CREDIT_PACKS[pack_id];
         if (!pack) { res.status(400).json({ error: 'Invalid pack_id' }); return; }
-
-        // Create a pending purchase record
         const purchaseRes = await sbFetch('credit_purchases', {
           method: 'POST',
           body: JSON.stringify({
@@ -179,17 +157,12 @@ export default async function handler(req, res) {
         });
         const purchaseRows = await purchaseRes.json();
         const purchaseId = purchaseRows[0]?.id;
-
-        // Create Stripe Checkout session
         const session = await stripe.checkout.sessions.create({
           payment_method_types: ['card'],
           line_items: [{
             price_data: {
               currency: 'usd',
-              product_data: {
-                name: `BidDrop — ${pack.label}`,
-                description: `BidDrop mailer credits. 1 postcard = 15 credits ($3.75). Follow-Up Blitz (4 postcards) = 45 credits ($11.25). 1 property lookup = 1 credit ($0.25).`,
-              },
+              product_data: { name: `BidDrop — ${pack.label}`, description: pack.description },
               unit_amount: pack.amount_cents,
             },
             quantity: 1,
@@ -197,53 +170,45 @@ export default async function handler(req, res) {
           mode: 'payment',
           success_url: `${APP_URL}?credits_success=1&pack=${pack_id}`,
           cancel_url:  `${APP_URL}?credits_cancelled=1`,
-          metadata: {
-            account_id:  profile.account_id,
-            pack_id,
-            purchase_id: String(purchaseId || ''),
-          },
+          metadata: { account_id: profile.account_id, pack_id, purchase_id: String(purchaseId || '') },
         });
-
-        // Update purchase record with session ID
         if (purchaseId) {
           await sbFetch(`credit_purchases?id=eq.${purchaseId}`, {
             method: 'PATCH',
             body: JSON.stringify({ stripe_session_id: session.id })
           });
         }
-
         res.status(200).json({ checkout_url: session.url });
         break;
       }
 
-      // ── Get current credit balance ───────────────────────────────────────
       case 'balance': {
         const acctRes = await sbFetch(
-          `accounts?id=eq.${profile.account_id}&select=lookup_credits,free_lookups_used,free_lookups_reset,free_lookups_limit`
+          `accounts?id=eq.${profile.account_id}&select=mailer_credits,free_mailer_credits_used,free_mailer_credits_reset,plan`
         );
         if (!acctRes.ok) { res.status(500).json({ error: 'Failed to fetch balance' }); return; }
         const accts = await acctRes.json();
         if (!accts.length) { res.status(404).json({ error: 'Account not found' }); return; }
         const acct = accts[0];
-
-        // Check if free lookups need monthly reset
+        const plan = (acct.plan || 'starter').toLowerCase();
+        const freeLimit = PLAN_FREE_CREDITS[plan] || PLAN_FREE_CREDITS.starter;
         const today = new Date().toISOString().slice(0, 10);
-        const resetMonth = (acct.free_lookups_reset || '').slice(0, 7);
+        const resetMonth = (acct.free_mailer_credits_reset || '').slice(0, 7);
         const thisMonth  = today.slice(0, 7);
-        let freeUsed = acct.free_lookups_used;
+        let freeUsed = acct.free_mailer_credits_used || 0;
         if (resetMonth !== thisMonth) {
           await sbFetch(`accounts?id=eq.${profile.account_id}`, {
             method: 'PATCH',
-            body: JSON.stringify({ free_lookups_used: 0, free_lookups_reset: today })
+            body: JSON.stringify({ free_mailer_credits_used: 0, free_mailer_credits_reset: today })
           });
           freeUsed = 0;
         }
-
         res.status(200).json({
-          paid_credits:  acct.lookup_credits,
-          free_used:     freeUsed,
-          free_limit:    acct.free_lookups_limit ?? 20,
-          free_remaining: Math.max(0, (acct.free_lookups_limit ?? 20) - freeUsed),
+          paid_credits:   acct.mailer_credits || 0,
+          free_used:      freeUsed,
+          free_limit:     freeLimit,
+          free_remaining: Math.max(0, freeLimit - freeUsed),
+          plan,
           packs: CREDIT_PACKS
         });
         break;

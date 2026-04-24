@@ -518,18 +518,18 @@ tr:hover td{background:var(--card);}
 
 <!-- BUY CREDITS MODAL -->
 <div class="overlay" id="m-buy-credits" style="display:none;">
-  <div class="modal" style="max-width:480px;">
+  <div class="modal" style="max-width:500px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-      <div class="modal-title" style="margin-bottom:0;">💳 BidDrop Credits</div>
+      <div class="modal-title" style="margin-bottom:0;">💳 Mailer Credits</div>
       <button onclick="closeM('m-buy-credits')" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;">&times;</button>
     </div>
-    <p style="color:var(--muted);font-size:13px;margin:0 0 16px;">Send postcards &amp; look up homeowner data. Each account gets <strong>20 free credits/month</strong> (1 postcard or 20 lookups) that reset on the 1st.</p>
+    <p style="color:var(--muted);font-size:13px;margin:0 0 16px;"><strong>1 Credit = $4.00 = 1 postcard mailed.</strong> Your plan includes free credits each month. Property lookups are always free &amp; unlimited.</p>
 
     <!-- Current balance -->
     <div id="credits-balance-box" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:18px;display:flex;gap:20px;">
       <div style="flex:1;text-align:center;">
         <div style="font-size:22px;font-weight:800;color:var(--accent);" id="cb-free-remaining">—</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px;">Free Credits This Month</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">Free Credits Left This Month</div>
       </div>
       <div style="width:1px;background:var(--border);"></div>
       <div style="flex:1;text-align:center;">
@@ -539,35 +539,48 @@ tr:hover td{background:var(--card);}
     </div>
 
     <!-- Credit packs -->
-    <div style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Buy Credits — 1 Postcard = 15 Credits ($3.75) &bull; 1 Lookup = 1 Credit ($0.25)</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;">
+    <div style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Buy Credits — Bulk discounts save you up to $250</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+      <button class="credit-pack-btn" onclick="buyCredits('pack_10',this)" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;text-align:center;transition:border-color .2s;">
+        <div style="font-size:20px;font-weight:800;color:var(--text);">10</div>
+        <div style="font-size:11px;color:var(--muted);margin:2px 0 2px;">credits</div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:6px;">10 postcards</div>
+        <div style="font-size:15px;font-weight:700;color:var(--accent);">$40.00</div>
+        <div style="font-size:10px;color:var(--muted);">$4.00 each</div>
+      </button>
+      <button class="credit-pack-btn" onclick="buyCredits('pack_25',this)" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;text-align:center;transition:border-color .2s;">
+        <div style="font-size:20px;font-weight:800;color:var(--text);">25</div>
+        <div style="font-size:11px;color:var(--muted);margin:2px 0 2px;">credits</div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:6px;">25 postcards</div>
+        <div style="font-size:15px;font-weight:700;color:var(--accent);">$90.00</div>
+        <div style="font-size:10px;color:#4ade80;">Save $10</div>
+      </button>
       <button class="credit-pack-btn" onclick="buyCredits('pack_50',this)" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;text-align:center;transition:border-color .2s;">
         <div style="font-size:20px;font-weight:800;color:var(--text);">50</div>
         <div style="font-size:11px;color:var(--muted);margin:2px 0 2px;">credits</div>
-        <div style="font-size:10px;color:var(--muted);margin-bottom:6px;">~3 postcards</div>
-        <div style="font-size:15px;font-weight:700;color:var(--accent);">$12.50</div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:6px;">50 postcards</div>
+        <div style="font-size:15px;font-weight:700;color:var(--accent);">$170.00</div>
+        <div style="font-size:10px;color:#4ade80;">Save $30</div>
       </button>
-      <button class="credit-pack-btn" onclick="buyCredits('pack_200',this)" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;text-align:center;transition:border-color .2s;">
-        <div style="font-size:20px;font-weight:800;color:var(--text);">200</div>
-        <div style="font-size:11px;color:var(--muted);margin:2px 0 2px;">credits</div>
-        <div style="font-size:10px;color:var(--muted);margin-bottom:6px;">12 postcards</div>
-        <div style="font-size:15px;font-weight:700;color:var(--accent);">$50.00</div>
-      </button>
-      <button class="credit-pack-btn" onclick="buyCredits('pack_500',this)" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;text-align:center;position:relative;border-color:var(--accent);">
+      <button class="credit-pack-btn" onclick="buyCredits('pack_100',this)" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;text-align:center;position:relative;border-color:var(--accent);">
         <div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;white-space:nowrap;">BEST VALUE</div>
-        <div style="font-size:20px;font-weight:800;color:var(--text);">500</div>
+        <div style="font-size:20px;font-weight:800;color:var(--text);">100</div>
         <div style="font-size:11px;color:var(--muted);margin:2px 0 2px;">credits</div>
-        <div style="font-size:10px;color:var(--muted);margin-bottom:6px;">31 postcards</div>
-        <div style="font-size:15px;font-weight:700;color:var(--accent);">$125.00</div>
-      </button>
-      <button class="credit-pack-btn" onclick="buyCredits('pack_1000',this)" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;text-align:center;">
-        <div style="font-size:20px;font-weight:800;color:var(--text);">1,000</div>
-        <div style="font-size:11px;color:var(--muted);margin:2px 0 2px;">credits</div>
-        <div style="font-size:10px;color:var(--muted);margin-bottom:6px;">62 postcards</div>
-        <div style="font-size:15px;font-weight:700;color:var(--accent);">$250.00</div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:6px;">100 postcards</div>
+        <div style="font-size:15px;font-weight:700;color:var(--accent);">$320.00</div>
+        <div style="font-size:10px;color:#4ade80;">Save $80</div>
       </button>
     </div>
-
+    <!-- 250 pack full width -->
+    <button class="credit-pack-btn" onclick="buyCredits('pack_250',this)" style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid var(--accent);border-radius:10px;padding:14px 20px;cursor:pointer;text-align:center;width:100%;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;transition:border-color .2s;">
+      <div style="text-align:left;">
+        <div style="font-size:18px;font-weight:800;color:var(--text);">250 Credits <span style="font-size:13px;color:var(--muted);font-weight:400;">— 250 postcards</span></div>
+        <div style="font-size:11px;color:#4ade80;margin-top:2px;">Save $250 — only $3.00 per postcard</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:22px;font-weight:800;color:var(--accent);">$750.00</div>
+      </div>
+    </button>
     <p style="font-size:11px;color:var(--muted);text-align:center;margin:0;">Credits never expire &bull; Secure checkout via Stripe &bull; Instant activation</p>
     <div class="modal-footer" style="margin-top:14px;"><button class="btn-cancel" onclick="closeM('m-buy-credits')">Close</button></div>
   </div>
@@ -607,6 +620,7 @@ tr:hover td{background:var(--card);}
           <option value="starter">Starter</option>
           <option value="pro">Pro</option>
           <option value="agency">Agency</option>
+          <option value="enterprise">Enterprise</option>
         </select>
       </div>
       <div class="fg"><label class="fl">Mailer Rate ($/piece)</label><input class="fi" id="ec-rate" type="number" step="0.01" placeholder="2.50"></div>
@@ -939,8 +953,8 @@ tr:hover td{background:var(--card);}
         <label class="fl">Homeowner Email <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— required to Send via GHL</span></label>
         <input class="fi" id="e-email" placeholder="jane@email.com" type="email">
       </div>
-      <div class="fg" style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:12px;">
-        <label class="fl" style="color:#10b981;">&#127758; Estimate Page Settings</label>
+      <div class="fg" id="estimate-page-settings-section" style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:12px;">
+        <label class="fl" style="color:#10b981;">&#127758; Estimate Page Settings <span id="estimate-page-plan-badge" style="display:none;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;background:#D97706;color:#fff;margin-left:6px;text-transform:uppercase;letter-spacing:.5px;">Agency+ Only</span></label>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px;">
           <div>
             <label style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Offer Expires</label>
@@ -951,7 +965,7 @@ tr:hover td{background:var(--card);}
             <input class="fi" id="e-video" type="url" placeholder="https://..." style="margin-top:3px;font-size:12px;" title="Optional: link to a short video message from the rep">
           </div>
         </div>
-        <div style="margin-top:8px;font-size:11px;color:var(--muted);">&#128065; Homeowners see this page when they scan the postcard QR code. <a href="#" onclick="if(currentEstRecord)window.open('/e/'+currentEstRecord.id,'_blank');return false;" style="color:#10b981;">Preview page &#8599;</a></div>
+        <div style="margin-top:8px;font-size:11px;color:var(--muted);">&#128065; Homeowners see this page when they scan the postcard QR code. <a href="#" onclick="if(!isPlanAtLeast('agency')){showPlanUpgradePrompt('Estimate Pages','agency');return false;}if(currentEstRecord)window.open('/e/'+currentEstRecord.id,'_blank');return false;" style="color:#10b981;">Preview page &#8599;</a></div>
       </div>
       <div class="fg">
         <label class="fl">Property Photos <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:10px;">— first Front of Home photo appears on mailer</span></label>
@@ -1102,7 +1116,7 @@ tr:hover td{background:var(--card);}
         <span style="font-size:24px;font-weight:800;color:var(--accent);" id="qcb-total">—</span>
         <div>
           <div style="font-size:13px;font-weight:700;color:var(--text);">Credits Available</div>
-          <div style="font-size:10px;color:var(--mid);">1 postcard = 15 credits • 1 lookup = 1 credit</div>
+          <div style="font-size:10px;color:var(--mid);">1 credit = $4.00 = 1 postcard mailed</div>
         </div>
       </div>
       <span id="qcb-free" style="display:none;">—</span>
@@ -1194,6 +1208,7 @@ tr:hover td{background:var(--card);}
             <option value="starter">Starter</option>
             <option value="pro">Pro</option>
             <option value="agency">Agency</option>
+            <option value="enterprise">Enterprise</option>
           </select>
           <select id="ag-filter-status" onchange="filterAgencyAccounts()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--text);font-size:12px;cursor:pointer;">
             <option value="all">All Status</option>
@@ -1638,9 +1653,9 @@ tr:hover td{background:var(--card);}
           <span class="stab-chevron" id="stab-chevron-integrations">&#9662;</span>
         </div>
         <div class="stab-card-body" id="stab-body-integrations">
-          <div class="stab-section-hdr">GoHighLevel Integration</div>
+          <div class="stab-section-hdr">GoHighLevel Integration <span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;background:#8B5CF6;color:#fff;margin-left:6px;text-transform:uppercase;letter-spacing:.5px;">Pro+</span></div>
           <div style="background:var(--accent-dim);border:1px solid rgba(242,92,5,.2);border-radius:7px;padding:10px 14px;font-size:11px;color:var(--mid);margin-bottom:12px;">
-            &#128279; Connect your GHL sub-account to create contacts, opportunities, and send emails directly from BidDrop.
+            &#128279; Connect your GHL sub-account to create contacts, opportunities, and send emails directly from BidDrop. Requires Pro plan or higher.
           </div>
           <div class="fg"><label class="fl">GHL Location API Key</label><input class="fi" id="s-ghl-key" placeholder="pit-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" type="password"></div>
           <div class="fg"><label class="fl">GHL Location ID</label><input class="fi" id="s-ghl-loc" placeholder="gz85VU6SxGXS7lqHAQGx"></div>
@@ -2114,12 +2129,16 @@ function accountRowToCfg(row){
     drip4Headline: row.drip4_headline||null,
     drip4Subtext:  row.drip4_subtext||null,
     dripEnabled: row.drip_enabled||false,
+    plan:             (row.plan||'starter').toLowerCase(),
     enablePostcard:   row.enable_postcard!==false,
     enableLetter:     row.enable_letter!==false,
     lookupCredits:    row.lookup_credits    || 0,
     freeLookupsUsed:  row.free_lookups_used || 0,
     freeLookupsReset: row.free_lookups_reset|| null,
     freeLookupsLimit: row.free_lookups_limit || 20,
+    mailerCredits:          row.mailer_credits           || 0,
+    freeMailerCreditsUsed:  row.free_mailer_credits_used || 0,
+    freeMailerCreditsReset: row.free_mailer_credits_reset|| null,
   };
 }
 
@@ -5773,10 +5792,11 @@ const HIST_PAGE_SIZE = 25;
 async function loadHistory(){
   // Update balance display
   // Show total credits: free remaining + paid (same as header badge)
-  const freeLimit = S.cfg.freeLookupsLimit || 20;
-  const freeLeft  = Math.max(0, freeLimit - (S.cfg.freeLookupsUsed || 0));
-  const paid      = S.cfg.lookupCredits || 0;
-  const totalBal  = freeLeft + paid;
+  const planFreeMapH = {starter:5,pro:15,agency:30,enterprise:60};
+  const freeLimitH = planFreeMapH[(S.cfg.plan||'starter').toLowerCase()] || 5;
+  const freeLeftH  = Math.max(0, freeLimitH - (S.cfg.freeMailerCreditsUsed || 0));
+  const paidH      = S.cfg.mailerCredits || 0;
+  const totalBal  = freeLeftH + paidH;
   const el = document.getElementById('hist-credits-balance');
   if(el) el.textContent = totalBal + ' credits';
 
@@ -6637,7 +6657,7 @@ async function sendLob(id){
     if(d && d.error === 'no_credits'){
       // Not enough credits — show Buy Credits modal
       toast('Not enough credits to send a letter (15 credits = $3.75). Please purchase more credits.','error');
-      if(d._credits){ S.cfg.lookupCredits = d._credits.paid_credits ?? S.cfg.lookupCredits; if(d._credits.free_used !== undefined) S.cfg.freeLookupsUsed = d._credits.free_used; }
+      if(d._credits){ S.cfg.mailerCredits = d._credits.paid_credits ?? S.cfg.mailerCredits; if(d._credits.free_used !== undefined) S.cfg.freeMailerCreditsUsed = d._credits.free_used; }
       updateCreditBadge();
       setTimeout(()=>showBuyCreditsModal(), 800);
       return;
@@ -6645,7 +6665,7 @@ async function sendLob(id){
     if(d && d.id){
       item.status='sent';item.mailedAt=new Date().toISOString();item.lobId=d.id;
       // Update credit badge with new balance
-      if(d._credits){ S.cfg.lookupCredits = d._credits.paid_credits ?? S.cfg.lookupCredits; if(d._credits.free_used !== undefined) S.cfg.freeLookupsUsed = d._credits.free_used; updateCreditBadge(); }
+      if(d._credits){ S.cfg.mailerCredits = d._credits.paid_credits ?? S.cfg.mailerCredits; if(d._credits.free_used !== undefined) S.cfg.freeMailerCreditsUsed = d._credits.free_used; updateCreditBadge(); }
       addAct('Bid letter mailed to <strong>'+escHtml(item.addr)+'</strong>','converted');
       // If this is a drip step, log it to GHL contact timeline
       if(item.drip_step) ghlAddDripNote(item.owner, item.addr, item.drip_step, item.mailedAt).catch(e=>console.warn('[GHL drip note]',e));
@@ -6764,14 +6784,14 @@ async function sendLobPostcard6x9(id){
     }});
     if(d&&d.error==='no_credits'){
       toast('Not enough credits to send a postcard (15 credits = $3.75). Please purchase more credits.','error');
-      if(d._credits){ S.cfg.lookupCredits = d._credits.paid_credits ?? S.cfg.lookupCredits; if(d._credits.free_used !== undefined) S.cfg.freeLookupsUsed = d._credits.free_used; }
+      if(d._credits){ S.cfg.mailerCredits = d._credits.paid_credits ?? S.cfg.mailerCredits; if(d._credits.free_used !== undefined) S.cfg.freeMailerCreditsUsed = d._credits.free_used; }
       updateCreditBadge();
       setTimeout(()=>showBuyCreditsModal(),800);
       return;
     }
     if(d&&d.id){
       item.status='sent';item.mailedAt=new Date().toISOString();item.lobId=d.id;
-      if(d._credits){ S.cfg.lookupCredits = d._credits.paid_credits ?? S.cfg.lookupCredits; if(d._credits.free_used !== undefined) S.cfg.freeLookupsUsed = d._credits.free_used; updateCreditBadge(); }
+      if(d._credits){ S.cfg.mailerCredits = d._credits.paid_credits ?? S.cfg.mailerCredits; if(d._credits.free_used !== undefined) S.cfg.freeMailerCreditsUsed = d._credits.free_used; updateCreditBadge(); }
       addAct('6×9 postcard mailed to <strong>'+escHtml(item.addr)+'</strong>','converted');
       if(currentAccount&&sb){
         sb.from('mailer_log').insert({
@@ -8262,7 +8282,7 @@ function filterAgencyAccounts(){
     if(sort==='name_asc')  return nameA < nameB ? -1 : nameA > nameB ? 1 : 0;
     if(sort==='name_desc') return nameA > nameB ? -1 : nameA < nameB ? 1 : 0;
     if(sort==='plan'){
-      const order = {agency:0,pro:1,starter:2};
+      const order = {enterprise:0,agency:1,pro:2,starter:3};
       return (order[a.plan]??2) - (order[b.plan]??2);
     }
     if(sort==='pins_desc'){
@@ -8322,12 +8342,13 @@ function _renderAgencyAccountCards(accounts){
     const rate = parseFloat(a.mailer_rate)||2.50;
     const revAllTime = (rate * mailersAllTime).toFixed(2);
     const converted = acctPins.filter(p=>p.status==='converted').length;
-    const planColor = {starter:'#3B82F6',pro:'#8B5CF6',agency:'#F25C05'}[a.plan]||'#6688A8';
+    const planColor = {starter:'#3B82F6',pro:'#8B5CF6',agency:'#F25C05',enterprise:'#D97706'}[a.plan]||'#6688A8';
     const activeColor = a.active!==false ? '#22C55E' : '#EF4444';
     const activeLabel = a.active!==false ? 'Active' : 'Inactive';
-    const paidCredits = a.lookup_credits||0;
-    const freeLeft = Math.max(0,(a.free_lookups_limit||10)-(a.free_lookups_used||0));
-    const freeLimit = a.free_lookups_limit||10;
+    const paidCredits = a.mailer_credits||0;
+    const planFreeMapA = {starter:5,pro:15,agency:30,enterprise:60};
+    const freeLimit = planFreeMapA[(a.plan||'starter').toLowerCase()] || 5;
+    const freeLeft = Math.max(0, freeLimit - (a.free_mailer_credits_used||0));
     // Last activity
     const allDates = [
       ...acctPins.map(p=>p.created_at),
@@ -8377,15 +8398,15 @@ async function adjustCredits(accountId){
   if(!_agencyData) return;
   const a = _agencyData.accounts.find(x=>x.id===accountId);
   if(!a) return;
-  const current = a.lookup_credits||0;
-  const input = prompt(`Adjust paid credits for ${a.company_name||a.name}\nCurrent balance: ${current}\n\nEnter new balance:`, current);
+  const current = a.mailer_credits||0;
+  const input = prompt(`Adjust paid mailer credits for ${a.company_name||a.name}\nCurrent balance: ${current}\n\nEnter new balance:`, current);
   if(input===null) return;
   const newVal = parseInt(input,10);
   if(isNaN(newVal)||newVal<0){ toast('Invalid value','error'); return; }
   try{
-    const {error} = await sb.from('accounts').update({lookup_credits:newVal}).eq('id',accountId);
+    const {error} = await sb.from('accounts').update({mailer_credits:newVal}).eq('id',accountId);
     if(error) throw error;
-    a.lookup_credits = newVal;
+    a.mailer_credits = newVal;
     toast(`Credits updated to ${newVal} for ${a.company_name||a.name}`,'success');
     await renderAdminPanel();
   }catch(e){
@@ -8397,24 +8418,26 @@ async function setFreeLimit(accountId){
   if(!_agencyData) return;
   const a = _agencyData.accounts.find(x=>x.id===accountId);
   if(!a) return;
-  const currentLimit = a.free_lookups_limit ?? 10;
-  const freeUsed     = a.free_lookups_used || 0;
+  const planFreeMapSL = {starter:5,pro:15,agency:30,enterprise:60};
+  const currentLimit = planFreeMapSL[(a.plan||'starter').toLowerCase()] || 5;
+  const freeUsed     = a.free_mailer_credits_used || 0;
   const freeLeft     = Math.max(0, currentLimit - freeUsed);
   const input = prompt(
-    `Set monthly free lookup limit for ${a.company_name||a.name}\n` +
-    `Current: ${freeLeft} remaining of ${currentLimit}/month (${freeUsed} used)\n\n` +
-    `Enter new monthly free lookup allowance:`,
-    String(currentLimit)
+    `Adjust free mailer credits for ${a.company_name||a.name}\n` +
+    `Plan: ${a.plan||'starter'} (${currentLimit}/month)\n` +
+    `Current: ${freeLeft} remaining (${freeUsed} used)\n\n` +
+    `Enter new free_mailer_credits_used value (to reset, enter 0):`,
+    String(freeUsed)
   );
   if(input===null) return;
   const newLimit = parseInt(input,10);
   if(isNaN(newLimit)||newLimit<0){ toast('Invalid value','error'); return; }
   try{
-    const {error} = await sb.from('accounts').update({ free_lookups_limit: newLimit }).eq('id',accountId);
+    const {error} = await sb.from('accounts').update({ free_mailer_credits_used: newLimit }).eq('id',accountId);
     if(error) throw error;
-    a.free_lookups_limit = newLimit;
-    const newFreeLeft = Math.max(0, newLimit - freeUsed);
-    toast(`✅ ${a.company_name||a.name} now gets ${newLimit} free lookups/month (${newFreeLeft} remaining this month)`,'success');
+    a.free_mailer_credits_used = newLimit;
+    const newFreeLeft = Math.max(0, currentLimit - newLimit);
+    toast(`✅ ${a.company_name||a.name}: ${newFreeLeft} free credits remaining this month`,'success');
     await renderAdminPanel();
   }catch(e){
     toast('Error: '+e.message,'error');
@@ -9191,8 +9214,8 @@ async function lookupPropertyData(address){
     // Handle no-credits error (402)
     if(data && data.error === 'no_credits'){
       // Update local credit state
-      if(data.free_used !== undefined) S.cfg.freeLookupsUsed = data.free_used;
-      if(data.paid_credits !== undefined) S.cfg.lookupCredits = data.paid_credits;
+      if(data.free_used !== undefined) S.cfg.freeMailerCreditsUsed = data.free_used;
+      if(data.paid_credits !== undefined) S.cfg.mailerCredits = data.paid_credits;
       updateCreditBadge();
       // Show buy credits modal
       showBuyCreditsModal();
@@ -9201,8 +9224,8 @@ async function lookupPropertyData(address){
 
     // Update local credit state from response
     if(data && data._credits){
-      S.cfg.freeLookupsUsed = data._credits.free_used;
-      S.cfg.lookupCredits   = data._credits.paid_credits;
+      S.cfg.freeMailerCreditsUsed = data._credits.free_used;
+      S.cfg.mailerCredits         = data._credits.paid_credits;
       updateCreditBadge();
     }
 
@@ -9303,10 +9326,10 @@ async function autoFillOwnerIfEmpty(address){
     }
   }
 }
-function toast(msg,type='info'){
+function toast(msg,type='info',duration=3200){
   const el=document.getElementById('toast');
   el.className='toast '+type;el.textContent=msg;el.classList.add('show');
-  clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3200);
+  clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),duration);
 }
 
 // ═══════════════════════════════
@@ -9315,9 +9338,12 @@ function toast(msg,type='info'){
 function updateCreditBadge(){
   const badge = document.getElementById('credit-badge-label');
   if(!badge) return;
-  const freeLimit = S.cfg.freeLookupsLimit || 20;
-  const freeLeft = Math.max(0, freeLimit - (S.cfg.freeLookupsUsed||0));
-  const paid     = S.cfg.lookupCredits || 0;
+  // Use mailerCredits (new model: 1 credit = $4 = 1 postcard)
+  const plan = (S.cfg.plan||'starter').toLowerCase();
+  const planFreeMap = {starter:5,pro:15,agency:30,enterprise:60};
+  const freeLimit = planFreeMap[plan] || 5;
+  const freeLeft = Math.max(0, freeLimit - (S.cfg.freeMailerCreditsUsed||0));
+  const paid     = S.cfg.mailerCredits || 0;
   const total    = freeLeft + paid;
   if(total > 0){
     badge.textContent = total + ' credits';
@@ -9350,15 +9376,17 @@ async function showBuyCreditsModal(){
       const r = await fetch('/api/credits?action=balance',{ headers:{ 'Authorization':'Bearer '+sess.access_token } });
       if(r.ok){
         const b = await r.json();
-        S.cfg.lookupCredits   = b.paid_credits;
-        S.cfg.freeLookupsUsed = b.free_used;
+        S.cfg.mailerCredits          = b.paid_credits;
+        S.cfg.freeMailerCreditsUsed  = b.free_used;
         updateCreditBadge();
       }
     }
   }catch(_){}
-  const freeLimit2 = S.cfg.freeLookupsLimit || 20;
-  const freeLeft = Math.max(0, freeLimit2 - (S.cfg.freeLookupsUsed||0));
-  const paid     = S.cfg.lookupCredits || 0;
+  const plan2 = (S.cfg.plan||'starter').toLowerCase();
+  const planFreeMap2 = {starter:5,pro:15,agency:30,enterprise:60};
+  const freeLimit2 = planFreeMap2[plan2] || 5;
+  const freeLeft = Math.max(0, freeLimit2 - (S.cfg.freeMailerCreditsUsed||0));
+  const paid     = S.cfg.mailerCredits || 0;
   const fEl = document.getElementById('cb-free-remaining');
   const pEl = document.getElementById('cb-paid-credits');
   if(fEl) fEl.textContent = freeLeft;
@@ -9580,6 +9608,7 @@ async function ghlAddDripNote(ownerName, address, stepNum, mailedAt){
 }
 
 async function sendViaGHL(){
+  if(!isPlanAtLeast('pro')){ showPlanUpgradePrompt('GHL Integration','pro'); return; }
   const owner  = document.getElementById('e-owner').value.trim();
   const addr   = document.getElementById('e-addr').value.trim();
   const email  = document.getElementById('e-email').value.trim();
@@ -9776,6 +9805,27 @@ function isRep(){
   return currentProfile && currentProfile.role==='rep';
 }
 
+// ── Plan tier helpers ────────────────────────────────────────────────────────
+const PLAN_TIERS = { starter: 0, pro: 1, agency: 2, enterprise: 3 };
+function currentPlanTier(){
+  const plan = (S.cfg && S.cfg.plan) ? S.cfg.plan.toLowerCase() : 'starter';
+  return PLAN_TIERS[plan] ?? 0;
+}
+function isPlanAtLeast(minPlan){
+  // super_admin bypasses all plan gates
+  if(isSuperAdmin()) return true;
+  return currentPlanTier() >= (PLAN_TIERS[minPlan.toLowerCase()] ?? 0);
+}
+// Show an upgrade prompt when a feature is gated
+function showPlanUpgradePrompt(featureName, requiredPlan){
+  const planNames = { starter: 'Starter ($97/mo)', pro: 'Pro ($197/mo)', agency: 'Agency ($397/mo)', enterprise: 'Enterprise ($797/mo)' };
+  const currentPlan = (S.cfg && S.cfg.plan) ? S.cfg.plan : 'starter';
+  toast(
+    `🔒 ${featureName} requires the ${planNames[requiredPlan] || requiredPlan} plan or higher. You are on ${planNames[currentPlan] || currentPlan}. Contact support to upgrade.`,
+    'error',
+    6000
+  );
+}
 function applyRoleUI(){
   // Hide settings gear from reps
   const gear = document.querySelector('.icon-btn[onclick="openSettings()"]');
@@ -9796,6 +9846,20 @@ function applyRoleUI(){
   }
   // Sync hamburger nav menu visibility
   if(typeof syncNavRoleUI === 'function') syncNavRoleUI();
+  // Plan-based UI gates
+  applyPlanUI();
+}
+function applyPlanUI(){
+  // Estimate Page Settings section — Agency+ only
+  const epBadge = document.getElementById('estimate-page-plan-badge');
+  if(epBadge) epBadge.style.display = isPlanAtLeast('agency') ? 'none' : 'inline-block';
+  const epSection = document.getElementById('estimate-page-settings-section');
+  if(epSection) epSection.style.opacity = isPlanAtLeast('agency') ? '1' : '0.5';
+  // GHL settings section — Pro+ only
+  const ghlSection = document.querySelector('.stab-card-body #stab-body-integrations');
+  // (GHL is shown to all but gates on send)
+  // Quote page settings — Pro+ only (show slug input only for Pro+)
+  // (Quote page slug is admin-set, not user-facing in settings)
 }
 
 // ═══════════════════════════════
@@ -10400,7 +10464,7 @@ function filterAdminAccounts(){
     if(sort==='name_asc')  return nameA < nameB ? -1 : nameA > nameB ? 1 : 0;
     if(sort==='name_desc') return nameA > nameB ? -1 : nameA < nameB ? 1 : 0;
     if(sort==='plan'){
-      const order = {agency:0,pro:1,starter:2};
+      const order = {enterprise:0,agency:1,pro:2,starter:3};
       return (order[a.plan]??2) - (order[b.plan]??2);
     }
     if(sort==='users_desc'){
@@ -10421,7 +10485,7 @@ function filterAdminAccounts(){
   }
   grid.innerHTML = filtered.map(a=>{
     const users = allProfiles.filter(p=>p.account_id===a.id);
-    const planColor = {starter:'#3B82F6',pro:'#8B5CF6',agency:'#F25C05'}[a.plan]||'#6688A8';
+    const planColor = {starter:'#3B82F6',pro:'#8B5CF6',agency:'#F25C05',enterprise:'#D97706'}[a.plan]||'#6688A8';
     const activeColor = a.active!==false ? '#22C55E' : '#EF4444';
     const rate = parseFloat(a.mailer_rate)||2.50;
     return '<div class="ag-acct-card">' +
@@ -10476,6 +10540,7 @@ function renderSuperAdminPanel(accounts, allProfiles){
         '<option value="starter">Starter</option>' +
         '<option value="pro">Pro</option>' +
         '<option value="agency">Agency</option>' +
+        '<option value="enterprise">Enterprise</option>' +
       '</select>' +
       '<select id="admin-filter-status" onchange="filterAdminAccounts()" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-family:var(--font-b);font-size:11px;cursor:pointer;">' +
         '<option value="all">All Status</option>' +
@@ -10486,7 +10551,7 @@ function renderSuperAdminPanel(accounts, allProfiles){
     '<div id="admin-accounts-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-bottom:24px;">' +
     clientAccounts.map(a=>{
       const users = allProfiles.filter(p=>p.account_id===a.id);
-      const planColor = {starter:'#3B82F6',pro:'#8B5CF6',agency:'#F25C05'}[a.plan]||'#6688A8';
+      const planColor = {starter:'#3B82F6',pro:'#8B5CF6',agency:'#F25C05',enterprise:'#D97706'}[a.plan]||'#6688A8';
       const activeColor = a.active!==false ? '#22C55E' : '#EF4444';
       const rate = parseFloat(a.mailer_rate)||2.50;
       return '<div class="ag-acct-card">' +
@@ -10558,6 +10623,7 @@ function renderSuperAdminPanel(accounts, allProfiles){
               '<option value="starter">Starter</option>' +
               '<option value="pro">Pro</option>' +
               '<option value="agency">Agency</option>' +
+              '<option value="enterprise">Enterprise</option>' +
             '</select>' +
           '</div>' +
           '<div class="fg"><label class="fl">Your Mailer Rate ($/piece)</label><input class="fi" id="new-acct-rate" placeholder="2.50" type="number" step="0.01" value="2.50"></div>' +
@@ -11120,7 +11186,7 @@ async function onSignedIn(user){
       // Refresh credit balance from server
       try{
         const bal = await fetch('/api/credits?action=balance', { headers:{ 'Authorization':'Bearer '+(await sb.auth.getSession()).data.session?.access_token } });
-        if(bal.ok){ const b=await bal.json(); S.cfg.lookupCredits=b.paid_credits; S.cfg.freeLookupsUsed=b.free_used; updateCreditBadge(); }
+        if(bal.ok){ const b=await bal.json(); S.cfg.mailerCredits=b.paid_credits; S.cfg.freeMailerCreditsUsed=b.free_used; updateCreditBadge(); }
       }catch(_){}
       toast('✅ Credits added to your account!','success');
       showBuyCreditsModal();
@@ -11876,14 +11942,16 @@ function openDripModal(estId){
 }
 
 function startDripSequence(){
+  if(!isPlanAtLeast('agency')){ showPlanUpgradePrompt('Follow-Up Blitz','agency'); return; }
   const est = (S.estimates||[]).find(e=>e.id===_dripEstId);
   if(!est){ toast('Estimate not found','error'); return; }
   // Credit pre-check: Follow-Up Blitz costs 48 credits (4 mailers × 16, but 4th is free = 3×16)
   const BLITZ_CREDITS = 45;
-  const freeLimit = S.cfg.freeLookupsLimit || 20;
-  const freeLeft  = Math.max(0, freeLimit - (S.cfg.freeLookupsUsed || 0));
-  const paid      = S.cfg.lookupCredits || 0;
-  const total     = freeLeft + paid;
+  const planFreeMapD = {starter:5,pro:15,agency:30,enterprise:60};
+  const freeLimitD = planFreeMapD[(S.cfg.plan||'starter').toLowerCase()] || 5;
+  const freeLeftD  = Math.max(0, freeLimitD - (S.cfg.freeMailerCreditsUsed || 0));
+  const paid      = S.cfg.mailerCredits || 0;
+  const total     = freeLeftD + paid;
   if(total < BLITZ_CREDITS){
     toast(`Not enough credits for Follow-Up Blitz. Need 45 credits ($11.25), you have ${total}. Please purchase more credits.`,'error');
     setTimeout(()=>showBuyCreditsModal(), 800);
@@ -12049,7 +12117,7 @@ async function sendDripPostcard(id){
     }});
     if(d && d.id){
       item.status='sent'; item.mailedAt=new Date().toISOString(); item.lobId=d.id;
-      if(d._credits){ S.cfg.lookupCredits = d._credits.paid_credits ?? S.cfg.lookupCredits; if(d._credits.free_used !== undefined) S.cfg.freeLookupsUsed = d._credits.free_used; updateCreditBadge(); }
+      if(d._credits){ S.cfg.mailerCredits = d._credits.paid_credits ?? S.cfg.mailerCredits; if(d._credits.free_used !== undefined) S.cfg.freeMailerCreditsUsed = d._credits.free_used; updateCreditBadge(); }
       addAct('Drip Step '+item.drip_step+' postcard mailed to <strong>'+escHtml(item.addr)+'</strong>','converted');
       if(currentAccount && sb){
         sb.from('mailer_log').insert({

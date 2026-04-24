@@ -611,7 +611,23 @@ export default async function handler(req, res) {
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS slug TEXT`,
           `CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_slug ON accounts(slug) WHERE slug IS NOT NULL`,
           `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS source TEXT`,
-          `ALTER TABLE pins ADD COLUMN IF NOT EXISTS source TEXT`
+          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS page_views INTEGER DEFAULT 0`,
+          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS page_first_viewed_at TIMESTAMPTZ`,
+          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS page_last_viewed_at TIMESTAMPTZ`,
+          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS page_time_spent INTEGER DEFAULT 0`,
+          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS page_mat_clicks JSONB`,
+          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS page_share_clicks INTEGER DEFAULT 0`,
+          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS page_call_clicks INTEGER DEFAULT 0`,
+          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ`,
+          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS rep_video_url TEXT`,
+          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS page_enabled BOOLEAN DEFAULT TRUE`,
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS estimate_page_expires_days INTEGER`,
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS estimate_page_countdown BOOLEAN DEFAULT FALSE`,
+          `CREATE INDEX IF NOT EXISTS idx_estimates_account_saved ON estimates(account_id, saved_at DESC)`,
+          `ALTER TABLE pins ADD COLUMN IF NOT EXISTS source TEXT`,
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS mailer_credits INTEGER DEFAULT 0`,
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS free_mailer_credits_used INTEGER DEFAULT 0`,
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS free_mailer_credits_reset DATE`
         ].join('; ');
         const results = [];
         // Run each DDL statement individually via Supabase pg_meta API (uses SERVICE_KEY)
