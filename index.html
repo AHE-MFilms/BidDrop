@@ -70,7 +70,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 .main{flex:1;overflow:hidden;display:flex;flex-direction:column;position:relative;}
 .tab-pane{display:none;flex:1;overflow:hidden;min-height:0;}
 .tab-pane.active{display:flex;}
-#tab-agency,#tab-history,#tab-admin,#tab-dashboard{overflow-y:auto;overflow-x:hidden;}
+#tab-agency,#tab-history,#tab-admin,#tab-dashboard{overflow-y:auto!important;overflow-x:hidden;flex:1;min-height:0;}
 #tab-settings{display:none;flex-direction:column;overflow-y:auto;padding:22px;gap:14px;}
   #tab-settings.active{display:flex;}
   .stab-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
@@ -1204,7 +1204,7 @@ tr:hover td{background:var(--card);}
       <div id="agency-accounts-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;"></div>
     </div>
     <!-- Mailer log table -->
-    <div class="dash-card" style="overflow:hidden;">
+    <div class="dash-card" style="overflow:visible;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
         <div class="dc-title" style="margin-bottom:0;">Mailer Log</div>
         <div style="display:flex;gap:8px;align-items:center;">
