@@ -1165,35 +1165,37 @@ tr:hover td{background:var(--card);}
   </div>
 
   <!-- AGENCY VIEW — super_admin only -->
-  <div class="tab-pane" id="tab-agency" style="flex-direction:column;overflow-y:auto;padding:20px;gap:16px;">
+  <div class="tab-pane" id="tab-agency" style="flex-direction:column;overflow-y:scroll;padding:20px;gap:16px;">
     <!-- Top KPI bar -->
-    <div class="stats-row" id="agency-kpi-row" style="margin-bottom:4px;">
+    <div class="stats-row" id="agency-kpi-row" style="margin-bottom:4px;flex-shrink:0;">
       <div class="stat-card"><div class="stat-icon">🏢</div><div class="stat-lbl">Active Clients</div><div class="stat-val" id="ag-clients">—</div><div class="stat-sub">Accounts</div></div>
       <div class="stat-card"><div class="stat-icon">📬</div><div class="stat-lbl">Mailers This Month</div><div class="stat-val" id="ag-mailers-mo">—</div><div class="stat-sub">All clients</div></div>
       <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-lbl">Revenue This Month</div><div class="stat-val" id="ag-rev-mo">—</div><div class="stat-sub">Mailer billing</div></div>
       <div class="stat-card"><div class="stat-icon">📍</div><div class="stat-lbl">Total Pins</div><div class="stat-val" id="ag-pins">—</div><div class="stat-sub">All accounts</div></div>
     </div>
-    <!-- Per-account cards -->
-    <div>
+    <!-- Client Accounts Table -->
+    <div style="flex-shrink:0;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
         <div class="dc-title" style="margin-bottom:0;">Client Accounts</div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <input id="ag-search" type="text" placeholder="🔍 Search clients..." oninput="filterAgencyAccounts()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:6px 12px;color:var(--fg);font-size:12px;width:180px;outline:none;" />
-          <select id="ag-sort" onchange="filterAgencyAccounts()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--fg);font-size:12px;cursor:pointer;">
+          <input id="ag-search" type="text" placeholder="🔍 Search clients..." oninput="filterAgencyAccounts()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:6px 12px;color:var(--text);font-size:12px;width:180px;outline:none;" />
+          <select id="ag-sort" onchange="filterAgencyAccounts()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--text);font-size:12px;cursor:pointer;">
             <option value="name_asc">Name A→Z</option>
             <option value="name_desc">Name Z→A</option>
             <option value="plan">Plan</option>
             <option value="pins_desc">Most Pins</option>
+            <option value="mailers_desc">Most Mailers</option>
+            <option value="revenue_desc">Most Revenue</option>
             <option value="activity">Recent Activity</option>
             <option value="created">Date Added</option>
           </select>
-          <select id="ag-filter-plan" onchange="filterAgencyAccounts()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--fg);font-size:12px;cursor:pointer;">
+          <select id="ag-filter-plan" onchange="filterAgencyAccounts()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--text);font-size:12px;cursor:pointer;">
             <option value="all">All Plans</option>
             <option value="starter">Starter</option>
             <option value="pro">Pro</option>
             <option value="agency">Agency</option>
           </select>
-          <select id="ag-filter-status" onchange="filterAgencyAccounts()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--fg);font-size:12px;cursor:pointer;">
+          <select id="ag-filter-status" onchange="filterAgencyAccounts()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--text);font-size:12px;cursor:pointer;">
             <option value="all">All Status</option>
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
@@ -1201,10 +1203,31 @@ tr:hover td{background:var(--card);}
           <button onclick="goTab('admin');setTimeout(showAddAccountForm,400)" style="background:var(--accent);border:none;border-radius:8px;padding:8px 16px;color:white;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.4px;">+ Onboard New Client</button>
         </div>
       </div>
-      <div id="agency-accounts-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;"></div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:12px;">
+            <thead>
+              <tr style="background:var(--card2);border-bottom:1px solid var(--border);">
+                <th style="padding:10px 14px;text-align:left;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">COMPANY</th>
+                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">PLAN</th>
+                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">STATUS</th>
+                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">PINS</th>
+                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">CONVERTED</th>
+                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">MAILERS MO.</th>
+                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">TOTAL MAIL</th>
+                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">REVENUE</th>
+                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">CREDITS</th>
+                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">LAST ACTIVITY</th>
+                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody id="agency-accounts-grid"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
     <!-- Mailer log table -->
-    <div class="dash-card" style="overflow:visible;">
+    <div class="dash-card" style="flex-shrink:0;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
         <div class="dc-title" style="margin-bottom:0;">Mailer Log</div>
         <div style="display:flex;gap:8px;align-items:center;">
@@ -8253,6 +8276,16 @@ function filterAgencyAccounts(){
       return lastB - lastA;
     }
     if(sort==='created') return new Date(a.created_at) - new Date(b.created_at);
+    if(sort==='mailers_desc'){
+      const mA = mailerLog.filter(m=>m.account_id===a.id).length;
+      const mB = mailerLog.filter(m=>m.account_id===b.id).length;
+      return mB - mA;
+    }
+    if(sort==='revenue_desc'){
+      const rA = (parseFloat(a.mailer_rate)||2.50) * mailerLog.filter(m=>m.account_id===a.id).length;
+      const rB = (parseFloat(b.mailer_rate)||2.50) * mailerLog.filter(m=>m.account_id===b.id).length;
+      return rB - rA;
+    }
     return 0;
   });
 
@@ -8268,72 +8301,69 @@ function _renderAgencyAccountCards(accounts){
   const {profiles, pins, mailerLog} = _agencyData;
   const el = document.getElementById('agency-accounts-grid');
   if(!el) return;
-
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-
   if(!accounts.length){
-    el.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:10px;">No accounts match your search.</div>';
+    el.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">No accounts match your search.</td></tr>';
     return;
   }
-
-  el.innerHTML = accounts.map(a=>{
+  el.innerHTML = accounts.map((a,i)=>{
     const users = profiles.filter(p=>p.account_id===a.id);
     const acctPins = pins.filter(p=>p.account_id===a.id);
     const acctMailers = mailerLog.filter(m=>m.account_id===a.id);
     const mailersThisMonth = acctMailers.filter(m=>m.sent_at>=monthStart).length;
     const mailersAllTime = acctMailers.length;
     const rate = parseFloat(a.mailer_rate)||2.50;
-    const revThisMonth = (rate * mailersThisMonth).toFixed(2);
     const revAllTime = (rate * mailersAllTime).toFixed(2);
     const converted = acctPins.filter(p=>p.status==='converted').length;
     const planColor = {starter:'#3B82F6',pro:'#8B5CF6',agency:'#F25C05'}[a.plan]||'#6688A8';
     const activeColor = a.active!==false ? '#22C55E' : '#EF4444';
-
+    const activeLabel = a.active!==false ? 'Active' : 'Inactive';
+    const paidCredits = a.lookup_credits||0;
+    const freeLeft = Math.max(0,(a.free_lookups_limit||10)-(a.free_lookups_used||0));
+    const freeLimit = a.free_lookups_limit||10;
     // Last activity
-    const lastPin = acctPins.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))[0];
-    const lastMailer = acctMailers.sort((a,b)=>new Date(b.sent_at)-new Date(a.sent_at))[0];
-    const lastActivity = lastPin || lastMailer;
-    const lastDate = lastActivity
-      ? new Date(lastPin?.created_at||lastMailer?.sent_at).toLocaleDateString('en-US',{month:'short',day:'numeric'})
+    const allDates = [
+      ...acctPins.map(p=>p.created_at),
+      ...acctMailers.map(m=>m.sent_at)
+    ].filter(Boolean).sort().reverse();
+    const lastDate = allDates.length
+      ? new Date(allDates[0]).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'})
       : 'No activity';
-
-    return '<div class="ag-acct-card">' +
-      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">' +
-        '<div class="ag-acct-name">'+(a.company_name||a.name)+'</div>' +
-        '<div style="display:flex;gap:4px;">' +
-          '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;background:'+planColor+'22;color:'+planColor+';border:1px solid '+planColor+'44;text-transform:uppercase;">'+(a.plan||'starter')+'</span>' +
-          '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;background:'+activeColor+'22;color:'+activeColor+';border:1px solid '+activeColor+'44;">'+(a.active!==false?'Active':'Inactive')+'</span>' +
-        '</div>' +
-      '</div>' +
-      '<div class="ag-acct-meta">'+users.length+' user'+(users.length!==1?'s':'')+' · Last activity: '+lastDate+'</div>' +
-      '<div class="ag-stat-row">' +
-        '<div class="ag-stat"><div class="ag-stat-val">'+acctPins.length+'</div><div class="ag-stat-lbl">Pins</div></div>' +
-        '<div class="ag-stat"><div class="ag-stat-val">'+converted+'</div><div class="ag-stat-lbl">Converted</div></div>' +
-        '<div class="ag-stat"><div class="ag-stat-val">'+mailersThisMonth+'</div><div class="ag-stat-lbl">Mailers Mo.</div></div>' +
-        '<div class="ag-stat"><div class="ag-stat-val">'+mailersAllTime+'</div><div class="ag-stat-lbl">Total Mail</div></div>' +
-      '</div>' +
-      '<div class="ag-bill-row">' +
-        '<div>' +
-          '<div class="ag-bill-lbl">This month @ $'+rate.toFixed(2)+'/piece</div>' +
-          '<div style="font-size:10px;color:var(--muted);">All time: $'+revAllTime+'</div>' +
-        '</div>' +
-        '<div class="ag-bill-val">$'+revThisMonth+'</div>' +
-      '</div>' +
-      '<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-top:8px;">' +
-        '<div style="font-size:11px;color:var(--muted);">🔍 Lookup Credits</div>' +
-        '<div style="display:flex;align-items:center;gap:8px;">' +
-          '<span style="font-size:13px;font-weight:800;color:#4ade80;">'+(a.lookup_credits||0)+'</span>' +
-          '<span style="font-size:10px;color:var(--muted);">paid</span>' +
-          '<span style="font-size:10px;color:var(--muted);">|</span>' +
-          '<span style="font-size:13px;font-weight:800;color:var(--accent);">'+(Math.max(0,(a.free_lookups_limit||10)-(a.free_lookups_used||0)))+'</span>' +
-          '<span style="font-size:10px;color:var(--muted);">/ '+(a.free_lookups_limit||10)+' free</span>' +
-          '<button onclick="adjustCredits(\''+a.id+'\')" style="background:none;border:1px solid var(--border);border-radius:5px;padding:2px 7px;color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;margin-left:4px;">Adjust</button>' +
-          '<button onclick="setFreeLimit(\''+a.id+'\')" style="background:none;border:1px solid #a855f7;border-radius:5px;padding:2px 7px;color:#a855f7;font-size:10px;font-weight:700;cursor:pointer;margin-left:2px;" title="Set monthly free lookup limit">Set Limit</button>' +
-        '</div>' +
-      '</div>' +
-      '<div style="display:flex;gap:6px;margin-top:10px;">' + '<button onclick="editClientAccount(\''+a.id+'\')" style="flex:1;background:none;border:1px solid var(--border);border-radius:7px;padding:7px;color:var(--mid);font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.4px;" onmouseover="this.style.borderColor=\'var(--accent)\';this.style.color=\'var(--accent)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--mid)\'">✏️ Edit</button>' + '<button onclick="openManageTeam(\''+a.id+'\')" style="flex:1;background:none;border:1px solid #3B82F6;border-radius:7px;padding:7px;color:#3B82F6;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.4px;" onmouseover="this.style.background=\'#3B82F622\'" onmouseout="this.style.background=\'none\'">👥 Team ('+users.length+')</button>' + '</div>' +
-      '</div>';
+    const rowBg = i%2===0 ? 'var(--card)' : 'var(--card2)';
+    const td = 'padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:middle;';
+    const tdC = td+'text-align:center;';
+    return '<tr style="background:'+rowBg+';transition:background .1s;" onmouseover="this.style.background=\'var(--card2)\'" onmouseout="this.style.background=\''+rowBg+'\'">' +
+      '<td style="'+td+'min-width:160px;">' +
+        '<div style="font-weight:700;font-size:13px;color:var(--text);">'+(a.company_name||a.name)+'</div>' +
+        '<div style="font-size:10px;color:var(--muted);margin-top:2px;">'+users.length+' user'+(users.length!==1?'s':'')+' · $'+rate.toFixed(2)+'/piece</div>' +
+      '</td>' +
+      '<td style="'+tdC+'">' +
+        '<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:'+planColor+'22;color:'+planColor+';border:1px solid '+planColor+'44;text-transform:uppercase;">'+(a.plan||'starter')+'</span>' +
+      '</td>' +
+      '<td style="'+tdC+'">' +
+        '<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:'+activeColor+'22;color:'+activeColor+';border:1px solid '+activeColor+'44;">'+activeLabel+'</span>' +
+      '</td>' +
+      '<td style="'+tdC+';font-size:13px;font-weight:700;color:var(--text);">'+acctPins.length+'</td>' +
+      '<td style="'+tdC+';font-size:13px;font-weight:700;color:#22C55E;">'+converted+'</td>' +
+      '<td style="'+tdC+';font-size:13px;font-weight:700;color:var(--text);">'+mailersThisMonth+'</td>' +
+      '<td style="'+tdC+';font-size:13px;font-weight:700;color:var(--text);">'+mailersAllTime+'</td>' +
+      '<td style="'+tdC+';font-size:13px;font-weight:700;color:#4ade80;">$'+revAllTime+'</td>' +
+      '<td style="'+tdC+'">' +
+        '<span style="font-size:12px;font-weight:700;color:#4ade80;">'+paidCredits+'</span>' +
+        '<span style="font-size:10px;color:var(--muted);"> paid</span>' +
+        '<span style="font-size:10px;color:var(--muted);"> | </span>' +
+        '<span style="font-size:12px;font-weight:700;color:var(--accent);">'+freeLeft+'</span>' +
+        '<span style="font-size:10px;color:var(--muted);">/'+freeLimit+' free</span>' +
+      '</td>' +
+      '<td style="'+tdC+';font-size:11px;color:var(--muted);">'+lastDate+'</td>' +
+      '<td style="'+tdC+';white-space:nowrap;">' +
+        '<button onclick="editClientAccount(\''+a.id+'\')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 9px;color:var(--mid);font-size:10px;font-weight:700;cursor:pointer;margin:1px;" title="Edit account">Edit</button>' +
+        '<button onclick="openManageTeam(\''+a.id+'\')" style="background:none;border:1px solid #3B82F6;border-radius:6px;padding:4px 9px;color:#3B82F6;font-size:10px;font-weight:700;cursor:pointer;margin:1px;" title="Manage team">Team</button>' +
+        '<button onclick="adjustCredits(\''+a.id+'\')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 9px;color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;margin:1px;" title="Adjust credits">Credits</button>' +
+        '<button onclick="setFreeLimit(\''+a.id+'\')" style="background:none;border:1px solid #a855f7;border-radius:6px;padding:4px 9px;color:#a855f7;font-size:10px;font-weight:700;cursor:pointer;margin:1px;" title="Set free limit">Limit</button>' +
+      '</td>' +
+    '</tr>';
   }).join('');
 }
 
