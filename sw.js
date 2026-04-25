@@ -1,7 +1,7 @@
-// BidDrop Service Worker — v2.0
+// BidDrop Service Worker — v2.1
 // Network-first for index.html (always get latest code), cache-first for static assets
 
-const CACHE_NAME = 'biddrop-v2';
+const CACHE_NAME = 'biddrop-v3';
 
 // Core app shell files to cache on install
 const PRECACHE_URLS = [
@@ -57,8 +57,16 @@ self.addEventListener('fetch', event => {
     url.hostname.includes('cdnjs.cloudflare.com')
   );
 
-  // Network-first for HTML pages and API calls — always get the latest code
-  const isHTML = url.pathname === '/' || url.pathname.endsWith('.html') || url.pathname.startsWith('/api/');
+  // Network-first for HTML pages, API calls, and special routes (/e/, /open, /r/, /q/)
+  const isHTML = (
+    url.pathname === '/' ||
+    url.pathname.endsWith('.html') ||
+    url.pathname.startsWith('/api/') ||
+    url.pathname.startsWith('/e/') ||
+    url.pathname.startsWith('/open') ||
+    url.pathname.startsWith('/r/') ||
+    url.pathname.startsWith('/q/')
+  );
 
   if (isExternal || isHTML) {
     // Network-first: try network, fall back to cache if offline
