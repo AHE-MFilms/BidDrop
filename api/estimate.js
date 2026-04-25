@@ -43,7 +43,7 @@ export default async function handler(req, res) {
       if (!id) { res.status(400).json({ error: 'id required' }); return; }
 
       // Fetch estimate row
-      const estR = await sbFetch(`estimates?id=eq.${encodeURIComponent(id)}&select=id,account_id,pin_id,addr,owner,email,phone,total,sqft,mat,structures,photo_url,photo_data,all_photos,damage_photos,skylight,skylight_qty,chimney,gutters,gutter_lf,saved_at,source,page_views,page_first_viewed_at,page_last_viewed_at,page_time_spent,page_mat_clicks,page_share_clicks,page_call_clicks,expires_at,rep_video_url,page_enabled,rep,version,deleted_at,is_revision`);
+      const estR = await sbFetch(`estimates?id=eq.${encodeURIComponent(id)}&select=id,account_id,pin_id,addr,owner,email,phone,total,sqft,mat,structures,photo_url,photo_data,all_photos,damage_photos,skylight,skylight_qty,chimney,gutters,gutter_lf,saved_at,source,page_views,page_first_viewed_at,page_last_viewed_at,page_time_spent,page_mat_clicks,page_share_clicks,page_call_clicks,expires_at,rep_video_url,page_enabled,rep,version,deleted_at,is_revision,inspection_note`);
       const estRows = await estR.json();
       if (!estRows || !estRows.length) { res.status(404).json({ error: 'Estimate not found' }); return; }
       const est = estRows[0];
@@ -54,7 +54,7 @@ export default async function handler(req, res) {
       }
 
       // Fetch account config
-      const acctR = await sbFetch(`accounts?id=eq.${encodeURIComponent(est.account_id)}&select=id,company_name,company_phone,company_addr,brand_color,logo_data,headshot,rep_name,rep_title,booking_url,diff1,diff2,diff3,diff4,diff5,diff6,years_in_business,warranty_years,financing_enabled,financing_apr,financing_term,financing_down,cost_architectural,cost_3tab,cost_designer,cost_metal,cost_tearoff,cost_ice_water,cost_felts,cost_dumpster,overhead,margin,estimate_page_expires_days,estimate_page_countdown,active`);
+      const acctR = await sbFetch(`accounts?id=eq.${encodeURIComponent(est.account_id)}&select=id,company_name,company_phone,company_addr,brand_color,logo_data,headshot,rep_name,rep_title,booking_url,diff1,diff2,diff3,diff4,diff5,diff6,years_in_business,warranty_years,financing_enabled,financing_apr,financing_term,financing_down,cost_architectural,cost_3tab,cost_designer,cost_metal,cost_tearoff,cost_ice_water,cost_felts,cost_dumpster,overhead,margin,estimate_page_expires_days,estimate_page_countdown,active,company_bio`);
       const acctRows = await acctR.json();
       if (!acctRows || !acctRows.length) { res.status(404).json({ error: 'Account not found' }); return; }
       const acct = acctRows[0];
@@ -104,6 +104,7 @@ export default async function handler(req, res) {
           pageShareClicks: est.page_share_clicks || 0,
           pageCallClicks:  est.page_call_clicks  || 0,
           pageFirstViewedAt: est.page_first_viewed_at || null,
+          inspectionNote: est.inspection_note || null,
         },
         account: {
           companyName:   acct.company_name  || 'Your Roofing Co',
@@ -139,6 +140,7 @@ export default async function handler(req, res) {
           margin:            acct.margin              || 20,
           estimatePageCountdown: acct.estimate_page_countdown || false,
           estimatePageExpiresDays: acct.estimate_page_expires_days || null,
+          companyBio: acct.company_bio || '',
         }
       });
       return;

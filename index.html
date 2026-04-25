@@ -980,6 +980,10 @@ tr:hover td{background:var(--card);}
             <input class="fi" id="e-video" type="url" placeholder="https://..." style="margin-top:3px;font-size:12px;" title="Optional: link to a short video message from the rep">
           </div>
         </div>
+        <div style="margin-top:8px;">
+          <label style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Inspection Note <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);">&mdash; shown on estimate page as a personal message</span></label>
+          <textarea class="fi" id="e-insp-note" rows="2" placeholder="e.g. During our visit we found significant hail damage to the ridge caps and several missing shingles on the south-facing slope. We recommend a full replacement before winter." style="margin-top:3px;font-size:12px;resize:vertical;min-height:60px;" oninput="scheduleDraftSave()"></textarea>
+        </div>
         <div style="margin-top:8px;font-size:11px;color:var(--muted);">&#128065; Homeowners see this page when they scan the postcard QR code. <a href="#" onclick="if(!isPlanAtLeast('agency')){showPlanUpgradePrompt('Estimate Pages','agency');return false;}if(currentEstRecord)window.open('/e/'+currentEstRecord.id,'_blank');return false;" style="color:#10b981;">Preview page &#8599;</a></div>
       </div>
       <div class="fg">
@@ -1387,10 +1391,10 @@ tr:hover td{background:var(--card);}
           <div class="frow">
             <div class="fg"><label class="fl">Years in Business</label><input class="fi" id="s-yrs" placeholder="20+"></div>
             <div class="fg"><label class="fl">Workmanship Warranty (yrs)</label><input class="fi" id="s-warr" placeholder="10"></div>
-          </div>
+           </div>
+          <div class="fg stab-full" style="margin-top:4px;"><label class="fl">Company Bio <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; shown on homeowner estimate pages</span></label><textarea class="fi" id="s-bio" rows="3" placeholder="We're a family-owned roofing company serving Metro Detroit for 20+ years. We specialize in storm damage restoration and insurance claims, making the process seamless for homeowners." style="resize:vertical;min-height:80px;"></textarea></div>
         </div>
       </div>
-
       <!-- FULL WIDTH: Branding -->
       <div class="stab-card stab-full">
         <div class="stab-card-hdr" onclick="toggleStabCard('branding')">
@@ -2070,7 +2074,8 @@ async function syncAccountToSupabase(){
     drip3_subtext:  cfg.drip3Subtext||null,
     drip4_headline: cfg.drip4Headline||null,
     drip4_subtext:  cfg.drip4Subtext||null,
-    drip_enabled: cfg.dripEnabled||false
+    drip_enabled: cfg.dripEnabled||false,
+    company_bio: cfg.companyBio||null
   }).eq('id', currentAccount.id);
   if(syncErr) console.error('[BidDrop] syncAccountToSupabase error:', syncErr.message, syncErr);
   else console.log('[BidDrop] Account synced to Supabase OK');
@@ -2154,6 +2159,7 @@ function accountRowToCfg(row){
     mailerCredits:          row.mailer_credits           || 0,
     freeMailerCreditsUsed:  row.free_mailer_credits_used || 0,
     freeMailerCreditsReset: row.free_mailer_credits_reset|| null,
+    companyBio: row.company_bio || '',
   };
 }
 
@@ -2505,7 +2511,8 @@ function saveEstimateNow(){
     sentAt: null, status: 'saved',
     rep: pin.rep || (currentUser && currentUser.email ? currentUser.email.split('@')[0] : ''),
     expiresAt: (document.getElementById('e-expires')||{}).value ? new Date((document.getElementById('e-expires')||{}).value).toISOString() : null,
-    repVideoUrl: (document.getElementById('e-video')||{}).value.trim() || null
+    repVideoUrl: (document.getElementById('e-video')||{}).value.trim() || null,
+    inspectionNote: (document.getElementById('e-insp-note')||{}).value.trim() || null
   };
   const editingId = window._editingEstimateId || null;
   window._editingEstimateId = null;
@@ -2569,7 +2576,8 @@ function saveEstimateNow(){
       saved_at: estRecord.savedAt,
       deleted_at: null,
       expires_at: estRecord.expiresAt || null,
-      rep_video_url: estRecord.repVideoUrl || null
+      rep_video_url: estRecord.repVideoUrl || null,
+      inspection_note: estRecord.inspectionNote || null
     };
     sb.from('estimates').upsert(estRow, {onConflict:'id'}).then(({error})=>{
       if(error) console.warn('[BidDrop] Save estimate to estimates table:', error.message);
@@ -2611,7 +2619,8 @@ function saveEstimateNow(){
       saved_at: estRecord.savedAt,
       deleted_at: null,
       expires_at: estRecord.expiresAt || null,
-      rep_video_url: estRecord.repVideoUrl || null
+      rep_video_url: estRecord.repVideoUrl || null,
+      inspection_note: estRecord.inspectionNote || null
     };
     sb.from('estimates').upsert(estRow2, {onConflict:'id'}).then(({error})=>{
       if(error) console.warn('[BidDrop] Save estimate to estimates table:', error.message);
@@ -6526,6 +6535,8 @@ function loadEstimateIntoEstimator(estId){
   if(expiresEl) expiresEl.value = est.expiresAt ? new Date(est.expiresAt).toISOString().split('T')[0] : '';
   const videoEl = document.getElementById('e-video');
   if(videoEl) videoEl.value = est.repVideoUrl || '';
+  const inspNoteEl = document.getElementById('e-insp-note');
+  if(inspNoteEl) inspNoteEl.value = est.inspectionNote || '';
   // Set the pin picker
   const sel = document.getElementById('est-pin-picker');
   if(sel && est.pinId) sel.value = est.pinId;
@@ -8986,6 +8997,7 @@ function openSettings(){
   document.getElementById('s-lic').value=c.licenseNum||'';
   document.getElementById('s-yrs').value=c.yearsInBusiness||'5+';
   document.getElementById('s-warr').value=c.warrantyYears||'10';
+  const sBioEl = document.getElementById('s-bio'); if(sBioEl) sBioEl.value=c.companyBio||'';
   document.getElementById('s-hook').value=c.hookLetter||'';
   document.getElementById('s-why').value=c.whyReceived||'';
   document.getElementById('s-pc-hook').value=c.postcardHook||'';
@@ -9192,7 +9204,8 @@ function saveSettings(){
     repTitle:document.getElementById('s-reptitle').value||'',
     headshotPos:document.getElementById('s-hspos').value||'30',
     bookingUrl:document.getElementById('s-bookingurl').value||'',
-    dripEnabled: isAdminOrAbove() ? !!(document.getElementById('s-drip-enabled') && document.getElementById('s-drip-enabled').checked) : (S.cfg.dripEnabled||false)
+    dripEnabled: isAdminOrAbove() ? !!(document.getElementById('s-drip-enabled') && document.getElementById('s-drip-enabled').checked) : (S.cfg.dripEnabled||false),
+    companyBio: (document.getElementById('s-bio')||{}).value || ''
   };
   applyBrand();save();updatePreview();
   // Super admin: persist master Lob and RentCast keys directly to agency account row (never touches client rows)
@@ -13538,6 +13551,21 @@ async function initEstimatePage(estId) {
           <div class="ep-hero-addr" style="font-size:22px;">${est.addr || 'Your Property'}</div>
         </div>`;
 
+    // ── Welcome card ────────────────────────────────────────────────────────
+    const ownerFirstName = (est.owner || '').split(' ')[0] || 'Homeowner';
+    const bioText = acct.companyBio || `${acct.companyName} is a locally owned roofing company proudly serving homeowners in your area. We specialize in full roof replacements, storm damage restoration, and working directly with insurance companies to make the process as smooth as possible. Our team is fully licensed, bonded, and insured — and we stand behind every job with a written workmanship warranty.`;
+    const inspNote = est.inspectionNote || '';
+    const welcomeHtml = `
+      <div class="ep-section ep-fade" style="padding:24px 20px 20px;">
+        <div style="font-size:22px;font-weight:800;margin-bottom:4px;">Welcome, ${ownerFirstName}! <span style="font-size:20px;">👋</span></div>
+        <div style="font-size:14px;color:rgba(255,255,255,.55);margin-bottom:16px;">${acct.companyName}</div>
+        <p style="font-size:14px;line-height:1.7;color:rgba(255,255,255,.8);margin:0 0 ${inspNote ? '16px' : '0'};">${bioText}</p>
+        ${inspNote ? `
+        <div style="background:rgba(255,255,255,.06);border-left:3px solid ${brand};border-radius:0 12px 12px 0;padding:14px 16px;margin-top:4px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:${brand};margin-bottom:6px;">📋 What We Found At Your Property</div>
+          <p style="font-size:13px;line-height:1.65;color:rgba(255,255,255,.85);margin:0;">${inspNote}</p>
+        </div>` : ''}
+      </div>`;
     // ── Countdown ──────────────────────────────────────────────────────────
     let countdownHtml = '';
     if (est.expiresAt) {
@@ -13697,6 +13725,7 @@ async function initEstimatePage(estId) {
       ${headerHtml}
       <div style="max-width:600px;margin:0 auto;padding-bottom:40px;">
         ${heroHtml}
+        ${welcomeHtml}
         <div style="padding:16px 16px 0;">
           ${countdownHtml}
           ${videoHtml}
