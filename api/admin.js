@@ -577,6 +577,79 @@ export default async function handler(req, res) {
         return res.json({ policyResults });
       }
 
+      case 'print-unlock': {
+        // Charge 1 credit to unlock printing for an estimate (pay-once per estimate)
+        const { estId: puEstId } = req.body;
+        if (!puEstId) { res.status(400).json({ error: 'estId required' }); return; }
+        // Check if already unlocked
+        const puEstRes = await sbFetch(`estimates?id=eq.${puEstId}&select=id,account_id,print_paid`);
+        if (!puEstRes.ok) { res.status(500).json({ error: 'Failed to fetch estimate' }); return; }
+        const puEsts = await puEstRes.json();
+        if (!puEsts.length) { res.status(404).json({ error: 'Estimate not found' }); return; }
+        const puEst = puEsts[0];
+        // Verify ownership
+        if (puEst.account_id !== profile.account_id && !isSuperAdmin) {
+          res.status(403).json({ error: 'Not your estimate' }); return;
+        }
+        // Already paid — allow free reprint
+        if (puEst.print_paid) {
+          res.status(200).json({ already_paid: true });
+          return;
+        }
+        // Deduct 1 credit — use free first, then paid
+        const PRINT_CREDITS = 1;
+        const puAcctRes = await sbFetch(
+          `accounts?id=eq.${profile.account_id}&select=id,lookup_credits,free_lookups_used,free_lookups_reset,free_lookups_limit`
+        );
+        if (!puAcctRes.ok) { res.status(500).json({ error: 'Failed to fetch account' }); return; }
+        const puAcctRows = await puAcctRes.json();
+        if (!puAcctRows.length) { res.status(404).json({ error: 'Account not found' }); return; }
+        const puAcct = puAcctRows[0];
+        // Monthly reset
+        const puToday = new Date().toISOString().slice(0, 10);
+        if ((puAcct.free_lookups_reset || '').slice(0, 7) !== puToday.slice(0, 7)) {
+          await sbFetch(`accounts?id=eq.${profile.account_id}`, {
+            method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ free_lookups_used: 0, free_lookups_reset: puToday })
+          });
+          puAcct.free_lookups_used = 0;
+        }
+        const puFreeLimit = puAcct.free_lookups_limit ?? 20;
+        const puFreeLeft  = Math.max(0, puFreeLimit - (puAcct.free_lookups_used || 0));
+        const puPaid      = puAcct.lookup_credits || 0;
+        const puTotal     = puFreeLeft + puPaid;
+        if (puTotal < PRINT_CREDITS) {
+          res.status(402).json({
+            error: 'no_credits',
+            message: 'Printing a quote costs 1 credit. You have no credits remaining.',
+            credits_needed: PRINT_CREDITS,
+            credits_available: puTotal
+          });
+          return;
+        }
+        // Deduct
+        const puFreeToUse = Math.min(puFreeLeft, PRINT_CREDITS);
+        const puPaidToUse = PRINT_CREDITS - puFreeToUse;
+        const puUpdates = {};
+        if (puFreeToUse > 0) puUpdates.free_lookups_used = (puAcct.free_lookups_used || 0) + puFreeToUse;
+        if (puPaidToUse > 0) puUpdates.lookup_credits = puPaid - puPaidToUse;
+        await sbFetch(`accounts?id=eq.${profile.account_id}`, {
+          method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
+          body: JSON.stringify(puUpdates)
+        });
+        // Mark estimate as print_paid
+        await sbFetch(`estimates?id=eq.${puEstId}`, {
+          method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ print_paid: true })
+        });
+        const puNewPaid     = puPaid - puPaidToUse;
+        const puNewFreeUsed = (puAcct.free_lookups_used || 0) + puFreeToUse;
+        res.status(200).json({
+          success: true,
+          _credits: { paid_credits: puNewPaid, free_used: puNewFreeUsed, free_limit: puFreeLimit }
+        });
+        break;
+      }
       case 'run-migration': {
         // One-time migration: add missing columns and performance indexes
         if (!isSuperAdmin) {
@@ -627,7 +700,8 @@ export default async function handler(req, res) {
           `ALTER TABLE pins ADD COLUMN IF NOT EXISTS source TEXT`,
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS mailer_credits INTEGER DEFAULT 0`,
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS free_mailer_credits_used INTEGER DEFAULT 0`,
-          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS free_mailer_credits_reset DATE`
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS free_mailer_credits_reset DATE`,
+          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS print_paid BOOLEAN DEFAULT FALSE`
         ].join('; ');
         const results = [];
         // Run each DDL statement individually via Supabase pg_meta API (uses SERVICE_KEY)

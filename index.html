@@ -588,6 +588,18 @@ tr:hover td{background:var(--card);}
   </div>
 </div>
 
+<!-- PHOTO LIGHTBOX MODAL (estimate photos in admin view) -->
+<div id="m-photo-lightbox" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:30000;align-items:center;justify-content:center;flex-direction:column;" onclick="if(event.target===this)closePhotoLightbox()">
+  <div style="position:relative;max-width:96vw;max-height:90vh;display:flex;flex-direction:column;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:0 4px;">
+      <div id="plb-title" style="font-family:var(--font-h);font-size:16px;font-weight:700;color:#fff;letter-spacing:.5px;"></div>
+      <button onclick="closePhotoLightbox()" style="background:none;border:1px solid rgba(255,255,255,.3);border-radius:6px;padding:4px 12px;color:#fff;font-size:16px;cursor:pointer;margin-left:20px;">&times; Close</button>
+    </div>
+    <img id="plb-img" src="" style="max-width:90vw;max-height:80vh;object-fit:contain;border-radius:8px;display:block;" alt="Property photo">
+    <div id="plb-strip" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px;max-width:90vw;"></div>
+  </div>
+</div>
+
 <!-- ADMIN MODAL -->
 <div class="overlay" id="m-admin" style="display:none;">
   <div class="modal" style="max-width:580px;">
@@ -1119,6 +1131,7 @@ tr:hover td{background:var(--card);}
             <th onclick="setEstSort('total')" style="text-align:right;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);cursor:pointer;user-select:none;white-space:nowrap;">Total <span id="est-sort-total"></span></th>
             <th onclick="setEstSort('savedAt')" style="text-align:left;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);cursor:pointer;user-select:none;white-space:nowrap;">Saved <span id="est-sort-savedAt"></span></th>
             <th style="text-align:center;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">&#128065; Page</th>
+            <th style="text-align:center;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">&#128247; Photos</th>
             <th style="text-align:center;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">Actions</th>
           </tr>
         </thead>
@@ -1670,8 +1683,8 @@ tr:hover td{background:var(--card);}
         </div>
       </div>
 
-      <!-- RIGHT: Integrations -->
-      <div class="stab-card">
+      <!-- RIGHT: Integrations — super_admin only -->
+      <div class="stab-card" id="stab-integrations-card" style="display:none;">
         <div class="stab-card-hdr" onclick="toggleStabCard('integrations')">
           <span>&#128279; Integrations</span>
           <span class="stab-chevron" id="stab-chevron-integrations">&#9662;</span>
@@ -3149,6 +3162,58 @@ function previewPostcardBack(step){
   const fromPhone= cfg.phone            || '';
   const logoUrl  = cfg.logoData         || '';
   previewPostcardBackLightbox(step, toName, toAddr, fromName, fromAddr, fromCity, fromPhone, logoUrl);
+}
+
+// ── Photo Lightbox (estimate admin view) ─────────────────────────────────────
+function openEstPhotoLightbox(estId){
+  const est = (S.estimates||[]).find(e=>e.id===estId);
+  if(!est){ toast('Estimate not found','error'); return; }
+  // Collect all photos from all categories
+  const photos = [];
+  // Front / house photos
+  const allPhotos = est.all_photos || {};
+  const cats = [
+    { key:'home', label:'Front of Home' },
+    { key:'damage', label:'Damage' },
+    { key:'additional', label:'Additional' }
+  ];
+  cats.forEach(({key, label})=>{
+    const arr = allPhotos[key] || [];
+    arr.forEach((p,i)=>{
+      const src = (typeof p === 'string') ? p : (p.data || p.url || '');
+      if(src) photos.push({ src, label: label + (arr.length>1?' '+(i+1):'') });
+    });
+  });
+  // Legacy single photo_url / photo_data
+  if(!photos.length){
+    const src = est.photo_data || est.photo_url || '';
+    if(src) photos.push({ src, label:'Property Photo' });
+  }
+  // Damage photos (legacy separate field)
+  if(est.damage_photos && Array.isArray(est.damage_photos)){
+    est.damage_photos.forEach((p,i)=>{
+      const src = (typeof p === 'string') ? p : (p.data || p.url || '');
+      if(src && !photos.find(x=>x.src===src)) photos.push({ src, label:'Damage '+(i+1) });
+    });
+  }
+  if(!photos.length){ toast('No photos for this estimate','info'); return; }
+  const lb = document.getElementById('m-photo-lightbox');
+  const titleEl = document.getElementById('plb-title');
+  const imgEl = document.getElementById('plb-img');
+  const stripEl = document.getElementById('plb-strip');
+  if(!lb||!imgEl||!stripEl) return;
+  titleEl.textContent = est.addr || 'Property Photos';
+  // Show main image
+  imgEl.src = photos[0].src;
+  // Build thumbnail strip
+  stripEl.innerHTML = photos.map((p,i)=>`
+    <img src="${p.src}" title="${p.label}" onclick="document.getElementById('plb-img').src='${p.src}';document.getElementById('plb-title').textContent='${(est.addr||'').replace(/'/g,"'")} — ${p.label}';" style="width:72px;height:54px;object-fit:cover;border-radius:5px;cursor:pointer;border:2px solid ${i===0?'var(--accent)':'rgba(255,255,255,.2)'};transition:border-color .15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='${i===0?'var(--accent)':'rgba(255,255,255,.2)'}'">
+  `).join('');
+  lb.style.display = 'flex';
+}
+function closePhotoLightbox(){
+  const lb = document.getElementById('m-photo-lightbox');
+  if(lb){ lb.style.display='none'; const img=document.getElementById('plb-img'); if(img) img.src=''; }
 }
 
 // Build the standard USPS-compliant postcard back side HTML
@@ -6232,6 +6297,25 @@ function renderEstimatesTab(){
           +(est.page_share_clicks?'<div style="font-size:10px;color:#7c3aed;">&#x1F4E4; Shared</div>':'')
           +'</td>';
       })()
+      +(()=>{
+        // Photo thumbnail cell — click to open lightbox
+        const allP = est.all_photos || {};
+        const firstCat = ['home','damage','additional'].find(k=>(allP[k]||[]).length>0);
+        const firstEntry = firstCat ? (allP[firstCat]||[])[0] : null;
+        const thumbSrc = firstEntry
+          ? (typeof firstEntry==='string' ? firstEntry : (firstEntry.data||firstEntry.url||''))
+          : (est.photo_data||est.photo_url||'');
+        const totalCount = ['home','damage','additional'].reduce((n,k)=>n+(allP[k]||[]).length,0)
+          || (est.damage_photos&&Array.isArray(est.damage_photos)?est.damage_photos.length:0)
+          || (thumbSrc?1:0);
+        if(!thumbSrc) return '<td style="padding:12px;text-align:center;"><span style="font-size:10px;color:var(--muted);opacity:.4;">No photos</span></td>';
+        return '<td style="padding:12px;text-align:center;">'
+          +'<div onclick="openEstPhotoLightbox(\''+eid+'\')" title="Click to view '+totalCount+' photo'+(totalCount!==1?'s':'')+' — '+escHtml(addr)+'" style="position:relative;display:inline-block;cursor:pointer;">'
+          +'<img src="'+thumbSrc+'" style="width:64px;height:48px;object-fit:cover;border-radius:5px;border:2px solid var(--border);transition:border-color .15s;" onmouseover="this.style.borderColor=\'var(--accent)\'" onmouseout="this.style.borderColor=\'var(--border)\'" alt="photo">'
+          +(totalCount>1?'<span style="position:absolute;bottom:3px;right:3px;background:rgba(0,0,0,.7);color:#fff;font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px;">'+totalCount+'</span>':'')
+          +'</div>'
+          +'</td>';
+      })()
       +'<td style="padding:12px;text-align:center;">'
         +'<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">'+actionBtns+'</div>'
       +'</td>'
@@ -6659,9 +6743,44 @@ async function sendEstimateViaGHL(estId){
     renderEstimatesTab();
   }, 300);
 }
-function printEstimate(estId){
+async function printEstimate(estId){
   const est = (S.estimates||[]).find(e=>e.id===estId);
   if(!est){ toast('Estimate not found','error'); return; }
+  // Pay-once print gate: 1 credit per estimate, free reprints after first payment
+  if(!est.printPaid){
+    // Check credits first
+    const freeLimit = {starter:5,pro:15,agency:30,enterprise:60}[(S.cfg&&S.cfg.plan||'starter').toLowerCase()] || 5;
+    const freeLeft  = Math.max(0, freeLimit - (S.cfg.freeMailerCreditsUsed||0));
+    const paid      = S.cfg.mailerCredits||0;
+    const total     = freeLeft + paid;
+    if(total < 1){
+      toast('Printing a quote costs 1 credit. Please purchase more credits.','error');
+      setTimeout(()=>showBuyCreditsModal(), 800);
+      return;
+    }
+    // Confirm with user
+    const confirmed = confirm('Printing this quote costs 1 credit ($4.00).\nYou will only be charged once — all future reprints of this estimate are free.\n\nProceed?');
+    if(!confirmed) return;
+    toast('Unlocking print…','info');
+    try{
+      const d = await adminAPI('print-unlock', { estId });
+      if(d && d.error === 'no_credits'){
+        toast('Not enough credits to print. Please purchase more.','error');
+        setTimeout(()=>showBuyCreditsModal(), 800);
+        return;
+      }
+      // Update local state
+      est.printPaid = true;
+      if(d && d._credits){
+        S.cfg.mailerCredits = d._credits.paid_credits ?? S.cfg.mailerCredits;
+        if(d._credits.free_used !== undefined) S.cfg.freeMailerCreditsUsed = d._credits.free_used;
+        updateCreditBadge();
+      }
+    } catch(err){
+      toast('Failed to unlock print: '+err.message,'error');
+      return;
+    }
+  }
   loadEstimateIntoEstimator(estId);
   setTimeout(()=>{ printNow(); }, 300);
 }
@@ -9129,6 +9248,9 @@ function openSettings(){
     }
     if(c.ghlStageId) stgSel.value=c.ghlStageId;
   }
+  // Integrations card (GHL, Lob, RentCast) — super_admin only
+  const intCard = document.getElementById('stab-integrations-card');
+  if(intCard) intCard.style.display = isSuperAdmin() ? 'block' : 'none';
   // Show Lob and RentCast key fields only to super_admin
   const lobSection = document.getElementById('lob-settings-section');
   if(lobSection) lobSection.style.display = isSuperAdmin() ? 'block' : 'none';
@@ -10277,6 +10399,7 @@ async function loadEstimatesFromSupabase(){
     savedAt: row.saved_at || row.created_at,
     sentAt: row.sent_at || null,
     deletedAt: row.deleted_at || null,
+    printPaid: row.print_paid || false,
     status: 'saved'
   }));
   // Merge: keep any in-memory estimates not yet in DB, replace those that are
