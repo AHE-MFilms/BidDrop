@@ -700,10 +700,10 @@ function buildPage(firstName,lastName,email,phone){
   } else {
     $('ep-sticky-logo-init').textContent=initials(acct.companyName);
   }
-  const phone=acct.phone||'';
-  if(phone){
-    $('ep-sticky-phone').href='tel:'+phone.replace(/[^0-9+]/g,'');
-    $('ep-sticky-phone-num').textContent=phone;
+  const acctPhone=acct.phone||'';
+  if(acctPhone){
+    $('ep-sticky-phone').href='tel:'+acctPhone.replace(/[^0-9+]/g,'');
+    $('ep-sticky-phone-num').textContent=acctPhone;
   } else {
     $('ep-sticky-phone').style.display='none';
   }
