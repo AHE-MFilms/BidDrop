@@ -1111,13 +1111,13 @@ tr:hover td{background:var(--card);}
       </div>
       <table id="estimates-table" style="display:none;width:100%;border-collapse:collapse;">
         <thead>
-          <tr style="border-bottom:2px solid var(--border);">
+          <tr id="est-thead-row" style="border-bottom:2px solid var(--border);">
             <th style="padding:10px 8px;width:32px;"><input type="checkbox" id="est-select-all" onchange="toggleAllEstimateSelect(this.checked)" style="cursor:pointer;"></th>
-            <th style="text-align:left;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">Address</th>
-            <th style="text-align:left;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">Homeowner</th>
-            <th style="text-align:left;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">Rep</th>
-            <th style="text-align:right;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">Total</th>
-            <th style="text-align:left;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">Saved</th>
+            <th onclick="setEstSort('addr')" style="text-align:left;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);cursor:pointer;user-select:none;white-space:nowrap;">Address <span id="est-sort-addr"></span></th>
+            <th onclick="setEstSort('owner')" style="text-align:left;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);cursor:pointer;user-select:none;white-space:nowrap;">Homeowner <span id="est-sort-owner"></span></th>
+            <th onclick="setEstSort('rep')" style="text-align:left;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);cursor:pointer;user-select:none;white-space:nowrap;">Rep <span id="est-sort-rep"></span></th>
+            <th onclick="setEstSort('total')" style="text-align:right;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);cursor:pointer;user-select:none;white-space:nowrap;">Total <span id="est-sort-total"></span></th>
+            <th onclick="setEstSort('savedAt')" style="text-align:left;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);cursor:pointer;user-select:none;white-space:nowrap;">Saved <span id="est-sort-savedAt"></span></th>
             <th style="text-align:center;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">&#128065; Page</th>
             <th style="text-align:center;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">Actions</th>
           </tr>
@@ -1161,8 +1161,13 @@ tr:hover td{background:var(--card);}
         <thead>
           <tr>
             <th style="width:36px;"><input type="checkbox" id="q-select-all" onchange="toggleAllQueueSelect(this.checked)" style="cursor:pointer;width:16px;height:16px;accent-color:var(--accent);"></th>
-            <th>Homeowner</th><th>Address</th><th>Estimate</th>
-            <th>Material</th><th>Created</th><th>Status</th><th>Actions</th>
+            <th onclick="setQSort('owner')" style="cursor:pointer;user-select:none;white-space:nowrap;">Homeowner <span id="q-sort-owner"></span></th>
+            <th onclick="setQSort('addr')" style="cursor:pointer;user-select:none;white-space:nowrap;">Address <span id="q-sort-addr"></span></th>
+            <th onclick="setQSort('total')" style="cursor:pointer;user-select:none;white-space:nowrap;">Estimate <span id="q-sort-total"></span></th>
+            <th onclick="setQSort('mat')" style="cursor:pointer;user-select:none;white-space:nowrap;">Material <span id="q-sort-mat"></span></th>
+            <th onclick="setQSort('at')" style="cursor:pointer;user-select:none;white-space:nowrap;">Created <span id="q-sort-at"></span></th>
+            <th onclick="setQSort('status')" style="cursor:pointer;user-select:none;white-space:nowrap;">Status <span id="q-sort-status"></span></th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody id="q-tbody"></tbody>
@@ -6064,7 +6069,9 @@ function addToQueue(){
 }
 
 // ── Estimates view state ──────────────────────────────────────────────────
-let _estView = 'active'; // 'active' | 'trash'
+let _estView = 'active';
+let _estSort = {col:'savedAt', dir:'desc'};
+let _qSort   = {col:'at',      dir:'desc'}; // 'active' | 'trash'
 
 function switchEstView(view){
   _estView = view;
@@ -6080,6 +6087,52 @@ function switchEstView(view){
   renderEstimatesTab();
 }
 
+
+// ── Column Sort Helpers ──────────────────────────────────────────────────────
+function _sortList(arr, col, dir){
+  return arr.slice().sort(function(a,b){
+    let av = a[col], bv = b[col];
+    // Numeric columns
+    if(col==='total'){ av=parseFloat(av)||0; bv=parseFloat(bv)||0; }
+    // Date columns
+    else if(col==='savedAt'||col==='at'||col==='mailedAt'){
+      av = av ? new Date(av).getTime() : 0;
+      bv = bv ? new Date(bv).getTime() : 0;
+    }
+    // String columns
+    else { av=(av||'').toString().toLowerCase(); bv=(bv||'').toString().toLowerCase(); }
+    if(av < bv) return dir==='asc' ? -1 : 1;
+    if(av > bv) return dir==='asc' ? 1 : -1;
+    return 0;
+  });
+}
+function setEstSort(col){
+  if(_estSort.col===col){ _estSort.dir = _estSort.dir==='asc'?'desc':'asc'; }
+  else { _estSort.col=col; _estSort.dir='asc'; }
+  renderEstimatesTab();
+}
+function setQSort(col){
+  if(_qSort.col===col){ _qSort.dir = _qSort.dir==='asc'?'desc':'asc'; }
+  else { _qSort.col=col; _qSort.dir='asc'; }
+  renderQueue();
+}
+function _updateEstSortArrows(){
+  ['addr','owner','rep','total','savedAt'].forEach(function(c){
+    const el=document.getElementById('est-sort-'+c);
+    if(!el) return;
+    if(_estSort.col===c){ el.textContent=_estSort.dir==='asc'?' ▲':' ▼'; el.style.color='var(--accent)'; }
+    else { el.textContent=''; }
+  });
+}
+function _updateQSortArrows(){
+  ['owner','addr','total','mat','at','status'].forEach(function(c){
+    const el=document.getElementById('q-sort-'+c);
+    if(!el) return;
+    if(_qSort.col===c){ el.textContent=_qSort.dir==='asc'?' ▲':' ▼'; el.style.color='var(--accent)'; }
+    else { el.textContent=''; }
+  });
+}
+// ────────────────────────────────────────────────────────────────────────────
 function renderEstimatesTab(){
   const allEsts = S.estimates || [];
   // Populate rep filter dropdown
@@ -6120,6 +6173,9 @@ function renderEstimatesTab(){
     return;
   }
   empty.style.display='none'; table.style.display='table';
+  // Apply column sort
+  list = _sortList(list, _estSort.col, _estSort.dir);
+  _updateEstSortArrows();
   tbody.innerHTML = list.map(function(est){
     const date = est.savedAt ? new Date(est.savedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
     const addr = est.addr || '—';
@@ -6633,7 +6689,9 @@ function renderQueue(){
   const empty=document.getElementById('q-empty');
   if(!S.queue.length){tbl.style.display='none';empty.style.display='block';return;}
   tbl.style.display='table';empty.style.display='none';
-  tbody.innerHTML=S.queue.map(i=>{
+  const sortedQueue = _sortList([...S.queue], _qSort.col, _qSort.dir);
+  _updateQSortArrows();
+  tbody.innerHTML=sortedQueue.map(i=>{
     // Fix A: sync live estimate data from S.estimates so queue always shows current numbers
     if(i.status !== 'sent'){
       const liveEst = (S.estimates||[]).find(e=>
