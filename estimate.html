@@ -535,10 +535,11 @@ function renderPage(){
   $('ep-price').style.color=sel?.mc||brand;
   $('ep-monthly').textContent=acct.financingEnabled!==false?fmtMo(sp,acct.financingApr,acct.financingTerm):'';
 
-  // Roof Details
-  const sqft=est.sqft?Math.round(est.sqft).toLocaleString()+' sq ft':'—';
+  // Roof Details — sqft lives in structures[0].sqft (top-level est.sqft may be null)
   const structs=est.structures||[];
-  const pitch=structs[0]?(parseFloat(structs[0].pitch)||1.31):'—';
+  const rawSqft=est.sqft||(structs[0]&&structs[0].sqft)||0;
+  const sqft=rawSqft?Math.round(rawSqft).toLocaleString()+' sq ft':'—';
+  const pitch=structs[0]?(parseFloat(structs[0].pitch)||1.15):'—';
   // Convert pitch multiplier to x/12 display
   const pitchDisplay=typeof pitch==='number'?pitchMulToLabel(pitch):'—';
   $('ep-detail-grid').innerHTML=`
@@ -576,11 +577,11 @@ function renderPage(){
   trackView();
 }
 
-// Convert pitch multiplier to readable label
+// Convert pitch multiplier to readable label — matches PITCHLBL in index.html
 function pitchMulToLabel(mul){
-  const map={'1.0':'Flat','1.03':'2/12','1.07':'3/12','1.10':'4/12','1.15':'5/12','1.20':'6/12','1.25':'7/12','1.31':'8/12','1.37':'9/12','1.44':'10/12','1.52':'11/12','1.60':'12/12'};
-  const k=String(parseFloat(mul).toFixed(2));
-  return map[k]||mul+'/12';
+  const map={'1.00':'4/12 Low','1.07':'5/12','1.15':'6/12 Std','1.23':'7/12','1.31':'8/12 Mod','1.40':'9/12','1.50':'10/12 Steep','1.65':'11/12','1.80':'12/12 Steep'};
+  const k=parseFloat(mul).toFixed(2);
+  return map[k]||map[parseFloat(mul).toFixed(1)]||(mul+'/12');
 }
 
 // ── Photo Galleries ───────────────────────────────────────────────────────────
@@ -591,12 +592,14 @@ function renderPhotos(est){
   const damage=ap.damage||est.damagePhotos||[];
   const angles=ap.angles||[];
   const buildings=ap.buildings||[];
+  const other=ap.other||[];
   const extraFront=front.slice(1);
 
   const secs=[];
   if(damage.length)secs.push({title:'Roof Damage Found',badge:'damage',lbl:'⚠️ Damage',photos:damage});
   if(angles.length)secs.push({title:'Additional Angles',badge:'angles',lbl:'📐 Angles',photos:angles});
   if(buildings.length)secs.push({title:'Other Structures',badge:'struct',lbl:'🏗️ Structures',photos:buildings});
+  if(other.length)secs.push({title:'Additional Photos',badge:'other',lbl:'📷 More',photos:other});
   if(extraFront.length)secs.push({title:'Property Photos',badge:'home',lbl:'🏠 Home',photos:extraFront});
   if(!secs.length)return;
 
