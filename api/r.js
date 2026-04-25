@@ -56,13 +56,19 @@ export default async function handler(req, res) {
     console.error('[r] queue lookup error:', e);
   }
 
-  // Get the booking URL from the account config
+  // Get the booking URL and company name from the account config
+  let companySlug = 'roofing';
   if (accountId) {
     try {
-      const r = await sbFetch(`accounts?id=eq.${encodeURIComponent(accountId)}&select=booking_url`);
+      const r = await sbFetch(`accounts?id=eq.${encodeURIComponent(accountId)}&select=booking_url,company_name`);
       if (r.ok) {
         const rows = await r.json();
-        if (rows && rows[0]) bookingUrl = rows[0].booking_url;
+        if (rows && rows[0]) {
+          bookingUrl = rows[0].booking_url;
+          if (rows[0].company_name) {
+            companySlug = rows[0].company_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'roofing';
+          }
+        }
       }
     } catch (e) {
       console.error('[r] account lookup error:', e);
@@ -103,12 +109,12 @@ export default async function handler(req, res) {
   }
 
   // Redirect priority:
-  //   1. Personalized estimate page /e/[id]
+  //   1. Personalized estimate page on estimate.biddrop.us/[company-slug]/[id]
   //   2. Booking URL (Calendly, etc.)
   //   3. Fallback homepage
   let dest;
   if (estimateId) {
-    dest = `https://biddrop.americashomeexperts.com/e/${estimateId}`;
+    dest = `https://estimate.biddrop.us/${companySlug}/${estimateId}`;
   } else if (bookingUrl) {
     dest = bookingUrl;
   } else {

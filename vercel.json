@@ -3,7 +3,8 @@
     { "source": "/r/:id", "destination": "/api/r" },
     { "source": "/q/:slug", "destination": "/index.html" },
     { "source": "/e/:id", "destination": "/estimate.html" },
-    { "source": "/open", "destination": "/open.html" }
+    { "source": "/open", "destination": "/open.html" },
+    { "source": "/:company/:id", "destination": "/estimate.html" }
   ],
   "functions": {
     "api/credits.js": {
