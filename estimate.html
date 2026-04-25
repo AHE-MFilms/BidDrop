@@ -721,7 +721,7 @@ function buildPage(firstName,lastName,email,phone){
     {icon:'🏠',val:est.addr||'Property Address',lbl:'Property Address'},
     {icon:'📋',val:_estId.replace('est_','EST-'),lbl:'Estimate Number'},
     estDate?{icon:'📅',val:estDate,lbl:'Inspection Date'}:null,
-    repName?{icon:'👷',val:repName+(acct.repTitle?' — '+acct.repTitle:''),lbl:'Assigned Estimator'}:null,
+    repName?{icon:'👷',val:repName,lbl:'Assigned Estimator'}:null,
     expDate?{icon:'⏱️',val:'Valid Through '+expDate,lbl:'Estimate Expiration'}:null,
   ].filter(Boolean);
   $('ep-prop-row').innerHTML=propItems.map(p=>`
