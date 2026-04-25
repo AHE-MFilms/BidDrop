@@ -59,6 +59,21 @@ body{font-family:'Barlow',sans-serif;background:var(--cream-soft);color:var(--in
 /* ── HERO ── */
 .ep-hero{background:var(--ink);position:relative;overflow:hidden;padding:0;}
 .ep-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 70% 50%,rgba(201,125,46,.12) 0%,transparent 70%);pointer-events:none;}
+/* ── STICKY CONTACT BAR ── */
+.ep-sticky-bar{position:sticky;top:0;z-index:1000;background:var(--ink);border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;padding:10px 60px;gap:16px;}
+@media(max-width:900px){.ep-sticky-bar{padding:10px 20px;gap:10px;}}
+.ep-sticky-co{display:flex;align-items:center;gap:12px;min-width:0;}
+.ep-sticky-logo{width:40px;height:40px;border-radius:8px;overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ep-sticky-logo img{width:100%;height:100%;object-fit:contain;}
+.ep-sticky-logo-init{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;color:var(--amber);}
+.ep-sticky-name{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;color:#fff;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ep-sticky-tag{font-size:11px;color:rgba(255,255,255,.4);letter-spacing:.5px;white-space:nowrap;}
+.ep-sticky-actions{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.ep-sticky-phone{display:flex;align-items:center;gap:6px;color:rgba(255,255,255,.7);font-size:14px;font-weight:600;text-decoration:none;white-space:nowrap;}
+.ep-sticky-phone:hover{color:#fff;}
+.ep-sticky-cta{background:var(--amber);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;letter-spacing:.3px;}
+.ep-sticky-cta:hover{opacity:.9;}
+/* ── TOPBAR (non-sticky, inside hero) ── */
 .ep-topbar{display:flex;justify-content:space-between;align-items:center;padding:22px 60px;border-bottom:1px solid var(--border-light);position:relative;z-index:2;}
 @media(max-width:900px){.ep-topbar{padding:18px 24px;flex-direction:column;gap:14px;text-align:center;}}
 .bd-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
@@ -66,8 +81,8 @@ body{font-family:'Barlow',sans-serif;background:var(--cream-soft);color:var(--in
 .bd-logo-text{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:20px;color:#fff;letter-spacing:1px;}
 .bd-logo-text span{color:var(--amber-lt);}
 .co-slot{display:flex;align-items:center;gap:14px;}
-.co-badge{width:52px;height:52px;background:rgba(255,255,255,.08);border:1px solid var(--border-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;color:var(--amber-lt);overflow:hidden;flex-shrink:0;}
-.co-badge img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.co-badge{width:52px;height:52px;background:#fff;border:2px solid rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;color:var(--amber);overflow:hidden;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.25);}
+.co-badge img{width:100%;height:100%;object-fit:contain;padding:4px;}
 .co-name-wrap{text-align:right;}
 @media(max-width:900px){.co-name-wrap{text-align:center;}}
 .co-name-wrap strong{display:block;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.5px;}
@@ -145,25 +160,7 @@ body{font-family:'Barlow',sans-serif;background:var(--cream-soft);color:var(--in
 @media(max-width:900px){.ep-gallery-section{padding:0 24px 40px;}}
 .ep-gallery-label{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:16px;padding-top:40px;display:block;}
 /* ── FULL-SCREEN GALLERY MODAL ── */
-#ep-gallery-modal{display:none;position:fixed;inset:0;background:#111;z-index:10000;flex-direction:column;}
-#ep-gallery-modal.open{display:flex;}
-.ep-gm-topbar{display:flex;align-items:center;gap:0;background:#111;border-bottom:1px solid rgba(255,255,255,.1);padding:0 20px;height:56px;flex-shrink:0;}
-.ep-gm-close{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:8px 16px 8px 0;display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;letter-spacing:.3px;opacity:.7;transition:opacity .15s;}
-.ep-gm-close:hover{opacity:1;}
-.ep-gm-tabs{display:flex;gap:0;overflow-x:auto;flex:1;scrollbar-width:none;}
-.ep-gm-tabs::-webkit-scrollbar{display:none;}
-.ep-gm-tab{background:none;border:none;border-bottom:3px solid transparent;color:rgba(255,255,255,.5);font-size:14px;font-weight:600;padding:0 16px;height:56px;cursor:pointer;white-space:nowrap;transition:color .15s,border-color .15s;}
-.ep-gm-tab.active{color:#fff;border-bottom-color:var(--amber);}
-.ep-gm-tab:hover{color:rgba(255,255,255,.8);}
-.ep-gm-body{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:20px 80px;}
-@media(max-width:600px){.ep-gm-body{padding:12px 52px;}}
-.ep-gm-img{max-width:100%;max-height:100%;object-fit:contain;border-radius:4px;display:block;}
-.ep-gm-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.1);border:none;color:#fff;width:52px;height:52px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:26px;transition:background .15s;}
-.ep-gm-nav:hover{background:rgba(255,255,255,.25);}
-#ep-gm-prev{left:16px;}
-#ep-gm-next{right:16px;}
-.ep-gm-footer{background:#111;border-top:1px solid rgba(255,255,255,.08);padding:12px 20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.ep-gm-counter{color:rgba(255,255,255,.4);font-size:13px;letter-spacing:1px;}
+/* gallery modal removed */
 /* Lightbox (single-image fallback) */
 #ep-lightbox-prev,#ep-lightbox-next{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.12);border:none;color:#fff;font-size:28px;width:48px;height:48px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;}
 #ep-lightbox-prev{left:16px;}
@@ -328,6 +325,22 @@ body{font-family:'Barlow',sans-serif;background:var(--cream-soft);color:var(--in
 .ep-powered-dot{width:14px;height:14px;background:var(--amber);border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff;font-family:'Barlow Condensed',sans-serif;}
 .ep-powered-name{font-size:13px;font-weight:700;color:rgba(255,255,255,.4);font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;}
 
+/* ── HOMEOWNER GREETING ── */
+.ep-greeting{background:var(--cream);padding:40px 60px 0;}
+@media(max-width:900px){.ep-greeting{padding:28px 24px 0;}}
+.ep-greeting-text{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--ink);line-height:1.6;max-width:700px;}
+.ep-greeting-text strong{color:var(--amber);font-weight:700;}
+/* ── PHOTO THUMBNAIL GRID ── */
+.ep-photo-cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px;}
+@media(max-width:600px){.ep-photo-cats{grid-template-columns:repeat(2,1fr);}}
+.ep-photo-cat{}
+.ep-photo-cat-label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mid);margin-bottom:8px;display:block;}
+.ep-photo-cat-thumbs{display:grid;grid-template-columns:repeat(2,1fr);gap:3px;border-radius:8px;overflow:hidden;cursor:pointer;}
+.ep-photo-cat-thumbs.single{grid-template-columns:1fr;}
+.ep-photo-cat-thumb{position:relative;aspect-ratio:1;overflow:hidden;background:rgba(0,0,0,.08);}
+.ep-photo-cat-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .2s;}
+.ep-photo-cat-thumb:hover img{transform:scale(1.06);}
+.ep-photo-cat-count{position:absolute;bottom:4px;right:5px;background:rgba(0,0,0,.65);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;}
 /* ── LIGHTBOX ── */
 #ep-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:10000;align-items:center;justify-content:center;padding:20px;}
 #ep-lightbox.open{display:flex;}
@@ -382,7 +395,20 @@ body{font-family:'Barlow',sans-serif;background:var(--cream-soft);color:var(--in
 
 <!-- Main Page -->
 <div id="ep-page">
-
+  <!-- ── STICKY CONTACT BAR ── -->
+  <div class="ep-sticky-bar" id="ep-sticky-bar">
+    <div class="ep-sticky-co">
+      <div class="ep-sticky-logo" id="ep-sticky-logo"><span class="ep-sticky-logo-init" id="ep-sticky-logo-init">RC</span></div>
+      <div>
+        <div class="ep-sticky-name" id="ep-sticky-name">Roofing Company</div>
+        <div class="ep-sticky-tag" id="ep-sticky-tag">Licensed &amp; Insured</div>
+      </div>
+    </div>
+    <div class="ep-sticky-actions">
+      <a class="ep-sticky-phone" id="ep-sticky-phone" href="#">📞 <span id="ep-sticky-phone-num">Call Now</span></a>
+      <a class="ep-sticky-cta" id="ep-sticky-cta" href="#">Schedule Inspection</a>
+    </div>
+  </div>
   <!-- ── HERO ── -->
   <section class="ep-hero">
     <div class="ep-topbar">
@@ -449,10 +475,14 @@ body{font-family:'Barlow',sans-serif;background:var(--cream-soft);color:var(--in
     <div class="ep-detail-grid" id="ep-detail-grid"></div>
   </section>
 
+  <!-- ── HOMEOWNER GREETING ── -->
+  <div class="ep-greeting" id="ep-greeting" style="display:none;">
+    <p class="ep-greeting-text" id="ep-greeting-text"></p>
+  </div>
   <!-- ── PHOTO GALLERY ── -->
   <section class="ep-gallery-section" id="ep-gallery-section" style="display:none;">
-    <span class="ep-gallery-label" id="ep-gallery-label">Inspection Photos</span>
-    <div id="ep-photo-hero-wrap"></div>
+    <span class="ep-gallery-label">Inspection Photos</span>
+    <div class="ep-photo-cats" id="ep-photo-cats"></div>
   </section>
 
   <!-- ── VIDEO ── -->
@@ -542,22 +572,7 @@ body{font-family:'Barlow',sans-serif;background:var(--cream-soft);color:var(--in
 
 </div><!-- /ep-page -->
 
-<!-- Full-screen Gallery Modal -->
-<div id="ep-gallery-modal">
-  <div class="ep-gm-topbar">
-    <button class="ep-gm-close" onclick="closeGallery()">✕ Close</button>
-    <div class="ep-gm-tabs" id="ep-gm-tabs"></div>
-  </div>
-  <div class="ep-gm-body">
-    <button class="ep-gm-nav" id="ep-gm-prev" onclick="gmNav(-1)">‹</button>
-    <img class="ep-gm-img" id="ep-gm-img" src="" alt="">
-    <button class="ep-gm-nav" id="ep-gm-next" onclick="gmNav(1)">›</button>
-  </div>
-  <div class="ep-gm-footer">
-    <div class="ep-gm-counter" id="ep-gm-counter">1 / 1</div>
-  </div>
-</div>
-<!-- Legacy single-image lightbox (fallback) -->
+<!-- Photo lightbox -->
 <div id="ep-lightbox">
   <button id="ep-lightbox-close" onclick="closeLightbox()">✕</button>
   <button id="ep-lightbox-prev" onclick="lbNav(-1)">‹</button>
@@ -673,8 +688,28 @@ function buildPage(firstName,lastName,email,phone){
   $('ep-co-name').textContent=acct.companyName||'Your Roofing Company';
   $('ep-co-tagline').textContent=(acct.yearsInBusiness?'Est. '+(new Date().getFullYear()-parseInt(acct.yearsInBusiness))+' · ':'')+' Licensed & Insured';
   const badge=$('ep-co-badge');
-  if(acct.logoData){badge.innerHTML=`<img src="${acct.logoData}" alt="">`;}
+  if(acct.logoData){badge.innerHTML=`<img src="${acct.logoData}" alt="">`;}  
   else{badge.textContent=initials(acct.companyName);}
+  // ── Sticky bar ──
+  $('ep-sticky-name').textContent=acct.companyName||'Your Roofing Company';
+  const yib=acct.yearsInBusiness?'Est. '+(new Date().getFullYear()-parseInt(acct.yearsInBusiness))+' · ':'';
+  $('ep-sticky-tag').textContent=yib+'Licensed & Insured';
+  const stickyLogo=$('ep-sticky-logo');
+  if(acct.logoData){
+    stickyLogo.innerHTML=`<img src="${acct.logoData}" alt="" style="width:100%;height:100%;object-fit:contain;">`;
+  } else {
+    $('ep-sticky-logo-init').textContent=initials(acct.companyName);
+  }
+  const phone=acct.phone||'';
+  if(phone){
+    $('ep-sticky-phone').href='tel:'+phone.replace(/[^0-9+]/g,'');
+    $('ep-sticky-phone-num').textContent=phone;
+  } else {
+    $('ep-sticky-phone').style.display='none';
+  }
+  const schedLink=acct.scheduleLink||acct.calendarLink||'';
+  if(schedLink){$('ep-sticky-cta').href=schedLink;$('ep-sticky-cta').target='_blank';}
+  else{$('ep-sticky-cta').style.display='none';}
 
   // ── Property card ──
   const structs=est.structures||[];
@@ -742,6 +777,21 @@ function buildPage(firstName,lastName,email,phone){
     <div class="ep-detail-box"><div class="ep-detail-val">${pitch}</div><div class="ep-detail-label">Roof Pitch</div></div>
     ${acct.warrantyYears?`<div class="ep-detail-box"><div class="ep-detail-val" style="color:${brand};">${esc(acct.warrantyYears)} yr</div><div class="ep-detail-label">Warranty</div></div>`:''}`;
 
+  // ── Greeting ──
+  const greetingEl=$('ep-greeting');
+  const greetingText=$('ep-greeting-text');
+  if(greetingEl&&greetingText){
+    const fn=firstName||est.homeownerFirstName||'';
+    const addr=est.addr?est.addr.split(',')[0]:'';
+    const coName=acct.companyName||'our team';
+    let msg='';
+    if(fn) msg=`<strong>${esc(fn)}</strong>, thank you for letting ${esc(coName)} inspect your home`;
+    else msg=`Thank you for letting ${esc(coName)} inspect your home`;
+    if(addr) msg+=` at <strong>${esc(addr)}</strong>`;
+    msg+=`. We’ve prepared this personalized estimate based on our full on-site inspection. Please review the details below and don’t hesitate to reach out with any questions.`;
+    greetingText.innerHTML=msg;
+    greetingEl.style.display='block';
+  }
   // ── Photos ──
   renderPhotos(est);
 
@@ -826,12 +876,8 @@ function buildPage(firstName,lastName,email,phone){
   trackView();
 }
 
-// ── Photo Gallery (Realtor.com style) ──────────────────────────────────────────
-// _gmSections = [{title, photos:[]}]
-// _gmActive = section index
-// _gmIdx = photo index within active section
-let _gmSections=[],_gmActive=0,_gmIdx=0;
-
+// ── Photo Gallery — labeled thumbnail grid with lightbox ──────────────────────
+let _allPhotosFlat=[];
 function renderPhotos(est){
   const ap=est.allPhotos||{};
   const front=ap.front||(est.photoUrl?[est.photoUrl]:[]);
@@ -839,78 +885,51 @@ function renderPhotos(est){
   const angles=ap.angles||[];
   const buildings=ap.buildings||[];
   const other=ap.other||[];
-  const extraFront=front.slice(1);
-  // Build all-photos flat list for the hero + sections for tabs
-  const allFlat=[];
-  const secs=[];
-  // Front photo is the hero main image — already shown in hero
-  // Damage, angles etc go into gallery
-  if(damage.length){secs.push({title:'Roof Damage',photos:damage});allFlat.push(...damage);}
-  if(angles.length){secs.push({title:'Additional Angles',photos:angles});allFlat.push(...angles);}
-  if(buildings.length){secs.push({title:'Other Structures',photos:buildings});allFlat.push(...buildings);}
-  if(other.length){secs.push({title:'More Photos',photos:other});allFlat.push(...other);}
-  if(extraFront.length){secs.push({title:'Property',photos:extraFront});allFlat.push(...extraFront);}
-  const totalCount=allFlat.length;
-  if(!totalCount)return;
+  // Categories in display order
+  const cats=[
+    {label:'Front of Home',photos:front},
+    {label:'Roof Damage',photos:damage},
+    {label:'Additional Angles',photos:angles},
+    {label:'Additional Buildings',photos:buildings},
+    {label:'Additional Photos',photos:other},
+  ].filter(c=>c.photos.length>0);
+  if(!cats.length)return;
+  // Build flat list for lightbox navigation
+  _allPhotosFlat=[];
+  const catOffsets=[];
+  cats.forEach(c=>{
+    catOffsets.push(_allPhotosFlat.length);
+    _allPhotosFlat.push(...c.photos);
+  });
+  // Render category blocks
+  const container=$('ep-photo-cats');
+  container.innerHTML=cats.map((cat,ci)=>{
+    const offset=catOffsets[ci];
+    const show=cat.photos.slice(0,4); // show up to 4 thumbs per category
+    const extra=cat.photos.length-show.length;
+    const isSingle=show.length===1;
+    const thumbsHtml=show.map((src,ti)=>{
+      const globalIdx=offset+ti;
+      const isLast=ti===show.length-1&&extra>0;
+      return`<div class="ep-photo-cat-thumb" onclick="openLBFlat(${globalIdx})">` +
+        `<img src="${src}" alt="" loading="lazy">` +
+        (isLast?`<div class="ep-photo-cat-count">+${extra} more</div>`:'') +
+        `</div>`;
+    }).join('');
+    return`<div class="ep-photo-cat">` +
+      `<span class="ep-photo-cat-label">${cat.label}</span>` +
+      `<div class="ep-photo-cat-thumbs${isSingle?' single':''}">${thumbsHtml}</div>` +
+      `</div>`;
+  }).join('');
   $('ep-gallery-section').style.display='block';
-  // Label
-  $('ep-gallery-label').textContent='Inspection Photos';
-  // Build hero grid: main (first damage or first overall) + 3 thumbs
-  const heroPhotos=allFlat;
-  const mainPhoto=heroPhotos[0];
-  const thumb1=heroPhotos[1]||null;
-  const thumb2=heroPhotos[2]||null;
-  const thumb3=heroPhotos[3]||null;
-  let heroHtml=`<div class="ep-photo-hero" onclick="openGallery(0,0)">`;
-  heroHtml+=`<div class="ep-photo-hero-main"><img src="${mainPhoto}" alt="" loading="lazy"></div>`;
-  if(thumb1)heroHtml+=`<div class="ep-photo-hero-thumb" onclick="event.stopPropagation();openGallery(0,1)"><img src="${thumb1}" alt="" loading="lazy"></div>`;
-  if(thumb2)heroHtml+=`<div class="ep-photo-hero-thumb" onclick="event.stopPropagation();openGallery(0,2)"><img src="${thumb2}" alt="" loading="lazy"></div>`;
-  if(thumb3)heroHtml+=`<div class="ep-photo-hero-thumb" onclick="event.stopPropagation();openGallery(0,3)"><img src="${thumb3}" alt="" loading="lazy"></div>`;
-  heroHtml+=`<button class="ep-see-all-btn" onclick="event.stopPropagation();openGallery(0,0)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>See all ${totalCount} photo${totalCount===1?'':'s'}</button>`;
-  heroHtml+=`</div>`;
-  $('ep-photo-hero-wrap').innerHTML=heroHtml;
-  // Store sections for modal
-  _gmSections=[{title:'All Photos',photos:allFlat},...secs];
-  // Build tabs
-  const tabsEl=$('ep-gm-tabs');
-  tabsEl.innerHTML=_gmSections.map((s,i)=>`<button class="ep-gm-tab${i===0?' active':''}" onclick="gmSwitchTab(${i})">${esc(s.title)} (${s.photos.length})</button>`).join('');
 }
-
-function openGallery(secIdx,photoIdx){
-  _gmActive=secIdx||0;
-  _gmIdx=photoIdx||0;
-  gmRender();
-  $('ep-gallery-modal').classList.add('open');
+function openLBFlat(idx){
+  _lbGallery=_allPhotosFlat;
+  _lbIdx=idx||0;
+  _lbShow();
+  $('ep-lightbox').classList.add('open');
   document.body.style.overflow='hidden';
 }
-function closeGallery(){
-  $('ep-gallery-modal').classList.remove('open');
-  document.body.style.overflow='';
-}
-function gmSwitchTab(i){
-  _gmActive=i;
-  _gmIdx=0;
-  gmRender();
-  document.querySelectorAll('.ep-gm-tab').forEach((t,j)=>t.classList.toggle('active',j===i));
-}
-function gmNav(dir){
-  const sec=_gmSections[_gmActive];
-  if(!sec)return;
-  _gmIdx=(_gmIdx+dir+sec.photos.length)%sec.photos.length;
-  gmRender();
-}
-function gmRender(){
-  const sec=_gmSections[_gmActive];
-  if(!sec||!sec.photos.length)return;
-  $('ep-gm-img').src=sec.photos[_gmIdx];
-  $('ep-gm-counter').textContent=(_gmIdx+1)+' / '+sec.photos.length;
-}
-document.addEventListener('keydown',e=>{
-  if(!$('ep-gallery-modal').classList.contains('open'))return;
-  if(e.key==='Escape')closeGallery();
-  if(e.key==='ArrowLeft')gmNav(-1);
-  if(e.key==='ArrowRight')gmNav(1);
-});
 
 // ── Google Reviews ─────────────────────────────────────────────────────────
 function loadReviews(acct){
