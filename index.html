@@ -981,7 +981,7 @@ tr:hover td{background:var(--card);}
           </div>
         </div>
         <div style="margin-top:8px;">
-          <label style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Inspection Note <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);">&mdash; shown on estimate page as a personal message</span></label>
+          <label style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Assessment Note <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);">&mdash; shown on estimate page as a personal message</span></label>
           <textarea class="fi" id="e-insp-note" rows="2" placeholder="e.g. During our visit we found significant hail damage to the ridge caps and several missing shingles on the south-facing slope. We recommend a full replacement before winter." style="margin-top:3px;font-size:12px;resize:vertical;min-height:60px;" oninput="scheduleDraftSave()"></textarea>
         </div>
         <div style="margin-top:8px;font-size:11px;color:var(--muted);">&#128065; Homeowners see this page when they scan the postcard QR code. <a href="#" onclick="if(!isPlanAtLeast('agency')){showPlanUpgradePrompt('Estimate Pages','agency');return false;}if(currentEstRecord)(function(){const slug=(S.cfg&&S.cfg.companyName?S.cfg.companyName.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''):'roofing');window.open('https://estimate.biddrop.us/'+slug+'/'+currentEstRecord.id,'_blank','noopener,noreferrer');})();return false;" style="color:#10b981;">Preview page &#8599;</a></div>
@@ -1954,8 +1954,8 @@ const DEFAULTS = {
   costSkylight:375, costChimney:295, costGutter:9,
   overhead:15, margin:20, brandColor:'#F25C05', lobKey:'',
   ghlApiKey:'', ghlLocationId:'gz85VU6SxGXS7lqHAQGx', ghlPipelineId:'bxskBIBdbklHry0B63qx', ghlStageId:'',
-  ghlSmsTpl:'Hi {name}! This is {rep} from {company}. Following up about your roof at {address}. Free inspection available this week — reply YES to schedule!',
-  ghlEmailTpl:'Hi {name},\n\nI hope this message finds you well! I\'m {rep} from {company}. I recently visited your property at {address} and noticed your roof may need attention.\n\nWe\'re offering free storm damage inspections this week. Would you like to schedule a time?\n\nBest,\n{rep}\n{company}',
+  ghlSmsTpl:'Hi {name}! This is {rep} from {company}. Following up about your roof at {address}. Free assessment available this week — reply YES to schedule!',
+  ghlEmailTpl:'Hi {name},\n\nI hope this message finds you well! I\'m {rep} from {company}. I recently visited your property at {address} and noticed your roof may need attention.\n\nWe\'re offering free storm damage assessments this week. Would you like to schedule a time?\n\nBest,\n{rep}\n{company}',
   // Letter & pitch
   repName:'', licenseNum:'', yearsInBusiness:'5+', warrantyYears:'10',
   hookLetter:'Most homeowners are tired of door-knockers, pushy salespeople, and high prices when it comes to getting a new roof. I won\'t bother you by knocking on the door — instead, I skip the hassle and lead with my price.',
@@ -5536,7 +5536,7 @@ function updatePreview(){
     '<strong style="color:#555;display:block;margin-bottom:3px;">Every installation includes:</strong>'+
     'Complete tear-off &amp; disposal · Synthetic underlayment · Ice &amp; water shield · Drip edge flashing · Ridge cap shingles · Workmanship warranty · Licensed &amp; insured crews'+
     '</div>'+
-    '<div style="margin-top:7px;font-size:8px;color:#bbb;line-height:1.5;">Estimates are created using satellite imagery. Final pricing confirmed at inspection. Factors that may affect price include skylights, chimneys, special vents, plywood decking, and manufacturer price increases.</div>'+
+    '<div style="margin-top:7px;font-size:8px;color:#bbb;line-height:1.5;">Estimates are created using satellite imagery. Final pricing confirmed at assessment. Factors that may affect price include skylights, chimneys, special vents, plywood decking, and manufacturer price increases.</div>'+
     '</div>'+
     pageFooter()+
     '</div>';
@@ -7942,7 +7942,7 @@ function buildLobMailerHtml(item){
     '<strong style="color:#555;display:block;margin-bottom:3px;">Every installation includes:</strong>'+
     'Complete tear-off &amp; disposal · Synthetic underlayment · Ice &amp; water shield · Drip edge flashing · Ridge cap shingles · Workmanship warranty · Licensed &amp; insured crews'+
     '</div>'+
-    '<div style="margin-top:7px;font-size:8px;color:#bbb;line-height:1.5;">Estimates are created using satellite imagery. Final pricing confirmed at inspection. Factors that may affect price include skylights, chimneys, special vents, plywood decking, and manufacturer price increases.</div>'+
+    '<div style="margin-top:7px;font-size:8px;color:#bbb;line-height:1.5;">Estimates are created using satellite imagery. Final pricing confirmed at assessment. Factors that may affect price include skylights, chimneys, special vents, plywood decking, and manufacturer price increases.</div>'+
     '</div>'+
     pageFooter()+
     '</div>';
@@ -12990,7 +12990,7 @@ async function initQuotePage(slug) {
           <div id="q-price-label">Estimated Replacement Cost</div>
           <div id="q-price-range">—</div>
           <div id="q-price-sqft">Estimated roof area: <strong id="q-sqft-display">—</strong> sq ft</div>
-          <div id="q-price-disclaimer">This is a preliminary estimate based on satellite measurements. Final pricing may vary based on pitch, complexity, and material selection. A free on-site inspection will confirm exact pricing.</div>
+          <div id="q-price-disclaimer">This is a preliminary estimate based on satellite measurements. Final pricing may vary based on pitch, complexity, and material selection. A free on-site assessment will confirm exact pricing.</div>
         </div>
         ${cfg.financingEnabled ? `<div id="q-financing">💳 <strong>As low as $<span id="q-monthly">—</span>/mo</strong> with ${cfg.financingApr}% APR financing over ${cfg.financingTerm} months. Ask about our financing options.</div>` : ''}
         ${diffItems ? `<div id="q-diffs">${diffItems}</div>` : ''}
@@ -13002,7 +13002,7 @@ async function initQuotePage(slug) {
       <div class="q-step" id="qstep-3">
         <div class="q-step-label"><div class="q-step-num">3</div>Your Contact Info</div>
         <div class="q-step-title">Where should we send it?</div>
-        <div class="q-step-sub">A roofing specialist will reach out to confirm your estimate and schedule a free inspection.</div>
+        <div class="q-step-sub">A roofing specialist will reach out to confirm your estimate and schedule a free assessment.</div>
         <div class="q-field">
           <label class="q-label">Your Name *</label>
           <input class="q-input" id="q-lead-name" type="text" placeholder="John Smith" autocomplete="name">
@@ -13029,8 +13029,8 @@ async function initQuotePage(slug) {
         <div id="q-confirm-card">
           <div id="q-confirm-icon">🎉</div>
           <div id="q-confirm-title">You're All Set!</div>
-          <div id="q-confirm-sub">We've received your request and a roofing specialist from <strong>${cfg.companyName}</strong> will be in touch shortly to confirm your estimate and schedule a free inspection.<br><br>Estimated response time: <strong>within 24 hours</strong></div>
-          ${cfg.bookingUrl ? `<a href="${cfg.bookingUrl}" target="_blank" class="q-btn-primary" style="display:block;text-decoration:none;text-align:center;">📅 Schedule My Inspection Now</a>` : ''}
+          <div id="q-confirm-sub">We've received your request and a roofing specialist from <strong>${cfg.companyName}</strong> will be in touch shortly to confirm your estimate and schedule a free assessment.<br><br>Estimated response time: <strong>within 24 hours</strong></div>
+          ${cfg.bookingUrl ? `<a href="${cfg.bookingUrl}" target="_blank" class="q-btn-primary" style="display:block;text-decoration:none;text-align:center;">📅 Schedule My Assessment Now</a>` : ''}
         </div>
         <div style="background:var(--qcard);border:1px solid var(--qborder);border-radius:12px;padding:16px;text-align:center;">
           <div style="font-size:12px;color:var(--qmuted);margin-bottom:8px;">Questions? Call or text us directly:</div>
@@ -13705,7 +13705,7 @@ async function initEstimatePage(estId) {
           }
           ${acct.bookingUrl
             ? `<a href="${acct.bookingUrl}" target="_blank" class="ep-btn-secondary">
-                \uD83D\uDCC5 Schedule a Free Inspection
+                \uD83D\uDCC5 Schedule a Free Assessment
               </a>`
             : ''
           }

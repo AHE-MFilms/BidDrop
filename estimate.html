@@ -405,7 +405,7 @@ body{font-family:'Barlow',sans-serif;background:var(--cream-soft);color:var(--in
     </div>
     <div class="ep-sticky-actions">
       <a class="ep-sticky-phone" id="ep-sticky-phone" href="#">📞 <span id="ep-sticky-phone-num">Call Now</span></a>
-      <a class="ep-sticky-cta" id="ep-sticky-cta" href="#">Schedule Inspection</a>
+      <a class="ep-sticky-cta" id="ep-sticky-cta" href="#">Schedule Assessment</a>
     </div>
   </div>
   <!-- ── HERO ── -->
@@ -447,7 +447,7 @@ body{font-family:'Barlow',sans-serif;background:var(--cream-soft);color:var(--in
         <div class="ep-repbio-info">
           <div class="ep-repbio-name" id="ep-repbio-name">Your Estimator</div>
           <div class="ep-repbio-title" id="ep-repbio-title">Roofing Specialist</div>
-          <p class="ep-repbio-notes" id="ep-repbio-notes">During our inspection we found damage consistent with recent storm activity. I’ve prepared this estimate to walk you through your options.</p>
+          <p class="ep-repbio-notes" id="ep-repbio-notes">During our assessment we found damage consistent with recent storm activity. I’ve prepared this estimate to walk you through your options.</p>
         </div>
       </div>
       <div class="ep-prop-card ep-fade" style="background:rgba(255,255,255,.04);border-color:var(--border-light);">
@@ -479,7 +479,7 @@ body{font-family:'Barlow',sans-serif;background:var(--cream-soft);color:var(--in
 
   <!-- ── PHOTO GALLERY ── -->
   <section class="ep-gallery-section" id="ep-gallery-section" style="display:none;">
-    <span class="ep-gallery-label">Inspection Photos</span>
+    <span class="ep-gallery-label">Assessment Photos</span>
     <div class="ep-photo-cats" id="ep-photo-cats"></div>
   </section>
 
@@ -492,7 +492,7 @@ body{font-family:'Barlow',sans-serif;background:var(--cream-soft);color:var(--in
       <div class="ep-video-info">
         <span class="ep-section-label">Personal Message</span>
         <h3 id="ep-video-title">A message from your estimator</h3>
-        <p id="ep-video-body">We recorded a short walkthrough of your inspection findings and what we recommend — watch it to understand exactly what's happening with your roof and why we made these recommendations.</p>
+        <p id="ep-video-body">We recorded a short walkthrough of your assessment findings and what we recommend — watch it to understand exactly what's happening with your roof and why we made these recommendations.</p>
         <div class="ep-video-badge">🎥 Recorded just for you</div>
       </div>
     </div>
@@ -720,7 +720,7 @@ function buildPage(firstName,lastName,email,phone){
   const propItems=[
     {icon:'🏠',val:est.addr||'Property Address',lbl:'Property Address'},
     {icon:'📋',val:_estId.replace('est_','EST-'),lbl:'Estimate Number'},
-    estDate?{icon:'📅',val:estDate,lbl:'Inspection Date'}:null,
+    estDate?{icon:'📅',val:estDate,lbl:'Assessment Date'}:null,
     repName?{icon:'👷',val:repName,lbl:'Assigned Estimator'}:null,
     expDate?{icon:'⏱️',val:'Valid Through '+expDate,lbl:'Estimate Expiration'}:null,
   ].filter(Boolean);
@@ -847,7 +847,7 @@ function buildPage(firstName,lastName,email,phone){
   ].map(s=>`<div class="ep-stat-box"><div class="ep-stat-num">${esc(s.num)}</div><div class="ep-stat-label">${esc(s.lbl)}</div></div>`).join('');
 
   if(acct.companyBio)$('ep-about-body').textContent=acct.companyBio;
-  else $('ep-about-body').textContent='We are a locally owned and operated roofing company committed to delivering exceptional craftsmanship and honest pricing. Our team of certified professionals handles every project with care — from the first inspection to the final cleanup.';
+  else $('ep-about-body').textContent='We are a locally owned and operated roofing company committed to delivering exceptional craftsmanship and honest pricing. Our team of certified professionals handles every project with care — from the first assessment to the final cleanup.';
 
   const diffs=[acct.diff1,acct.diff2,acct.diff3,acct.diff4,acct.diff5,acct.diff6].filter(Boolean);
   $('ep-creds').innerHTML=diffs.map(d=>`<li><div class="ep-check">✓</div>${esc(d)}</li>`).join('');
@@ -859,7 +859,7 @@ function buildPage(firstName,lastName,email,phone){
   // ── CTA ──
   let ctaBtns='';
   if(acct.companyPhone)ctaBtns+=`<a href="tel:${acct.companyPhone}" class="ep-btn-primary">📞 Call Now</a>`;
-  if(acct.bookingUrl)ctaBtns+=`<a href="${acct.bookingUrl}" target="_blank" class="ep-btn-secondary">📅 Schedule Inspection</a>`;
+  if(acct.bookingUrl)ctaBtns+=`<a href="${acct.bookingUrl}" target="_blank" class="ep-btn-secondary">📅 Schedule Assessment</a>`;
   ctaBtns+=`<button class="ep-btn-secondary" onclick="shareEst()">🔗 Share Estimate</button>`;
   $('ep-cta-btns').innerHTML=ctaBtns;
 
