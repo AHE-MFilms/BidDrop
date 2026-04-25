@@ -3,6 +3,7 @@
   "short_name": "BidDrop",
   "description": "Roofing canvass, estimate, and lead management tool for field reps.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#0f1117",

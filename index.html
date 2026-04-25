@@ -984,7 +984,7 @@ tr:hover td{background:var(--card);}
           <label style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Inspection Note <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);">&mdash; shown on estimate page as a personal message</span></label>
           <textarea class="fi" id="e-insp-note" rows="2" placeholder="e.g. During our visit we found significant hail damage to the ridge caps and several missing shingles on the south-facing slope. We recommend a full replacement before winter." style="margin-top:3px;font-size:12px;resize:vertical;min-height:60px;" oninput="scheduleDraftSave()"></textarea>
         </div>
-        <div style="margin-top:8px;font-size:11px;color:var(--muted);">&#128065; Homeowners see this page when they scan the postcard QR code. <a href="#" onclick="if(!isPlanAtLeast('agency')){showPlanUpgradePrompt('Estimate Pages','agency');return false;}if(currentEstRecord)window.open('/e/'+currentEstRecord.id,'_blank');return false;" style="color:#10b981;">Preview page &#8599;</a></div>
+        <div style="margin-top:8px;font-size:11px;color:var(--muted);">&#128065; Homeowners see this page when they scan the postcard QR code. <a href="#" onclick="if(!isPlanAtLeast('agency')){showPlanUpgradePrompt('Estimate Pages','agency');return false;}if(currentEstRecord)window.open('/open?url=/e/'+currentEstRecord.id,'_blank','noopener,noreferrer');return false;" style="color:#10b981;">Preview page &#8599;</a></div>
       </div>
       <div class="fg">
         <label class="fl">Property Photos <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:10px;">— first Front of Home photo appears on mailer</span></label>
@@ -6147,7 +6147,7 @@ function renderEstimatesTab(){
             +(S.cfg && S.cfg.dripEnabled ? `<button onclick="openDripModal('${eid}')" style="background:#7C3AED;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🔥 Blitz</button>` : '')
             +`<button onclick="previewEstimatePostcard('${eid}')" style="background:#0e7490;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128247; Preview Postcard</button>`
             +`<button onclick="printEstimate('${eid}')" style="background:#1f3d68;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128424; Print</button>`
-            +`<button onclick="window.open('/e/${eid}','_blank','noopener,noreferrer')" style="background:#065f46;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#127758; View Page</button>`
+            +`<button onclick="window.open('/open?url=/e/${eid}','_blank','noopener,noreferrer')" style="background:#065f46;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#127758; View Page</button>`
             +histBtn
             +`<button onclick="deleteEstimate('${eid}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">&#10005;</button>`;
         })()
