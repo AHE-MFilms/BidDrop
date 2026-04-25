@@ -73,8 +73,11 @@ body{font-family:'Barlow',sans-serif;background:var(--cream-soft);color:var(--in
 .co-name-wrap strong{display:block;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.5px;}
 .co-name-wrap small{color:rgba(255,255,255,.4);font-size:12px;font-weight:400;letter-spacing:1px;text-transform:uppercase;}
 
-.ep-hero-main{padding:70px 60px 80px;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;position:relative;z-index:2;}
-@media(max-width:900px){.ep-hero-main{grid-template-columns:1fr;padding:44px 24px 56px;gap:36px;}}
+.ep-hero-main{padding:60px 60px 0;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;position:relative;z-index:2;}
+@media(max-width:900px){.ep-hero-main{grid-template-columns:1fr;padding:36px 24px 0;gap:28px;}}
+.ep-hero-photo-col{position:relative;}
+.ep-hero-photo-col img{width:100%;max-height:380px;object-fit:contain;border-radius:14px;background:rgba(255,255,255,.04);display:block;}
+@media(max-width:900px){.ep-hero-photo-col img{max-height:240px;}}
 .ep-hero-tag{display:inline-flex;align-items:center;gap:8px;background:rgba(201,125,46,.15);border:1px solid var(--border);border-radius:100px;padding:6px 16px 6px 10px;margin-bottom:24px;}
 .ep-hero-tag-dot{width:8px;height:8px;background:var(--amber);border-radius:50%;animation:pulse 2s ease-in-out infinite;}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.8)}}
@@ -84,7 +87,7 @@ body{font-family:'Barlow',sans-serif;background:var(--cream-soft);color:var(--in
 @media(max-width:900px){.ep-hero-headline{font-size:46px;}}
 .ep-hero-sub{color:rgba(255,255,255,.5);font-size:17px;font-weight:300;line-height:1.7;max-width:400px;}
 
-.ep-prop-card{background:rgba(255,255,255,.05);border:1px solid var(--border-light);border-radius:16px;padding:36px;backdrop-filter:blur(10px);}
+.ep-prop-card{background:rgba(255,255,255,.05);border:1px solid var(--border-light);border-radius:16px;padding:28px;backdrop-filter:blur(10px);}
 .ep-prop-label{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--amber);margin-bottom:20px;}
 .ep-prop-row{display:flex;flex-direction:column;gap:0;}
 .ep-prop-item{display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid var(--border-light);}
@@ -93,11 +96,18 @@ body{font-family:'Barlow',sans-serif;background:var(--cream-soft);color:var(--in
 .ep-prop-item strong{display:block;color:#fff;font-size:14px;font-weight:600;margin-bottom:2px;}
 .ep-prop-item span{color:rgba(255,255,255,.4);font-size:12px;text-transform:uppercase;letter-spacing:.8px;}
 
-/* ── HERO PHOTO STRIP ── */
-.ep-hero-photo-outer{background:var(--ink);padding:24px 60px 32px;}
-@media(max-width:900px){.ep-hero-photo-outer{padding:16px 24px 24px;}}
-.ep-hero-photo{width:100%;max-height:420px;object-fit:contain;display:block;border-radius:12px;background:var(--ink);}
-@media(max-width:600px){.ep-hero-photo{max-height:260px;}}
+/* ── REP BIO ROW ── */
+.ep-repbio-section{background:var(--ink);padding:0 60px 60px;}
+@media(max-width:900px){.ep-repbio-section{padding:0 24px 40px;}}
+.ep-repbio-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start;padding-top:40px;border-top:1px solid var(--border-light);margin-top:0;}
+@media(max-width:900px){.ep-repbio-grid{grid-template-columns:1fr;gap:24px;}}
+.ep-repbio-card{background:rgba(255,255,255,.04);border:1px solid var(--border-light);border-radius:16px;padding:24px;display:flex;gap:20px;align-items:flex-start;}
+.ep-repbio-avatar{width:72px;height:72px;border-radius:50%;object-fit:cover;flex-shrink:0;background:rgba(201,125,46,.12);border:2px solid var(--border-light);}
+.ep-repbio-initials{width:72px;height:72px;border-radius:50%;background:rgba(201,125,46,.15);border:2px dashed rgba(201,125,46,.35);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--amber-lt);flex-shrink:0;}
+.ep-repbio-info{flex:1;min-width:0;}
+.ep-repbio-name{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:#fff;margin-bottom:2px;}
+.ep-repbio-title{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--amber);margin-bottom:12px;}
+.ep-repbio-notes{font-size:14px;color:rgba(255,255,255,.55);line-height:1.7;font-style:italic;}
 
 /* ── ESTIMATE NUMBERS ── */
 .ep-est-section{background:var(--cream);border-top:4px solid var(--amber);padding:36px 60px;}
@@ -116,6 +126,20 @@ body{font-family:'Barlow',sans-serif;background:var(--cream-soft);color:var(--in
 .ep-est-note{color:rgba(255,255,255,.35);font-size:11px;margin-top:3px;}
 .ep-est-mo{color:var(--amber-lt);font-size:12px;font-weight:600;margin-top:1px;}
 
+/* ── REALTOR-STYLE PHOTO THUMBNAILS ── */
+.ep-thumb-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+@media(max-width:800px){.ep-thumb-grid{grid-template-columns:repeat(4,1fr);}}
+@media(max-width:500px){.ep-thumb-grid{grid-template-columns:repeat(3,1fr);}}
+.ep-thumb{position:relative;aspect-ratio:4/3;border-radius:8px;overflow:hidden;cursor:pointer;background:rgba(0,0,0,.2);}
+.ep-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .2s,opacity .15s;}
+.ep-thumb:hover img{transform:scale(1.05);opacity:.85;}
+.ep-thumb-more{position:absolute;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:#fff;}
+/* Lightbox nav */
+#ep-lightbox-prev,#ep-lightbox-next{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.12);border:none;color:#fff;font-size:28px;width:48px;height:48px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+#ep-lightbox-prev{left:16px;}
+#ep-lightbox-next{right:16px;}
+#ep-lightbox-prev:hover,#ep-lightbox-next:hover{background:rgba(255,255,255,.25);}
+#ep-lightbox-counter{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.5);font-size:13px;letter-spacing:1px;}
 /* Material Option Cards */
 .ep-mat-label{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:12px;display:block;}
 .ep-mat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
@@ -354,16 +378,26 @@ body{font-family:'Barlow',sans-serif;background:var(--cream-soft);color:var(--in
         <h1 class="ep-hero-headline">Your<br><em>personalized</em><br>roof estimate.</h1>
         <p class="ep-hero-sub">Prepared exclusively for you by our certified estimating team. Every number is backed by a full on-site inspection of your property.</p>
       </div>
-
-      <div class="ep-prop-card ep-fade">
+      <div class="ep-hero-photo-col" id="ep-hero-photo-wrap"></div>
+    </div>
+  </section>
+  <!-- Rep bio + property details row -->
+  <div class="ep-repbio-section">
+    <div class="ep-repbio-grid">
+      <div class="ep-repbio-card" id="ep-repbio-card">
+        <div class="ep-repbio-initials" id="ep-repbio-avatar">JF</div>
+        <div class="ep-repbio-info">
+          <div class="ep-repbio-name" id="ep-repbio-name">Your Estimator</div>
+          <div class="ep-repbio-title" id="ep-repbio-title">Roofing Specialist</div>
+          <p class="ep-repbio-notes" id="ep-repbio-notes">During our inspection we found damage consistent with recent storm activity. I’ve prepared this estimate to walk you through your options.</p>
+        </div>
+      </div>
+      <div class="ep-prop-card ep-fade" style="background:rgba(255,255,255,.04);border-color:var(--border-light);">
         <p class="ep-prop-label">Property Details</p>
         <div class="ep-prop-row" id="ep-prop-row"></div>
       </div>
     </div>
-  </section>
-
-  <!-- Hero photo -->
-  <div class="ep-hero-photo-outer" id="ep-hero-photo-wrap"></div>
+  </div>
 
   <!-- ── ESTIMATE NUMBERS ── -->
   <section class="ep-est-section">
@@ -483,7 +517,10 @@ body{font-family:'Barlow',sans-serif;background:var(--cream-soft);color:var(--in
 <!-- Lightbox -->
 <div id="ep-lightbox">
   <button id="ep-lightbox-close" onclick="closeLightbox()">✕</button>
+  <button id="ep-lightbox-prev" onclick="lbNav(-1)">‹</button>
   <img id="ep-lightbox-img" src="" alt="">
+  <button id="ep-lightbox-next" onclick="lbNav(1)">›</button>
+  <div id="ep-lightbox-counter"></div>
 </div>
 
 <script>
@@ -679,15 +716,30 @@ function buildPage(firstName,lastName,email,phone){
     $('ep-video-title').textContent='A personal message from '+(repName||acct.companyName||'your estimator');
   }
 
-  // ── About ──
+  // ── Rep Bio Row (top of page) ──
   const ini=initials(repName||acct.companyName);
+  const repDisplayName=repName||acct.repName||'Your Estimator';
+  const repDisplayTitle=(acct.repTitle||'Roofing Specialist');
+  $('ep-repbio-name').textContent=repDisplayName;
+  $('ep-repbio-title').textContent=repDisplayTitle+' · '+(acct.companyName||'');
+  if(est.inspectionNotes){
+    $('ep-repbio-notes').textContent=est.inspectionNotes;
+  } else {
+    $('ep-repbio-notes').textContent='During our on-site inspection I documented the condition of your roof and identified areas that need attention. This estimate covers everything needed for a complete, professional replacement.';
+  }
+  if(acct.headshot){
+    $('ep-repbio-avatar').outerHTML=`<img class="ep-repbio-avatar" src="${acct.headshot}" alt="${esc(repDisplayName)}">`;
+  } else {
+    $('ep-repbio-avatar').textContent=ini;
+  }
+  // ── About ──
   if(acct.headshot){
     $('ep-owner-photo-wrap').innerHTML=`<img class="ep-owner-photo" src="${acct.headshot}" alt="">`;
   } else {
     $('ep-owner-initials').textContent=ini;
   }
-  $('ep-owner-name').textContent=repName||acct.repName||'Your Estimator';
-  $('ep-owner-title').textContent=(acct.repTitle||'Roofing Specialist')+' · '+(acct.companyName||'');
+  $('ep-owner-name').textContent=repDisplayName;
+  $('ep-owner-title').textContent=repDisplayTitle+' · '+(acct.companyName||'');
   let ownerLinks='';
   if(acct.companyPhone)ownerLinks+=`<a href="tel:${acct.companyPhone}" class="ep-owner-link"><span class="contact-icon">📞</span>${esc(acct.companyPhone)}</a>`;
   if(acct.bookingUrl)ownerLinks+=`<a href="${acct.bookingUrl}" target="_blank" class="ep-owner-link"><span class="contact-icon">📅</span>Schedule Appointment</a>`;
@@ -759,21 +811,23 @@ function renderPhotos(est){
   });
 }
 
+// Gallery registry for lightbox navigation
+const _galleries={};
+let _galId=0;
 function photoGrid(photos){
   if(!photos||!photos.length)return'';
-  const n=photos.length;
-  const img=(p,cls)=>`<img class="${cls}" src="${p}" alt="" onclick="openLB('${p.replace(/'/g,"\\'")}')" loading="lazy">`;
-  if(n===1)return`<div class="ep-pg-1">${img(photos[0],'ep-pm')}</div>`;
-  if(n===2)return`<div class="ep-pg-2">${photos.map(p=>img(p,'ep-pm')).join('')}</div>`;
-  if(n===3)return`<div class="ep-pg-3">${img(photos[0],'ep-pm')}${img(photos[1],'ep-pt')}${img(photos[2],'ep-pt')}</div>`;
-  const main=photos.slice(0,2).map(p=>img(p,'ep-pm')).join('');
-  const strip=photos.slice(2,5);
-  const rem=photos.length-5;
-  const stripHtml=strip.map((p,i)=>{
-    if(i===strip.length-1&&rem>0)return`<div class="ep-pmore" onclick="openLB('${p.replace(/'/g,"\\'")}')"><img src="${p}" alt="" loading="lazy"><div class="ep-pmore-lbl">+${rem+1}</div></div>`;
-    return img(p,'ep-pt');
+  const MAX_VISIBLE=10;
+  const gid='g'+(++_galId);
+  _galleries[gid]=photos;
+  const thumbs=photos.slice(0,MAX_VISIBLE).map((p,i)=>{
+    const isLast=i===MAX_VISIBLE-1&&photos.length>MAX_VISIBLE;
+    const extra=photos.length-MAX_VISIBLE;
+    return `<div class="ep-thumb" onclick="openLBG('${gid}',${i})">`+
+      `<img src="${p}" alt="" loading="lazy">`+
+      (isLast?`<div class="ep-thumb-more">+${extra+1}</div>`:'')+
+    `</div>`;
   }).join('');
-  return`<div class="ep-pg-4">${main}</div>${strip.length?`<div class="ep-pg-strip">${stripHtml}</div>`:''}`;
+  return`<div class="ep-thumb-grid">${thumbs}</div>`;
 }
 
 // ── Google Reviews ─────────────────────────────────────────────────────────
@@ -860,9 +914,39 @@ function selectMat(key){
 }
 
 // ── Lightbox ───────────────────────────────────────────────────────────────
-function openLB(src){$('ep-lightbox-img').src=src;$('ep-lightbox').classList.add('open');document.body.style.overflow='hidden';}
+let _lbGallery=[],_lbIdx=0;
+function openLBG(gid,idx){
+  _lbGallery=_galleries[gid]||[];
+  _lbIdx=idx||0;
+  _lbShow();
+  $('ep-lightbox').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function openLB(src){
+  _lbGallery=[src];
+  _lbIdx=0;
+  _lbShow();
+  $('ep-lightbox').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function _lbShow(){
+  $('ep-lightbox-img').src=_lbGallery[_lbIdx];
+  const c=$('ep-lightbox-counter');
+  if(c)c.textContent=(_lbIdx+1)+' / '+_lbGallery.length;
+  const prev=$('ep-lightbox-prev'),next=$('ep-lightbox-next');
+  if(prev)prev.style.display=_lbGallery.length>1?'flex':'none';
+  if(next)next.style.display=_lbGallery.length>1?'flex':'none';
+}
+function lbNav(dir){
+  _lbIdx=(_lbIdx+dir+_lbGallery.length)%_lbGallery.length;
+  _lbShow();
+}
 function closeLightbox(){$('ep-lightbox').classList.remove('open');document.body.style.overflow='';}
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLightbox();});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')closeLightbox();
+  if(e.key==='ArrowLeft')lbNav(-1);
+  if(e.key==='ArrowRight')lbNav(1);
+});
 
 // ── Share ──────────────────────────────────────────────────────────────────
 function shareEst(){
