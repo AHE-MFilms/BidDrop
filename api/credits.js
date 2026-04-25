@@ -28,13 +28,13 @@ const STRIPE_KEY     = process.env.STRIPE_SECRET_KEY;
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 const APP_URL        = process.env.APP_URL || 'https://biddrop.americashomeexperts.com';
 
-// 1 credit = $4.00 = 1 postcard mailed. Bulk packs give volume discount.
+// 1 credit = $4.00 = 1 postcard mailed. Volume discounts at 100+ credits.
 const CREDIT_PACKS = {
-  pack_10:  { credits:    10, amount_cents:   4000, label: '10 Credits',    description: '10 postcards — $4.00 each',                    savings: null   },
-  pack_50:  { credits:    50, amount_cents:  17500, label: '50 Credits',    description: '50 postcards — $3.50 each — Save $12.50',      savings:  1250  },
-  pack_100: { credits:   100, amount_cents:  33000, label: '100 Credits',   description: '100 postcards — $3.30 each — Save $70',        savings:  7000  },
-  pack_500: { credits:   500, amount_cents: 150000, label: '500 Credits',   description: '500 postcards — $3.00 each — Save $500',       savings: 50000  },
-  pack_1k:  { credits:  1000, amount_cents: 275000, label: '1,000 Credits', description: '1,000 postcards — $2.75 each — Save $1,250',   savings: 125000 },
+  pack_10:  { credits:    10, amount_cents:   4000, label: '10 Credits',    description: '10 postcards — $4.00 each',                              savings: null   },
+  pack_50:  { credits:    50, amount_cents:  20000, label: '50 Credits',    description: '50 postcards — $4.00 each',                              savings:     0  },
+  pack_100: { credits:   100, amount_cents:  38000, label: '100 Credits',   description: '100 postcards — $3.80 each — Save $20 (5% off)',         savings:  2000  },
+  pack_500: { credits:   500, amount_cents: 180000, label: '500 Credits',   description: '500 postcards — $3.60 each — Save $200 (10% off)',       savings: 20000  },
+  pack_1k:  { credits:  1000, amount_cents: 340000, label: '1,000 Credits', description: '1,000 postcards — $3.40 each — Save $600 (15% off)',     savings: 60000  },
 };
 
 // Free mailer credits per month by plan
