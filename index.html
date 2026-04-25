@@ -99,6 +99,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 .filters{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;}
 .fchip{font-family:var(--font-b);font-size:12px;font-weight:700;padding:5px 11px;border-radius:10px;border:1px solid var(--border);cursor:pointer;background:none;color:var(--muted);transition:all .15s;}
 .fchip.active[data-s="all"]{background:var(--card2);border-color:var(--mid);color:var(--text);}
+.fchip.active[data-s="pipeline"]{background:rgba(242,92,5,.15);border-color:var(--accent);color:var(--accent);}
+.fchip.active[data-s="archive"]{background:rgba(150,176,200,.12);border-color:var(--muted);color:var(--mid);}
 .fchip.active[data-s="needs_roof"]{background:rgba(242,92,5,.15);border-color:var(--accent);color:var(--accent);}
 .fchip.active[data-s="bid_sent"]{background:rgba(59,130,246,.15);border-color:var(--info);color:var(--info);}
 .fchip.active[data-s="converted"]{background:rgba(34,197,94,.15);border-color:var(--success);color:var(--success);}
@@ -865,12 +867,25 @@ tr:hover td{background:var(--card);}
           </div>
           <button id="pin-bulk-toggle" onclick="togglePinBulkMode()" style="background:none;border:1px solid var(--border);border-radius:7px;padding:4px 10px;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.4px;text-transform:uppercase;white-space:nowrap;">☑ Select</button>
         </div>
-        <div class="filters">
-          <button class="fchip active" data-s="all" onclick="filterPins('all')">All</button>
+        <!-- Pipeline / Archive tab switcher -->
+        <div style="display:flex;gap:6px;margin-bottom:6px;">
+          <button id="view-tab-pipeline" class="view-tab active" onclick="switchPinView('pipeline')" style="flex:1;background:var(--accent);border:none;border-radius:7px;padding:5px 0;color:#fff;font-size:11px;font-weight:800;cursor:pointer;letter-spacing:.3px;">
+            🎯 Pipeline <span id="badge-pipeline" style="background:rgba(255,255,255,.25);border-radius:8px;padding:1px 6px;margin-left:3px;font-size:10px;">0</span>
+          </button>
+          <button id="view-tab-archive" class="view-tab" onclick="switchPinView('archive')" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:5px 0;color:var(--muted);font-size:11px;font-weight:800;cursor:pointer;letter-spacing:.3px;">
+            🗂 Archive <span id="badge-archive" style="background:var(--border);border-radius:8px;padding:1px 6px;margin-left:3px;font-size:10px;">0</span>
+          </button>
+        </div>
+        <!-- Status chips — shown contextually based on active view -->
+        <div class="filters" id="pipeline-chips">
+          <button class="fchip active" data-s="pipeline" onclick="filterPins('pipeline')">All Active</button>
           <button class="fchip" data-s="needs_roof" onclick="filterPins('needs_roof')">🟠 Needs Roof</button>
-          <button class="fchip" data-s="contacted" onclick="filterPins('contacted')">🟣 Contacted</button>
           <button class="fchip" data-s="quoted" onclick="filterPins('quoted')">🔵 Quoted</button>
           <button class="fchip" data-s="signed" onclick="filterPins('signed')">🟢 Signed</button>
+        </div>
+        <div class="filters" id="archive-chips" style="display:none;">
+          <button class="fchip active" data-s="archive" onclick="filterPins('archive')">All Archived</button>
+          <button class="fchip" data-s="contacted" onclick="filterPins('contacted')">🟣 Contacted</button>
           <button class="fchip" data-s="converted" onclick="filterPins('converted')">✅ Converted</button>
           <button class="fchip" data-s="not_interested" onclick="filterPins('not_interested')">⚫ Pass</button>
           <button class="fchip" data-s="lost" onclick="filterPins('lost')">🔴 Lost</button>
@@ -1958,7 +1973,7 @@ const DEFAULTS = {
 
 let S = { pins:[], queue:[], estimates:[], team:[], activity:[], cfg:{...DEFAULTS}, offlineQueue:[] };
 let _appInitialized = false; // true once onSignedIn has fully completed
-let map, markers={}, tempLL=null, curFilter='all', actChart=null;
+let map, markers={}, tempLL=null, curFilter='pipeline', curView='pipeline', actChart=null;
 let clusterGroup = null;          // Leaflet.markercluster group
 let totalPinCount = 0;            // server-side count (may exceed S.pins.length)
 let pinListPage = 0;              // current page for sidebar pin list (50 per page)
@@ -4570,11 +4585,50 @@ function handlePopupPhotoInput(e){
   });
 }
 
+// Pipeline statuses (active working leads)
+const PIPELINE_STATUSES = new Set(['needs_roof','quoted','signed']);
+// Archive statuses (closed / parked leads)
+const ARCHIVE_STATUSES  = new Set(['contacted','converted','not_interested','lost']);
+
+function switchPinView(view){
+  curView = view;
+  // Update tab button styles
+  const pTab = document.getElementById('view-tab-pipeline');
+  const aTab = document.getElementById('view-tab-archive');
+  const pChips = document.getElementById('pipeline-chips');
+  const aChips = document.getElementById('archive-chips');
+  if(pTab){ pTab.style.background = view==='pipeline' ? 'var(--accent)' : 'var(--card2)'; pTab.style.color = view==='pipeline' ? '#fff' : 'var(--muted)'; pTab.style.border = view==='pipeline' ? 'none' : '1px solid var(--border)'; }
+  if(aTab){ aTab.style.background = view==='archive'  ? 'var(--accent)' : 'var(--card2)'; aTab.style.color = view==='archive'  ? '#fff' : 'var(--muted)'; aTab.style.border = view==='archive'  ? 'none' : '1px solid var(--border)'; }
+  if(pChips) pChips.style.display = view==='pipeline' ? '' : 'none';
+  if(aChips) aChips.style.display = view==='archive'  ? '' : 'none';
+  // Reset to the "all" chip for the new view
+  const defaultFilter = view==='pipeline' ? 'pipeline' : 'archive';
+  filterPins(defaultFilter);
+}
+
 function filterPins(s){
   curFilter=s;
   pinListPage=0; // reset pagination when filter changes
+  // Highlight the correct chip in the active chip row
   document.querySelectorAll('.fchip').forEach(c=>c.classList.toggle('active',c.dataset.s===s));
   renderPinList();
+}
+
+function getPinViewList(pins){
+  // Returns the filtered array based on curFilter
+  if(curFilter==='pipeline') return pins.filter(p=>PIPELINE_STATUSES.has(p.status)||!p.status);
+  if(curFilter==='archive')  return pins.filter(p=>ARCHIVE_STATUSES.has(p.status));
+  return pins.filter(p=>p.status===curFilter);
+}
+
+function updatePinViewBadges(){
+  const active = (S.pins||[]).filter(p=>!p.deleted_at);
+  const pCount = active.filter(p=>PIPELINE_STATUSES.has(p.status)||!p.status).length;
+  const aCount = active.filter(p=>ARCHIVE_STATUSES.has(p.status)).length;
+  const bp = document.getElementById('badge-pipeline');
+  const ba = document.getElementById('badge-archive');
+  if(bp) bp.textContent = pCount;
+  if(ba) ba.textContent = aCount;
 }
 
 const PIN_LIST_PAGE_SIZE = 50;
@@ -4594,7 +4648,7 @@ function togglePinBulkMode(){
   renderPinList();
 }
 function toggleAllPinSelect(checked){
-  const list = (curFilter==='all' ? S.pins : S.pins.filter(p=>p.status===curFilter)).filter(p=>!p.deleted_at);
+  const list = getPinViewList((S.pins||[]).filter(p=>!p.deleted_at));
   if(checked) list.forEach(p=>_selectedPinIds.add(p.id));
   else _selectedPinIds.clear();
   updatePinSelectionCount();
@@ -4605,7 +4659,7 @@ function togglePinSelect(pid){
   else _selectedPinIds.add(pid);
   updatePinSelectionCount();
   const all = document.getElementById('pin-select-all');
-  const list = curFilter==='all' ? S.pins : S.pins.filter(p=>p.status===curFilter);
+  const list = getPinViewList((S.pins||[]).filter(p=>!p.deleted_at));
   if(all){ all.checked = _selectedPinIds.size === list.length && list.length > 0; all.indeterminate = _selectedPinIds.size > 0 && _selectedPinIds.size < list.length; }
 }
 function updatePinSelectionCount(){
@@ -4670,12 +4724,12 @@ function bulkSendPinsToFollowUp(){
 
 function renderPinList(){
   const el=document.getElementById('pin-list');
-  const list=curFilter==='all'?S.pins:S.pins.filter(p=>p.status===curFilter);
+  const list=getPinViewList((S.pins||[]).filter(p=>!p.deleted_at)); updatePinViewBadges();
   // Show server-side total when available, otherwise fall back to loaded count
   const displayCount = totalPinCount > S.pins.length ? totalPinCount : S.pins.length;
   document.getElementById('pin-count').textContent = displayCount;
   if(!list.length){
-    el.innerHTML='<div style="text-align:center;padding:30px 14px;color:var(--muted);font-size:12px;">'+(curFilter==='all'?'No homes pinned yet. Click the map.':'No homes with this status.')+'</div>';
+    el.innerHTML='<div style="text-align:center;padding:30px 14px;color:var(--muted);font-size:12px;">'+(curFilter==='pipeline'?'No active leads yet. Drop a pin on the map.':(curFilter==='archive'?'No archived leads yet.':'No homes with this status.'))+'</div>';
     return;
   }
   // Paginate: show up to (pinListPage+1)*PAGE_SIZE items
