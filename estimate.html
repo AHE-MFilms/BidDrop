@@ -328,7 +328,8 @@ body{font-family:'Barlow',sans-serif;background:var(--cream-soft);color:var(--in
 /* ── HOMEOWNER GREETING ── */
 .ep-greeting{background:var(--cream);padding:40px 60px 0;}
 @media(max-width:900px){.ep-greeting{padding:28px 24px 0;}}
-.ep-greeting-text{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--ink);line-height:1.6;max-width:700px;}
+.ep-greeting-text{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--ink);line-height:1.6;max-width:700px;margin-bottom:16px;}
+.ep-greeting-text:last-child{margin-bottom:0;}
 .ep-greeting-text strong{color:var(--amber);font-weight:700;}
 /* ── PHOTO THUMBNAIL GRID ── */
 .ep-photo-cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px;}
@@ -440,7 +441,7 @@ body{font-family:'Barlow',sans-serif;background:var(--cream-soft);color:var(--in
   </section>
   <!-- ── HOMEOWNER GREETING ── -->
   <div class="ep-greeting" id="ep-greeting" style="display:none;">
-    <p class="ep-greeting-text" id="ep-greeting-text"></p>
+    <div id="ep-greeting-text"></div>
   </div>
   <!-- Rep bio + property details row -->
   <div class="ep-repbio-section">
@@ -787,11 +788,12 @@ function buildPage(firstName,lastName,email,phone){
     const addr=est.addr?est.addr.split(',')[0]:'';
     const coName=acct.companyName||'our team';
     let msg='';
-    if(fn) msg=`<strong>${esc(fn)}</strong>, we noticed your home`;
-    else msg=`We noticed the property`;
-    if(addr) msg+=` at <strong>${esc(addr)}</strong>`;
-    msg+=` and wanted to make sure you had a clear, honest picture of what a full roof replacement would cost. This estimate is based on a visual assessment and satellite data for your property — no surprise fees, no obligation. ${esc(coName)} is here if you have any questions.`;
-    greetingText.innerHTML=msg;
+    let p1=fn?`<strong>${esc(fn)}</strong>, we reviewed your home`:`We reviewed the property`;
+    if(addr) p1+=` at <strong>${esc(addr)}</strong>`;
+    p1+=`\u2014and it may be time for a roof replacement. So we created a clear, no-obligation estimate you can view right here.`;
+    const p2=`We believe in upfront, honest pricing. Using satellite measurements and a visual assessment, this gives you a realistic number\u2014no hidden fees, no surprises.`;
+    const p3=`Questions? ${esc(coName)} is here to help.`;
+    greetingText.innerHTML=`<p class="ep-greeting-text">${p1}</p><p class="ep-greeting-text">${p2}</p><p class="ep-greeting-text">${p3}</p>`;
     greetingEl.style.display='block';
   }
   // ── Photos ──
@@ -820,7 +822,7 @@ function buildPage(firstName,lastName,email,phone){
   if(est.inspectionNote){
     $('ep-repbio-notes').textContent=est.inspectionNote;
   } else {
-    $('ep-repbio-notes').textContent='We noticed your roof from the street and wanted to make sure you had an accurate picture of what a full replacement would cost — no pressure, no obligation. This estimate is based on a visual assessment and satellite data for your property.';
+    $('ep-repbio-notes').textContent='Using satellite measurements and a visual assessment of your property, we put together this clear, no-obligation estimate so you have a realistic number — no hidden fees, no surprises.';
   }
   if(acct.headshot){
     $('ep-repbio-avatar').outerHTML=`<img class="ep-repbio-avatar" src="${acct.headshot}" alt="${esc(repDisplayName)}">`;
