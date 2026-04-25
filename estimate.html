@@ -112,7 +112,7 @@ body{font-family:'Barlow',sans-serif;background:var(--cream-soft);color:var(--in
 .ep-prop-item span{color:rgba(255,255,255,.85);font-size:12px;text-transform:uppercase;letter-spacing:.8px;}
 
 /* ── REP BIO ROW ── */
-.ep-repbio-section{background:var(--ink);padding:0 60px 60px;}
+.ep-repbio-section{background:var(--ink);padding:40px 60px 60px;}
 @media(max-width:900px){.ep-repbio-section{padding:0 24px 40px;}}
 .ep-repbio-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start;padding-top:40px;border-top:1px solid var(--border-light);margin-top:0;}
 @media(max-width:900px){.ep-repbio-grid{grid-template-columns:1fr;gap:24px;}}
@@ -125,7 +125,7 @@ body{font-family:'Barlow',sans-serif;background:var(--cream-soft);color:var(--in
 .ep-repbio-notes{font-size:14px;color:rgba(255,255,255,.9);line-height:1.7;font-style:italic;}
 
 /* ── ESTIMATE NUMBERS ── */
-.ep-est-section{background:var(--cream);border-top:4px solid var(--amber);padding:36px 60px;}
+.ep-est-section{background:var(--cream);border-top:none;padding:36px 60px;}
 @media(max-width:900px){.ep-est-section{padding:24px 20px;}}
 .ep-est-hero{display:flex;align-items:center;gap:28px;padding:22px 32px;background:var(--ink);border-radius:16px;position:relative;overflow:hidden;margin-bottom:24px;}
 .ep-est-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(201,125,46,.15) 0%,transparent 70%);pointer-events:none;}
@@ -156,9 +156,7 @@ body{font-family:'Barlow',sans-serif;background:var(--cream-soft);color:var(--in
 .ep-see-all-btn:hover{background:#fff;}
 .ep-see-all-btn svg{width:14px;height:14px;}
 /* Gallery section wrapper */
-.ep-gallery-section{background:var(--cream);padding:0 60px 60px;}
-@media(max-width:900px){.ep-gallery-section{padding:0 24px 40px;}}
-.ep-gallery-label{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:16px;padding-top:40px;display:block;}
+.ep-gallery-label{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:16px;padding-top:0;display:block;}
 /* ── FULL-SCREEN GALLERY MODAL ── */
 /* gallery modal removed */
 /* Lightbox (single-image fallback) */
@@ -192,7 +190,7 @@ body{font-family:'Barlow',sans-serif;background:var(--cream-soft);color:var(--in
 .ep-detail-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--ink);}
 
 /* ── GALLERY ── */
-.ep-gallery-section{background:var(--ink-soft);padding:80px 60px;}
+.ep-gallery-section{background:var(--ink-soft);padding:60px 60px;}
 @media(max-width:900px){.ep-gallery-section{padding:50px 24px;}}
 .ep-section-label{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--amber);margin-bottom:12px;display:block;}
 .ep-section-title{font-family:'Cormorant Garamond',serif;font-size:46px;font-weight:600;line-height:1.1;margin-bottom:16px;}
@@ -326,11 +324,10 @@ body{font-family:'Barlow',sans-serif;background:var(--cream-soft);color:var(--in
 .ep-powered-name{font-size:13px;font-weight:700;color:rgba(255,255,255,.8);font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;}
 
 /* ── HOMEOWNER GREETING ── */
-.ep-greeting{background:var(--cream);padding:40px 60px 0;}
-@media(max-width:900px){.ep-greeting{padding:28px 24px 0;}}
-.ep-greeting-text{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--ink);line-height:1.6;max-width:700px;margin-bottom:16px;}
+.ep-greeting{margin-top:28px;}
+.ep-greeting-text{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:400;color:rgba(255,255,255,.88);line-height:1.65;max-width:480px;margin-bottom:12px;}
 .ep-greeting-text:last-child{margin-bottom:0;}
-.ep-greeting-text strong{color:var(--amber);font-weight:700;}
+.ep-greeting-text strong{color:var(--amber-lt);font-weight:700;}
 /* ── PHOTO THUMBNAIL GRID ── */
 .ep-photo-cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px;}
 @media(max-width:600px){.ep-photo-cats{grid-template-columns:repeat(2,1fr);}}
@@ -434,15 +431,14 @@ body{font-family:'Barlow',sans-serif;background:var(--cream-soft);color:var(--in
           <span>Roof Replacement Estimate</span>
         </div>
         <h1 class="ep-hero-headline">Your<br><em>personalized</em><br>roof estimate.</h1>
-        <p class="ep-hero-sub">Based on a visual assessment of your property, we’ve put together this personalized estimate so you know exactly what a full roof replacement would cost — no pressure, no obligation.</p>
+        <!-- ── HOMEOWNER GREETING ── -->
+        <div class="ep-greeting" id="ep-greeting" style="display:none;">
+          <div id="ep-greeting-text"></div>
+        </div>
       </div>
       <div class="ep-hero-photo-col" id="ep-hero-photo-wrap"></div>
     </div>
   </section>
-  <!-- ── HOMEOWNER GREETING ── -->
-  <div class="ep-greeting" id="ep-greeting" style="display:none;">
-    <div id="ep-greeting-text"></div>
-  </div>
   <!-- Rep bio + property details row -->
   <div class="ep-repbio-section">
     <div class="ep-repbio-grid">
@@ -787,7 +783,6 @@ function buildPage(firstName,lastName,email,phone){
     const fn=firstName||est.homeownerFirstName||'';
     const addr=est.addr?est.addr.split(',')[0]:'';
     const coName=acct.companyName||'our team';
-    let msg='';
     let p1=fn?`<strong>${esc(fn)}</strong>, we reviewed your home`:`We reviewed the property`;
     if(addr) p1+=` at <strong>${esc(addr)}</strong>`;
     p1+=`\u2014and it may be time for a roof replacement. So we created a clear, no-obligation estimate you can view right here.`;
