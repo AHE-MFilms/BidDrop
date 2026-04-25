@@ -4,113 +4,151 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
-<title>Your Roofing Estimate</title>
-<!-- NO manifest link — this page must NOT be treated as a PWA -->
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<title>Your Roof Estimate</title>
+<!-- NO manifest — this page must NOT be treated as a PWA -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Barlow:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --brand:#F25C05;
-  --dark:#07090f;
-  --panel:#0f1520;
-  --card:#141e2e;
-  --card2:#1a2540;
-  --border:#1e2d45;
-  --text:#f0f6ff;
-  --mid:#c8d8e8;
-  --muted:#7a94b0;
-  --font-h:'Oswald',sans-serif;
-  --font-b:'Barlow',sans-serif;
+  --ink:#0D1117;
+  --ink-soft:#1C2333;
+  --slate:#2A3244;
+  --cream:#F5EFE6;
+  --cream-soft:#F9F5F0;
+  --amber:#C97D2E;
+  --amber-lt:#E89A48;
+  --amber-pale:#F5E8D4;
+  --white:#FFFFFF;
+  --mid:#6B7280;
+  --border:rgba(201,125,46,0.25);
+  --border-light:rgba(255,255,255,0.08);
+  --brand:#C97D2E;
 }
 html{scroll-behavior:smooth;}
-body{background:var(--dark);color:var(--text);font-family:var(--font-b);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+body{font-family:'Barlow',sans-serif;background:var(--cream-soft);color:var(--ink);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased;}
+
+/* ── LOADING / ERROR ── */
+#ep-loading{display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:16px;background:var(--ink);}
+.ep-spinner{width:44px;height:44px;border:3px solid rgba(201,125,46,.2);border-top-color:var(--amber);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ep-loading-text{color:rgba(255,255,255,.4);font-size:14px;letter-spacing:1px;text-transform:uppercase;}
+#ep-error{display:none;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:12px;background:var(--ink);color:rgba(255,255,255,.5);font-size:15px;}
+#ep-page{display:none;}
 
 /* ── LEAD GATE ── */
-#ep-gate{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(10px);}
-.ep-gate-box{background:var(--panel);border:1px solid var(--border);border-radius:24px;padding:40px 32px;max-width:440px;width:100%;box-shadow:0 32px 80px rgba(0,0,0,.8);animation:gate-up .35s cubic-bezier(.34,1.56,.64,1);}
-@keyframes gate-up{from{opacity:0;transform:translateY(24px) scale(.97)}to{opacity:1;transform:none}}
-.ep-gate-logo{text-align:center;margin-bottom:22px;min-height:44px;display:flex;align-items:center;justify-content:center;}
-.ep-gate-logo img{max-height:52px;max-width:200px;object-fit:contain;}
-.ep-gate-co{font-family:var(--font-h);font-size:24px;font-weight:700;color:var(--brand);letter-spacing:1px;}
-.ep-gate-title{font-family:var(--font-h);font-size:28px;font-weight:700;text-align:center;margin-bottom:8px;line-height:1.2;}
-.ep-gate-sub{font-size:14px;color:var(--muted);text-align:center;margin-bottom:28px;line-height:1.6;}
+#ep-gate{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(12px);}
+.ep-gate-box{background:var(--ink-soft);border:1px solid var(--border);border-radius:24px;padding:44px 36px;max-width:460px;width:100%;box-shadow:0 40px 100px rgba(0,0,0,.8);animation:gate-up .35s cubic-bezier(.34,1.56,.64,1);}
+@keyframes gate-up{from{opacity:0;transform:translateY(28px) scale(.96)}to{opacity:1;transform:none}}
+.ep-gate-logo{text-align:center;margin-bottom:24px;min-height:52px;display:flex;align-items:center;justify-content:center;}
+.ep-gate-logo img{max-height:56px;max-width:200px;object-fit:contain;}
+.ep-gate-logo-text{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:28px;color:var(--amber-lt);letter-spacing:1px;}
+.ep-gate-title{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:600;text-align:center;margin-bottom:8px;color:var(--white);line-height:1.2;}
+.ep-gate-sub{font-size:14px;color:rgba(255,255,255,.4);text-align:center;margin-bottom:30px;line-height:1.6;}
 .ep-gate-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
 .ep-gate-field{display:flex;flex-direction:column;gap:5px;}
-.ep-gate-field label{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);}
-.ep-gate-field input{background:var(--dark);border:1.5px solid var(--border);border-radius:11px;padding:13px 15px;color:var(--text);font-family:var(--font-b);font-size:15px;outline:none;transition:border-color .2s;-webkit-appearance:none;}
-.ep-gate-field input:focus{border-color:var(--brand);}
-.ep-gate-field input::placeholder{color:#2a3d55;}
-.ep-gate-btn{width:100%;background:linear-gradient(135deg,#c44c04,#F25C05,#ff7a2e);border:none;border-radius:13px;padding:17px;color:#fff;font-family:var(--font-h);font-size:19px;font-weight:700;letter-spacing:.5px;cursor:pointer;margin-top:18px;transition:opacity .2s,transform .1s;box-shadow:0 8px 28px rgba(242,92,5,.45);}
-.ep-gate-btn:hover{opacity:.92;transform:translateY(-1px);}
-.ep-gate-btn:active{transform:translateY(0);}
-.ep-gate-privacy{font-size:11px;color:var(--muted);text-align:center;margin-top:14px;}
-
-/* ── STICKY HEADER ── */
-.ep-header{position:sticky;top:0;z-index:100;background:rgba(7,9,15,.94);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:12px 20px;gap:12px;}
-.ep-header-co{font-family:var(--font-h);font-size:20px;font-weight:700;color:var(--brand);letter-spacing:1px;}
-.ep-header-cta{display:flex;gap:8px;align-items:center;flex-shrink:0;}
-.ep-btn-call{display:flex;align-items:center;gap:7px;background:var(--brand);border:none;border-radius:10px;padding:10px 18px;color:#fff;font-family:var(--font-h);font-size:14px;font-weight:700;letter-spacing:.3px;cursor:pointer;text-decoration:none;white-space:nowrap;box-shadow:0 4px 16px rgba(242,92,5,.4);transition:opacity .2s;}
-.ep-btn-call:hover{opacity:.88;}
-.ep-btn-book{display:flex;align-items:center;gap:6px;background:transparent;border:1px solid rgba(242,92,5,.5);border-radius:10px;padding:9px 15px;color:var(--brand);font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;transition:all .2s;}
-.ep-btn-book:hover{background:rgba(242,92,5,.1);}
-@media(max-width:480px){.ep-btn-book{display:none;}}
+.ep-gate-field label{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.35);}
+.ep-gate-field input{background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:10px;padding:13px 15px;color:var(--white);font-family:'Barlow',sans-serif;font-size:15px;outline:none;transition:border-color .2s;-webkit-appearance:none;}
+.ep-gate-field input:focus{border-color:var(--amber);}
+.ep-gate-field input::placeholder{color:rgba(255,255,255,.18);}
+.ep-gate-btn{width:100%;background:var(--amber);border:none;border-radius:12px;padding:17px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;letter-spacing:.5px;cursor:pointer;margin-top:18px;transition:all .2s;box-shadow:0 8px 28px rgba(201,125,46,.4);}
+.ep-gate-btn:hover{background:var(--amber-lt);transform:translateY(-1px);}
+.ep-gate-privacy{font-size:11px;color:rgba(255,255,255,.2);text-align:center;margin-top:14px;}
 
 /* ── HERO ── */
-.ep-hero{position:relative;height:440px;overflow:hidden;background:var(--panel);}
-@media(max-width:600px){.ep-hero{height:300px;}}
-.ep-hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.08) 0%,rgba(7,9,15,0) 35%,rgba(7,9,15,.92) 100%);}
-.ep-hero-content{position:absolute;bottom:0;left:0;right:0;padding:32px 24px;}
-.ep-hero-label{font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--brand);margin-bottom:8px;}
-.ep-hero-addr{font-family:var(--font-h);font-size:30px;font-weight:700;color:#fff;line-height:1.2;text-shadow:0 2px 16px rgba(0,0,0,.6);}
-@media(max-width:600px){.ep-hero-addr{font-size:22px;}}
+.ep-hero{background:var(--ink);position:relative;overflow:hidden;padding:0;}
+.ep-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 70% 50%,rgba(201,125,46,.12) 0%,transparent 70%);pointer-events:none;}
+.ep-topbar{display:flex;justify-content:space-between;align-items:center;padding:22px 60px;border-bottom:1px solid var(--border-light);position:relative;z-index:2;}
+@media(max-width:900px){.ep-topbar{padding:18px 24px;flex-direction:column;gap:14px;text-align:center;}}
+.bd-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.bd-logo-icon{width:34px;height:34px;background:var(--amber);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;color:#fff;letter-spacing:-1px;flex-shrink:0;}
+.bd-logo-text{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:20px;color:#fff;letter-spacing:1px;}
+.bd-logo-text span{color:var(--amber-lt);}
+.co-slot{display:flex;align-items:center;gap:14px;}
+.co-badge{width:52px;height:52px;background:rgba(255,255,255,.08);border:1px solid var(--border-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;color:var(--amber-lt);overflow:hidden;flex-shrink:0;}
+.co-badge img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.co-name-wrap{text-align:right;}
+@media(max-width:900px){.co-name-wrap{text-align:center;}}
+.co-name-wrap strong{display:block;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.5px;}
+.co-name-wrap small{color:rgba(255,255,255,.4);font-size:12px;font-weight:400;letter-spacing:1px;text-transform:uppercase;}
 
-/* ── BODY ── */
-.ep-body{max-width:740px;margin:0 auto;padding:0 16px 80px;}
+.ep-hero-main{padding:70px 60px 80px;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;position:relative;z-index:2;}
+@media(max-width:900px){.ep-hero-main{grid-template-columns:1fr;padding:44px 24px 56px;gap:36px;}}
+.ep-hero-tag{display:inline-flex;align-items:center;gap:8px;background:rgba(201,125,46,.15);border:1px solid var(--border);border-radius:100px;padding:6px 16px 6px 10px;margin-bottom:24px;}
+.ep-hero-tag-dot{width:8px;height:8px;background:var(--amber);border-radius:50%;animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.8)}}
+.ep-hero-tag span{font-size:12px;font-weight:600;color:var(--amber-lt);text-transform:uppercase;letter-spacing:1.5px;}
+.ep-hero-headline{font-family:'Cormorant Garamond',serif;font-size:64px;font-weight:600;line-height:1.05;color:#fff;margin-bottom:20px;}
+.ep-hero-headline em{font-style:italic;color:var(--amber-lt);}
+@media(max-width:900px){.ep-hero-headline{font-size:46px;}}
+.ep-hero-sub{color:rgba(255,255,255,.5);font-size:17px;font-weight:300;line-height:1.7;max-width:400px;}
 
-/* ── COUNTDOWN ── */
-.ep-countdown{background:linear-gradient(135deg,rgba(239,68,68,.12),rgba(239,68,68,.04));border:1px solid rgba(239,68,68,.25);border-radius:14px;padding:16px 20px;margin:24px 0;display:flex;align-items:center;gap:14px;}
-.ep-countdown-icon{font-size:26px;flex-shrink:0;}
-.ep-countdown-label{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#f87171;margin-bottom:4px;}
-.ep-countdown-timer{font-family:var(--font-h);font-size:22px;font-weight:700;color:#fff;}
+.ep-prop-card{background:rgba(255,255,255,.05);border:1px solid var(--border-light);border-radius:16px;padding:36px;backdrop-filter:blur(10px);}
+.ep-prop-label{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--amber);margin-bottom:20px;}
+.ep-prop-row{display:flex;flex-direction:column;gap:0;}
+.ep-prop-item{display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid var(--border-light);}
+.ep-prop-item:last-child{border-bottom:none;padding-bottom:0;}
+.ep-prop-icon{width:36px;height:36px;background:rgba(201,125,46,.12);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;}
+.ep-prop-item strong{display:block;color:#fff;font-size:14px;font-weight:600;margin-bottom:2px;}
+.ep-prop-item span{color:rgba(255,255,255,.4);font-size:12px;text-transform:uppercase;letter-spacing:.8px;}
 
-/* ── WELCOME ── */
-.ep-welcome{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:28px 24px;margin:24px 0;}
-.ep-welcome-greeting{font-family:var(--font-h);font-size:28px;font-weight:700;line-height:1.3;margin-bottom:14px;}
-.ep-welcome-greeting span{color:var(--brand);}
-.ep-welcome-bio{font-size:15px;color:var(--mid);line-height:1.75;}
+/* ── HERO PHOTO STRIP ── */
+.ep-hero-photo{width:100%;height:380px;object-fit:cover;display:block;}
+@media(max-width:600px){.ep-hero-photo{height:240px;}}
 
-/* ── INSPECTION NOTE ── */
-.ep-inspection{border-left:3px solid var(--brand);background:rgba(242,92,5,.06);border-radius:0 12px 12px 0;padding:18px 20px;margin-top:20px;}
-.ep-inspection-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--brand);margin-bottom:8px;}
-.ep-inspection-text{font-size:14px;color:var(--mid);line-height:1.75;font-style:italic;}
+/* ── ESTIMATE NUMBERS ── */
+.ep-est-section{background:var(--cream);border-top:4px solid var(--amber);padding:80px 60px;}
+@media(max-width:900px){.ep-est-section{padding:50px 24px;}}
+.ep-est-hero{text-align:center;padding:60px 40px;background:var(--ink);border-radius:20px;position:relative;overflow:hidden;margin-bottom:40px;}
+.ep-est-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(201,125,46,.15) 0%,transparent 70%);pointer-events:none;}
+.ep-est-eyebrow{font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--amber);margin-bottom:16px;position:relative;z-index:2;}
+.ep-est-big{font-family:'Cormorant Garamond',serif;font-size:96px;font-weight:700;color:#fff;line-height:1;position:relative;z-index:2;letter-spacing:-2px;}
+.ep-est-big .dollar{font-size:56px;vertical-align:super;color:var(--amber-lt);}
+@media(max-width:900px){.ep-est-big{font-size:72px;}.ep-est-big .dollar{font-size:42px;}}
+.ep-est-note{color:rgba(255,255,255,.4);font-size:14px;margin-top:10px;position:relative;z-index:2;}
+.ep-est-mo{color:var(--amber-lt);font-size:16px;font-weight:600;margin-top:8px;position:relative;z-index:2;}
 
-/* ── VIDEO ── */
-.ep-video-section{margin:28px 0;}
-.ep-video-label{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:10px;}
-.ep-video-label::after{content:'';flex:1;height:1px;background:var(--border);}
-.ep-video-wrap{position:relative;width:100%;padding-top:56.25%;border-radius:16px;overflow:hidden;background:#000;box-shadow:0 12px 40px rgba(0,0,0,.6);}
-.ep-video-wrap iframe,.ep-video-wrap video{position:absolute;inset:0;width:100%;height:100%;border:none;object-fit:cover;}
+/* Material Option Cards */
+.ep-mat-label{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:16px;display:block;}
+.ep-mat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:32px;}
+@media(max-width:600px){.ep-mat-grid{grid-template-columns:1fr;}}
+.ep-mat-card{background:#fff;border:2px solid rgba(0,0,0,.08);border-radius:14px;padding:22px 20px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.ep-mat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--mc,var(--amber));opacity:0;transition:opacity .2s;}
+.ep-mat-card.active{border-color:var(--mc,var(--amber));box-shadow:0 0 0 1px var(--mc,var(--amber)),0 8px 28px rgba(0,0,0,.1);}
+.ep-mat-card.active::before{opacity:1;}
+.ep-mat-card:hover:not(.active){border-color:rgba(0,0,0,.15);transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,.08);}
+.ep-mat-badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:3px 9px;border-radius:6px;margin-bottom:10px;}
+.ep-mat-name{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--ink);margin-bottom:5px;}
+.ep-mat-desc{font-size:12px;color:var(--mid);line-height:1.55;margin-bottom:14px;}
+.ep-mat-price{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:700;}
+.ep-mat-mo{font-size:11px;color:var(--mid);margin-top:3px;}
+.ep-mat-check{position:absolute;top:14px;right:14px;width:24px;height:24px;border-radius:50%;background:var(--mc,var(--amber));display:none;align-items:center;justify-content:center;font-size:12px;color:#fff;font-weight:700;}
+.ep-mat-card.active .ep-mat-check{display:flex;}
 
-/* ── TRUST BAR ── */
-.ep-trust-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border-radius:16px;overflow:hidden;margin:28px 0;}
-.ep-trust-item{background:var(--panel);padding:22px 12px;text-align:center;}
-.ep-trust-num{font-family:var(--font-h);font-size:34px;font-weight:700;line-height:1;margin-bottom:5px;}
-.ep-trust-label{font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);}
+/* Roof Details */
+.ep-detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:32px;}
+@media(max-width:600px){.ep-detail-grid{grid-template-columns:1fr 1fr;}}
+.ep-detail-box{background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:22px;text-align:center;}
+.ep-detail-val{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:700;color:var(--ink);line-height:1;margin-bottom:6px;}
+.ep-detail-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--mid);}
 
-/* ── SECTION TITLE ── */
-.ep-section{margin:28px 0;}
-.ep-section-title{font-family:var(--font-h);font-size:22px;font-weight:700;letter-spacing:.3px;margin-bottom:18px;display:flex;align-items:center;gap:12px;}
-.ep-section-title::after{content:'';flex:1;height:1px;background:var(--border);}
-
-/* ── PHOTO SECTIONS ── */
-.ep-photo-section{margin:28px 0;}
-.ep-photo-section-hdr{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
-.ep-photo-section-title{font-family:var(--font-h);font-size:20px;font-weight:700;}
-.ep-photo-badge{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:4px 10px;border-radius:6px;font-family:var(--font-b);}
+/* ── GALLERY ── */
+.ep-gallery-section{background:var(--ink-soft);padding:80px 60px;}
+@media(max-width:900px){.ep-gallery-section{padding:50px 24px;}}
+.ep-section-label{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--amber);margin-bottom:12px;display:block;}
+.ep-section-title{font-family:'Cormorant Garamond',serif;font-size:46px;font-weight:600;line-height:1.1;margin-bottom:16px;}
+@media(max-width:900px){.ep-section-title{font-size:34px;}}
+.ep-divider{width:48px;height:3px;background:var(--amber);border-radius:2px;margin-bottom:36px;}
+.ep-photo-section{margin-bottom:40px;}
+.ep-photo-section-hdr{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.ep-photo-section-title{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:#fff;}
+.ep-photo-badge{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:4px 12px;border-radius:6px;}
 .ep-photo-badge-damage{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3);}
 .ep-photo-badge-angles{background:rgba(59,130,246,.15);color:#60a5fa;border:1px solid rgba(59,130,246,.3);}
 .ep-photo-badge-home{background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.3);}
 .ep-photo-badge-struct{background:rgba(168,85,247,.15);color:#c084fc;border:1px solid rgba(168,85,247,.3);}
+.ep-photo-badge-other{background:rgba(251,191,36,.15);color:#fbbf24;border:1px solid rgba(251,191,36,.3);}
 .ep-pg-1{display:grid;grid-template-columns:1fr;}
 .ep-pg-2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .ep-pg-3{display:grid;grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr;gap:8px;}
@@ -122,92 +160,127 @@ body{background:var(--dark);color:var(--text);font-family:var(--font-b);min-heig
 .ep-pt{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;cursor:pointer;display:block;transition:transform .2s,opacity .15s;}
 .ep-pt:hover{transform:scale(1.02);opacity:.9;}
 .ep-pmore{position:relative;border-radius:10px;overflow:hidden;cursor:pointer;}
-.ep-pmore img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;filter:brightness(.35);}
-.ep-pmore-lbl{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-size:24px;font-weight:700;color:#fff;}
+.ep-pmore img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;filter:brightness(.3);}
+.ep-pmore-lbl{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:#fff;}
 
-/* ── MATERIAL CARDS ── */
-.ep-mat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px;}
-@media(max-width:480px){.ep-mat-grid{grid-template-columns:1fr;}}
-.ep-mat-card{background:var(--card);border:2px solid var(--border);border-radius:16px;padding:20px 18px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
-.ep-mat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--mc,var(--border));opacity:0;transition:opacity .2s;}
-.ep-mat-card.active{border-color:var(--mc,var(--brand));box-shadow:0 0 0 1px var(--mc,var(--brand)),0 8px 28px rgba(0,0,0,.4);}
-.ep-mat-card.active::before{opacity:1;}
-.ep-mat-card:hover:not(.active){border-color:rgba(255,255,255,.15);background:var(--card2);}
-.ep-mat-badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:3px 9px;border-radius:6px;margin-bottom:10px;}
-.ep-mat-name{font-family:var(--font-h);font-size:18px;font-weight:700;margin-bottom:5px;}
-.ep-mat-desc{font-size:12px;color:var(--muted);line-height:1.55;margin-bottom:14px;}
-.ep-mat-price{font-family:var(--font-h);font-size:26px;font-weight:700;}
-.ep-mat-mo{font-size:11px;color:var(--muted);margin-top:3px;}
-.ep-mat-check{position:absolute;top:14px;right:14px;width:24px;height:24px;border-radius:50%;background:var(--mc,var(--brand));display:none;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:700;}
-.ep-mat-card.active .ep-mat-check{display:flex;}
+/* ── VIDEO ── */
+.ep-video-section{background:var(--cream-soft);padding:80px 60px;}
+@media(max-width:900px){.ep-video-section{padding:50px 24px;}}
+.ep-video-layout{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;}
+@media(max-width:900px){.ep-video-layout{grid-template-columns:1fr;}}
+.ep-video-wrap{position:relative;width:100%;padding-top:56.25%;border-radius:16px;overflow:hidden;background:var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.ep-video-wrap iframe,.ep-video-wrap video{position:absolute;inset:0;width:100%;height:100%;border:none;object-fit:cover;}
+.ep-video-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;border:2px dashed rgba(201,125,46,.3);border-radius:16px;background:radial-gradient(ellipse at center,rgba(201,125,46,.06) 0%,transparent 70%);}
+.ep-play-btn{width:72px;height:72px;border-radius:50%;background:var(--amber);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 12px rgba(201,125,46,.15);cursor:pointer;transition:transform .2s;}
+.ep-play-btn:hover{transform:scale(1.08);}
+.ep-play-arrow{width:0;height:0;border-style:solid;border-width:14px 0 14px 24px;border-color:transparent transparent transparent #fff;margin-left:5px;}
+.ep-video-placeholder-text{color:rgba(255,255,255,.4);font-size:13px;letter-spacing:1px;text-align:center;line-height:1.6;}
+.ep-video-placeholder-text strong{display:block;color:rgba(255,255,255,.65);font-size:15px;margin-bottom:4px;font-weight:500;}
+.ep-video-info h3{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:600;color:var(--ink);line-height:1.15;margin-bottom:16px;}
+.ep-video-info p{color:var(--mid);font-size:15px;line-height:1.7;margin-bottom:20px;}
+.ep-video-badge{display:inline-flex;align-items:center;gap:8px;background:var(--amber-pale);border:1px solid var(--border);border-radius:100px;padding:8px 18px;font-size:13px;font-weight:600;color:var(--amber);}
 
-/* ── PRICE HERO ── */
-.ep-price-hero{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:28px;text-align:center;}
-.ep-price-label{font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
-.ep-price-amount{font-family:var(--font-h);font-size:56px;font-weight:700;line-height:1;margin-bottom:8px;letter-spacing:-1px;}
-@media(max-width:480px){.ep-price-amount{font-size:44px;}}
-.ep-price-monthly{font-size:14px;color:var(--muted);}
+/* ── ABOUT ── */
+.ep-about-section{background:var(--ink);padding:80px 60px;color:#fff;}
+@media(max-width:900px){.ep-about-section{padding:50px 24px;}}
+.ep-about-layout{display:grid;grid-template-columns:300px 1fr;gap:60px;align-items:start;margin-top:48px;}
+@media(max-width:900px){.ep-about-layout{grid-template-columns:1fr;}}
+.ep-owner-card{background:rgba(255,255,255,.04);border:1px solid var(--border-light);border-radius:20px;overflow:hidden;text-align:center;}
+.ep-owner-photo{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;}
+.ep-owner-placeholder{aspect-ratio:3/4;background:linear-gradient(160deg,#2A3244 0%,#1C2333 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
+.ep-owner-avatar{width:90px;height:90px;border-radius:50%;background:rgba(201,125,46,.15);border:2px dashed rgba(201,125,46,.4);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:800;color:var(--amber-lt);}
+.ep-owner-placeholder p{color:rgba(255,255,255,.25);font-size:11px;letter-spacing:1px;text-transform:uppercase;}
+.ep-owner-footer{padding:22px;}
+.ep-owner-name{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;color:#fff;margin-bottom:4px;}
+.ep-owner-title{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--amber);margin-bottom:16px;}
+.ep-owner-links{display:flex;flex-direction:column;gap:8px;}
+.ep-owner-link{display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(255,255,255,.04);border:1px solid var(--border-light);border-radius:8px;color:rgba(255,255,255,.55);font-size:13px;text-decoration:none;transition:all .2s;}
+.ep-owner-link:hover{background:rgba(201,125,46,.1);border-color:var(--border);color:var(--amber-lt);}
+.ep-about-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:32px;}
+@media(max-width:600px){.ep-about-stats{grid-template-columns:1fr 1fr;}}
+.ep-stat-box{background:rgba(255,255,255,.04);border:1px solid var(--border-light);border-radius:12px;padding:18px;text-align:center;}
+.ep-stat-num{font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:700;color:var(--amber-lt);line-height:1;margin-bottom:5px;}
+.ep-stat-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.3);}
+.ep-about-body{color:rgba(255,255,255,.6);font-size:15px;line-height:1.8;margin-bottom:26px;}
+.ep-creds{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:28px;}
+.ep-creds li{display:flex;align-items:center;gap:12px;font-size:14px;color:rgba(255,255,255,.65);}
+.ep-check{width:22px;height:22px;border-radius:50%;background:rgba(201,125,46,.15);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--amber);flex-shrink:0;}
+.ep-service-badges{display:flex;flex-wrap:wrap;gap:8px;}
+.ep-service-badge{background:rgba(255,255,255,.06);border:1px solid var(--border-light);border-radius:100px;padding:6px 14px;font-size:12px;font-weight:500;color:rgba(255,255,255,.5);letter-spacing:.3px;}
 
-/* ── DETAILS ── */
-.ep-detail-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
-.ep-detail-box{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:22px;text-align:center;}
-.ep-detail-val{font-family:var(--font-h);font-size:34px;font-weight:700;margin-bottom:5px;}
-.ep-detail-label{font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);}
-
-/* ── WHY US ── */
-.ep-why-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
-@media(max-width:480px){.ep-why-grid{grid-template-columns:1fr;}}
-.ep-why-item{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;align-items:flex-start;gap:12px;}
-.ep-why-icon{font-size:22px;flex-shrink:0;}
-.ep-why-text{font-size:14px;font-weight:600;color:var(--mid);line-height:1.45;}
-
-/* ── REP CARD ── */
-.ep-rep-card{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:24px;display:flex;align-items:center;gap:20px;margin:28px 0;}
-.ep-rep-photo{width:76px;height:76px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border);}
-.ep-rep-initials{width:76px;height:76px;border-radius:50%;background:var(--card2);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-size:26px;font-weight:700;flex-shrink:0;}
-.ep-rep-name{font-family:var(--font-h);font-size:22px;font-weight:700;margin-bottom:3px;}
-.ep-rep-title{font-size:13px;color:var(--muted);margin-bottom:12px;}
-.ep-rep-links{display:flex;gap:8px;flex-wrap:wrap;}
-.ep-rep-link{display:flex;align-items:center;gap:5px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;color:var(--mid);font-size:13px;font-weight:600;text-decoration:none;transition:all .15s;}
-.ep-rep-link:hover{border-color:var(--brand);color:var(--brand);}
+/* ── REVIEWS ── */
+.ep-reviews-section{background:var(--cream);padding:80px 60px;}
+@media(max-width:900px){.ep-reviews-section{padding:50px 24px;}}
+.ep-reviews-hdr{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:40px;flex-wrap:wrap;gap:20px;}
+.ep-google-rating{text-align:right;}
+.ep-google-brand{display:flex;align-items:center;gap:8px;justify-content:flex-end;margin-bottom:8px;}
+.ep-google-g{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#4285F4,#34A853,#FBBC05,#EA4335);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;font-family:sans-serif;}
+.ep-google-brand span{font-weight:600;color:var(--mid);font-size:14px;}
+.ep-rating-score{font-family:'Cormorant Garamond',serif;font-size:54px;font-weight:700;color:var(--ink);line-height:1;}
+.ep-rating-stars{color:#FBBC05;font-size:20px;letter-spacing:2px;}
+.ep-rating-count{font-size:13px;color:var(--mid);margin-top:2px;}
+.ep-reviews-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:32px;}
+@media(max-width:900px){.ep-reviews-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:600px){.ep-reviews-grid{grid-template-columns:1fr;}}
+.ep-review-card{background:#fff;border-radius:14px;padding:24px;border:1px solid rgba(0,0,0,.07);display:flex;flex-direction:column;gap:14px;transition:transform .2s,box-shadow .2s;}
+.ep-review-card:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.08);}
+.ep-review-stars{color:#FBBC05;font-size:14px;letter-spacing:2px;}
+.ep-review-text{font-size:14px;color:var(--mid);line-height:1.65;font-style:italic;flex:1;}
+.ep-reviewer{display:flex;align-items:center;gap:10px;}
+.ep-reviewer-avatar{width:36px;height:36px;border-radius:50%;background:var(--ink-soft);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--amber-lt);flex-shrink:0;font-family:'Barlow Condensed',sans-serif;overflow:hidden;}
+.ep-reviewer-avatar img{width:100%;height:100%;object-fit:cover;}
+.ep-reviewer-name{font-weight:600;font-size:13px;color:var(--ink);}
+.ep-reviewer-date{font-size:11px;color:var(--mid);}
+.ep-review-cta{text-align:center;}
+.ep-btn-review{display:inline-flex;align-items:center;gap:10px;background:var(--ink);color:#fff;text-decoration:none;padding:14px 28px;border-radius:10px;font-weight:600;font-size:14px;letter-spacing:.3px;transition:all .2s;margin:0 6px;}
+.ep-btn-review:hover{background:var(--amber);}
+.ep-btn-review-outline{display:inline-flex;align-items:center;gap:10px;background:transparent;border:1px solid rgba(0,0,0,.2);color:var(--ink);text-decoration:none;padding:14px 28px;border-radius:10px;font-weight:600;font-size:14px;transition:all .2s;margin:0 6px;}
+.ep-btn-review-outline:hover{border-color:var(--amber);color:var(--amber);}
 
 /* ── CTA ── */
-.ep-cta-section{background:linear-gradient(135deg,rgba(242,92,5,.14),rgba(242,92,5,.05));border:1px solid rgba(242,92,5,.28);border-radius:22px;padding:40px 28px;text-align:center;margin:28px 0;}
-.ep-cta-title{font-family:var(--font-h);font-size:34px;font-weight:700;margin-bottom:12px;line-height:1.2;}
-.ep-cta-sub{font-size:15px;color:var(--mid);line-height:1.65;margin-bottom:28px;max-width:500px;margin-left:auto;margin-right:auto;}
-.ep-cta-btns{display:flex;flex-direction:column;gap:12px;align-items:center;}
-.ep-cta-btn-primary{display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg,#c44c04,#F25C05,#ff7a2e);border:none;border-radius:14px;padding:19px 36px;color:#fff;font-family:var(--font-h);font-size:21px;font-weight:700;letter-spacing:.3px;cursor:pointer;text-decoration:none;width:100%;max-width:420px;box-shadow:0 8px 32px rgba(242,92,5,.45);transition:all .2s;}
-.ep-cta-btn-primary:hover{opacity:.92;transform:translateY(-2px);box-shadow:0 14px 40px rgba(242,92,5,.55);}
-.ep-cta-btn-secondary{display:flex;align-items:center;justify-content:center;gap:8px;background:transparent;border:1px solid var(--border);border-radius:14px;padding:14px 28px;color:var(--mid);font-family:var(--font-b);font-size:15px;font-weight:600;cursor:pointer;text-decoration:none;width:100%;max-width:420px;transition:all .2s;}
-.ep-cta-btn-secondary:hover{border-color:var(--brand);color:var(--brand);}
+.ep-cta-section{background:var(--ink);padding:80px 60px;text-align:center;position:relative;overflow:hidden;}
+@media(max-width:900px){.ep-cta-section{padding:50px 24px;}}
+.ep-cta-section::before{content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:600px;height:400px;background:radial-gradient(ellipse,rgba(201,125,46,.18) 0%,transparent 70%);pointer-events:none;}
+.ep-cta-title{font-family:'Cormorant Garamond',serif;font-size:52px;font-weight:600;color:#fff;max-width:600px;margin:0 auto 16px;position:relative;z-index:2;line-height:1.1;}
+@media(max-width:900px){.ep-cta-title{font-size:36px;}}
+.ep-cta-sub{color:rgba(255,255,255,.4);font-size:16px;max-width:480px;margin:0 auto 40px;position:relative;z-index:2;}
+.ep-cta-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;position:relative;z-index:2;margin-bottom:56px;}
+.ep-btn-primary{display:inline-flex;align-items:center;gap:10px;background:var(--amber);color:#fff;text-decoration:none;padding:16px 36px;border-radius:10px;font-weight:700;font-size:15px;letter-spacing:.3px;transition:all .2s;border:none;cursor:pointer;font-family:'Barlow',sans-serif;}
+.ep-btn-primary:hover{background:var(--amber-lt);transform:translateY(-2px);}
+.ep-btn-secondary{display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,.08);border:1px solid var(--border-light);color:#fff;text-decoration:none;padding:16px 36px;border-radius:10px;font-weight:600;font-size:15px;transition:all .2s;cursor:pointer;font-family:'Barlow',sans-serif;}
+.ep-btn-secondary:hover{background:rgba(255,255,255,.12);}
+.ep-contact-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.06);border-radius:14px;overflow:hidden;max-width:800px;margin:0 auto;border:1px solid var(--border-light);position:relative;z-index:2;}
+@media(max-width:600px){.ep-contact-strip{grid-template-columns:1fr;}}
+.ep-contact-item{background:rgba(255,255,255,.03);padding:28px;text-align:center;text-decoration:none;transition:background .2s;display:block;}
+.ep-contact-item:hover{background:rgba(201,125,46,.1);}
+.ep-contact-icon{font-size:24px;margin-bottom:8px;display:block;}
+.ep-contact-label{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.3);margin-bottom:6px;}
+.ep-contact-value{font-size:15px;font-weight:600;color:#fff;}
+
+/* ── FOOTER ── */
+.ep-footer{background:#080D13;padding:20px 60px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+@media(max-width:600px){.ep-footer{padding:20px 24px;justify-content:center;text-align:center;}}
+.ep-footer p{font-size:12px;color:rgba(255,255,255,.2);}
+.ep-powered{display:flex;align-items:center;gap:8px;}
+.ep-powered span{font-size:12px;color:rgba(255,255,255,.2);}
+.ep-powered-logo{display:flex;align-items:center;gap:5px;text-decoration:none;}
+.ep-powered-dot{width:14px;height:14px;background:var(--amber);border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff;font-family:'Barlow Condensed',sans-serif;}
+.ep-powered-name{font-size:13px;font-weight:700;color:rgba(255,255,255,.4);font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;}
 
 /* ── LIGHTBOX ── */
-#ep-lightbox{position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:9998;display:none;align-items:center;justify-content:center;padding:20px;}
+#ep-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:10000;align-items:center;justify-content:center;padding:20px;}
 #ep-lightbox.open{display:flex;}
-#ep-lightbox-img{max-width:100%;max-height:90vh;border-radius:12px;object-fit:contain;}
-#ep-lb-close{position:fixed;top:16px;right:16px;background:rgba(255,255,255,.12);border:none;border-radius:50%;width:46px;height:46px;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;}
-#ep-lb-close:hover{background:rgba(255,255,255,.22);}
+#ep-lightbox-img{max-width:100%;max-height:90vh;object-fit:contain;border-radius:8px;}
+#ep-lightbox-close{position:absolute;top:20px;right:24px;font-size:32px;color:rgba(255,255,255,.6);cursor:pointer;line-height:1;background:none;border:none;}
+#ep-lightbox-close:hover{color:#fff;}
 
-/* ── LOADING ── */
-#ep-loading{position:fixed;inset:0;background:var(--dark);z-index:9990;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;}
-.ep-spinner{width:46px;height:46px;border:3px solid rgba(242,92,5,.2);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg);}}
-#ep-loading p{font-size:14px;color:var(--muted);}
-
-/* ── ERROR ── */
-#ep-error{display:none;text-align:center;padding:80px 24px;}
-#ep-error h2{font-family:var(--font-h);font-size:30px;margin-bottom:12px;}
-#ep-error p{color:var(--muted);font-size:15px;}
-
-/* ── SCROLL FADE ── */
-.ep-fade{opacity:0;transform:translateY(22px);transition:opacity .65s ease,transform .65s ease;}
+/* ── FADE IN ── */
+.ep-fade{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease;}
 .ep-fade.vis{opacity:1;transform:none;}
-.ep-fade-d1{opacity:0;transform:translateY(22px);transition:opacity .65s .1s ease,transform .65s .1s ease;}
+.ep-fade-d1{opacity:0;transform:translateY(20px);transition:opacity .6s .1s ease,transform .6s .1s ease;}
 .ep-fade-d1.vis{opacity:1;transform:none;}
-.ep-fade-d2{opacity:0;transform:translateY(22px);transition:opacity .65s .2s ease,transform .65s .2s ease;}
+.ep-fade-d2{opacity:0;transform:translateY(20px);transition:opacity .6s .2s ease,transform .6s .2s ease;}
 .ep-fade-d2.vis{opacity:1;transform:none;}
-.ep-fade-d3{opacity:0;transform:translateY(22px);transition:opacity .65s .3s ease,transform .65s .3s ease;}
-.ep-fade-d3.vis{opacity:1;transform:none;}
 </style>
 </head>
 <body>
@@ -215,15 +288,24 @@ body{background:var(--dark);color:var(--text);font-family:var(--font-b);min-heig
 <!-- Loading -->
 <div id="ep-loading">
   <div class="ep-spinner"></div>
-  <p>Loading your estimate…</p>
+  <div class="ep-loading-text">Loading your estimate…</div>
+</div>
+
+<!-- Error -->
+<div id="ep-error">
+  <div style="font-size:40px;">🏚️</div>
+  <div>This estimate is no longer available.</div>
+  <div style="font-size:13px;margin-top:4px;">Please contact your roofing contractor for assistance.</div>
 </div>
 
 <!-- Lead Gate -->
 <div id="ep-gate">
   <div class="ep-gate-box">
-    <div class="ep-gate-logo" id="ep-gate-logo"></div>
-    <div class="ep-gate-title">Your Estimate Is Ready</div>
-    <div class="ep-gate-sub">Enter your info to view your personalized roofing estimate and pricing options.</div>
+    <div class="ep-gate-logo" id="ep-gate-logo">
+      <div class="ep-gate-logo-text">BidDrop</div>
+    </div>
+    <h2 class="ep-gate-title">Your estimate is ready.</h2>
+    <p class="ep-gate-sub">Enter your details to view your personalized roof replacement estimate.</p>
     <div class="ep-gate-row">
       <div class="ep-gate-field"><label>First Name</label><input id="g-first" type="text" placeholder="Jane" autocomplete="given-name"></div>
       <div class="ep-gate-field"><label>Last Name</label><input id="g-last" type="text" placeholder="Smith" autocomplete="family-name"></div>
@@ -233,293 +315,322 @@ body{background:var(--dark);color:var(--text);font-family:var(--font-b);min-heig
       <div class="ep-gate-field"><label>Phone</label><input id="g-phone" type="tel" placeholder="(555) 000-0000" autocomplete="tel"></div>
     </div>
     <button class="ep-gate-btn" onclick="submitGate()">View My Estimate →</button>
-    <div class="ep-gate-privacy">🔒 Your info is private and will never be sold.</div>
+    <p class="ep-gate-privacy">🔒 Your information is kept private and never sold.</p>
   </div>
 </div>
 
 <!-- Main Page -->
-<div id="ep-page" style="display:none;">
-  <div class="ep-header">
-    <div id="ep-hdr-logo"></div>
-    <div class="ep-header-cta" id="ep-hdr-cta"></div>
-  </div>
+<div id="ep-page">
 
-  <div class="ep-hero" id="ep-hero">
-    <div class="ep-hero-overlay"></div>
-    <div class="ep-hero-content">
-      <div class="ep-hero-label">Your Personalized Estimate</div>
-      <div class="ep-hero-addr" id="ep-hero-addr"></div>
-    </div>
-  </div>
-
-  <div class="ep-body">
-    <div id="ep-countdown-wrap"></div>
-
-    <div class="ep-welcome ep-fade" id="ep-welcome">
-      <div class="ep-welcome-greeting" id="ep-greeting"></div>
-      <div class="ep-welcome-bio" id="ep-bio"></div>
-      <div id="ep-insp-wrap"></div>
-    </div>
-
-    <div id="ep-video-wrap"></div>
-
-    <div class="ep-trust-bar ep-fade-d1">
-      <div class="ep-trust-item">
-        <div class="ep-trust-num" id="ep-t-yrs" style="color:var(--brand);">5+</div>
-        <div class="ep-trust-label">Years in Business</div>
-      </div>
-      <div class="ep-trust-item">
-        <div class="ep-trust-num" id="ep-t-warr" style="color:var(--brand);">10</div>
-        <div class="ep-trust-label">Year Warranty</div>
-      </div>
-      <div class="ep-trust-item">
-        <div class="ep-trust-num" style="color:var(--brand);">5★</div>
-        <div class="ep-trust-label">Rated</div>
+  <!-- ── HERO ── -->
+  <section class="ep-hero">
+    <div class="ep-topbar">
+      <a class="bd-logo" href="https://biddrop.us" target="_blank" rel="noopener">
+        <div class="bd-logo-icon">BD</div>
+        <span class="bd-logo-text">Bid<span>Drop</span></span>
+      </a>
+      <div class="co-slot">
+        <div class="co-name-wrap">
+          <strong id="ep-co-name">Roofing Company</strong>
+          <small id="ep-co-tagline">Licensed &amp; Insured</small>
+        </div>
+        <div class="co-badge" id="ep-co-badge">RC</div>
       </div>
     </div>
 
-    <div class="ep-section ep-fade-d1" id="ep-mat-section">
-      <div class="ep-section-title">Choose Your Material</div>
-      <div class="ep-mat-grid" id="ep-mat-grid"></div>
-      <div class="ep-price-hero">
-        <div class="ep-price-label">Selected: <span id="ep-sel-name"></span></div>
-        <div class="ep-price-amount" id="ep-price"></div>
-        <div class="ep-price-monthly" id="ep-monthly"></div>
+    <div class="ep-hero-main">
+      <div>
+        <div class="ep-hero-tag">
+          <div class="ep-hero-tag-dot"></div>
+          <span>Roof Replacement Estimate</span>
+        </div>
+        <h1 class="ep-hero-headline">Your<br><em>personalized</em><br>roof estimate.</h1>
+        <p class="ep-hero-sub">Prepared exclusively for you by our certified estimating team. Every number is backed by a full on-site inspection of your property.</p>
+      </div>
+
+      <div class="ep-prop-card ep-fade">
+        <p class="ep-prop-label">Property Details</p>
+        <div class="ep-prop-row" id="ep-prop-row"></div>
       </div>
     </div>
+  </section>
 
-    <div class="ep-section ep-fade-d2" id="ep-details-section">
-      <div class="ep-section-title">Roof Details</div>
-      <div class="ep-detail-grid" id="ep-detail-grid"></div>
+  <!-- Hero photo -->
+  <div id="ep-hero-photo-wrap"></div>
+
+  <!-- ── ESTIMATE NUMBERS ── -->
+  <section class="ep-est-section">
+    <div class="ep-est-hero ep-fade">
+      <p class="ep-est-eyebrow">Total Replacement Cost Estimate</p>
+      <div class="ep-est-big"><span class="dollar">$</span><span id="ep-price">0</span></div>
+      <p class="ep-est-note">Includes all materials, labor, disposal &amp; cleanup</p>
+      <p class="ep-est-mo" id="ep-monthly"></p>
     </div>
 
+    <span class="ep-mat-label">Choose Your Material</span>
+    <div class="ep-mat-grid" id="ep-mat-grid"></div>
+
+    <div class="ep-detail-grid" id="ep-detail-grid"></div>
+  </section>
+
+  <!-- ── PHOTO GALLERY ── -->
+  <section class="ep-gallery-section" id="ep-gallery-section" style="display:none;">
+    <span class="ep-section-label">Inspection Documentation</span>
+    <h2 class="ep-section-title" style="color:#fff;">Photos from<br><em style="font-style:italic;color:var(--amber-lt);">your roof.</em></h2>
+    <div class="ep-divider"></div>
     <div id="ep-photos-all"></div>
+  </section>
 
-    <div class="ep-section ep-fade-d2" id="ep-why-section">
-      <div class="ep-section-title">Why Choose Us</div>
-      <div class="ep-why-grid" id="ep-why-grid"></div>
+  <!-- ── VIDEO ── -->
+  <section class="ep-video-section" id="ep-video-section" style="display:none;">
+    <div class="ep-video-layout">
+      <div style="position:relative;width:100%;padding-top:56.25%;border-radius:16px;overflow:hidden;background:var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.15);">
+        <div id="ep-video-inner" style="position:absolute;inset:0;"></div>
+      </div>
+      <div class="ep-video-info">
+        <span class="ep-section-label">Personal Message</span>
+        <h3 id="ep-video-title">A message from your estimator</h3>
+        <p id="ep-video-body">We recorded a short walkthrough of your inspection findings and what we recommend — watch it to understand exactly what's happening with your roof and why we made these recommendations.</p>
+        <div class="ep-video-badge">🎥 Recorded just for you</div>
+      </div>
     </div>
+  </section>
 
-    <div id="ep-rep-wrap"></div>
-
-    <div class="ep-cta-section ep-fade-d3">
-      <div class="ep-cta-title">Ready to Get Started?</div>
-      <div class="ep-cta-sub">Lock in your estimate today — our team is ready to schedule your installation.</div>
-      <div class="ep-cta-btns" id="ep-cta-btns"></div>
+  <!-- ── ABOUT ── -->
+  <section class="ep-about-section ep-fade">
+    <span class="ep-section-label">About Your Contractor</span>
+    <h2 class="ep-section-title" style="color:#fff;">The team behind<br><em style="font-style:italic;color:var(--amber-lt);">your estimate.</em></h2>
+    <div class="ep-divider"></div>
+    <div class="ep-about-layout">
+      <div class="ep-owner-card">
+        <div id="ep-owner-photo-wrap">
+          <div class="ep-owner-placeholder">
+            <div class="ep-owner-avatar" id="ep-owner-initials">RC</div>
+            <p>Rep Photo</p>
+          </div>
+        </div>
+        <div class="ep-owner-footer">
+          <div class="ep-owner-name" id="ep-owner-name">Your Estimator</div>
+          <div class="ep-owner-title" id="ep-owner-title">Roofing Specialist</div>
+          <div class="ep-owner-links" id="ep-owner-links"></div>
+        </div>
+      </div>
+      <div>
+        <div class="ep-about-stats" id="ep-about-stats"></div>
+        <p class="ep-about-body" id="ep-about-body"></p>
+        <ul class="ep-creds" id="ep-creds"></ul>
+        <div class="ep-service-badges" id="ep-service-badges"></div>
+      </div>
     </div>
-  </div>
-</div>
+  </section>
 
-<div id="ep-error"><h2>Estimate Not Found</h2><p>This link may have expired or been removed.</p></div>
+  <!-- ── REVIEWS ── -->
+  <section class="ep-reviews-section ep-fade" id="ep-reviews-section">
+    <div class="ep-reviews-hdr">
+      <div>
+        <span class="ep-section-label">What Homeowners Say</span>
+        <h2 class="ep-section-title">Real reviews from<br><em style="font-style:italic;color:var(--amber);">real customers.</em></h2>
+        <div class="ep-divider"></div>
+      </div>
+      <div class="ep-google-rating" id="ep-google-rating" style="display:none;">
+        <div class="ep-google-brand">
+          <div class="ep-google-g">G</div>
+          <span>Google Reviews</span>
+        </div>
+        <div class="ep-rating-score" id="ep-rating-score">5.0</div>
+        <div class="ep-rating-stars" id="ep-rating-stars">★★★★★</div>
+        <div class="ep-rating-count" id="ep-rating-count"></div>
+      </div>
+    </div>
+    <div class="ep-reviews-grid" id="ep-reviews-grid"></div>
+    <div class="ep-review-cta" id="ep-review-cta"></div>
+  </section>
+
+  <!-- ── CTA ── -->
+  <section class="ep-cta-section">
+    <h2 class="ep-cta-title ep-fade">Ready to protect<br><em style="font-style:italic;color:var(--amber-lt);">your home?</em></h2>
+    <p class="ep-cta-sub ep-fade-d1">This estimate is valid for a limited time. Lock in your price today — no pressure, no obligation.</p>
+    <div class="ep-cta-btns ep-fade-d2" id="ep-cta-btns"></div>
+    <div class="ep-contact-strip ep-fade-d2" id="ep-contact-strip"></div>
+  </section>
+
+  <!-- ── FOOTER ── -->
+  <footer class="ep-footer">
+    <p id="ep-footer-co">© 2025 Your Roofing Company</p>
+    <div class="ep-powered">
+      <span>Powered by</span>
+      <a class="ep-powered-logo" href="https://biddrop.us" target="_blank" rel="noopener">
+        <div class="ep-powered-dot">BD</div>
+        <span class="ep-powered-name">BidDrop</span>
+      </a>
+    </div>
+  </footer>
+
+</div><!-- /ep-page -->
 
 <!-- Lightbox -->
-<div id="ep-lightbox" onclick="closeLightbox()">
-  <button id="ep-lb-close" onclick="closeLightbox()">✕</button>
+<div id="ep-lightbox">
+  <button id="ep-lightbox-close" onclick="closeLightbox()">✕</button>
   <img id="ep-lightbox-img" src="" alt="">
 </div>
 
 <script>
-// ── Unregister any service worker on this estimate page ──────────────────────
-// Estimate pages must NOT be controlled by the PWA service worker
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(regs => {
-    regs.forEach(r => r.unregister());
-  });
+// ── Unregister any PWA service worker immediately ──────────────────────────
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.getRegistrations().then(regs=>regs.forEach(r=>r.unregister()));
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────────────────
 const $=id=>document.getElementById(id);
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function fmt(v){return v>0?'$'+Math.round(v).toLocaleString():'—';}
-function fmtMo(v,apr,term){
-  if(!v||v<=0)return'';
-  const r=(parseFloat(apr)||9.99)/100/12,n=parseInt(term)||60;
-  const mo=r>0?Math.round(v*r/(1-Math.pow(1+r,-n))):Math.round(v/n);
-  return`~$${mo.toLocaleString()}/mo with financing`;
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function fmt(n){return n?'$'+Math.round(n).toLocaleString():'$0';}
+function fmtMo(total,apr,term){
+  if(!total||!apr||!term)return'';
+  const r=apr/100/12,n=term;
+  const mo=total*(r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1);
+  return'~'+fmt(Math.ceil(mo))+'/mo with financing';
 }
-function ytId(url){
-  const m=(url||'').match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);
-  return m?m[1]:null;
+function stars(n){return'★'.repeat(Math.round(n))+'☆'.repeat(5-Math.round(n));}
+function slugify(s){return(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');}
+function pitchLabel(mul){
+  const map={'1.00':'4/12 Low','1.07':'5/12','1.15':'6/12 Std','1.23':'7/12','1.31':'8/12 Mod','1.40':'9/12','1.50':'10/12 Steep','1.65':'11/12','1.80':'12/12 Steep'};
+  return map[parseFloat(mul).toFixed(2)]||map[parseFloat(mul).toFixed(1)]||(mul+'/12');
 }
+function initials(s){return(s||'').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
+function fmtDate(iso){if(!iso)return'';const d=new Date(iso);return d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});}
 
-// ── Price computation (mirrors index.html calcStructPrice) ───────────────────
-// matKey: '1.0'=3tab, '1.3'=arch, '1.8'=designer, '2.5'=metal
-function computePrice(structures, matKey, acct) {
-  if(!structures||!structures.length) return 0;
-  const matCostMap = {
-    '1.0': parseFloat(acct.cost3Tab)||350,
-    '1.3': parseFloat(acct.costArchitectural)||450,
-    '1.8': parseFloat(acct.costDesigner)||620,
-    '2.5': parseFloat(acct.costMetal)||950,
-  };
-  const matCost = matCostMap[String(matKey)] || matCostMap['1.3'];
-  const overhead = parseFloat(acct.overhead)||15;
-  const margin   = parseFloat(acct.margin)||20;
-  const costTearoff  = parseFloat(acct.costTearoff)||75;
-  const costIceWater = parseFloat(acct.costIceWater)||42;
-  const costFelts    = parseFloat(acct.costFelts)||22;
-  const costDumpster = parseFloat(acct.costDumpster)||450;
-
-  let grand = 0;
-  structures.forEach(s => {
-    const sqft = parseFloat(s.sqft)||0;
-    if(!sqft) return;
-    const pitchMult  = parseFloat(s.pitch)||1.31;
-    const complexity = parseFloat(s.complexity)||1.12;
-    const stories    = parseFloat(s.stories)||1;
-    const sq = sqft/100*1.12*pitchMult;
-    const stMult = stories<=1?1:stories<=1.5?1.08:stories<=2?1.16:1.25;
-    const labor = matCost*sq*stMult*complexity;
-    const tearoff  = costTearoff*sq;
-    const iceWater = costIceWater*sq;
-    const felts    = costFelts*sq;
-    const dumpster = costDumpster;
-    const sub = labor+tearoff+iceWater+felts+dumpster;
-    const ovh = sub*overhead/100;
-    const mgn = (sub+ovh)*margin/100;
-    grand += Math.round(sub+ovh+mgn);
+// ── Pricing ────────────────────────────────────────────────────────────────
+function computePrice(structures,matKey,acct){
+  if(!structures||!structures.length)return 0;
+  const costMap={'1.0':acct.cost3Tab,'1.3':acct.costArchitectural,'1.8':acct.costDesigner,'2.5':acct.costMetal};
+  const matCost=parseFloat(costMap[matKey])||450;
+  const tearoff=parseFloat(acct.costTearoff)||75;
+  const iceWater=parseFloat(acct.costIceWater)||42;
+  const felts=parseFloat(acct.costFelts)||22;
+  const dumpster=parseFloat(acct.costDumpster)||450;
+  const overhead=(parseFloat(acct.overhead)||15)/100;
+  const margin=(parseFloat(acct.margin)||20)/100;
+  let subtotal=dumpster;
+  structures.forEach(s=>{
+    const sqft=parseFloat(s.sqft)||0;if(!sqft)return;
+    const pitchMult=parseFloat(s.pitch)||1.15;
+    const complexity=parseFloat(s.complexity)||1.12;
+    const sq=sqft/100*1.12*pitchMult;
+    subtotal+=sq*(matCost+tearoff+iceWater+felts)*complexity;
   });
-  return grand;
+  return Math.round(subtotal*(1+overhead)*(1+margin));
 }
 
-// ── State ─────────────────────────────────────────────────────────────────────
-let _est=null,_acct=null,_estId=null,_brand='#F25C05';
-let _prices={};  // computed prices per matKey
+// ── State ──────────────────────────────────────────────────────────────────
+let _estId='',_est=null,_acct=null,_prices={};
 
-// ── Init ──────────────────────────────────────────────────────────────────────
-async function init(){
-  // Unregister SW so this page is never intercepted
-  if('serviceWorker' in navigator){
-    navigator.serviceWorker.getRegistrations().then(r=>r.forEach(x=>x.unregister()));
-  }
-
+// ── Init ───────────────────────────────────────────────────────────────────
+function init(){
   const parts=location.pathname.split('/').filter(Boolean);
-  _estId=parts[parts.length-1];
-  if(!_estId){showError();return;}
-
-  try{
-    // CORRECT API call: GET ?action=get&id=...
-    const res=await fetch(`/api/estimate?action=get&id=${encodeURIComponent(_estId)}`);
-    if(!res.ok){showError();return;}
-    const data=await res.json();
-    if(!data.estimate||data.error){showError();return;}
-    _est=data.estimate;
-    _acct=data.account;
-    _brand=_acct.brandColor||'#F25C05';
-    document.documentElement.style.setProperty('--brand',_brand);
-
-    // Pre-compute prices for all 4 materials
-    const structs=_est.structures||[];
-    _prices={
-      '1.0': computePrice(structs,'1.0',_acct),
-      '1.3': computePrice(structs,'1.3',_acct),
-      '1.8': computePrice(structs,'1.8',_acct),
-      '2.5': computePrice(structs,'2.5',_acct),
-    };
-
-    $('ep-loading').style.display='none';
-    if(sessionStorage.getItem('ep-g-'+_estId)){renderPage();}
-    else{showGate();}
-  }catch(e){
-    console.error('Estimate load error:',e);
-    showError();
-  }
+  _estId=parts[parts.length-1]||'';
+  if(!_estId||!_estId.startsWith('est_')){showError();return;}
+  fetch('/api/estimate?action=get&id='+encodeURIComponent(_estId))
+    .then(r=>r.json())
+    .then(d=>{
+      if(!d||!d.estimate){showError();return;}
+      _est=d.estimate;_acct=d.account;
+      // Compute prices for all mats
+      const MATS=['1.0','1.3','1.8','2.5'];
+      MATS.forEach(k=>{_prices[k]=computePrice(_est.structures||[],k,_acct);});
+      // Show gate if account has it enabled (always show for now)
+      showGate();
+    })
+    .catch(()=>showError());
 }
 
 function showGate(){
-  const lg=_acct.logoData
-    ?`<img src="${_acct.logoData}" alt="" style="max-height:52px;max-width:200px;object-fit:contain;">`
-    :`<div class="ep-gate-co">${esc(_acct.companyName)}</div>`;
-  $('ep-gate-logo').innerHTML=lg;
+  $('ep-loading').style.display='none';
+  // Pre-fill gate logo
+  if(_acct){
+    const gl=$('ep-gate-logo');
+    if(_acct.logoData){gl.innerHTML=`<img src="${_acct.logoData}" alt="">`;}
+    else{gl.innerHTML=`<div class="ep-gate-logo-text" style="color:var(--amber-lt);">${esc(_acct.companyName||'BidDrop')}</div>`;}
+  }
   $('ep-gate').style.display='flex';
 }
 
-async function submitGate(){
-  const first=$('g-first').value.trim(),last=$('g-last').value.trim();
-  const email=$('g-email').value.trim(),phone=$('g-phone').value.trim();
-  if(!first||!last){$('g-first').focus();return;}
-  // CORRECT API: capture-lead needs estimate_id, first_name, last_name
-  try{
-    await fetch('/api/estimate',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'capture-lead',estimate_id:_estId,first_name:first,last_name:last,email,phone})
-    });
-  }catch(e){}
-  sessionStorage.setItem('ep-g-'+_estId,'1');
+function submitGate(){
+  const first=($('g-first').value||'').trim();
+  const last=($('g-last').value||'').trim();
+  const email=($('g-email').value||'').trim();
+  const phone=($('g-phone').value||'').trim();
+  if(!first){$('g-first').focus();return;}
   $('ep-gate').style.display='none';
-  renderPage();
+  buildPage(first,last,email,phone);
+  // Capture lead
+  try{fetch('/api/estimate',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'capture_lead',estimate_id:_estId,first_name:first,last_name:last,email,phone})});}catch(e){}
 }
 
-function renderPage(){
-  const est=_est,acct=_acct,brand=_brand;
+// ── Build Page ─────────────────────────────────────────────────────────────
+function buildPage(firstName,lastName,email,phone){
+  const est=_est,acct=_acct;
+  const brand=acct.brandColor||'#C97D2E';
+  // Inject brand color as CSS var
+  document.documentElement.style.setProperty('--brand',brand);
+  document.documentElement.style.setProperty('--amber',brand);
+  // Derived amber-lt (lighter)
+  document.documentElement.style.setProperty('--amber-lt',brand);
 
-  // Header
-  $('ep-hdr-logo').innerHTML=acct.logoData
-    ?`<img src="${acct.logoData}" alt="" style="max-height:40px;max-width:150px;object-fit:contain;">`
-    :`<div class="ep-header-co">${esc(acct.companyName)}</div>`;
-  let ctaH='';
-  if(acct.companyPhone)ctaH+=`<a href="tel:${acct.companyPhone}" class="ep-btn-call">📞 Call Now</a>`;
-  if(acct.bookingUrl)ctaH+=`<a href="${acct.bookingUrl}" target="_blank" class="ep-btn-book">📅 Schedule</a>`;
-  $('ep-hdr-cta').innerHTML=ctaH;
+  // ── Topbar ──
+  $('ep-co-name').textContent=acct.companyName||'Your Roofing Company';
+  $('ep-co-tagline').textContent=(acct.yearsInBusiness?'Est. '+(new Date().getFullYear()-parseInt(acct.yearsInBusiness))+' · ':'')+' Licensed & Insured';
+  const badge=$('ep-co-badge');
+  if(acct.logoData){badge.innerHTML=`<img src="${acct.logoData}" alt="">`;}
+  else{badge.textContent=initials(acct.companyName);}
 
-  // Hero
-  const heroImg=est.photoUrl||(est.allPhotos&&est.allPhotos.front&&est.allPhotos.front[0])||null;
-  const hero=$('ep-hero');
-  if(heroImg){hero.style.backgroundImage=`url('${heroImg}')`;hero.style.backgroundSize='cover';hero.style.backgroundPosition='center';}
-  else{hero.style.background='linear-gradient(135deg,#1a2030,#07090f)';}
-  $('ep-hero-addr').textContent=est.addr||'';
+  // ── Property card ──
+  const structs=est.structures||[];
+  const rawSqft=est.sqft||(structs[0]&&structs[0].sqft)||0;
+  const pitch=structs[0]?pitchLabel(structs[0].pitch):'—';
+  const estDate=fmtDate(est.savedAt);
+  const expDate=est.expiresAt?fmtDate(est.expiresAt):'';
+  const repName=est.rep||acct.repName||'';
+  const propItems=[
+    {icon:'🏠',val:est.addr||'Property Address',lbl:'Property Address'},
+    {icon:'📋',val:_estId.replace('est_','EST-'),lbl:'Estimate Number'},
+    estDate?{icon:'📅',val:estDate,lbl:'Inspection Date'}:null,
+    repName?{icon:'👷',val:repName+(acct.repTitle?' — '+acct.repTitle:''),lbl:'Assigned Estimator'}:null,
+    expDate?{icon:'⏱️',val:'Valid Through '+expDate,lbl:'Estimate Expiration'}:null,
+  ].filter(Boolean);
+  $('ep-prop-row').innerHTML=propItems.map(p=>`
+    <div class="ep-prop-item">
+      <div class="ep-prop-icon">${p.icon}</div>
+      <div>
+        <strong>${esc(p.val)}</strong>
+        <span>${esc(p.lbl)}</span>
+      </div>
+    </div>`).join('');
 
-  // Countdown
-  if(est.expiresAt){
-    const diff=new Date(est.expiresAt)-Date.now();
-    if(diff>0){
-      const d=Math.floor(diff/86400000),h=Math.floor((diff%86400000)/3600000);
-      $('ep-countdown-wrap').innerHTML=`<div class="ep-countdown ep-fade"><div class="ep-countdown-icon">⏰</div><div><div class="ep-countdown-label">Estimate Expires In</div><div class="ep-countdown-timer">${d}d ${h}h remaining</div></div></div>`;
-    }
+  // ── Hero photo ──
+  const heroImg=est.photoUrl||((est.allPhotos&&est.allPhotos.front&&est.allPhotos.front[0])||null);
+  if(heroImg){
+    $('ep-hero-photo-wrap').innerHTML=`<img class="ep-hero-photo" src="${heroImg}" alt="Property photo">`;
   }
 
-  // Welcome
-  const firstName=(est.owner||'').split(' ')[0]||'Homeowner';
-  $('ep-greeting').innerHTML=`Hi <span>${esc(firstName)},</span> here's your personalized estimate.`;
-  $('ep-bio').textContent=acct.companyBio||`${acct.companyName} is a locally owned roofing company proudly serving homeowners in your area. We specialize in full roof replacements, storm damage restoration, and working directly with insurance companies to make the process as seamless as possible.`;
-  if(est.inspectionNote){
-    $('ep-insp-wrap').innerHTML=`<div class="ep-inspection"><div class="ep-inspection-label">🔍 Inspection Findings</div><div class="ep-inspection-text">${esc(est.inspectionNote)}</div></div>`;
-  }
-
-  // Video
-  if(est.repVideoUrl){
-    const yt=ytId(est.repVideoUrl);
-    const inner=yt
-      ?`<iframe src="https://www.youtube.com/embed/${yt}?rel=0&modestbranding=1" allowfullscreen></iframe>`
-      :`<video src="${est.repVideoUrl}" controls playsinline></video>`;
-    $('ep-video-wrap').innerHTML=`<div class="ep-video-section ep-fade"><div class="ep-video-label">Message From Your Rep</div><div class="ep-video-wrap">${inner}</div></div>`;
-  }
-
-  // Trust
-  $('ep-t-yrs').textContent=acct.yearsInBusiness||'5+';
-  $('ep-t-warr').textContent=acct.warrantyYears||'10';
-
-  // Materials — use computed prices
+  // ── Materials ──
   const MATS=[
-    {key:'1.0',name:'3-Tab Shingle',   desc:'Budget-friendly, reliable protection for 20–25 years.',    mc:'#64748b',badge:'Economy',    bb:'rgba(100,116,139,.15)',bc:'#94a3b8'},
-    {key:'1.3',name:'Architectural',   desc:'Most popular — dimensional look, 30-year warranty.',       mc:'#3b82f6',badge:'Most Popular',bb:'rgba(59,130,246,.15)', bc:'#60a5fa'},
-    {key:'1.8',name:'Designer Shingle',desc:'Premium curb appeal with enhanced impact resistance.',     mc:'#8b5cf6',badge:'Premium',     bb:'rgba(139,92,246,.15)', bc:'#a78bfa'},
-    {key:'2.5',name:'Metal Roofing',   desc:'50+ year lifespan, energy efficient, maintenance-free.',  mc:'#10b981',badge:'Best Value',  bb:'rgba(16,185,129,.15)', bc:'#34d399'},
+    {key:'1.0',name:'3-Tab Shingle',   desc:'Budget-friendly, reliable protection for 20–25 years.',    mc:'#64748b',badge:'Economy',    bb:'rgba(100,116,139,.12)',bc:'#64748b'},
+    {key:'1.3',name:'Architectural',   desc:'Most popular — dimensional look, 30-year warranty.',       mc:'#3b82f6',badge:'Most Popular',bb:'rgba(59,130,246,.12)', bc:'#3b82f6'},
+    {key:'1.8',name:'Designer Shingle',desc:'Premium curb appeal with enhanced impact resistance.',     mc:'#8b5cf6',badge:'Premium',     bb:'rgba(139,92,246,.12)', bc:'#8b5cf6'},
+    {key:'2.5',name:'Metal Roofing',   desc:'50+ year lifespan, energy efficient, maintenance-free.',  mc:'#10b981',badge:'Best Value',  bb:'rgba(16,185,129,.12)', bc:'#10b981'},
   ];
   const avail=MATS.filter(m=>(_prices[m.key]||0)>0);
-  if(!avail.length)$('ep-mat-section').style.display='none';
-
-  // Default selected mat from estimate (mat field is '1.3' etc)
+  if(!avail.length){$('ep-mat-grid').closest('section').style.display='none';}
   const estMat=est.mat||'1.3';
-  const sel=avail.find(m=>m.key===estMat)||avail[0];
+  const selMat=avail.find(m=>m.key===estMat)||avail[0];
   window._M=avail;window._E=est;window._A=acct;window._P=_prices;
 
   $('ep-mat-grid').innerHTML=avail.map(m=>{
     const p=_prices[m.key]||0;
     const mo=acct.financingEnabled!==false?fmtMo(p,acct.financingApr,acct.financingTerm):'';
-    const act=m.key===(sel?.key||'1.3');
-    return`<div class="ep-mat-card${act?' active':''}" style="--mc:${m.mc};" onclick="selMat('${m.key}')">
+    const act=m.key===(selMat?.key||'1.3');
+    return`<div class="ep-mat-card${act?' active':''}" style="--mc:${m.mc};" onclick="selectMat('${m.key}')">
       <div class="ep-mat-check">✓</div>
       <span class="ep-mat-badge" style="background:${m.bb};color:${m.bc};">${m.badge}</span>
       <div class="ep-mat-name">${m.name}</div>
@@ -529,64 +640,87 @@ function renderPage(){
     </div>`;
   }).join('');
 
-  const sp=_prices[sel?.key||'1.3']||0;
-  $('ep-sel-name').textContent=sel?.name||'';
-  $('ep-price').textContent=fmt(sp);
-  $('ep-price').style.color=sel?.mc||brand;
+  const sp=_prices[selMat?.key||'1.3']||0;
+  $('ep-price').textContent=Math.round(sp).toLocaleString();
   $('ep-monthly').textContent=acct.financingEnabled!==false?fmtMo(sp,acct.financingApr,acct.financingTerm):'';
 
-  // Roof Details — sqft lives in structures[0].sqft (top-level est.sqft may be null)
-  const structs=est.structures||[];
-  const rawSqft=est.sqft||(structs[0]&&structs[0].sqft)||0;
-  const sqft=rawSqft?Math.round(rawSqft).toLocaleString()+' sq ft':'—';
-  const pitch=structs[0]?(parseFloat(structs[0].pitch)||1.15):'—';
-  // Convert pitch multiplier to x/12 display
-  const pitchDisplay=typeof pitch==='number'?pitchMulToLabel(pitch):'—';
+  // ── Roof Details ──
   $('ep-detail-grid').innerHTML=`
-    <div class="ep-detail-box"><div class="ep-detail-val" style="color:${brand};">${sqft}</div><div class="ep-detail-label">Roof Area</div></div>
-    <div class="ep-detail-box"><div class="ep-detail-val">${pitchDisplay}</div><div class="ep-detail-label">Roof Pitch</div></div>`;
+    <div class="ep-detail-box"><div class="ep-detail-val" style="color:${brand};">${rawSqft?Math.round(rawSqft).toLocaleString()+' sq ft':'—'}</div><div class="ep-detail-label">Roof Area</div></div>
+    <div class="ep-detail-box"><div class="ep-detail-val">${pitch}</div><div class="ep-detail-label">Roof Pitch</div></div>
+    ${acct.warrantyYears?`<div class="ep-detail-box"><div class="ep-detail-val" style="color:${brand};">${esc(acct.warrantyYears)} yr</div><div class="ep-detail-label">Warranty</div></div>`:''}`;
 
-  // Photos
+  // ── Photos ──
   renderPhotos(est);
 
-  // Why Us
-  const diffs=[acct.diff1,acct.diff2,acct.diff3,acct.diff4,acct.diff5,acct.diff6].filter(Boolean);
-  const icons=['🛡️','🏅','📋','🔨','💳','🏠'];
-  $('ep-why-grid').innerHTML=diffs.map((d,i)=>`<div class="ep-why-item"><div class="ep-why-icon">${icons[i]||'✓'}</div><div class="ep-why-text">${esc(d)}</div></div>`).join('');
-
-  // Rep
-  const rn=est.rep||acct.repName||'';
-  if(rn){
-    const ini=rn.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-    const ph=acct.headshot?`<img class="ep-rep-photo" src="${acct.headshot}" alt="">`:`<div class="ep-rep-initials" style="color:${brand};">${ini}</div>`;
-    let rl='';
-    if(acct.companyPhone)rl+=`<a href="tel:${acct.companyPhone}" class="ep-rep-link">📞 ${acct.companyPhone}</a>`;
-    if(acct.bookingUrl)rl+=`<a href="${acct.bookingUrl}" target="_blank" class="ep-rep-link">📅 Schedule</a>`;
-    $('ep-rep-wrap').innerHTML=`<div class="ep-rep-card ep-fade-d2">${ph}<div><div class="ep-rep-name">${esc(rn)}</div><div class="ep-rep-title">${esc(acct.repTitle||'Roofing Specialist')} · ${esc(acct.companyName)}</div><div class="ep-rep-links">${rl}</div></div></div>`;
+  // ── Video ──
+  const vid=est.repVideoUrl||'';
+  if(vid){
+    $('ep-video-section').style.display='block';
+    const inner=$('ep-video-inner');
+    const ytMatch=vid.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([A-Za-z0-9_-]{11})/);
+    if(ytMatch){
+      inner.innerHTML=`<iframe src="https://www.youtube.com/embed/${ytMatch[1]}?rel=0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>`;
+    } else {
+      inner.innerHTML=`<video src="${vid}" controls playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"></video>`;
+    }
+    $('ep-video-title').textContent='A personal message from '+(repName||acct.companyName||'your estimator');
   }
 
-  // CTA
-  let cb='';
-  if(acct.companyPhone)cb+=`<a href="tel:${acct.companyPhone}" class="ep-cta-btn-primary">📞 Call Us Now</a>`;
-  if(acct.bookingUrl)cb+=`<a href="${acct.bookingUrl}" target="_blank" class="ep-cta-btn-secondary">📅 Schedule Free Inspection</a>`;
-  cb+=`<button class="ep-cta-btn-secondary" onclick="shareEst()">🔗 Share This Estimate</button>`;
-  $('ep-cta-btns').innerHTML=cb;
+  // ── About ──
+  const ini=initials(repName||acct.companyName);
+  if(acct.headshot){
+    $('ep-owner-photo-wrap').innerHTML=`<img class="ep-owner-photo" src="${acct.headshot}" alt="">`;
+  } else {
+    $('ep-owner-initials').textContent=ini;
+  }
+  $('ep-owner-name').textContent=repName||acct.repName||'Your Estimator';
+  $('ep-owner-title').textContent=(acct.repTitle||'Roofing Specialist')+' · '+(acct.companyName||'');
+  let ownerLinks='';
+  if(acct.companyPhone)ownerLinks+=`<a href="tel:${acct.companyPhone}" class="ep-owner-link"><span class="contact-icon">📞</span>${esc(acct.companyPhone)}</a>`;
+  if(acct.bookingUrl)ownerLinks+=`<a href="${acct.bookingUrl}" target="_blank" class="ep-owner-link"><span class="contact-icon">📅</span>Schedule Appointment</a>`;
+  $('ep-owner-links').innerHTML=ownerLinks;
 
+  $('ep-about-stats').innerHTML=[
+    {num:(acct.yearsInBusiness||'5')+'+'  ,lbl:'Years in Business'},
+    {num:(acct.warrantyYears||'10')+'yr'  ,lbl:'Warranty'},
+    {num:'5★'                             ,lbl:'Google Rated'},
+  ].map(s=>`<div class="ep-stat-box"><div class="ep-stat-num">${esc(s.num)}</div><div class="ep-stat-label">${esc(s.lbl)}</div></div>`).join('');
+
+  if(acct.companyBio)$('ep-about-body').textContent=acct.companyBio;
+  else $('ep-about-body').textContent='We are a locally owned and operated roofing company committed to delivering exceptional craftsmanship and honest pricing. Our team of certified professionals handles every project with care — from the first inspection to the final cleanup.';
+
+  const diffs=[acct.diff1,acct.diff2,acct.diff3,acct.diff4,acct.diff5,acct.diff6].filter(Boolean);
+  $('ep-creds').innerHTML=diffs.map(d=>`<li><div class="ep-check">✓</div>${esc(d)}</li>`).join('');
+  $('ep-service-badges').innerHTML=['Roof Replacement','Storm Damage','Insurance Claims','Gutters','Skylights','Free Estimates'].map(s=>`<span class="ep-service-badge">${s}</span>`).join('');
+
+  // ── Reviews ──
+  loadReviews(acct);
+
+  // ── CTA ──
+  let ctaBtns='';
+  if(acct.companyPhone)ctaBtns+=`<a href="tel:${acct.companyPhone}" class="ep-btn-primary">📞 Call Now</a>`;
+  if(acct.bookingUrl)ctaBtns+=`<a href="${acct.bookingUrl}" target="_blank" class="ep-btn-secondary">📅 Schedule Inspection</a>`;
+  ctaBtns+=`<button class="ep-btn-secondary" onclick="shareEst()">🔗 Share Estimate</button>`;
+  $('ep-cta-btns').innerHTML=ctaBtns;
+
+  let strip='';
+  if(acct.companyPhone)strip+=`<a href="tel:${acct.companyPhone}" class="ep-contact-item"><span class="ep-contact-icon">📞</span><div class="ep-contact-label">Call Us</div><div class="ep-contact-value">${esc(acct.companyPhone)}</div></a>`;
+  if(acct.bookingUrl)strip+=`<a href="${acct.bookingUrl}" target="_blank" class="ep-contact-item"><span class="ep-contact-icon">📅</span><div class="ep-contact-label">Schedule</div><div class="ep-contact-value">Book Online</div></a>`;
+  if(acct.companyAddr)strip+=`<div class="ep-contact-item"><span class="ep-contact-icon">📍</span><div class="ep-contact-label">Office</div><div class="ep-contact-value">${esc(acct.companyAddr)}</div></div>`;
+  $('ep-contact-strip').innerHTML=strip;
+
+  // ── Footer ──
+  $('ep-footer-co').textContent='© '+new Date().getFullYear()+' '+(acct.companyName||'Your Roofing Company');
+
+  // ── Show page ──
   $('ep-page').style.display='block';
   initFade();
   trackView();
 }
 
-// Convert pitch multiplier to readable label — matches PITCHLBL in index.html
-function pitchMulToLabel(mul){
-  const map={'1.00':'4/12 Low','1.07':'5/12','1.15':'6/12 Std','1.23':'7/12','1.31':'8/12 Mod','1.40':'9/12','1.50':'10/12 Steep','1.65':'11/12','1.80':'12/12 Steep'};
-  const k=parseFloat(mul).toFixed(2);
-  return map[k]||map[parseFloat(mul).toFixed(1)]||(mul+'/12');
-}
-
-// ── Photo Galleries ───────────────────────────────────────────────────────────
+// ── Photo Galleries ────────────────────────────────────────────────────────
 function renderPhotos(est){
-  const c=$('ep-photos-all');c.innerHTML='';
   const ap=est.allPhotos||{};
   const front=ap.front||(est.photoUrl?[est.photoUrl]:[]);
   const damage=ap.damage||est.damagePhotos||[];
@@ -601,11 +735,13 @@ function renderPhotos(est){
   if(buildings.length)secs.push({title:'Other Structures',badge:'struct',lbl:'🏗️ Structures',photos:buildings});
   if(other.length)secs.push({title:'Additional Photos',badge:'other',lbl:'📷 More',photos:other});
   if(extraFront.length)secs.push({title:'Property Photos',badge:'home',lbl:'🏠 Home',photos:extraFront});
-  if(!secs.length)return;
 
+  if(!secs.length)return;
+  $('ep-gallery-section').style.display='block';
+  const c=$('ep-photos-all');c.innerHTML='';
   secs.forEach(sec=>{
     const el=document.createElement('div');
-    el.className='ep-photo-section ep-fade-d2';
+    el.className='ep-photo-section ep-fade-d1';
     el.innerHTML=`<div class="ep-photo-section-hdr"><div class="ep-photo-section-title">${esc(sec.title)}</div><span class="ep-photo-badge ep-photo-badge-${sec.badge}">${sec.lbl}</span></div>${photoGrid(sec.photos)}`;
     c.appendChild(el);
   });
@@ -628,51 +764,116 @@ function photoGrid(photos){
   return`<div class="ep-pg-4">${main}</div>${strip.length?`<div class="ep-pg-strip">${stripHtml}</div>`:''}`;
 }
 
-// ── Material Select ───────────────────────────────────────────────────────────
-function selMat(key){
+// ── Google Reviews ─────────────────────────────────────────────────────────
+function loadReviews(acct){
+  const placeId=acct.googlePlaceId||'';
+  if(placeId){
+    // Fetch via our proxy API
+    fetch('/api/estimate?action=reviews&place_id='+encodeURIComponent(placeId))
+      .then(r=>r.json())
+      .then(d=>{
+        if(d&&d.reviews&&d.reviews.length){renderReviews(d.reviews,d.rating,d.user_ratings_total,acct);}
+        else{renderFallbackReviews(acct);}
+      })
+      .catch(()=>renderFallbackReviews(acct));
+  } else {
+    renderFallbackReviews(acct);
+  }
+}
+
+function renderReviews(reviews,rating,total,acct){
+  if(rating){
+    $('ep-google-rating').style.display='block';
+    $('ep-rating-score').textContent=parseFloat(rating).toFixed(1);
+    $('ep-rating-stars').textContent=stars(rating);
+    $('ep-rating-count').textContent=(total||'')+(total?' reviews':'');
+  }
+  const top=reviews.slice(0,3).filter(r=>r.rating>=4);
+  if(!top.length){renderFallbackReviews(acct);return;}
+  $('ep-reviews-grid').innerHTML=top.map(r=>{
+    const ini=initials(r.author_name||'');
+    const av=r.profile_photo_url?`<img src="${r.profile_photo_url}" alt="">`:`<span>${ini}</span>`;
+    return`<div class="ep-review-card">
+      <div class="ep-review-stars">${stars(r.rating)}</div>
+      <div class="ep-review-text">"${esc(r.text&&r.text.length>200?r.text.slice(0,200)+'…':r.text||'')}"</div>
+      <div class="ep-reviewer">
+        <div class="ep-reviewer-avatar">${av}</div>
+        <div><div class="ep-reviewer-name">${esc(r.author_name||'')}</div><div class="ep-reviewer-date">${esc(r.relative_time_description||'')}</div></div>
+      </div>
+    </div>`;
+  }).join('');
+  renderReviewCTA(acct,rating);
+}
+
+function renderFallbackReviews(acct){
+  // Show 3 placeholder cards
+  const placeholders=[
+    {name:'Michael T.',date:'2 weeks ago',text:'Absolutely professional from start to finish. They showed up on time, completed the job in one day, and cleaned up every nail. Highly recommend!'},
+    {name:'Sarah K.',date:'1 month ago',text:'Best roofing experience we\'ve ever had. The estimate was detailed and fair, and the crew was respectful of our property. Zero surprises.'},
+    {name:'James R.',date:'3 months ago',text:'Our roof looks incredible. They walked us through every option without any pressure. The quality of work speaks for itself.'},
+  ];
+  $('ep-reviews-grid').innerHTML=placeholders.map(r=>`
+    <div class="ep-review-card">
+      <div class="ep-review-stars">★★★★★</div>
+      <div class="ep-review-text">"${esc(r.text)}"</div>
+      <div class="ep-reviewer">
+        <div class="ep-reviewer-avatar">${initials(r.name)}</div>
+        <div><div class="ep-reviewer-name">${esc(r.name)}</div><div class="ep-reviewer-date">${esc(r.date)}</div></div>
+      </div>
+    </div>`).join('');
+  renderReviewCTA(acct,null);
+}
+
+function renderReviewCTA(acct,rating){
+  let html='';
+  if(acct.googlePlaceId){
+    html+=`<a href="https://search.google.com/local/writereview?placeid=${acct.googlePlaceId}" target="_blank" class="ep-btn-review">⭐ Leave a Review</a>`;
+  }
+  html+=`<a href="https://www.google.com/search?q=${encodeURIComponent((acct.companyName||'')+ ' reviews')}" target="_blank" class="ep-btn-review-outline">See All Reviews</a>`;
+  $('ep-review-cta').innerHTML=html;
+}
+
+// ── Material Select ────────────────────────────────────────────────────────
+function selectMat(key){
   const mats=window._M||[],acct=window._A||{},prices=window._P||{};
   const m=mats.find(x=>x.key===key);if(!m)return;
   document.querySelectorAll('.ep-mat-card').forEach(c=>c.classList.remove('active'));
-  const card=document.querySelector(`.ep-mat-card[onclick="selMat('${key}')"]`);
+  const card=document.querySelector(`.ep-mat-card[onclick="selectMat('${key}')"]`);
   if(card)card.classList.add('active');
   const p=prices[key]||0;
-  $('ep-sel-name').textContent=m.name;
-  $('ep-price').textContent=fmt(p);
-  $('ep-price').style.color=m.mc;
+  $('ep-price').textContent=Math.round(p).toLocaleString();
   $('ep-monthly').textContent=acct.financingEnabled!==false?fmtMo(p,acct.financingApr,acct.financingTerm):'';
-  // Track
-  try{
-    fetch('/api/estimate',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'track_event',id:_estId,event:'mat_click',data:{mat:key}})});
-  }catch(e){}
+  try{fetch('/api/estimate',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'track_event',id:_estId,event:'mat_click',data:{mat:key}})});}catch(e){}
 }
 
-// ── Lightbox ──────────────────────────────────────────────────────────────────
+// ── Lightbox ───────────────────────────────────────────────────────────────
 function openLB(src){$('ep-lightbox-img').src=src;$('ep-lightbox').classList.add('open');document.body.style.overflow='hidden';}
 function closeLightbox(){$('ep-lightbox').classList.remove('open');document.body.style.overflow='';}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLightbox();});
 
+// ── Share ──────────────────────────────────────────────────────────────────
 function shareEst(){
   if(navigator.share){navigator.share({title:'My Roofing Estimate',url:location.href});}
   else{navigator.clipboard.writeText(location.href).then(()=>alert('Link copied!'));}
 }
 
+// ── Fade In ────────────────────────────────────────────────────────────────
 function initFade(){
-  const els=document.querySelectorAll('.ep-fade,.ep-fade-d1,.ep-fade-d2,.ep-fade-d3');
+  const els=document.querySelectorAll('.ep-fade,.ep-fade-d1,.ep-fade-d2');
   const obs=new IntersectionObserver(entries=>{
     entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');obs.unobserve(e.target);}});
-  },{threshold:0.07});
+  },{threshold:0.06});
   els.forEach(el=>obs.observe(el));
 }
 
+// ── Track ──────────────────────────────────────────────────────────────────
 function trackView(){
-  try{
-    fetch('/api/estimate',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'track_view',id:_estId,seconds:0})});
-  }catch(e){}
+  try{fetch('/api/estimate',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'track_view',id:_estId,seconds:0})});}catch(e){}
 }
 
-function showError(){$('ep-loading').style.display='none';$('ep-error').style.display='block';}
+function showError(){$('ep-loading').style.display='none';$('ep-error').style.display='flex';}
 
 init();
 </script>

@@ -54,7 +54,7 @@ export default async function handler(req, res) {
       }
 
       // Fetch account config
-      const acctR = await sbFetch(`accounts?id=eq.${encodeURIComponent(est.account_id)}&select=id,company_name,company_phone,company_addr,brand_color,logo_data,headshot,rep_name,rep_title,booking_url,diff1,diff2,diff3,diff4,diff5,diff6,years_in_business,warranty_years,financing_enabled,financing_apr,financing_term,financing_down,cost_architectural,cost_3tab,cost_designer,cost_metal,cost_tearoff,cost_ice_water,cost_felts,cost_dumpster,overhead,margin,estimate_page_expires_days,estimate_page_countdown,active,company_bio`);
+      const acctR = await sbFetch(`accounts?id=eq.${encodeURIComponent(est.account_id)}&select=id,company_name,company_phone,company_addr,brand_color,logo_data,headshot,rep_name,rep_title,booking_url,diff1,diff2,diff3,diff4,diff5,diff6,years_in_business,warranty_years,financing_enabled,financing_apr,financing_term,financing_down,cost_architectural,cost_3tab,cost_designer,cost_metal,cost_tearoff,cost_ice_water,cost_felts,cost_dumpster,overhead,margin,estimate_page_expires_days,estimate_page_countdown,active,company_bio,google_place_id`);
       const acctRows = await acctR.json();
       if (!acctRows || !acctRows.length) { res.status(404).json({ error: 'Account not found' }); return; }
       const acct = acctRows[0];
@@ -141,7 +141,26 @@ export default async function handler(req, res) {
           estimatePageCountdown: acct.estimate_page_countdown || false,
           estimatePageExpiresDays: acct.estimate_page_expires_days || null,
           companyBio: acct.company_bio || '',
+          googlePlaceId: acct.google_place_id || null,
         }
+      });
+      return;
+    }
+
+    // ── GET reviews proxy ─────────────────────────────────────────────────────
+    if (action === 'reviews') {
+      const placeId = (req.query.place_id || '').trim();
+      if (!placeId) { res.status(400).json({ error: 'place_id required' }); return; }
+      const GKEY = process.env.GOOGLE_PLACES_KEY || '';
+      if (!GKEY) { res.json({ reviews: [], rating: null, user_ratings_total: 0 }); return; }
+      const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(placeId)}&fields=name,rating,user_ratings_total,reviews&key=${GKEY}`;
+      const gr = await fetch(url);
+      const gd = await gr.json();
+      const result = gd.result || {};
+      res.json({
+        reviews: (result.reviews || []).filter(r => r.rating >= 4).slice(0, 5),
+        rating: result.rating || null,
+        user_ratings_total: result.user_ratings_total || 0,
       });
       return;
     }
@@ -214,7 +233,7 @@ export default async function handler(req, res) {
     }
 
     // ── POST capture-lead ──────────────────────────────────────────────────────
-    if (action === 'capture-lead') {
+    if (action === 'capture_lead' || action === 'capture-lead') {
       const { estimate_id, first_name, last_name, email, phone } = req.body || {};
       if (!estimate_id) { res.status(400).json({ error: 'estimate_id required' }); return; }
 
