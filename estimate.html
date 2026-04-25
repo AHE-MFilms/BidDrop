@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Your Personalized Estimate</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    html{scroll-behavior:smooth;}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+      background:#0a0f16;
+      color:#fff;
+      min-height:100vh;
+      -webkit-font-smoothing:antialiased;
+    }
+
+    /* ── Lead Capture Gate ─────────────────────────────────── */
+    #gate{
+      position:fixed;inset:0;z-index:9999;
+      background:#0a0f16;
+      display:flex;align-items:center;justify-content:center;
+      padding:24px;
+    }
+    .gate-card{
+      width:100%;max-width:420px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.1);
+      border-radius:24px;
+      padding:32px 28px;
+      text-align:center;
+    }
+    .gate-logo{height:48px;max-width:180px;object-fit:contain;margin-bottom:20px;}
+    .gate-logo-placeholder{
+      font-size:20px;font-weight:900;letter-spacing:-0.5px;
+      color:#F25C05;margin-bottom:20px;
+    }
+    .gate-title{font-size:22px;font-weight:800;margin-bottom:8px;line-height:1.25;}
+    .gate-sub{font-size:14px;opacity:.55;margin-bottom:28px;line-height:1.5;}
+    .gate-field{
+      width:100%;
+      background:rgba(255,255,255,.07);
+      border:1.5px solid rgba(255,255,255,.12);
+      border-radius:12px;
+      padding:14px 16px;
+      font-size:16px;
+      color:#fff;
+      margin-bottom:12px;
+      outline:none;
+      transition:border-color .2s;
+      -webkit-appearance:none;
+    }
+    .gate-field:focus{border-color:#F25C05;}
+    .gate-field::placeholder{color:rgba(255,255,255,.3);}
+    .gate-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .gate-btn{
+      width:100%;
+      background:#F25C05;
+      border:none;
+      border-radius:12px;
+      padding:16px;
+      font-size:16px;
+      font-weight:800;
+      color:#fff;
+      cursor:pointer;
+      margin-top:8px;
+      transition:transform .15s,opacity .15s;
+      letter-spacing:0.3px;
+    }
+    .gate-btn:hover{transform:scale(1.02);opacity:.92;}
+    .gate-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+    .gate-privacy{font-size:11px;opacity:.35;margin-top:14px;line-height:1.5;}
+    .gate-error{color:#f87171;font-size:13px;margin-bottom:12px;display:none;}
+
+    /* ── Main Estimate Page ────────────────────────────────── */
+    #estimate-page{display:none;}
+
+    @keyframes ep-spin{to{transform:rotate(360deg)}}
+    @keyframes ep-fade{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes ep-pulse{0%,100%{opacity:1}50%{opacity:.6}}
+
+    .ep-fade{animation:ep-fade 0.5s ease forwards;}
+    .ep-fade-d1{animation:ep-fade 0.5s ease 0.1s both;}
+    .ep-fade-d2{animation:ep-fade 0.5s ease 0.2s both;}
+    .ep-fade-d3{animation:ep-fade 0.5s ease 0.3s both;}
+
+    /* Sticky header */
+    .ep-header{
+      position:sticky;top:0;z-index:100;
+      backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+      background:rgba(10,15,22,.9);
+      border-bottom:1px solid rgba(255,255,255,.08);
+      padding:12px 20px;
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+    }
+    .ep-header-logo{height:36px;max-width:140px;object-fit:contain;}
+    .ep-header-name{font-size:15px;font-weight:800;color:#F25C05;}
+    .ep-header-cta{
+      display:flex;align-items:center;gap:8px;
+      padding:10px 18px;border-radius:50px;border:none;
+      font-size:14px;font-weight:700;cursor:pointer;
+      text-decoration:none;white-space:nowrap;
+      transition:transform .15s,opacity .15s;
+      color:#fff;
+    }
+    .ep-header-cta:hover{transform:scale(1.04);opacity:.92;}
+
+    /* Hero */
+    .ep-hero{position:relative;width:100%;height:320px;overflow:hidden;}
+    @media(max-width:480px){.ep-hero{height:260px;}}
+    .ep-hero-img{width:100%;height:100%;object-fit:cover;display:block;}
+    .ep-hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(10,15,22,.2) 0%,rgba(10,15,22,.85) 100%);}
+    .ep-hero-content{position:absolute;bottom:0;left:0;right:0;padding:24px 20px;}
+    .ep-hero-label{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;opacity:.7;margin-bottom:6px;}
+    .ep-hero-addr{font-size:20px;font-weight:800;line-height:1.25;text-shadow:0 2px 8px rgba(0,0,0,.5);}
+    @media(max-width:480px){.ep-hero-addr{font-size:17px;}}
+
+    /* Page body */
+    .ep-body{max-width:640px;margin:0 auto;padding:20px 16px 60px;}
+
+    /* Welcome card */
+    .ep-welcome{
+      background:linear-gradient(135deg,rgba(242,92,5,.12) 0%,rgba(242,92,5,.04) 100%);
+      border:1px solid rgba(242,92,5,.25);
+      border-radius:20px;padding:24px;margin-bottom:16px;
+    }
+    .ep-welcome-greeting{font-size:22px;font-weight:900;margin-bottom:10px;}
+    .ep-welcome-bio{font-size:14px;line-height:1.65;opacity:.75;}
+    .ep-inspection-note{
+      background:rgba(255,255,255,.05);
+      border-left:3px solid #F25C05;
+      border-radius:0 12px 12px 0;
+      padding:14px 16px;
+      margin-top:16px;
+      font-size:13px;line-height:1.6;opacity:.8;
+    }
+    .ep-inspection-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;opacity:.5;margin-bottom:6px;}
+
+    /* Video */
+    .ep-video-wrap{position:relative;width:100%;border-radius:16px;overflow:hidden;background:#000;aspect-ratio:16/9;margin-bottom:16px;}
+    .ep-video-wrap video,.ep-video-wrap iframe{width:100%;height:100%;display:block;border:none;}
+    .ep-video-label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;opacity:.5;margin-bottom:10px;}
+
+    /* Sections */
+    .ep-section{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:22px;margin-bottom:16px;}
+    .ep-section-title{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;opacity:.5;margin-bottom:16px;}
+
+    /* Material cards */
+    .ep-mat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+    @media(max-width:500px){.ep-mat-grid{grid-template-columns:repeat(2,1fr);}}
+    .ep-mat-card{cursor:pointer;border:2px solid rgba(255,255,255,.08);border-radius:16px;padding:14px 10px;background:rgba(255,255,255,.04);transition:all .2s;text-align:center;position:relative;}
+    .ep-mat-card:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2);}
+    .ep-mat-card.active{border-color:var(--ep-brand,#F25C05);background:rgba(242,92,5,.1);box-shadow:0 0 0 3px rgba(242,92,5,.15);}
+    .ep-mat-icon{font-size:22px;margin-bottom:6px;}
+    .ep-mat-name{font-size:12px;font-weight:700;line-height:1.3;margin-bottom:2px;}
+    .ep-mat-desc{font-size:10px;opacity:.5;margin-bottom:6px;}
+    .ep-mat-popular{font-size:9px;font-weight:800;letter-spacing:.5px;padding:2px 7px;border-radius:20px;margin-bottom:6px;display:inline-block;}
+    .ep-mat-price{font-size:15px;font-weight:900;}
+
+    /* Price */
+    .ep-price-hero{text-align:center;padding:20px 0 8px;}
+    .ep-price-label{font-size:12px;opacity:.5;margin-bottom:4px;}
+    .ep-price-amount{font-size:52px;font-weight:900;line-height:1;letter-spacing:-2px;}
+    @media(max-width:480px){.ep-price-amount{font-size:42px;}}
+    .ep-price-monthly{font-size:14px;opacity:.6;margin-top:6px;}
+
+    /* Trust bar */
+    .ep-trust-bar{display:flex;gap:0;border-radius:16px;overflow:hidden;margin-bottom:16px;}
+    .ep-trust-item{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);padding:16px 10px;text-align:center;}
+    .ep-trust-item:not(:last-child){border-right:none;}
+    .ep-trust-item:first-child{border-radius:16px 0 0 16px;}
+    .ep-trust-item:last-child{border-radius:0 16px 16px 0;}
+    .ep-trust-num{font-size:26px;font-weight:900;line-height:1;}
+    .ep-trust-label{font-size:10px;opacity:.45;margin-top:3px;line-height:1.3;}
+
+    /* Roof details */
+    .ep-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .ep-detail-box{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:16px;text-align:center;}
+    .ep-detail-val{font-size:28px;font-weight:900;line-height:1;}
+    .ep-detail-label{font-size:10px;opacity:.4;margin-top:4px;text-transform:uppercase;letter-spacing:.5px;}
+
+    /* Photos */
+    .ep-photo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+    .ep-photo-thumb{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px;cursor:pointer;transition:transform .2s,opacity .2s;}
+    .ep-photo-thumb:hover{transform:scale(1.02);opacity:.9;}
+
+    /* Lightbox */
+    .ep-lightbox{position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;padding:20px;}
+    .ep-lightbox.open{display:flex;}
+    .ep-lightbox img{max-width:100%;max-height:90vh;border-radius:12px;object-fit:contain;}
+    .ep-lightbox-close{position:absolute;top:16px;right:16px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+
+    /* Why us */
+    .ep-why-list{list-style:none;display:flex;flex-direction:column;gap:10px;}
+    .ep-why-item{display:flex;align-items:flex-start;gap:12px;font-size:14px;line-height:1.5;}
+    .ep-why-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-top:1px;}
+
+    /* Rep card */
+    .ep-rep-card{display:flex;align-items:center;gap:16px;}
+    .ep-rep-avatar{width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.1);}
+    .ep-rep-avatar-placeholder{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+    .ep-rep-name{font-size:16px;font-weight:700;margin-bottom:2px;}
+    .ep-rep-title{font-size:12px;opacity:.5;}
+
+    /* Countdown */
+    .ep-countdown{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:16px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:14px;}
+    .ep-countdown-icon{font-size:24px;flex-shrink:0;}
+    .ep-countdown-text{font-size:13px;line-height:1.5;}
+    .ep-countdown-time{font-weight:800;color:#f87171;}
+
+    /* CTA section */
+    .ep-cta-section{background:linear-gradient(135deg,#c44c04 0%,#F25C05 50%,#ff7a2e 100%);border-radius:24px;padding:32px 24px;text-align:center;margin-bottom:16px;}
+    .ep-cta-title{font-size:24px;font-weight:900;margin-bottom:8px;line-height:1.2;}
+    .ep-cta-sub{font-size:14px;opacity:.85;margin-bottom:24px;line-height:1.5;}
+    .ep-cta-btns{display:flex;flex-direction:column;gap:12px;}
+    .ep-cta-btn-primary{display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#c44c04;border:none;border-radius:14px;padding:16px 24px;font-size:16px;font-weight:800;cursor:pointer;text-decoration:none;transition:transform .15s,opacity .15s;}
+    .ep-cta-btn-primary:hover{transform:scale(1.02);opacity:.95;}
+    .ep-cta-btn-secondary{display:flex;align-items:center;justify-content:center;gap:10px;background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:14px;padding:14px 24px;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;transition:transform .15s,opacity .15s;}
+    .ep-cta-btn-secondary:hover{transform:scale(1.02);opacity:.9;}
+
+    /* Spinner */
+    .ep-spinner{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;min-height:100vh;}
+    .ep-spin-ring{width:48px;height:48px;border:4px solid rgba(255,255,255,.15);border-top-color:#F25C05;border-radius:50%;animation:ep-spin 0.8s linear infinite;}
+    .ep-spin-text{color:rgba(255,255,255,.5);font-size:14px;}
+  </style>
+</head>
+<body>
+
+<!-- Lead Capture Gate -->
+<div id="gate">
+  <div class="gate-card">
+    <div id="gate-logo-wrap"></div>
+    <h2 class="gate-title">View Your Personalized Estimate</h2>
+    <p class="gate-sub">Please enter your information below to access your custom roofing estimate.</p>
+    <div class="gate-error" id="gate-error">Please fill in all fields.</div>
+    <div class="gate-row">
+      <input class="gate-field" id="g-first" type="text" placeholder="First Name" autocomplete="given-name">
+      <input class="gate-field" id="g-last" type="text" placeholder="Last Name" autocomplete="family-name">
+    </div>
+    <input class="gate-field" id="g-email" type="email" placeholder="Email Address" autocomplete="email">
+    <input class="gate-field" id="g-phone" type="tel" placeholder="Phone Number" autocomplete="tel">
+    <button class="gate-btn" id="gate-submit-btn" onclick="submitGate()">View My Estimate &rarr;</button>
+    <p class="gate-privacy">Your information is private and will only be used to contact you about your estimate. We never sell your data.</p>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="ep-lightbox" id="ep-lightbox" onclick="closeLightbox()">
+  <button class="ep-lightbox-close" onclick="closeLightbox()">&#x2715;</button>
+  <img id="ep-lightbox-img" src="" alt="">
+</div>
+
+<!-- Estimate Page (shown after gate) -->
+<div id="estimate-page"></div>
+
+<script>
+  // ── Extract estimate ID from URL ────────────────────────────
+  const pathParts = window.location.pathname.split('/');
+  const estId = pathParts[pathParts.length - 1] || pathParts[pathParts.length - 2];
+
+  let estData = null;
+  let acctData = null;
+
+  // ── Load estimate data immediately (for gate logo) ──────────
+  async function loadEstimate() {
+    try {
+      const res = await fetch(`/api/estimate?action=get&id=${estId}`);
+      const json = await res.json();
+      if (json.error) return;
+      estData = json.estimate;
+      acctData = json.account;
+      // Show logo in gate
+      renderGateLogo();
+    } catch(e) {}
+  }
+
+  function renderGateLogo() {
+    const wrap = document.getElementById('gate-logo-wrap');
+    if (!wrap) return;
+    if (acctData && acctData.logo_url) {
+      wrap.innerHTML = `<img src="${acctData.logo_url}" class="gate-logo" alt="Company Logo">`;
+    } else if (acctData && acctData.company_name) {
+      wrap.innerHTML = `<div class="gate-logo-placeholder">${acctData.company_name}</div>`;
+    }
+  }
+
+  // ── Gate submission ─────────────────────────────────────────
+  async function submitGate() {
+    const first = document.getElementById('g-first').value.trim();
+    const last  = document.getElementById('g-last').value.trim();
+    const email = document.getElementById('g-email').value.trim();
+    const phone = document.getElementById('g-phone').value.trim();
+    const errEl = document.getElementById('gate-error');
+    const btn   = document.getElementById('gate-submit-btn');
+
+    if (!first || !last || !email || !phone) {
+      errEl.style.display = 'block';
+      errEl.textContent = 'Please fill in all fields.';
+      return;
+    }
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      errEl.style.display = 'block';
+      errEl.textContent = 'Please enter a valid email address.';
+      return;
+    }
+    errEl.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'Loading your estimate…';
+
+    // Save lead info back to the pin via API
+    try {
+      await fetch('/api/estimate?action=capture-lead', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          estimate_id: estId,
+          first_name: first,
+          last_name: last,
+          email,
+          phone
+        })
+      });
+    } catch(e) {}
+
+    // Show estimate
+    document.getElementById('gate').style.display = 'none';
+    renderEstimatePage(first);
+  }
+
+  // ── Render the full estimate page ───────────────────────────
+  function renderEstimatePage(firstName) {
+    const page = document.getElementById('estimate-page');
+    page.style.display = 'block';
+
+    if (!estData) {
+      page.innerHTML = `<div class="ep-spinner"><div class="ep-spin-ring"></div><div class="ep-spin-text">Estimate not found</div></div>`;
+      return;
+    }
+
+    const est  = estData;
+    const acct = acctData || {};
+    const brand = acct.brand_color || '#F25C05';
+
+    // CSS variable for brand color
+    document.documentElement.style.setProperty('--ep-brand', brand);
+
+    // Materials
+    const matDefs = [
+      {key:'3tab',    icon:'🏠', name:'3-Tab Shingle',    desc:'Economy',  priceKey:'price_3tab'},
+      {key:'arch',    icon:'⭐', name:'Architectural',    desc:'Most Popular', priceKey:'price_arch', popular:true},
+      {key:'designer',icon:'💎', name:'Designer',         desc:'Premium',  priceKey:'price_designer'},
+      {key:'metal',   icon:'🛡️', name:'Metal Roofing',    desc:'Lifetime', priceKey:'price_metal'},
+    ];
+    const availMats = matDefs.filter(m => est[m.priceKey] && parseFloat(est[m.priceKey]) > 0);
+    let selMat = availMats.find(m => m.key === est.selected_mat) || availMats[0];
+
+    function fmt(n){ return '$'+Math.round(parseFloat(n)||0).toLocaleString(); }
+    function fmtMo(n){ return '~$'+Math.round((parseFloat(n)||0)/48).toLocaleString()+'/mo with financing'; }
+
+    // Hero image
+    const heroImg = est.photos && est.photos.length > 0 ? est.photos[0] : (est.street_view_url || '');
+
+    // Logo / company name header
+    let logoHtml = '';
+    if (acct.logo_url) {
+      logoHtml = `<img src="${acct.logo_url}" class="ep-header-logo" alt="Logo">`;
+    } else {
+      logoHtml = `<span class="ep-header-name">${acct.company_name||'Your Roofer'}</span>`;
+    }
+
+    // Phone CTA
+    const phone = acct.company_phone || '';
+    const ctaHtml = phone
+      ? `<a href="tel:${phone.replace(/\D/g,'')}" class="ep-header-cta" style="background:${brand};">
+           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.1 1.18 2 2 0 012.08 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.16 6.16l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+           Call Now
+         </a>`
+      : '';
+
+    // Video
+    let videoHtml = '';
+    if (est.rep_video_url) {
+      const vurl = est.rep_video_url;
+      let embedSrc = '';
+      if (vurl.includes('youtube.com') || vurl.includes('youtu.be')) {
+        const vid = vurl.match(/(?:v=|youtu\.be\/)([^&?/]+)/)?.[1];
+        if (vid) embedSrc = `https://www.youtube.com/embed/${vid}?rel=0&modestbranding=1`;
+      } else if (vurl.includes('vimeo.com')) {
+        const vid = vurl.match(/vimeo\.com\/(\d+)/)?.[1];
+        if (vid) embedSrc = `https://player.vimeo.com/video/${vid}`;
+      }
+      videoHtml = `
+        <div class="ep-fade-d1">
+          <div class="ep-video-label">Message From Your Rep</div>
+          <div class="ep-video-wrap">
+            ${embedSrc
+              ? `<iframe src="${embedSrc}" allowfullscreen></iframe>`
+              : `<video src="${vurl}" controls playsinline></video>`}
+          </div>
+        </div>`;
+    }
+
+    // Welcome / bio
+    const bioText = acct.company_bio || `${acct.company_name||'We'} is a locally owned roofing company proudly serving homeowners in your area. We specialize in full roof replacements, storm damage restoration, and working directly with insurance companies to make the process as seamless as possible.`;
+    const inspectionHtml = est.inspection_note
+      ? `<div class="ep-inspection-note">
+           <div class="ep-inspection-label">What We Found At Your Property</div>
+           ${est.inspection_note}
+         </div>`
+      : '';
+
+    // Material cards
+    const matCardsHtml = availMats.map(m => `
+      <div class="ep-mat-card ${m.key === (selMat?.key) ? 'active' : ''}" onclick="selectMat('${m.key}')">
+        <div class="ep-mat-icon">${m.icon}</div>
+        <div class="ep-mat-name">${m.name}</div>
+        <div class="ep-mat-desc">${m.desc}</div>
+        ${m.popular ? `<div class="ep-mat-popular" style="background:${brand};color:#fff;">POPULAR</div>` : ''}
+        <div class="ep-mat-price" style="color:${brand};">${fmt(est[m.priceKey])}</div>
+      </div>`).join('');
+
+    // Trust bar
+    const yrs  = acct.years_in_business || '20++';
+    const warr = acct.warranty_years || '10';
+    const trustHtml = `
+      <div class="ep-trust-bar ep-fade-d1">
+        <div class="ep-trust-item">
+          <div class="ep-trust-num" style="color:${brand};">${yrs}</div>
+          <div class="ep-trust-label">Years in Business</div>
+        </div>
+        <div class="ep-trust-item">
+          <div class="ep-trust-num" style="color:${brand};">${warr}</div>
+          <div class="ep-trust-label">Year Warranty</div>
+        </div>
+        <div class="ep-trust-item">
+          <div class="ep-trust-num" style="color:${brand};">5★</div>
+          <div class="ep-trust-label">Rated</div>
+        </div>
+      </div>`;
+
+    // Roof details
+    const sqft  = est.sqft ? Math.round(parseFloat(est.sqft)).toLocaleString() : '—';
+    const pitch = est.pitch || '—';
+    const detailsHtml = `
+      <div class="ep-section ep-fade-d2">
+        <div class="ep-section-title">Roof Details</div>
+        <div class="ep-detail-grid">
+          <div class="ep-detail-box">
+            <div class="ep-detail-val" style="color:${brand};">${sqft}</div>
+            <div class="ep-detail-label">Roof Area (sq ft)</div>
+          </div>
+          <div class="ep-detail-box">
+            <div class="ep-detail-val">${pitch}</div>
+            <div class="ep-detail-label">Pitch</div>
+          </div>
+        </div>
+      </div>`;
+
+    // Photos
+    let photosHtml = '';
+    if (est.photos && est.photos.length > 1) {
+      const thumbs = est.photos.slice(1).map((p,i) =>
+        `<img class="ep-photo-thumb" src="${p}" alt="Photo ${i+2}" onclick="openLightbox('${p}')">`
+      ).join('');
+      photosHtml = `
+        <div class="ep-section ep-fade-d2">
+          <div class="ep-section-title">📸 Property Photos</div>
+          <div class="ep-photo-grid">${thumbs}</div>
+        </div>`;
+    }
+
+    // Why us
+    const whyItems = [
+      {icon:'🏆', bg:'rgba(251,191,36,.12)', text:'<strong>Licensed & Insured</strong> — Full coverage on every job. Your home is protected.'},
+      {icon:'📋', bg:'rgba(99,102,241,.12)',  text:'<strong>Insurance Claim Experts</strong> — We handle the paperwork and work directly with your adjuster.'},
+      {icon:'⚡', bg:'rgba(34,197,94,.12)',   text:'<strong>Fast Turnaround</strong> — Most jobs completed in 1–2 days with minimal disruption.'},
+      {icon:'🤝', bg:'rgba(242,92,5,.12)',    text:'<strong>Satisfaction Guaranteed</strong> — We stand behind every roof we install.'},
+    ];
+    const whyHtml = `
+      <div class="ep-section ep-fade-d3">
+        <div class="ep-section-title">Why Choose Us</div>
+        <ul class="ep-why-list">
+          ${whyItems.map(w=>`
+            <li class="ep-why-item">
+              <div class="ep-why-icon" style="background:${w.bg};">${w.icon}</div>
+              <span>${w.text}</span>
+            </li>`).join('')}
+        </ul>
+      </div>`;
+
+    // Rep card
+    let repHtml = '';
+    if (acct.rep_name || est.rep_name) {
+      const rn = est.rep_name || acct.rep_name || '';
+      const rt = acct.rep_title || 'Your Roofing Specialist';
+      const ra = acct.rep_avatar_url || '';
+      repHtml = `
+        <div class="ep-section ep-fade-d3">
+          <div class="ep-section-title">Your Rep</div>
+          <div class="ep-rep-card">
+            ${ra
+              ? `<img src="${ra}" class="ep-rep-avatar" alt="${rn}">`
+              : `<div class="ep-rep-avatar-placeholder">👤</div>`}
+            <div>
+              <div class="ep-rep-name">${rn}</div>
+              <div class="ep-rep-title">${rt}</div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    // Countdown
+    let countdownHtml = '';
+    if (est.expires_at) {
+      const exp = new Date(est.expires_at);
+      const now = new Date();
+      const diff = exp - now;
+      if (diff > 0) {
+        const days = Math.floor(diff / 86400000);
+        const hrs  = Math.floor((diff % 86400000) / 3600000);
+        countdownHtml = `
+          <div class="ep-countdown ep-fade">
+            <div class="ep-countdown-icon">⏰</div>
+            <div class="ep-countdown-text">
+              This estimate expires in <span class="ep-countdown-time">${days}d ${hrs}h</span>. 
+              Lock in your price before it changes.
+            </div>
+          </div>`;
+      }
+    }
+
+    // CTA section
+    const bookUrl = acct.booking_url || '';
+    const ctaBtns = `
+      ${phone ? `<a href="tel:${phone.replace(/\D/g,'')}" class="ep-cta-btn-primary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.1 1.18 2 2 0 012.08 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.16 6.16l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+        Call Us Now
+      </a>` : ''}
+      ${bookUrl ? `<a href="${bookUrl}" target="_blank" class="ep-cta-btn-secondary">
+        📅 Schedule Free Inspection
+      </a>` : ''}
+      <button class="ep-cta-btn-secondary" onclick="shareEstimate()">
+        🔗 Share This Estimate
+      </button>`;
+
+    page.innerHTML = `
+      <!-- Sticky Header -->
+      <div class="ep-header">
+        ${logoHtml}
+        ${ctaHtml}
+      </div>
+
+      <!-- Hero -->
+      <div class="ep-hero ep-fade">
+        ${heroImg ? `<img class="ep-hero-img" src="${heroImg}" alt="Property">` : `<div style="width:100%;height:100%;background:linear-gradient(135deg,#1a2030,#0a0f16);"></div>`}
+        <div class="ep-hero-overlay"></div>
+        <div class="ep-hero-content">
+          <div class="ep-hero-label">Your Personalized Estimate</div>
+          <div class="ep-hero-addr">${est.address || ''}</div>
+        </div>
+      </div>
+
+      <div class="ep-body">
+        ${countdownHtml}
+
+        <!-- Welcome -->
+        <div class="ep-welcome ep-fade">
+          <div class="ep-welcome-greeting">Welcome, ${firstName}! 👋</div>
+          <div class="ep-welcome-bio">${bioText}</div>
+          ${inspectionHtml}
+        </div>
+
+        ${videoHtml}
+        ${trustHtml}
+
+        <!-- Material Selector -->
+        <div class="ep-section ep-fade-d1">
+          <div class="ep-section-title">Choose Your Material</div>
+          <div class="ep-mat-grid" id="ep-mat-grid">${matCardsHtml}</div>
+          <div class="ep-price-hero">
+            <div class="ep-price-label">Selected: <span id="ep-sel-name">${selMat?.name||''}</span></div>
+            <div class="ep-price-amount" style="color:${brand};" id="ep-price">${fmt(est[selMat?.priceKey||'price_arch'])}</div>
+            <div class="ep-price-monthly" id="ep-monthly">${fmtMo(est[selMat?.priceKey||'price_arch'])}</div>
+          </div>
+        </div>
+
+        ${detailsHtml}
+        ${photosHtml}
+        ${whyHtml}
+        ${repHtml}
+
+        <!-- CTA -->
+        <div class="ep-cta-section ep-fade-d3">
+          <div class="ep-cta-title">Ready to Get Started?</div>
+          <div class="ep-cta-sub">Lock in your estimate today. Our team is ready to schedule your installation.</div>
+          <div class="ep-cta-btns">${ctaBtns}</div>
+        </div>
+      </div>`;
+
+    // Store mat data for interactivity
+    window._epMats = availMats;
+    window._epEst  = est;
+    window._epBrand = brand;
+  }
+
+  // ── Material selection ──────────────────────────────────────
+  function selectMat(key) {
+    const mats  = window._epMats || [];
+    const est   = window._epEst  || {};
+    const brand = window._epBrand || '#F25C05';
+    const mat   = mats.find(m => m.key === key);
+    if (!mat) return;
+    document.querySelectorAll('.ep-mat-card').forEach(c => c.classList.remove('active'));
+    const card = document.querySelector(`.ep-mat-card[onclick="selectMat('${key}')"]`);
+    if (card) card.classList.add('active');
+    const price = parseFloat(est[mat.priceKey]||0);
+    document.getElementById('ep-sel-name').textContent = mat.name;
+    document.getElementById('ep-price').textContent = '$'+Math.round(price).toLocaleString();
+    document.getElementById('ep-monthly').textContent = '~$'+Math.round(price/48).toLocaleString()+'/mo with financing';
+  }
+
+  // ── Lightbox ────────────────────────────────────────────────
+  function openLightbox(src) {
+    document.getElementById('ep-lightbox-img').src = src;
+    document.getElementById('ep-lightbox').classList.add('open');
+  }
+  function closeLightbox() {
+    document.getElementById('ep-lightbox').classList.remove('open');
+  }
+
+  // ── Share ───────────────────────────────────────────────────
+  function shareEstimate() {
+    if (navigator.share) {
+      navigator.share({title:'My Roofing Estimate', url: window.location.href});
+    } else {
+      navigator.clipboard.writeText(window.location.href).then(()=>alert('Link copied!'));
+    }
+  }
+
+  // ── Init ────────────────────────────────────────────────────
+  loadEstimate();
+</script>
+</body>
+</html>

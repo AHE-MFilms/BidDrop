@@ -213,6 +213,49 @@ export default async function handler(req, res) {
       return;
     }
 
+    // ── POST capture-lead ──────────────────────────────────────────────────────
+    if (action === 'capture-lead') {
+      const { estimate_id, first_name, last_name, email, phone } = req.body || {};
+      if (!estimate_id) { res.status(400).json({ error: 'estimate_id required' }); return; }
+
+      // Get the pin_id from the estimate
+      const estR = await sbFetch(`estimates?id=eq.${encodeURIComponent(estimate_id)}&select=id,pin_id,account_id`);
+      const estRows = await estR.json();
+      if (!estRows || !estRows.length) { res.status(404).json({ error: 'Estimate not found' }); return; }
+      const est = estRows[0];
+
+      const now = new Date().toISOString();
+      const fullName = [first_name, last_name].filter(Boolean).join(' ');
+
+      // Update the estimate with lead info
+      await sbFetch(`estimates?id=eq.${encodeURIComponent(estimate_id)}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          owner: fullName || undefined,
+          email: email || undefined,
+          phone: phone || undefined,
+          page_first_viewed_at: now,
+        }),
+        headers: { 'Prefer': 'return=minimal' }
+      });
+
+      // Also update the pin with homeowner contact info if pin_id exists
+      if (est.pin_id) {
+        await sbFetch(`pins?id=eq.${encodeURIComponent(est.pin_id)}`, {
+          method: 'PATCH',
+          body: JSON.stringify({
+            owner_name: fullName || undefined,
+            owner_email: email || undefined,
+            owner_phone: phone || undefined,
+          }),
+          headers: { 'Prefer': 'return=minimal' }
+        });
+      }
+
+      res.json({ ok: true });
+      return;
+    }
+
     res.status(400).json({ error: `Unknown action: ${action}` });
 
   } catch (err) {
