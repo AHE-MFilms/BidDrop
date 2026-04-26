@@ -3215,6 +3215,18 @@ function closePhotoLightbox(){
   const lb = document.getElementById('m-photo-lightbox');
   if(lb){ lb.style.display='none'; const img=document.getElementById('plb-img'); if(img) img.src=''; }
 }
+// Auto-unlock print for an estimate when a mailer is successfully sent (free reprint forever after)
+function _unlockPrintForEstimate(estId){
+  if(!estId) return;
+  const est = (S.estimates||[]).find(e=>e.id===estId);
+  if(est && !est.printPaid){
+    est.printPaid = true;
+    // Persist to Supabase silently
+    if(sb) sb.from('estimates').update({print_paid:true}).eq('id',estId).then(({error})=>{
+      if(error) console.warn('[BidDrop] print_paid unlock error:',error.message);
+    });
+  }
+}
 
 // Build the standard USPS-compliant postcard back side HTML
 function buildPostcardBack({ toName, toAddr, fromName, fromAddr, fromCity, fromPhone, logoUrl }){
@@ -6271,7 +6283,9 @@ function renderEstimatesTab(){
           })()
             +(S.cfg && S.cfg.dripEnabled ? `<button onclick="openDripModal('${eid}')" style="background:#7C3AED;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🔥 Blitz</button>` : '')
             +`<button onclick="previewEstimatePostcard('${eid}')" style="background:#0e7490;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128247; Preview Postcard</button>`
-            +`<button onclick="printEstimate('${eid}')" style="background:#1f3d68;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128424; Print</button>`
+            +(isPlanAtLeast('pro')
+              ? `<button onclick="printEstimate('${eid}')" style="background:#1f3d68;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128424; Print</button>`
+              : `<button onclick="showPlanUpgradePrompt('Print Quote','pro')" title="Upgrade to Pro ($197/mo) to unlock printing" style="background:#1f3d68;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;opacity:.45;">&#128424; Print</button>`)
             +`<button onclick="openEstimatePage('${eid}')" style="background:#065f46;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#127758; View Page</button>`
             +histBtn
             +`<button onclick="deleteEstimate('${eid}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">&#10005;</button>`;
@@ -6910,6 +6924,8 @@ async function sendLob(id){
     }
     if(d && d.id){
       item.status='sent';item.mailedAt=new Date().toISOString();item.lobId=d.id;
+      // Auto-unlock print for the linked estimate (free reprint since mailer was sent)
+      _unlockPrintForEstimate(item.estId);
       // Update credit badge with new balance
       if(d._credits){ S.cfg.mailerCredits = d._credits.paid_credits ?? S.cfg.mailerCredits; if(d._credits.free_used !== undefined) S.cfg.freeMailerCreditsUsed = d._credits.free_used; updateCreditBadge(); }
       addAct('Bid letter mailed to <strong>'+escHtml(item.addr)+'</strong>','converted');
@@ -7037,6 +7053,8 @@ async function sendLobPostcard6x9(id){
     }
     if(d&&d.id){
       item.status='sent';item.mailedAt=new Date().toISOString();item.lobId=d.id;
+      // Auto-unlock print for the linked estimate
+      _unlockPrintForEstimate(item.estId);
       if(d._credits){ S.cfg.mailerCredits = d._credits.paid_credits ?? S.cfg.mailerCredits; if(d._credits.free_used !== undefined) S.cfg.freeMailerCreditsUsed = d._credits.free_used; updateCreditBadge(); }
       addAct('6×9 postcard mailed to <strong>'+escHtml(item.addr)+'</strong>','converted');
       if(currentAccount&&sb){
@@ -12369,6 +12387,8 @@ async function sendDripPostcard(id){
     }});
     if(d && d.id){
       item.status='sent'; item.mailedAt=new Date().toISOString(); item.lobId=d.id;
+      // Auto-unlock print for the linked estimate
+      _unlockPrintForEstimate(item.estId);
       if(d._credits){ S.cfg.mailerCredits = d._credits.paid_credits ?? S.cfg.mailerCredits; if(d._credits.free_used !== undefined) S.cfg.freeMailerCreditsUsed = d._credits.free_used; updateCreditBadge(); }
       addAct('Drip Step '+item.drip_step+' postcard mailed to <strong>'+escHtml(item.addr)+'</strong>','converted');
       if(currentAccount && sb){
