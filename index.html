@@ -2763,7 +2763,7 @@ function handleLogoUpload(inp){
     if(url){
       S.cfg.logoData = url;
       const prev=document.getElementById('logo-preview');
-      if(prev)prev.innerHTML='<img src="'+url+'" style="max-width:100%;max-height:100%;object-fit:contain;">';
+      if(prev){prev.innerHTML='<img src="'+url+'" style="max-width:100%;max-height:100%;object-fit:contain;">';prev.style.cursor='zoom-in';prev.onclick=()=>openBrandingLightbox(url,'Company Logo');}
       save();updatePreview();toast('Logo uploaded!','success');
     } else {
       // Fallback: store as base64 if upload fails
@@ -2771,7 +2771,7 @@ function handleLogoUpload(inp){
       r2.onload = ev=>{
         S.cfg.logoData = ev.target.result;
         const prev=document.getElementById('logo-preview');
-        if(prev)prev.innerHTML='<img src="'+ev.target.result+'" style="max-width:100%;max-height:100%;object-fit:contain;">';
+        if(prev){prev.innerHTML='<img src="'+ev.target.result+'" style="max-width:100%;max-height:100%;object-fit:contain;">';prev.style.cursor='zoom-in';prev.onclick=()=>openBrandingLightbox(ev.target.result,'Company Logo');}
         save();updatePreview();toast('Logo saved locally','info');
       };
       r2.readAsDataURL(file);
@@ -2789,7 +2789,7 @@ function handleHeadshotUpload(inp){
     if(url){
       S.cfg.headshot = url;
       const prev=document.getElementById('headshot-preview');
-      if(prev)prev.innerHTML='<img src="'+url+'" style="max-width:100%;max-height:100%;object-fit:contain;">';
+      if(prev){prev.innerHTML='<img src="'+url+'" style="max-width:100%;max-height:100%;object-fit:contain;">';prev.style.cursor='zoom-in';prev.onclick=()=>openBrandingLightbox(url,'Rep Headshot');}
       save();updatePreview();toast('Headshot uploaded!','success');
     } else {
       const r2 = new FileReader();
@@ -2804,7 +2804,7 @@ function handleHeadshotUpload(inp){
           const data=canvas.toDataURL('image/png');
           S.cfg.headshot=data;
           const prev=document.getElementById('headshot-preview');
-          if(prev)prev.innerHTML='<img src="'+data+'" style="max-width:100%;max-height:100%;object-fit:contain;">';
+          if(prev){prev.innerHTML='<img src="'+data+'" style="max-width:100%;max-height:100%;object-fit:contain;">';prev.style.cursor='zoom-in';prev.onclick=()=>openBrandingLightbox(data,'Rep Headshot');}
           save();updatePreview();toast('Headshot saved locally','info');
         };
         img.src=ev.target.result;
@@ -2829,7 +2829,7 @@ function handleReviewUpload(inp,slot){
     if(url){
       S.cfg['review'+slot] = url;
       const prev=document.getElementById('review'+slot+'-preview');
-      if(prev)prev.innerHTML='<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;border-radius:5px;">';
+      if(prev){prev.innerHTML='<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;border-radius:5px;">';prev.style.cursor='zoom-in';prev.onclick=()=>openBrandingLightbox(url,'Review Image '+slot);}
       save();updatePreview();toast('Review '+slot+' uploaded!','success');
     } else {
       const r2 = new FileReader();
@@ -2844,7 +2844,7 @@ function handleReviewUpload(inp,slot){
           const data=canvas.toDataURL('image/jpeg',.88);
           S.cfg['review'+slot]=data;
           const prev=document.getElementById('review'+slot+'-preview');
-          if(prev)prev.innerHTML='<img src="'+data+'" style="width:100%;height:100%;object-fit:cover;border-radius:5px;">';
+          if(prev){prev.innerHTML='<img src="'+data+'" style="width:100%;height:100%;object-fit:cover;border-radius:5px;">';prev.style.cursor='zoom-in';prev.onclick=()=>openBrandingLightbox(data,'Review Image '+slot);}
           save();updatePreview();toast('Review '+slot+' saved locally','info');
         };
         img.src=ev.target.result;
@@ -3214,6 +3214,19 @@ function openEstPhotoLightbox(estId){
 function closePhotoLightbox(){
   const lb = document.getElementById('m-photo-lightbox');
   if(lb){ lb.style.display='none'; const img=document.getElementById('plb-img'); if(img) img.src=''; }
+}
+// Open the photo lightbox for a single branding image (logo, headshot, review)
+function openBrandingLightbox(src, label){
+  if(!src) return;
+  const lb = document.getElementById('m-photo-lightbox');
+  const titleEl = document.getElementById('plb-title');
+  const imgEl = document.getElementById('plb-img');
+  const stripEl = document.getElementById('plb-strip');
+  if(!lb||!imgEl) return;
+  titleEl.textContent = label || 'Image Preview';
+  imgEl.src = src;
+  if(stripEl) stripEl.innerHTML = '';
+  lb.style.display = 'flex';
 }
 // Auto-unlock print for an estimate when a mailer is successfully sent (free reprint forever after)
 function _unlockPrintForEstimate(estId){
@@ -9280,16 +9293,28 @@ function openSettings(){
   }
   if(isSuperAdmin()){ const mc=document.getElementById('s-mailer-cost'); if(mc) mc.value=c.mailerCostPerPiece||'0.85'; }
   const lp=document.getElementById('logo-preview');
-  if(lp)lp.innerHTML=c.logoData?'<img src="'+c.logoData+'" style="max-width:100%;max-height:100%;object-fit:contain;">':'No logo';
+  if(lp){
+    lp.innerHTML=c.logoData?'<img src="'+c.logoData+'" style="max-width:100%;max-height:100%;object-fit:contain;">':'No logo';
+    if(c.logoData){lp.style.cursor='zoom-in';lp.onclick=()=>openBrandingLightbox(c.logoData,'Company Logo');}else{lp.style.cursor='';lp.onclick=null;}
+  }
   document.getElementById('s-reptitle').value=c.repTitle||'';
   document.getElementById('s-hspos').value=c.headshotPos||'30';
   document.getElementById('s-bookingurl').value=c.bookingUrl||'';
   const hp=document.getElementById('headshot-preview');
-  if(hp)hp.innerHTML=c.headshot?'<img src="'+c.headshot+'" style="width:100%;height:100%;object-fit:cover;object-position:center '+((c.headshotPos||'30')+'%')+'">':'No photo';
+  if(hp){
+    hp.innerHTML=c.headshot?'<img src="'+c.headshot+'" style="width:100%;height:100%;object-fit:cover;object-position:center '+((c.headshotPos||'30')+'%')+'">' :'No photo';
+    if(c.headshot){hp.style.cursor='zoom-in';hp.onclick=()=>openBrandingLightbox(c.headshot,'Rep Headshot');}else{hp.style.cursor='';hp.onclick=null;}
+  }
   const r1p=document.getElementById('review1-preview');
-  if(r1p)r1p.innerHTML=c.review1?'<img src="'+c.review1+'" style="width:100%;height:100%;object-fit:cover;border-radius:5px;">':'No image';
+  if(r1p){
+    r1p.innerHTML=c.review1?'<img src="'+c.review1+'" style="width:100%;height:100%;object-fit:cover;border-radius:5px;">':'No image';
+    if(c.review1){r1p.style.cursor='zoom-in';r1p.onclick=()=>openBrandingLightbox(c.review1,'Review Image 1');}else{r1p.style.cursor='';r1p.onclick=null;}
+  }
   const r2p=document.getElementById('review2-preview');
-  if(r2p)r2p.innerHTML=c.review2?'<img src="'+c.review2+'" style="width:100%;height:100%;object-fit:cover;border-radius:5px;">':'No image';
+  if(r2p){
+    r2p.innerHTML=c.review2?'<img src="'+c.review2+'" style="width:100%;height:100%;object-fit:cover;border-radius:5px;">':'No image';
+    if(c.review2){r2p.style.cursor='zoom-in';r2p.onclick=()=>openBrandingLightbox(c.review2,'Review Image 2');}else{r2p.style.cursor='';r2p.onclick=null;}
+  }
   [2,3,4].forEach(step=>{
     const pcp=document.getElementById('pc'+step+'-preview');
     const url=c['postcardStep'+step];
