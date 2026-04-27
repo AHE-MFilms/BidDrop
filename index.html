@@ -3120,14 +3120,14 @@ function previewPostcardBackLightbox(step, toName, toAddr, fromName, fromAddr, f
   const overlay = document.createElement('div');
   overlay.id = 'pc-back-lightbox';
   overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;';
-  // Build the back inline — enforced 4x6 landscape (3:2) aspect ratio
+  // Build the back inline — enforced 6x9 landscape (3:2) aspect ratio
   const backInner = `
     <div style="width:100%;max-width:720px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
         <span style="color:#fff;font-weight:700;font-size:14px;">📮 Postcard Back — ${label}</span>
         <button onclick="document.getElementById('pc-back-lightbox').remove()" style="background:none;border:1px solid rgba(255,255,255,.3);border-radius:6px;padding:4px 12px;color:#fff;font-size:13px;cursor:pointer;">✕ Close</button>
       </div>
-      <!-- 4x6 postcard = 6in wide x 4in tall = 3:2 ratio. We enforce this with padding-top trick -->
+      <!-- 6x9 postcard = 9in wide x 6in tall = 3:2 ratio. We enforce this with padding-top trick -->
       <div style="position:relative;width:100%;padding-top:66.67%;background:#fff;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.6);overflow:hidden;">
         <div style="position:absolute;inset:0;display:flex;font-family:Arial,sans-serif;">
           <!-- Left side: return address (3.5in of 6in = 58%) -->
@@ -3143,7 +3143,7 @@ function previewPostcardBackLightbox(step, toName, toAddr, fromName, fromAddr, f
           </div>
         </div>
       </div>
-      <div style="text-align:center;margin-top:10px;color:rgba(255,255,255,.5);font-size:11px;">4×6 postcard back — actual print size. Click anywhere outside to close</div>
+      <div style="text-align:center;margin-top:10px;color:rgba(255,255,255,.5);font-size:11px;">6×9 postcard back — actual print size. Click anywhere outside to close</div>
     </div>`;
   overlay.innerHTML = backInner;
   overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.remove(); });
@@ -5941,7 +5941,7 @@ const HIST_PAGE_SIZE = 25;
 async function loadHistory(){
   // Update balance display
   // Show total credits: free remaining + paid (same as header badge)
-  const planFreeMapH = {starter:5,pro:15,agency:30,enterprise:60};
+  const planFreeMapH = {starter:15,pro:30,agency:60,enterprise:200};
   const freeLimitH = planFreeMapH[(S.cfg.plan||'starter').toLowerCase()] || 5;
   const freeLeftH  = Math.max(0, freeLimitH - (S.cfg.freeMailerCreditsUsed || 0));
   const paidH      = S.cfg.mailerCredits || 0;
@@ -6763,7 +6763,7 @@ async function printEstimate(estId){
   // Pay-once print gate: 1 credit per estimate, free reprints after first payment
   if(!est.printPaid){
     // Check credits first
-    const freeLimit = {starter:5,pro:15,agency:30,enterprise:60}[(S.cfg&&S.cfg.plan||'starter').toLowerCase()] || 5;
+    const freeLimit = {starter:15,pro:30,agency:60,enterprise:200}[(S.cfg&&S.cfg.plan||'starter').toLowerCase()] || 5;
     const freeLeft  = Math.max(0, freeLimit - (S.cfg.freeMailerCreditsUsed||0));
     const paid      = S.cfg.mailerCredits||0;
     const total     = freeLeft + paid;
@@ -8610,7 +8610,7 @@ function _renderAgencyAccountCards(accounts){
     const activeColor = a.active!==false ? '#22C55E' : '#EF4444';
     const activeLabel = a.active!==false ? 'Active' : 'Inactive';
     const paidCredits = a.mailer_credits||0;
-    const planFreeMapA = {starter:5,pro:15,agency:30,enterprise:60};
+    const planFreeMapA = {starter:15,pro:30,agency:60,enterprise:200};
     const freeLimit = planFreeMapA[(a.plan||'starter').toLowerCase()] || 5;
     const freeLeft = Math.max(0, freeLimit - (a.free_mailer_credits_used||0));
     // Last activity
@@ -8682,7 +8682,7 @@ async function setFreeLimit(accountId){
   if(!_agencyData) return;
   const a = _agencyData.accounts.find(x=>x.id===accountId);
   if(!a) return;
-  const planFreeMapSL = {starter:5,pro:15,agency:30,enterprise:60};
+  const planFreeMapSL = {starter:15,pro:30,agency:60,enterprise:200};
   const currentLimit = planFreeMapSL[(a.plan||'starter').toLowerCase()] || 5;
   const freeUsed     = a.free_mailer_credits_used || 0;
   const freeLeft     = Math.max(0, currentLimit - freeUsed);
@@ -9609,7 +9609,7 @@ function updateCreditBadge(){
   if(!badge) return;
   // Use mailerCredits (new model: 1 credit = $4 = 1 postcard)
   const plan = (S.cfg.plan||'starter').toLowerCase();
-  const planFreeMap = {starter:5,pro:15,agency:30,enterprise:60};
+  const planFreeMap = {starter:15,pro:30,agency:60,enterprise:200};
   const freeLimit = planFreeMap[plan] || 5;
   const freeLeft = Math.max(0, freeLimit - (S.cfg.freeMailerCreditsUsed||0));
   const paid     = S.cfg.mailerCredits || 0;
@@ -9652,7 +9652,7 @@ async function showBuyCreditsModal(){
     }
   }catch(_){}
   const plan2 = (S.cfg.plan||'starter').toLowerCase();
-  const planFreeMap2 = {starter:5,pro:15,agency:30,enterprise:60};
+  const planFreeMap2 = {starter:15,pro:30,agency:60,enterprise:200};
   const freeLimit2 = planFreeMap2[plan2] || 5;
   const freeLeft = Math.max(0, freeLimit2 - (S.cfg.freeMailerCreditsUsed||0));
   const paid     = S.cfg.mailerCredits || 0;
@@ -12217,7 +12217,7 @@ function startDripSequence(){
   if(!est){ toast('Estimate not found','error'); return; }
   // Credit pre-check: Follow-Up Blitz costs 48 credits (4 mailers × 16, but 4th is free = 3×16)
   const BLITZ_CREDITS = 45;
-  const planFreeMapD = {starter:5,pro:15,agency:30,enterprise:60};
+  const planFreeMapD = {starter:15,pro:30,agency:60,enterprise:200};
   const freeLimitD = planFreeMapD[(S.cfg.plan||'starter').toLowerCase()] || 5;
   const freeLeftD  = Math.max(0, freeLimitD - (S.cfg.freeMailerCreditsUsed || 0));
   const paid      = S.cfg.mailerCredits || 0;
