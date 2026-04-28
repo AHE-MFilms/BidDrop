@@ -1098,7 +1098,11 @@ tr:hover td{background:var(--card);}
             <button id="est-tab-trash" onclick="switchEstView('trash')" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:5px 12px;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;">🗑 Trash</button>
           </div>
         </div>
-        <div style="display:flex;gap:8px;align-items:center;">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <div style="position:relative;display:flex;align-items:center;">
+            <span style="position:absolute;left:9px;font-size:13px;pointer-events:none;">🔍</span>
+            <input id="est-search" type="text" placeholder="Search address, homeowner, rep…" oninput="renderEstimatesTab()" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:6px 10px 6px 30px;color:var(--text);font-size:12px;width:230px;font-family:var(--font-b);">
+          </div>
           <select id="est-rep-filter" onchange="renderEstimatesTab()" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-size:12px;cursor:pointer;"><option value="">All Reps</option></select>
           <button onclick="exportEstimatesCSV()" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:7px 12px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;">⬇ CSV</button>
           <button onclick="goTab('estimate')" style="background:var(--accent);border:none;border-radius:8px;padding:9px 16px;color:#fff;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;">+ New Estimate</button>
@@ -6223,6 +6227,16 @@ function renderEstimatesTab(){
     }
   });
   if(repFilter) list = list.filter(e=>(e.rep||'')=== repFilter);
+  // Search filter
+  const searchEl = document.getElementById('est-search');
+  const searchQ = searchEl ? searchEl.value.trim().toLowerCase() : '';
+  if(searchQ){
+    list = list.filter(e=>{
+      return (e.addr||'').toLowerCase().includes(searchQ)
+        || (e.owner||'').toLowerCase().includes(searchQ)
+        || (e.rep||'').toLowerCase().includes(searchQ);
+    });
+  }
 
   const empty = document.getElementById('estimates-empty');
   const table = document.getElementById('estimates-table');
@@ -6235,7 +6249,7 @@ function renderEstimatesTab(){
   if(!list.length && !trashedPins.length){
     empty.style.display='block'; table.style.display='none';
     const lbl2 = empty.querySelector('div:nth-child(2)');
-    if(lbl2) lbl2.textContent = _estView==='trash' ? 'Trash is empty' : 'No saved estimates yet';
+    if(lbl2) lbl2.textContent = searchQ ? 'No estimates match "'+searchQ+'"' : (_estView==='trash' ? 'Trash is empty' : 'No saved estimates yet');
     return;
   }
   empty.style.display='none'; table.style.display='table';
