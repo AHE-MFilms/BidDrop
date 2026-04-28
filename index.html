@@ -9583,6 +9583,9 @@ function saveSettings(){
     companyBio: (document.getElementById('s-bio')||{}).value || ''
   };
   applyBrand();save();updatePreview();
+  // Update solar add-on row visibility immediately after save
+  const _solarRowAfterSave=document.getElementById('solar-addon-row');
+  if(_solarRowAfterSave) _solarRowAfterSave.style.display=S.cfg.offerSolar?'block':'none';
   // Super admin: persist master Lob and RentCast keys directly to agency account row (never touches client rows)
   if(isSuperAdmin() && sb){
     const newLobKey = document.getElementById('s-lob') ? document.getElementById('s-lob').value.trim() : '';
@@ -9599,6 +9602,9 @@ function saveSettings(){
 }
 
 function applyBrand(){
+  // Update solar add-on row visibility based on current cfg
+  const _solarRowBrand=document.getElementById('solar-addon-row');
+  if(_solarRowBrand) _solarRowBrand.style.display=(S.cfg&&S.cfg.offerSolar)?'block':'none';
   const aheImg = document.getElementById('ahe-hdr-logo');
   if(aheImg) aheImg.src = AHE_LOGO;
   const loginLogo = document.getElementById('ahe-login-logo');
