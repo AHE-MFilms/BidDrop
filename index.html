@@ -9724,19 +9724,7 @@ function updateCreditBadge(){
 }
 
 async function showBuyCreditsModal(){
-  // Refresh balance from server
-  try{
-    const sess = (await sb.auth.getSession()).data.session;
-    if(sess){
-      const r = await fetch('/api/credits?action=balance',{ headers:{ 'Authorization':'Bearer '+sess.access_token } });
-      if(r.ok){
-        const b = await r.json();
-        S.cfg.mailerCredits          = b.paid_credits;
-        S.cfg.freeMailerCreditsUsed  = b.free_used;
-        updateCreditBadge();
-      }
-    }
-  }catch(_){}
+  // Open modal immediately using cached values — don't block on network
   const plan2 = (S.cfg.plan||'starter').toLowerCase();
   const planFreeMap2 = {starter:15,pro:30,agency:60,enterprise:200};
   const freeLimit2 = planFreeMap2[plan2] || 5;
@@ -9747,6 +9735,24 @@ async function showBuyCreditsModal(){
   if(fEl) fEl.textContent = freeLeft;
   if(pEl) pEl.textContent = paid;
   openM('m-buy-credits');
+  // Refresh balance from server in background and update if modal still open
+  try{
+    const sess = (await sb.auth.getSession()).data.session;
+    if(sess){
+      const r = await fetch('/api/credits?action=balance',{ headers:{ 'Authorization':'Bearer '+sess.access_token } });
+      if(r.ok){
+        const b = await r.json();
+        S.cfg.mailerCredits          = b.paid_credits;
+        S.cfg.freeMailerCreditsUsed  = b.free_used;
+        updateCreditBadge();
+        const plan3 = (S.cfg.plan||'starter').toLowerCase();
+        const freeLimit3 = planFreeMap2[plan3] || 5;
+        const freeLeft3 = Math.max(0, freeLimit3 - (S.cfg.freeMailerCreditsUsed||0));
+        if(fEl) fEl.textContent = freeLeft3;
+        if(pEl) pEl.textContent = S.cfg.mailerCredits || 0;
+      }
+    }
+  }catch(_){}
 }
 
 async function buyCredits(packId, btn){
@@ -10306,6 +10312,18 @@ async function switchAccount(accountId){
       return '<button onclick="switchAccount(\''+a.id+'\')" style="display:block;width:100%;text-align:left;background:'+(isCurrent?'var(--accent-dim)':'none')+';border:none;border-bottom:1px solid var(--border);padding:10px 14px;color:var(--text);font-family:var(--font-b);font-size:12px;font-weight:'+(isCurrent?'700':'500')+';cursor:pointer;">'+(isCurrent?'✓ ':'')+escHtml(a.name||a.company_name||a.id)+'</button>';
     }).join('');
   }
+  // Refresh credit badge immediately from DB row, then fetch live balance
+  updateCreditBadge();
+  // Async refresh from API to get accurate live balance
+  (async()=>{
+    try{
+      const sess = (await sb.auth.getSession()).data.session;
+      if(sess){
+        const r = await fetch('/api/credits?action=balance',{ headers:{ 'Authorization':'Bearer '+sess.access_token } });
+        if(r.ok){ const b=await r.json(); S.cfg.mailerCredits=b.paid_credits; S.cfg.freeMailerCreditsUsed=b.free_used; updateCreditBadge(); }
+      }
+    }catch(_){}
+  })();
   toast('✅ Switched to '+escHtml(account.name||account.company_name||''),'success');
 }
 
@@ -11535,6 +11553,16 @@ async function onSignedIn(user){
     updateOfflineBanner();
     // Initialize credit badge
     updateCreditBadge();
+    // Fetch live credit balance in background on every login
+    (async()=>{
+      try{
+        const sess2 = (await sb.auth.getSession()).data.session;
+        if(sess2){
+          const r2 = await fetch('/api/credits?action=balance',{ headers:{ 'Authorization':'Bearer '+sess2.access_token } });
+          if(r2.ok){ const b2=await r2.json(); S.cfg.mailerCredits=b2.paid_credits; S.cfg.freeMailerCreditsUsed=b2.free_used; updateCreditBadge(); }
+        }
+      }catch(_){}
+    })();
     // Handle Stripe redirect params
     const _urlParams = new URLSearchParams(window.location.search);
     if(_urlParams.get('credits_success')){
