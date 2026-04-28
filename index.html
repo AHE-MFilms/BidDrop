@@ -985,8 +985,21 @@ tr:hover td{background:var(--card);}
             <input class="fi" id="e-expires" type="date" style="margin-top:3px;font-size:12px;" title="Optional: set an expiration date shown as a countdown on the estimate page">
           </div>
           <div>
-            <label style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Rep Video URL</label>
-            <input class="fi" id="e-video" type="url" placeholder="https://..." style="margin-top:3px;font-size:12px;" title="Optional: link to a short video message from the rep">
+            <label style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Rep Video</label>
+            <div style="margin-top:4px;display:flex;flex-direction:column;gap:5px;">
+              <!-- Upload button -->
+              <label id="e-video-upload-btn" style="display:flex;align-items:center;justify-content:center;gap:6px;background:var(--card);border:2px dashed var(--border);border-radius:8px;padding:9px 12px;cursor:pointer;color:var(--mid);font-size:12px;font-weight:600;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+                <span id="e-video-upload-label">&#127909; Upload Video</span>
+                <input type="file" accept="video/*" style="display:none;" onchange="handleEstVideoUpload(this)">
+              </label>
+              <div style="text-align:center;font-size:10px;color:var(--muted);">MP4 / MOV &bull; max 100 MB &bull; or paste a link below</div>
+              <!-- URL paste -->
+              <input class="fi" id="e-video" type="url" placeholder="https://youtube.com/... or https://loom.com/..." style="font-size:12px;" oninput="onEstVideoUrlInput()" title="Paste a YouTube, Loom, Vimeo, or direct video URL">
+              <!-- Preview / status -->
+              <div id="e-video-status" style="display:none;font-size:11px;color:var(--accent);font-weight:600;"></div>
+              <div id="e-video-preview-wrap" style="display:none;border-radius:8px;overflow:hidden;background:#000;aspect-ratio:16/9;"></div>
+              <button id="e-video-clear-btn" onclick="clearEstVideo()" style="display:none;background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-align:left;">&#10005; Remove video</button>
+            </div>
           </div>
         </div>
         <div style="margin-top:8px;">
@@ -1525,6 +1538,15 @@ tr:hover td{background:var(--card);}
                 </div>
               </div>
             </div>
+            <!-- Default Rep Video -->
+            <div>
+              <label class="fl">Default Rep Video <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; auto-fills on every new estimate</span></label>
+              <div style="margin-top:6px;display:flex;flex-direction:column;gap:6px;">
+                <input class="fi" id="s-rep-video-url" type="url" placeholder="https://youtube.com/... or https://loom.com/..." style="font-size:12px;" oninput="updatePreview()">
+                <div style="font-size:10px;color:var(--muted);line-height:1.5;">Paste a YouTube, Loom, Vimeo, or direct MP4 link. This will pre-fill the video field on every new estimate. Reps can override it per estimate.</div>
+                <div id="s-rep-video-preview" style="display:none;border-radius:8px;overflow:hidden;background:#000;aspect-ratio:16/9;"></div>
+              </div>
+            </div>
             <!-- Review 1 -->
             <div>
               <label class="fl">Review Image 1 (Page 4)</label>
@@ -2036,7 +2058,7 @@ const DEFAULTS = {
   ghlSmsTpl:'Hi {name}! This is {rep} from {company}. Following up about your roof at {address}. Free assessment available this week — reply YES to schedule!',
   ghlEmailTpl:'Hi {name},\n\nI hope this message finds you well! I\'m {rep} from {company}. I recently visited your property at {address} and noticed your roof may need attention.\n\nWe\'re offering free storm damage assessments this week. Would you like to schedule a time?\n\nBest,\n{rep}\n{company}',
   // Letter & pitch
-  repName:'', licenseNum:'', yearsInBusiness:'5+', warrantyYears:'10',
+  repName:'', repVideoUrl:'', licenseNum:'', yearsInBusiness:'5+', warrantyYears:'10',
   hookLetter:'Most homeowners are tired of door-knockers, pushy salespeople, and high prices when it comes to getting a new roof. I won\'t bother you by knocking on the door — instead, I skip the hassle and lead with my price.',
   whyReceived:'We assessed your neighborhood and identified your home as a candidate for roof replacement. We look for things like missing shingles, moss, algae, buckling, granule loss, and age. The average roof lasts 18–20 years.',
   postcardHook:'Most homeowners dread the pushy roofing salesman. I do things differently — I lead with my price, no pressure, no games. Your estimate is ready.',
@@ -2129,6 +2151,7 @@ async function syncAccountToSupabase(){
     financing_term: cfg.financingTerm, financing_down: cfg.financingDown,
     diff1: cfg.diff1, diff2: cfg.diff2, diff3: cfg.diff3,
     diff4: cfg.diff4, diff5: cfg.diff5, diff6: cfg.diff6,
+    rep_video_url_default: cfg.repVideoUrl||null,
     offer_siding: cfg.offerSiding, offer_windows: cfg.offerWindows,
     offer_gutters: cfg.offerGutters, offer_solar: cfg.offerSolar, offer_custom: cfg.offerCustom,
     cost_solar_per_watt: cfg.costSolarPerWatt,
@@ -2192,6 +2215,7 @@ function accountRowToCfg(row){
     offerSiding: row.offer_siding!==false,
     offerWindows: !!row.offer_windows,
     offerGutters: row.offer_gutters!==false,
+    repVideoUrl: row.rep_video_url_default||'',
     offerSolar: !!row.offer_solar,
     offerCustom: row.offer_custom||'',
     costSolarPerWatt: parseFloat(row.cost_solar_per_watt)||3.50,
@@ -2564,6 +2588,11 @@ function newEstimate(){
   renderStructures(); calcP(); updatePreview();
   const sel = document.getElementById('est-pin-picker');
   if(sel) sel.value = '';
+  // Pre-fill default rep video from company settings
+  const defaultVid = (S.cfg && S.cfg.repVideoUrl) || '';
+  const vidEl = document.getElementById('e-video');
+  if(vidEl) vidEl.value = defaultVid;
+  if(defaultVid) onEstVideoUrlInput();
   toast('🗒 New estimate started','info');
 }
 
@@ -5325,6 +5354,93 @@ function getMatCost(matKey){
   return{'1.0':parseFloat(c.cost3Tab)||350,'1.3':parseFloat(c.costArchitectural)||450,'1.8':parseFloat(c.costDesigner)||620,'2.5':parseFloat(c.costMetal)||950}[matKey]||450;
 }
 
+// ═══════════════════════════════
+//  VIDEO HELPERS
+// ═══════════════════════════════
+function videoEmbedPreview(url){
+  if(!url) return '';
+  // YouTube
+  const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/);
+  if(ytMatch) return `<iframe src="https://www.youtube.com/embed/${ytMatch[1]}" frameborder="0" allow="autoplay;encrypted-media" allowfullscreen style="width:100%;height:100%;display:block;"></iframe>`;
+  // Loom
+  const loomMatch = url.match(/loom\.com\/share\/([a-f0-9]+)/);
+  if(loomMatch) return `<iframe src="https://www.loom.com/embed/${loomMatch[1]}" frameborder="0" allowfullscreen style="width:100%;height:100%;display:block;"></iframe>`;
+  // Vimeo
+  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+  if(vimeoMatch) return `<iframe src="https://player.vimeo.com/video/${vimeoMatch[1]}" frameborder="0" allowfullscreen style="width:100%;height:100%;display:block;"></iframe>`;
+  // Direct MP4 / video file
+  if(/\.(mp4|mov|webm|ogg)/i.test(url)) return `<video src="${url}" controls playsinline preload="metadata" style="width:100%;height:100%;display:block;"></video>`;
+  return '';
+}
+function updateRepVideoPreview(url){
+  const wrap = document.getElementById('s-rep-video-preview');
+  if(!wrap) return;
+  const html = videoEmbedPreview(url);
+  if(html){ wrap.innerHTML=html; wrap.style.display='block'; }
+  else { wrap.innerHTML=''; wrap.style.display='none'; }
+}
+function onEstVideoUrlInput(){
+  const url = (document.getElementById('e-video')||{}).value||'';
+  const wrap = document.getElementById('e-video-preview-wrap');
+  const clearBtn = document.getElementById('e-video-clear-btn');
+  const html = videoEmbedPreview(url);
+  if(wrap){ if(html){ wrap.innerHTML=html; wrap.style.display='block'; } else { wrap.innerHTML=''; wrap.style.display='none'; } }
+  if(clearBtn) clearBtn.style.display = url ? 'block' : 'none';
+  scheduleDraftSave();
+}
+async function handleEstVideoUpload(inp){
+  if(!inp.files||!inp.files[0]) return;
+  const file = inp.files[0];
+  if(file.size > 100*1024*1024){ toast('Video must be under 100 MB','error'); return; }
+  const statusEl = document.getElementById('e-video-status');
+  const labelEl  = document.getElementById('e-video-upload-label');
+  const clearBtn = document.getElementById('e-video-clear-btn');
+  if(statusEl){ statusEl.textContent='⏳ Uploading...'; statusEl.style.display='block'; }
+  if(labelEl) labelEl.textContent='⏳ Uploading...';
+  try{
+    const session = await sb.auth.getSession();
+    const jwt = session?.data?.session?.access_token;
+    const acctId = currentAccount?.id || 'unknown';
+    const ext = file.name.split('.').pop().toLowerCase();
+    const path = acctId + '/videos/rep-' + Date.now() + '.' + ext;
+    // Read as base64
+    const dataUrl = await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.onerror=rej; r.readAsDataURL(file); });
+    const resp = await fetch('/api/admin?action=upload-photo', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${jwt}`},
+      body: JSON.stringify({ path, dataUrl, mimeType: file.type||'video/mp4' })
+    });
+    if(!resp.ok) throw new Error('Upload failed: '+resp.status);
+    const {url} = await resp.json();
+    const videoEl = document.getElementById('e-video');
+    if(videoEl) videoEl.value = url;
+    const wrap = document.getElementById('e-video-preview-wrap');
+    if(wrap){ wrap.innerHTML=`<video src="${url}" controls playsinline preload="metadata" style="width:100%;height:100%;display:block;"></video>`; wrap.style.display='block'; }
+    if(statusEl){ statusEl.textContent='✅ Uploaded!'; setTimeout(()=>{ statusEl.style.display='none'; },3000); }
+    if(labelEl) labelEl.textContent='🎥 Replace Video';
+    if(clearBtn) clearBtn.style.display='block';
+    scheduleDraftSave();
+    toast('Video uploaded!','success');
+  }catch(err){
+    console.error('Video upload error:',err);
+    if(statusEl){ statusEl.textContent='❌ Upload failed — try a smaller file or paste a URL'; statusEl.style.color='#ef4444'; }
+    if(labelEl) labelEl.textContent='🎥 Upload Video';
+    toast('Video upload failed','error');
+  }
+}
+function clearEstVideo(){
+  const videoEl = document.getElementById('e-video');
+  if(videoEl) videoEl.value = '';
+  const wrap = document.getElementById('e-video-preview-wrap');
+  if(wrap){ wrap.innerHTML=''; wrap.style.display='none'; }
+  const clearBtn = document.getElementById('e-video-clear-btn');
+  if(clearBtn) clearBtn.style.display='none';
+  const statusEl = document.getElementById('e-video-status');
+  if(statusEl){ statusEl.textContent=''; statusEl.style.display='none'; }
+  const labelEl = document.getElementById('e-video-upload-label');
+  if(labelEl) labelEl.textContent='🎥 Upload Video';
+  scheduleDraftSave();
+}
 function getSolarPrice(){
   const solarCk = document.getElementById('a-solar');
   if(!solarCk || !solarCk.checked) return 0;
@@ -6815,7 +6931,7 @@ function loadEstimateIntoEstimator(estId){
   const expiresEl = document.getElementById('e-expires');
   if(expiresEl) expiresEl.value = est.expiresAt ? new Date(est.expiresAt).toISOString().split('T')[0] : '';
   const videoEl = document.getElementById('e-video');
-  if(videoEl) videoEl.value = est.repVideoUrl || '';
+  if(videoEl){ videoEl.value = est.repVideoUrl || ''; if(est.repVideoUrl) onEstVideoUrlInput(); }
   const inspNoteEl = document.getElementById('e-insp-note');
   if(inspNoteEl) inspNoteEl.value = est.inspectionNote || '';
   // Set the pin picker
@@ -9372,6 +9488,7 @@ function openSettings(){
   document.getElementById('s-chim').value=c.costChimney||295;
   document.getElementById('s-gut').value=c.costGutter||9;
   const solarPwEl=document.getElementById('s-solar-pw'); if(solarPwEl) solarPwEl.value=c.costSolarPerWatt||3.50;
+  const repVidEl=document.getElementById('s-rep-video-url'); if(repVidEl){ repVidEl.value=c.repVideoUrl||''; updateRepVideoPreview(c.repVideoUrl||''); }
   const offSolarEl=document.getElementById('s-off-solar'); if(offSolarEl) offSolarEl.checked=!!c.offerSolar;
   // Show/hide solar add-on row in estimate builder
   const solarRow=document.getElementById('solar-addon-row'); if(solarRow) solarRow.style.display=c.offerSolar?'block':'none';
@@ -9543,6 +9660,7 @@ function saveSettings(){
     diff1:v('s-d1'), diff2:v('s-d2'), diff3:v('s-d3'),
     diff4:v('s-d4'), diff5:v('s-d5'), diff6:v('s-d6'),
     offerSiding:ck('s-off-sid'), offerWindows:ck('s-off-win'), offerGutters:ck('s-off-gut'),
+    repVideoUrl:v('s-rep-video-url')||'',
     offerSolar:ck('s-off-solar'),
     costSolarPerWatt:parseFloat(v('s-solar-pw'))||3.50,
     offerCustom:v('s-off-custom'),
