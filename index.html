@@ -331,12 +331,12 @@ tr:hover td{background:var(--card);}
 .mtool-btn{background:var(--panel);border:1px solid var(--border);color:var(--mid);padding:8px 13px;border-radius:8px;cursor:pointer;font-family:var(--font-b);font-size:11px;font-weight:700;letter-spacing:.4px;display:flex;align-items:center;gap:7px;transition:all .15s;box-shadow:0 3px 12px rgba(0,0,0,.4);white-space:nowrap;}
 .mtool-btn:hover{border-color:var(--accent);color:var(--text);}
 .mtool-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
-.measure-hud{position:absolute;bottom:0;left:0;right:0;transform:none;z-index:1000;background:var(--panel);border-top:1px solid var(--accent);border-left:none;border-right:none;border-bottom:none;border-radius:0;padding:8px 16px;display:none;flex-direction:row;align-items:center;gap:10px;flex-wrap:nowrap;width:100%;box-sizing:border-box;box-shadow:0 -4px 20px rgba(0,0,0,.5);}
+.measure-hud{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);z-index:1000;background:var(--panel);border:1px solid var(--accent);border-radius:12px;padding:14px 20px;display:none;flex-direction:column;align-items:center;gap:4px;min-width:240px;box-shadow:0 6px 28px rgba(0,0,0,.6);}
 .measure-hud.show{display:flex;}
-.mhud-sqft{font-family:var(--font-h);font-size:22px;font-weight:700;color:var(--accent);min-width:50px;}
-.mhud-lbl{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);margin-bottom:0;white-space:nowrap;}
-.mhud-hint{font-size:11px;color:var(--mid);margin-top:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.mhud-btn{flex:0 0 auto;padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;}
+.mhud-sqft{font-family:var(--font-h);font-size:32px;font-weight:700;color:var(--accent);}
+.mhud-lbl{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);margin-bottom:2px;}
+.mhud-hint{font-size:11px;color:var(--mid);margin-top:4px;text-align:center;max-width:220px;}
+.mhud-btn{flex:1;padding:7px 14px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;}
 .mhud-btn:hover{border-color:var(--mid);}
 .mhud-btn.pr{background:var(--accent);border-color:var(--accent);color:#fff;}
 .mhud-btn.pr:hover{opacity:.85;}
@@ -401,10 +401,12 @@ tr:hover td{background:var(--card);}
   .fab-pins{position:absolute;bottom:14px;right:14px;z-index:1000;background:var(--accent);border:none;border-radius:50%;width:54px;height:54px;font-size:24px;cursor:pointer;box-shadow:0 4px 20px rgba(242,92,5,.55);display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;}
   .map-toolbar{flex-direction:row;flex-wrap:wrap;justify-content:center;top:10px;left:4px;right:4px;transform:none;width:auto;gap:5px;}
   .mtool-btn{font-size:10px;padding:6px 10px;flex-shrink:0;}
-  .mhud-lbl{display:none;}
+  .measure-hud{bottom:62px;left:50%;right:auto;transform:translateX(-50%);min-width:200px;max-width:calc(100vw - 32px);}
+  .mhud-lbl{font-size:9px;}
+  .mhud-sqft{font-size:24px;}
   #mhud-bldg-count{font-size:10px;min-height:0;}
   .mhud-btn{padding:5px 10px;font-size:11px;}
-  #btn-use-measure{width:auto;flex-shrink:0;}
+  #btn-use-measure{width:auto;}
   #tab-estimate{flex-direction:column;overflow-y:auto;}
   .est-form{width:100%;border-right:none;padding:16px 16px 0;overflow-y:visible;}
   .est-preview{display:none;padding:16px;flex-direction:column;align-items:center;}
@@ -850,18 +852,18 @@ tr:hover td{background:var(--card);}
       <div id="storm-status" style="font-size:11px;color:var(--mid);text-align:center;min-height:16px;"></div>
     </div>
     <div class="measure-hud" id="measure-hud">
-      <div style="display:flex;flex-direction:column;align-items:center;min-width:52px;">
-        <div class="mhud-lbl">Roof Area</div>
-        <div class="mhud-sqft" id="mhud-sqft">0</div>
-        <div style="font-size:10px;color:var(--mid);line-height:1;">sq ft</div>
+      <div class="mhud-lbl">Total Roof Area</div>
+      <div class="mhud-sqft" id="mhud-sqft">0</div>
+      <div style="font-size:11px;color:var(--mid);">sq ft</div>
+      <div id="mhud-bldg-count" style="font-size:12px;color:var(--accent);font-weight:600;margin-top:2px;min-height:16px;"></div>
+      <div class="mhud-hint" id="mhud-hint">Tap each corner of the roof. Double-tap to finish.</div>
+      <div style="display:flex;gap:6px;margin-top:10px;width:100%;">
+        <button class="mhud-btn" onclick="undoMeasurePoint()">↩ Undo</button>
+        <button class="mhud-btn" onclick="clearMeasure()">Clear</button>
       </div>
-      <div style="flex:1;min-width:0;">
-        <div id="mhud-bldg-count" style="font-size:11px;color:var(--accent);font-weight:600;min-height:0;"></div>
-        <div class="mhud-hint" id="mhud-hint">Tap each corner of the roof. Double-tap to finish.</div>
+      <div style="margin-top:6px;width:100%;">
+        <button class="mhud-btn pr" id="btn-use-measure" onclick="useRoofMeasurement()" style="width:100%;opacity:.4;pointer-events:none;">📋 Add to Estimate</button>
       </div>
-      <button class="mhud-btn" onclick="undoMeasurePoint()">↩ Undo</button>
-      <button class="mhud-btn" onclick="clearMeasure()">Clear</button>
-      <button class="mhud-btn pr" id="btn-use-measure" onclick="useRoofMeasurement()" style="opacity:.4;pointer-events:none;">📋 Add to Estimate</button>
     </div>
     <button class="fab-pins" onclick="togglePinPanel()" id="fab-pins">📍</button>
     <div class="map-panel" id="map-panel">
