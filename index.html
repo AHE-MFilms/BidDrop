@@ -1033,6 +1033,26 @@ tr:hover td{background:var(--card);}
           Gutters (+$8/lf)
           <input type="number" class="addon-qty" id="a-gut-q" value="120" min="1" onchange="calcP();updatePreview();scheduleDraftSave()"> lf
         </label>
+        <div id="solar-addon-row" style="display:none;">
+          <label class="addon-row" style="align-items:flex-start;flex-direction:column;gap:6px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="checkbox" id="a-solar" onchange="calcP();updatePreview();scheduleDraftSave();toggleSolarInputs()">
+              <span>&#9728;&#65039; Solar Add-On</span>
+            </div>
+            <div id="solar-inputs" style="display:none;padding-left:26px;display:none;gap:8px;flex-wrap:wrap;align-items:center;">
+              <div style="display:flex;flex-direction:column;gap:2px;">
+                <span style="font-size:10px;color:var(--muted);font-weight:600;">System Size (kW)</span>
+                <input type="number" class="addon-qty" id="a-solar-kw" placeholder="8.5" step="0.1" min="0" style="width:80px;" oninput="onSolarKwInput();calcP();updatePreview();scheduleDraftSave()">
+              </div>
+              <div style="font-size:11px;color:var(--muted);padding-top:14px;">or</div>
+              <div style="display:flex;flex-direction:column;gap:2px;">
+                <span style="font-size:10px;color:var(--muted);font-weight:600;">Flat Price ($)</span>
+                <input type="number" class="addon-qty" id="a-solar-flat" placeholder="28000" step="100" min="0" style="width:100px;" oninput="onSolarFlatInput();calcP();updatePreview();scheduleDraftSave()">
+              </div>
+              <div style="font-size:10px;color:var(--muted);padding-top:14px;">&#8594; <span id="solar-calc-display" style="color:var(--accent);font-weight:700;"></span></div>
+            </div>
+          </label>
+        </div>
       </div>
 
       <div class="price-box">
@@ -1563,7 +1583,7 @@ tr:hover td{background:var(--card);}
           </div>
           <div class="frow">
             <div class="fg"><label class="fl">Gutters ($/lf)</label><input type="number" class="fi" id="s-gut" placeholder="9"></div>
-            <div class="fg"></div>
+            <div class="fg"><label class="fl">Solar ($/watt) <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; used when kW entered</span></label><input type="number" class="fi" id="s-solar-pw" placeholder="3.50" step="0.05" min="0"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Overhead &amp; Margin</div>
           <div class="frow">
@@ -1670,6 +1690,7 @@ tr:hover td{background:var(--card);}
             <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="s-off-sid" style="accent-color:var(--accent);"> Siding</label>
             <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="s-off-win" style="accent-color:var(--accent);"> Windows</label>
             <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="s-off-gut" style="accent-color:var(--accent);"> Gutters</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="s-off-solar" style="accent-color:var(--accent);"> &#9728;&#65039; Solar</label>
           </div>
           <div class="fg"><label class="fl">Custom Service (optional)</label><input class="fi" id="s-off-custom" placeholder="e.g. Solar, Insulation, Painting"></div>
           <div class="stab-section-hdr" style="margin-top:16px;">Referral Program (Page 4)</div>
@@ -2026,7 +2047,8 @@ const DEFAULTS = {
   // Comparison table (company values; competitor col is hardcoded)
   diff1:'Licensed, Bonded & Insured', diff2:'Manufacturer Certified', diff3:'Itemized Pricing', diff4:'Workmanship Warranty', diff5:'Financing Available', diff6:'Local Crews',
   // Services for page 4
-  offerSiding:true, offerWindows:false, offerGutters:true, offerCustom:'',
+  offerSiding:true, offerWindows:false, offerGutters:true, offerSolar:false, offerCustom:'',
+  costSolarPerWatt:3.50,
   // Referral
   referralAmt:'250', referralText:'For every customer you send our way who moves forward with a project, we\'ll send you a Visa gift card as a thank you.',
   // Billing
@@ -2108,7 +2130,8 @@ async function syncAccountToSupabase(){
     diff1: cfg.diff1, diff2: cfg.diff2, diff3: cfg.diff3,
     diff4: cfg.diff4, diff5: cfg.diff5, diff6: cfg.diff6,
     offer_siding: cfg.offerSiding, offer_windows: cfg.offerWindows,
-    offer_gutters: cfg.offerGutters, offer_custom: cfg.offerCustom,
+    offer_gutters: cfg.offerGutters, offer_solar: cfg.offerSolar, offer_custom: cfg.offerCustom,
+    cost_solar_per_watt: cfg.costSolarPerWatt,
     referral_amt: cfg.referralAmt, referral_text: cfg.referralText,
     cost_architectural: cfg.costArchitectural, cost_3tab: cfg.cost3Tab,
     cost_designer: cfg.costDesigner, cost_metal: cfg.costMetal,
@@ -2169,7 +2192,9 @@ function accountRowToCfg(row){
     offerSiding: row.offer_siding!==false,
     offerWindows: !!row.offer_windows,
     offerGutters: row.offer_gutters!==false,
+    offerSolar: !!row.offer_solar,
     offerCustom: row.offer_custom||'',
+    costSolarPerWatt: parseFloat(row.cost_solar_per_watt)||3.50,
     referralAmt: row.referral_amt||'250',
     referralText: row.referral_text||'',
     costArchitectural: row.cost_architectural||450,
@@ -2429,7 +2454,10 @@ function loadEstFromPicker(){
   document.getElementById('e-email').value = '';
   document.getElementById('e-addr').value = p.address || '';
   clearHomePhoto();
-  ['a-sky','a-chim','a-gut'].forEach(function(id){var el=document.getElementById(id);if(el)el.checked=false;});
+  ['a-sky','a-chim','a-gut','a-solar'].forEach(function(id){var el=document.getElementById(id);if(el)el.checked=false;});
+  ['a-solar-kw','a-solar-flat'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  const solarInp=document.getElementById('solar-inputs'); if(solarInp) solarInp.style.display='none';
+  const solarDisp=document.getElementById('solar-calc-display'); if(solarDisp) solarDisp.textContent='';
   // Try to load from S.estimates first (has photo_data), fall back to pin.estimate
   const savedEst = (S.estimates||[]).find(function(e){return e.pinId === p.id && !e.deletedAt;});
   // Always reset _allPhotos before loading (prevents stale photos from previous pin)
@@ -2483,7 +2511,9 @@ function saveDraft(){
     chimney: (document.getElementById('a-chim')||{}).checked||false,
     gutters: (document.getElementById('a-gut')||{}).checked||false,
     gutterLf: parseInt((document.getElementById('a-gut-q')||{}).value||120),
-    savedAt: new Date().toISOString()
+    solar: (document.getElementById('a-solar')||{}).checked||false,
+    solarKw: parseFloat((document.getElementById('a-solar-kw')||{}).value||0),
+    solarFlat: parseFloat((document.getElementById('a-solar-flat')||{}).value||0),
   };
   try{ localStorage.setItem('biddrop_draft_'+currentEstPinId, JSON.stringify(draft)); }catch(e){}
 }
@@ -2502,6 +2532,9 @@ function restoreDraft(pinId){
     const chim=document.getElementById('a-chim'); if(chim) chim.checked=!!draft.chimney;
     const gut=document.getElementById('a-gut'); if(gut) gut.checked=!!draft.gutters;
     const gutQ=document.getElementById('a-gut-q'); if(gutQ) gutQ.value=draft.gutterLf||120;
+    const sol=document.getElementById('a-solar'); if(sol){ sol.checked=!!draft.solar; toggleSolarInputs(); }
+    const solKw=document.getElementById('a-solar-kw'); if(solKw) solKw.value=draft.solarKw||'';
+    const solFlat=document.getElementById('a-solar-flat'); if(solFlat) solFlat.value=draft.solarFlat||'';
     const banner=document.getElementById('draft-banner');
     const bannerTime=document.getElementById('draft-banner-time');
     if(banner){ banner.style.display='flex'; if(bannerTime) bannerTime.textContent='· '+timeAgo(draft.savedAt); }
@@ -3834,6 +3867,10 @@ function _autoSaveEstimateOnLeave(){
       damage_photos: dmgPhotos||null,
       skylight: sky, skylight_qty: skyQ,
       chimney: chim, gutters: gut, gutter_lf: gutQ,
+      solar: (document.getElementById('a-solar')||{}).checked||false,
+      solar_kw: parseFloat((document.getElementById('a-solar-kw')||{}).value||0)||null,
+      solar_flat: parseFloat((document.getElementById('a-solar-flat')||{}).value||0)||null,
+      solar_price: getSolarPrice()||null,
       version: (existing&&existing.version)||1,
       is_revision: false,
       saved_at: new Date().toISOString(),
@@ -3853,6 +3890,7 @@ function _autoSaveEstimateOnLeave(){
             damage_photos: dmgPhotos||existing.damage_photos,
             skylight: sky, skylightQty: skyQ,
             chimney: chim, gutters: gut, gutterLf: gutQ,
+            solar: estRow.solar, solarKw: estRow.solar_kw, solarFlat: estRow.solar_flat, solarPrice: estRow.solar_price,
             savedAt: estRow.saved_at
           });
         } else {
@@ -3864,6 +3902,7 @@ function _autoSaveEstimateOnLeave(){
             all_photos: allPhotos||null, damage_photos: dmgPhotos||null,
             skylight: sky, skylightQty: skyQ,
             chimney: chim, gutters: gut, gutterLf: gutQ,
+            solar: estRow.solar, solarKw: estRow.solar_kw, solarFlat: estRow.solar_flat, solarPrice: estRow.solar_price,
             version: 1, isRevision: false,
             savedAt: estRow.saved_at
           });
@@ -5286,6 +5325,39 @@ function getMatCost(matKey){
   return{'1.0':parseFloat(c.cost3Tab)||350,'1.3':parseFloat(c.costArchitectural)||450,'1.8':parseFloat(c.costDesigner)||620,'2.5':parseFloat(c.costMetal)||950}[matKey]||450;
 }
 
+function getSolarPrice(){
+  const solarCk = document.getElementById('a-solar');
+  if(!solarCk || !solarCk.checked) return 0;
+  const flatEl = document.getElementById('a-solar-flat');
+  const kwEl   = document.getElementById('a-solar-kw');
+  const flat   = parseFloat((flatEl&&flatEl.value)||0);
+  if(flat > 0) return flat;
+  const kw     = parseFloat((kwEl&&kwEl.value)||0);
+  const ppw    = parseFloat(S.cfg.costSolarPerWatt)||3.50;
+  return kw > 0 ? Math.round(kw * 1000 * ppw) : 0;
+}
+function toggleSolarInputs(){
+  const ck = document.getElementById('a-solar');
+  const inp = document.getElementById('solar-inputs');
+  if(!inp) return;
+  inp.style.display = (ck && ck.checked) ? 'flex' : 'none';
+}
+function onSolarKwInput(){
+  // When kW is entered, clear flat price and show calculated amount
+  const kwEl = document.getElementById('a-solar-kw');
+  const flatEl = document.getElementById('a-solar-flat');
+  const dispEl = document.getElementById('solar-calc-display');
+  if(flatEl && parseFloat(kwEl&&kwEl.value||0) > 0) flatEl.value = '';
+  const price = getSolarPrice();
+  if(dispEl) dispEl.textContent = price > 0 ? '$'+price.toLocaleString() : '';
+}
+function onSolarFlatInput(){
+  // When flat price is entered, clear kW and hide calculated
+  const kwEl = document.getElementById('a-solar-kw');
+  const dispEl = document.getElementById('solar-calc-display');
+  if(kwEl) kwEl.value = '';
+  if(dispEl) dispEl.textContent = '';
+}
 function calcP(){
   if(!structures.length){
     document.getElementById('e-total').textContent='$0';
@@ -5300,6 +5372,7 @@ function calcP(){
     grand+=(parseFloat(c.costChimney)||295);
   if(document.getElementById('a-gut')&&document.getElementById('a-gut').checked)
     grand+=(parseFloat(c.costGutter)||9)*(parseInt(document.getElementById('a-gut-q').value)||120);
+  grand+=getSolarPrice();
   document.getElementById('e-total').textContent='$'+grand.toLocaleString();
   document.getElementById('e-breakdown').textContent=structures.length+' structure'+(structures.length>1?'s':'')+' · Total: $'+grand.toLocaleString();
   structures.forEach(s=>{
@@ -5443,6 +5516,13 @@ function updatePreview(){
       const amt=(parseFloat(c2.costGutter)||9)*lf; addsTotal+=amt;
       addRows+='<div class="ml-row"><span class="rl">Gutters ('+lf+' lf)</span><span class="rv">$'+amt.toLocaleString()+'</span></div>';
     }
+    const solarAmt=getSolarPrice();
+    if(solarAmt>0){
+      addsTotal+=solarAmt;
+      const solarKw=parseFloat((document.getElementById('a-solar-kw')||{}).value||0);
+      const solarLabel=solarKw>0?'Solar ('+solarKw+' kW)':'Solar Add-On';
+      addRows+='<div class="ml-row"><span class="rl">&#9728;&#65039; '+solarLabel+'</span><span class="rv">$'+solarAmt.toLocaleString()+'</span></div>';
+    }
     if(addsTotal){
       grandTotal+=addsTotal;
       structSectionsP2+='<div class="ml-box" style="border:2px solid #888;margin-bottom:14px;">'+
@@ -5490,6 +5570,7 @@ function updatePreview(){
   if(cfg.offerSiding) svcDefs.push({icon:'🏠',name:'SIDING',bullets:['James Hardie Install','30 Year Warranty','Fiber Cement Strength']});
   if(cfg.offerWindows) svcDefs.push({icon:'🪟',name:'WINDOWS',bullets:['Energy Efficient','100% Virgin Vinyl','Low-E Glass']});
   if(cfg.offerGutters) svcDefs.push({icon:'🌊',name:'GUTTERS',bullets:['Seamless Gutters','Hidden Fasteners','Rust-Free Aluminum']});
+  if(cfg.offerSolar) svcDefs.push({icon:'☀️',name:'SOLAR',bullets:['Reduce Energy Bills','Federal Tax Credit','Increase Home Value']});
   if(cfg.offerCustom&&cfg.offerCustom.trim()) svcDefs.push({icon:'⭐',name:cfg.offerCustom.toUpperCase(),bullets:[]});
 
   const servicesHtml = svcDefs.length
@@ -9290,6 +9371,10 @@ function openSettings(){
   document.getElementById('s-sky').value=c.costSkylight||375;
   document.getElementById('s-chim').value=c.costChimney||295;
   document.getElementById('s-gut').value=c.costGutter||9;
+  const solarPwEl=document.getElementById('s-solar-pw'); if(solarPwEl) solarPwEl.value=c.costSolarPerWatt||3.50;
+  const offSolarEl=document.getElementById('s-off-solar'); if(offSolarEl) offSolarEl.checked=!!c.offerSolar;
+  // Show/hide solar add-on row in estimate builder
+  const solarRow=document.getElementById('solar-addon-row'); if(solarRow) solarRow.style.display=c.offerSolar?'block':'none';
   document.getElementById('s-ovh').value=c.overhead||15;
   document.getElementById('s-mgn').value=c.margin||20;
   document.getElementById('s-color').value=c.brandColor||'#F25C05';
@@ -9458,6 +9543,8 @@ function saveSettings(){
     diff1:v('s-d1'), diff2:v('s-d2'), diff3:v('s-d3'),
     diff4:v('s-d4'), diff5:v('s-d5'), diff6:v('s-d6'),
     offerSiding:ck('s-off-sid'), offerWindows:ck('s-off-win'), offerGutters:ck('s-off-gut'),
+    offerSolar:ck('s-off-solar'),
+    costSolarPerWatt:parseFloat(v('s-solar-pw'))||3.50,
     offerCustom:v('s-off-custom'),
     referralAmt:v('s-refamt')||'250',
     referralText:v('s-reftext'),
@@ -10515,6 +10602,10 @@ async function loadEstimatesFromSupabase(){
     chimney: row.chimney || false,
     gutters: row.gutters || false,
     gutterLf: row.gutter_lf || 120,
+    solar: row.solar || false,
+    solarKw: row.solar_kw || null,
+    solarFlat: row.solar_flat || null,
+    solarPrice: row.solar_price || null,
     version: row.version || 1,
     isRevision: row.is_revision || false,
     parentId: row.parent_id || null,
@@ -13958,11 +14049,12 @@ async function initEstimatePage(estId) {
           ${sqft ? `<div style="background:rgba(255,255,255,.04);border-radius:12px;padding:16px;text-align:center;"><div style="font-size:11px;opacity:.45;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Roof Area</div><div style="font-size:28px;font-weight:900;color:${brand};">${sqft.toLocaleString()}</div><div style="font-size:11px;opacity:.4;">sq ft</div></div>` : ''}
           ${pitchLabel ? `<div style="background:rgba(255,255,255,.04);border-radius:12px;padding:16px;text-align:center;"><div style="font-size:11px;opacity:.45;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Pitch</div><div style="font-size:16px;font-weight:800;margin-top:6px;">${pitchLabel}</div></div>` : ''}
         </div>
-        ${(est.skylight || est.chimney || est.gutters) ? `
+        ${(est.skylight || est.chimney || est.gutters || est.solar) ? `
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           ${est.skylight ? `<div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px 14px;font-size:12px;font-weight:600;">\u2600\uFE0F Skylight${est.skylightQty > 1 ? ' \xd7' + est.skylightQty : ''}</div>` : ''}
           ${est.chimney ? `<div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px 14px;font-size:12px;font-weight:600;">\uD83E\uDDF1 Chimney</div>` : ''}
           ${est.gutters ? `<div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px 14px;font-size:12px;font-weight:600;">\uD83D\uDCA7 Gutters ${est.gutterLf || 120} LF</div>` : ''}
+          ${est.solar ? `<div style="background:rgba(255,200,0,.08);border:1px solid rgba(255,200,0,.2);border-radius:10px;padding:10px 14px;font-size:12px;font-weight:600;">&#9728;&#65039; Solar${est.solarKw ? ' ' + est.solarKw + ' kW' : ''} &mdash; $${(est.solarPrice||0).toLocaleString()}</div>` : ''}
         </div>` : ''}
       </div>`;
 
