@@ -7155,7 +7155,7 @@ async function sendLob(id){
     }});
     if(d && d.error === 'no_credits'){
       // Not enough credits — show Buy Credits modal
-      toast('Not enough credits to send a letter (15 credits = $3.75). Please purchase more credits.','error');
+      toast('Not enough credits to send a letter (1 credit = $4.00). Please purchase more credits.','error');
       if(d._credits){ S.cfg.mailerCredits = d._credits.paid_credits ?? S.cfg.mailerCredits; if(d._credits.free_used !== undefined) S.cfg.freeMailerCreditsUsed = d._credits.free_used; }
       updateCreditBadge();
       setTimeout(()=>showBuyCreditsModal(), 800);
@@ -7284,7 +7284,7 @@ async function sendLobPostcard6x9(id){
       use_type:'marketing'
     }});
     if(d&&d.error==='no_credits'){
-      toast('Not enough credits to send a postcard (15 credits = $3.75). Please purchase more credits.','error');
+      toast('Not enough credits to send a postcard (1 credit = $4.00). Please purchase more credits.','error');
       if(d._credits){ S.cfg.mailerCredits = d._credits.paid_credits ?? S.cfg.mailerCredits; if(d._credits.free_used !== undefined) S.cfg.freeMailerCreditsUsed = d._credits.free_used; }
       updateCreditBadge();
       setTimeout(()=>showBuyCreditsModal(),800);
@@ -12544,15 +12544,15 @@ function startDripSequence(){
   if(!isPlanAtLeast('agency')){ showPlanUpgradePrompt('Follow-Up Blitz','agency'); return; }
   const est = (S.estimates||[]).find(e=>e.id===_dripEstId);
   if(!est){ toast('Estimate not found','error'); return; }
-  // Credit pre-check: Follow-Up Blitz costs 48 credits (4 mailers × 16, but 4th is free = 3×16)
-  const BLITZ_CREDITS = 45;
+  // Credit pre-check: Follow-Up Blitz costs 3 credits (4 mailers × 1, but 4th is free = 3×1)
+  const BLITZ_CREDITS = 3;
   const planFreeMapD = {starter:15,pro:30,agency:60,enterprise:200};
   const freeLimitD = planFreeMapD[(S.cfg.plan||'starter').toLowerCase()] || 5;
   const freeLeftD  = Math.max(0, freeLimitD - (S.cfg.freeMailerCreditsUsed || 0));
   const paid      = S.cfg.mailerCredits || 0;
   const total     = freeLeftD + paid;
   if(total < BLITZ_CREDITS){
-    toast(`Not enough credits for Follow-Up Blitz. Need 45 credits ($11.25), you have ${total}. Please purchase more credits.`,'error');
+    toast(`Not enough credits for Follow-Up Blitz. Need 3 credits ($12.00), you have ${total}. Please purchase more credits.`,'error');
     setTimeout(()=>showBuyCreditsModal(), 800);
     return;
   }
@@ -13791,10 +13791,10 @@ function spmSelect(choice){
   const btn = document.getElementById('spm-confirm-btn');
   if(btn){
     if(choice==='single'){
-      btn.textContent='🏠 Send 1 Postcard — 15 Credits';
+      btn.textContent='🏠 Send 1 Postcard — 1 Credit';
       btn.style.background='var(--accent)';
     } else {
-      btn.textContent='🔥 Start Follow-Up Blitz — 45 Credits';
+      btn.textContent='🔥 Start Follow-Up Blitz — 3 Credits';
       btn.style.background='#7C3AED';
     }
     btn.style.opacity='1'; btn.style.pointerEvents='auto';
@@ -14367,14 +14367,14 @@ async function initEstimatePage(estId) {
         <div style="font-size:28px;margin-bottom:8px;">🏠</div>
         <div style="font-family:var(--font-h);font-size:14px;font-weight:700;margin-bottom:4px;">Single Send</div>
         <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">1 postcard, sent today</div>
-        <div style="font-size:20px;font-weight:700;color:var(--accent);font-family:var(--font-h);">15 credits</div>
+        <div style="font-size:20px;font-weight:700;color:var(--accent);font-family:var(--font-h);">1 credit</div>
       </div>
       <!-- Follow-Up Blitz -->
       <div onclick="spmSelect('blitz')" id="spm-opt-blitz" style="cursor:pointer;border:2px solid var(--border);border-radius:12px;padding:18px 14px;text-align:center;transition:border-color .15s,background .15s;">
         <div style="font-size:28px;margin-bottom:8px;">🔥</div>
         <div style="font-family:var(--font-h);font-size:14px;font-weight:700;margin-bottom:4px;">Follow-Up Blitz</div>
         <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">4 postcards over 5 weeks<br>to the same homeowner</div>
-        <div style="font-size:20px;font-weight:700;color:#a855f7;font-family:var(--font-h);">45 credits</div>
+        <div style="font-size:20px;font-weight:700;color:#a855f7;font-family:var(--font-h);">3 credits</div>
         <div style="font-size:11px;color:#22C55E;font-weight:600;">4th postcard FREE</div>
       </div>
     </div>
@@ -14398,7 +14398,7 @@ async function initEstimatePage(estId) {
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
           <div style="background:var(--accent);color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 1</div>
           <div style="font-size:13px;font-weight:600;color:var(--text);">First Postcard</div>
-          <div style="margin-left:auto;font-size:12px;color:var(--muted);">Send immediately &bull; 15 credits</div>
+          <div style="margin-left:auto;font-size:12px;color:var(--muted);">Send immediately &bull; 1 credit</div>
         </div>
         <div style="font-size:12px;color:var(--muted);">Opening postcard — introduces your estimate and invites the homeowner to call.</div>
       </div>
@@ -14406,7 +14406,7 @@ async function initEstimatePage(estId) {
       <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
           <div style="background:#7C3AED;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 2</div>
-          <div style="font-size:13px;font-weight:600;color:var(--text);">Follow-Up Postcard <span style="font-size:11px;color:var(--muted);">15 credits</span></div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);">Follow-Up Postcard <span style="font-size:11px;color:var(--muted);">1 credit</span></div>
           <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
             <input type="number" id="drip-delay-2" value="14" min="1" max="90" style="width:52px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 6px;color:var(--text);font-size:12px;text-align:center;">
             <span style="font-size:12px;color:var(--muted);">days after step 1</span>
@@ -14495,10 +14495,10 @@ async function initEstimatePage(estId) {
     </div>
     <!-- Info note -->
     <div style="background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:10px 14px;font-size:12px;color:#C4B5FD;margin-bottom:18px;">
-      <strong>Follow-Up Blitz:</strong> 4 postcards sent to the same homeowner over time. Step 1 goes out immediately — Steps 2–4 are scheduled automatically. <strong style="color:#4ade80;">Save 25% vs. single sends — 45 credits total ($11.25) instead of 60 ($15).</strong> Cancel anytime from the Estimates tab.
+      <strong>Follow-Up Blitz:</strong> 4 postcards sent to the same homeowner over time. Step 1 goes out immediately — Steps 2–4 are scheduled automatically. <strong style="color:#4ade80;">4th postcard FREE — 3 credits total ($12) instead of $16.</strong> Cancel anytime from the Estimates tab.
     </div>
     <div style="display:flex;gap:10px;">
-      <button onclick="startDripSequence()" style="flex:1;background:#7C3AED;border:none;border-radius:8px;padding:14px;color:#fff;font-family:var(--font-b);font-size:14px;font-weight:700;cursor:pointer;">🔥 Start Follow-Up Blitz — 45 Credits ($11.25)</button>
+      <button onclick="startDripSequence()" style="flex:1;background:#7C3AED;border:none;border-radius:8px;padding:14px;color:#fff;font-family:var(--font-b);font-size:14px;font-weight:700;cursor:pointer;">🔥 Start Follow-Up Blitz — 3 Credits ($12)</button>
       <button onclick="closeM('m-drip')" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:14px 20px;color:var(--muted);font-family:var(--font-b);font-size:14px;cursor:pointer;">Cancel</button>
     </div>
   </div>

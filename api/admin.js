@@ -245,7 +245,7 @@ export default async function handler(req, res) {
 
       // ── Lob postcard proxy ────────────────────────────────────────────────
       case 'lob-postcard': {
-        const POSTCARD_CREDITS = 15; // 15 credits = $3.75
+        const POSTCARD_CREDITS = 1; // 1 credit = $4.00 = 1 postcard
         const { payload } = req.body;
         if (!payload) { res.status(400).json({ error: 'payload required' }); return; }
         // Enforce credit balance — fetch free + paid totals
@@ -272,7 +272,7 @@ export default async function handler(req, res) {
         if (pcTotal < POSTCARD_CREDITS) {
           res.status(402).json({
             error: 'no_credits',
-            message: `Sending a postcard costs ${POSTCARD_CREDITS} credits ($3.75). You have ${pcTotal} credits (${pcFreeLeft} free + ${pcPaid} paid). Please purchase more credits to continue.`,
+            message: `Sending a postcard costs ${POSTCARD_CREDITS} credit ($4.00). You have ${pcTotal} credits (${pcFreeLeft} free + ${pcPaid} paid). Please purchase more credits to continue.`,
             credits_needed: POSTCARD_CREDITS,
             credits_available: pcTotal
           });
@@ -327,7 +327,7 @@ export default async function handler(req, res) {
 
       // ── Lob letter proxy ──────────────────────────────────────────────────
       case 'lob-letter': {
-        const LETTER_CREDITS = 15; // 15 credits = $3.75
+        const LETTER_CREDITS = 1; // 1 credit = $4.00 = 1 letter
         const { payload: ltPayload } = req.body;
         if (!ltPayload) { res.status(400).json({ error: 'payload required' }); return; }
         // Enforce credit balance — fetch free + paid totals
@@ -354,7 +354,7 @@ export default async function handler(req, res) {
         if (ltTotal < LETTER_CREDITS) {
           res.status(402).json({
             error: 'no_credits',
-            message: `Sending a letter costs ${LETTER_CREDITS} credits ($3.75). You have ${ltTotal} credits (${ltFreeLeft} free + ${ltPaid} paid). Please purchase more credits to continue.`,
+            message: `Sending a letter costs ${LETTER_CREDITS} credit ($4.00). You have ${ltTotal} credits (${ltFreeLeft} free + ${ltPaid} paid). Please purchase more credits to continue.`,
             credits_needed: LETTER_CREDITS,
             credits_available: ltTotal
           });
