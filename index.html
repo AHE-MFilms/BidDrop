@@ -1414,6 +1414,45 @@ tr:hover td{background:var(--card);}
           <div class="fg stab-full" style="margin-top:4px;"><label class="fl">Company Bio <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; shown on homeowner estimate pages</span></label><textarea class="fi" id="s-bio" rows="3" placeholder="We're a family-owned roofing company serving Metro Detroit for 20+ years. We specialize in storm damage restoration and insurance claims, making the process seamless for homeowners." style="resize:vertical;min-height:80px;"></textarea></div>
         </div>
       </div>
+      <!-- FULL WIDTH: Share & Embed -->
+      <div class="stab-card stab-full" id="stab-embed-card">
+        <div class="stab-card-hdr" onclick="toggleStabCard('embed')">
+          <span>&#128279; Share &amp; Embed &#8212; Website Estimator &amp; Quote Page</span>
+          <span class="stab-chevron" id="stab-chevron-embed">&#9662;</span>
+        </div>
+        <div class="stab-card-body" id="stab-body-embed">
+          <div id="embed-no-slug" style="display:none;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:13px;color:var(--muted);">
+            &#128279; Your quote page URL hasn't been set yet. Contact BidDrop support to get your custom slug (e.g. <code style="background:var(--card);padding:1px 5px;border-radius:3px;color:var(--accent);">/q/rapidroof</code>).
+          </div>
+          <div id="embed-has-slug">
+            <div style="margin-bottom:14px;">
+              <div class="stab-section-hdr">Your Public Estimator URL</div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <code id="embed-url-display" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;font-size:13px;color:var(--accent);font-family:var(--font-m);word-break:break-all;"></code>
+                <button onclick="copyEmbedText('embed-url-display')" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:7px 14px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128203; Copy URL</button>
+                <a id="embed-url-open" href="#" target="_blank" style="background:var(--accent);border:none;border-radius:6px;padding:7px 14px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;">&#8599; Open</a>
+              </div>
+              <div style="font-size:11px;color:var(--muted);margin-top:6px;">Share this link directly, add it to your Google Business profile, or use it in a QR code.</div>
+            </div>
+            <div style="margin-bottom:14px;">
+              <div class="stab-section-hdr">Website Button Code</div>
+              <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Paste this into your website to add a &ldquo;Get a Free Estimate&rdquo; button.</div>
+              <div style="position:relative;">
+                <pre id="embed-btn-code" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-size:11px;color:var(--mid);font-family:var(--font-m);white-space:pre-wrap;word-break:break-all;margin:0;"></pre>
+                <button onclick="copyEmbedText('embed-btn-code')" style="position:absolute;top:8px;right:8px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 10px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;">&#128203; Copy</button>
+              </div>
+            </div>
+            <div>
+              <div class="stab-section-hdr">Iframe Embed Code</div>
+              <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Embed the full estimator directly inside your website page.</div>
+              <div style="position:relative;">
+                <pre id="embed-iframe-code" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-size:11px;color:var(--mid);font-family:var(--font-m);white-space:pre-wrap;word-break:break-all;margin:0;"></pre>
+                <button onclick="copyEmbedText('embed-iframe-code')" style="position:absolute;top:8px;right:8px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 10px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;">&#128203; Copy</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <!-- FULL WIDTH: Branding -->
       <div class="stab-card stab-full">
         <div class="stab-card-hdr" onclick="toggleStabCard('branding')">
@@ -9343,9 +9382,41 @@ function openSettings(){
     r._pcDesignHandler=()=>{
       const v=document.querySelector('input[name="pc-design"]:checked')?.value||'1';
       document.getElementById('s-pc-d1-fields').style.display=v==='2'?'none':'';
-      document.getElementById('s-pc-d2-fields').style.display=v==='2'?'':'none';
+      document.getElementById('s-pc-d2-fields').style.display=v==='2'?'':'';
     };
     r.addEventListener('change',r._pcDesignHandler);
+  });
+  // Populate Share & Embed card
+  populateEmbedCard();
+}
+function populateEmbedCard(){
+  const slug = currentAccount && currentAccount.slug;
+  const noSlug = document.getElementById('embed-no-slug');
+  const hasSlug = document.getElementById('embed-has-slug');
+  if(!noSlug || !hasSlug) return;
+  if(!slug){
+    noSlug.style.display='block'; hasSlug.style.display='none'; return;
+  }
+  noSlug.style.display='none'; hasSlug.style.display='block';
+  const url = 'https://biddrop.us/q/'+slug;
+  const urlEl = document.getElementById('embed-url-display');
+  const openEl = document.getElementById('embed-url-open');
+  const btnEl = document.getElementById('embed-btn-code');
+  const iframeEl = document.getElementById('embed-iframe-code');
+  if(urlEl) urlEl.textContent = url;
+  if(openEl){ openEl.href = url; }
+  if(btnEl) btnEl.textContent = '<a href="'+url+'" target="_blank" style="display:inline-block;background:#F25C05;color:#fff;font-family:sans-serif;font-size:16px;font-weight:700;padding:14px 28px;border-radius:8px;text-decoration:none;">Get a Free Roof Estimate</a>';
+  if(iframeEl) iframeEl.textContent = '<iframe src="'+url+'" width="100%" height="720" frameborder="0" style="border:none;border-radius:12px;" title="Free Roof Estimate"></iframe>';
+}
+function copyEmbedText(elId){
+  const el = document.getElementById(elId);
+  if(!el) return;
+  const text = el.textContent || el.innerText || '';
+  navigator.clipboard.writeText(text).then(()=>toast('Copied!','success')).catch(()=>{
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta); toast('Copied!','success');
   });
 }
 
