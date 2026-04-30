@@ -9387,7 +9387,7 @@ async function loadHotLeads(){
     if(!sess) return;
     // Fetch estimates with QR scan data, sorted by scan count desc then last scan desc
     const {data:rows, error} = await sb.from('estimates')
-      .select('id,address,homeowner,rep,total,qr_scan_count,page_views,page_last_viewed_at,created_at,status,material')
+      .select('id,addr,owner,email,rep,total,qr_scan_count,page_views,page_last_viewed_at,created_at,status,material')
       .eq('account_id', currentAccount.id)
       .gt('page_views', 0)
       .order('page_last_viewed_at', {ascending:false})
@@ -9413,8 +9413,10 @@ async function loadHotLeads(){
       const heatLabel = heatScore>=9?'🔥 Very Hot':heatScore>=4?'🌡 Warm':'👀 Viewed';
       const total = r.total ? '$'+Number(r.total).toLocaleString() : '—';
       // Find pin for quick actions
-      const pin = S.pins.find(p=>p.address&&r.address&&p.address.trim()===r.address.trim());
+      const pin = S.pins.find(p=>p.address&&r.addr&&p.address.trim()===r.addr.trim());
       const pinId = pin ? pin.id : null;
+      const hasGhl = !!(S.cfg&&(S.cfg.ghlApiKey||S.cfg.ghlLocationId));
+      const hasEmail = !!(r.email);
       return '<div class="hl-row" onclick="openHotLeadDetail(\''+r.id+'\')" style="cursor:pointer;">'+
         '<div class="hl-heat" style="background:'+heatColor+'22;border:1px solid '+heatColor+'44;border-radius:8px;padding:6px 10px;text-align:center;min-width:90px;">'+
           '<div style="font-size:11px;font-weight:700;color:'+heatColor+';">'+heatLabel+'</div>'+
@@ -9422,16 +9424,17 @@ async function loadHotLeads(){
           '<div style="font-size:10px;color:var(--muted);">'+views+' view'+(views!==1?'s':'')+'</div>'+
         '</div>'+
         '<div style="flex:1;min-width:0;">'+
-          '<div style="font-weight:700;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(r.homeowner||'Homeowner')+'</div>'+
-          '<div style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(r.address||'')+'</div>'+
+          '<div style="font-weight:700;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(r.owner||'Homeowner')+'</div>'+
+          '<div style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(r.addr||'')+'</div>'+
           '<div style="font-size:11px;color:var(--muted);margin-top:2px;">Last seen: '+lastSeen+' · Rep: '+escHtml(r.rep||'—')+'</div>'+
-        '</div>'+
+          (hasEmail?'<div style="font-size:11px;color:#22C55E;margin-top:1px;">✉ '+escHtml(r.email)+'</div>':'')+'</div>'+
         '<div style="text-align:right;flex-shrink:0;">'+
           '<div style="font-size:16px;font-weight:800;color:var(--accent);">'+total+'</div>'+
           '<div style="font-size:11px;color:var(--muted);">'+escHtml(r.material||'')+'</div>'+
-          '<div style="display:flex;gap:6px;margin-top:6px;justify-content:flex-end;">'+
+          '<div style="display:flex;gap:6px;margin-top:6px;justify-content:flex-end;flex-wrap:wrap;">'+
             '<button onclick="event.stopPropagation();window.open(\'/e/'+r.id+'\',\'_blank\')" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:10px;cursor:pointer;font-weight:700;">View Page</button>'+
-            (pinId?'<button onclick="event.stopPropagation();goTab(\'map\');setTimeout(()=>openPinPanel(\''+pinId+'\'),400)" style="background:var(--accent);border:none;border-radius:6px;padding:4px 8px;color:#fff;font-size:10px;cursor:pointer;font-weight:700;">Open Pin</button>':'')+'</div>'+
+            (pinId?'<button onclick="event.stopPropagation();goTab(\'map\');setTimeout(()=>openPinPanel(\''+pinId+'\'),400)" style="background:var(--accent);border:none;border-radius:6px;padding:4px 8px;color:#fff;font-size:10px;cursor:pointer;font-weight:700;">Open Pin</button>':'')+
+            (hasGhl?'<button onclick="event.stopPropagation();hlSendToGHL(this)" data-est-id="'+r.id+'" data-owner="'+escHtml(r.owner||'')+'" data-addr="'+escHtml(r.addr||'')+'" data-email="'+escHtml(r.email||'')+'" data-total="'+(r.total||0)+'" data-rep="'+escHtml(r.rep||'')+'" style="background:#0f172a;border:1px solid #334155;border-radius:6px;padding:4px 8px;color:#7dd3fc;font-size:10px;cursor:pointer;font-weight:700;">Send to GHL →</button>':'')+'</div>'+
         '</div>'+
       '</div>';
     }).join('');
@@ -9456,6 +9459,91 @@ async function loadHotLeads(){
 function openHotLeadDetail(estimateId){
   window.open('/e/'+estimateId,'_blank');
 }
+
+// ── Send Hot Lead to GHL ──────────────────────────────────────────────────────
+async function hlSendToGHL(btn){
+  const estId = btn.dataset.estId;
+  const owner = btn.dataset.owner || 'Homeowner';
+  const addr  = btn.dataset.addr  || '';
+  let   email = btn.dataset.email || '';
+  const total = parseFloat(btn.dataset.total) || 0;
+  const rep   = btn.dataset.rep   || '';
+
+  // If no email captured yet, show inline prompt
+  if(!email){
+    const row = btn.closest('.hl-row');
+    // Prevent double-prompt
+    if(row && row.querySelector('.hl-email-prompt')) return;
+    const prompt = document.createElement('div');
+    prompt.className='hl-email-prompt';
+    prompt.style.cssText='display:flex;gap:6px;align-items:center;padding:8px 0 2px;flex-wrap:wrap;';
+    prompt.innerHTML=
+      '<span style="font-size:11px;color:var(--muted);">Enter email to send to GHL:</span>'+
+      '<input type="email" placeholder="homeowner@email.com" style="flex:1;min-width:140px;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:11px;">'+
+      '<button style="background:#0f172a;border:1px solid #334155;border-radius:6px;padding:5px 10px;color:#7dd3fc;font-size:11px;cursor:pointer;font-weight:700;">Send</button>'+
+      '<button style="background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;">Cancel</button>';
+    if(row){
+      const info = row.querySelector('div[style*="flex:1"]');
+      if(info) info.appendChild(prompt);
+    }
+    const [, emailInput, sendBtn, cancelBtn] = prompt.children;
+    cancelBtn.onclick = ()=>prompt.remove();
+    sendBtn.onclick = async ()=>{
+      const typed = emailInput.value.trim();
+      if(!typed || !typed.includes('@')){ emailInput.style.borderColor='#EF4444'; return; }
+      // Persist email to estimate
+      if(sb && estId){
+        sb.from('estimates').update({email: typed}).eq('id', estId).then(({error})=>{
+          if(error) console.warn('GHL email save:', error.message);
+        });
+      }
+      btn.dataset.email = typed;
+      prompt.remove();
+      await _doSendToGHL(btn, estId, owner, addr, typed, total, rep);
+    };
+    emailInput.focus();
+    return;
+  }
+
+  await _doSendToGHL(btn, estId, owner, addr, email, total, rep);
+}
+
+async function _doSendToGHL(btn, estId, owner, addr, email, total, rep){
+  if(!S.cfg || (!S.cfg.ghlApiKey && !S.cfg.ghlLocationId)){
+    toast('GHL not configured. Add your GHL API Key in Settings.','error');
+    return;
+  }
+  const origText = btn.textContent;
+  btn.textContent = 'Sending…';
+  btn.disabled = true;
+  try{
+    // Upsert contact in GHL
+    const contactId = await ghlUpsertContact(owner, addr, email);
+    if(!contactId) throw new Error('Could not create GHL contact');
+    // Create opportunity if pipeline configured
+    if(S.cfg.ghlPipelineId){
+      await ghlCreateOpportunity(contactId, owner, addr, total);
+    }
+    // Add a note with estimate page URL
+    const estUrl = window.location.origin+'/e/'+estId;
+    try{
+      await ghlRequest('/contacts/'+contactId+'/notes', 'POST', {
+        body: 'BidDrop Hot Lead\nAddress: '+addr+'\nEstimate Total: $'+Number(total).toLocaleString()+'\nRep: '+(rep||'—')+'\nEstimate Page: '+estUrl
+      });
+    }catch(e){ /* notes are non-blocking */ }
+    btn.textContent = '✓ Sent to GHL';
+    btn.style.background='#052e16';
+    btn.style.color='#4ade80';
+    btn.style.borderColor='#166534';
+    toast('✓ '+owner+' sent to GHL','success');
+  }catch(e){
+    btn.textContent = origText;
+    btn.disabled = false;
+    toast('GHL error: '+e.message,'error');
+    console.error('hlSendToGHL error:', e);
+  }
+}
+
 // timeAgo defined below
 
 // ═══════════════════════════════
@@ -9478,7 +9566,7 @@ async function loadAnalytics(){
     const totalPins = filteredPins.length;
     const signedPins = filteredPins.filter(p=>(p.status||'').toLowerCase()==='signed').length;
     // ── Estimates from Supabase ───────────────────────────────────────────────
-    let estQuery = sb.from('estimates').select('id,address,rep,total,material,qr_scan_count,page_views,created_at,status')
+    let estQuery = sb.from('estimates').select('id,addr,owner,rep,total,material,qr_scan_count,page_views,created_at,status')
       .eq('account_id', currentAccount.id);
     if(cutoff) estQuery = estQuery.gte('created_at', cutoff.toISOString());
     const {data:estimates} = await estQuery.order('created_at',{ascending:false}).limit(2000);
@@ -9487,7 +9575,7 @@ async function loadAnalytics(){
     const totalPipeline = ests.reduce((s,e)=>s+(Number(e.total)||0),0);
     const totalScans = ests.reduce((s,e)=>s+(e.qr_scan_count||0),0);
     // ── Mail queue from Supabase ──────────────────────────────────────────────
-    let qQuery = sb.from('mail_queue').select('id,created_at,status,address,rep_name')
+    let qQuery = sb.from('queue').select('id,created_at,status,addr,owner')
       .eq('account_id', currentAccount.id);
     if(cutoff) qQuery = qQuery.gte('created_at', cutoff.toISOString());
     const {data:queue} = await qQuery.limit(5000);
@@ -9561,7 +9649,8 @@ async function loadAnalytics(){
       if((p.status||'').toLowerCase()==='signed') repMap[rep].signed++;
     });
     q.forEach(m=>{
-      const rep=m.rep_name||'Unknown';
+      // Queue items don't store rep directly — use owner name as proxy, or 'Unknown'
+      const rep=m.owner||'Unknown';
       if(!repMap[rep]) repMap[rep]={name:rep,pins:0,estimates:0,mailers:0,scans:0,signed:0,pipeline:0};
       repMap[rep].mailers++;
     });
