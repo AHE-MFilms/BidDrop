@@ -701,7 +701,16 @@ export default async function handler(req, res) {
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS mailer_credits INTEGER DEFAULT 0`,
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS free_mailer_credits_used INTEGER DEFAULT 0`,
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS free_mailer_credits_reset DATE`,
-          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS print_paid BOOLEAN DEFAULT FALSE`
+          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS print_paid BOOLEAN DEFAULT FALSE`,
+          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS qr_scan_count INTEGER DEFAULT 0`,
+          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS qr_first_scanned_at TIMESTAMPTZ`,
+          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS qr_last_scanned_at TIMESTAMPTZ`,
+          `CREATE TABLE IF NOT EXISTS scan_events (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), estimate_id TEXT NOT NULL, account_id TEXT, scanned_at TIMESTAMPTZ DEFAULT NOW(), source TEXT DEFAULT 'qr', user_agent TEXT, referrer TEXT)`,
+          `CREATE INDEX IF NOT EXISTS idx_scan_events_estimate ON scan_events(estimate_id, scanned_at DESC)`,
+          `CREATE INDEX IF NOT EXISTS idx_scan_events_account ON scan_events(account_id, scanned_at DESC)`,
+          `CREATE TABLE IF NOT EXISTS postcard_scans (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), queue_item_id TEXT, account_id TEXT, owner_name TEXT, address TEXT, estimate_id TEXT, scanned_at TIMESTAMPTZ DEFAULT NOW(), ip TEXT, user_agent TEXT)`,
+          `CREATE INDEX IF NOT EXISTS idx_postcard_scans_account ON postcard_scans(account_id, scanned_at DESC)`,
+          `CREATE INDEX IF NOT EXISTS idx_postcard_scans_estimate ON postcard_scans(estimate_id, scanned_at DESC)`
         ].join('; ');
         const results = [];
         // Run each DDL statement individually via Supabase pg_meta API (uses SERVICE_KEY)

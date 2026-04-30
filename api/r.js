@@ -89,6 +89,7 @@ export default async function handler(req, res) {
   }
 
   // Log the scan
+  const now = new Date().toISOString();
   try {
     await sbFetch('postcard_scans', {
       method: 'POST',
@@ -99,13 +100,35 @@ export default async function handler(req, res) {
         owner_name:    ownerName,
         address:       addr,
         estimate_id:   estimateId || null,
-        scanned_at:    new Date().toISOString(),
+        scanned_at:    now,
         ip:            req.headers['x-forwarded-for'] || req.socket?.remoteAddress || null,
         user_agent:    req.headers['user-agent'] || null
       })
     });
   } catch (e) {
     console.error('[r] scan log error:', e);
+  }
+  // Update qr_scan_count on the estimate and insert into scan_events
+  if (estimateId) {
+    try {
+      const curR = await sbFetch(`estimates?id=eq.${encodeURIComponent(estimateId)}&select=qr_scan_count,qr_first_scanned_at`);
+      if (curR.ok) {
+        const curRows = await curR.json();
+        const cur = (curRows && curRows[0]) || {};
+        const updates = { qr_scan_count: (cur.qr_scan_count || 0) + 1, qr_last_scanned_at: now };
+        if (!cur.qr_first_scanned_at) updates.qr_first_scanned_at = now;
+        await sbFetch(`estimates?id=eq.${encodeURIComponent(estimateId)}`, {
+          method: 'PATCH', body: JSON.stringify(updates), headers: { 'Prefer': 'return=minimal' }
+        });
+        await sbFetch('scan_events', {
+          method: 'POST',
+          body: JSON.stringify({ estimate_id: estimateId, account_id: accountId || null, source: 'qr_postcard', user_agent: (req.headers['user-agent'] || '').substring(0, 300) }),
+          headers: { 'Prefer': 'return=minimal' }
+        });
+      }
+    } catch (e) {
+      console.error('[r] estimate scan update error:', e);
+    }
   }
 
   // Redirect priority:

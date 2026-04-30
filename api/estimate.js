@@ -232,6 +232,30 @@ export default async function handler(req, res) {
       return;
     }
 
+    // ── POST track_qr_scan ────────────────────────────────────────────────────
+    if (action === 'track_qr_scan') {
+      const { id } = req.body || {};
+      if (!id) { res.status(400).json({ error: 'id required' }); return; }
+      const now = new Date().toISOString();
+      const curR = await sbFetch(`estimates?id=eq.${encodeURIComponent(id)}&select=account_id,qr_scan_count,qr_first_scanned_at`);
+      const curRows = await curR.json();
+      if (!curRows || !curRows.length) { res.status(404).json({ error: 'Not found' }); return; }
+      const cur = curRows[0];
+      const updates = { qr_scan_count: (cur.qr_scan_count || 0) + 1, qr_last_scanned_at: now };
+      if (!cur.qr_first_scanned_at) updates.qr_first_scanned_at = now;
+      await sbFetch(`estimates?id=eq.${encodeURIComponent(id)}`, {
+        method: 'PATCH', body: JSON.stringify(updates), headers: { 'Prefer': 'return=minimal' }
+      });
+      const ua = (req.headers['user-agent'] || '').substring(0, 300);
+      const ref = (req.headers['referer'] || '').substring(0, 300);
+      await sbFetch('scan_events', {
+        method: 'POST',
+        body: JSON.stringify({ estimate_id: id, account_id: cur.account_id || null, source: 'qr', user_agent: ua, referrer: ref }),
+        headers: { 'Prefer': 'return=minimal' }
+      });
+      res.json({ ok: true, scan_count: (cur.qr_scan_count || 0) + 1 });
+      return;
+    }
     // ── POST capture-lead ──────────────────────────────────────────────────────
     if (action === 'capture_lead' || action === 'capture-lead') {
       const { estimate_id, first_name, last_name, email, phone } = req.body || {};
