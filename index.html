@@ -1734,53 +1734,238 @@ tr:hover td{background:var(--card);}
           <div class="stab-section-hdr">Cover Letter (Page 1)</div>
           <div class="fg"><label class="fl">Hook &#8212; Opening Paragraph</label><textarea class="fi" id="s-hook" rows="3" style="resize:vertical;font-size:13px;" placeholder="Most homeowners are tired of door-knockers..."></textarea></div>
           <div class="fg"><label class="fl">Why They Received This Bid</label><textarea class="fi" id="s-why" rows="2" style="resize:vertical;font-size:13px;" placeholder="We were in your neighborhood assessing storm damage..."></textarea></div>
-          <div class="stab-section-hdr" style="margin-top:16px;">Postcard (6&#215;9 Mailer)</div>
-          <div class="fg">
-            <label class="fl">Postcard Design</label>
-            <div style="display:flex;gap:10px;margin-top:4px;">
-              <label style="flex:1;cursor:pointer;">
-                <input type="radio" name="pc-design" id="s-pc-design-1" value="1" style="accent-color:var(--accent);margin-right:6px;">
-                <span style="font-size:12px;color:var(--mid);font-weight:600;">Design 1 &mdash; Estimate Reveal</span>
-                <div style="font-size:10px;color:var(--muted);margin-top:2px;margin-left:20px;">House photo full background, price overlay</div>
-              </label>
-              <label style="flex:1;cursor:pointer;">
-                <input type="radio" name="pc-design" id="s-pc-design-2" value="2" style="accent-color:var(--accent);margin-right:6px;">
-                <span style="font-size:12px;color:var(--mid);font-weight:600;">Design 2 &mdash; Neighborhood Bold</span>
-                <div style="font-size:10px;color:var(--muted);margin-top:2px;margin-left:20px;">Left text panel + right house photo + brand bar</div>
-              </label>
+          <!-- ═══════════════════════════════════════════════════════════
+               POSTCARD DESIGNER — Full Customization
+          ═══════════════════════════════════════════════════════════ -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;margin-bottom:8px;">
+            <div class="stab-section-hdr" style="margin:0;">&#127760; Postcard Designer</div>
+            <button onclick="pcPreviewRefresh()" style="background:var(--accent);border:none;border-radius:7px;padding:7px 14px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font-b);">&#128247; Preview Card</button>
+          </div>
+          <!-- Live Preview Panel -->
+          <div id="pc-designer-preview" style="background:#111;border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:16px;">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:8px;text-align:center;letter-spacing:.5px;text-transform:uppercase;">Live Preview &mdash; 6&times;9 Postcard</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+              <div style="flex:1;min-width:260px;">
+                <div style="font-size:9px;color:var(--muted);text-align:center;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;">Front</div>
+                <canvas id="pc-preview-front" style="width:100%;border-radius:6px;display:block;background:#1a2333;"></canvas>
+              </div>
+              <div style="flex:1;min-width:260px;">
+                <div style="font-size:9px;color:var(--muted);text-align:center;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;">Back</div>
+                <canvas id="pc-preview-back" style="width:100%;border-radius:6px;display:block;background:#1a1a1a;"></canvas>
+              </div>
+            </div>
+            <div id="pc-preview-spinner" style="text-align:center;padding:20px;color:var(--muted);font-size:12px;display:none;">&#9696; Rendering preview&hellip;</div>
+          </div>
+
+          <!-- FRONT SIDE CONTROLS -->
+          <div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;">
+            <div style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;">&#9632; Front Side</div>
+
+            <!-- Design selector -->
+            <div class="fg" style="margin-bottom:10px;">
+              <label class="fl">Layout</label>
+              <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">
+                <label style="flex:1;min-width:120px;cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:7px;padding:8px 10px;">
+                  <input type="radio" name="pc-design" id="s-pc-design-1" value="1" style="accent-color:var(--accent);margin-right:5px;">
+                  <span style="font-size:11px;color:var(--mid);font-weight:600;">Estimate Reveal</span>
+                  <div style="font-size:9px;color:var(--muted);margin-top:2px;margin-left:18px;">Full house photo + price overlay</div>
+                </label>
+                <label style="flex:1;min-width:120px;cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:7px;padding:8px 10px;">
+                  <input type="radio" name="pc-design" id="s-pc-design-2" value="2" style="accent-color:var(--accent);margin-right:5px;">
+                  <span style="font-size:11px;color:var(--mid);font-weight:600;">Neighborhood Bold</span>
+                  <div style="font-size:9px;color:var(--muted);margin-top:2px;margin-left:18px;">Left text + right photo + brand bar</div>
+                </label>
+              </div>
+            </div>
+
+            <!-- DESIGN 1 FRONT FIELDS -->
+            <div id="s-pc-d1-fields">
+              <!-- Headline -->
+              <div class="fg">
+                <label class="fl">Headline Line 1 <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; large text bottom-left</span></label>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <input class="fi" id="s-pc-headline1" type="text" style="flex:1;font-size:13px;" placeholder="We Assessed">
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:80px;">
+                    <span style="font-size:9px;color:var(--muted);">Size: <span id="s-pc-hl1-sz-val">160</span>px</span>
+                    <input type="range" id="s-pc-hl1-sz" min="80" max="220" value="160" style="width:80px;accent-color:var(--accent);" oninput="document.getElementById('s-pc-hl1-sz-val').textContent=this.value">
+                  </div>
+                </div>
+              </div>
+              <div class="fg">
+                <label class="fl">Headline Line 2</label>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <input class="fi" id="s-pc-headline2" type="text" style="flex:1;font-size:13px;" placeholder="Your Roof.">
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:80px;">
+                    <span style="font-size:9px;color:var(--muted);">Size: <span id="s-pc-hl2-sz-val">160</span>px</span>
+                    <input type="range" id="s-pc-hl2-sz" min="80" max="220" value="160" style="width:80px;accent-color:var(--accent);" oninput="document.getElementById('s-pc-hl2-sz-val').textContent=this.value">
+                  </div>
+                </div>
+              </div>
+              <!-- Badge -->
+              <div class="frow">
+                <div class="fg">
+                  <label class="fl">Badge Text <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; top-right pill</span></label>
+                  <input class="fi" id="s-pc-badge-text" type="text" style="font-size:13px;" placeholder="YOUR ROOF ESTIMATE IS READY">
+                </div>
+                <div class="fg" style="max-width:100px;">
+                  <label class="fl">Badge Color</label>
+                  <input class="fi" id="s-pc-badge-color" type="color" style="height:36px;padding:2px 4px;" value="#F25C05">
+                </div>
+              </div>
+              <!-- Photo layout -->
+              <div class="fg">
+                <label class="fl">Front Photo Layout</label>
+                <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">
+                  <label style="cursor:pointer;display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mid);background:var(--card);border:1px solid var(--border);border-radius:6px;padding:6px 10px;">
+                    <input type="radio" name="pc-photo-layout" value="single" id="s-pc-photo-single" style="accent-color:var(--accent);" checked> Single (full bleed)
+                  </label>
+                  <label style="cursor:pointer;display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mid);background:var(--card);border:1px solid var(--border);border-radius:6px;padding:6px 10px;">
+                    <input type="radio" name="pc-photo-layout" value="split2" id="s-pc-photo-split2" style="accent-color:var(--accent);"> Split 2-Photo
+                  </label>
+                  <label style="cursor:pointer;display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mid);background:var(--card);border:1px solid var(--border);border-radius:6px;padding:6px 10px;">
+                    <input type="radio" name="pc-photo-layout" value="grid3" id="s-pc-photo-grid3" style="accent-color:var(--accent);"> 3-Photo Grid
+                  </label>
+                </div>
+              </div>
+              <!-- Show/hide toggles -->
+              <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;">
+                <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mid);cursor:pointer;">
+                  <input type="checkbox" id="s-pc-show-price" checked style="accent-color:var(--accent);"> Show price on front
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mid);cursor:pointer;">
+                  <input type="checkbox" id="s-pc-show-monthly" checked style="accent-color:var(--accent);"> Show monthly payment
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mid);cursor:pointer;">
+                  <input type="checkbox" id="s-pc-show-phone" checked style="accent-color:var(--accent);"> Show phone on front
+                </label>
+              </div>
+              <!-- Address font size -->
+              <div class="fg" style="margin-top:8px;">
+                <label class="fl">Address Font Size</label>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <input type="range" id="s-pc-addr-sz" min="36" max="90" value="62" style="flex:1;accent-color:var(--accent);" oninput="document.getElementById('s-pc-addr-sz-val').textContent=this.value">
+                  <span id="s-pc-addr-sz-val" style="font-size:11px;color:var(--mid);min-width:30px;">62</span>px
+                </div>
+              </div>
+              <!-- Price font size -->
+              <div class="fg">
+                <label class="fl">Price Font Size</label>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <input type="range" id="s-pc-price-sz" min="40" max="120" value="78" style="flex:1;accent-color:var(--accent);" oninput="document.getElementById('s-pc-price-sz-val').textContent=this.value">
+                  <span id="s-pc-price-sz-val" style="font-size:11px;color:var(--mid);min-width:30px;">78</span>px
+                </div>
+              </div>
+            </div>
+
+            <!-- DESIGN 2 FRONT FIELDS -->
+            <div id="s-pc-d2-fields" style="display:none;">
+              <div class="frow">
+                <div class="fg"><label class="fl">Top Line</label><input class="fi" id="s-pc-d2-topline" type="text" style="font-size:13px;" placeholder="PROTECT YOUR HOME WITH"></div>
+                <div class="fg"><label class="fl">Accent Word</label><input class="fi" id="s-pc-d2-accent" type="text" style="font-size:13px;" placeholder="AFFORDABLE"></div>
+              </div>
+              <div class="frow">
+                <div class="fg"><label class="fl">Headline Line 1</label><input class="fi" id="s-pc-d2-headline" type="text" style="font-size:13px;" placeholder="ROOFING"></div>
+                <div class="fg"><label class="fl">Headline Line 2</label><input class="fi" id="s-pc-d2-headline2" type="text" style="font-size:13px;" placeholder="SOLUTIONS!"></div>
+              </div>
+              <div class="frow">
+                <div class="fg"><label class="fl">Bullet 1</label><input class="fi" id="s-pc-d2-bullet1" type="text" style="font-size:13px;" placeholder="ROOFING"></div>
+                <div class="fg"><label class="fl">Bullet 2</label><input class="fi" id="s-pc-d2-bullet2" type="text" style="font-size:13px;" placeholder="SIDING"></div>
+                <div class="fg"><label class="fl">Bullet 3</label><input class="fi" id="s-pc-d2-bullet3" type="text" style="font-size:13px;" placeholder="GUTTERS"></div>
+              </div>
+              <div class="frow">
+                <div class="fg"><label class="fl">Badge Line 1</label><input class="fi" id="s-pc-d2-badge1" type="text" style="font-size:13px;" placeholder="FREE"></div>
+                <div class="fg"><label class="fl">Badge Line 2</label><input class="fi" id="s-pc-d2-badge2" type="text" style="font-size:13px;" placeholder="GUTTERS"></div>
+              </div>
+              <div class="fg"><label class="fl">Badge Fine Print</label><input class="fi" id="s-pc-d2-badgesub" type="text" style="font-size:13px;" placeholder="With this card. Offer expires 30 days from mail date."></div>
+              <div class="frow">
+                <div class="fg"><label class="fl">CTA Text</label><input class="fi" id="s-pc-d2-cta" type="text" style="font-size:13px;" placeholder="SCHEDULE A FREE ESTIMATE TODAY!"></div>
+                <div class="fg" style="max-width:100px;"><label class="fl">Bar Color</label><input class="fi" id="s-pc-d2-barcolor" type="color" style="height:36px;padding:2px 4px;" value="#CC1111"></div>
+              </div>
             </div>
           </div>
-          <div class="fg" id="s-pc-d1-fields">
-            <label class="fl">Hook Headline <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; Design 1 front</span></label>
-            <input class="fi" id="s-pc-hook" type="text" style="font-size:13px;" placeholder="Your Roof Needs Attention.">
+
+          <!-- BACK SIDE CONTROLS -->
+          <div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;">
+            <div style="font-size:11px;font-weight:700;color:#60a5fa;letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;">&#9632; Back Side</div>
+
+            <!-- Hook -->
+            <div class="fg">
+              <label class="fl">Hook Paragraph <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; sales pitch top-right</span></label>
+              <div style="display:flex;gap:8px;">
+                <textarea class="fi" id="s-pc-hook" rows="2" style="flex:1;resize:vertical;font-size:13px;" placeholder="Most homeowners dread the pushy roofing salesman..."></textarea>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:80px;">
+                  <span style="font-size:9px;color:var(--muted);">Size: <span id="s-pc-hook-sz-val">36</span>px</span>
+                  <input type="range" id="s-pc-hook-sz" min="22" max="56" value="36" style="width:80px;accent-color:var(--accent);" oninput="document.getElementById('s-pc-hook-sz-val').textContent=this.value">
+                </div>
+              </div>
+            </div>
+
+            <!-- Why paragraph -->
+            <div class="fg">
+              <label class="fl">Why Paragraph <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; bottom-left section</span></label>
+              <div style="display:flex;gap:8px;">
+                <textarea class="fi" id="s-pc-why" rows="2" style="flex:1;resize:vertical;font-size:13px;" placeholder="We assessed your roof and found..."></textarea>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:80px;">
+                  <span style="font-size:9px;color:var(--muted);">Size: <span id="s-pc-why-sz-val">30</span>px</span>
+                  <input type="range" id="s-pc-why-sz" min="18" max="48" value="30" style="width:80px;accent-color:var(--accent);" oninput="document.getElementById('s-pc-why-sz-val').textContent=this.value">
+                </div>
+              </div>
+            </div>
+
+            <!-- Quote -->
+            <div class="fg">
+              <label class="fl">Customer Quote <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; 5-star review</span></label>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input class="fi" id="s-pc-quote" type="text" style="flex:1;font-size:13px;" placeholder='"They replaced our roof in one day." &#8212; Mike D.'>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:80px;">
+                  <span style="font-size:9px;color:var(--muted);">Size: <span id="s-pc-quote-sz-val">32</span>px</span>
+                  <input type="range" id="s-pc-quote-sz" min="18" max="48" value="32" style="width:80px;accent-color:var(--accent);" oninput="document.getElementById('s-pc-quote-sz-val').textContent=this.value">
+                </div>
+              </div>
+            </div>
+
+            <!-- Guarantee -->
+            <div class="fg">
+              <label class="fl">Guarantee Tagline <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; below phone</span></label>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input class="fi" id="s-pc-guarantee" type="text" style="flex:1;font-size:13px;" placeholder="No door-knocking. No pressure. Just your price.">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:80px;">
+                  <span style="font-size:9px;color:var(--muted);">Size: <span id="s-pc-guar-sz-val">26</span>px</span>
+                  <input type="range" id="s-pc-guar-sz" min="16" max="42" value="26" style="width:80px;accent-color:var(--accent);" oninput="document.getElementById('s-pc-guar-sz-val').textContent=this.value">
+                </div>
+              </div>
+            </div>
+
+            <!-- Scan CTA -->
+            <div class="frow">
+              <div class="fg">
+                <label class="fl">Scan CTA Text <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; above QR code</span></label>
+                <input class="fi" id="s-pc-scan-cta" type="text" style="font-size:13px;" placeholder="SCAN TO BOOK">
+              </div>
+              <div class="fg">
+                <label class="fl">Scan Sub-text <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; below CTA</span></label>
+                <input class="fi" id="s-pc-scan-sub" type="text" style="font-size:13px;" placeholder="No-pressure booking">
+              </div>
+            </div>
+
+            <!-- Phone size -->
+            <div class="fg">
+              <label class="fl">Phone Number Size</label>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <input type="range" id="s-pc-phone-sz" min="28" max="72" value="42" style="flex:1;accent-color:var(--accent);" oninput="document.getElementById('s-pc-phone-sz-val').textContent=this.value">
+                <span id="s-pc-phone-sz-val" style="font-size:11px;color:var(--mid);min-width:30px;">42</span>px
+              </div>
+            </div>
+
+            <!-- Back badge color -->
+            <div class="fg">
+              <label class="fl">Back Badge Color <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; pill on back (defaults to brand color)</span></label>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input class="fi" id="s-pc-back-badge-text" type="text" style="flex:1;font-size:13px;" placeholder="YOUR ROOF ESTIMATE IS READY">
+                <input id="s-pc-back-badge-color" type="color" style="height:36px;width:48px;padding:2px 4px;border:1px solid var(--border);border-radius:6px;background:var(--card);" value="#F25C05">
+              </div>
+            </div>
           </div>
-          <div id="s-pc-d2-fields" style="display:none;">
-            <div class="frow">
-              <div class="fg"><label class="fl">Top Line <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; small white text above accent</span></label><input class="fi" id="s-pc-d2-topline" type="text" style="font-size:13px;" placeholder="PROTECT YOUR HOME WITH"></div>
-              <div class="fg"><label class="fl">Accent Word <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; large yellow italic (e.g. AFFORDABLE)</span></label><input class="fi" id="s-pc-d2-accent" type="text" style="font-size:13px;" placeholder="AFFORDABLE"></div>
-            </div>
-            <div class="frow">
-              <div class="fg"><label class="fl">Headline Line 1 <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; large bold white (e.g. ROOFING)</span></label><input class="fi" id="s-pc-d2-headline" type="text" style="font-size:13px;" placeholder="ROOFING"></div>
-              <div class="fg"><label class="fl">Headline Line 2 <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; e.g. SOLUTIONS!</span></label><input class="fi" id="s-pc-d2-headline2" type="text" style="font-size:13px;" placeholder="SOLUTIONS!"></div>
-            </div>
-            <div class="frow">
-              <div class="fg"><label class="fl">Bullet 1</label><input class="fi" id="s-pc-d2-bullet1" type="text" style="font-size:13px;" placeholder="ROOFING"></div>
-              <div class="fg"><label class="fl">Bullet 2</label><input class="fi" id="s-pc-d2-bullet2" type="text" style="font-size:13px;" placeholder="SIDING"></div>
-              <div class="fg"><label class="fl">Bullet 3</label><input class="fi" id="s-pc-d2-bullet3" type="text" style="font-size:13px;" placeholder="GUTTERS"></div>
-            </div>
-            <div class="frow">
-              <div class="fg"><label class="fl">Badge Line 1 <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; starburst top (e.g. FREE)</span></label><input class="fi" id="s-pc-d2-badge1" type="text" style="font-size:13px;" placeholder="FREE"></div>
-              <div class="fg"><label class="fl">Badge Line 2 <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; starburst bottom (e.g. GUTTERS)</span></label><input class="fi" id="s-pc-d2-badge2" type="text" style="font-size:13px;" placeholder="GUTTERS"></div>
-            </div>
-            <div class="fg"><label class="fl">Badge Fine Print <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; small text inside starburst</span></label><input class="fi" id="s-pc-d2-badgesub" type="text" style="font-size:13px;" placeholder="With this card. Offer expires 30 days from mail date."></div>
-            <div class="frow">
-              <div class="fg"><label class="fl">CTA Text <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; red bar top line</span></label><input class="fi" id="s-pc-d2-cta" type="text" style="font-size:13px;" placeholder="SCHEDULE A FREE ESTIMATE TODAY!"></div>
-              <div class="fg"><label class="fl">Bar Color <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; right section of bottom bar</span></label><input class="fi" id="s-pc-d2-barcolor" type="color" style="height:36px;padding:2px 4px;" value="#CC1111"></div>
-            </div>
-          </div>
-          <div class="fg"><label class="fl">Why Paragraph <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; postcard back</span></label><textarea class="fi" id="s-pc-why" rows="2" style="resize:vertical;font-size:13px;" placeholder="We assessed your roof and found..."></textarea></div>
-          <div class="fg"><label class="fl">Customer Quote <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; 5-star review on back</span></label><input class="fi" id="s-pc-quote" type="text" style="font-size:13px;" placeholder="&quot;They replaced our roof in one day.&quot; &#8212; Mike D."></div>
-          <div class="fg"><label class="fl">Guarantee Tagline <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; below price strip</span></label><input class="fi" id="s-pc-guarantee" type="text" style="font-size:13px;" placeholder="No door-knocking. No pressure. Just your price."></div>
           <div class="stab-section-hdr" style="margin-top:16px;">Your Differentiators (Page 3)</div>
           <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Checkmarks in your column vs competitors.</div>
           <div class="frow"><div class="fg"><input class="fi" id="s-d1" placeholder="Licensed, Bonded &amp; Insured"></div><div class="fg"><input class="fi" id="s-d2" placeholder="Manufacturer Certified"></div></div>
@@ -2226,6 +2411,27 @@ async function syncAccountToSupabase(){
     hook_letter: cfg.hookLetter, why_received: cfg.whyReceived,
     postcard_hook: cfg.postcardHook, postcard_why: cfg.postcardWhy,
     postcard_quote: cfg.postcardQuote, postcard_guarantee: cfg.postcardGuarantee,
+    postcard_headline1: cfg.postcardHeadline1||null,
+    postcard_headline2: cfg.postcardHeadline2||null,
+    postcard_badge_text: cfg.postcardBadgeText||null,
+    postcard_badge_color: cfg.postcardBadgeColor||null,
+    postcard_back_badge_text: cfg.postcardBackBadgeText||null,
+    postcard_back_badge_color: cfg.postcardBackBadgeColor||null,
+    postcard_scan_cta: cfg.postcardScanCta||null,
+    postcard_scan_sub: cfg.postcardScanSub||null,
+    postcard_photo_layout: cfg.postcardPhotoLayout||'single',
+    postcard_show_price: cfg.postcardShowPrice!==false,
+    postcard_show_monthly: cfg.postcardShowMonthly!==false,
+    postcard_show_phone: cfg.postcardShowPhone!==false,
+    postcard_hl1_size: cfg.postcardHl1Size||160,
+    postcard_hl2_size: cfg.postcardHl2Size||160,
+    postcard_hook_size: cfg.postcardHookSize||36,
+    postcard_why_size: cfg.postcardWhySize||30,
+    postcard_quote_size: cfg.postcardQuoteSize||32,
+    postcard_guar_size: cfg.postcardGuarSize||26,
+    postcard_phone_size: cfg.postcardPhoneSize||42,
+    postcard_addr_size: cfg.postcardAddrSize||62,
+    postcard_price_size: cfg.postcardPriceSize||78,
     financing_enabled: cfg.financingEnabled, financing_apr: cfg.financingApr,
     financing_term: cfg.financingTerm, financing_down: cfg.financingDown,
     diff1: cfg.diff1, diff2: cfg.diff2, diff3: cfg.diff3,
@@ -2281,6 +2487,27 @@ function accountRowToCfg(row){
     postcardWhy: row.postcard_why||DEFAULTS.postcardWhy,
     postcardQuote: row.postcard_quote||DEFAULTS.postcardQuote,
     postcardGuarantee: row.postcard_guarantee||DEFAULTS.postcardGuarantee,
+    postcardHeadline1: row.postcard_headline1||'We Assessed',
+    postcardHeadline2: row.postcard_headline2||'Your Roof.',
+    postcardBadgeText: row.postcard_badge_text||'YOUR ROOF ESTIMATE IS READY',
+    postcardBadgeColor: row.postcard_badge_color||row.brand_color||'#F25C05',
+    postcardBackBadgeText: row.postcard_back_badge_text||'YOUR ROOF ESTIMATE IS READY',
+    postcardBackBadgeColor: row.postcard_back_badge_color||row.brand_color||'#F25C05',
+    postcardScanCta: row.postcard_scan_cta||'SCAN TO BOOK',
+    postcardScanSub: row.postcard_scan_sub||'No-pressure booking',
+    postcardPhotoLayout: row.postcard_photo_layout||'single',
+    postcardShowPrice: row.postcard_show_price!==false,
+    postcardShowMonthly: row.postcard_show_monthly!==false,
+    postcardShowPhone: row.postcard_show_phone!==false,
+    postcardHl1Size: row.postcard_hl1_size||160,
+    postcardHl2Size: row.postcard_hl2_size||160,
+    postcardHookSize: row.postcard_hook_size||36,
+    postcardWhySize: row.postcard_why_size||30,
+    postcardQuoteSize: row.postcard_quote_size||32,
+    postcardGuarSize: row.postcard_guar_size||26,
+    postcardPhoneSize: row.postcard_phone_size||42,
+    postcardAddrSize: row.postcard_addr_size||62,
+    postcardPriceSize: row.postcard_price_size||78,
     financingEnabled: row.financing_enabled!==false,
     financingApr: row.financing_apr||9.99,
     financingTerm: row.financing_term||60,
@@ -7437,6 +7664,82 @@ function wrapText(ctx,text,maxWidth){
   return lines;
 }
 
+// ═══════════════════════════════════════════════════════════
+// POSTCARD DESIGNER — Live Preview
+// ═══════════════════════════════════════════════════════════
+async function pcPreviewRefresh(){
+  // Build a temporary cfg from current form values without saving
+  const v=id=>{ const el=document.getElementById(id); return el?(el.value||''):''; };
+  const tmpCfg=Object.assign({},S.cfg||{},{
+    postcardDesign:(document.querySelector('input[name="pc-design"]:checked')||{value:'1'}).value,
+    postcardHeadline1:v('s-pc-headline1')||'We Assessed',
+    postcardHeadline2:v('s-pc-headline2')||'Your Roof.',
+    postcardBadgeText:v('s-pc-badge-text')||'YOUR ROOF ESTIMATE IS READY',
+    postcardBadgeColor:v('s-pc-badge-color')||S.cfg?.brandColor||'#F25C05',
+    postcardBackBadgeText:v('s-pc-back-badge-text')||'YOUR ROOF ESTIMATE IS READY',
+    postcardBackBadgeColor:v('s-pc-back-badge-color')||S.cfg?.brandColor||'#F25C05',
+    postcardHook:v('s-pc-hook'),
+    postcardWhy:v('s-pc-why'),
+    postcardQuote:v('s-pc-quote'),
+    postcardGuarantee:v('s-pc-guarantee'),
+    postcardScanCta:v('s-pc-scan-cta')||'SCAN TO BOOK',
+    postcardScanSub:v('s-pc-scan-sub')||'No-pressure booking',
+    postcardPhotoLayout:(document.querySelector('input[name="pc-photo-layout"]:checked')||{value:'single'}).value,
+    postcardShowPrice:!!(document.getElementById('s-pc-show-price')&&document.getElementById('s-pc-show-price').checked),
+    postcardShowMonthly:!!(document.getElementById('s-pc-show-monthly')&&document.getElementById('s-pc-show-monthly').checked),
+    postcardShowPhone:!!(document.getElementById('s-pc-show-phone')&&document.getElementById('s-pc-show-phone').checked),
+    postcardHl1Size:parseInt(v('s-pc-hl1-sz'))||160,
+    postcardHl2Size:parseInt(v('s-pc-hl2-sz'))||160,
+    postcardHookSize:parseInt(v('s-pc-hook-sz'))||36,
+    postcardWhySize:parseInt(v('s-pc-why-sz'))||30,
+    postcardQuoteSize:parseInt(v('s-pc-quote-sz'))||32,
+    postcardGuarSize:parseInt(v('s-pc-guar-sz'))||26,
+    postcardPhoneSize:parseInt(v('s-pc-phone-sz'))||42,
+    postcardAddrSize:parseInt(v('s-pc-addr-sz'))||62,
+    postcardPriceSize:parseInt(v('s-pc-price-sz'))||78,
+  });
+  // Build a sample item for preview
+  const sampleItem={
+    addr:(S.cfg?.companyName?S.cfg.companyName+' Sample Address':'123 Sample Street, Your City, MI 48000'),
+    total:8500,
+    id:null,
+    photo_url:null,
+    all_photos:[],
+  };
+  // Temporarily swap cfg
+  const origCfg=S.cfg;
+  S.cfg=tmpCfg;
+  const spinner=document.getElementById('pc-preview-spinner');
+  if(spinner) spinner.style.display='block';
+  try{
+    const design=tmpCfg.postcardDesign||'1';
+    const frontDataUrl=design==='2'
+      ? await renderPostcard6x9FrontCanvasD2(sampleItem)
+      : await renderPostcard6x9FrontCanvas(sampleItem);
+    const backDataUrl=await renderPostcard6x9BackCanvas(sampleItem);
+    // Render into preview canvases
+    function renderToCanvas(canvasId,dataUrl){
+      const canvas=document.getElementById(canvasId);
+      if(!canvas||!dataUrl)return;
+      const img=new Image();
+      img.onload=()=>{
+        canvas.width=img.width;canvas.height=img.height;
+        const ctx=canvas.getContext('2d');
+        ctx.drawImage(img,0,0);
+      };
+      img.src=dataUrl;
+    }
+    renderToCanvas('pc-preview-front',frontDataUrl);
+    renderToCanvas('pc-preview-back',backDataUrl);
+    toast('Preview updated!');
+  } catch(err){
+    console.error('pcPreviewRefresh error',err);
+    toast('Preview error: '+err.message,'error');
+  } finally {
+    S.cfg=origCfg;
+    if(spinner) spinner.style.display='none';
+  }
+}
 async function renderPostcard6x9FrontCanvas(item){
   const cfg=S.cfg||{};
   // Lob 6x9 postcard: 2775x1875px portrait at 300dpi (9.25"x6.25" bleed)
@@ -7458,19 +7761,54 @@ async function renderPostcard6x9FrontCanvas(item){
   if(finEnabled&&total){const loan=total*(1-finDown/100);const r=finApr/100/12;finMo=r===0?Math.round(loan/finTerm):Math.round(loan*r*Math.pow(1+r,finTerm)/(Math.pow(1+r,finTerm)-1));}
   const housePhotoUrl=item.photo_url||(item.photo_data&&item.photo_data.startsWith('http')?item.photo_data:null);
   const logoUrl=(cfg.logoData&&cfg.logoData.startsWith('http'))?cfg.logoData:null;
-  const [houseImg,logoImg]=await Promise.all([loadImg(housePhotoUrl),loadImg(logoUrl)]);
+  // New designer config fields
+  const hl1Txt=cfg.postcardHeadline1||'We Assessed';
+  const hl2Txt=cfg.postcardHeadline2||'Your Roof.';
+  const badgeTxtCfg=cfg.postcardBadgeText||'YOUR ROOF ESTIMATE IS READY';
+  const badgeColorCfg=cfg.postcardBadgeColor||color;
+  const hl1Size=cfg.postcardHl1Size||160;
+  const hl2Size=cfg.postcardHl2Size||160;
+  const addrSize=cfg.postcardAddrSize||62;
+  const priceSize=cfg.postcardPriceSize||78;
+  const showPrice=cfg.postcardShowPrice!==false;
+  const showMonthly=cfg.postcardShowMonthly!==false;
+  const showPhone=cfg.postcardShowPhone!==false;
+  const photoLayout=cfg.postcardPhotoLayout||'single';
+  // Load extra photos for multi-photo layouts
+  const extraPhoto1Url=item.all_photos&&item.all_photos[0]?item.all_photos[0]:null;
+  const extraPhoto2Url=item.all_photos&&item.all_photos[1]?item.all_photos[1]:null;
+  const [houseImg,logoImg,extraImg1,extraImg2]=await Promise.all([loadImg(housePhotoUrl),loadImg(logoUrl),loadImg(extraPhoto1Url),loadImg(extraPhoto2Url)]);
   const canvas=document.createElement('canvas');
   canvas.width=W;canvas.height=H;
   const ctx=canvas.getContext('2d');
-  // Background: house photo cover-fit
-  if(houseImg){
-    const scale=Math.max(W/houseImg.width,H/houseImg.height);
-    const sw=houseImg.width*scale,sh=houseImg.height*scale;
-    ctx.drawImage(houseImg,(W-sw)/2,(H-sh)/2,sw,sh);
-  } else {
-    ctx.fillStyle='#1a2333';ctx.fillRect(0,0,W,H);
+  // ── Background: photo layout ──────────────────────────────────────────────
+  function drawCover(img,x,y,w,h){
+    if(!img){ctx.fillStyle='#1a2333';ctx.fillRect(x,y,w,h);return;}
+    const scale=Math.max(w/img.width,h/img.height);
+    const sw=img.width*scale,sh=img.height*scale;
+    ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();
+    ctx.drawImage(img,x+(w-sw)/2,y+(h-sh)/2,sw,sh);
+    ctx.restore();
   }
-  // Dark gradient overlay (top light, bottom dark)
+  if(photoLayout==='split2'){
+    const halfW=Math.round(W/2);
+    drawCover(houseImg,0,0,halfW,H);
+    drawCover(extraImg1||houseImg,halfW,0,W-halfW,H);
+    // Thin divider
+    ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(halfW-2,0,4,H);
+  } else if(photoLayout==='grid3'){
+    const topH=Math.round(H*0.6);
+    const botH=H-topH;
+    const halfW=Math.round(W/2);
+    drawCover(houseImg,0,0,W,topH);
+    drawCover(extraImg1||houseImg,0,topH,halfW,botH);
+    drawCover(extraImg2||extraImg1||houseImg,halfW,topH,W-halfW,botH);
+    ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(0,topH-2,W,4);
+    ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(halfW-2,topH,4,botH);
+  } else {
+    drawCover(houseImg,0,0,W,H);
+  }
+  // Dark gradient overlay
   const grad=ctx.createLinearGradient(0,0,0,H);
   grad.addColorStop(0,'rgba(0,0,0,0.3)');
   grad.addColorStop(0.4,'rgba(0,0,0,0.15)');
@@ -7487,39 +7825,46 @@ async function renderPostcard6x9FrontCanvas(item){
     ctx.fillText(co,PAD,topY+70);
   }
   // Badge pill
-  const badgeTxt='YOUR ROOF ESTIMATE IS READY';
   ctx.font='bold 42px Arial';
-  const btw=ctx.measureText(badgeTxt).width;
+  const btw=ctx.measureText(badgeTxtCfg).width;
   const bx=W-PAD-btw-56,by=topY,bw=btw+56,bh=72,br=36;
-  ctx.fillStyle=color;
+  ctx.fillStyle=badgeColorCfg;
   roundRect(ctx,bx,by,bw,bh,br);ctx.fill();
   ctx.fillStyle='#fff';ctx.textBaseline='middle';
-  ctx.fillText(badgeTxt,bx+28,by+bh/2);
+  ctx.fillText(badgeTxtCfg,bx+28,by+bh/2);
   ctx.textBaseline='alphabetic';
   // HEADLINE (bottom-left area)
-  ctx.fillStyle='#fff';ctx.font='bold 160px Arial';
-  ctx.fillText('We Assessed',PAD,H-530);
-  ctx.fillText('Your Roof.',PAD,H-350);
+  ctx.fillStyle='#fff';
+  ctx.font='bold '+hl1Size+'px Arial';
+  const hl1Y=H-(showPrice?530:420);
+  ctx.fillText(hl1Txt,PAD,hl1Y);
+  ctx.font='bold '+hl2Size+'px Arial';
+  ctx.fillText(hl2Txt,PAD,hl1Y+hl2Size+20);
   // Address line
-  ctx.font='bold 62px Arial';ctx.fillStyle='rgba(255,255,255,0.92)';
-  ctx.fillText('\u{1F4CD} '+addrLine,PAD,H-268);
-  // Phone
-  ctx.fillStyle='rgba(255,255,255,0.85)';ctx.font='bold 52px Arial';
-  ctx.fillText('\u{1F4DE} '+ph,PAD,H-196);
-  // Price pill
-  const priceBoxW=finMo?820:420,priceBoxH=140,priceBoxY=H-PAD-priceBoxH;
-  ctx.fillStyle=color;
-  roundRect(ctx,PAD,priceBoxY,priceBoxW,priceBoxH,18);ctx.fill();
-  ctx.fillStyle='rgba(255,255,255,0.8)';ctx.font='32px Arial';
-  ctx.fillText('ESTIMATED TOTAL',PAD+28,priceBoxY+38);
-  ctx.fillStyle='#fff';ctx.font='bold 78px Arial';
-  ctx.fillText('$'+total.toLocaleString(),PAD+28,priceBoxY+118);
-  if(finMo){
-    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.fillRect(PAD+410,priceBoxY+18,3,104);
+  ctx.font='bold '+addrSize+'px Arial';ctx.fillStyle='rgba(255,255,255,0.92)';
+  ctx.fillText('\u{1F4CD} '+addrLine,PAD,H-(showPrice?268:180));
+  // Phone (optional)
+  if(showPhone){
+    ctx.fillStyle='rgba(255,255,255,0.85)';ctx.font='bold 52px Arial';
+    ctx.fillText('\u{1F4DE} '+ph,PAD,H-(showPrice?196:110));
+  }
+  // Price pill (optional)
+  if(showPrice){
+    const showMo=showMonthly&&finEnabled&&finMo>0;
+    const priceBoxW=showMo?820:420,priceBoxH=140,priceBoxY=H-PAD-priceBoxH;
+    ctx.fillStyle=color;
+    roundRect(ctx,PAD,priceBoxY,priceBoxW,priceBoxH,18);ctx.fill();
     ctx.fillStyle='rgba(255,255,255,0.8)';ctx.font='32px Arial';
-    ctx.fillText('AS LOW AS',PAD+438,priceBoxY+38);
-    ctx.fillStyle='#fff';ctx.font='bold 78px Arial';
-    ctx.fillText('$'+finMo.toLocaleString()+'/mo',PAD+438,priceBoxY+118);
+    ctx.fillText('ESTIMATED TOTAL',PAD+28,priceBoxY+38);
+    ctx.fillStyle='#fff';ctx.font='bold '+priceSize+'px Arial';
+    ctx.fillText('$'+total.toLocaleString(),PAD+28,priceBoxY+priceSize+40);
+    if(showMo){
+      ctx.fillStyle='rgba(255,255,255,0.3)';ctx.fillRect(PAD+410,priceBoxY+18,3,104);
+      ctx.fillStyle='rgba(255,255,255,0.8)';ctx.font='32px Arial';
+      ctx.fillText('AS LOW AS',PAD+438,priceBoxY+38);
+      ctx.fillStyle='#fff';ctx.font='bold '+priceSize+'px Arial';
+      ctx.fillText('$'+finMo.toLocaleString()+'/mo',PAD+438,priceBoxY+priceSize+40);
+    }
   }
   return canvas.toDataURL('image/jpeg',0.92);
 }
@@ -7713,6 +8058,16 @@ async function renderPostcard6x9BackCanvas(item){
   const pcQuote=cfg.postcardQuote||'"They replaced our roof in one day, no mess, no drama." \u2014 Mike D., Canton MI';
   const guarantee=cfg.postcardGuarantee||'No door-knocking. No pressure. Just your price.';
   const badges=[cfg.diff1||'Licensed, Bonded & Insured',cfg.diff2||'Manufacturer Certified',cfg.diff3||'Itemized Pricing'].filter(Boolean).slice(0,3);
+  // Designer font sizes
+  const backBadgeTxt=cfg.postcardBackBadgeText||'YOUR ROOF ESTIMATE IS READY';
+  const backBadgeColor=cfg.postcardBackBadgeColor||color;
+  const hookSize=cfg.postcardHookSize||36;
+  const whySize=cfg.postcardWhySize||30;
+  const quoteSize=cfg.postcardQuoteSize||32;
+  const guarSize=cfg.postcardGuarSize||26;
+  const phoneSize=cfg.postcardPhoneSize||42;
+  const scanCta=cfg.postcardScanCta||'SCAN TO BOOK';
+  const scanSub=cfg.postcardScanSub||'No-pressure booking';
   const urgencyDate=new Date();urgencyDate.setDate(urgencyDate.getDate()+30);
   const urgencyStr=urgencyDate.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
   const headshotUrl=cfg.headshot||null;
@@ -7818,18 +8173,18 @@ async function renderPostcard6x9BackCanvas(item){
 
   // Badge pill
   ctx.font='bold 36px Arial';
-  const pillLabel='YOUR ROOF ESTIMATE IS READY';
+  const pillLabel=backBadgeTxt;
   const pillW=ctx.measureText(pillLabel).width+48;
-  ctx.fillStyle=color;
+  ctx.fillStyle=backBadgeColor;
   roundRect(ctx,HR_X,hy,pillW,60,10);ctx.fill();
   ctx.fillStyle='#fff';ctx.fillText(pillLabel,HR_X+24,hy+42);
   hy+=80;
-
   // Hook quote
-  ctx.font='italic 36px Georgia, serif';ctx.fillStyle='rgba(255,255,255,0.88)';
+  const hookLineH=Math.round(hookSize*1.38);
+  ctx.font='italic '+hookSize+'px Georgia, serif';ctx.fillStyle='rgba(255,255,255,0.88)';
   const hookLines=wrapText(ctx,hook,HR_W);
-  hookLines.slice(0,3).forEach((l,i)=>{ctx.fillText(l,HR_X,hy+40+i*50);});
-  hy+=Math.min(hookLines.length,3)*50+28;
+  hookLines.slice(0,3).forEach((l,i)=>{ctx.fillText(l,HR_X,hy+hookSize+i*hookLineH);});
+  hy+=Math.min(hookLines.length,3)*hookLineH+28;;
 
   // Price bar
   const PB_H=finMo?200:160;
@@ -7858,9 +8213,10 @@ async function renderPostcard6x9BackCanvas(item){
   ctx.font='46px Arial';ctx.fillStyle='#f59e0b';
   ctx.fillText('\u2605\u2605\u2605\u2605\u2605',HR_X,hy+46);hy+=64;
   if(pcQuote){
-    ctx.font='italic 32px Georgia, serif';ctx.fillStyle='rgba(255,255,255,0.80)';
+    const qLineH=Math.round(quoteSize*1.36);
+    ctx.font='italic '+quoteSize+'px Georgia, serif';ctx.fillStyle='rgba(255,255,255,0.80)';
     const qLines=wrapText(ctx,pcQuote,HR_W);
-    qLines.slice(0,2).forEach((l,i)=>{ctx.fillText(l,HR_X,hy+34+i*44);});
+    qLines.slice(0,2).forEach((l,i)=>{ctx.fillText(l,HR_X,hy+quoteSize+i*qLineH);});
   }
 
   // ── BOTTOM SECTION (white) ────────────────────────────────────
@@ -7883,10 +8239,11 @@ async function renderPostcard6x9BackCanvas(item){
   // WHY DID YOU RECEIVE THIS?
   ctx.font='bold 34px Arial';ctx.fillStyle=color;
   ctx.fillText('WHY DID YOU RECEIVE THIS?',SAFE,by+34);by+=52;
-  ctx.font='30px Arial';ctx.fillStyle='#374151';
+  const whyLineH=Math.round(whySize*1.4);
+  ctx.font=whySize+'px Arial';ctx.fillStyle='#374151';
   const whyLines=wrapText(ctx,why,LEFT_COL_W-SAFE);
-  whyLines.slice(0,4).forEach((l,i)=>{ctx.fillText(l,SAFE,by+32+i*42);});
-  by+=Math.min(whyLines.length,4)*42+24;
+  whyLines.slice(0,4).forEach((l,i)=>{ctx.fillText(l,SAFE,by+whySize+i*whyLineH);});
+  by+=Math.min(whyLines.length,4)*whyLineH+24;
 
   // Badges
   ctx.font='bold 28px Arial';
@@ -7919,20 +8276,21 @@ async function renderPostcard6x9BackCanvas(item){
     ctx.drawImage(qrImg,RIGHT_COL_X,ry2,QR_SIZE,QR_SIZE);
     ry2+=QR_SIZE+10;
     ctx.font='bold 28px Arial';ctx.fillStyle='#111827';
-    ctx.fillText('SCAN TO BOOK',RIGHT_COL_X,ry2+28);
+    ctx.fillText(scanCta,RIGHT_COL_X,ry2+28);
     ry2+=38;
     ctx.font='22px Arial';ctx.fillStyle='#6b7280';
-    ctx.fillText('No-pressure booking',RIGHT_COL_X,ry2+24);
+    ctx.fillText(scanSub,RIGHT_COL_X,ry2+24);
     ry2+=36;
   }
-  ctx.font='bold 42px Arial';ctx.fillStyle='#111827';
-  ctx.fillText(ph,RIGHT_COL_X,ry2+42);ry2+=58;
+  ctx.font='bold '+phoneSize+'px Arial';ctx.fillStyle='#111827';
+  ctx.fillText(ph,RIGHT_COL_X,ry2+phoneSize);ry2+=phoneSize+16;
   // Guarantee — clamp to RIGHT_COL_W so it never bleeds into Lob address zone
   if(ry2+50 < BOTTOM_SAFE){
-    ctx.font='bold 26px Arial';ctx.fillStyle=color;
+    const gLineH=Math.round(guarSize*1.4);
+    ctx.font='bold '+guarSize+'px Arial';ctx.fillStyle=color;
     const gLines=wrapText(ctx,guarantee,RIGHT_COL_W);
     gLines.forEach((l,i)=>{
-      const lineY=ry2+28+i*38;
+      const lineY=ry2+guarSize+i*gLineH;
       if(lineY < BOTTOM_SAFE){ctx.fillText(l,RIGHT_COL_X,lineY);}
     });
   }
@@ -9841,6 +10199,33 @@ function openSettings(){
   document.getElementById('s-pc-why').value=c.postcardWhy||'';
   document.getElementById('s-pc-quote').value=c.postcardQuote||'';
   document.getElementById('s-pc-guarantee').value=c.postcardGuarantee||'';
+  // New designer fields
+  const _pcH1=document.getElementById('s-pc-headline1'); if(_pcH1) _pcH1.value=c.postcardHeadline1||'We Assessed';
+  const _pcH2=document.getElementById('s-pc-headline2'); if(_pcH2) _pcH2.value=c.postcardHeadline2||'Your Roof.';
+  const _pcBadgeTxt=document.getElementById('s-pc-badge-text'); if(_pcBadgeTxt) _pcBadgeTxt.value=c.postcardBadgeText||'YOUR ROOF ESTIMATE IS READY';
+  const _pcBadgeClr=document.getElementById('s-pc-badge-color'); if(_pcBadgeClr) _pcBadgeClr.value=c.postcardBadgeColor||c.brandColor||'#F25C05';
+  const _pcBackBadgeTxt=document.getElementById('s-pc-back-badge-text'); if(_pcBackBadgeTxt) _pcBackBadgeTxt.value=c.postcardBackBadgeText||'YOUR ROOF ESTIMATE IS READY';
+  const _pcBackBadgeClr=document.getElementById('s-pc-back-badge-color'); if(_pcBackBadgeClr) _pcBackBadgeClr.value=c.postcardBackBadgeColor||c.brandColor||'#F25C05';
+  const _pcScanCta=document.getElementById('s-pc-scan-cta'); if(_pcScanCta) _pcScanCta.value=c.postcardScanCta||'SCAN TO BOOK';
+  const _pcScanSub=document.getElementById('s-pc-scan-sub'); if(_pcScanSub) _pcScanSub.value=c.postcardScanSub||'No-pressure booking';
+  // Font size sliders
+  function _setSz(id,valId,val){ const el=document.getElementById(id); if(el){el.value=val; const vEl=document.getElementById(valId); if(vEl) vEl.textContent=val;} }
+  _setSz('s-pc-hl1-sz','s-pc-hl1-sz-val',c.postcardHl1Size||160);
+  _setSz('s-pc-hl2-sz','s-pc-hl2-sz-val',c.postcardHl2Size||160);
+  _setSz('s-pc-hook-sz','s-pc-hook-sz-val',c.postcardHookSize||36);
+  _setSz('s-pc-why-sz','s-pc-why-sz-val',c.postcardWhySize||30);
+  _setSz('s-pc-quote-sz','s-pc-quote-sz-val',c.postcardQuoteSize||32);
+  _setSz('s-pc-guar-sz','s-pc-guar-sz-val',c.postcardGuarSize||26);
+  _setSz('s-pc-phone-sz','s-pc-phone-sz-val',c.postcardPhoneSize||42);
+  _setSz('s-pc-addr-sz','s-pc-addr-sz-val',c.postcardAddrSize||62);
+  _setSz('s-pc-price-sz','s-pc-price-sz-val',c.postcardPriceSize||78);
+  // Photo layout
+  const _pcPhotoLayout=c.postcardPhotoLayout||'single';
+  const _pcPhotoEl=document.getElementById('s-pc-photo-'+_pcPhotoLayout); if(_pcPhotoEl) _pcPhotoEl.checked=true;
+  // Show/hide toggles
+  const _pcShowPrice=document.getElementById('s-pc-show-price'); if(_pcShowPrice) _pcShowPrice.checked=c.postcardShowPrice!==false;
+  const _pcShowMonthly=document.getElementById('s-pc-show-monthly'); if(_pcShowMonthly) _pcShowMonthly.checked=c.postcardShowMonthly!==false;
+  const _pcShowPhone=document.getElementById('s-pc-show-phone'); if(_pcShowPhone) _pcShowPhone.checked=c.postcardShowPhone!==false;
   // Design selector
   const _pcDes=c.postcardDesign||'1';
   const _pcDesEl=document.getElementById('s-pc-design-'+_pcDes);
@@ -10040,6 +10425,28 @@ function saveSettings(){
     postcardQuote:v('s-pc-quote'),
     postcardGuarantee:v('s-pc-guarantee'),
     postcardDesign:(document.querySelector('input[name="pc-design"]:checked')||{value:'1'}).value,
+    // New designer fields
+    postcardHeadline1:v('s-pc-headline1')||'We Assessed',
+    postcardHeadline2:v('s-pc-headline2')||'Your Roof.',
+    postcardBadgeText:v('s-pc-badge-text')||'YOUR ROOF ESTIMATE IS READY',
+    postcardBadgeColor:v('s-pc-badge-color')||'#F25C05',
+    postcardBackBadgeText:v('s-pc-back-badge-text')||'YOUR ROOF ESTIMATE IS READY',
+    postcardBackBadgeColor:v('s-pc-back-badge-color')||'#F25C05',
+    postcardScanCta:v('s-pc-scan-cta')||'SCAN TO BOOK',
+    postcardScanSub:v('s-pc-scan-sub')||'No-pressure booking',
+    postcardPhotoLayout:(document.querySelector('input[name="pc-photo-layout"]:checked')||{value:'single'}).value,
+    postcardShowPrice:!!(document.getElementById('s-pc-show-price')&&document.getElementById('s-pc-show-price').checked),
+    postcardShowMonthly:!!(document.getElementById('s-pc-show-monthly')&&document.getElementById('s-pc-show-monthly').checked),
+    postcardShowPhone:!!(document.getElementById('s-pc-show-phone')&&document.getElementById('s-pc-show-phone').checked),
+    postcardHl1Size:parseInt(v('s-pc-hl1-sz'))||160,
+    postcardHl2Size:parseInt(v('s-pc-hl2-sz'))||160,
+    postcardHookSize:parseInt(v('s-pc-hook-sz'))||36,
+    postcardWhySize:parseInt(v('s-pc-why-sz'))||30,
+    postcardQuoteSize:parseInt(v('s-pc-quote-sz'))||32,
+    postcardGuarSize:parseInt(v('s-pc-guar-sz'))||26,
+    postcardPhoneSize:parseInt(v('s-pc-phone-sz'))||42,
+    postcardAddrSize:parseInt(v('s-pc-addr-sz'))||62,
+    postcardPriceSize:parseInt(v('s-pc-price-sz'))||78,
     postcardD2TopLine:v('s-pc-d2-topline'),
     postcardD2Accent:v('s-pc-d2-accent'),
     postcardD2Headline:v('s-pc-d2-headline'),
