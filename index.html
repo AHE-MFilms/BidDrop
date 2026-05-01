@@ -11531,12 +11531,22 @@ async function migrateEstimatesFromPins(){
 
 async function loadEstimatesFromSupabase(){
   if(!currentAccount || !sb) return;
-  const {data, error} = await sb.from('estimates')
+  // Try with deleted_at filter; fall back without it if column doesn't exist yet (pre-migration)
+  let result = await sb.from('estimates')
     .select('*')
     .eq('account_id', currentAccount.id)
     .is('deleted_at', null)
     .order('saved_at', {ascending: false})
     .limit(2000);
+  if(result.error && (result.status===400 || result.error.code==='42703' || result.error.message?.includes('column') || result.error.message?.includes('deleted_at'))){
+    // deleted_at column not yet added — load all and filter client-side
+    result = await sb.from('estimates')
+      .select('*')
+      .eq('account_id', currentAccount.id)
+      .order('saved_at', {ascending: false})
+      .limit(2000);
+  }
+  const {data, error} = result;
   if(error){ console.warn('[BidDrop] loadEstimatesFromSupabase error:', error.message); return; }
   if(!data || !data.length) return;
   // Map DB rows to in-memory estimate objects
