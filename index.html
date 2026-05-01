@@ -9754,12 +9754,20 @@ async function loadHotLeads(){
     const sess = (await sb.auth.getSession()).data.session;
     if(!sess) return;
     // Fetch estimates with QR scan data, sorted by scan count desc then last scan desc
-    const {data:rows, error} = await sb.from('estimates')
+    // Try full query first; fall back to basic query if extended columns don't exist yet (pre-migration)
+    let rows = null, error = null;
+    const fullQ = await sb.from('estimates')
       .select('id,addr,owner,email,rep,total,qr_scan_count,page_views,page_last_viewed_at,created_at,status,material')
       .eq('account_id', currentAccount.id)
       .gt('page_views', 0)
       .order('page_last_viewed_at', {ascending:false})
       .limit(100);
+    if(fullQ.error && (fullQ.error.code==='42703'||fullQ.error.message?.includes('column')||fullQ.error.message?.includes('does not exist')||fullQ.status===400)){
+      // Columns not yet migrated — show upgrade prompt
+      container.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);font-size:13px;">Hot Leads tracking requires a database migration.<br><br><button onclick="runMigration()" style="background:var(--accent);border:none;border-radius:8px;padding:10px 20px;color:#fff;font-weight:700;cursor:pointer;">Run Migration Now</button></div>';
+      return;
+    }
+    rows = fullQ.data; error = fullQ.error;
     if(error) throw error;
     if(!rows || !rows.length){
       container.innerHTML='';
@@ -9934,10 +9942,18 @@ async function loadAnalytics(){
     const totalPins = filteredPins.length;
     const signedPins = filteredPins.filter(p=>(p.status||'').toLowerCase()==='signed').length;
     // ── Estimates from Supabase ───────────────────────────────────────────────
+    // Try with extended columns; fall back to basic if migration hasn't run yet
     let estQuery = sb.from('estimates').select('id,addr,owner,rep,total,material,qr_scan_count,page_views,created_at,status')
       .eq('account_id', currentAccount.id);
     if(cutoff) estQuery = estQuery.gte('created_at', cutoff.toISOString());
-    const {data:estimates} = await estQuery.order('created_at',{ascending:false}).limit(2000);
+    let estResult = await estQuery.order('created_at',{ascending:false}).limit(2000);
+    if(estResult.error && (estResult.error.code==='42703'||estResult.status===400||estResult.error.message?.includes('column'))){
+      // Fall back to basic columns (pre-migration)
+      let basicQ = sb.from('estimates').select('id,addr,owner,rep,total,material,created_at,status').eq('account_id', currentAccount.id);
+      if(cutoff) basicQ = basicQ.gte('created_at', cutoff.toISOString());
+      estResult = await basicQ.order('created_at',{ascending:false}).limit(2000);
+    }
+    const {data:estimates} = estResult;
     const ests = estimates||[];
     const totalEsts = ests.length;
     const totalPipeline = ests.reduce((s,e)=>s+(Number(e.total)||0),0);
