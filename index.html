@@ -9942,17 +9942,11 @@ async function loadAnalytics(){
     const totalPins = filteredPins.length;
     const signedPins = filteredPins.filter(p=>(p.status||'').toLowerCase()==='signed').length;
     // ── Estimates from Supabase ───────────────────────────────────────────────
-    // Try with extended columns; fall back to basic if migration hasn't run yet
-    let estQuery = sb.from('estimates').select('id,addr,owner,rep,total,material,qr_scan_count,page_views,created_at,status')
+    // Use only guaranteed-safe columns (no qr_scan_count/page_views which may not exist yet)
+    let estBaseQ = sb.from('estimates').select('id,addr,owner,rep,total,material,created_at,status')
       .eq('account_id', currentAccount.id);
-    if(cutoff) estQuery = estQuery.gte('created_at', cutoff.toISOString());
-    let estResult = await estQuery.order('created_at',{ascending:false}).limit(2000);
-    if(estResult.error && (estResult.error.code==='42703'||estResult.status===400||estResult.error.message?.includes('column'))){
-      // Fall back to basic columns (pre-migration)
-      let basicQ = sb.from('estimates').select('id,addr,owner,rep,total,material,created_at,status').eq('account_id', currentAccount.id);
-      if(cutoff) basicQ = basicQ.gte('created_at', cutoff.toISOString());
-      estResult = await basicQ.order('created_at',{ascending:false}).limit(2000);
-    }
+    if(cutoff) estBaseQ = estBaseQ.gte('created_at', cutoff.toISOString());
+    const estResult = await estBaseQ.order('created_at',{ascending:false}).limit(2000);
     const {data:estimates} = estResult;
     const ests = estimates||[];
     const totalEsts = ests.length;
