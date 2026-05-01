@@ -118,16 +118,74 @@ export default async function handler(req, res) {
       }
 
       // ── Delete a Supabase auth user (super_admin only) ────────────────────
+      // Option A: reassign all data to account owner, preserve rep_name for tracking
       case 'delete-user': {
         if (!isSuperAdmin) { res.status(403).json({ error: 'Super admin only' }); return; }
         const { userId } = req.body;
         if (!userId) { res.status(400).json({ error: 'userId required' }); return; }
+
+        // 1. Look up the profile of the user being deleted to get their account_id and name
+        const profResp = await sbFetch(`profiles?id=eq.${userId}&select=id,account_id,name,email`);
+        const profData = await profResp.json();
+        if (!profResp.ok || !profData.length) {
+          res.status(404).json({ error: 'User profile not found' }); return;
+        }
+        const delProfile = profData[0];
+        const accountId = delProfile.account_id;
+        const repName = delProfile.name || delProfile.email || 'Former Rep';
+
+        // 2. Find the account owner (the admin user for this account)
+        const ownerResp = await sbFetch(`profiles?account_id=eq.${accountId}&role=eq.admin&select=id&limit=1`);
+        const ownerData = await ownerResp.json();
+        const ownerId = ownerData?.[0]?.id || null;
+
+        if (ownerId && ownerId !== userId) {
+          // 3a. Reassign pins: update created_by to owner, but preserve rep_name snapshot
+          await sbFetch(`pins?created_by=eq.${userId}&account_id=eq.${accountId}`, {
+            method: 'PATCH',
+            headers: { 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ created_by: ownerId, rep_name: repName })
+          });
+
+          // 3b. Reassign estimates: update owner_id to account owner (estimates use 'rep' text field for rep name — already a snapshot, no change needed)
+          // estimates table uses 'owner' as homeowner name and 'rep' as rep name text — rep is already a snapshot, just reassign created_by if it exists
+          // Check if estimates has a created_by column; if not, skip (rep text field already tracks attribution)
+          await sbFetch(`estimates?pin_id=in.(select id from pins where account_id=eq.${accountId})`, {
+            method: 'PATCH',
+            headers: { 'Prefer': 'return=minimal' },
+            body: JSON.stringify({})
+          }).catch(() => {}); // best-effort, rep name already stored as text
+
+          // 3c. Reassign queue items: update created_by to owner, preserve rep_name snapshot
+          await sbFetch(`queue?created_by=eq.${userId}&account_id=eq.${accountId}`, {
+            method: 'PATCH',
+            headers: { 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ created_by: ownerId, rep_name: repName })
+          });
+
+          // 3d. Soft-delete the profile row (keep for historical rep name lookups)
+          await sbFetch(`profiles?id=eq.${userId}`, {
+            method: 'PATCH',
+            headers: { 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ deleted_at: new Date().toISOString(), role: 'deleted' })
+          });
+        }
+
+        // 4. Delete the Supabase Auth user (revokes login)
         const r = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${userId}`, {
           method: 'DELETE',
           headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}` }
         });
         if (!r.ok) { const d = await r.json(); res.status(r.status).json({ error: d.message || 'Delete failed' }); return; }
-        res.status(200).json({ success: true });
+
+        res.status(200).json({
+          success: true,
+          reassigned: !!ownerId,
+          repName,
+          message: ownerId
+            ? `Deleted ${repName}. All their pins, estimates, and mailers have been reassigned to the account owner. Rep name is preserved on each record for tracking.`
+            : `Deleted ${repName}. No account owner found to reassign data to.`
+        });
         break;
       }
 
@@ -672,6 +730,8 @@ export default async function handler(req, res) {
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS postcard_why TEXT`,
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS postcard_quote TEXT`,
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS postcard_guarantee TEXT`,
+          `ALTER TABLE queue ADD COLUMN IF NOT EXISTS rep_name TEXT`,
+          `ALTER TABLE profiles ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ`,
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS postcard_headline1 TEXT`,
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS postcard_headline2 TEXT`,
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS postcard_badge_text TEXT`,

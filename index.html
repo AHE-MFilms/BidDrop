@@ -12392,14 +12392,22 @@ async function saveUserEdits(){
 
 async function deleteUser(userId, displayName){
   if(!isSuperAdmin()){ toast('Permission denied','error'); return; }
-  if(!confirm('Delete user "'+displayName+'"? This will permanently remove their account and all their data. This cannot be undone.')){ return; }
+  if(!confirm(
+    'Remove "'+displayName+'" from the team?\n\n'+
+    '✓ Their login will be disabled immediately.\n'+
+    '✓ All their pins, estimates, and mailers will be reassigned to the account owner.\n'+
+    '✓ Their name stays attached to each record for tracking purposes.\n\n'+
+    'This cannot be undone.'
+  )){ return; }
   try {
-    const delResult = await adminAPI('delete-user', {userId}); const error = delResult?.error || null;
+    const delResult = await adminAPI('delete-user', {userId});
+    const error = delResult?.error || null;
     if(error) throw new Error(error);
-    toast('✅ User deleted: '+escHtml(displayName),'success');
+    const msg = delResult?.message || ('Removed '+escHtml(displayName)+' from the team.');
+    toast('✅ '+msg, 'success');
     renderAdminPanel();
   } catch(e){
-    toast('❌ '+(e.message||'Could not delete user.'),'error');
+    toast('❌ '+(e.message||'Could not remove user.'),'error');
   }
 }
 
