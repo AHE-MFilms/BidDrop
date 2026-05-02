@@ -371,6 +371,13 @@ body{font-family:'Open Sans',sans-serif;background:var(--cream-soft);color:var(-
   <div style="font-size:13px;margin-top:4px;">Please contact your roofing contractor for assistance.</div>
 </div>
 
+<!-- Expired -->
+<div id="ep-expired" style="display:none;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:16px;background:var(--ink);padding:40px 24px;text-align:center;">
+  <div style="font-size:52px;">📅</div>
+  <div style="font-family:'Roboto',sans-serif;font-size:26px;font-weight:700;color:#fff;">This estimate has expired</div>
+  <div style="font-size:15px;color:rgba(255,255,255,.65);max-width:380px;line-height:1.6;" id="ep-expired-msg">This estimate was valid for a limited time. Please contact the roofing company for an updated quote.</div>
+  <div id="ep-expired-contact" style="margin-top:8px;"></div>
+</div>
 <!-- Lead Gate -->
 <div id="ep-gate">
   <div class="ep-gate-box">
@@ -386,6 +393,12 @@ body{font-family:'Open Sans',sans-serif;background:var(--cream-soft);color:var(-
     <div class="ep-gate-row">
       <div class="ep-gate-field"><label>Email</label><input id="g-email" type="email" placeholder="jane@email.com" autocomplete="email"></div>
       <div class="ep-gate-field"><label>Phone</label><input id="g-phone" type="tel" placeholder="(555) 000-0000" autocomplete="tel"></div>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-top:16px;padding:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;">
+      <input type="checkbox" id="g-consent" style="margin-top:3px;width:16px;height:16px;flex-shrink:0;accent-color:#C97D2E;cursor:pointer;">
+      <label for="g-consent" style="font-size:12px;color:rgba(255,255,255,.75);line-height:1.5;cursor:pointer;">
+        I agree to be contacted by the roofing company above regarding my estimate, including by phone, text, or email. I understand this is not a condition of purchase. &nbsp;<a href="https://biddrop.us/privacy" target="_blank" rel="noopener" style="color:#C97D2E;text-decoration:underline;">Privacy Policy</a>
+      </label>
     </div>
     <button class="ep-gate-btn" onclick="submitGate()">View My Estimate →</button>
     <p class="ep-gate-privacy">🔒 Your information is kept private and never sold.</p>
@@ -567,6 +580,13 @@ body{font-family:'Open Sans',sans-serif;background:var(--cream-soft);color:var(-
       </a>
     </div>
   </footer>
+  <!-- ── PRIVACY DISCLOSURE ── -->
+  <div style="background:#040810;padding:12px 24px;text-align:center;border-top:1px solid rgba(255,255,255,.07);">
+    <p style="font-size:11px;color:rgba(255,255,255,.45);line-height:1.6;max-width:680px;margin:0 auto;">
+      This page was created for you by the roofing company listed above. By viewing this page, you acknowledge that your interaction may be tracked for advertising purposes, including Meta Pixel and Google Tag. Your information is never sold.
+      &nbsp;<a href="https://biddrop.us/privacy" target="_blank" rel="noopener" style="color:rgba(255,255,255,.55);text-decoration:underline;">Privacy Policy</a>
+    </p>
+  </div>
 
 </div><!-- /ep-page -->
 
@@ -642,6 +662,22 @@ function init(){
     .then(d=>{
       if(!d||!d.estimate){showError();return;}
       _est=d.estimate;_acct=d.account;
+      // ── Expiration check ──
+      if(_est.expiresAt){
+        const expiry=new Date(_est.expiresAt);
+        if(!isNaN(expiry) && expiry < new Date()){
+          $('ep-loading').style.display='none';
+          const expDiv=$('ep-expired');
+          if(expDiv){
+            const co=_acct&&_acct.companyName?_acct.companyName:'the roofing company';
+            const ph=_acct&&(_acct.companyPhone||_acct.phone);
+            $('ep-expired-msg').textContent='This estimate was valid until '+expiry.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})+'. Contact '+co+' for an updated quote.';
+            if(ph){$('ep-expired-contact').innerHTML='<a href="tel:'+ph.replace(/[^0-9+]/g,'')+'" style="display:inline-block;background:#C97D2E;color:#fff;padding:12px 28px;border-radius:10px;font-family:Roboto,sans-serif;font-weight:700;font-size:16px;text-decoration:none;">📞 Call '+ph+'</a>';}
+            expDiv.style.display='flex';
+          }
+          return;
+        }
+      }
       // Compute prices for all mats
       const MATS=['1.0','1.3','1.8','2.5'];
       MATS.forEach(k=>{_prices[k]=computePrice(_est.structures||[],k,_acct);});
@@ -668,6 +704,13 @@ function submitGate(){
   const email=($('g-email').value||'').trim();
   const phone=($('g-phone').value||'').trim();
   if(!first){$('g-first').focus();return;}
+  const consentEl=$('g-consent');
+  if(consentEl && !consentEl.checked){
+    consentEl.style.outline='2px solid #E89A48';
+    consentEl.scrollIntoView({behavior:'smooth',block:'center'});
+    return;
+  }
+  if(consentEl) consentEl.style.outline='';
   $('ep-gate').style.display='none';
   buildPage(first,last,email,phone);
   // Capture lead
