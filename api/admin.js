@@ -276,6 +276,11 @@ export default async function handler(req, res) {
       case 'ghl': {
         const { path, method: ghlMethod = 'GET', body: ghlBody, accountId: ghlAcctId } = req.body;
         if (!path) { res.status(400).json({ error: 'path required' }); return; }
+        // Safety guard: BidDrop must never delete anything in GHL
+        if (ghlMethod && ghlMethod.toUpperCase() === 'DELETE') {
+          res.status(403).json({ error: 'DELETE operations are not permitted via the BidDrop GHL proxy.' });
+          return;
+        }
 
         // Resolve which account to use
         const acctId = ghlAcctId || profile.account_id;
