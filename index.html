@@ -3991,8 +3991,16 @@ function _loadAllPhotosFromPin(pin){
 
 function _loadAllPhotosFromEst(est, pin){
   const ap = { front:[], damage:[], angles:[], buildings:[], other:[] };
-  if(est && est.all_photos && typeof est.all_photos==='object'){
-    ['front','damage','angles','buildings','other'].forEach(k=>{ ap[k] = Array.isArray(est.all_photos[k]) ? [...est.all_photos[k]] : []; });
+  // Prefer pin.all_photos when it has more photos than est.all_photos
+  // (Manage Photos saves to pin; estimate snapshot may be stale)
+  const estAP  = (est && est.all_photos && typeof est.all_photos==='object') ? est.all_photos : null;
+  const pinAP  = (pin && pin.all_photos && typeof pin.all_photos==='object') ? pin.all_photos : null;
+  const estCnt = estAP ? ['front','damage','angles','buildings','other'].reduce((n,k)=>n+(Array.isArray(estAP[k])?estAP[k].length:0),0) : 0;
+  const pinCnt = pinAP ? ['front','damage','angles','buildings','other'].reduce((n,k)=>n+(Array.isArray(pinAP[k])?pinAP[k].length:0),0) : 0;
+  // Use whichever source has more photos (pin wins ties when both have same count > 0)
+  const src = (pinCnt >= estCnt && pinCnt > 0) ? pinAP : (estAP || pinAP);
+  if(src){
+    ['front','damage','angles','buildings','other'].forEach(k=>{ ap[k] = Array.isArray(src[k]) ? [...src[k]] : []; });
   } else {
     // Migrate legacy
     const fp = (est && (est.photo_data || est.photo_url)) || (pin && (pin.photo_url || pin.photo_data));
@@ -4116,16 +4124,35 @@ function _persistAllPhotos(){
   if(!pinId || !sb) return;
   const pin = S.pins && S.pins.find(p=>p.id===pinId);
   if(pin){
-    pin.all_photos = window._allPhotos;
+    const newAllPhotos = JSON.parse(JSON.stringify(window._allPhotos));
+    pin.all_photos = newAllPhotos;
     // Also keep legacy fields in sync
-    pin.photo_url = (window._allPhotos.front||[])[0] || pin.photo_url || null;
+    pin.photo_url = (newAllPhotos.front||[])[0] || pin.photo_url || null;
     pin.damage_photos = window._damagePhotos.length ? [...window._damagePhotos] : null;
     sb.from('pins').update({
-      all_photos: window._allPhotos,
+      all_photos: newAllPhotos,
       photo_url: pin.photo_url,
       damage_photos: pin.damage_photos,
       updated_at: new Date().toISOString()
     }).eq('id', pinId).then(()=>{});
+    // ── CRITICAL FIX: also update the linked estimate record so Edit Estimate
+    //    always sees the latest photos (not the stale snapshot saved when estimate was created)
+    const linkedEst = (S.estimates||[]).find(e=>e.pinId===pinId && !e.deletedAt && !e.isRevision);
+    if(linkedEst){
+      linkedEst.all_photos = newAllPhotos;
+      linkedEst.photo_url = pin.photo_url || linkedEst.photo_url;
+      linkedEst.damage_photos = pin.damage_photos || linkedEst.damage_photos;
+      // Also update pin.estimate JSONB snapshot
+      if(pin.estimate) pin.estimate.all_photos = newAllPhotos;
+      sb.from('estimates').update({
+        all_photos: newAllPhotos,
+        photo_url: pin.photo_url || null,
+        damage_photos: pin.damage_photos || null,
+        updated_at: new Date().toISOString()
+      }).eq('id', linkedEst.id).then(({error})=>{
+        if(error) console.warn('[BidDrop] _persistAllPhotos est update:', error.message);
+      });
+    }
     save();
   }
 }
