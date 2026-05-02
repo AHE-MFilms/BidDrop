@@ -9855,7 +9855,7 @@ async function loadHotLeads(){
     // Try full query first; fall back to basic query if extended columns don't exist yet (pre-migration)
     let rows = null, error = null;
     const fullQ = await sb.from('estimates')
-      .select('id,addr,owner,email,rep,total,qr_scan_count,page_views,page_last_viewed_at,created_at,status,material')
+      .select('id,addr,owner,email,rep,total,qr_scan_count,page_views,page_last_viewed_at,created_at,mat')
       .eq('account_id', currentAccount.id)
       .gt('page_views', 0)
       .order('page_last_viewed_at', {ascending:false})
@@ -9904,7 +9904,7 @@ async function loadHotLeads(){
           (hasEmail?'<div style="font-size:11px;color:#22C55E;margin-top:1px;">✉ '+escHtml(r.email)+'</div>':'')+'</div>'+
         '<div style="text-align:right;flex-shrink:0;">'+
           '<div style="font-size:16px;font-weight:800;color:var(--accent);">'+total+'</div>'+
-          '<div style="font-size:11px;color:var(--muted);">'+escHtml(r.material||'')+'</div>'+
+          '<div style="font-size:11px;color:var(--muted);">'+escHtml(r.mat||'')+'</div>'+
           '<div style="display:flex;gap:6px;margin-top:6px;justify-content:flex-end;flex-wrap:wrap;">'+
             '<button onclick="event.stopPropagation();window.open(\'/e/'+r.id+'\',\'_blank\')" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:10px;cursor:pointer;font-weight:700;">View Page</button>'+
             (pinId?'<button onclick="event.stopPropagation();goTab(\'map\');setTimeout(()=>openPinPanel(\''+pinId+'\'),400)" style="background:var(--accent);border:none;border-radius:6px;padding:4px 8px;color:#fff;font-size:10px;cursor:pointer;font-weight:700;">Open Pin</button>':'')+
@@ -10041,7 +10041,7 @@ async function loadAnalytics(){
     const signedPins = filteredPins.filter(p=>(p.status||'').toLowerCase()==='signed').length;
     // ── Estimates from Supabase ───────────────────────────────────────────────
     // Use only guaranteed-safe columns (no qr_scan_count/page_views which may not exist yet)
-    let estBaseQ = sb.from('estimates').select('id,addr,owner,rep,total,material,created_at,status,qr_scan_count,page_views,booking_clicks,call_clicks,page_first_viewed_at')
+    let estBaseQ = sb.from('estimates').select('id,addr,owner,rep,total,mat,created_at,qr_scan_count,page_views,booking_clicks,call_clicks,page_first_viewed_at')
       .eq('account_id', currentAccount.id);
     if(cutoff) estBaseQ = estBaseQ.gte('created_at', cutoff.toISOString());
     const estResult = await estBaseQ.order('created_at',{ascending:false}).limit(2000);
@@ -10185,7 +10185,7 @@ async function loadAnalytics(){
     }
     // ── Material breakdown ────────────────────────────────────────────────────
     const matMap={};
-    ests.forEach(e=>{ if(e.material){ matMap[e.material]=(matMap[e.material]||0)+1; } });
+    ests.forEach(e=>{ if(e.mat){ matMap[e.mat]=(matMap[e.mat]||0)+1; } });
     const matEl=document.getElementById('an-materials');
     if(matEl){
       const sorted=Object.entries(matMap).sort((a,b)=>b[1]-a[1]);
