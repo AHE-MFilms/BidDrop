@@ -5980,9 +5980,13 @@ function updatePreview(){
   const review1     = cfg.review1     || null;
   const review2     = cfg.review2     || null;
   const bookingUrl  = cfg.bookingUrl  || '';
-  const qrUrl = bookingUrl
-    ? 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&margin=6&data='+encodeURIComponent(bookingUrl)
-    : '';
+  // QR: always point to homeowner estimate page; fall back to booking URL if no ID
+  const _previewEstId = window._editingEstimateId || null;
+  const _previewSlug = cfg.companyName ? cfg.companyName.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') : 'roofing';
+  const _previewEstUrl = _previewEstId
+    ? 'https://biddrop.us/'+_previewSlug+'/'+encodeURIComponent(_previewEstId)
+    : (bookingUrl || 'https://biddrop.us');
+  const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&margin=6&data='+encodeURIComponent(_previewEstUrl);
 
   // ── Calc totals ──────────────────────────────
   let grandTotal = 0;
@@ -8707,9 +8711,13 @@ function buildLobMailerHtml(item){
   const review1      = cfg.review1   || null;
   const review2      = cfg.review2   || null;
   const bookingUrl   = cfg.bookingUrl || '';
-  const qrUrl = bookingUrl
-    ? 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&margin=6&data='+encodeURIComponent(bookingUrl)
-    : '';
+  // QR: always point to homeowner estimate page; fall back to booking URL if no ID
+  const _lobEstId = item.estId || item.estimate_id || null;
+  const _lobSlug = cfg.companyName ? cfg.companyName.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') : 'roofing';
+  const _lobEstUrl = _lobEstId
+    ? 'https://biddrop.us/'+_lobSlug+'/'+encodeURIComponent(_lobEstId)
+    : (bookingUrl || 'https://biddrop.us');
+  const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&margin=6&data='+encodeURIComponent(_lobEstUrl);
 
   // Logo
   const logoImg = cfg.logoData
