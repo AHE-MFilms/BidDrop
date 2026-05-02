@@ -6453,6 +6453,7 @@ async function previewEstimatorPostcardFullscreen(){
   const grand = calcP ? calcP() : 0;
   const _frontPhoto = ((window._allPhotos && window._allPhotos.front)||[])[0] || window._homePhotoData || null;
   const fakeItem = {
+    id: window._editingEstimateId || null,
     addr, owner,
     total: grand,
     structures: JSON.parse(JSON.stringify(structures||[])),
@@ -6483,6 +6484,7 @@ async function _refreshPostcardPreview(){
   const grand = calcP ? calcP() : 0;
   const _frontPhoto = ((window._allPhotos && window._allPhotos.front)||[])[0] || window._homePhotoData || null;
   const fakeItem = {
+    id: window._editingEstimateId || null,
     addr, owner,
     total: grand,
     structures: JSON.parse(JSON.stringify(structures||[])),
