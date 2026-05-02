@@ -1093,6 +1093,21 @@ function initFade(){
 function trackView(){
   try{fetch(API_BASE+'/api/estimate',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({action:'track_view',id:_estId,seconds:0})});}catch(e){}
+  // If opened from a QR code context (direct URL visit from postcard), also track as QR scan.
+  // We detect QR context by: (a) ?src=qr param, (b) no HTTP referrer (direct scan), or (c) referrer is a QR code service.
+  try{
+    const params = new URLSearchParams(window.location.search);
+    const srcParam = params.get('src') || params.get('source') || '';
+    const ref = document.referrer || '';
+    const isQr = srcParam === 'qr' || srcParam === 'postcard' ||
+                 (!ref && !window._qrTracked) ||
+                 ref.includes('qrserver.com') || ref.includes('qr.io');
+    if(isQr && !window._qrTracked){
+      window._qrTracked = true;
+      fetch(API_BASE+'/api/estimate',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'track_qr_scan',id:_estId})}).catch(()=>{});
+    }
+  }catch(e){}
 }
 
 // ── Retargeting pixel helper ────────────────────────────────────────────────

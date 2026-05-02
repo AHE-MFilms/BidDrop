@@ -132,12 +132,12 @@ export default async function handler(req, res) {
   }
 
   // Redirect priority:
-  //   1. Personalized estimate page on estimate.biddrop.us/[company-slug]/[id]
+  //   1. Personalized estimate page on biddrop.us/[company-slug]/[id]?src=qr
   //   2. Booking URL (Calendly, etc.)
   //   3. Fallback homepage
   let dest;
   if (estimateId) {
-    dest = `https://estimate.biddrop.us/${companySlug}/${estimateId}`;
+    dest = `https://biddrop.us/${companySlug}/${estimateId}?src=qr`;
   } else if (bookingUrl) {
     dest = bookingUrl;
   } else {
