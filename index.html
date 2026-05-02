@@ -9184,7 +9184,15 @@ async function previewPostcard6x9(id){
       }
     } catch(e){ console.warn('[BidDrop] Geocode for postcard preview failed:', e); }
   }
+  // Resolve estimate ID: queue items store estId; fall back to address lookup in S.estimates
+  const _qEstId = item.estId || item.estimate_id ||
+    ((S.estimates||[]).find(e=>(e.addr||'').trim().toLowerCase()===(item.addr||'').trim().toLowerCase()) || {}).id || null;
+  const _qSlug = (S.cfg&&S.cfg.companyName)
+    ? S.cfg.companyName.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')
+    : 'roofing';
   const syntheticItem = {
+    id:         _qEstId,
+    slug:       _qSlug,
     addr:       item.addr  || '',
     owner:      item.owner || 'Homeowner',
     total:      item.total || 0,
