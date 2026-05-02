@@ -703,12 +703,22 @@ function buildPage(firstName,lastName,email,phone){
   if(acctPhone){
     $('ep-sticky-phone').href='tel:'+acctPhone.replace(/[^0-9+]/g,'');
     $('ep-sticky-phone-num').textContent=acctPhone;
+    $('ep-sticky-phone').addEventListener('click',function(){
+      firePixels('CallClicked',{value:_est?_est.total:0,currency:'USD',content_name:_est?_est.addr:''});
+      try{fetch('/api/estimate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'track_event',id:_estId,event:'call_click',data:{}})});}catch(e){}
+    },{once:true});
   } else {
     $('ep-sticky-phone').style.display='none';
   }
   const schedLink=acct.bookingUrl||acct.scheduleLink||acct.calendarLink||'';
-  if(schedLink){$('ep-sticky-cta').href=schedLink;$('ep-sticky-cta').target='_blank';}
-  else{$('ep-sticky-cta').style.display='none';}
+  if(schedLink){
+    $('ep-sticky-cta').href=schedLink;
+    $('ep-sticky-cta').target='_blank';
+    $('ep-sticky-cta').addEventListener('click',function(){
+      firePixels('BookingClicked',{value:_est?_est.total:0,currency:'USD',content_name:_est?_est.addr:''});
+      try{fetch('/api/estimate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'track_event',id:_estId,event:'booking_click',data:{}})});}catch(e){}
+    },{once:true});
+  } else{$('ep-sticky-cta').style.display='none';}
 
   // ── Property card ──
   const structs=est.structures||[];
@@ -876,6 +886,8 @@ function buildPage(firstName,lastName,email,phone){
   $('ep-page').style.display='block';
   initFade();
   trackView();
+  // ── Fire retargeting pixels ──────────────────────────────────────────────
+  firePixels('EstimateViewed', { value: est.total || 0, currency: 'USD', content_name: est.addr || '' });
 }
 
 // ── Photo Gallery — labeled thumbnail grid with lightbox ──────────────────────
@@ -1081,6 +1093,50 @@ function trackView(){
     body:JSON.stringify({action:'track_view',id:_estId,seconds:0})});}catch(e){}
 }
 
+// ── Retargeting pixel helper ────────────────────────────────────────────────
+// Fires Meta Pixel + Google Tag events for the account AND the AHE platform pixel
+const AHE_META_PIXEL = '1234567890'; // AHE platform-level pixel (fires on ALL estimate pages)
+function firePixels(eventName, params){
+  const acct = _acct || {};
+  const clientPixelId = acct.metaPixelId || null;
+  const clientGtagId  = acct.googleTagId  || null;
+  // ── Meta Pixel ────────────────────────────────────────────────────────────
+  function loadAndFireMeta(pixelId){
+    if(!pixelId) return;
+    if(typeof fbq === 'undefined'){
+      // Inject Meta Pixel base code
+      (function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)})(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+    }
+    fbq('init', pixelId);
+    fbq('track', 'PageView');
+    fbq('trackCustom', eventName, params);
+  }
+  // Fire AHE platform pixel (always)
+  loadAndFireMeta(AHE_META_PIXEL);
+  // Fire client's own pixel (if configured)
+  if(clientPixelId && clientPixelId !== AHE_META_PIXEL) loadAndFireMeta(clientPixelId);
+  // ── Google Tag ────────────────────────────────────────────────────────────
+  if(clientGtagId){
+    if(typeof gtag === 'undefined'){
+      const s=document.createElement('script');
+      s.async=true;
+      s.src='https://www.googletagmanager.com/gtag/js?id='+encodeURIComponent(clientGtagId);
+      document.head.appendChild(s);
+      window.dataLayer=window.dataLayer||[];
+      window.gtag=function(){window.dataLayer.push(arguments);}
+      gtag('js',new Date());
+      gtag('config',clientGtagId);
+    }
+    // Map BidDrop event names to Google standard events
+    const gEventMap = {
+      'EstimateViewed': 'view_item',
+      'BookingClicked': 'begin_checkout',
+      'CallClicked':    'contact'
+    };
+    const gEvent = gEventMap[eventName] || eventName;
+    gtag('event', gEvent, { event_category: 'BidDrop', event_label: eventName, value: params.value || 0 });
+  }
+}
 function showError(){$('ep-loading').style.display='none';$('ep-error').style.display='flex';}
 
 init();

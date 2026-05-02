@@ -793,7 +793,12 @@ export default async function handler(req, res) {
           `CREATE INDEX IF NOT EXISTS idx_scan_events_account ON scan_events(account_id, scanned_at DESC)`,
           `CREATE TABLE IF NOT EXISTS postcard_scans (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), queue_item_id TEXT, account_id TEXT, owner_name TEXT, address TEXT, estimate_id TEXT, scanned_at TIMESTAMPTZ DEFAULT NOW(), ip TEXT, user_agent TEXT)`,
           `CREATE INDEX IF NOT EXISTS idx_postcard_scans_account ON postcard_scans(account_id, scanned_at DESC)`,
-          `CREATE INDEX IF NOT EXISTS idx_postcard_scans_estimate ON postcard_scans(estimate_id, scanned_at DESC)`
+          `CREATE INDEX IF NOT EXISTS idx_postcard_scans_estimate ON postcard_scans(estimate_id, scanned_at DESC)`,
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS meta_pixel_id TEXT`,
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS google_tag_id TEXT`,
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS google_place_id TEXT`,
+          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS booking_clicks INTEGER DEFAULT 0`,
+          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS call_clicks INTEGER DEFAULT 0`
         ].join('; ');
         const results = [];
         // Run each DDL statement individually via Supabase pg_meta API (uses SERVICE_KEY)

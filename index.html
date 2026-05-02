@@ -1014,7 +1014,7 @@ tr:hover td{background:var(--card);}
           <label style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Assessment Note <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);">&mdash; shown on estimate page as a personal message</span></label>
           <textarea class="fi" id="e-insp-note" rows="2" placeholder="e.g. During our visit we found significant hail damage to the ridge caps and several missing shingles on the south-facing slope. We recommend a full replacement before winter." style="margin-top:3px;font-size:12px;resize:vertical;min-height:60px;" oninput="scheduleDraftSave()"></textarea>
         </div>
-        <div style="margin-top:8px;font-size:11px;color:var(--muted);">&#128065; Homeowners see this page when they scan the postcard QR code. <a href="#" onclick="if(!isPlanAtLeast('agency')){showPlanUpgradePrompt('Estimate Pages','agency');return false;}if(currentEstRecord)(function(){const slug=(S.cfg&&S.cfg.companyName?S.cfg.companyName.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''):'roofing');window.open('https://estimate.biddrop.us/'+slug+'/'+currentEstRecord.id,'_blank','noopener,noreferrer');})();return false;" style="color:#10b981;">Preview page &#8599;</a></div>
+        <div style="margin-top:8px;font-size:11px;color:var(--muted);">&#128065; Homeowners see this page when they scan the postcard QR code. <a href="#" onclick="if(!isPlanAtLeast('agency')){showPlanUpgradePrompt('Estimate Pages','agency');return false;}if(currentEstRecord)(function(){const slug=(S.cfg&&S.cfg.companyName?S.cfg.companyName.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''):'roofing');window.open('https://biddrop.us/e/'+encodeURIComponent(currentEstRecord.id),'_blank','noopener,noreferrer');})();return false;" style="color:#10b981;">Preview page &#8599;</a></div>
       </div>
       <div class="fg">
         <label class="fl">Property Photos <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:10px;">— first Front of Home photo appears on mailer</span></label>
@@ -1302,6 +1302,17 @@ tr:hover td{background:var(--card);}
       <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-lbl">Est. Pipeline Value</div><div class="stat-val" id="an-pipeline">—</div><div class="stat-sub">Sum of estimate totals</div></div>
       <div class="stat-card"><div class="stat-icon">🎯</div><div class="stat-lbl">Close Rate</div><div class="stat-val" id="an-close-rate">—</div><div class="stat-sub">Signed / Estimates</div></div>
     </div>
+    <!-- Retargeting KPIs row -->
+    <div class="stats-row" style="background:rgba(59,130,246,.05);border:1px solid rgba(59,130,246,.15);border-radius:12px;padding:12px;">
+      <div style="width:100%;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid rgba(59,130,246,.15);display:flex;align-items:center;gap:8px;">
+        <span style="font-size:13px;font-weight:700;color:#3B82F6;letter-spacing:.4px;">🎯 RETARGETING PERFORMANCE</span>
+        <span style="font-size:10px;color:var(--muted);">Homeowner estimate page engagement — fires your Meta &amp; Google pixels</span>
+      </div>
+      <div class="stat-card" style="background:transparent;border:none;"><div class="stat-icon">👁️</div><div class="stat-lbl">Page Views</div><div class="stat-val" id="an-page-views">—</div><div class="stat-sub">Homeowners who opened page</div></div>
+      <div class="stat-card" style="background:transparent;border:none;"><div class="stat-icon">📅</div><div class="stat-lbl">Booking Clicks</div><div class="stat-val" id="an-booking-clicks">—</div><div class="stat-sub">Tapped Schedule button</div></div>
+      <div class="stat-card" style="background:transparent;border:none;"><div class="stat-icon">📞</div><div class="stat-lbl">Call Clicks</div><div class="stat-val" id="an-call-clicks">—</div><div class="stat-sub">Tapped phone number</div></div>
+      <div class="stat-card" style="background:transparent;border:none;"><div class="stat-icon">🔄</div><div class="stat-lbl">View Rate</div><div class="stat-val" id="an-view-rate">—</div><div class="stat-sub">Views / QR Scans</div></div>
+    </div>
     <div class="dash-grid">
       <div class="dash-card"><div class="dc-title">📬 Postcards Sent — Daily</div><div style="position:relative;height:160px;"><canvas id="an-chart-postcards"></canvas></div></div>
       <div class="dash-card"><div class="dc-title">🔍 QR Scans — Daily</div><div style="position:relative;height:160px;"><canvas id="an-chart-scans"></canvas></div></div>
@@ -1320,6 +1331,28 @@ tr:hover td{background:var(--card);}
             <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">PIPELINE $</th>
           </tr></thead>
           <tbody id="an-rep-table"></tbody>
+        </table>
+      </div>
+    </div>
+    <!-- Per-Estimate Engagement Table -->
+    <div class="dash-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+        <div class="dc-title" style="margin-bottom:0;">📋 Estimate Page Engagement</div>
+        <div style="font-size:11px;color:var(--muted);">Per-estimate scan, view &amp; click data — proof your postcards are working</div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead><tr style="background:var(--card2);border-bottom:1px solid var(--border);">
+            <th style="padding:10px 14px;text-align:left;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">ADDRESS</th>
+            <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">ESTIMATE</th>
+            <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">QR SCANS</th>
+            <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">PAGE VIEWS</th>
+            <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">BOOKING CLICKS</th>
+            <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">CALL CLICKS</th>
+            <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">FIRST VIEWED</th>
+            <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">VIEW PAGE</th>
+          </tr></thead>
+          <tbody id="an-est-table"></tbody>
         </table>
       </div>
     </div>
@@ -1524,6 +1557,16 @@ tr:hover td{background:var(--card);}
             <div class="fg"><label class="fl">Workmanship Warranty (yrs)</label><input class="fi" id="s-warr" placeholder="10"></div>
            </div>
           <div class="fg stab-full" style="margin-top:4px;"><label class="fl">Company Bio <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; shown on homeowner estimate pages</span></label><textarea class="fi" id="s-bio" rows="3" placeholder="We're a family-owned roofing company serving Metro Detroit for 20+ years. We specialize in storm damage restoration and insurance claims, making the process seamless for homeowners." style="resize:vertical;min-height:80px;"></textarea></div>
+          <!-- Retargeting Pixels -->
+          <div style="margin-top:18px;padding:14px;background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.2);border-radius:10px;">
+            <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#3B82F6;margin-bottom:10px;">&#127919; Retargeting Pixels <span style="font-size:9px;font-weight:600;padding:2px 7px;border-radius:10px;background:#3B82F6;color:#fff;margin-left:6px;">PRO+</span></div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:12px;">When a homeowner scans your postcard QR code and views their estimate page, BidDrop fires your pixel events automatically — building your retargeting audience in Meta Ads &amp; Google Ads.</div>
+            <div class="frow">
+              <div class="fg"><label class="fl">Meta Pixel ID <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; from Meta Events Manager</span></label><input class="fi" id="s-meta-pixel-id" placeholder="1234567890123456" autocomplete="off"></div>
+              <div class="fg"><label class="fl">Google Tag ID <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; e.g. G-XXXXXXXXXX or AW-XXXXXXXXX</span></label><input class="fi" id="s-google-tag-id" placeholder="G-XXXXXXXXXX" autocomplete="off"></div>
+            </div>
+            <div style="font-size:10px;color:var(--muted);margin-top:6px;">Events fired: <strong>EstimateViewed</strong> (when homeowner opens their page) · <strong>BookingClicked</strong> (when they tap Schedule) · <strong>CallClicked</strong> (when they tap your phone number)</div>
+          </div>
         </div>
       </div>
       <!-- FULL WIDTH: Share & Embed -->
@@ -2464,7 +2507,9 @@ async function syncAccountToSupabase(){
     drip4_headline: cfg.drip4Headline||null,
     drip4_subtext:  cfg.drip4Subtext||null,
     drip_enabled: cfg.dripEnabled||false,
-    company_bio: cfg.companyBio||null
+    company_bio: cfg.companyBio||null,
+    meta_pixel_id: cfg.metaPixelId||null,
+    google_tag_id: cfg.googleTagId||null
   }).eq('id', currentAccount.id);
   if(syncErr) console.error('[BidDrop] syncAccountToSupabase error:', syncErr.message, syncErr);
   else console.log('[BidDrop] Account synced to Supabase OK');
@@ -2573,6 +2618,8 @@ function accountRowToCfg(row){
     freeMailerCreditsUsed:  row.free_mailer_credits_used || 0,
     freeMailerCreditsReset: row.free_mailer_credits_reset|| null,
     companyBio: row.company_bio || '',
+    metaPixelId: row.meta_pixel_id || '',
+    googleTagId: row.google_tag_id || '',
   };
 }
 
@@ -4347,8 +4394,8 @@ function flyToResult(lat,lon,name){
   map.flyTo([parseFloat(lat),parseFloat(lon)],19,{duration:.8});
 }
 function openEstimatePage(eid){
-  const slug=(S.cfg&&S.cfg.companyName?S.cfg.companyName.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''):'roofing');
-  window.open('https://estimate.biddrop.us/'+slug+'/'+eid,'_blank','noopener,noreferrer');
+  // Use biddrop.us/e/{id} — clean URL that fires retargeting pixels
+  window.open('https://biddrop.us/e/'+encodeURIComponent(eid),'_blank','noopener,noreferrer');
 }
 function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function formatPhone(raw){
@@ -8124,7 +8171,9 @@ async function renderPostcard6x9BackCanvas(item){
   const headshotUrl=cfg.headshot||null;
   const headshotPos=parseFloat(cfg.headshotPos||'30')/100;
   const logoUrl=(cfg.logoData&&cfg.logoData.startsWith('http'))?cfg.logoData:null;
-  const trackedUrl=item.id?'https://biddrop.americashomeexperts.com/r/'+encodeURIComponent(item.id):(cfg.bookingUrl||'');
+  const trackedUrl=item.id
+    ? 'https://biddrop.us/e/'+encodeURIComponent(item.id)
+    : (cfg.bookingUrl||'https://biddrop.us');
   const qrUrl=trackedUrl?'https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=4&data='+encodeURIComponent(trackedUrl):'';
 
   const [headshotImg,logoImg,qrImg]=await Promise.all([loadImg(headshotUrl),loadImg(logoUrl),loadImg(qrUrl)]);
@@ -8519,7 +8568,9 @@ function buildPostcard6x9BackHtml(item){
   const total=item.total||0;
   const logoUrl=(cfg.logoData&&!cfg.logoData.startsWith('data:'))?cfg.logoData:'';
   const fromRaw=cfg.companyAddr||cfg.companyAddress||'123 Main St, Detroit, MI 48000';
-  const trackedUrl=item.id?'https://biddrop.americashomeexperts.com/r/'+encodeURIComponent(item.id):(cfg.bookingUrl||'');
+  const trackedUrl=item.id
+    ? 'https://biddrop.us/e/'+encodeURIComponent(item.id)
+    : (cfg.bookingUrl||'https://biddrop.us');
   const qrUrl=trackedUrl?'https://api.qrserver.com/v1/create-qr-code/?size=120x120&margin=4&data='+encodeURIComponent(trackedUrl):'';
   const finEnabled=cfg.financingEnabled!==false;
   const finApr=parseFloat(cfg.financingApr)||9.99;
@@ -9984,7 +10035,7 @@ async function loadAnalytics(){
     const signedPins = filteredPins.filter(p=>(p.status||'').toLowerCase()==='signed').length;
     // ── Estimates from Supabase ───────────────────────────────────────────────
     // Use only guaranteed-safe columns (no qr_scan_count/page_views which may not exist yet)
-    let estBaseQ = sb.from('estimates').select('id,addr,owner,rep,total,material,created_at,status')
+    let estBaseQ = sb.from('estimates').select('id,addr,owner,rep,total,material,created_at,status,qr_scan_count,page_views,booking_clicks,call_clicks,page_first_viewed_at')
       .eq('account_id', currentAccount.id);
     if(cutoff) estBaseQ = estBaseQ.gte('created_at', cutoff.toISOString());
     const estResult = await estBaseQ.order('created_at',{ascending:false}).limit(2000);
@@ -9993,6 +10044,9 @@ async function loadAnalytics(){
     const totalEsts = ests.length;
     const totalPipeline = ests.reduce((s,e)=>s+(Number(e.total)||0),0);
     const totalScans = ests.reduce((s,e)=>s+(e.qr_scan_count||0),0);
+    const totalPageViews = ests.reduce((s,e)=>s+(e.page_views||0),0);
+    const totalBookingClicks = ests.reduce((s,e)=>s+(e.booking_clicks||0),0);
+    const totalCallClicks = ests.reduce((s,e)=>s+(e.call_clicks||0),0);
     // ── Mail queue from Supabase ──────────────────────────────────────────────
     let qQuery = sb.from('queue').select('id,created_at,status,addr,owner,rep_name')
       .eq('account_id', currentAccount.id);
@@ -10011,6 +10065,12 @@ async function loadAnalytics(){
     setStat('an-pins', totalPins.toLocaleString());
     setStat('an-pipeline', totalPipeline>0?'$'+Math.round(totalPipeline).toLocaleString():'$0');
     setStat('an-close-rate', closeRate+'%');
+    // ── Retargeting stats ─────────────────────────────────────────────────────
+    setStat('an-page-views', totalPageViews.toLocaleString());
+    setStat('an-booking-clicks', totalBookingClicks.toLocaleString());
+    setStat('an-call-clicks', totalCallClicks.toLocaleString());
+    const viewRate = totalScans>0 ? Math.round(totalPageViews/totalScans*100) : 0;
+    setStat('an-view-rate', viewRate+'%');
     // ── Daily postcards chart ─────────────────────────────────────────────────
     const days = []; const dayLabels = [];
     const numDays = period==='all'?30:Math.min(parseInt(period),90);
@@ -10086,6 +10146,36 @@ async function loadAnalytics(){
         '<td style="padding:9px 14px;text-align:center;color:#22C55E;font-weight:700;">'+r.signed+'</td>'+
         '<td style="padding:9px 14px;text-align:center;color:var(--text);font-weight:700;">'+(r.pipeline?'$'+Math.round(r.pipeline).toLocaleString():'—')+'</td>'+
       '</tr>').join('') : '<tr><td colspan="7" style="padding:18px;text-align:center;color:var(--muted);">No data yet.</td></tr>';
+    }
+    // ── Per-estimate engagement table ────────────────────────────────────────
+    const estTbody = document.getElementById('an-est-table');
+    if(estTbody){
+      const estsWithActivity = ests
+        .filter(e=>(e.qr_scan_count||0)+(e.page_views||0)+(e.booking_clicks||0)+(e.call_clicks||0)>0)
+        .sort((a,b)=>((b.page_views||0)+(b.qr_scan_count||0))-(((a.page_views||0)+(a.qr_scan_count||0))));
+      const allEsts = [...estsWithActivity, ...ests.filter(e=>!estsWithActivity.includes(e))].slice(0,50);
+      if(allEsts.length){
+        estTbody.innerHTML = allEsts.map(e=>{
+          const scans = e.qr_scan_count||0;
+          const views = e.page_views||0;
+          const bookings = e.booking_clicks||0;
+          const calls = e.call_clicks||0;
+          const firstViewed = e.page_first_viewed_at ? new Date(e.page_first_viewed_at).toLocaleDateString('en-US',{month:'numeric',day:'numeric',year:'2-digit'}) : '—';
+          const hasActivity = scans+views+bookings+calls > 0;
+          return '<tr style="border-bottom:1px solid var(--border);'+(hasActivity?'':'opacity:.5')+'">' +
+            '<td style="padding:9px 14px;font-weight:600;color:var(--text);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(e.addr||'—')+'</td>'+
+            '<td style="padding:9px 14px;text-align:center;color:var(--text);font-weight:700;">'+(e.total?'$'+Math.round(e.total).toLocaleString():'—')+'</td>'+
+            '<td style="padding:9px 14px;text-align:center;color:'+(scans>0?'#F59E0B':'var(--muted)')+';font-weight:'+(scans>0?'700':'400')+';">'+scans+'</td>'+
+            '<td style="padding:9px 14px;text-align:center;color:'+(views>0?'#3B82F6':'var(--muted)')+';font-weight:'+(views>0?'700':'400')+';">'+views+'</td>'+
+            '<td style="padding:9px 14px;text-align:center;color:'+(bookings>0?'#22C55E':'var(--muted)')+';font-weight:'+(bookings>0?'700':'400')+';">'+bookings+'</td>'+
+            '<td style="padding:9px 14px;text-align:center;color:'+(calls>0?'#A855F7':'var(--muted)')+';font-weight:'+(calls>0?'700':'400')+';">'+calls+'</td>'+
+            '<td style="padding:9px 14px;text-align:center;color:var(--muted);font-size:11px;">'+firstViewed+'</td>'+
+            '<td style="padding:9px 14px;text-align:center;">'+(e.id?'<a href="https://biddrop.us/e/'+encodeURIComponent(e.id)+'" target="_blank" style="color:var(--accent);font-size:11px;font-weight:700;text-decoration:none;">View ↗</a>':'—')+'</td>'+
+          '</tr>';
+        }).join('');
+      } else {
+        estTbody.innerHTML = '<tr><td colspan="8" style="padding:18px;text-align:center;color:var(--muted);">No estimates in this period. Send some postcards to start tracking!</td></tr>';
+      }
     }
     // ── Material breakdown ────────────────────────────────────────────────────
     const matMap={};
@@ -10255,6 +10345,8 @@ function openSettings(){
   document.getElementById('s-yrs').value=c.yearsInBusiness||'5+';
   document.getElementById('s-warr').value=c.warrantyYears||'10';
   const sBioEl = document.getElementById('s-bio'); if(sBioEl) sBioEl.value=c.companyBio||'';
+  const sMetaPixelEl = document.getElementById('s-meta-pixel-id'); if(sMetaPixelEl) sMetaPixelEl.value=c.metaPixelId||'';
+  const sGoogleTagEl = document.getElementById('s-google-tag-id'); if(sGoogleTagEl) sGoogleTagEl.value=c.googleTagId||'';
   document.getElementById('s-hook').value=c.hookLetter||'';
   document.getElementById('s-why').value=c.whyReceived||'';
   document.getElementById('s-pc-hook').value=c.postcardHook||'';
@@ -10566,7 +10658,9 @@ function saveSettings(){
     headshotPos:document.getElementById('s-hspos').value||'30',
     bookingUrl:document.getElementById('s-bookingurl').value||'',
     dripEnabled: isAdminOrAbove() ? !!(document.getElementById('s-drip-enabled') && document.getElementById('s-drip-enabled').checked) : (S.cfg.dripEnabled||false),
-    companyBio: (document.getElementById('s-bio')||{}).value || ''
+    companyBio: (document.getElementById('s-bio')||{}).value || '',
+    metaPixelId: (document.getElementById('s-meta-pixel-id')||{}).value || '',
+    googleTagId: (document.getElementById('s-google-tag-id')||{}).value || ''
   };
   applyBrand();save();updatePreview();
   // Update solar add-on row visibility immediately after save
