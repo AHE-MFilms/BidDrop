@@ -9762,7 +9762,7 @@ async function loadHotLeads(){
       .gt('page_views', 0)
       .order('page_last_viewed_at', {ascending:false})
       .limit(100);
-    if(fullQ.error && (fullQ.error.code==='42703'||fullQ.error.message?.includes('column')||fullQ.error.message?.includes('does not exist')||fullQ.status===400)){
+    if(fullQ.error && (fullQ.error.code==='42703'||fullQ.error.message?.includes('column')||fullQ.error.message?.includes('does not exist')||fullQ.error.status===400||fullQ.error.code==='PGRST204')){
       // Columns not yet migrated — show upgrade prompt
       container.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);font-size:13px;">Hot Leads tracking requires a database migration.<br><br><button onclick="runMigration()" style="background:var(--accent);border:none;border-radius:8px;padding:10px 20px;color:#fff;font-weight:700;cursor:pointer;">Run Migration Now</button></div>';
       return;
@@ -11525,21 +11525,12 @@ async function migrateEstimatesFromPins(){
 
 async function loadEstimatesFromSupabase(){
   if(!currentAccount || !sb) return;
-  // Try with deleted_at filter; fall back without it if column doesn't exist yet (pre-migration)
-  let result = await sb.from('estimates')
+  // Load all estimates — filter deleted ones client-side (deleted_at column may not exist yet pre-migration)
+  const result = await sb.from('estimates')
     .select('*')
     .eq('account_id', currentAccount.id)
-    .is('deleted_at', null)
     .order('saved_at', {ascending: false})
     .limit(2000);
-  if(result.error && (result.status===400 || result.error.code==='42703' || result.error.message?.includes('column') || result.error.message?.includes('deleted_at'))){
-    // deleted_at column not yet added — load all and filter client-side
-    result = await sb.from('estimates')
-      .select('*')
-      .eq('account_id', currentAccount.id)
-      .order('saved_at', {ascending: false})
-      .limit(2000);
-  }
   const {data, error} = result;
   if(error){ console.warn('[BidDrop] loadEstimatesFromSupabase error:', error.message); return; }
   if(!data || !data.length) return;
