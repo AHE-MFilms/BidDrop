@@ -2948,6 +2948,12 @@ function newEstimate(){
   const vidEl = document.getElementById('e-video');
   if(vidEl) vidEl.value = defaultVid;
   if(defaultVid) onEstVideoUrlInput();
+  // Default expiration: 90 days from today
+  const expiresEl = document.getElementById('e-expires');
+  if(expiresEl){
+    const d90 = new Date(); d90.setDate(d90.getDate()+90);
+    expiresEl.value = d90.toISOString().split('T')[0];
+  }
   toast('🗒 New estimate started','info');
 }
 
@@ -8176,7 +8182,7 @@ async function renderPostcard6x9BackCanvas(item){
   const phoneSize=cfg.postcardPhoneSize||42;
   const scanCta=cfg.postcardScanCta||'SCAN TO BOOK';
   const scanSub=cfg.postcardScanSub||'No-pressure booking';
-  const urgencyDate=new Date();urgencyDate.setDate(urgencyDate.getDate()+30);
+  const urgencyDate=new Date();urgencyDate.setDate(urgencyDate.getDate()+90);
   const urgencyStr=urgencyDate.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
   const headshotUrl=cfg.headshot||null;
   const headshotPos=parseFloat(cfg.headshotPos||'30')/100;
@@ -8596,7 +8602,7 @@ function buildPostcard6x9BackHtml(item){
   const repName=cfg.repName||'';
   const repTitle=cfg.repTitle||'Owner';
   const badges=[cfg.diff1||'Licensed & Insured',cfg.diff2||'Manufacturer Certified',cfg.diff3||'Workmanship Warranty'].filter(Boolean).slice(0,3);
-  const urgencyDate=new Date();urgencyDate.setDate(urgencyDate.getDate()+30);
+  const urgencyDate=new Date();urgencyDate.setDate(urgencyDate.getDate()+90);
   const urgencyStr=urgencyDate.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
 *{margin:0;padding:0;box-sizing:border-box}

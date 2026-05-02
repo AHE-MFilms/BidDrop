@@ -371,13 +371,7 @@ body{font-family:'Open Sans',sans-serif;background:var(--cream-soft);color:var(-
   <div style="font-size:13px;margin-top:4px;">Please contact your roofing contractor for assistance.</div>
 </div>
 
-<!-- Expired -->
-<div id="ep-expired" style="display:none;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:16px;background:var(--ink);padding:40px 24px;text-align:center;">
-  <div style="font-size:52px;">📅</div>
-  <div style="font-family:'Roboto',sans-serif;font-size:26px;font-weight:700;color:#fff;">This estimate has expired</div>
-  <div style="font-size:15px;color:rgba(255,255,255,.65);max-width:380px;line-height:1.6;" id="ep-expired-msg">This estimate was valid for a limited time. Please contact the roofing company for an updated quote.</div>
-  <div id="ep-expired-contact" style="margin-top:8px;"></div>
-</div>
+
 <!-- Lead Gate -->
 <div id="ep-gate">
   <div class="ep-gate-box">
@@ -407,6 +401,10 @@ body{font-family:'Open Sans',sans-serif;background:var(--cream-soft);color:var(-
 
 <!-- Main Page -->
 <div id="ep-page">
+  <!-- ── EXPIRED NOTICE (injected by JS when past expiresAt) ── -->
+  <div id="ep-expired-banner" style="display:none;background:#7c2d12;border-bottom:2px solid #ea580c;padding:10px 24px;text-align:center;position:sticky;top:0;z-index:1001;">
+    <span id="ep-expired-banner-msg" style="font-size:13px;color:#fff;font-weight:600;"></span>
+  </div>
   <!-- ── STICKY CONTACT BAR ── -->
   <div class="ep-sticky-bar" id="ep-sticky-bar">
     <div class="ep-sticky-co">
@@ -662,20 +660,20 @@ function init(){
     .then(d=>{
       if(!d||!d.estimate){showError();return;}
       _est=d.estimate;_acct=d.account;
-      // ── Expiration check ──
+      // ── Expiration check (non-blocking — page stays live, just shows a notice) ──
       if(_est.expiresAt){
         const expiry=new Date(_est.expiresAt);
         if(!isNaN(expiry) && expiry < new Date()){
-          $('ep-loading').style.display='none';
-          const expDiv=$('ep-expired');
-          if(expDiv){
+          // Show a slim banner but DO NOT block the page
+          const banner=$('ep-expired-banner');
+          if(banner){
             const co=_acct&&_acct.companyName?_acct.companyName:'the roofing company';
             const ph=_acct&&(_acct.companyPhone||_acct.phone);
-            $('ep-expired-msg').textContent='This estimate was valid until '+expiry.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})+'. Contact '+co+' for an updated quote.';
-            if(ph){$('ep-expired-contact').innerHTML='<a href="tel:'+ph.replace(/[^0-9+]/g,'')+'" style="display:inline-block;background:#C97D2E;color:#fff;padding:12px 28px;border-radius:10px;font-family:Roboto,sans-serif;font-weight:700;font-size:16px;text-decoration:none;">📞 Call '+ph+'</a>';}
-            expDiv.style.display='flex';
+            const expStr=expiry.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+            const phStr=ph?' — Call '+ph:'';
+            $('ep-expired-banner-msg').textContent='⏰ This estimate expired on '+expStr+'. Contact '+co+' for an updated quote'+phStr+'.';
+            banner.style.display='block';
           }
-          return;
         }
       }
       // Compute prices for all mats
@@ -777,7 +775,7 @@ function buildPage(firstName,lastName,email,phone){
     {icon:'📋',val:_estId.replace('est_','EST-'),lbl:'Estimate Number'},
     estDate?{icon:'📅',val:estDate,lbl:'Assessment Date'}:null,
     repName?{icon:'👷',val:repName,lbl:'Assigned Estimator'}:null,
-    expDate?{icon:'⏱️',val:'Valid Through '+expDate,lbl:'Estimate Expiration'}:null,
+    expDate?{icon:'⏱️',val:(est.expiresAt&&new Date(est.expiresAt)<new Date()?'Expired — ':'Valid Through ')+expDate,lbl:'Estimate Expiration'}:null,
   ].filter(Boolean);
   $('ep-prop-row').innerHTML=propItems.map(p=>`
     <div class="ep-prop-item">
