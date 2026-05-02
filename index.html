@@ -9953,7 +9953,7 @@ async function loadAnalytics(){
     const totalPipeline = ests.reduce((s,e)=>s+(Number(e.total)||0),0);
     const totalScans = ests.reduce((s,e)=>s+(e.qr_scan_count||0),0);
     // ── Mail queue from Supabase ──────────────────────────────────────────────
-    let qQuery = sb.from('queue').select('id,created_at,status,addr,owner')
+    let qQuery = sb.from('queue').select('id,created_at,status,addr,owner,rep_name')
       .eq('account_id', currentAccount.id);
     if(cutoff) qQuery = qQuery.gte('created_at', cutoff.toISOString());
     const {data:queue} = await qQuery.limit(5000);
@@ -10027,8 +10027,9 @@ async function loadAnalytics(){
       if((p.status||'').toLowerCase()==='signed') repMap[rep].signed++;
     });
     q.forEach(m=>{
-      // Queue items don't store rep directly — use owner name as proxy, or 'Unknown'
-      const rep=m.owner||'Unknown';
+      // Use rep_name from queue item (set when mailer was sent); only attribute to known reps
+      const rep=m.rep_name||null;
+      if(!rep) return; // skip queue items with no rep_name (old records before migration)
       if(!repMap[rep]) repMap[rep]={name:rep,pins:0,estimates:0,mailers:0,scans:0,signed:0,pipeline:0};
       repMap[rep].mailers++;
     });
@@ -11735,13 +11736,16 @@ async function sbSaveQueueItem(item){
   // Embed photo_url, photo_data, pin_id inside structures as _meta (no extra columns needed)
   const structs = (item.structures||[]).filter(s=>s&&s.id!=='_meta');
   const meta = {id:'_meta', photo_url: item.photo_url||null, photo_data: item.photo_data||null, pin_id: item.pinId||null};
+  // Capture rep name at send time for analytics attribution
+  const repName = item.rep_name || currentProfile?.name || currentProfile?.full_name || currentUser?.email?.split('@')[0] || null;
   const {error} = await sb.from('queue').upsert({
     id: item.id, account_id: currentAccount.id, created_by: currentUser.id,
     owner: item.owner, addr: item.addr, email: item.email||'',
     sqft: item.sqft, pitch: item.pitch, mat: item.mat,
     structures: [...structs, meta], total: item.total,
     status: item.status, lob_id: item.lobId||null,
-    mailed_at: item.mailedAt||null
+    mailed_at: item.mailedAt||null,
+    rep_name: repName
   });
   if(error) console.error('Queue save error:', error);
 }
