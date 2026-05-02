@@ -982,7 +982,7 @@ tr:hover td{background:var(--card);}
         </div>
       </div>
       <div class="fg">
-        <label class="fl">Homeowner Email <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— required to Send via GHL</span></label>
+        <label class="fl">Homeowner Email <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— required to Email via GHL</span></label>
         <input class="fi" id="e-email" placeholder="jane@email.com" type="email">
       </div>
       <div class="fg" id="estimate-page-settings-section" style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:12px;">
@@ -1085,7 +1085,7 @@ tr:hover td{background:var(--card);}
       <div style="display:flex;flex-direction:column;gap:8px;">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <button style="background:#1a7f4b;border:none;border-radius:10px;padding:14px;color:#fff;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;" onclick="sendViaGHL()">
-            <span style="font-size:16px;">⚡</span> Send via GHL
+            <span style="font-size:16px;">📧</span> Email via GHL
           </button>
           <button style="background:#1f3d68;border:none;border-radius:10px;padding:14px;color:#fff;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;" onclick="printNow()">
             <span style="font-size:16px;">🖨</span> Print Now
@@ -2273,7 +2273,7 @@ tr:hover td{background:var(--card);}
     <input type="hidden" id="fu-pin-id">
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeM('m-follow-up')">Cancel</button>
-      <button class="btn-ok" onclick="sendFollowUp()">Send via GHL</button>
+      <button class="btn-ok" onclick="sendFollowUp()">Send Follow-Up</button>
     </div>
   </div>
 </div>
@@ -3128,6 +3128,8 @@ function saveEstimateNow(){
   clearDraftBanner();
   save();
   addAct('Estimate saved for <strong>'+escHtml(pin.address||'')+'</strong> — <strong>$'+total.toLocaleString()+'</strong>','bid_sent');
+  // Auto-sync estimate total to GHL opportunity (fire-and-forget)
+  ghlUpdateOpportunityValue(pin, total).catch(e=>console.warn('GHL opp update:', e));
   toast('✅ Estimate saved!','success');
   setTimeout(()=>{ newEstimate(); goTab('estimates'); }, 600);
 }
@@ -5439,7 +5441,7 @@ async function sendFollowUp(){
   } catch(e){
     toast('Send failed: '+e.message,'error');
   } finally {
-    if(btn){btn.textContent='Send via GHL';btn.disabled=false;}
+    if(btn){btn.textContent='Send Follow-Up';btn.disabled=false;}
   }
 }
 
@@ -6780,6 +6782,17 @@ function addToQueue(){
   addAct('Estimate for <strong>'+escHtml(addr)+'</strong> queued','bid_sent');
   sbSaveQueueItem(item).catch(e=>console.error('Queue:',e));
   sbAddActivity('Estimate queued for <strong>'+escHtml(addr)+'</strong> — $'+grand.toLocaleString(),'bid_sent');
+  // Auto-tag GHL contact with biddrop-postcard and advance to Stage 2 (fire-and-forget)
+  if(S.cfg.ghlLocationId){
+    const qPin = S.pins.find(p=>p.address&&p.address.trim()===addr.trim());
+    if(qPin && qPin.ghlContactId){
+      ghlAddContactTag(qPin.ghlContactId, 'biddrop-postcard').catch(e=>console.warn('GHL tag:', e));
+      if(qPin.ghlOpportunityId){
+        ghlUpdateOpportunityStage(qPin.ghlOpportunityId, '2d06ced7-0bcf-432a-b925-701daada9ef4', null)
+          .catch(e=>console.warn('GHL stage:', e));
+      }
+    }
+  }
   save();toast('📬 Added to mail queue!','success');renderQueue();
 }
 
@@ -7401,6 +7414,14 @@ function addEstimateToMailQueue(estId){
   save();
   renderEstimatesTab();
   toast('Added to Mail Queue!', 'success');
+  // Auto-tag GHL contact with biddrop-postcard and advance to Stage 2 (fire-and-forget)
+  if(S.cfg.ghlLocationId && pin && pin.ghlContactId){
+    ghlAddContactTag(pin.ghlContactId, 'biddrop-postcard').catch(e=>console.warn('GHL tag:', e));
+    if(pin.ghlOpportunityId){
+      ghlUpdateOpportunityStage(pin.ghlOpportunityId, '2d06ced7-0bcf-432a-b925-701daada9ef4', null)
+        .catch(e=>console.warn('GHL stage:', e));
+    }
+  }
 }
 async function sendEstimateViaGHL(estId){
   const est = (S.estimates||[]).find(e=>e.id===estId);
@@ -9908,7 +9929,7 @@ async function loadHotLeads(){
       // Find pin for quick actions
       const pin = S.pins.find(p=>p.address&&r.addr&&p.address.trim()===r.addr.trim());
       const pinId = pin ? pin.id : null;
-      const hasGhl = !!(S.cfg&&(S.cfg.ghlApiKey||S.cfg.ghlLocationId));
+      const hasGhl = !!(S.cfg&&S.cfg.ghlLocationId);
       const hasEmail = !!(r.email);
       return '<div class="hl-row" onclick="openHotLeadDetail(\''+r.id+'\')" style="cursor:pointer;">'+
         '<div class="hl-heat" style="background:'+heatColor+'22;border:1px solid '+heatColor+'44;border-radius:8px;padding:6px 10px;text-align:center;min-width:90px;">'+
@@ -10002,8 +10023,8 @@ async function hlSendToGHL(btn){
 }
 
 async function _doSendToGHL(btn, estId, owner, addr, email, total, rep){
-  if(!S.cfg || (!S.cfg.ghlApiKey && !S.cfg.ghlLocationId)){
-    toast('GHL not configured. Add your GHL API Key in Settings.','error');
+  if(!S.cfg || !S.cfg.ghlLocationId){
+    toast('GHL not configured. Add your GHL Location ID in Settings.','error');
     return;
   }
   const origText = btn.textContent;
@@ -11004,9 +11025,7 @@ async function ghlFetchStages(){
   const sel = document.getElementById('s-ghl-stage');
   const pipelineId = document.getElementById('s-ghl-pipe').value.trim() || 'bxskBIBdbklHry0B63qx';
   const locId = document.getElementById('s-ghl-loc').value.trim() || 'gz85VU6SxGXS7lqHAQGx';
-  if(!document.getElementById('s-ghl-key').value.trim()){
-    toast('Enter your GHL API key first','error'); return;
-  }
+  // GHL API key is stored server-side — no client-side check needed
   btn.textContent='Loading...'; btn.disabled=true;
   try {
     const data = await ghlRequest('/opportunities/pipelines/'+pipelineId+'?locationId='+locId);
@@ -11083,10 +11102,11 @@ async function ghlUpdateOpportunityStage(opportunityId, stageId, wonLost){
 
 // Auto-push a new pin to GHL as a contact + opportunity (fire-and-forget)
 async function ghlAutoPushPin(pin){
-  if(!S.cfg.ghlApiKey && !S.cfg.ghlLocationId) return; // GHL not configured
+  // GHL key is server-side only — only check locationId to see if GHL is configured
+  if(!S.cfg.ghlLocationId) return;
   if(!S.cfg.ghlPipelineId) return;
   try {
-    const contactId = await ghlUpsertContact(pin.rep||'Homeowner', pin.address, null);
+    const contactId = await ghlUpsertContact(pin.rep||'Homeowner', pin.address, pin.phone||null);
     if(!contactId) return;
     const oppId = await ghlCreateOpportunity(contactId, pin.rep, pin.address, 0);
     // Store GHL IDs on the pin for future stage updates
@@ -11105,16 +11125,55 @@ async function ghlAutoPushPin(pin){
   }
 }
 
+// Update GHL opportunity monetary value when estimate is saved
+async function ghlUpdateOpportunityValue(pin, total){
+  if(!S.cfg.ghlLocationId) return;
+  if(pin.ghlOpportunityId){
+    try{
+      await ghlRequest('/opportunities/'+pin.ghlOpportunityId, 'PUT', { monetaryValue: total||0 });
+      console.log('BidDrop: GHL opportunity value updated to $'+total+' for', pin.address);
+    }catch(e){ console.warn('BidDrop: GHL opp value update failed:', e.message); }
+    return;
+  }
+  // No opportunity yet — create contact+opportunity now
+  try{
+    const contactId = await ghlUpsertContact(pin.rep||'Homeowner', pin.address, pin.phone||null);
+    if(!contactId) return;
+    const oppId = await ghlCreateOpportunity(contactId, pin.rep, pin.address, total||0);
+    pin.ghlContactId = contactId;
+    pin.ghlOpportunityId = oppId;
+    if(currentAccount){
+      sb.from('pins').update({ ghl_contact_id: contactId, ghl_opportunity_id: oppId }).eq('id', pin.id)
+        .then(({error})=>{ if(error) console.warn('GHL ID save:', error); });
+    }
+    console.log('BidDrop: GHL contact+opportunity created (on estimate save) for', pin.address, '$'+total);
+  }catch(e){ console.warn('BidDrop: GHL late push failed:', e.message); }
+}
+// Add a tag to a GHL contact by contactId
+async function ghlAddContactTag(contactId, tag){
+  if(!contactId || !tag) return;
+  try{
+    await ghlRequest('/contacts/'+contactId+'/tags', 'POST', { tags: [tag] });
+    console.log('BidDrop: GHL tag added:', tag, 'to', contactId);
+  }catch(e){ console.warn('BidDrop: GHL tag failed:', e.message); }
+}
 // Update GHL opportunity stage when pin status changes
 async function ghlSyncPinStatus(pin){
   if(!pin.ghlOpportunityId) return;
-  if(!S.cfg.ghlApiKey && !S.cfg.ghlLocationId) return;
+  if(!S.cfg.ghlLocationId) return;
   try {
     let wonLost = null;
     if(pin.status === 'converted') wonLost = 'won';
     if(pin.status === 'not_interested') wonLost = 'lost';
-    // Use the configured stage for bid_sent, otherwise just update won/lost
-    const stageId = (pin.status === 'bid_sent') ? (S.cfg.ghlStageId||null) : null;
+    // Map BidDrop pin status to pipeline stage IDs
+    const STAGE_MAP = {
+      'quoted':        '2d06ced7-0bcf-432a-b925-701daada9ef4', // Stage 2: Postcard Mailed
+      'bid_sent':      S.cfg.ghlStageId || '887131f7-39be-49c1-b5f3-f9b53d7b986e', // Stage 4: Estimate Viewed
+      'signed':        '62444bae-6e67-42c9-812b-7dbf1648e153', // Stage 6: Signed
+      'converted':     '62444bae-6e67-42c9-812b-7dbf1648e153', // Stage 6: Signed
+      'not_interested':'48091422-c19b-4eef-bdbd-488e3b45e10f', // Stage 7: Not Interested
+    };
+    const stageId = STAGE_MAP[pin.status] || null;
     await ghlUpdateOpportunityStage(pin.ghlOpportunityId, stageId, wonLost);
     console.log('BidDrop: GHL opportunity updated for', pin.address, '->', pin.status);
   } catch(e){
@@ -11149,7 +11208,7 @@ async function ghlSendEmail(contactId, toEmail, toName, subject, htmlBody){
 
 // Add a note to a GHL contact by address lookup
 async function ghlAddDripNote(ownerName, address, stepNum, mailedAt){
-  if(!S.cfg.ghlApiKey && !S.cfg.ghlLocationId) return;
+  if(!S.cfg.ghlLocationId) return;
   try {
     // Find contact by address
     const locationId = S.cfg.ghlLocationId || 'gz85VU6SxGXS7lqHAQGx';
