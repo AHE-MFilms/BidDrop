@@ -2098,6 +2098,15 @@ tr:hover td{background:var(--card);}
               </div>
             </div>
           </div>
+          <!-- Bulk sync existing leads to GHL -->
+          <div style="margin-top:14px;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:8px;padding:12px 14px;">
+            <div style="font-size:11px;font-weight:700;color:#22C55E;margin-bottom:6px;">&#128257; Sync Existing Leads to GHL</div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Push all pins that haven't been sent to GHL yet. Creates a contact + opportunity for each one. Safe to run multiple times — skips pins already synced.</div>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <button id="btn-ghl-bulk-sync" onclick="ghlBulkSync()" style="background:#166534;border:1px solid #22C55E;border-radius:8px;padding:9px 18px;color:#4ade80;font-family:var(--font-b);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">&#128257; Sync All Leads to GHL</button>
+              <span id="ghl-bulk-sync-status" style="font-size:11px;color:var(--muted);"></span>
+            </div>
+          </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Follow-Up Message Templates</div>
           <div style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:8px 12px;font-size:11px;color:var(--muted);margin-bottom:10px;">Use <code style="background:var(--card2);padding:1px 5px;border-radius:3px;color:var(--accent);">{name}</code> <code style="background:var(--card2);padding:1px 5px;border-radius:3px;color:var(--accent);">{rep}</code> <code style="background:var(--card2);padding:1px 5px;border-radius:3px;color:var(--accent);">{company}</code> <code style="background:var(--card2);padding:1px 5px;border-radius:3px;color:var(--accent);">{address}</code> as tokens.</div>
           <div class="fg"><label class="fl">SMS Template</label><textarea class="fi" id="s-ghl-sms-tpl" rows="3" style="resize:vertical;" placeholder="Hi {name}! This is {rep} from {company}..."></textarea></div>
@@ -11020,6 +11029,62 @@ async function ghlRequest(path, method='GET', body=null){
   return data;
 }
 
+// ── Bulk sync all existing pins to GHL ──────────────────────────────────
+async function ghlBulkSync(){
+  if(!S.cfg.ghlLocationId){
+    toast('GHL Location ID not configured. Save your GHL settings first.','error'); return;
+  }
+  if(!S.cfg.ghlPipelineId){
+    toast('GHL Pipeline ID not configured. Save your GHL settings first.','error'); return;
+  }
+  const btn = document.getElementById('btn-ghl-bulk-sync');
+  const statusEl = document.getElementById('ghl-bulk-sync-status');
+  // Find all pins without GHL contact IDs
+  const unsynced = (S.pins||[]).filter(p => !p.ghlContactId && !p.deletedAt && p.address);
+  if(!unsynced.length){
+    toast('All leads are already synced to GHL! ✅','success');
+    if(statusEl) statusEl.textContent = 'All leads already synced ✅';
+    return;
+  }
+  if(btn){ btn.textContent = 'Syncing…'; btn.disabled = true; }
+  if(statusEl) statusEl.textContent = '0 / '+unsynced.length+' synced…';
+  let done = 0, failed = 0;
+  for(const pin of unsynced){
+    try{
+      // Get estimate total if available
+      const est = (S.estimates||[]).find(e=>e.pinId===pin.id && !e.deletedAt);
+      const total = est ? (est.total||0) : 0;
+      const contactId = await ghlUpsertContact(pin.rep||'Homeowner', pin.address, pin.phone||null);
+      if(!contactId) throw new Error('No contact ID returned');
+      const oppId = await ghlCreateOpportunity(contactId, pin.rep, pin.address, total);
+      // Update in-memory pin
+      pin.ghlContactId = contactId;
+      pin.ghlOpportunityId = oppId;
+      // Persist to Supabase
+      if(currentAccount){
+        sb.from('pins').update({ ghl_contact_id: contactId, ghl_opportunity_id: oppId }).eq('id', pin.id)
+          .then(({error})=>{ if(error) console.warn('GHL bulk save:', error); });
+      }
+      // If pin was queued for mail, add postcard tag
+      const wasQueued = (S.queue||[]).some(q=>q.pinId===pin.id || (q.addr&&q.addr.trim()===pin.address.trim()));
+      if(wasQueued) ghlAddContactTag(contactId, 'biddrop-postcard').catch(()=>{});
+      // Advance stage based on current pin status
+      if(oppId) ghlSyncPinStatus(pin).catch(()=>{});
+      done++;
+    }catch(e){
+      console.warn('GHL bulk sync failed for', pin.address, e.message);
+      failed++;
+    }
+    if(statusEl) statusEl.textContent = done+' / '+unsynced.length+' synced…';
+    // Small delay to avoid GHL rate limits
+    await new Promise(r=>setTimeout(r,300));
+  }
+  save();
+  if(btn){ btn.textContent = '🔄 Sync All Leads to GHL'; btn.disabled = false; }
+  const msg = done+' lead'+(done!==1?'s':'')+' synced to GHL'+(failed?' (⚠️ '+failed+' failed)':'')+'!';
+  if(statusEl) statusEl.textContent = msg;
+  toast(done+' lead'+(done!==1?'s':'')+' synced to GHL ✅', 'success');
+}
 async function ghlFetchStages(){
   const btn = document.getElementById('btn-fetch-stages');
   const sel = document.getElementById('s-ghl-stage');
