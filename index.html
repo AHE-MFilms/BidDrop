@@ -2482,7 +2482,7 @@ async function syncAccountToSupabase(){
     rep_video_url_default: cfg.repVideoUrl||null,
     offer_siding: cfg.offerSiding, offer_windows: cfg.offerWindows,
     offer_gutters: cfg.offerGutters, offer_solar: cfg.offerSolar, offer_custom: cfg.offerCustom,
-    cost_solar_per_watt: cfg.costSolarPerWatt,
+    // cost_solar_per_watt removed — not in DB schema yet
     referral_amt: cfg.referralAmt, referral_text: cfg.referralText,
     cost_architectural: cfg.costArchitectural, cost_3tab: cfg.cost3Tab,
     cost_designer: cfg.costDesigner, cost_metal: cfg.costMetal,
@@ -4302,10 +4302,7 @@ function _autoSaveEstimateOnLeave(){
       damage_photos: dmgPhotos||null,
       skylight: sky, skylight_qty: skyQ,
       chimney: chim, gutters: gut, gutter_lf: gutQ,
-      solar: (document.getElementById('a-solar')||{}).checked||false,
-      solar_kw: parseFloat((document.getElementById('a-solar-kw')||{}).value||0)||null,
-      solar_flat: parseFloat((document.getElementById('a-solar-flat')||{}).value||0)||null,
-      solar_price: getSolarPrice()||null,
+      // solar columns removed — not in DB schema yet
       version: (existing&&existing.version)||1,
       is_revision: false,
       saved_at: new Date().toISOString(),
@@ -11176,8 +11173,8 @@ async function sendViaGHL(){
   const email  = document.getElementById('e-email').value.trim();
   const total  = calcP();
 
-  if(!addr){toast('Enter a property address first','error');return;}
-  if(!email){toast('Enter homeowner email to send via GHL','error');return;}
+
+
   if(!total){toast('Build an estimate first','error');return;}
 
   // GHL API key is used server-side only — no need to check it here
@@ -11185,12 +11182,13 @@ async function sendViaGHL(){
   toast('Sending to GHL...','info');
   try {
     // 1. Upsert contact
-    const contactId = await ghlUpsertContact(owner||'Homeowner', addr, email);
+    const contactId = await ghlUpsertContact(owner||'Homeowner', addr, email||null);
     toast('✅ Contact created in GHL','success');
 
     // 2. Create opportunity (fire and forget — no blocking)
     ghlCreateOpportunity(contactId, owner, addr, total).catch(e=>console.warn('Opp error:',e));
 
+    if(email){
     // 3. Build email HTML = full mailer
     const mailerHtml = document.getElementById('mailer-preview').innerHTML;
     const fullHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8">
@@ -11211,6 +11209,10 @@ async function sendViaGHL(){
     save();
 
     toast('🚀 Mailer sent via GHL!','success');
+    } else {
+      addAct('Contact + opportunity created in GHL for <strong>'+escHtml(owner||'Homeowner')+'</strong> — no email on file','bid_sent');
+      toast('✅ Contact + opportunity created in GHL (no email on file)','success');
+    }
     // Mark on pin if address matches
     const pin = S.pins.find(p=>p.address===addr);
     if(pin && pin.status==='needs_roof'){
