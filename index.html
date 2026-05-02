@@ -4025,6 +4025,22 @@ function openPhotoModal(pinId){
   // If a pinId is passed (from map popup), store it so uploads attach to that pin
   if(pinId) window._photoModalPinId = pinId;
   else window._photoModalPinId = currentEstPinId || null;
+  // Always reload photos from the authoritative source before rendering:
+  // - If a real pin ID was passed, load from that pin (and its linked estimate)
+  // - If called from estimator (no pinId or pinId='pin'), keep window._allPhotos as-is
+  const realPinId = window._photoModalPinId;
+  if(realPinId && realPinId !== 'pin'){
+    const pin = S.pins && S.pins.find(p=>p.id===realPinId);
+    if(pin){
+      // Prefer the estimate's all_photos if it has more (may have been updated more recently)
+      const linkedEst = (S.estimates||[]).find(e=>e.pinId===realPinId && !e.deletedAt && !e.isRevision);
+      if(linkedEst && linkedEst.all_photos){
+        _loadAllPhotosFromEst(linkedEst, pin);
+      } else {
+        _loadAllPhotosFromPin(pin);
+      }
+    }
+  }
   renderPhotoModal();
   openM('m-photos');
 }
@@ -4896,7 +4912,7 @@ function addMarker(pin){
       ${pin.estimate && pin.estimate.total ? `<div style="background:#0a1628;border:1px solid #3B82F655;border-radius:6px;padding:5px 8px;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;"><span style="font-size:9px;font-weight:700;color:#3B82F6;">✓ ESTIMATE</span><span style="font-size:13px;font-weight:700;color:#FFF;">$${(pin.estimate.total||0).toLocaleString()}</span></div>` : ''}
       <button onclick="goEstFromPin('${pid}')" style="background:#F25C05;border:none;border-radius:7px;padding:8px;color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">${pin.estimate && pin.estimate.total ? '📋 Edit Estimate' : '📋 Build Estimate'}</button>
       <button onclick="measureForPin('${pid}')" style="background:transparent;border:1.5px solid #F25C05;border-radius:7px;padding:6px;color:#F25C05;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">📐 Measure Roof</button>
-      <button onclick="_loadAllPhotosFromPin(S.pins.find(p=>p.id==='${pid}'));openPhotoModal('${pid}')" style="background:transparent;border:1.5px solid #22C55E;border-radius:7px;padding:6px;color:#22C55E;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">📷 Manage Photos</button>
+      <button onclick="openPhotoModal('${pid}')" style="background:transparent;border:1.5px solid #22C55E;border-radius:7px;padding:6px;color:#22C55E;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">📷 Manage Photos</button>
       <button onclick="confirmDeletePin('${pid}')" style="background:transparent;border:1.5px solid #EF4444;border-radius:7px;padding:5px;color:#EF4444;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;display:block;">🗑 Delete Pin</button>
     </div>
   `,{maxWidth:260});
