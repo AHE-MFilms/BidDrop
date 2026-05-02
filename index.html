@@ -11768,9 +11768,11 @@ function _rowToPin(row){
 }
 
 // ── Helper: rebuild S.estimates from S.pins ───────────────────────────────────
+let _estimateMigrationDone = false;
 async function migrateEstimatesFromPins(){
   // One-time migration: copy estimates from pins.estimate JSONB into the estimates table
   // This runs silently on first login after the estimates table was created.
+  if(_estimateMigrationDone) return;  // already ran (success or failure) — don't retry
   if(!currentAccount || !sb) return;
   const pinsWithEstimates = (S.pins||[]).filter(p => p.estimate && p.estimate.structures && p.estimate.structures.length > 0);
   if(!pinsWithEstimates.length) return;
@@ -11809,6 +11811,7 @@ async function migrateEstimatesFromPins(){
     };
   });
   const {error} = await sb.from('estimates').upsert(rows, {onConflict:'id'});
+  _estimateMigrationDone = true;  // don't retry regardless of outcome
   if(error) console.warn('[BidDrop] migrateEstimatesFromPins error:', error.message);
   else console.log('[BidDrop] Migration complete:', rows.length, 'estimates migrated');
 }
