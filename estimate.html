@@ -627,6 +627,8 @@ function computePrice(structures,matKey,acct){
   return Math.round(subtotal*(1+overhead)*(1+margin));
 }
 
+// ── Config ─────────────────────────────────────────────────────────────────
+const API_BASE='https://biddrop.americashomeexperts.com';
 // ── State ──────────────────────────────────────────────────────────────────
 let _estId='',_est=null,_acct=null,_prices={};
 
@@ -635,7 +637,7 @@ function init(){
   const parts=location.pathname.split('/').filter(Boolean);
   _estId=parts[parts.length-1]||'';
   if(!_estId||!_estId.startsWith('est_')){showError();return;}
-  fetch('/api/estimate?action=get&id='+encodeURIComponent(_estId))
+  fetch(API_BASE+'/api/estimate?action=get&id='+encodeURIComponent(_estId))
     .then(r=>r.json())
     .then(d=>{
       if(!d||!d.estimate){showError();return;}
@@ -669,7 +671,7 @@ function submitGate(){
   $('ep-gate').style.display='none';
   buildPage(first,last,email,phone);
   // Capture lead
-  try{fetch('/api/estimate',{method:'POST',headers:{'Content-Type':'application/json'},
+  try{fetch(API_BASE+'/api/estimate',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({action:'capture_lead',estimate_id:_estId,first_name:first,last_name:last,email,phone})});}catch(e){}
 }
 
@@ -705,7 +707,7 @@ function buildPage(firstName,lastName,email,phone){
     $('ep-sticky-phone-num').textContent=acctPhone;
     $('ep-sticky-phone').addEventListener('click',function(){
       firePixels('CallClicked',{value:_est?_est.total:0,currency:'USD',content_name:_est?_est.addr:''});
-      try{fetch('/api/estimate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'track_event',id:_estId,event:'call_click',data:{}})});}catch(e){}
+      try{fetch(API_BASE+'/api/estimate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'track_event',id:_estId,event:'call_click',data:{}})});}catch(e){}
     },{once:true});
   } else {
     $('ep-sticky-phone').style.display='none';
@@ -716,7 +718,7 @@ function buildPage(firstName,lastName,email,phone){
     $('ep-sticky-cta').target='_blank';
     $('ep-sticky-cta').addEventListener('click',function(){
       firePixels('BookingClicked',{value:_est?_est.total:0,currency:'USD',content_name:_est?_est.addr:''});
-      try{fetch('/api/estimate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'track_event',id:_estId,event:'booking_click',data:{}})});}catch(e){}
+      try{fetch(API_BASE+'/api/estimate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'track_event',id:_estId,event:'booking_click',data:{}})});}catch(e){}
     },{once:true});
   } else{$('ep-sticky-cta').style.display='none';}
 
@@ -957,7 +959,7 @@ function loadReviews(acct){
   const placeId=acct.googlePlaceId||'';
   if(placeId){
     // Fetch via our proxy API
-    fetch('/api/estimate?action=reviews&place_id='+encodeURIComponent(placeId))
+    fetch(API_BASE+'/api/estimate?action=reviews&place_id='+encodeURIComponent(placeId))
       .then(r=>r.json())
       .then(d=>{
         if(d&&d.reviews&&d.reviews.length){renderReviews(d.reviews,d.rating,d.user_ratings_total,acct);}
@@ -1031,7 +1033,7 @@ function selectMat(key){
   const p=prices[key]||0;
   $('ep-price').textContent=Math.round(p).toLocaleString();
   $('ep-monthly').textContent=acct.financingEnabled!==false?fmtMo(p,acct.financingApr,acct.financingTerm):'';
-  try{fetch('/api/estimate',{method:'POST',headers:{'Content-Type':'application/json'},
+  try{fetch(API_BASE+'/api/estimate',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({action:'track_event',id:_estId,event:'mat_click',data:{mat:key}})});}catch(e){}
 }
 
@@ -1089,7 +1091,7 @@ function initFade(){
 
 // ── Track ──────────────────────────────────────────────────────────────────
 function trackView(){
-  try{fetch('/api/estimate',{method:'POST',headers:{'Content-Type':'application/json'},
+  try{fetch(API_BASE+'/api/estimate',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({action:'track_view',id:_estId,seconds:0})});}catch(e){}
 }
 
