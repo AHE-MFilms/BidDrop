@@ -10082,6 +10082,15 @@ async function _doSendToGHL(btn, estId, owner, addr, email, total, rep){
     }
     // Add a note with estimate page URL
     const estUrl = window.location.origin+'/e/'+estId;
+    // Push estimate URL to GHL custom field (fire-and-forget)
+    ghlEnsureEstimateUrlField().then(fieldId=>{
+      if(!fieldId) return;
+      ghlRequest('/contacts/'+contactId, 'PUT', {
+        customFields: [{ id: fieldId, value: estUrl }]
+      }).then(()=>console.log('[BidDrop] GHL: estimate URL set on contact:', estUrl))
+        .catch(e=>console.warn('[BidDrop] GHL: estimate URL field update failed:', e.message));
+    });
+    // Also add a note with the estimate URL for easy reference
     try{
       await ghlRequest('/contacts/'+contactId+'/notes', 'POST', {
         body: 'BidDrop Hot Lead\nAddress: '+addr+'\nEstimate Total: $'+Number(total).toLocaleString()+'\nRep: '+(rep||'—')+'\nEstimate Page: '+estUrl
@@ -11151,6 +11160,40 @@ async function ghlFetchStages(){
 // Per-pin GHL sync mutex — prevents race condition duplicates
 const _ghlSyncLocks = {};
 
+// ── GHL Estimate URL Custom Field ────────────────────────────────────────────
+// Auto-creates a "Estimate URL" custom field in GHL on first use.
+// Caches the field ID in S.cfg.ghlEstimateUrlFieldId (memory only, no DB needed).
+async function ghlEnsureEstimateUrlField(){
+  if(S.cfg.ghlEstimateUrlFieldId) return S.cfg.ghlEstimateUrlFieldId;
+  const locationId = S.cfg.ghlLocationId;
+  if(!locationId) return null;
+  try{
+    // 1. Check if field already exists
+    const existing = await ghlRequest('/locations/'+locationId+'/customFields');
+    const fields = existing.customFields || existing.customField || [];
+    const found = fields.find(f => f.name === 'Estimate URL' || f.fieldKey === 'contact.estimate_url');
+    if(found){
+      S.cfg.ghlEstimateUrlFieldId = found.id;
+      console.log('[BidDrop] GHL: found existing Estimate URL field:', found.id);
+      return found.id;
+    }
+    // 2. Create it
+    const res = await ghlRequest('/locations/'+locationId+'/customFields', 'POST', {
+      name:     'Estimate URL',
+      dataType: 'TEXT',
+      placeholder: 'https://biddrop.americashomeexperts.com/e/...',
+      model:    'contact'
+    });
+    const fieldId = res.customField?.id || res.id;
+    S.cfg.ghlEstimateUrlFieldId = fieldId;
+    console.log('[BidDrop] GHL: created Estimate URL custom field:', fieldId);
+    return fieldId;
+  }catch(e){
+    console.warn('[BidDrop] GHL: could not ensure Estimate URL field:', e.message);
+    return null;
+  }
+}
+
 async function ghlUpsertContact(name, address, email, existingContactId, pinId){
   const locationId = S.cfg.ghlLocationId || 'gz85VU6SxGXS7lqHAQGx';
   const nameParts = (name||'Homeowner').split(' ');
@@ -11524,6 +11567,19 @@ async function sendViaGHL(){
       ghlCreateOpportunity(contactId, owner, addr, total).then(oppId=>{
         if(oppId && _curPin){ _curPin.ghlOpportunityId = oppId; if(sb) sb.from('pins').update({ghl_opportunity_id: oppId}).eq('id', _curPin.id).then(()=>{}); }
       }).catch(e=>console.warn('Opp error:',e));
+    }
+
+    // 3. Push estimate URL to GHL custom field (so GHL workflows can send it to homeowner)
+    const _estId = window._editingEstimateId || (_curPin ? (S.estimates||[]).find(e=>e.pinId===_curPin.id)?.id : null);
+    if(_estId && contactId){
+      ghlEnsureEstimateUrlField().then(fieldId=>{
+        if(!fieldId) return;
+        const estUrl = window.location.origin+'/e/'+_estId;
+        ghlRequest('/contacts/'+contactId, 'PUT', {
+          customFields: [{ id: fieldId, value: estUrl }]
+        }).then(()=>console.log('[BidDrop] GHL: estimate URL set on contact:', estUrl))
+          .catch(e=>console.warn('[BidDrop] GHL: estimate URL field update failed:', e.message));
+      });
     }
 
     // BidDrop only syncs contact + opportunity to GHL.
