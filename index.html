@@ -11168,7 +11168,26 @@ async function ghlUpsertContact(name, address, email, existingContactId){
       }
     }
   } catch(e){}
-  // Create new contact only if no existing ID found
+  // Search by street address to prevent duplicates (address is the unique key for a property)
+  if(street){
+    try{
+      // Search using the street number (first word) — GHL query searches name/address
+      const streetNum = street.split(' ')[0];
+      const addrSearch = await ghlRequest('/contacts/?locationId='+locationId+'&query='+encodeURIComponent(streetNum));
+      if(addrSearch.contacts && addrSearch.contacts.length > 0){
+        // Find a contact whose address1 starts with the same street number
+        const match = addrSearch.contacts.find(c =>
+          c.address1 && c.address1.toLowerCase().startsWith(streetNum.toLowerCase())
+        );
+        if(match){
+          console.log('BidDrop: GHL dedup — found existing contact by address:', match.address1, match.id);
+          await ghlRequest('/contacts/'+match.id, 'PUT', body);
+          return match.id;
+        }
+      }
+    }catch(e){ console.warn('GHL address dedup search failed:', e.message); }
+  }
+  // Create new contact only if no existing contact found by ID, email, or address
   const res = await ghlRequest('/contacts/', 'POST', body);
   return res.contact?.id || res.id;
 }
