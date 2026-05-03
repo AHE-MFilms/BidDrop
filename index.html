@@ -5022,7 +5022,6 @@ function savePin(){
   refreshZoneOverlays();
   savePin_withOffline(pin).catch(e=>console.error('Pin save:',e));
   sbAddActivity('<strong>'+escHtml(pin.rep)+'</strong> pinned <strong>'+escHtml(pin.address)+'</strong>',pin.status);
-  ghlAutoPushPin(pin).catch(e=>console.warn('GHL push:',e));
   window._pinDamagePhotos = [];
   const _totalPhotos = _allPhotosCount() || dmgPhotos.length;
   _clearAllPhotos(); // clear after saving so next pin starts fresh
