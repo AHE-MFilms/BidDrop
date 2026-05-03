@@ -11179,26 +11179,15 @@ async function ghlCheckOAuthStatus() {
 }
 
 async function ghlOAuthConnect() {
-  // Build the GHL OAuth URL with the current account ID encoded in state
-  // currentAccount.id is the Supabase accounts row UUID — always available when logged in
+  // Route through server-side /api/oauth?action=connect which builds the correct URL
+  // with client_id, scopes, and state all properly encoded
   const accountId = (currentAccount && currentAccount.id) || '';
   if (!accountId) {
     toast('Could not determine your account — please reload and try again.', 'error');
     return;
   }
-  const state = btoa(JSON.stringify({ accountId }));
-  const GHL_VERSION_ID = '69f796d2528efc733a30a9ab';
-  const REDIRECT_URI = encodeURIComponent('https://biddrop.americashomeexperts.com/api/oauth/callback');
-  const SCOPES = encodeURIComponent([
-    'contacts.readonly','contacts.write',
-    'opportunities.readonly','opportunities.write',
-    'conversations/message.readonly','conversations/message.write',
-    'locations.readonly','locations/customValues.readonly','locations/customValues.write',
-    'locations/customFields.readonly','locations/customFields.write'
-  ].join(' '));
-  const url = `https://marketplace.leadconnectorhq.com/v2/oauth/chooselocation?response_type=code&redirect_uri=${REDIRECT_URI}&version_id=${GHL_VERSION_ID}&scope=${SCOPES}&state=${state}`;
-  // Open in same tab so the redirect back to BidDrop works correctly
-  window.location.href = url;
+  // Redirect to the server handler which will redirect to GHL with the correct client_id
+  window.location.href = `/api/oauth?action=connect&accountId=${encodeURIComponent(accountId)}`;
 }
 
 async function ghlOAuthDisconnect() {
