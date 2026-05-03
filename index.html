@@ -11088,13 +11088,18 @@ async function ghlBulkSync(){
 async function ghlFetchStages(){
   const btn = document.getElementById('btn-fetch-stages');
   const sel = document.getElementById('s-ghl-stage');
-  const pipelineId = document.getElementById('s-ghl-pipe').value.trim() || 'bxskBIBdbklHry0B63qx';
-  const locId = document.getElementById('s-ghl-loc').value.trim() || 'gz85VU6SxGXS7lqHAQGx';
+  const pipelineId = document.getElementById('s-ghl-pipe').value.trim() || S.cfg.ghlPipelineId;
+  const locId = document.getElementById('s-ghl-loc').value.trim() || S.cfg.ghlLocationId;
+  if(!locId){ toast('Enter a GHL Location ID first','error'); return; }
   // GHL API key is stored server-side — no client-side check needed
   btn.textContent='Loading...'; btn.disabled=true;
   try {
-    const data = await ghlRequest('/opportunities/pipelines/'+pipelineId+'?locationId='+locId);
-    const stages = data.stages || data.pipeline?.stages || [];
+    // Use list-all-pipelines endpoint (single-pipeline-by-ID requires OAuth scope not available with private keys)
+    const data = await ghlRequest('/opportunities/pipelines?locationId='+locId);
+    const pipelines = data.pipelines || [];
+    // Find the matching pipeline, or fall back to first
+    const pipeline = pipelines.find(p => p.id === pipelineId) || pipelines[0];
+    const stages = pipeline?.stages || [];
     if(!stages.length){ toast('No stages found — check Pipeline ID','error'); return; }
     sel.innerHTML = stages.map(s =>
       '<option value="'+s.id+'">'+s.name+'</option>'

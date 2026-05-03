@@ -136,13 +136,14 @@ export default async function handler(req, res) {
   if (!caller) { res.status(401).json({ error: 'Unauthorized' }); return; }
   const profile = await getCallerProfile(caller.id);
   if (!profile) { res.status(403).json({ error: 'No profile found' }); return; }
-  const stripe = new Stripe(STRIPE_KEY);
 
   try {
     switch (action) {
 
       case 'checkout': {
         if (req.method !== 'POST') { res.status(405).end(); return; }
+        if (!STRIPE_KEY) { res.status(500).json({ error: 'Stripe not configured' }); return; }
+        const stripe = new Stripe(STRIPE_KEY);
         const { pack_id } = req.body;
         const pack = CREDIT_PACKS[pack_id];
         if (!pack) { res.status(400).json({ error: 'Invalid pack_id' }); return; }
