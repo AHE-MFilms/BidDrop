@@ -11358,13 +11358,16 @@ async function ghlAutoPushPin(pin){
 }
 
 // Update GHL opportunity monetary value when estimate is saved
+// NOTE: This function ONLY updates an existing opportunity's value.
+// It NEVER creates new contacts or opportunities — that is ghlAutoPushPin's job.
+// This prevents race-condition duplicates when pin drop + estimate save fire simultaneously.
 async function ghlUpdateOpportunityValue(pin, total){
   if(!S.cfg.ghlLocationId) return;
-  // Mutex: if a GHL sync is already running for this pin, wait for it
+  // Wait for any in-progress GHL sync on this pin (e.g. ghlAutoPushPin running concurrently)
   if(pin.id && _ghlSyncLocks[pin.id]){
     try{ await _ghlSyncLocks[pin.id]; }catch(e){}
   }
-  // If GHL IDs are missing in memory, try to reload from Supabase (e.g. after bulk sync in previous session)
+  // If GHL IDs are missing in memory, try to reload from Supabase
   if(!pin.ghlOpportunityId && pin.id && currentAccount){
     try{
       const {data} = await sb.from('pins').select('ghl_contact_id,ghl_opportunity_id').eq('id',pin.id).single();
@@ -11372,27 +11375,14 @@ async function ghlUpdateOpportunityValue(pin, total){
       if(data && data.ghl_opportunity_id){ pin.ghlOpportunityId = data.ghl_opportunity_id; }
     }catch(e){ console.warn('GHL ID reload:', e); }
   }
+  // Only update if an opportunity already exists — never create a new contact here
   if(pin.ghlOpportunityId){
     try{
       await ghlRequest('/opportunities/'+pin.ghlOpportunityId, 'PUT', { monetaryValue: total||0 });
       console.log('BidDrop: GHL opportunity value updated to $'+total+' for', pin.address);
     }catch(e){ console.warn('BidDrop: GHL opp value update failed:', e.message); }
-    return;
   }
-  // No opportunity yet — create contact+opportunity now
-  try{
-    const ownerName3 = pin.owner||pin.estimate?.owner||pin.rep||'Homeowner';
-    const contactId = await ghlUpsertContact(ownerName3, pin.address, pin.phone||null, pin.ghlContactId||null);
-    if(!contactId) return;
-    const oppId = await ghlCreateOpportunity(contactId, ownerName3, pin.address, total||0);
-    pin.ghlContactId = contactId;
-    pin.ghlOpportunityId = oppId;
-    if(currentAccount){
-      sb.from('pins').update({ ghl_contact_id: contactId, ghl_opportunity_id: oppId }).eq('id', pin.id)
-        .then(({error})=>{ if(error) console.warn('GHL ID save:', error); });
-    }
-    console.log('BidDrop: GHL contact+opportunity created (on estimate save) for', pin.address, '$'+total);
-  }catch(e){ console.warn('BidDrop: GHL late push failed:', e.message); }
+  // If no opportunity exists yet, ghlAutoPushPin will handle it — do NOT create one here
 }
 // Add a tag to a GHL contact by contactId
 async function ghlAddContactTag(contactId, tag){
