@@ -11324,24 +11324,36 @@ async function ghlAutoPushPin(pin){
   // GHL key is server-side only — only check locationId to see if GHL is configured
   if(!S.cfg.ghlLocationId) return;
   if(!S.cfg.ghlPipelineId) return;
+  // Mutex: set a lock so ghlUpdateOpportunityValue waits for this to finish
+  // before trying to create its own contact (prevents race-condition duplicates)
+  if(pin.id && _ghlSyncLocks[pin.id]){
+    try{ await _ghlSyncLocks[pin.id]; }catch(e){}
+    return; // already synced by a concurrent call
+  }
+  let _resolve, _reject;
+  if(pin.id) _ghlSyncLocks[pin.id] = new Promise((res,rej)=>{ _resolve=res; _reject=rej; });
   try {
     const ownerName2 = pin.owner||pin.estimate?.owner||pin.rep||'Homeowner';
-    const contactId = await ghlUpsertContact(ownerName2, pin.address, pin.phone||null, pin.ghlContactId||null);
-    if(!contactId) return;
+    const contactId = await ghlUpsertContact(ownerName2, pin.address, pin.phone||null, pin.ghlContactId||null, pin.id||null);
+    if(!contactId){ if(_resolve) _resolve(null); return; }
     const oppId = await ghlCreateOpportunity(contactId, ownerName2, pin.address, 0);
     // Store GHL IDs on the pin for future stage updates
     pin.ghlContactId = contactId;
     pin.ghlOpportunityId = oppId;
     // Persist GHL IDs to Supabase
     if(currentAccount){
-      sb.from('pins').update({
+      await sb.from('pins').update({
         ghl_contact_id: contactId,
         ghl_opportunity_id: oppId
-      }).eq('id', pin.id).then(({error})=>{ if(error) console.warn('GHL ID save:', error); });
+      }).eq('id', pin.id);
     }
     console.log('BidDrop: GHL contact+opportunity created for', pin.address);
+    if(_resolve) _resolve(contactId);
   } catch(e){
     console.warn('BidDrop: GHL auto-push failed (non-blocking):', e.message);
+    if(_reject) _reject(e);
+  } finally {
+    if(pin.id) delete _ghlSyncLocks[pin.id];
   }
 }
 
