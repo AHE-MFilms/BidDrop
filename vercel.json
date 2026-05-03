@@ -1,11 +1,33 @@
 {
   "rewrites": [
-    { "source": "/privacy", "destination": "/privacy.html" },
-    { "source": "/r/:id", "destination": "/api/r" },
-    { "source": "/q/:slug", "destination": "/index.html" },
-    { "source": "/e/:id", "destination": "/estimate.html" },
-    { "source": "/open", "destination": "/open.html" },
-    { "source": "/:company((?!api)[^/]+)/:id", "destination": "/estimate.html" }
+    {
+      "source": "/privacy",
+      "destination": "/privacy.html"
+    },
+    {
+      "source": "/r/:id",
+      "destination": "/api/r"
+    },
+    {
+      "source": "/q/:slug",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/e/:id",
+      "destination": "/estimate.html"
+    },
+    {
+      "source": "/open",
+      "destination": "/open.html"
+    },
+    {
+      "source": "/api/oauth/callback",
+      "destination": "/api/oauth"
+    },
+    {
+      "source": "/:company((?!api)[^/]+)/:id",
+      "destination": "/estimate.html"
+    }
   ],
   "functions": {
     "api/credits.js": {
@@ -15,6 +37,9 @@
       "maxDuration": 15
     },
     "api/estimate.js": {
+      "maxDuration": 15
+    },
+    "api/oauth.js": {
       "maxDuration": 15
     }
   },

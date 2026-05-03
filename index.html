@@ -2084,8 +2084,28 @@ tr:hover td{background:var(--card);}
           <div style="background:var(--accent-dim);border:1px solid rgba(242,92,5,.2);border-radius:7px;padding:10px 14px;font-size:11px;color:var(--mid);margin-bottom:12px;">
             &#128279; Connect your GHL sub-account to create contacts, opportunities, and send emails directly from BidDrop. Requires Pro plan or higher.
           </div>
-          <div class="fg"><label class="fl">GHL Location API Key</label><input class="fi" id="s-ghl-key" placeholder="pit-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" type="password"></div>
-          <div class="fg"><label class="fl">GHL Location ID</label><input class="fi" id="s-ghl-loc" placeholder="gz85VU6SxGXS7lqHAQGx"></div>
+          <!-- GHL OAuth Connection Status -->
+          <div id="ghl-oauth-status-box" style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:12px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+              <div>
+                <div id="ghl-oauth-status-label" style="font-size:12px;font-weight:700;color:var(--muted);">Not Connected</div>
+                <div id="ghl-oauth-status-detail" style="font-size:11px;color:var(--muted);margin-top:2px;"></div>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <button id="btn-ghl-connect" onclick="ghlOAuthConnect()" style="background:#8B5CF6;border:none;border-radius:8px;padding:9px 18px;color:#fff;font-family:var(--font-b);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                  Connect GoHighLevel
+                </button>
+                <button id="btn-ghl-disconnect" onclick="ghlOAuthDisconnect()" style="display:none;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:9px 14px;color:var(--muted);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">Disconnect</button>
+              </div>
+            </div>
+          </div>
+          <!-- Fallback: manual API key (shown only when not OAuth connected) -->
+          <div id="ghl-manual-key-section" style="">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:6px;padding:4px 8px;background:rgba(255,255,255,.04);border-radius:5px;">Or enter credentials manually (legacy):</div>
+            <div class="fg"><label class="fl">GHL Location API Key</label><input class="fi" id="s-ghl-key" placeholder="pit-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" type="password"></div>
+            <div class="fg"><label class="fl">GHL Location ID</label><input class="fi" id="s-ghl-loc" placeholder="gz85VU6SxGXS7lqHAQGx"></div>
+          </div>
           <div class="frow">
             <div class="fg"><label class="fl">Pipeline ID</label><input class="fi" id="s-ghl-pipe" placeholder="bxskBIBdbklHry0B63qx" value="bxskBIBdbklHry0B63qx"></div>
             <div class="fg" style="display:flex;flex-direction:column;gap:6px;">
@@ -10531,6 +10551,8 @@ function openSettings(){
   document.getElementById('s-mgn').value=c.margin||20;
   document.getElementById('s-color').value=c.brandColor||'#F25C05';
   document.getElementById('s-ghl-key').value=c.ghlApiKey||'';
+  // Check GHL OAuth connection status
+  setTimeout(ghlCheckOAuthStatus, 100);
   document.getElementById('s-ghl-loc').value=c.ghlLocationId||'';
   document.getElementById('s-ghl-pipe').value=c.ghlPipelineId||'';
   document.getElementById('s-ghl-sms-tpl').value=c.ghlSmsTpl||DEFAULTS.ghlSmsTpl;
@@ -11128,7 +11150,100 @@ async function ghlBulkSync(){
   if(statusEl) statusEl.textContent = msg;
   toast(done+' lead'+(done!==1?'s':'')+' synced to GHL ✅', 'success');
 }
-async function ghlFetchStages(){
+// ── GHL OAuth helpers ────────────────────────────────────────────────────────
+async function ghlCheckOAuthStatus() {
+  try {
+    const r = await adminAPI({ action: 'ghl-oauth-status' });
+    const statusLabel = document.getElementById('ghl-oauth-status-label');
+    const statusDetail = document.getElementById('ghl-oauth-status-detail');
+    const connectBtn = document.getElementById('btn-ghl-connect');
+    const disconnectBtn = document.getElementById('btn-ghl-disconnect');
+    const manualSection = document.getElementById('ghl-manual-key-section');
+    if (!statusLabel) return;
+    if (r.connected) {
+      statusLabel.textContent = '✓ Connected to GoHighLevel';
+      statusLabel.style.color = '#22C55E';
+      statusDetail.textContent = r.locationId ? `Location: ${r.locationId}` : '';
+      connectBtn.style.display = 'none';
+      disconnectBtn.style.display = '';
+      if (manualSection) manualSection.style.display = 'none';
+    } else {
+      statusLabel.textContent = 'Not Connected';
+      statusLabel.style.color = 'var(--muted)';
+      statusDetail.textContent = 'Click Connect to authorize BidDrop with your GHL account';
+      connectBtn.style.display = '';
+      disconnectBtn.style.display = 'none';
+      if (manualSection) manualSection.style.display = '';
+    }
+  } catch(e) { console.warn('[GHL OAuth] status check failed:', e.message); }
+}
+
+async function ghlOAuthConnect() {
+  // Build the GHL OAuth URL with the current account ID encoded in state
+  const accountId = S.cfg.accountId || '';
+  const state = btoa(JSON.stringify({ accountId }));
+  const GHL_CLIENT_ID = '69f796d2528efc733a30a9ab-moq4vxxq';
+  const REDIRECT_URI = encodeURIComponent('https://biddrop.americashomeexperts.com/api/oauth/callback');
+  const SCOPES = encodeURIComponent([
+    'contacts.readonly','contacts.write',
+    'opportunities.readonly','opportunities.write',
+    'conversations/message.readonly','conversations/message.write',
+    'locations.readonly','locations/customValues.readonly','locations/customValues.write',
+    'locations/customFields.readonly','locations/customFields.write'
+  ].join(' '));
+  const url = `https://marketplace.leadconnectorhq.com/v2/oauth/chooselocation?response_type=code&redirect_uri=${REDIRECT_URI}&client_id=${GHL_CLIENT_ID}&scope=${SCOPES}&state=${state}`;
+  window.location.href = url;
+}
+
+async function ghlOAuthDisconnect() {
+  if (!confirm('Disconnect GoHighLevel? BidDrop will stop syncing to GHL until you reconnect.')) return;
+  try {
+    await adminAPI({ action: 'ghl-oauth-disconnect' });
+    toast('GoHighLevel disconnected', 'info');
+    ghlCheckOAuthStatus();
+  } catch(e) { toast('Disconnect failed: ' + e.message, 'error'); }
+}
+
+// ── Handle OAuth callback redirect ───────────────────────────────────────────
+(function handleGhlOAuthCallback() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('ghl_connected') === '1') {
+    const locationId = params.get('location') || params.get('location_id') || '';
+    const accessToken = params.get('access_token') || '';
+    const refreshToken = params.get('refresh_token') || '';
+    const expiresIn = parseInt(params.get('expires_in') || '86400', 10);
+    // If tokens are in URL (no accountId in state), save them via admin API
+    if (accessToken) {
+      adminAPI({
+        action: 'ghl-oauth-save',
+        access_token: accessToken,
+        refresh_token: refreshToken,
+        expires_in: expiresIn,
+        location_id: locationId
+      }).then(() => {
+        toast('GoHighLevel connected successfully!', 'success');
+        // Also update ghl_location_id in settings if not set
+        if (locationId && !S.cfg.ghlLocationId) {
+          S.cfg.ghlLocationId = locationId;
+          const locEl = document.getElementById('s-ghl-loc');
+          if (locEl) locEl.value = locationId;
+        }
+        ghlCheckOAuthStatus();
+      }).catch(e => toast('GHL connect error: ' + e.message, 'error'));
+    } else {
+      toast('GoHighLevel connected successfully!', 'success');
+      ghlCheckOAuthStatus();
+    }
+    // Clean URL
+    const cleanUrl = window.location.pathname;
+    window.history.replaceState({}, '', cleanUrl);
+  } else if (params.get('ghl_error')) {
+    toast('GHL connection failed: ' + decodeURIComponent(params.get('ghl_error')), 'error');
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+})();
+
+async function ghlFetchStages() {{
   const btn = document.getElementById('btn-fetch-stages');
   const sel = document.getElementById('s-ghl-stage');
   const pipelineId = document.getElementById('s-ghl-pipe').value.trim() || S.cfg.ghlPipelineId;
