@@ -982,7 +982,7 @@ tr:hover td{background:var(--card);}
         </div>
       </div>
       <div class="fg">
-        <label class="fl">Homeowner Email <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— required to Email via GHL</span></label>
+        <label class="fl">Homeowner Email <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— syncs to GHL contact</span></label>
         <input class="fi" id="e-email" placeholder="jane@email.com" type="email">
       </div>
       <div class="fg" id="estimate-page-settings-section" style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:12px;">
@@ -1085,7 +1085,7 @@ tr:hover td{background:var(--card);}
       <div style="display:flex;flex-direction:column;gap:8px;">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <button style="background:#1a7f4b;border:none;border-radius:10px;padding:14px;color:#fff;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;" onclick="sendViaGHL()">
-            <span style="font-size:16px;">📧</span> Email via GHL
+            <span style="font-size:16px;">⬆</span> Sync to GHL
           </button>
           <button style="background:#1f3d68;border:none;border-radius:10px;padding:14px;color:#fff;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;" onclick="printNow()">
             <span style="font-size:16px;">🖨</span> Print Now
@@ -10063,14 +10063,22 @@ async function _doSendToGHL(btn, estId, owner, addr, email, total, rep){
     const _hlPinId = _hlPin ? _hlPin.id : null;
     const contactId = await ghlUpsertContact(owner, addr, email, _hlGhlId, _hlPinId);
     if(!contactId) throw new Error('Could not create GHL contact');
-    // Save back to pin
-    if(_hlPin && contactId && !_hlPin.ghlContactId){
+    // Always save returned contactId back to pin (even if it changed via fallback create)
+    if(_hlPin && contactId){
       _hlPin.ghlContactId = contactId;
       if(sb) sb.from('pins').update({ghl_contact_id: contactId}).eq('id', _hlPin.id).then(()=>{});
     }
-    // Create opportunity if pipeline configured
+    // Create or update opportunity
     if(S.cfg.ghlPipelineId){
-      await ghlCreateOpportunity(contactId, owner, addr, total);
+      if(_hlPin && _hlPin.ghlOpportunityId){
+        ghlRequest('/opportunities/'+_hlPin.ghlOpportunityId, 'PUT', { monetaryValue: total||0 }).catch(()=>{});
+      } else {
+        const oppId = await ghlCreateOpportunity(contactId, owner, addr, total);
+        if(oppId && _hlPin){
+          _hlPin.ghlOpportunityId = oppId;
+          if(sb) sb.from('pins').update({ghl_opportunity_id: oppId}).eq('id', _hlPin.id).then(()=>{});
+        }
+      }
     }
     // Add a note with estimate page URL
     const estUrl = window.location.origin+'/e/'+estId;
@@ -11518,31 +11526,11 @@ async function sendViaGHL(){
       }).catch(e=>console.warn('Opp error:',e));
     }
 
-    if(email){
-    // 3. Build email HTML = full mailer
-    const mailerHtml = document.getElementById('mailer-preview').innerHTML;
-    const fullHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8">
-      <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Barlow:wght@400;600;700&display=swap" rel="stylesheet">
-      <style>
-        *{margin:0;padding:0;box-sizing:border-box;}
-        body{font-family:'Barlow',sans-serif;background:#f5f5f5;padding:20px;}
-        .mailer{max-width:680px;margin:0 auto;}
-        ${getMailerStyles()}
-      </style>
-      </head><body><div class="mailer">${mailerHtml}</div></body></html>`;
-
-    const subject = 'Your Custom Roof Estimate — '+(addr.split(',')[0]||'Your Property');
-    await ghlSendEmail(contactId, email, owner||'Homeowner', subject, fullHtml);
-
-    // 4. Add to local queue record
-    addAct('Email sent via GHL to <strong>'+escHtml(owner||'Homeowner')+'</strong> ('+escHtml(email)+')','bid_sent');
+    // BidDrop only syncs contact + opportunity to GHL.
+    // GHL workflows handle all email/SMS follow-up automatically.
+    addAct('Synced to GHL: <strong>'+escHtml(owner||'Homeowner')+'</strong>'+(email?' ('+escHtml(email)+')':''),'bid_sent');
     save();
-
-    toast('🚀 Mailer sent via GHL!','success');
-    } else {
-      addAct('Contact + opportunity created in GHL for <strong>'+escHtml(owner||'Homeowner')+'</strong> — no email on file','bid_sent');
-      toast('✅ Contact + opportunity created in GHL (no email on file)','success');
-    }
+    toast('✅ Synced to GHL — workflows will handle follow-up','success');
     // Mark on pin if address matches
     const pin = S.pins.find(p=>p.address===addr);
     if(pin && pin.status==='needs_roof'){
