@@ -30,6 +30,82 @@ async function sbFetch(path, opts = {}) {
   return fetch(url, { ...opts, headers });
 }
 
+
+// ── Silent GHL sync helper ────────────────────────────────────────────────
+// Silently upserts a contact + opportunity in GHL using the account's API key.
+// Never throws — any error is logged and swallowed so the main flow is unaffected.
+async function syncLeadToGHL({ apiKey, locationId, pipelineId, pipelineStageId, firstName, lastName, email, phone, address, estimateTotal, estimateId }) {
+  if (!apiKey || !locationId) return; // GHL not configured — skip silently
+  const BASE = 'https://services.leadconnectorhq.com';
+  const headers = {
+    'Authorization': `Bearer ${apiKey}`,
+    'Content-Type': 'application/json',
+    'Version': '2021-07-28',
+  };
+  try {
+    // 1. Upsert contact (search by email or phone, then create/update)
+    let contactId = null;
+    // Try to find existing contact
+    const searchParam = email ? `email=${encodeURIComponent(email)}` : `phone=${encodeURIComponent(phone)}`;
+    const searchRes = await fetch(`${BASE}/contacts/search/duplicate?${searchParam}&locationId=${locationId}`, { headers });
+    if (searchRes.ok) {
+      const searchData = await searchRes.json();
+      contactId = searchData?.contact?.id || null;
+    }
+    const contactBody = {
+      locationId,
+      firstName: firstName || undefined,
+      lastName:  lastName  || undefined,
+      email:     email     || undefined,
+      phone:     phone     || undefined,
+      address1:  address   || undefined,
+      source:    'BidDrop',
+      tags:      ['BidDrop Lead'],
+    };
+    if (contactId) {
+      // Update existing contact
+      await fetch(`${BASE}/contacts/${contactId}`, {
+        method: 'PUT', headers,
+        body: JSON.stringify(contactBody),
+      });
+    } else {
+      // Create new contact
+      const createRes = await fetch(`${BASE}/contacts/`, {
+        method: 'POST', headers,
+        body: JSON.stringify(contactBody),
+      });
+      if (createRes.ok) {
+        const created = await createRes.json();
+        contactId = created?.contact?.id || null;
+      }
+    }
+    // 2. Create opportunity in pipeline (if pipeline is configured and we have a contactId)
+    if (contactId && pipelineId) {
+      const oppBody = {
+        pipelineId,
+        locationId,
+        name:    `${[firstName, lastName].filter(Boolean).join(' ') || 'Homeowner'} — ${address || 'Roof Estimate'}`,
+        status:  'open',
+        source:  'BidDrop',
+        contactId,
+        monetaryValue: estimateTotal ? Math.round(estimateTotal) : undefined,
+        customFields: [
+          { key: 'biddrop_estimate_id', field_value: estimateId || '' },
+          { key: 'property_address',    field_value: address    || '' },
+        ],
+      };
+      if (pipelineStageId) oppBody.pipelineStageId = pipelineStageId;
+      await fetch(`${BASE}/opportunities/`, {
+        method: 'POST', headers,
+        body: JSON.stringify(oppBody),
+      });
+    }
+    console.log('[GHL sync] Lead synced — contactId:', contactId, 'pipelineId:', pipelineId);
+  } catch (e) {
+    console.warn('[GHL sync] Silent error (non-fatal):', e.message);
+  }
+}
+
 export default async function handler(req, res) {
   cors(res);
   if (req.method === 'OPTIONS') { res.status(200).end(); return; }
@@ -260,8 +336,8 @@ export default async function handler(req, res) {
       const { estimate_id, first_name, last_name, email, phone } = req.body || {};
       if (!estimate_id) { res.status(400).json({ error: 'estimate_id required' }); return; }
 
-      // Get the pin_id from the estimate
-      const estR = await sbFetch(`estimates?id=eq.${encodeURIComponent(estimate_id)}&select=id,pin_id,account_id`);
+      // Get the estimate + account_id + address + total
+      const estR = await sbFetch(`estimates?id=eq.${encodeURIComponent(estimate_id)}&select=id,pin_id,account_id,addr,total`);
       const estRows = await estR.json();
       if (!estRows || !estRows.length) { res.status(404).json({ error: 'Estimate not found' }); return; }
       const est = estRows[0];
@@ -292,6 +368,29 @@ export default async function handler(req, res) {
           }),
           headers: { 'Prefer': 'return=minimal' }
         });
+      }
+
+      // ── Silent GHL sync (fire-and-forget, never blocks or errors the response) ──
+      if (est.account_id) {
+        const acctGhlR = await sbFetch(`accounts?id=eq.${encodeURIComponent(est.account_id)}&select=ghl_api_key,ghl_location_id,ghl_pipeline_id,ghl_stage_id,ghl_oauth_access_token,ghl_oauth_location_id`);
+        const acctGhlRows = acctGhlR.ok ? await acctGhlR.json() : [];
+        const ag = acctGhlRows[0] || {};
+        // Prefer OAuth token over manual API key; prefer OAuth location over manual
+        const ghlApiKey    = ag.ghl_oauth_access_token || ag.ghl_api_key || null;
+        const ghlLocationId = ag.ghl_oauth_location_id || ag.ghl_location_id || null;
+        syncLeadToGHL({
+          apiKey:          ghlApiKey,
+          locationId:      ghlLocationId,
+          pipelineId:      ag.ghl_pipeline_id   || null,
+          pipelineStageId: ag.ghl_stage_id      || null,
+          firstName:       first_name,
+          lastName:        last_name,
+          email,
+          phone,
+          address:         est.addr,
+          estimateTotal:   est.total,
+          estimateId:      estimate_id,
+        }).catch(() => {}); // extra safety — never propagate
       }
 
       res.json({ ok: true });
