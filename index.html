@@ -11247,16 +11247,17 @@ async function ghlCreateOpportunity(contactId, name, address, total){
     console.warn('BidDrop: No GHL Pipeline ID set — skipping opportunity');
     return null;
   }
-  const res = await ghlRequest('/opportunities/', 'POST', {
+  const oppBody = {
     locationId,
     pipelineId,
-    pipelineStageId: stageId||undefined,
     contactId,
     name:    'Roof Bid — '+(address||name||'Unknown'),
     monetaryValue: total||0,
     status:  'open',
     source:  'BidDrop by AHE'
-  });
+  };
+  if(stageId) oppBody.pipelineStageId = stageId;
+  const res = await ghlRequest('/opportunities/', 'POST', oppBody);
   return res.opportunity?.id || res.id || null;
 }
 
@@ -11336,18 +11337,25 @@ async function ghlAutoPushPin(pin){
     const ownerName2 = pin.owner||pin.estimate?.owner||pin.rep||'Homeowner';
     const contactId = await ghlUpsertContact(ownerName2, pin.address, pin.phone||null, pin.ghlContactId||null, pin.id||null);
     if(!contactId){ if(_resolve) _resolve(null); return; }
-    const oppId = await ghlCreateOpportunity(contactId, ownerName2, pin.address, 0);
-    // Store GHL IDs on the pin for future stage updates
+    // Save contact ID immediately — before opportunity creation — so it's never lost if opp fails
     pin.ghlContactId = contactId;
-    pin.ghlOpportunityId = oppId;
-    // Persist GHL IDs to Supabase
     if(currentAccount){
-      await sb.from('pins').update({
-        ghl_contact_id: contactId,
-        ghl_opportunity_id: oppId
-      }).eq('id', pin.id);
+      await sb.from('pins').update({ ghl_contact_id: contactId }).eq('id', pin.id);
     }
-    console.log('BidDrop: GHL contact+opportunity created for', pin.address);
+    // Now create the opportunity (non-fatal if it fails)
+    let oppId = null;
+    try{
+      oppId = await ghlCreateOpportunity(contactId, ownerName2, pin.address, 0);
+    }catch(oppErr){
+      console.warn('BidDrop: GHL opportunity creation failed (contact was saved):', oppErr.message);
+    }
+    if(oppId){
+      pin.ghlOpportunityId = oppId;
+      if(currentAccount){
+        await sb.from('pins').update({ ghl_opportunity_id: oppId }).eq('id', pin.id);
+      }
+    }
+    console.log('BidDrop: GHL contact created for', pin.address, oppId ? '+ opportunity' : '(no opportunity)');
     if(_resolve) _resolve(contactId);
   } catch(e){
     console.warn('BidDrop: GHL auto-push failed (non-blocking):', e.message);
