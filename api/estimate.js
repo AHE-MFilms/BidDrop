@@ -36,6 +36,12 @@ async function sbFetch(path, opts = {}) {
 // Never throws — any error is logged and swallowed so the main flow is unaffected.
 async function syncLeadToGHL({ apiKey, locationId, pipelineId, pipelineStageId, firstName, lastName, email, phone, address, estimateTotal, estimateId }) {
   if (!apiKey || !locationId) return; // GHL not configured — skip silently
+  // Normalize phone to E.164 format (GHL requires +1XXXXXXXXXX for US numbers)
+  if (phone) {
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length === 10) phone = '+1' + digits;
+    else if (digits.length === 11 && digits[0] === '1') phone = '+' + digits;
+  }
   const BASE = 'https://services.leadconnectorhq.com';
   const headers = {
     'Authorization': `Bearer ${apiKey}`,
