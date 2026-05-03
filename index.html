@@ -985,6 +985,10 @@ tr:hover td{background:var(--card);}
         <label class="fl">Homeowner Email <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— syncs to GHL contact</span></label>
         <input class="fi" id="e-email" placeholder="jane@email.com" type="email">
       </div>
+      <div class="fg">
+        <label class="fl">Homeowner Phone <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— syncs to GHL contact</span></label>
+        <input class="fi" id="e-phone" placeholder="(555) 000-0000" type="tel">
+      </div>
       <div class="fg" id="estimate-page-settings-section" style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:12px;">
         <label class="fl" style="color:#10b981;">&#127758; Estimate Page Settings <span id="estimate-page-plan-badge" style="display:none;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;background:#D97706;color:#fff;margin-left:6px;text-transform:uppercase;letter-spacing:.5px;">Agency+ Only</span></label>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px;">
@@ -2861,6 +2865,7 @@ function loadEstFromPicker(){
   // Reset form fields
   document.getElementById('e-owner').value = '';
   document.getElementById('e-email').value = '';
+  if(document.getElementById('e-phone')) document.getElementById('e-phone').value = '';
   document.getElementById('e-addr').value = p.address || '';
   clearHomePhoto();
   ['a-sky','a-chim','a-gut','a-solar'].forEach(function(id){var el=document.getElementById(id);if(el)el.checked=false;});
@@ -2874,6 +2879,7 @@ function loadEstFromPicker(){
   if(savedEst){
     if(savedEst.owner) document.getElementById('e-owner').value = savedEst.owner;
     if(savedEst.email) document.getElementById('e-email').value = savedEst.email;
+    if(savedEst.phone && document.getElementById('e-phone')) document.getElementById('e-phone').value = savedEst.phone||'';
     if(savedEst.structures && savedEst.structures.length) structures = savedEst.structures.map(function(s){return normStruct(s);});
     else structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'1.15',mat:'1.3',complexity:'1.12',pts:null}];
     // Load all photos via unified system (migrates legacy fields automatically)
@@ -2883,6 +2889,7 @@ function loadEstFromPicker(){
     const est = typeof p.estimate === 'string' ? JSON.parse(p.estimate) : p.estimate;
     if(est.owner) document.getElementById('e-owner').value = est.owner;
     if(est.email) document.getElementById('e-email').value = est.email;
+    if(est.phone && document.getElementById('e-phone')) document.getElementById('e-phone').value = est.phone||'';
     if(est.structures && est.structures.length) structures = est.structures.map(function(s){return normStruct(s);})
     else structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'1.15',mat:'1.3',complexity:'1.12',pts:null}];
     // Load all photos via unified system
@@ -2996,6 +3003,7 @@ function saveEstimateNow(){
   if(!pin){ toast('Pin not found','error'); return; }
   const owner = (document.getElementById('e-owner')||{}).value.trim()||'Homeowner';
   const email = (document.getElementById('e-email')||{}).value.trim()||'';
+  const phone = (document.getElementById('e-phone')||{}).value.trim()||'';
   const total = (structures||[]).reduce((sum,s)=>sum+(calcStructPrice?calcStructPrice(s):0),0);
   // Photo: prefer the current form state (_homePhotoData, _allPhotos.front) over the stale pin.photo_url
   const frontFromAllPhotos = (window._allPhotos && (window._allPhotos.front||[])[0]) || null;
@@ -3007,7 +3015,7 @@ function saveEstimateNow(){
     id: window._editingEstimateId || ('est_' + Date.now()),
     pinId: currentEstPinId,
     addr: pin.address || '',
-    owner, email, total,
+    owner, email, phone, total,
     structures: (structures||[]).map(s=>({...s})),
     photo_url: photoUrl,
     photo_data: photoData,
@@ -3069,6 +3077,7 @@ function saveEstimateNow(){
       addr: estRecord.addr,
       owner: estRecord.owner,
       email: estRecord.email,
+      phone: estRecord.phone || null,
       rep: estRecord.rep,
       total: estRecord.total,
       structures: estRecord.structures,
@@ -3112,6 +3121,7 @@ function saveEstimateNow(){
       addr: estRecord.addr,
       owner: estRecord.owner,
       email: estRecord.email,
+      phone: estRecord.phone || null,
       rep: estRecord.rep,
       total: estRecord.total,
       structures: estRecord.structures,
@@ -5551,6 +5561,7 @@ function goEstFromPin(id){
   // Reset form
   document.getElementById('e-owner').value = '';
   document.getElementById('e-email').value = '';
+  if(document.getElementById('e-phone')) document.getElementById('e-phone').value = '';
   document.getElementById('e-addr').value = p.address||'';
   structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'1.15',mat:'1.3',complexity:'1.12',pts:null}];
   if(est){
@@ -11303,7 +11314,7 @@ async function ghlEnsureEstimateUrlField(){
   }
 }
 
-async function ghlUpsertContact(name, address, email, existingContactId, pinId){
+async function ghlUpsertContact(name, address, email, existingContactId, pinId, phone){
   const locationId = S.cfg.ghlLocationId || 'gz85VU6SxGXS7lqHAQGx';
   const nameParts = (name||'Homeowner').split(' ');
   // Parse "123 Main St, Canton, Michigan 48188" into GHL fields
@@ -11340,6 +11351,11 @@ async function ghlUpsertContact(name, address, email, existingContactId, pinId){
     source:     'BidDrop by AHE'
   };
   if(email) postBody.email = email;
+  if(phone){
+    const digits = phone.replace(/\D/g,'');
+    postBody.phone = digits.length===10 ? '+1'+digits : (digits.length===11&&digits[0]==='1' ? '+'+digits : phone);
+    putBody.phone = postBody.phone;
+  }
   // PUT body must NOT include locationId — GHL returns 422 if it's present on update
   const putBody = {
     firstName:  postBody.firstName,
@@ -11634,6 +11650,7 @@ async function sendViaGHL(){
   const owner  = document.getElementById('e-owner').value.trim();
   const addr   = document.getElementById('e-addr').value.trim();
   const email  = document.getElementById('e-email').value.trim();
+  const phone  = (document.getElementById('e-phone')||{}).value.trim()||'';
   const total  = calcP();
 
 
@@ -11661,7 +11678,7 @@ async function sendViaGHL(){
   const _existingGhlId = _curPin ? (_curPin.ghlContactId||null) : null;
   try {
     // 1. Upsert contact — pass existing ID and pinId to prevent duplicates
-    const contactId = await ghlUpsertContact(owner||'Homeowner', addr, email||null, _existingGhlId, currentEstPinId||null);
+    const contactId = await ghlUpsertContact(owner||'Homeowner', addr, email||null, _existingGhlId, currentEstPinId||null, phone||null);
     // Always save returned contactId — even if it changed (e.g. fallback create after 404)
     if(_curPin && contactId){
       _curPin.ghlContactId = contactId;
