@@ -11191,12 +11191,17 @@ async function ghlUpsertContact(name, address, email, existingContactId, pinId){
     country:    'US',
     tags:       ['biddrop-lead','canvass']
   };
-  if(email) putBody.email = email;
+  // NOTE: email NOT in putBody — sent separately to avoid GHL 400 on first-time email add
 
   // Helper: try PUT update; if GHL returns 400/404 (stale/deleted contact), fall through to POST
   async function _tryPutOrCreate(contactId){
     try{
       await ghlRequest('/contacts/'+contactId, 'PUT', putBody);
+      // Step 2: Update email separately if provided
+      if(email){
+        try{ await ghlRequest('/contacts/'+contactId, 'PUT', { email }); }
+        catch(emailErr){ console.warn('[BidDrop] GHL email update:', emailErr.message); }
+      }
       return contactId; // success — contact still exists in GHL
     } catch(putErr){
       const msg = (putErr.message||'').toLowerCase();
