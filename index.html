@@ -2488,7 +2488,7 @@ async function syncAccountToSupabase(){
     financing_term: cfg.financingTerm, financing_down: cfg.financingDown,
     diff1: cfg.diff1, diff2: cfg.diff2, diff3: cfg.diff3,
     diff4: cfg.diff4, diff5: cfg.diff5, diff6: cfg.diff6,
-    rep_video_url_default: cfg.repVideoUrl||null,
+    // rep_video_url_default omitted — column not in DB schema
     offer_siding: cfg.offerSiding, offer_windows: cfg.offerWindows,
     offer_gutters: cfg.offerGutters, offer_custom: cfg.offerCustom,
     // offer_solar omitted — column not yet in DB schema
@@ -11193,10 +11193,29 @@ async function ghlUpsertContact(name, address, email, existingContactId, pinId){
   };
   if(email) putBody.email = email;
 
-  // PRIORITY 1: If we already have a GHL contact ID in memory, always UPDATE — never create
+  // Helper: try PUT update; if GHL returns 400/404 (stale/deleted contact), fall through to POST
+  async function _tryPutOrCreate(contactId){
+    try{
+      await ghlRequest('/contacts/'+contactId, 'PUT', putBody);
+      return contactId; // success — contact still exists in GHL
+    } catch(putErr){
+      const msg = (putErr.message||'').toLowerCase();
+      if(msg.includes('bad request') || msg.includes('not found') || msg.includes('400') || msg.includes('404')){
+        // Contact was deleted from GHL — clear stale ID and create fresh
+        console.warn('[BidDrop] GHL: stale contact ID '+contactId+' — creating new contact');
+        if(pinId && sb){
+          sb.from('pins').update({ghl_contact_id: null}).eq('id', pinId).then(()=>{});
+        }
+        const res = await ghlRequest('/contacts/', 'POST', postBody);
+        return res.contact?.id || res.id;
+      }
+      throw putErr; // re-throw unexpected errors
+    }
+  }
+
+  // PRIORITY 1: If we already have a GHL contact ID in memory, try UPDATE first
   if(existingContactId){
-    await ghlRequest('/contacts/'+existingContactId, 'PUT', putBody);
-    return existingContactId;
+    return await _tryPutOrCreate(existingContactId);
   }
   // PRIORITY 2: If we have a pinId, check Supabase for a stored ghl_contact_id
   // (handles case where pin was synced in a previous session)
@@ -11205,8 +11224,7 @@ async function ghlUpsertContact(name, address, email, existingContactId, pinId){
       const { data } = await sb.from('pins').select('ghl_contact_id').eq('id', pinId).single();
       if(data && data.ghl_contact_id){
         console.log('[BidDrop] GHL: found stored contact ID for pin', pinId, '→ updating');
-        await ghlRequest('/contacts/'+data.ghl_contact_id, 'PUT', putBody);
-        return data.ghl_contact_id;
+        return await _tryPutOrCreate(data.ghl_contact_id);
       }
     }catch(e){ console.warn('GHL Supabase lookup failed:', e.message); }
   }
