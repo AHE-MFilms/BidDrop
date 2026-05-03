@@ -11054,7 +11054,7 @@ async function ghlBulkSync(){
       const est = (S.estimates||[]).find(e=>e.pinId===pin.id && !e.deletedAt);
       const total = est ? (est.total||0) : 0;
       const ownerName1 = pin.owner||pin.estimate?.owner||pin.rep||'Homeowner';
-      const contactId = await ghlUpsertContact(ownerName1, pin.address, pin.phone||null);
+      const contactId = await ghlUpsertContact(ownerName1, pin.address, pin.phone||null, pin.ghlContactId||null);
       if(!contactId) throw new Error('No contact ID returned');
       const oppId = await ghlCreateOpportunity(contactId, ownerName1, pin.address, total);
       // Update in-memory pin
@@ -11114,7 +11114,7 @@ async function ghlFetchStages(){
   }
 }
 
-async function ghlUpsertContact(name, address, email){
+async function ghlUpsertContact(name, address, email, existingContactId){
   const locationId = S.cfg.ghlLocationId || 'gz85VU6SxGXS7lqHAQGx';
   const nameParts = (name||'Homeowner').split(' ');
   // Parse "123 Main St, Canton, Michigan 48188" into GHL fields
@@ -11150,7 +11150,14 @@ async function ghlUpsertContact(name, address, email){
     source:     'BidDrop by AHE'
   };
   if(email) body.email = email;
-  // Try to find existing contact first
+  // If we already have a GHL contact ID, always UPDATE (never create duplicate)
+  if(existingContactId){
+    try{
+      await ghlRequest('/contacts/'+existingContactId, 'PUT', body);
+      return existingContactId;
+    }catch(e){ console.warn('GHL contact update failed, will try create:', e.message); }
+  }
+  // Try to find existing contact by email before creating
   try {
     if(email){
       const search = await ghlRequest('/contacts/?locationId='+locationId+'&email='+encodeURIComponent(email));
@@ -11161,6 +11168,7 @@ async function ghlUpsertContact(name, address, email){
       }
     }
   } catch(e){}
+  // Create new contact only if no existing ID found
   const res = await ghlRequest('/contacts/', 'POST', body);
   return res.contact?.id || res.id;
 }
@@ -11212,7 +11220,7 @@ async function ghlPushPin(pinId){
     }
     const ownerName = pin.owner||pin.estimate?.owner||pin.rep||'Homeowner';
     const total = pin.estimate?.total || 0;
-    const contactId = await ghlUpsertContact(ownerName, pin.address, pin.phone||null);
+    const contactId = await ghlUpsertContact(ownerName, pin.address, pin.phone||null, pin.ghlContactId||null);
     if(!contactId) throw new Error('No contact ID returned from GHL');
     let oppId = pin.ghlOpportunityId;
     if(!oppId){
@@ -11241,7 +11249,7 @@ async function ghlAutoPushPin(pin){
   if(!S.cfg.ghlPipelineId) return;
   try {
     const ownerName2 = pin.owner||pin.estimate?.owner||pin.rep||'Homeowner';
-    const contactId = await ghlUpsertContact(ownerName2, pin.address, pin.phone||null);
+    const contactId = await ghlUpsertContact(ownerName2, pin.address, pin.phone||null, pin.ghlContactId||null);
     if(!contactId) return;
     const oppId = await ghlCreateOpportunity(contactId, ownerName2, pin.address, 0);
     // Store GHL IDs on the pin for future stage updates
@@ -11281,7 +11289,7 @@ async function ghlUpdateOpportunityValue(pin, total){
   // No opportunity yet — create contact+opportunity now
   try{
     const ownerName3 = pin.owner||pin.estimate?.owner||pin.rep||'Homeowner';
-    const contactId = await ghlUpsertContact(ownerName3, pin.address, pin.phone||null);
+    const contactId = await ghlUpsertContact(ownerName3, pin.address, pin.phone||null, pin.ghlContactId||null);
     if(!contactId) return;
     const oppId = await ghlCreateOpportunity(contactId, ownerName3, pin.address, total||0);
     pin.ghlContactId = contactId;
