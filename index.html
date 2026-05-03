@@ -11114,6 +11114,9 @@ async function ghlFetchStages(){
   }
 }
 
+// Per-pin GHL sync mutex — prevents race condition duplicates
+const _ghlSyncLocks = {};
+
 async function ghlUpsertContact(name, address, email, existingContactId){
   const locationId = S.cfg.ghlLocationId || 'gz85VU6SxGXS7lqHAQGx';
   const nameParts = (name||'Homeowner').split(' ');
@@ -11227,9 +11230,16 @@ async function ghlPushPin(pinId){
   const pin = (S.pins||[]).find(p=>p.id===pinId);
   if(!pin){ toast('Pin not found','error'); return; }
   if(!S.cfg.ghlLocationId){ toast('⚠️ GHL not configured — add your Location ID in Settings','warn'); return; }
+  // Mutex: if a GHL sync is already running for this pin, wait for it then bail
+  if(_ghlSyncLocks[pinId]){
+    try{ await _ghlSyncLocks[pinId]; }catch(e){}
+    renderPinList(); return;
+  }
   // Show spinner state on the button
   const btn = document.querySelector('#pc-'+pinId+' .btn-xs[onclick*="ghlPushPin"]');
   if(btn){ btn.textContent='⏳ Syncing…'; btn.disabled=true; }
+  let _resolve, _reject;
+  _ghlSyncLocks[pinId] = new Promise((res,rej)=>{ _resolve=res; _reject=rej; });
   try{
     // Reload GHL IDs from Supabase in case they were set in a previous session
     if(!pin.ghlOpportunityId && pin.id && currentAccount){
@@ -11255,10 +11265,14 @@ async function ghlPushPin(pinId){
     }
     toast('✅ Synced to GHL: '+ownerName,'success');
     renderPinList();
+    _resolve(pin.ghlContactId);
   } catch(e){
     console.warn('GHL push failed:', e);
     toast('❌ GHL sync failed: '+e.message,'error');
     if(btn){ btn.textContent='⚠ Retry'; btn.disabled=false; }
+    _reject(e);
+  } finally {
+    delete _ghlSyncLocks[pinId];
   }
 }
 
@@ -11290,6 +11304,10 @@ async function ghlAutoPushPin(pin){
 // Update GHL opportunity monetary value when estimate is saved
 async function ghlUpdateOpportunityValue(pin, total){
   if(!S.cfg.ghlLocationId) return;
+  // Mutex: if a GHL sync is already running for this pin, wait for it
+  if(pin.id && _ghlSyncLocks[pin.id]){
+    try{ await _ghlSyncLocks[pin.id]; }catch(e){}
+  }
   // If GHL IDs are missing in memory, try to reload from Supabase (e.g. after bulk sync in previous session)
   if(!pin.ghlOpportunityId && pin.id && currentAccount){
     try{
