@@ -6943,7 +6943,7 @@ function renderEstimatesTab(){
             ? `<button onclick="openEstHistory('${eid}')" style="background:#374151;border:none;border-radius:6px;padding:6px 10px;color:#9CA3AF;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128221; History (${revCount})</button>`
             : '';
           return `<button onclick="loadEstimateIntoEstimator('${eid}')" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#9999; Edit</button>`
-            ++(S.cfg && S.cfg.ghlLocationId ? (()=>{
+            +(S.cfg && S.cfg.ghlLocationId ? (()=>{
               // Look up the linked pin to check GHL sync status
               const _estPin = est.pinId ? (S.pins||[]).find(p=>p.id===est.pinId) : (S.pins||[]).find(p=>p.address===est.addr);
               const _ghlId = _estPin ? (_estPin.ghlContactId||null) : null;
