@@ -11182,7 +11182,7 @@ async function ghlOAuthConnect() {
   // Build the GHL OAuth URL with the current account ID encoded in state
   const accountId = S.cfg.accountId || '';
   const state = btoa(JSON.stringify({ accountId }));
-  const GHL_CLIENT_ID = '69f796d2528efc733a30a9ab-moq4vxxq';
+  const GHL_VERSION_ID = '69f796d2528efc733a30a9ab';
   const REDIRECT_URI = encodeURIComponent('https://biddrop.americashomeexperts.com/api/oauth/callback');
   const SCOPES = encodeURIComponent([
     'contacts.readonly','contacts.write',
@@ -11191,7 +11191,7 @@ async function ghlOAuthConnect() {
     'locations.readonly','locations/customValues.readonly','locations/customValues.write',
     'locations/customFields.readonly','locations/customFields.write'
   ].join(' '));
-  const url = `https://marketplace.leadconnectorhq.com/v2/oauth/chooselocation?response_type=code&redirect_uri=${REDIRECT_URI}&client_id=${GHL_CLIENT_ID}&scope=${SCOPES}&state=${state}`;
+  const url = `https://marketplace.leadconnectorhq.com/v2/oauth/chooselocation?response_type=code&redirect_uri=${REDIRECT_URI}&version_id=${GHL_VERSION_ID}&scope=${SCOPES}&state=${state}`;
   window.location.href = url;
 }
 
