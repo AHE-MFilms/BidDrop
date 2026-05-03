@@ -11488,15 +11488,21 @@ async function sendViaGHL(){
   try {
     // 1. Upsert contact — pass existing ID and pinId to prevent duplicates
     const contactId = await ghlUpsertContact(owner||'Homeowner', addr, email||null, _existingGhlId, currentEstPinId||null);
-    // Save back to pin in memory and Supabase
-    if(_curPin && contactId && !_curPin.ghlContactId){
+    // Always save returned contactId — even if it changed (e.g. fallback create after 404)
+    if(_curPin && contactId){
       _curPin.ghlContactId = contactId;
       if(sb) sb.from('pins').update({ghl_contact_id: contactId}).eq('id', _curPin.id).then(()=>{});
     }
     toast('✅ Contact synced to GHL','success');
 
-    // 2. Create opportunity (fire and forget — no blocking)
-    ghlCreateOpportunity(contactId, owner, addr, total).catch(e=>console.warn('Opp error:',e));
+    // 2. Update existing opportunity value, or create new one (fire and forget)
+    if(_curPin && _curPin.ghlOpportunityId){
+      ghlRequest('/opportunities/'+_curPin.ghlOpportunityId, 'PUT', { monetaryValue: total||0 }).catch(e=>console.warn('Opp update error:',e));
+    } else {
+      ghlCreateOpportunity(contactId, owner, addr, total).then(oppId=>{
+        if(oppId && _curPin){ _curPin.ghlOpportunityId = oppId; if(sb) sb.from('pins').update({ghl_opportunity_id: oppId}).eq('id', _curPin.id).then(()=>{}); }
+      }).catch(e=>console.warn('Opp error:',e));
+    }
 
     if(email){
     // 3. Build email HTML = full mailer
