@@ -2490,7 +2490,8 @@ async function syncAccountToSupabase(){
     diff4: cfg.diff4, diff5: cfg.diff5, diff6: cfg.diff6,
     rep_video_url_default: cfg.repVideoUrl||null,
     offer_siding: cfg.offerSiding, offer_windows: cfg.offerWindows,
-    offer_gutters: cfg.offerGutters, offer_solar: cfg.offerSolar, offer_custom: cfg.offerCustom,
+    offer_gutters: cfg.offerGutters, offer_custom: cfg.offerCustom,
+    // offer_solar omitted — column not yet in DB schema
     // cost_solar_per_watt removed — not in DB schema yet
     referral_amt: cfg.referralAmt, referral_text: cfg.referralText,
     cost_architectural: cfg.costArchitectural, cost_3tab: cfg.cost3Tab,
@@ -11149,7 +11150,8 @@ async function ghlUpsertContact(name, address, email, existingContactId, pinId){
       city   = parts[1];
     }
   }
-  const body = {
+  // POST body includes locationId (required for create)
+  const postBody = {
     locationId,
     firstName:  nameParts[0]||'Homeowner',
     lastName:   nameParts.slice(1).join(' ')||'',
@@ -11161,10 +11163,23 @@ async function ghlUpsertContact(name, address, email, existingContactId, pinId){
     tags:       ['biddrop-lead','canvass'],
     source:     'BidDrop by AHE'
   };
-  if(email) body.email = email;
+  if(email) postBody.email = email;
+  // PUT body must NOT include locationId — GHL returns 422 if it's present on update
+  const putBody = {
+    firstName:  postBody.firstName,
+    lastName:   postBody.lastName,
+    address1:   postBody.address1,
+    city:       postBody.city,
+    state:      postBody.state,
+    postalCode: postBody.postalCode,
+    country:    'US',
+    tags:       ['biddrop-lead','canvass']
+  };
+  if(email) putBody.email = email;
+
   // PRIORITY 1: If we already have a GHL contact ID in memory, always UPDATE — never create
   if(existingContactId){
-    await ghlRequest('/contacts/'+existingContactId, 'PUT', body);
+    await ghlRequest('/contacts/'+existingContactId, 'PUT', putBody);
     return existingContactId;
   }
   // PRIORITY 2: If we have a pinId, check Supabase for a stored ghl_contact_id
@@ -11174,14 +11189,14 @@ async function ghlUpsertContact(name, address, email, existingContactId, pinId){
       const { data } = await sb.from('pins').select('ghl_contact_id').eq('id', pinId).single();
       if(data && data.ghl_contact_id){
         console.log('[BidDrop] GHL: found stored contact ID for pin', pinId, '→ updating');
-        await ghlRequest('/contacts/'+data.ghl_contact_id, 'PUT', body);
+        await ghlRequest('/contacts/'+data.ghl_contact_id, 'PUT', putBody);
         return data.ghl_contact_id;
       }
     }catch(e){ console.warn('GHL Supabase lookup failed:', e.message); }
   }
   // PRIORITY 3: No existing contact found — create new
   console.log('[BidDrop] GHL: creating new contact for', name, address);
-  const res = await ghlRequest('/contacts/', 'POST', body);
+  const res = await ghlRequest('/contacts/', 'POST', postBody);
   return res.contact?.id || res.id;
 }
 
