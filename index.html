@@ -12928,12 +12928,13 @@ window.addEventListener('load', ()=>{
     }
   });
 
-  // Step 3 — auto-reload pins every 60 s (catches missed realtime events)
+  // Step 3 — auto-reload pins every 5 min (realtime handles live changes; this is a safety net)
+  // Reduced from 60s to 300s to cut Supabase Disk IO
   setInterval(() => {
     if(_appInitialized && currentAccount){
       loadPinsFromSupabase().catch(e => console.warn('[AutoReload] pins:', e));
     }
-  }, 60000);
+  }, 300000);
 
   // Step 4 — save estimate when user switches browser tabs or minimizes the window
   document.addEventListener('visibilitychange', () => {
