@@ -9,9 +9,9 @@
  * Credit model: 1 credit = $4.00 = 1 postcard mailed
  * Bulk packs give more credits for less money (volume discount).
  */
-import Stripe from 'stripe';
+const Stripe = require('stripe');
 
-export const config = { api: { bodyParser: false } };
+const config = { api: { bodyParser: false } };
 
 async function getRawBody(req) {
   return new Promise((resolve, reject) => {
@@ -75,7 +75,7 @@ async function getCallerProfile(userId) {
   return rows[0] || null;
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   cors(res);
   if (req.method === 'OPTIONS') { res.status(200).end(); return; }
   const { action } = req.query;
