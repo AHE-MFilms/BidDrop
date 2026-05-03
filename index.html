@@ -11054,9 +11054,10 @@ async function ghlBulkSync(){
       // Get estimate total if available
       const est = (S.estimates||[]).find(e=>e.pinId===pin.id && !e.deletedAt);
       const total = est ? (est.total||0) : 0;
-      const contactId = await ghlUpsertContact(pin.rep||'Homeowner', pin.address, pin.phone||null);
+      const ownerName1 = pin.owner||pin.estimate?.owner||pin.rep||'Homeowner';
+      const contactId = await ghlUpsertContact(ownerName1, pin.address, pin.phone||null);
       if(!contactId) throw new Error('No contact ID returned');
-      const oppId = await ghlCreateOpportunity(contactId, pin.rep, pin.address, total);
+      const oppId = await ghlCreateOpportunity(contactId, ownerName1, pin.address, total);
       // Update in-memory pin
       pin.ghlContactId = contactId;
       pin.ghlOpportunityId = oppId;
@@ -11117,13 +11118,37 @@ async function ghlFetchStages(){
 async function ghlUpsertContact(name, address, email){
   const locationId = S.cfg.ghlLocationId || 'gz85VU6SxGXS7lqHAQGx';
   const nameParts = (name||'Homeowner').split(' ');
+  // Parse "123 Main St, Canton, Michigan 48188" into GHL fields
+  let street = address||'', city = '', state = '', postalCode = '';
+  if(address){
+    const parts = address.split(',').map(s=>s.trim());
+    if(parts.length >= 3){
+      street = parts[0];
+      city   = parts[1];
+      // Last part may be "Michigan 48188" or "MI 48188"
+      const stateZip = parts[parts.length-1].trim().split(/\s+/);
+      if(stateZip.length >= 2){
+        postalCode = stateZip[stateZip.length-1];
+        state      = stateZip.slice(0, stateZip.length-1).join(' ');
+      } else {
+        state = parts[parts.length-1];
+      }
+    } else if(parts.length === 2){
+      street = parts[0];
+      city   = parts[1];
+    }
+  }
   const body = {
     locationId,
-    firstName: nameParts[0]||'Homeowner',
-    lastName:  nameParts.slice(1).join(' ')||'',
-    address1:  address||'',
-    tags:      ['biddrop-lead','canvass'],
-    source:    'BidDrop by AHE'
+    firstName:  nameParts[0]||'Homeowner',
+    lastName:   nameParts.slice(1).join(' ')||'',
+    address1:   street,
+    city:       city||undefined,
+    state:      state||undefined,
+    postalCode: postalCode||undefined,
+    country:    'US',
+    tags:       ['biddrop-lead','canvass'],
+    source:     'BidDrop by AHE'
   };
   if(email) body.email = email;
   // Try to find existing contact first
@@ -11176,9 +11201,10 @@ async function ghlAutoPushPin(pin){
   if(!S.cfg.ghlLocationId) return;
   if(!S.cfg.ghlPipelineId) return;
   try {
-    const contactId = await ghlUpsertContact(pin.rep||'Homeowner', pin.address, pin.phone||null);
+    const ownerName2 = pin.owner||pin.estimate?.owner||pin.rep||'Homeowner';
+    const contactId = await ghlUpsertContact(ownerName2, pin.address, pin.phone||null);
     if(!contactId) return;
-    const oppId = await ghlCreateOpportunity(contactId, pin.rep, pin.address, 0);
+    const oppId = await ghlCreateOpportunity(contactId, ownerName2, pin.address, 0);
     // Store GHL IDs on the pin for future stage updates
     pin.ghlContactId = contactId;
     pin.ghlOpportunityId = oppId;
@@ -11207,9 +11233,10 @@ async function ghlUpdateOpportunityValue(pin, total){
   }
   // No opportunity yet — create contact+opportunity now
   try{
-    const contactId = await ghlUpsertContact(pin.rep||'Homeowner', pin.address, pin.phone||null);
+    const ownerName3 = pin.owner||pin.estimate?.owner||pin.rep||'Homeowner';
+    const contactId = await ghlUpsertContact(ownerName3, pin.address, pin.phone||null);
     if(!contactId) return;
-    const oppId = await ghlCreateOpportunity(contactId, pin.rep, pin.address, total||0);
+    const oppId = await ghlCreateOpportunity(contactId, ownerName3, pin.address, total||0);
     pin.ghlContactId = contactId;
     pin.ghlOpportunityId = oppId;
     if(currentAccount){
