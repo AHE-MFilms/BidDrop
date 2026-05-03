@@ -2358,7 +2358,7 @@ async function adminAPI(action, body={}, queryParams={}, _retried=false) {
     if (refreshed.data.session) return adminAPI(action, body, queryParams, true);
   }
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'API error ' + res.status);
+  if (!res.ok) throw new Error(data.error || data.message || (Array.isArray(data.errors) ? data.errors.join(', ') : null) || JSON.stringify(data) || 'API error ' + res.status);
   return data;
 }
 const AGENCY_ACCOUNT_ID = 'ab08643f-3d71-4f47-abac-31599cf10d25'; // AHE master account row
