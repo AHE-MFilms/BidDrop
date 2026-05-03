@@ -11439,27 +11439,14 @@ async function ghlSyncPinStatus(pin){
 }
 
 async function ghlSendEmail(contactId, toEmail, toName, subject, htmlBody){
-  const locationId = S.cfg.ghlLocationId || 'gz85VU6SxGXS7lqHAQGx';
-  // Create or get conversation
-  let convId;
-  try {
-    const convRes = await ghlRequest('/conversations/', 'POST', {
-      locationId, contactId, type: 'EMAIL'
-    });
-    convId = convRes.conversation?.id || convRes.id;
-  } catch(e){
-    // Try searching for existing conversation
-    const search = await ghlRequest('/conversations/search?locationId='+locationId+'&contactId='+contactId);
-    convId = search.conversations?.[0]?.id;
-    if(!convId) throw new Error('Could not create GHL conversation');
-  }
-  // Send message on conversation
-  return ghlRequest('/conversations/'+convId+'/messages', 'POST', {
-    type:    'Email',
+  // GHL API: POST /conversations/messages with contactId directly — no need to create a conversation first
+  // Docs: https://marketplace.gohighlevel.com/docs/ghl/conversations/send-a-new-message/
+  return ghlRequest('/conversations/messages', 'POST', {
+    type:      'Email',
+    contactId,
+    emailTo:   toEmail,
     subject,
-    html:    htmlBody,
-    emailTo: toEmail,
-    emailFrom: undefined // uses location's connected sending email
+    html:      htmlBody
   });
 }
 
