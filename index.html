@@ -6943,7 +6943,16 @@ function renderEstimatesTab(){
             ? `<button onclick="openEstHistory('${eid}')" style="background:#374151;border:none;border-radius:6px;padding:6px 10px;color:#9CA3AF;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128221; History (${revCount})</button>`
             : '';
           return `<button onclick="loadEstimateIntoEstimator('${eid}')" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#9999; Edit</button>`
-            +`<button onclick="sendEstimateViaGHL('${eid}')" style="background:#1a7f4b;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#9889; GHL</button>`
+            ++(S.cfg && S.cfg.ghlLocationId ? (()=>{
+              // Look up the linked pin to check GHL sync status
+              const _estPin = est.pinId ? (S.pins||[]).find(p=>p.id===est.pinId) : (S.pins||[]).find(p=>p.address===est.addr);
+              const _ghlId = _estPin ? (_estPin.ghlContactId||null) : null;
+              const _ghlSynced = !!_ghlId;
+              return `<button id="est-ghl-btn-${eid}" onclick="sendEstimateViaGHL('${eid}')"
+                title="${_ghlSynced ? '✓ Synced to GHL — click to re-sync/update' : 'Send to GHL'}"
+                style="background:${_ghlSynced?'#166534':'#1e3a5f'};border:1px solid ${_ghlSynced?'#22c55e':'#3b82f6'};border-radius:6px;padding:6px 10px;color:${_ghlSynced?'#4ade80':'#93c5fd'};font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">
+                ${_ghlSynced?'✓ GHL':'⬆ GHL'}</button>`;
+            })() : '')
             +(()=>{
             const estAddr = (est.addr||'').trim().toLowerCase();
             const inQueue = (S.queue||[]).some(function(q){ return q.addr.trim().toLowerCase()===estAddr && q.status==='pending'; });
@@ -7435,8 +7444,15 @@ function addEstimateToMailQueue(estId){
 async function sendEstimateViaGHL(estId){
   const est = (S.estimates||[]).find(e=>e.id===estId);
   if(!est){ toast('Estimate not found','error'); return; }
-  // Load into estimator silently, send, then come back
+  // Load into estimator silently — this also sets currentEstPinId via loadEstimateIntoEstimator
   loadEstimateIntoEstimator(estId);
+  // Also ensure currentEstPinId is set so sendViaGHL can find the pin's ghlContactId
+  if(est.pinId) currentEstPinId = est.pinId;
+  else {
+    // Fall back to matching by address
+    const matchPin = (S.pins||[]).find(p=>p.address===est.addr);
+    if(matchPin) currentEstPinId = matchPin.id;
+  }
   setTimeout(async ()=>{
     await sendViaGHL();
     est.sentAt = new Date().toISOString();
