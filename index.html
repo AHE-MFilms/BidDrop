@@ -2358,7 +2358,7 @@ async function adminAPI(action, body={}, queryParams={}, _retried=false) {
     if (refreshed.data.session) return adminAPI(action, body, queryParams, true);
   }
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error || data.message || (Array.isArray(data.errors) ? data.errors.join(', ') : null) || JSON.stringify(data) || 'API error ' + res.status);
+  if (!res.ok) throw new Error(data.error || data.message || data.msg || (Array.isArray(data.errors) ? data.errors.map(e=>e.message||e).join(', ') : null) || JSON.stringify(data) || 'API error ' + res.status);
   return data;
 }
 const AGENCY_ACCOUNT_ID = 'ab08643f-3d71-4f47-abac-31599cf10d25'; // AHE master account row
@@ -11253,12 +11253,26 @@ async function ghlCreateOpportunity(contactId, name, address, total){
     contactId,
     name:    'Roof Bid — '+(address||name||'Unknown'),
     monetaryValue: total||0,
-    status:  'open',
-    source:  'BidDrop by AHE'
+    status:  'open'
   };
   if(stageId) oppBody.pipelineStageId = stageId;
-  const res = await ghlRequest('/opportunities/', 'POST', oppBody);
-  return res.opportunity?.id || res.id || null;
+  console.log('[BidDrop] ghlCreateOpportunity body:', JSON.stringify(oppBody));
+  try{
+    const res = await ghlRequest('/opportunities/', 'POST', oppBody);
+    return res.opportunity?.id || res.id || null;
+  }catch(oppErr){
+    console.warn('[BidDrop] ghlCreateOpportunity failed:', oppErr.message);
+    // Try without pipelineStageId in case it\'s invalid
+    if(oppBody.pipelineStageId){
+      delete oppBody.pipelineStageId;
+      console.log('[BidDrop] Retrying opportunity without pipelineStageId...');
+      try{
+        const res2 = await ghlRequest('/opportunities/', 'POST', oppBody);
+        return res2.opportunity?.id || res2.id || null;
+      }catch(e2){ console.warn('[BidDrop] Opportunity retry also failed:', e2.message); }
+    }
+    return null;
+  }
 }
 
 async function ghlUpdateOpportunityStage(opportunityId, stageId, wonLost){
@@ -11484,6 +11498,19 @@ async function sendViaGHL(){
   toast('Sending to GHL...','info');
   // Look up existing GHL contact ID via currentEstPinId
   const _curPin = currentEstPinId ? (S.pins||[]).find(p=>p.id===currentEstPinId) : null;
+  // CRITICAL: Wait for any in-progress ghlAutoPushPin to finish before reading ghlContactId
+  // Without this, sendViaGHL reads a stale/null ID if the user clicks GHL button immediately after pin drop
+  if(_curPin && _curPin.id && _ghlSyncLocks[_curPin.id]){
+    try{ await _ghlSyncLocks[_curPin.id]; }catch(e){}
+  }
+  // If pin still has no ghlContactId in memory, reload from Supabase (handles page-reload case)
+  if(_curPin && !_curPin.ghlContactId && _curPin.id && sb){
+    try{
+      const {data} = await sb.from('pins').select('ghl_contact_id,ghl_opportunity_id').eq('id',_curPin.id).single();
+      if(data && data.ghl_contact_id){ _curPin.ghlContactId = data.ghl_contact_id; }
+      if(data && data.ghl_opportunity_id){ _curPin.ghlOpportunityId = data.ghl_opportunity_id; }
+    }catch(e){ console.warn('GHL ID reload:', e); }
+  }
   const _existingGhlId = _curPin ? (_curPin.ghlContactId||null) : null;
   try {
     // 1. Upsert contact — pass existing ID and pinId to prevent duplicates
