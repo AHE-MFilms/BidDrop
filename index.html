@@ -11153,7 +11153,7 @@ async function ghlBulkSync(){
 // ── GHL OAuth helpers ────────────────────────────────────────────────────────
 async function ghlCheckOAuthStatus() {
   try {
-    const r = await adminAPI({ action: 'ghl-oauth-status' });
+    const r = await adminAPI('ghl-oauth-status');
     const statusLabel = document.getElementById('ghl-oauth-status-label');
     const statusDetail = document.getElementById('ghl-oauth-status-detail');
     const connectBtn = document.getElementById('btn-ghl-connect');
@@ -11204,7 +11204,7 @@ async function ghlOAuthConnect() {
 async function ghlOAuthDisconnect() {
   if (!confirm('Disconnect GoHighLevel? BidDrop will stop syncing to GHL until you reconnect.')) return;
   try {
-    await adminAPI({ action: 'ghl-oauth-disconnect' });
+    await adminAPI('ghl-oauth-disconnect');
     toast('GoHighLevel disconnected', 'info');
     ghlCheckOAuthStatus();
   } catch(e) { toast('Disconnect failed: ' + e.message, 'error'); }
@@ -11220,8 +11220,7 @@ async function ghlOAuthDisconnect() {
     const expiresIn = parseInt(params.get('expires_in') || '86400', 10);
     // If tokens are in URL (no accountId in state), save them via admin API
     if (accessToken) {
-      adminAPI({
-        action: 'ghl-oauth-save',
+      adminAPI('ghl-oauth-save', {
         access_token: accessToken,
         refresh_token: refreshToken,
         expires_in: expiresIn,

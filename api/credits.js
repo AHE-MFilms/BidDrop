@@ -83,6 +83,7 @@ export default async function handler(req, res) {
   // ── Stripe Webhook ────────────────────────────────────────────────────────
   if (action === 'webhook') {
     if (req.method !== 'POST') { res.status(405).end(); return; }
+    if (!STRIPE_KEY) { res.status(400).json({ error: 'Stripe not configured' }); return; }
     const rawBody = await getRawBody(req);
     const stripe = new Stripe(STRIPE_KEY);
     const sig = req.headers['stripe-signature'];
