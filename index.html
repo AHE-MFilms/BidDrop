@@ -5355,7 +5355,7 @@ function renderPinList(){
     const clickHandler = _pinBulkMode
       ? 'onclick="togglePinSelect(\''+pid+'\');this.querySelector(\'.pin-cb\')&&(this.querySelector(\'.pin-cb\').checked=_selectedPinIds.has(\''+pid+'\'))"'
       : 'onclick="togglePinCard(\''+pid+'\')"';
-    return '<div class="pc" id="pc-'+pid+'" '+clickHandler+'>'+'<div class="pc-summary">'+cbHtml+dmgThumb+'<div style="flex:1;min-width:0;"><div class="pc-addr">'+escHtml(p.address)+'</div><div class="pc-meta"><span>'+timeAgo(p.at)+'</span>'+(p.rep?'<span>· '+escHtml(p.rep)+'</span>':'')+'</div></div>'+dmgCount+'<div class="sdot" style="background:'+sColor(p.status)+';margin-top:0;"></div>'+(! _pinBulkMode?'<span class="pc-chevron">›</span>':'')+'</div>'+(!_pinBulkMode?'<div class="pc-body">'+(p.notes?'<div class="pc-note" style="margin-bottom:8px;">"'+escHtml(p.notes)+'"</div>':'')+'<div class="pc-acts">'+'<button class="btn-xs pr" onclick="event.stopPropagation();goEstFromPin(\''+pid+'\')">'+'📋 Estimate</button>'+'<button class="btn-xs" onclick="event.stopPropagation();openFollowUp(\''+pid+'\')">'+'✉️ Follow Up</button>'+'<button class="btn-xs" onclick="event.stopPropagation();cycleStatus(\''+pid+'\')">'+'↻ Status</button>'+'<button class="btn-xs danger" onclick="event.stopPropagation();rmPin(\''+pid+'\')">'+'✕</button>'+'</div></div>':'')+'</div>';
+    return '<div class="pc" id="pc-'+pid+'" '+clickHandler+'>'+'<div class="pc-summary">'+cbHtml+dmgThumb+'<div style="flex:1;min-width:0;"><div class="pc-addr">'+escHtml(p.address)+'</div><div class="pc-meta"><span>'+timeAgo(p.at)+'</span>'+(p.rep?'<span>· '+escHtml(p.rep)+'</span>':'')+'</div></div>'+dmgCount+'<div class="sdot" style="background:'+sColor(p.status)+';margin-top:0;"></div>'+(! _pinBulkMode?'<span class="pc-chevron">›</span>':'')+'</div>'+(!_pinBulkMode?'<div class="pc-body">'+(p.notes?'<div class="pc-note" style="margin-bottom:8px;">"'+escHtml(p.notes)+'"</div>':'')+'<div class="pc-acts">'+'<button class="btn-xs pr" onclick="event.stopPropagation();goEstFromPin(\''+pid+'\')">'+'📋 Estimate</button>'+'<button class="btn-xs" onclick="event.stopPropagation();openFollowUp(\''+pid+'\')">'+'✉️ Follow Up</button>'+'<button class="btn-xs" onclick="event.stopPropagation();cycleStatus(\''+pid+'\')">'+'↻ Status</button>'+(S.cfg.ghlLocationId?'<button class="btn-xs" style="background:'+(p.ghlContactId?'#166534':'#1e3a5f')+';border:1px solid '+(p.ghlContactId?'#22c55e':'#3b82f6')+';color:'+(p.ghlContactId?'#4ade80':'#93c5fd')+';" onclick="event.stopPropagation();ghlPushPin(\''+pid+'\')" title="'+(p.ghlContactId?'✓ Synced to GHL — click to re-sync':'Send to GHL')+'">'+(p.ghlContactId?'✓ GHL':'⬆ GHL')+'</button>':'')+'<button class="btn-xs danger" onclick="event.stopPropagation();rmPin(\''+pid+'\')">'+'✕</button>'+'</div></div>':'')+'</div>';
   }).join('');
   if(hasMore){
     el.insertAdjacentHTML('beforeend',
@@ -11196,6 +11196,46 @@ async function ghlUpdateOpportunityStage(opportunityId, stageId, wonLost){
 }
 
 // Auto-push a new pin to GHL as a contact + opportunity (fire-and-forget)
+// Manual per-pin GHL push — called from the ⬆ GHL / ✓ GHL button on each pin card
+async function ghlPushPin(pinId){
+  const pin = (S.pins||[]).find(p=>p.id===pinId);
+  if(!pin){ toast('Pin not found','error'); return; }
+  if(!S.cfg.ghlLocationId){ toast('⚠️ GHL not configured — add your Location ID in Settings','warn'); return; }
+  // Show spinner state on the button
+  const btn = document.querySelector('#pc-'+pinId+' .btn-xs[onclick*="ghlPushPin"]');
+  if(btn){ btn.textContent='⏳ Syncing…'; btn.disabled=true; }
+  try{
+    // Reload GHL IDs from Supabase in case they were set in a previous session
+    if(!pin.ghlOpportunityId && pin.id && currentAccount){
+      const {data} = await sb.from('pins').select('ghl_contact_id,ghl_opportunity_id').eq('id',pin.id).single();
+      if(data && data.ghl_contact_id){ pin.ghlContactId = data.ghl_contact_id; }
+      if(data && data.ghl_opportunity_id){ pin.ghlOpportunityId = data.ghl_opportunity_id; }
+    }
+    const ownerName = pin.owner||pin.estimate?.owner||pin.rep||'Homeowner';
+    const total = pin.estimate?.total || 0;
+    const contactId = await ghlUpsertContact(ownerName, pin.address, pin.phone||null);
+    if(!contactId) throw new Error('No contact ID returned from GHL');
+    let oppId = pin.ghlOpportunityId;
+    if(!oppId){
+      oppId = await ghlCreateOpportunity(contactId, ownerName, pin.address, total);
+    } else {
+      // Update existing opportunity value
+      await ghlRequest('/opportunities/'+oppId, 'PUT', { monetaryValue: total||0 }).catch(()=>{});
+    }
+    pin.ghlContactId = contactId;
+    pin.ghlOpportunityId = oppId;
+    if(currentAccount){
+      await sb.from('pins').update({ ghl_contact_id: contactId, ghl_opportunity_id: oppId }).eq('id', pin.id);
+    }
+    toast('✅ Synced to GHL: '+ownerName,'success');
+    renderPinList();
+  } catch(e){
+    console.warn('GHL push failed:', e);
+    toast('❌ GHL sync failed: '+e.message,'error');
+    if(btn){ btn.textContent='⚠ Retry'; btn.disabled=false; }
+  }
+}
+
 async function ghlAutoPushPin(pin){
   // GHL key is server-side only — only check locationId to see if GHL is configured
   if(!S.cfg.ghlLocationId) return;
@@ -11224,6 +11264,14 @@ async function ghlAutoPushPin(pin){
 // Update GHL opportunity monetary value when estimate is saved
 async function ghlUpdateOpportunityValue(pin, total){
   if(!S.cfg.ghlLocationId) return;
+  // If GHL IDs are missing in memory, try to reload from Supabase (e.g. after bulk sync in previous session)
+  if(!pin.ghlOpportunityId && pin.id && currentAccount){
+    try{
+      const {data} = await sb.from('pins').select('ghl_contact_id,ghl_opportunity_id').eq('id',pin.id).single();
+      if(data && data.ghl_contact_id){ pin.ghlContactId = data.ghl_contact_id; }
+      if(data && data.ghl_opportunity_id){ pin.ghlOpportunityId = data.ghl_opportunity_id; }
+    }catch(e){ console.warn('GHL ID reload:', e); }
+  }
   if(pin.ghlOpportunityId){
     try{
       await ghlRequest('/opportunities/'+pin.ghlOpportunityId, 'PUT', { monetaryValue: total||0 });
