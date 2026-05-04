@@ -394,11 +394,12 @@ module.exports = async function handler(req, res) {
       // ── Lob postcard proxy ────────────────────────────────────────────────
       case 'lob-postcard': {
         const POSTCARD_CREDITS = 1; // 1 credit = $4.00 = 1 postcard
+        const PC_PLAN_FREE = { starter: 5, pro: 15, agency: 30, enterprise: 60 };
         const { payload } = req.body;
         if (!payload) { res.status(400).json({ error: 'payload required' }); return; }
-        // Enforce credit balance — fetch free + paid totals
+        // Enforce credit balance — fetch free + paid totals (new mailer_credits columns)
         const pcAcctRes = await sbFetch(
-          `accounts?id=eq.${profile.account_id}&select=id,lookup_credits,free_lookups_used,free_lookups_reset,free_lookups_limit`
+          `accounts?id=eq.${profile.account_id}&select=id,plan,mailer_credits,free_mailer_credits_used,free_mailer_credits_reset`
         );
         if (!pcAcctRes.ok) { res.status(500).json({ error: 'Failed to fetch account credits' }); return; }
         const pcAcctRows = await pcAcctRes.json();
@@ -406,16 +407,17 @@ module.exports = async function handler(req, res) {
         const pcAcct = pcAcctRows[0];
         // Monthly reset for free credits
         const pcToday = new Date().toISOString().slice(0, 10);
-        if ((pcAcct.free_lookups_reset || '').slice(0, 7) !== pcToday.slice(0, 7)) {
+        if ((pcAcct.free_mailer_credits_reset || '').slice(0, 7) !== pcToday.slice(0, 7)) {
           await sbFetch(`accounts?id=eq.${profile.account_id}`, {
             method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
-            body: JSON.stringify({ free_lookups_used: 0, free_lookups_reset: pcToday })
+            body: JSON.stringify({ free_mailer_credits_used: 0, free_mailer_credits_reset: pcToday })
           });
-          pcAcct.free_lookups_used = 0;
+          pcAcct.free_mailer_credits_used = 0;
         }
-        const pcFreeLimit = pcAcct.free_lookups_limit ?? 20;
-        const pcFreeLeft  = Math.max(0, pcFreeLimit - (pcAcct.free_lookups_used || 0));
-        const pcPaid      = pcAcct.lookup_credits || 0;
+        const pcPlan      = (pcAcct.plan || 'starter').toLowerCase();
+        const pcFreeLimit = PC_PLAN_FREE[pcPlan] || PC_PLAN_FREE.starter;
+        const pcFreeLeft  = Math.max(0, pcFreeLimit - (pcAcct.free_mailer_credits_used || 0));
+        const pcPaid      = pcAcct.mailer_credits || 0;
         const pcTotal     = pcFreeLeft + pcPaid;
         if (pcTotal < POSTCARD_CREDITS) {
           res.status(402).json({
@@ -430,8 +432,8 @@ module.exports = async function handler(req, res) {
         const pcFreeToUse = Math.min(pcFreeLeft, POSTCARD_CREDITS);
         const pcPaidToUse = POSTCARD_CREDITS - pcFreeToUse;
         const pcUpdates = {};
-        if (pcFreeToUse > 0) pcUpdates.free_lookups_used = (pcAcct.free_lookups_used || 0) + pcFreeToUse;
-        if (pcPaidToUse > 0) pcUpdates.lookup_credits = pcPaid - pcPaidToUse;
+        if (pcFreeToUse > 0) pcUpdates.free_mailer_credits_used = (pcAcct.free_mailer_credits_used || 0) + pcFreeToUse;
+        if (pcPaidToUse > 0) pcUpdates.mailer_credits = pcPaid - pcPaidToUse;
         await sbFetch(`accounts?id=eq.${profile.account_id}`, {
           method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
           body: JSON.stringify(pcUpdates)
@@ -449,15 +451,15 @@ module.exports = async function handler(req, res) {
         // If Lob failed, refund the credits
         if (!lobRes.ok) {
           const pcRefund = {};
-          if (pcFreeToUse > 0) pcRefund.free_lookups_used = pcAcct.free_lookups_used || 0;
-          if (pcPaidToUse > 0) pcRefund.lookup_credits = pcPaid;
+          if (pcFreeToUse > 0) pcRefund.free_mailer_credits_used = pcAcct.free_mailer_credits_used || 0;
+          if (pcPaidToUse > 0) pcRefund.mailer_credits = pcPaid;
           await sbFetch(`accounts?id=eq.${profile.account_id}`, {
             method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
             body: JSON.stringify(pcRefund)
           });
         }
         const pcNewPaid     = lobRes.ok ? pcPaid - pcPaidToUse : pcPaid;
-        const pcNewFreeUsed = lobRes.ok ? (pcAcct.free_lookups_used || 0) + pcFreeToUse : (pcAcct.free_lookups_used || 0);
+        const pcNewFreeUsed = lobRes.ok ? (pcAcct.free_mailer_credits_used || 0) + pcFreeToUse : (pcAcct.free_mailer_credits_used || 0);
         if (lobRes.ok) {
           res.status(200).json({
             ...lobData,
@@ -467,7 +469,7 @@ module.exports = async function handler(req, res) {
           res.status(200).json({
             error: lobData.error || lobData,
             _lobStatus: lobRes.status,
-            _credits: { paid_credits: pcPaid, free_used: pcAcct.free_lookups_used || 0, free_limit: pcFreeLimit }
+            _credits: { paid_credits: pcPaid, free_used: pcAcct.free_mailer_credits_used || 0, free_limit: pcFreeLimit }
           });
         }
         break;
@@ -476,11 +478,12 @@ module.exports = async function handler(req, res) {
       // ── Lob letter proxy ──────────────────────────────────────────────────
       case 'lob-letter': {
         const LETTER_CREDITS = 1; // 1 credit = $4.00 = 1 letter
+        const LT_PLAN_FREE = { starter: 5, pro: 15, agency: 30, enterprise: 60 };
         const { payload: ltPayload } = req.body;
         if (!ltPayload) { res.status(400).json({ error: 'payload required' }); return; }
-        // Enforce credit balance — fetch free + paid totals
+        // Enforce credit balance — fetch free + paid totals (new mailer_credits columns)
         const ltAcctRes = await sbFetch(
-          `accounts?id=eq.${profile.account_id}&select=id,lookup_credits,free_lookups_used,free_lookups_reset,free_lookups_limit`
+          `accounts?id=eq.${profile.account_id}&select=id,plan,mailer_credits,free_mailer_credits_used,free_mailer_credits_reset`
         );
         if (!ltAcctRes.ok) { res.status(500).json({ error: 'Failed to fetch account credits' }); return; }
         const ltAcctRows = await ltAcctRes.json();
@@ -488,16 +491,17 @@ module.exports = async function handler(req, res) {
         const ltAcct = ltAcctRows[0];
         // Monthly reset for free credits
         const ltToday = new Date().toISOString().slice(0, 10);
-        if ((ltAcct.free_lookups_reset || '').slice(0, 7) !== ltToday.slice(0, 7)) {
+        if ((ltAcct.free_mailer_credits_reset || '').slice(0, 7) !== ltToday.slice(0, 7)) {
           await sbFetch(`accounts?id=eq.${profile.account_id}`, {
             method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
-            body: JSON.stringify({ free_lookups_used: 0, free_lookups_reset: ltToday })
+            body: JSON.stringify({ free_mailer_credits_used: 0, free_mailer_credits_reset: ltToday })
           });
-          ltAcct.free_lookups_used = 0;
+          ltAcct.free_mailer_credits_used = 0;
         }
-        const ltFreeLimit = ltAcct.free_lookups_limit ?? 20;
-        const ltFreeLeft  = Math.max(0, ltFreeLimit - (ltAcct.free_lookups_used || 0));
-        const ltPaid      = ltAcct.lookup_credits || 0;
+        const ltPlan      = (ltAcct.plan || 'starter').toLowerCase();
+        const ltFreeLimit = LT_PLAN_FREE[ltPlan] || LT_PLAN_FREE.starter;
+        const ltFreeLeft  = Math.max(0, ltFreeLimit - (ltAcct.free_mailer_credits_used || 0));
+        const ltPaid      = ltAcct.mailer_credits || 0;
         const ltTotal     = ltFreeLeft + ltPaid;
         if (ltTotal < LETTER_CREDITS) {
           res.status(402).json({
@@ -512,8 +516,8 @@ module.exports = async function handler(req, res) {
         const ltFreeToUse = Math.min(ltFreeLeft, LETTER_CREDITS);
         const ltPaidToUse = LETTER_CREDITS - ltFreeToUse;
         const ltUpdates = {};
-        if (ltFreeToUse > 0) ltUpdates.free_lookups_used = (ltAcct.free_lookups_used || 0) + ltFreeToUse;
-        if (ltPaidToUse > 0) ltUpdates.lookup_credits = ltPaid - ltPaidToUse;
+        if (ltFreeToUse > 0) ltUpdates.free_mailer_credits_used = (ltAcct.free_mailer_credits_used || 0) + ltFreeToUse;
+        if (ltPaidToUse > 0) ltUpdates.mailer_credits = ltPaid - ltPaidToUse;
         await sbFetch(`accounts?id=eq.${profile.account_id}`, {
           method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
           body: JSON.stringify(ltUpdates)
@@ -531,15 +535,15 @@ module.exports = async function handler(req, res) {
         // If Lob failed, refund the credits
         if (!ltLobRes.ok) {
           const ltRefund = {};
-          if (ltFreeToUse > 0) ltRefund.free_lookups_used = ltAcct.free_lookups_used || 0;
-          if (ltPaidToUse > 0) ltRefund.lookup_credits = ltPaid;
+          if (ltFreeToUse > 0) ltRefund.free_mailer_credits_used = ltAcct.free_mailer_credits_used || 0;
+          if (ltPaidToUse > 0) ltRefund.mailer_credits = ltPaid;
           await sbFetch(`accounts?id=eq.${profile.account_id}`, {
             method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
             body: JSON.stringify(ltRefund)
           });
         }
         const ltNewPaid     = ltLobRes.ok ? ltPaid - ltPaidToUse : ltPaid;
-        const ltNewFreeUsed = ltLobRes.ok ? (ltAcct.free_lookups_used || 0) + ltFreeToUse : (ltAcct.free_lookups_used || 0);
+        const ltNewFreeUsed = ltLobRes.ok ? (ltAcct.free_mailer_credits_used || 0) + ltFreeToUse : (ltAcct.free_mailer_credits_used || 0);
         if (ltLobRes.ok) {
           res.status(200).json({
             ...ltLobData,
@@ -549,7 +553,7 @@ module.exports = async function handler(req, res) {
           res.status(200).json({
             error: ltLobData.error || ltLobData,
             _lobStatus: ltLobRes.status,
-            _credits: { paid_credits: ltPaid, free_used: ltAcct.free_lookups_used || 0, free_limit: ltFreeLimit }
+            _credits: { paid_credits: ltPaid, free_used: ltAcct.free_mailer_credits_used || 0, free_limit: ltFreeLimit }
           });
         }
         break;
