@@ -1277,7 +1277,7 @@ tr:hover td{background:var(--card);}
     <div class="stats-row">
       <div class="stat-card"><div class="stat-icon">🔥</div><div class="stat-lbl">Total Scans</div><div class="stat-val" id="hl-total-scans">—</div><div class="stat-sub">All time</div></div>
       <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-lbl">Scans Today</div><div class="stat-val" id="hl-today-scans">—</div><div class="stat-sub">Last 24 hours</div></div>
-      <div class="stat-card"><div class="stat-icon">📈</div><div class="stat-lbl">Scan Rate</div><div class="stat-val" id="hl-scan-rate">—</div><div class="stat-sub">Scans / Mailers sent</div></div>
+      <div class="stat-card"><div class="stat-icon">📈</div><div class="stat-lbl">Engagement Rate</div><div class="stat-val" id="hl-scan-rate">—</div><div class="stat-sub">Engaged / Total estimates</div></div>
       <div class="stat-card"><div class="stat-icon">🏆</div><div class="stat-lbl">Multi-Scan Leads</div><div class="stat-val" id="hl-multi-scans">—</div><div class="stat-sub">Scanned 2+ times</div></div>
     </div>
     <div class="dash-card" style="padding:0;overflow:hidden;"><div id="hl-list" style="min-height:200px;"></div></div>
@@ -10040,13 +10040,14 @@ async function loadHotLeads(){
     const totalScans = rows.reduce((s,r)=>s+(r.qr_scan_count||0),0);
     const todayScans = rows.filter(r=>r.page_last_viewed_at&&new Date(r.page_last_viewed_at)>new Date(Date.now()-86400000)).reduce((s,r)=>s+(r.qr_scan_count||0),0);
     const multiScans = rows.filter(r=>(r.qr_scan_count||0)>=2).length;
-    // Count sent mailers from Supabase directly (not S.queue which may be stale/limited)
-    let totalMailers = S.queue ? S.queue.filter(m=>m.status==='sent').length : 0;
+    // Engagement rate: % of all estimates that have been scanned or viewed
+    let totalEstimates = 0;
     try {
-      const qCountR = await sb.from('queue').select('id', {count:'exact',head:true}).eq('account_id', currentAccount.id).eq('status','sent');
-      if(!qCountR.error && typeof qCountR.count === 'number') totalMailers = qCountR.count;
+      const estCountR = await sb.from('estimates').select('id', {count:'exact',head:true}).eq('account_id', currentAccount.id);
+      if(!estCountR.error && typeof estCountR.count === 'number') totalEstimates = estCountR.count;
     } catch(_) {}
-    const scanRate = totalMailers>0 ? Math.min(100, Math.round(totalScans/totalMailers*100)) : null;
+    const engagedCount = rows.length; // rows already filtered to page_views > 0
+    const scanRate = totalEstimates>0 ? Math.round(engagedCount/totalEstimates*100) : null;
     function setStat2(id,v){const el=document.getElementById(id);if(el)el.textContent=v;}
     setStat2('hl-total-scans',totalScans);
     setStat2('hl-today-scans',todayScans);
