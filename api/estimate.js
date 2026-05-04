@@ -34,7 +34,7 @@ async function sbFetch(path, opts = {}) {
 // ── Silent GHL sync helper ────────────────────────────────────────────────
 // Silently upserts a contact + opportunity in GHL using the account's API key.
 // Never throws — any error is logged and swallowed so the main flow is unaffected.
-async function syncLeadToGHL({ apiKey, locationId, pipelineId, pipelineStageId, existingContactId, firstName, lastName, email, phone, address, estimateTotal, estimateId }) {
+async function syncLeadToGHL({ apiKey, locationId, pipelineId, pipelineStageId, existingContactId, firstName, lastName, email, phone, address, estimateTotal, estimateId, extraTags }) {
   if (!apiKey || !locationId) return; // GHL not configured — skip silently
   // Normalize phone to E.164 format (GHL requires +1XXXXXXXXXX for US numbers)
   if (phone) {
@@ -51,6 +51,8 @@ async function syncLeadToGHL({ apiKey, locationId, pipelineId, pipelineStageId, 
   try {
     // 1. Upsert contact
     let contactId = null;
+    const baseTags = ['biddrop-lead', 'canvass'];
+    const allTags = extraTags && extraTags.length ? [...baseTags, ...extraTags] : baseTags;
     const contactBody = {
       locationId,
       firstName: firstName || undefined,
@@ -59,7 +61,7 @@ async function syncLeadToGHL({ apiKey, locationId, pipelineId, pipelineStageId, 
       phone:     phone     || undefined,
       address1:  address   || undefined,
       source:    'BidDrop',
-      tags:      ['biddrop-lead', 'canvass'],
+      tags:      allTags,
     };
     // PRIORITY 1: Use the stored GHL contact ID from the pin (avoids duplicate creation)
     if (existingContactId) {
@@ -272,24 +274,76 @@ export default async function handler(req, res) {
       const now = new Date().toISOString();
       const secs = parseInt(seconds) || 0;
 
-      // Fetch current row to get existing values
-      const curR = await sbFetch(`estimates?id=eq.${encodeURIComponent(id)}&select=page_views,page_first_viewed_at,page_time_spent`);
+      // Fetch current row — include contact/account fields for GHL sync
+      const curR = await sbFetch(`estimates?id=eq.${encodeURIComponent(id)}&select=account_id,pin_id,owner,email,phone,addr,page_views,page_first_viewed_at,page_time_spent`);
       const curRows = await curR.json();
       if (!curRows || !curRows.length) { res.status(404).json({ error: 'Not found' }); return; }
       const cur = curRows[0];
 
+      const isFirstView = !cur.page_first_viewed_at;
       const updates = {
         page_views: (cur.page_views || 0) + 1,
         page_last_viewed_at: now,
         page_time_spent: (cur.page_time_spent || 0) + secs,
       };
-      if (!cur.page_first_viewed_at) updates.page_first_viewed_at = now;
+      if (isFirstView) updates.page_first_viewed_at = now;
 
       await sbFetch(`estimates?id=eq.${encodeURIComponent(id)}`, {
         method: 'PATCH',
         body: JSON.stringify(updates),
         headers: { 'Prefer': 'return=minimal' }
       });
+
+      // ── GHL sync: tag contact as "homeowner-viewed-estimate" on first view ──
+      // On every subsequent view, still sync email/phone in case they were updated via gate form.
+      if (cur.account_id) {
+        try {
+          // Look up GHL credentials for this account
+          const acctR = await sbFetch(`accounts?id=eq.${encodeURIComponent(cur.account_id)}&select=ghl_api_key,ghl_location_id,ghl_pipeline_id,ghl_stage_id,ghl_oauth_access_token,ghl_oauth_location_id`);
+          const acctRows = acctR.ok ? await acctR.json() : [];
+          const ag = acctRows[0] || {};
+          const ghlApiKey     = ag.ghl_oauth_access_token || ag.ghl_api_key || null;
+          const ghlLocationId = ag.ghl_oauth_location_id  || ag.ghl_location_id || null;
+
+          if (ghlApiKey && ghlLocationId) {
+            // Look up the pin's stored GHL contact ID
+            let existingGhlContactId = null;
+            if (cur.pin_id) {
+              const pinR = await sbFetch(`pins?id=eq.${encodeURIComponent(cur.pin_id)}&select=ghl_contact_id`);
+              if (pinR.ok) {
+                const pinRows = await pinR.json();
+                existingGhlContactId = pinRows?.[0]?.ghl_contact_id || null;
+              }
+            }
+
+            // Parse owner name into first/last
+            const ownerParts = (cur.owner || '').trim().split(' ');
+            const firstName = ownerParts[0] || undefined;
+            const lastName  = ownerParts.slice(1).join(' ') || undefined;
+
+            // Always add the viewed tag; only add first-view tag on first view
+            const extraTags = ['homeowner-viewed-estimate'];
+            if (isFirstView) extraTags.push('homeowner-first-view');
+
+            await syncLeadToGHL({
+              apiKey:            ghlApiKey,
+              locationId:        ghlLocationId,
+              pipelineId:        ag.ghl_pipeline_id  || null,
+              pipelineStageId:   ag.ghl_stage_id     || null,
+              existingContactId: existingGhlContactId,
+              firstName,
+              lastName,
+              email:   cur.email   || undefined,
+              phone:   cur.phone   || undefined,
+              address: cur.addr    || undefined,
+              estimateId: id,
+              extraTags,
+            });
+          }
+        } catch (ghlErr) {
+          console.warn('[track_view] GHL sync error (non-fatal):', ghlErr.message);
+        }
+      }
 
       res.json({ ok: true });
       return;
