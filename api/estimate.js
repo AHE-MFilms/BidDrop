@@ -405,29 +405,34 @@ export default async function handler(req, res) {
         }
       }
 
-      // ── Silent GHL sync (fire-and-forget, never blocks or errors the response) ──
+      // ── GHL sync — awaited so Vercel does not kill the function before it completes ──
       // Pass existingGhlContactId so syncLeadToGHL updates the contact instead of creating a duplicate
       if (est.account_id) {
-        const acctGhlR = await sbFetch(`accounts?id=eq.${encodeURIComponent(est.account_id)}&select=ghl_api_key,ghl_location_id,ghl_pipeline_id,ghl_stage_id,ghl_oauth_access_token,ghl_oauth_location_id`);
-        const acctGhlRows = acctGhlR.ok ? await acctGhlR.json() : [];
-        const ag = acctGhlRows[0] || {};
-        // Prefer OAuth token over manual API key; prefer OAuth location over manual
-        const ghlApiKey    = ag.ghl_oauth_access_token || ag.ghl_api_key || null;
-        const ghlLocationId = ag.ghl_oauth_location_id || ag.ghl_location_id || null;
-        syncLeadToGHL({
-          apiKey:             ghlApiKey,
-          locationId:         ghlLocationId,
-          pipelineId:         ag.ghl_pipeline_id   || null,
-          pipelineStageId:    ag.ghl_stage_id      || null,
-          existingContactId:  existingGhlContactId,
-          firstName:          first_name,
-          lastName:           last_name,
-          email,
-          phone,
-          address:            est.addr,
-          estimateTotal:      est.total,
-          estimateId:         estimate_id,
-        }).catch(() => {}); // extra safety — never propagate
+        try {
+          const acctGhlR = await sbFetch(`accounts?id=eq.${encodeURIComponent(est.account_id)}&select=ghl_api_key,ghl_location_id,ghl_pipeline_id,ghl_stage_id,ghl_oauth_access_token,ghl_oauth_location_id`);
+          const acctGhlRows = acctGhlR.ok ? await acctGhlR.json() : [];
+          const ag = acctGhlRows[0] || {};
+          // Prefer OAuth token over manual API key; prefer OAuth location over manual
+          const ghlApiKey     = ag.ghl_oauth_access_token || ag.ghl_api_key || null;
+          const ghlLocationId = ag.ghl_oauth_location_id  || ag.ghl_location_id || null;
+          await syncLeadToGHL({
+            apiKey:             ghlApiKey,
+            locationId:         ghlLocationId,
+            pipelineId:         ag.ghl_pipeline_id   || null,
+            pipelineStageId:    ag.ghl_stage_id      || null,
+            existingContactId:  existingGhlContactId,
+            firstName:          first_name,
+            lastName:           last_name,
+            email,
+            phone,
+            address:            est.addr,
+            estimateTotal:      est.total,
+            estimateId:         estimate_id,
+          });
+        } catch (ghlErr) {
+          // GHL errors are non-fatal — log but do not fail the response
+          console.warn('[capture_lead] GHL sync error (non-fatal):', ghlErr.message);
+        }
       }
 
       res.json({ ok: true });

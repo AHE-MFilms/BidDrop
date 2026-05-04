@@ -2941,6 +2941,9 @@ function restoreDraft(pinId){
     if(!draft || !draft.structures) return false;
     if(draft.owner) document.getElementById('e-owner').value = draft.owner;
     if(draft.email) document.getElementById('e-email').value = draft.email;
+    // Restore phone from draft — but only if the field is currently empty (don't overwrite a phone loaded from Supabase)
+    const phoneEl = document.getElementById('e-phone');
+    if(phoneEl && draft.phone && !phoneEl.value) phoneEl.value = draft.phone;
     structures = draft.structures.map(s=>normStruct(s));
     if(draft.damage_photos && draft.damage_photos.length) window._damagePhotos = [...draft.damage_photos];
     const sky=document.getElementById('a-sky'); if(sky) sky.checked=!!draft.skylight;
