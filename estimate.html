@@ -718,11 +718,11 @@ function fmtPhoneDisplay(v){
   return '('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6);
 }
 function onGatePhoneInput(el){
-  const pos=el.selectionStart;
   const raw=(el.value||'').replace(/\D/g,'').slice(0,10);
   el.value=fmtPhoneDisplay(raw);
-  // Restore cursor roughly
-  try{el.setSelectionRange(pos,pos);}catch(e){}
+  // Always move cursor to end — prevents the "digits inserting in the middle" glitch
+  const end=el.value.length;
+  try{el.setSelectionRange(end,end);}catch(e){}
 }
 
 function submitGate(){
