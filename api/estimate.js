@@ -376,26 +376,20 @@ export default async function handler(req, res) {
         headers: { 'Prefer': 'return=minimal' }
       });
 
-      // Also update the pin with homeowner contact info if pin_id exists
-      // Also read back the stored ghl_contact_id so we can update (not duplicate) in GHL
+      // Read the pin's stored ghl_contact_id so we can update (not duplicate) in GHL
+      // NOTE: owner_phone / owner_email / owner_name columns do not exist on the pins table;
+      //       contact info is stored on the estimate row instead (already patched above).
       let existingGhlContactId = null;
       if (est.pin_id) {
-        const pinPatchR = await sbFetch(`pins?id=eq.${encodeURIComponent(est.pin_id)}&select=ghl_contact_id`, {
-          method: 'GET',
-        });
-        if (pinPatchR.ok) {
-          const pinRows = await pinPatchR.json();
-          existingGhlContactId = pinRows?.[0]?.ghl_contact_id || null;
+        try {
+          const pinReadR = await sbFetch(`pins?id=eq.${encodeURIComponent(est.pin_id)}&select=ghl_contact_id`);
+          if (pinReadR.ok) {
+            const pinRows = await pinReadR.json();
+            existingGhlContactId = pinRows?.[0]?.ghl_contact_id || null;
+          }
+        } catch (pinErr) {
+          console.warn('[capture_lead] Could not read pin ghl_contact_id:', pinErr.message);
         }
-        await sbFetch(`pins?id=eq.${encodeURIComponent(est.pin_id)}`, {
-          method: 'PATCH',
-          body: JSON.stringify({
-            owner_name: fullName || undefined,
-            owner_email: email || undefined,
-            owner_phone: phone || undefined,
-          }),
-          headers: { 'Prefer': 'return=minimal' }
-        });
       }
 
       // ── Silent GHL sync (fire-and-forget, never blocks or errors the response) ──
