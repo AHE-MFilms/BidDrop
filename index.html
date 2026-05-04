@@ -12509,6 +12509,32 @@ function subscribeRealtime(){
           renderPinList();
         }
       })
+    .on('postgres_changes', {event:'UPDATE', schema:'public', table:'estimates', filter:'account_id=eq.'+currentAccount.id},
+      payload=>{
+        // When the homeowner submits the gate form, capture_lead PATCHes the estimate row.
+        // Update S.estimates in-memory so the Estimator shows the fresh email/phone.
+        const nw = payload.new;
+        if(!nw || !nw.id) return;
+        const idx = (S.estimates||[]).findIndex(e=>e.id===nw.id);
+        if(idx>=0){
+          const existing = S.estimates[idx];
+          // Merge only the fields that capture_lead can update
+          if(nw.owner)  existing.owner = nw.owner;
+          if(nw.email)  existing.email = nw.email;
+          if(nw.phone)  existing.phone = nw.phone;
+          if(nw.page_views !== undefined) existing.page_views = nw.page_views;
+          if(nw.page_first_viewed_at) existing.page_first_viewed_at = nw.page_first_viewed_at;
+          // If this estimate is currently open in the Estimator, refresh the fields live
+          if(window._editingEstimateId === nw.id || currentEstPinId === nw.pin_id){
+            const emailEl = document.getElementById('e-email');
+            const phoneEl = document.getElementById('e-phone');
+            if(emailEl && nw.email) emailEl.value = nw.email;
+            if(phoneEl && nw.phone) phoneEl.value = nw.phone;
+          }
+          // Also refresh the estimate list row if visible
+          renderEstimateTable();
+        }
+      })
     .subscribe();
 }
 
