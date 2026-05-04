@@ -64,10 +64,13 @@ async function syncLeadToGHL({ apiKey, locationId, pipelineId, pipelineStageId, 
     // PRIORITY 1: Use the stored GHL contact ID from the pin (avoids duplicate creation)
     if (existingContactId) {
       contactId = existingContactId;
-      await fetch(`${BASE}/contacts/${contactId}`, {
+      console.log('[GHL sync] PUT contact', contactId, 'body=', JSON.stringify(contactBody));
+      const putRes = await fetch(`${BASE}/contacts/${contactId}`, {
         method: 'PUT', headers,
         body: JSON.stringify(contactBody),
       });
+      const putText = await putRes.text();
+      console.log('[GHL sync] PUT response', putRes.status, putText.slice(0, 300));
     } else {
       // PRIORITY 2: Search by email or phone to find an existing contact
       const searchParam = email
