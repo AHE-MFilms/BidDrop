@@ -5587,6 +5587,7 @@ function goEstFromPin(id){
   if(est){
     if(est.owner) document.getElementById('e-owner').value = est.owner;
     if(est.email) document.getElementById('e-email').value = est.email;
+    if(est.phone && document.getElementById('e-phone')) document.getElementById('e-phone').value = est.phone;
     if(est.structures && est.structures.length) structures = est.structures.map(s=>normStruct(s));
     if(savedEst){
       // Restore add-ons from estimates table record
