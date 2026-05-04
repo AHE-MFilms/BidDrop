@@ -2940,7 +2940,9 @@ function restoreDraft(pinId){
     const draft = JSON.parse(raw);
     if(!draft || !draft.structures) return false;
     if(draft.owner) document.getElementById('e-owner').value = draft.owner;
-    if(draft.email) document.getElementById('e-email').value = draft.email;
+    // Restore email from draft — but only if the field is currently empty (don't overwrite email loaded from Supabase)
+    const emailEl = document.getElementById('e-email');
+    if(emailEl && draft.email && !emailEl.value) emailEl.value = draft.email;
     // Restore phone from draft — but only if the field is currently empty (don't overwrite a phone loaded from Supabase)
     const phoneEl = document.getElementById('e-phone');
     if(phoneEl && draft.phone && !phoneEl.value) phoneEl.value = draft.phone;
