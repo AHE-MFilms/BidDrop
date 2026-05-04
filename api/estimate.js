@@ -367,16 +367,24 @@ export default async function handler(req, res) {
       const fullName = [first_name, last_name].filter(Boolean).join(' ');
 
       // Update the estimate with lead info
-      await sbFetch(`estimates?id=eq.${encodeURIComponent(estimate_id)}`, {
+      const patchBody = {
+        page_first_viewed_at: now,
+      };
+      if (fullName) patchBody.owner = fullName;
+      if (email)    patchBody.email = email;
+      if (phone)    patchBody.phone = phone;
+      console.log('[capture_lead] PATCH estimates id=', estimate_id, 'body=', JSON.stringify(patchBody));
+      const patchR = await sbFetch(`estimates?id=eq.${encodeURIComponent(estimate_id)}`, {
         method: 'PATCH',
-        body: JSON.stringify({
-          owner: fullName || undefined,
-          email: email || undefined,
-          phone: phone || undefined,
-          page_first_viewed_at: now,
-        }),
+        body: JSON.stringify(patchBody),
         headers: { 'Prefer': 'return=minimal' }
       });
+      if (!patchR.ok) {
+        const patchErr = await patchR.text();
+        console.error('[capture_lead] PATCH failed:', patchR.status, patchErr);
+      } else {
+        console.log('[capture_lead] PATCH ok — email:', email, 'phone:', phone);
+      }
 
       // Read the pin's stored ghl_contact_id so we can update (not duplicate) in GHL
       // NOTE: owner_phone / owner_email / owner_name columns do not exist on the pins table;
