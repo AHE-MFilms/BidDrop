@@ -10051,7 +10051,7 @@ async function loadHotLeads(){
     function setStat2(id,v){const el=document.getElementById(id);if(el)el.textContent=v;}
     setStat2('hl-total-scans',totalScans);
     setStat2('hl-today-scans',todayScans);
-    setStat2('hl-scan-rate', scanRate !== null ? scanRate+'%' : '—');
+    setStat2('hl-scan-rate', scanRate !== null ? engagedCount+' / '+totalEstimates+' ('+scanRate+'%)' : '—');
     setStat2('hl-multi-scans',multiScans);
     // Update header count
     const countEl = document.getElementById('hl-count');
