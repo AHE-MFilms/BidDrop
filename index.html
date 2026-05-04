@@ -7685,6 +7685,7 @@ async function sendLob(id){
     }
     if(d && d.id){
       item.status='sent';item.mailedAt=new Date().toISOString();item.lobId=d.id;
+      sbSaveQueueItem(item).catch(e=>console.warn('Queue save:',e));
       // Auto-unlock print for the linked estimate (free reprint since mailer was sent)
       _unlockPrintForEstimate(item.estId);
       // Update credit badge with new balance
@@ -7814,6 +7815,7 @@ async function sendLobPostcard6x9(id){
     }
     if(d&&d.id){
       item.status='sent';item.mailedAt=new Date().toISOString();item.lobId=d.id;
+      sbSaveQueueItem(item).catch(e=>console.warn('Queue save:',e));
       // Auto-unlock print for the linked estimate
       _unlockPrintForEstimate(item.estId);
       if(d._credits){ S.cfg.mailerCredits = d._credits.paid_credits ?? S.cfg.mailerCredits; if(d._credits.free_used !== undefined) S.cfg.freeMailerCreditsUsed = d._credits.free_used; updateCreditBadge(); }
@@ -10044,11 +10046,11 @@ async function loadHotLeads(){
       const qCountR = await sb.from('queue').select('id', {count:'exact',head:true}).eq('account_id', currentAccount.id).eq('status','sent');
       if(!qCountR.error && typeof qCountR.count === 'number') totalMailers = qCountR.count;
     } catch(_) {}
-    const scanRate = totalMailers>0 ? Math.min(100, Math.round(totalScans/totalMailers*100)) : 0;
+    const scanRate = totalMailers>0 ? Math.min(100, Math.round(totalScans/totalMailers*100)) : null;
     function setStat2(id,v){const el=document.getElementById(id);if(el)el.textContent=v;}
     setStat2('hl-total-scans',totalScans);
     setStat2('hl-today-scans',todayScans);
-    setStat2('hl-scan-rate',scanRate+'%');
+    setStat2('hl-scan-rate', scanRate !== null ? scanRate+'%' : '—');
     setStat2('hl-multi-scans',multiScans);
     // Update header count
     const countEl = document.getElementById('hl-count');
@@ -14283,6 +14285,7 @@ async function sendDripPostcard(id){
     }});
     if(d && d.id){
       item.status='sent'; item.mailedAt=new Date().toISOString(); item.lobId=d.id;
+      sbSaveQueueItem(item).catch(e=>console.warn('Queue save:',e));
       // Auto-unlock print for the linked estimate
       _unlockPrintForEstimate(item.estId);
       if(d._credits){ S.cfg.mailerCredits = d._credits.paid_credits ?? S.cfg.mailerCredits; if(d._credits.free_used !== undefined) S.cfg.freeMailerCreditsUsed = d._credits.free_used; updateCreditBadge(); }
