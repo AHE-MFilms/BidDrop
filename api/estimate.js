@@ -178,6 +178,8 @@ export default async function handler(req, res) {
           id:          est.id,
           addr:        est.addr,
           owner:       est.owner,
+          email:       est.email  || '',
+          phone:       est.phone  || '',
           total:       est.total,
           sqft:        est.sqft,
           structures:  structures || [],
