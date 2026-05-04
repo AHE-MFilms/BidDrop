@@ -10038,8 +10038,8 @@ async function loadHotLeads(){
     const totalScans = rows.reduce((s,r)=>s+(r.qr_scan_count||0),0);
     const todayScans = rows.filter(r=>r.page_last_viewed_at&&new Date(r.page_last_viewed_at)>new Date(Date.now()-86400000)).reduce((s,r)=>s+(r.qr_scan_count||0),0);
     const multiScans = rows.filter(r=>(r.qr_scan_count||0)>=2).length;
-    const totalMailers = S.queue ? S.queue.filter(m=>m.status==='sent'||m.status==='pending'||m.status==='queued').length : 0;
-    const scanRate = totalMailers>0 ? Math.round(totalScans/totalMailers*100) : 0;
+    const totalMailers = S.queue ? S.queue.filter(m=>m.status==='mailed'||m.status==='sent').length : 0;
+    const scanRate = totalMailers>0 ? Math.min(100, Math.round(totalScans/totalMailers*100)) : 0;
     function setStat2(id,v){const el=document.getElementById(id);if(el)el.textContent=v;}
     setStat2('hl-total-scans',totalScans);
     setStat2('hl-today-scans',todayScans);
