@@ -3083,8 +3083,8 @@ function saveEstimateNow(){
       structures: estRecord.structures,
       photo_url: estRecord.photo_url || null,
       photo_data: estRecord.photo_data || null,
-      all_photos: estRecord.all_photos || null,
-      damage_photos: estRecord.damage_photos || null,
+      all_photos: _allPhotosForSupabase(estRecord.all_photos),
+      damage_photos: (estRecord.damage_photos||[]).filter(s=>s&&s.startsWith('http'))||null,
       skylight: estRecord.skylight || false,
       skylight_qty: estRecord.skylightQty || 1,
       chimney: estRecord.chimney || false,
@@ -3106,8 +3106,8 @@ function saveEstimateNow(){
     sb.from('pins').update({
       estimate: pin.estimate, status: 'quoted',
       photo_url: estRecord.photo_url || pin.photo_url || null,
-      all_photos: estRecord.all_photos || pin.all_photos || null,
-      damage_photos: estRecord.damage_photos || pin.damage_photos || null,
+      all_photos: _allPhotosForSupabase(estRecord.all_photos || pin.all_photos),
+      damage_photos: (estRecord.damage_photos||pin.damage_photos||[]).filter(s=>s&&s.startsWith('http'))||null,
       updated_at: new Date().toISOString()
     }).eq('id', currentEstPinId).then(({error})=>{
       if(error) console.warn('Save estimate to pin:', error);
@@ -3127,8 +3127,8 @@ function saveEstimateNow(){
       structures: estRecord.structures,
       photo_url: estRecord.photo_url || null,
       photo_data: estRecord.photo_data || null,
-      all_photos: estRecord.all_photos || null,
-      damage_photos: estRecord.damage_photos || null,
+      all_photos: _allPhotosForSupabase(estRecord.all_photos),
+      damage_photos: (estRecord.damage_photos||[]).filter(s=>s&&s.startsWith('http'))||null,
       skylight: estRecord.skylight || false,
       skylight_qty: estRecord.skylightQty || 1,
       chimney: estRecord.chimney || false,
@@ -3149,8 +3149,8 @@ function saveEstimateNow(){
     sb.from('pins').update({
       estimate: pin.estimate,
       photo_url: estRecord.photo_url || pin.photo_url || null,
-      all_photos: estRecord.all_photos || pin.all_photos || null,
-      damage_photos: estRecord.damage_photos || pin.damage_photos || null,
+      all_photos: _allPhotosForSupabase(estRecord.all_photos || pin.all_photos),
+      damage_photos: (estRecord.damage_photos||pin.damage_photos||[]).filter(s=>s&&s.startsWith('http'))||null,
       updated_at: new Date().toISOString()
     }).eq('id', currentEstPinId).then(({error})=>{
       if(error) console.warn('Save estimate to pin:', error);
@@ -4118,6 +4118,20 @@ function _allPhotosCount(){
   return (ap.front||[]).length + (ap.damage||[]).length + (ap.angles||[]).length + (ap.buildings||[]).length + (ap.other||[]).length;
 }
 
+// Strip base64 data URLs from all_photos before saving to Supabase
+// (base64 images can be 500KB+ each and exceed JSONB limits)
+function _allPhotosForSupabase(ap){
+  if(!ap) return null;
+  const keys = ['front','damage','angles','buildings','other'];
+  const out = {};
+  let hasAny = false;
+  keys.forEach(k=>{
+    out[k] = (Array.isArray(ap[k]) ? ap[k] : []).filter(s=>s && s.startsWith('http'));
+    if(out[k].length) hasAny = true;
+  });
+  return hasAny ? out : null;
+}
+
 function openPhotoModal(pinId){
   // If a pinId is passed (from map popup), store it so uploads attach to that pin
   if(pinId) window._photoModalPinId = pinId;
@@ -4240,14 +4254,20 @@ function _persistAllPhotos(){
     const newAllPhotos = JSON.parse(JSON.stringify(window._allPhotos));
     pin.all_photos = newAllPhotos;
     // Also keep legacy fields in sync
-    pin.photo_url = (newAllPhotos.front||[])[0] || pin.photo_url || null;
+    const frontUrl = (newAllPhotos.front||[]).find(s=>s&&s.startsWith('http')) || null;
+    pin.photo_url = frontUrl || pin.photo_url || null;
     pin.damage_photos = window._damagePhotos.length ? [...window._damagePhotos] : null;
+    // Strip base64 before Supabase save (base64 can be 500KB+ and exceed JSONB limits)
+    const apForSB = _allPhotosForSupabase(newAllPhotos);
+    const dmgForSB = (pin.damage_photos||[]).filter(s=>s&&s.startsWith('http'));
     sb.from('pins').update({
-      all_photos: newAllPhotos,
+      all_photos: apForSB,
       photo_url: pin.photo_url,
-      damage_photos: pin.damage_photos,
+      damage_photos: dmgForSB.length ? dmgForSB : null,
       updated_at: new Date().toISOString()
-    }).eq('id', pinId).then(()=>{});
+    }).eq('id', pinId).then(({error})=>{
+      if(error) console.warn('[BidDrop] _persistAllPhotos pin update:', error.message);
+    });
     // ── CRITICAL FIX: also update the linked estimate record so Edit Estimate
     //    always sees the latest photos (not the stale snapshot saved when estimate was created)
     const linkedEst = (S.estimates||[]).find(e=>e.pinId===pinId && !e.deletedAt && !e.isRevision);
@@ -4258,9 +4278,9 @@ function _persistAllPhotos(){
       // Also update pin.estimate JSONB snapshot
       if(pin.estimate) pin.estimate.all_photos = newAllPhotos;
       sb.from('estimates').update({
-        all_photos: newAllPhotos,
+        all_photos: apForSB,
         photo_url: pin.photo_url || null,
-        damage_photos: pin.damage_photos || null,
+        damage_photos: dmgForSB.length ? dmgForSB : null,
         updated_at: new Date().toISOString()
       }).eq('id', linkedEst.id).then(({error})=>{
         if(error) console.warn('[BidDrop] _persistAllPhotos est update:', error.message);
@@ -7996,12 +8016,12 @@ async function renderPostcard6x9FrontCanvas(item){
   } else {
     drawCover(houseImg,0,0,W,H);
   }
-  // Dark gradient overlay
+  // Gradient overlay — kept light so the house photo stays bright and vivid
   const grad=ctx.createLinearGradient(0,0,0,H);
-  grad.addColorStop(0,'rgba(0,0,0,0.3)');
-  grad.addColorStop(0.4,'rgba(0,0,0,0.15)');
-  grad.addColorStop(0.72,'rgba(0,0,0,0.6)');
-  grad.addColorStop(1,'rgba(0,0,0,0.88)');
+  grad.addColorStop(0,'rgba(0,0,0,0.10)');
+  grad.addColorStop(0.4,'rgba(0,0,0,0.05)');
+  grad.addColorStop(0.72,'rgba(0,0,0,0.35)');
+  grad.addColorStop(1,'rgba(0,0,0,0.60)');
   ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
   // TOP ROW: logo/company name (left) + badge pill (right)
   const topY=PAD+8;
@@ -12083,7 +12103,7 @@ async function sbSavePin(pin){
     status: pin.status, notes: pin.notes, pts: pin.pts||null,
     photo_url: photoUrl,
     estimate: pin.estimate || null,
-    all_photos: pin.all_photos || null,
+    all_photos: _allPhotosForSupabase(pin.all_photos),
     updated_at: new Date().toISOString()
   }, {onConflict:'id'}).select('id').single();
   if(error){ console.error('Pin save error:', error); return; }
