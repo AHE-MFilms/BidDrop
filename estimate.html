@@ -386,7 +386,7 @@ body{font-family:'Open Sans',sans-serif;background:var(--cream-soft);color:var(-
     </div>
     <div class="ep-gate-row">
       <div class="ep-gate-field"><label>Email</label><input id="g-email" type="email" placeholder="jane@email.com" autocomplete="email"></div>
-      <div class="ep-gate-field"><label>Phone</label><input id="g-phone" type="tel" placeholder="(555) 000-0000" autocomplete="tel"></div>
+      <div class="ep-gate-field"><label>Phone</label><input id="g-phone" type="tel" placeholder="(555) 000-0000" autocomplete="tel" oninput="onGatePhoneInput(this)" inputmode="numeric"></div>
     </div>
     <div style="display:flex;align-items:flex-start;gap:10px;margin-top:16px;padding:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;">
       <input type="checkbox" id="g-consent" style="margin-top:3px;width:16px;height:16px;flex-shrink:0;accent-color:#C97D2E;cursor:pointer;">
@@ -690,10 +690,39 @@ function showGate(){
   // Pre-fill gate logo
   if(_acct){
     const gl=$('ep-gate-logo');
-    if(_acct.logoData){gl.innerHTML=`<img src="${_acct.logoData}" alt="">`;}
+    if(_acct.logoData){gl.innerHTML=`<img src="${_acct.logoData}" alt="">`;}  
     else{gl.innerHTML=`<div class="ep-gate-logo-text" style="color:var(--amber-lt);">${esc(_acct.companyName||'BidDrop')}</div>`;}
   }
+  // Pre-load homeowner name from the estimate so GHL matches the existing contact
+  if(_est && _est.owner){
+    const parts=(_est.owner||'').trim().split(/\s+/);
+    const gFirst=$('g-first'), gLast=$('g-last');
+    if(gFirst && !gFirst.value) gFirst.value=parts[0]||'';
+    if(gLast  && !gLast.value)  gLast.value=parts.slice(1).join(' ')||'';
+  }
+  // Pre-load email/phone if already on the estimate
+  if(_est && _est.email){
+    const gEmail=$('g-email'); if(gEmail && !gEmail.value) gEmail.value=_est.email;
+  }
+  if(_est && _est.phone){
+    const gPhone=$('g-phone'); if(gPhone && !gPhone.value) gPhone.value=fmtPhoneDisplay(_est.phone);
+  }
   $('ep-gate').style.display='flex';
+}
+
+// Format a phone number as (xxx) xxx-xxxx while the user types
+function fmtPhoneDisplay(v){
+  const d=(v||'').replace(/\D/g,'').slice(0,10);
+  if(d.length<=3) return d;
+  if(d.length<=6) return '('+d.slice(0,3)+') '+d.slice(3);
+  return '('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6);
+}
+function onGatePhoneInput(el){
+  const pos=el.selectionStart;
+  const raw=(el.value||'').replace(/\D/g,'').slice(0,10);
+  el.value=fmtPhoneDisplay(raw);
+  // Restore cursor roughly
+  try{el.setSelectionRange(pos,pos);}catch(e){}
 }
 
 function submitGate(){

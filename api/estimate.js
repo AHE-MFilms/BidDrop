@@ -34,7 +34,7 @@ async function sbFetch(path, opts = {}) {
 // ── Silent GHL sync helper ────────────────────────────────────────────────
 // Silently upserts a contact + opportunity in GHL using the account's API key.
 // Never throws — any error is logged and swallowed so the main flow is unaffected.
-async function syncLeadToGHL({ apiKey, locationId, pipelineId, pipelineStageId, firstName, lastName, email, phone, address, estimateTotal, estimateId }) {
+async function syncLeadToGHL({ apiKey, locationId, pipelineId, pipelineStageId, existingContactId, firstName, lastName, email, phone, address, estimateTotal, estimateId }) {
   if (!apiKey || !locationId) return; // GHL not configured — skip silently
   // Normalize phone to E.164 format (GHL requires +1XXXXXXXXXX for US numbers)
   if (phone) {
@@ -49,15 +49,8 @@ async function syncLeadToGHL({ apiKey, locationId, pipelineId, pipelineStageId, 
     'Version': '2021-07-28',
   };
   try {
-    // 1. Upsert contact (search by email or phone, then create/update)
+    // 1. Upsert contact
     let contactId = null;
-    // Try to find existing contact
-    const searchParam = email ? `email=${encodeURIComponent(email)}` : `phone=${encodeURIComponent(phone)}`;
-    const searchRes = await fetch(`${BASE}/contacts/search/duplicate?${searchParam}&locationId=${locationId}`, { headers });
-    if (searchRes.ok) {
-      const searchData = await searchRes.json();
-      contactId = searchData?.contact?.id || null;
-    }
     const contactBody = {
       locationId,
       firstName: firstName || undefined,
@@ -66,23 +59,43 @@ async function syncLeadToGHL({ apiKey, locationId, pipelineId, pipelineStageId, 
       phone:     phone     || undefined,
       address1:  address   || undefined,
       source:    'BidDrop',
-      tags:      ['BidDrop Lead'],
+      tags:      ['biddrop-lead', 'canvass'],
     };
-    if (contactId) {
-      // Update existing contact
+    // PRIORITY 1: Use the stored GHL contact ID from the pin (avoids duplicate creation)
+    if (existingContactId) {
+      contactId = existingContactId;
       await fetch(`${BASE}/contacts/${contactId}`, {
         method: 'PUT', headers,
         body: JSON.stringify(contactBody),
       });
     } else {
-      // Create new contact
-      const createRes = await fetch(`${BASE}/contacts/`, {
-        method: 'POST', headers,
-        body: JSON.stringify(contactBody),
-      });
-      if (createRes.ok) {
-        const created = await createRes.json();
-        contactId = created?.contact?.id || null;
+      // PRIORITY 2: Search by email or phone to find an existing contact
+      const searchParam = email
+        ? `email=${encodeURIComponent(email)}`
+        : (phone ? `phone=${encodeURIComponent(phone)}` : null);
+      if (searchParam) {
+        const searchRes = await fetch(`${BASE}/contacts/search/duplicate?${searchParam}&locationId=${locationId}`, { headers });
+        if (searchRes.ok) {
+          const searchData = await searchRes.json();
+          contactId = searchData?.contact?.id || null;
+        }
+      }
+      if (contactId) {
+        // Update existing contact found by email/phone
+        await fetch(`${BASE}/contacts/${contactId}`, {
+          method: 'PUT', headers,
+          body: JSON.stringify(contactBody),
+        });
+      } else {
+        // Create new contact
+        const createRes = await fetch(`${BASE}/contacts/`, {
+          method: 'POST', headers,
+          body: JSON.stringify(contactBody),
+        });
+        if (createRes.ok) {
+          const created = await createRes.json();
+          contactId = created?.contact?.id || null;
+        }
       }
     }
     // 2. Create opportunity in pipeline (if pipeline is configured and we have a contactId)
@@ -364,7 +377,16 @@ export default async function handler(req, res) {
       });
 
       // Also update the pin with homeowner contact info if pin_id exists
+      // Also read back the stored ghl_contact_id so we can update (not duplicate) in GHL
+      let existingGhlContactId = null;
       if (est.pin_id) {
+        const pinPatchR = await sbFetch(`pins?id=eq.${encodeURIComponent(est.pin_id)}&select=ghl_contact_id`, {
+          method: 'GET',
+        });
+        if (pinPatchR.ok) {
+          const pinRows = await pinPatchR.json();
+          existingGhlContactId = pinRows?.[0]?.ghl_contact_id || null;
+        }
         await sbFetch(`pins?id=eq.${encodeURIComponent(est.pin_id)}`, {
           method: 'PATCH',
           body: JSON.stringify({
@@ -377,6 +399,7 @@ export default async function handler(req, res) {
       }
 
       // ── Silent GHL sync (fire-and-forget, never blocks or errors the response) ──
+      // Pass existingGhlContactId so syncLeadToGHL updates the contact instead of creating a duplicate
       if (est.account_id) {
         const acctGhlR = await sbFetch(`accounts?id=eq.${encodeURIComponent(est.account_id)}&select=ghl_api_key,ghl_location_id,ghl_pipeline_id,ghl_stage_id,ghl_oauth_access_token,ghl_oauth_location_id`);
         const acctGhlRows = acctGhlR.ok ? await acctGhlR.json() : [];
@@ -385,17 +408,18 @@ export default async function handler(req, res) {
         const ghlApiKey    = ag.ghl_oauth_access_token || ag.ghl_api_key || null;
         const ghlLocationId = ag.ghl_oauth_location_id || ag.ghl_location_id || null;
         syncLeadToGHL({
-          apiKey:          ghlApiKey,
-          locationId:      ghlLocationId,
-          pipelineId:      ag.ghl_pipeline_id   || null,
-          pipelineStageId: ag.ghl_stage_id      || null,
-          firstName:       first_name,
-          lastName:        last_name,
+          apiKey:             ghlApiKey,
+          locationId:         ghlLocationId,
+          pipelineId:         ag.ghl_pipeline_id   || null,
+          pipelineStageId:    ag.ghl_stage_id      || null,
+          existingContactId:  existingGhlContactId,
+          firstName:          first_name,
+          lastName:           last_name,
           email,
           phone,
-          address:         est.addr,
-          estimateTotal:   est.total,
-          estimateId:      estimate_id,
+          address:            est.addr,
+          estimateTotal:      est.total,
+          estimateId:         estimate_id,
         }).catch(() => {}); // extra safety — never propagate
       }
 
