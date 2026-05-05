@@ -892,7 +892,10 @@ module.exports = async function handler(req, res) {
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS google_tag_id TEXT`,
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS google_place_id TEXT`,
           `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS booking_clicks INTEGER DEFAULT 0`,
-          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS call_clicks INTEGER DEFAULT 0`
+          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS call_clicks INTEGER DEFAULT 0`,
+          `ALTER TABLE queue ADD COLUMN IF NOT EXISTS drip_step INTEGER`,
+          `ALTER TABLE queue ADD COLUMN IF NOT EXISTS drip_est_id TEXT`,
+          `ALTER TABLE queue ADD COLUMN IF NOT EXISTS scheduled_send_at TIMESTAMPTZ`
         ].join('; ');
         const results = [];
         // Run each DDL statement individually via Supabase pg_meta API (uses SERVICE_KEY)
