@@ -29,6 +29,12 @@
       "destination": "/estimate.html"
     }
   ],
+  "crons": [
+    {
+      "path": "/api/cron-drip",
+      "schedule": "0 13 * * *"
+    }
+  ],
   "functions": {
     "api/credits.js": {
       "maxDuration": 30
@@ -41,6 +47,9 @@
     },
     "api/oauth.js": {
       "maxDuration": 15
+    },
+    "api/cron-drip.js": {
+      "maxDuration": 60
     }
   },
   "headers": [

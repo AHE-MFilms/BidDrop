@@ -12453,7 +12453,10 @@ async function sbSaveQueueItem(item){
     structures: [...structs, meta], total: item.total,
     status: item.status, lob_id: item.lobId||null,
     mailed_at: item.mailedAt||null,
-    rep_name: repName
+    rep_name: repName,
+    drip_step: item.drip_step||null,
+    drip_est_id: item.drip_est_id||null,
+    scheduled_send_at: item.scheduled_send_at||null
   });
   if(error) console.error('Queue save error:', error);
 }
