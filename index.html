@@ -246,9 +246,9 @@ tr:hover td{background:var(--card);}
 .stat-card{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:18px;transition:border-color .15s;}
 .stat-card:hover{border-color:var(--accent);}
 .stat-icon{font-size:20px;margin-bottom:8px;}
-.stat-lbl{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
-.stat-val{font-family:var(--font-h);font-size:34px;font-weight:700;color:var(--text);line-height:1;}
-.stat-sub{font-size:11px;color:var(--mid);margin-top:5px;}
+.stat-lbl{font-size:13px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.stat-val{font-family:var(--font-h);font-size:46px;font-weight:700;color:var(--text);line-height:1;}
+.stat-sub{font-size:13px;color:var(--mid);margin-top:6px;}
 .dash-grid{display:grid;grid-template-columns:2fr 1fr;gap:14px;}
 .dash-card{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:18px;}
 .hl-row{display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border-bottom:1px solid var(--border);transition:background .12s;}
@@ -1297,7 +1297,7 @@ tr:hover td{background:var(--card);}
     <div class="stats-row">
       <div class="stat-card"><div class="stat-icon">📬</div><div class="stat-lbl">Postcards Sent</div><div class="stat-val" id="an-postcards">—</div><div class="stat-sub">In period</div></div>
       <div class="stat-card"><div class="stat-icon">🔍</div><div class="stat-lbl">QR Scans</div><div class="stat-val" id="an-scans">—</div><div class="stat-sub">Homeowners who scanned</div></div>
-      <div class="stat-card"><div class="stat-icon">📈</div><div class="stat-lbl">Open Rate</div><div class="stat-val" id="an-open-rate">—</div><div class="stat-sub">Scans / Postcards</div></div>
+      <div class="stat-card"><div class="stat-icon">📈</div><div class="stat-lbl">Engagement Rate</div><div class="stat-val" id="an-open-rate">—</div><div class="stat-sub">Engaged / Estimates</div></div>
       <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-lbl">Signed Jobs</div><div class="stat-val" id="an-signed">—</div><div class="stat-sub">Pins marked Signed</div></div>
     </div>
     <div class="stats-row">
@@ -1315,7 +1315,7 @@ tr:hover td{background:var(--card);}
       <div class="stat-card" style="background:transparent;border:none;"><div class="stat-icon">👁️</div><div class="stat-lbl">Page Views</div><div class="stat-val" id="an-page-views">—</div><div class="stat-sub">Homeowners who opened page</div></div>
       <div class="stat-card" style="background:transparent;border:none;"><div class="stat-icon">📅</div><div class="stat-lbl">Booking Clicks</div><div class="stat-val" id="an-booking-clicks">—</div><div class="stat-sub">Tapped Schedule button</div></div>
       <div class="stat-card" style="background:transparent;border:none;"><div class="stat-icon">📞</div><div class="stat-lbl">Call Clicks</div><div class="stat-val" id="an-call-clicks">—</div><div class="stat-sub">Tapped phone number</div></div>
-      <div class="stat-card" style="background:transparent;border:none;"><div class="stat-icon">🔄</div><div class="stat-lbl">View Rate</div><div class="stat-val" id="an-view-rate">—</div><div class="stat-sub">Views / QR Scans</div></div>
+      <div class="stat-card" style="background:transparent;border:none;"><div class="stat-icon">🔄</div><div class="stat-lbl">Page View Rate</div><div class="stat-val" id="an-view-rate">—</div><div class="stat-sub">Viewed / Estimates</div></div>
     </div>
     <div class="dash-grid">
       <div class="dash-card"><div class="dc-title">📬 Postcards Sent — Daily</div><div style="position:relative;height:160px;"><canvas id="an-chart-postcards"></canvas></div></div>
@@ -10216,7 +10216,9 @@ async function loadAnalytics(){
     const {data:queue} = await qQuery.limit(5000);
     const q = queue||[];
     const totalPostcards = q.filter(m=>m.status==='sent'||m.status==='pending'||m.status==='queued').length;
-    const openRate = totalPostcards>0 ? Math.round(totalScans/totalPostcards*100) : 0;
+    // Engagement Rate: % of estimates that have been scanned or viewed
+    const engagedEsts = ests.filter(e=>(e.qr_scan_count||0)>0||(e.page_views||0)>0).length;
+    const openRate = totalEsts>0 ? Math.round(engagedEsts/totalEsts*100) : 0;
     const closeRate = totalEsts>0 ? Math.round(signedPins/totalEsts*100) : 0;
     // ── Set stats ─────────────────────────────────────────────────────────────
     setStat('an-postcards', totalPostcards.toLocaleString());
@@ -10231,7 +10233,9 @@ async function loadAnalytics(){
     setStat('an-page-views', totalPageViews.toLocaleString());
     setStat('an-booking-clicks', totalBookingClicks.toLocaleString());
     setStat('an-call-clicks', totalCallClicks.toLocaleString());
-    const viewRate = totalScans>0 ? Math.round(totalPageViews/totalScans*100) : 0;
+    // Page View Rate: % of estimates where homeowner actually viewed the estimate page
+    const uniqueViewers = ests.filter(e=>(e.page_views||0)>0).length;
+    const viewRate = totalEsts>0 ? Math.round(uniqueViewers/totalEsts*100) : 0;
     setStat('an-view-rate', viewRate+'%');
     // ── Daily postcards chart ─────────────────────────────────────────────────
     const days = []; const dayLabels = [];
