@@ -59,8 +59,7 @@
       "maxDuration": 15
     },
     "api/signup-webhook.js": {
-      "maxDuration": 30,
-      "bodyParser": false
+      "maxDuration": 30
     }
   },
   "headers": [

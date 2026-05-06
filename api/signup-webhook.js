@@ -215,6 +215,23 @@ async function sendWelcomeEmail({ email, firstName, companyName, planName, tempP
 // }
 // ============================================================
 
+// Vercel: disable default body parsing so we get the raw buffer for Stripe signature verification
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+// Helper to collect raw body buffer
+function getRawBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on('data', chunk => chunks.push(chunk));
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -226,8 +243,8 @@ export default async function handler(req, res) {
 
   let event;
   try {
-    // req.body must be raw buffer — Vercel config needed (see vercel.json)
-    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+    const rawBody = await getRawBody(req);
+    event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
   } catch (err) {
     console.error('[signup-webhook] Signature verification failed:', err.message);
     return res.status(400).json({ error: `Webhook signature error: ${err.message}` });
