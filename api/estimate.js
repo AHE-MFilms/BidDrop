@@ -125,8 +125,10 @@ async function syncLeadToGHL({ apiKey, locationId, pipelineId, pipelineStageId, 
       });
     }
     console.log('[GHL sync] Lead synced — contactId:', contactId, 'pipelineId:', pipelineId);
+    return contactId; // Return so callers can save it back to the pin
   } catch (e) {
     console.warn('[GHL sync] Silent error (non-fatal):', e.message);
+    return null;
   }
 }
 
@@ -325,7 +327,7 @@ export default async function handler(req, res) {
             const extraTags = ['homeowner-viewed-estimate'];
             if (isFirstView) extraTags.push('homeowner-first-view');
 
-            await syncLeadToGHL({
+            const returnedContactId = await syncLeadToGHL({
               apiKey:            ghlApiKey,
               locationId:        ghlLocationId,
               pipelineId:        ag.ghl_pipeline_id  || null,
@@ -339,6 +341,15 @@ export default async function handler(req, res) {
               estimateId: id,
               extraTags,
             });
+            // Save the GHL contact ID back to the pin so future calls update instead of duplicate
+            if (returnedContactId && !existingGhlContactId && cur.pin_id) {
+              await sbFetch(`pins?id=eq.${encodeURIComponent(cur.pin_id)}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ ghl_contact_id: returnedContactId }),
+                headers: { 'Prefer': 'return=minimal' }
+              });
+              console.log('[track_view] Saved GHL contact ID to pin:', cur.pin_id, returnedContactId);
+            }
           }
         } catch (ghlErr) {
           console.warn('[track_view] GHL sync error (non-fatal):', ghlErr.message);
@@ -469,7 +480,7 @@ export default async function handler(req, res) {
           // Prefer OAuth token over manual API key; prefer OAuth location over manual
           const ghlApiKey     = ag.ghl_oauth_access_token || ag.ghl_api_key || null;
           const ghlLocationId = ag.ghl_oauth_location_id  || ag.ghl_location_id || null;
-          await syncLeadToGHL({
+          const newContactId = await syncLeadToGHL({
             apiKey:             ghlApiKey,
             locationId:         ghlLocationId,
             pipelineId:         ag.ghl_pipeline_id   || null,
@@ -483,6 +494,15 @@ export default async function handler(req, res) {
             estimateTotal:      est.total,
             estimateId:         estimate_id,
           });
+          // Save the GHL contact ID back to the pin so track_view and future syncs update instead of duplicate
+          if (newContactId && !existingGhlContactId && est.pin_id) {
+            await sbFetch(`pins?id=eq.${encodeURIComponent(est.pin_id)}`, {
+              method: 'PATCH',
+              body: JSON.stringify({ ghl_contact_id: newContactId }),
+              headers: { 'Prefer': 'return=minimal' }
+            });
+            console.log('[capture_lead] Saved GHL contact ID to pin:', est.pin_id, newContactId);
+          }
         } catch (ghlErr) {
           // GHL errors are non-fatal — log but do not fail the response
           console.warn('[capture_lead] GHL sync error (non-fatal):', ghlErr.message);
