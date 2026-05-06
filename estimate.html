@@ -705,7 +705,7 @@ let _estId='',_est=null,_acct=null,_prices={};
 function init(){
   const parts=location.pathname.split('/').filter(Boolean);
   _estId=parts[parts.length-1]||'';
-  if(!_estId||!_estId.startsWith('est_')){showError();return;}
+  if(!_estId){showError();return;}
   fetch(API_BASE+'/api/estimate?action=get&id='+encodeURIComponent(_estId))
     .then(r=>r.json())
     .then(d=>{
