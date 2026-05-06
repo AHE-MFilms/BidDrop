@@ -1080,10 +1080,25 @@ tr:hover td{background:var(--card);}
         </div>
       </div>
 
-      <div class="price-box">
-        <div class="price-lbl">Estimated Total</div>
+      <div class="price-box" id="price-box-wrap">
+        <div class="price-lbl" id="price-box-lbl">Estimated Total</div>
         <div class="price-val" id="e-total">$0</div>
         <div class="price-sub" id="e-breakdown">Add a structure above to calculate</div>
+      </div>
+      <!-- Price Override -->
+      <div id="price-override-section" style="margin:-12px 0 16px;">
+        <button id="price-override-toggle" onclick="togglePriceOverride()" style="width:100%;background:none;border:1.5px dashed rgba(255,255,255,.15);border-radius:8px;padding:9px 14px;color:rgba(255,255,255,.45);font-size:12px;font-weight:700;letter-spacing:.5px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px;transition:all .2s;" onmouseover="this.style.borderColor='rgba(242,92,5,.5)';this.style.color='rgba(242,92,5,.9)'" onmouseout="if(!window._priceOverrideOn){this.style.borderColor='rgba(255,255,255,.15)';this.style.color='rgba(255,255,255,.45)';}">
+          <span id="price-override-icon" style="font-size:14px;">✏️</span>
+          <span id="price-override-toggle-label">Override Price</span>
+        </button>
+        <div id="price-override-input-wrap" style="display:none;margin-top:8px;background:rgba(242,92,5,.08);border:1.5px solid rgba(242,92,5,.4);border-radius:10px;padding:12px 14px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:rgba(242,92,5,.9);margin-bottom:8px;">Manual Price Override</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:20px;font-weight:800;color:rgba(255,255,255,.6);">$</span>
+            <input id="e-price-override" type="number" min="0" step="100" placeholder="e.g. 12500" oninput="onPriceOverrideInput()" style="flex:1;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.15);border-radius:8px;padding:11px 12px;color:#fff;font-size:20px;font-weight:800;font-family:var(--font-h);outline:none;-webkit-appearance:none;" />
+          </div>
+          <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:8px;">Homeowner sees this price. Calculated total is kept for your records.</div>
+        </div>
       </div>
       <!-- Primary action row -->
       <div style="display:flex;flex-direction:column;gap:8px;">
@@ -2972,6 +2987,19 @@ function clearDraftBanner(){
   const banner=document.getElementById('draft-banner');
   if(banner) banner.style.display='none';
 }
+function _resetPriceOverride(){
+  window._priceOverrideOn = false;
+  const inp = document.getElementById('e-price-override');
+  const wrap = document.getElementById('price-override-input-wrap');
+  const btn = document.getElementById('price-override-toggle');
+  const lbl = document.getElementById('price-override-toggle-label');
+  const icon = document.getElementById('price-override-icon');
+  if(inp) inp.value='';
+  if(wrap) wrap.style.display='none';
+  if(btn){ btn.style.borderColor='rgba(255,255,255,.15)'; btn.style.color='rgba(255,255,255,.45)'; btn.style.background='none'; }
+  if(lbl) lbl.textContent='Override Price';
+  if(icon) icon.textContent='✏️';
+}
 function newEstimate(){
   currentEstPinId = null;
   document.getElementById('e-owner').value = '';
@@ -2981,6 +3009,7 @@ function newEstimate(){
   clearHomePhoto(); // always wipe photo when starting fresh
   clearDraftBanner();
   hideEquityBadge();
+  _resetPriceOverride();
   structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'1.15',mat:'1.3',complexity:'1.12',pts:null}];
   renderStructures(); calcP(); updatePreview();
   const sel = document.getElementById('est-pin-picker');
@@ -3009,7 +3038,10 @@ function saveEstimateNow(){
   const owner = (document.getElementById('e-owner')||{}).value.trim()||'Homeowner';
   const email = (document.getElementById('e-email')||{}).value.trim()||'';
   const phone = (document.getElementById('e-phone')||{}).value.trim()||'';
-  const total = (structures||[]).reduce((sum,s)=>sum+(calcStructPrice?calcStructPrice(s):0),0);
+  const calcTotal = (structures||[]).reduce((sum,s)=>sum+(calcStructPrice?calcStructPrice(s):0),0);
+  const overrideRaw = window._priceOverrideOn ? (parseFloat((document.getElementById('e-price-override')||{}).value)||0) : 0;
+  const total = (window._priceOverrideOn && overrideRaw > 0) ? overrideRaw : calcTotal;
+  const priceOverride = (window._priceOverrideOn && overrideRaw > 0) ? overrideRaw : null;
   // Photo: prefer the current form state (_homePhotoData, _allPhotos.front) over the stale pin.photo_url
   const frontFromAllPhotos = (window._allPhotos && (window._allPhotos.front||[])[0]) || null;
   const photoUrl = (window._homePhotoData && window._homePhotoData.startsWith('http') ? window._homePhotoData : null)
@@ -3020,7 +3052,7 @@ function saveEstimateNow(){
     id: window._editingEstimateId || ('est_' + Date.now()),
     pinId: currentEstPinId,
     addr: pin.address || '',
-    owner, email, phone, total,
+    owner, email, phone, total, priceOverride,
     structures: (structures||[]).map(s=>({...s})),
     photo_url: photoUrl,
     photo_data: photoData,
@@ -3085,6 +3117,7 @@ function saveEstimateNow(){
       phone: estRecord.phone || null,
       rep: estRecord.rep,
       total: estRecord.total,
+      price_override: estRecord.priceOverride || null,
       structures: estRecord.structures,
       photo_url: estRecord.photo_url || null,
       photo_data: estRecord.photo_data || null,
@@ -3129,6 +3162,7 @@ function saveEstimateNow(){
       phone: estRecord.phone || null,
       rep: estRecord.rep,
       total: estRecord.total,
+      price_override: estRecord.priceOverride || null,
       structures: estRecord.structures,
       photo_url: estRecord.photo_url || null,
       photo_data: estRecord.photo_data || null,
@@ -5958,14 +5992,49 @@ function calcP(){
   if(document.getElementById('a-gut')&&document.getElementById('a-gut').checked)
     grand+=(parseFloat(c.costGutter)||9)*(parseInt(document.getElementById('a-gut-q').value)||120);
   grand+=getSolarPrice();
-  document.getElementById('e-total').textContent='$'+grand.toLocaleString();
-  document.getElementById('e-breakdown').textContent=structures.length+' structure'+(structures.length>1?'s':'')+' · Total: $'+grand.toLocaleString();
+  // Show override price in the display if active
+  const overrideVal = window._priceOverrideOn ? (parseFloat((document.getElementById('e-price-override')||{}).value)||0) : 0;
+  const displayTotal = (window._priceOverrideOn && overrideVal > 0) ? overrideVal : grand;
+  const lbl = document.getElementById('price-box-lbl');
+  if(lbl) lbl.textContent = (window._priceOverrideOn && overrideVal > 0) ? '⚡ Override Price (Homeowner Sees This)' : 'Estimated Total';
+  document.getElementById('e-total').textContent='$'+displayTotal.toLocaleString();
+  document.getElementById('e-breakdown').textContent=structures.length+' structure'+(structures.length>1?'s':'')+' · Calc: $'+grand.toLocaleString()+(window._priceOverrideOn&&overrideVal>0?' · Override: $'+overrideVal.toLocaleString():'');
   structures.forEach(s=>{
     const el=document.getElementById('sp-'+s.id);
     if(el)el.textContent='$'+calcStructPrice(s).toLocaleString();
   });
   if(typeof scheduleDraftSave==='function') scheduleDraftSave();
   return grand;
+}
+function togglePriceOverride(){
+  window._priceOverrideOn = !window._priceOverrideOn;
+  const wrap = document.getElementById('price-override-input-wrap');
+  const btn  = document.getElementById('price-override-toggle');
+  const lbl  = document.getElementById('price-override-toggle-label');
+  const icon = document.getElementById('price-override-icon');
+  if(window._priceOverrideOn){
+    wrap.style.display='block';
+    btn.style.borderColor='rgba(242,92,5,.6)';
+    btn.style.color='rgba(242,92,5,1)';
+    btn.style.background='rgba(242,92,5,.08)';
+    lbl.textContent='Override Active — Click to Disable';
+    icon.textContent='⚡';
+    const inp=document.getElementById('e-price-override');
+    if(inp) inp.focus();
+  } else {
+    wrap.style.display='none';
+    btn.style.borderColor='rgba(255,255,255,.15)';
+    btn.style.color='rgba(255,255,255,.45)';
+    btn.style.background='none';
+    lbl.textContent='Override Price';
+    icon.textContent='✏️';
+    const inp=document.getElementById('e-price-override');
+    if(inp) inp.value='';
+  }
+  calcP(); updatePreview();
+}
+function onPriceOverrideInput(){
+  calcP(); updatePreview(); scheduleDraftSave();
 }
 // ═══════════════════════════════
 //  MAILER PREVIEW
@@ -7441,6 +7510,26 @@ function loadEstimateIntoEstimator(estId){
   if(videoEl){ videoEl.value = est.repVideoUrl || ''; if(est.repVideoUrl) onEstVideoUrlInput(); }
   const inspNoteEl = document.getElementById('e-insp-note');
   if(inspNoteEl) inspNoteEl.value = est.inspectionNote || '';
+  // Restore price override state
+  window._priceOverrideOn = !!(est.priceOverride);
+  const overrideInp = document.getElementById('e-price-override');
+  const overrideWrap = document.getElementById('price-override-input-wrap');
+  const overrideBtn = document.getElementById('price-override-toggle');
+  const overrideLbl = document.getElementById('price-override-toggle-label');
+  const overrideIcon = document.getElementById('price-override-icon');
+  if(window._priceOverrideOn && overrideInp){
+    overrideInp.value = est.priceOverride;
+    if(overrideWrap) overrideWrap.style.display='block';
+    if(overrideBtn){ overrideBtn.style.borderColor='rgba(242,92,5,.6)'; overrideBtn.style.color='rgba(242,92,5,1)'; overrideBtn.style.background='rgba(242,92,5,.08)'; }
+    if(overrideLbl) overrideLbl.textContent='Override Active — Click to Disable';
+    if(overrideIcon) overrideIcon.textContent='⚡';
+  } else {
+    if(overrideInp) overrideInp.value='';
+    if(overrideWrap) overrideWrap.style.display='none';
+    if(overrideBtn){ overrideBtn.style.borderColor='rgba(255,255,255,.15)'; overrideBtn.style.color='rgba(255,255,255,.45)'; overrideBtn.style.background='none'; }
+    if(overrideLbl) overrideLbl.textContent='Override Price';
+    if(overrideIcon) overrideIcon.textContent='✏️';
+  }
   // Set the pin picker
   const sel = document.getElementById('est-pin-picker');
   if(sel && est.pinId) sel.value = est.pinId;
@@ -7564,6 +7653,7 @@ function clearEst(){
   document.getElementById('e-addr').value='';
   ['a-sky','a-chim','a-gut'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
   structures=[];
+  _resetPriceOverride();
   renderStructures();clearHomePhoto();calcP();updatePreview();
   window._editingQueueId=null;
   window._editingEstimateId=null;
@@ -12272,6 +12362,7 @@ async function loadEstimatesFromSupabase(){
     sentAt: row.sent_at || null,
     deletedAt: row.deleted_at || null,
     printPaid: row.print_paid || false,
+    priceOverride: row.price_override || null,
     status: 'saved'
   }));
   // Merge: keep any in-memory estimates not yet in DB, replace those that are

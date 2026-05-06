@@ -145,7 +145,7 @@ export default async function handler(req, res) {
       if (!id) { res.status(400).json({ error: 'id required' }); return; }
 
       // Fetch estimate row
-      const estR = await sbFetch(`estimates?id=eq.${encodeURIComponent(id)}&select=id,account_id,pin_id,addr,owner,email,phone,total,sqft,mat,structures,photo_url,photo_data,all_photos,damage_photos,skylight,skylight_qty,chimney,gutters,gutter_lf,saved_at,source,page_views,page_first_viewed_at,page_last_viewed_at,page_time_spent,page_mat_clicks,page_share_clicks,page_call_clicks,expires_at,rep_video_url,page_enabled,rep,version,deleted_at,is_revision,inspection_note`);
+      const estR = await sbFetch(`estimates?id=eq.${encodeURIComponent(id)}&select=id,account_id,pin_id,addr,owner,email,phone,total,price_override,sqft,mat,structures,photo_url,photo_data,all_photos,damage_photos,skylight,skylight_qty,chimney,gutters,gutter_lf,saved_at,source,page_views,page_first_viewed_at,page_last_viewed_at,page_time_spent,page_mat_clicks,page_share_clicks,page_call_clicks,expires_at,rep_video_url,page_enabled,rep,version,deleted_at,is_revision,inspection_note`);
       const estRows = await estR.json();
       if (!estRows || !estRows.length) { res.status(404).json({ error: 'Estimate not found' }); return; }
       const est = estRows[0];
@@ -187,7 +187,8 @@ export default async function handler(req, res) {
           owner:       est.owner,
           email:       est.email  || '',
           phone:       est.phone  || '',
-          total:       est.total,
+          total:       est.price_override || est.total,
+          priceOverride: est.price_override || null,
           sqft:        est.sqft,
           structures:  structures || [],
           photoUrl:    est.photo_url || null,
