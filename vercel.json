@@ -5,6 +5,10 @@
       "destination": "/privacy.html"
     },
     {
+      "source": "/signup",
+      "destination": "/signup.html"
+    },
+    {
       "source": "/r/:id",
       "destination": "/api/r"
     },
@@ -50,6 +54,13 @@
     },
     "api/cron-drip.js": {
       "maxDuration": 60
+    },
+    "api/signup.js": {
+      "maxDuration": 15
+    },
+    "api/signup-webhook.js": {
+      "maxDuration": 30,
+      "bodyParser": false
     }
   },
   "headers": [
