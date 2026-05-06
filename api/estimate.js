@@ -144,9 +144,16 @@ export default async function handler(req, res) {
       const id = (req.query.id || '').trim();
       if (!id) { res.status(400).json({ error: 'id required' }); return; }
 
-      // Fetch estimate row
-      const estR = await sbFetch(`estimates?id=eq.${encodeURIComponent(id)}&select=id,account_id,pin_id,addr,owner,email,phone,total,price_override,sqft,mat,structures,photo_url,photo_data,all_photos,damage_photos,skylight,skylight_qty,chimney,gutters,gutter_lf,saved_at,source,page_views,page_first_viewed_at,page_last_viewed_at,page_time_spent,page_mat_clicks,page_share_clicks,page_call_clicks,expires_at,rep_video_url,page_enabled,rep,version,deleted_at,is_revision,inspection_note`);
-      const estRows = await estR.json();
+      // Fetch estimate row — try with price_override first, fall back if column not yet migrated
+      let estRows = null;
+      const estR1 = await sbFetch(`estimates?id=eq.${encodeURIComponent(id)}&select=id,account_id,pin_id,addr,owner,email,phone,total,price_override,sqft,mat,structures,photo_url,photo_data,all_photos,damage_photos,skylight,skylight_qty,chimney,gutters,gutter_lf,saved_at,source,page_views,page_first_viewed_at,page_last_viewed_at,page_time_spent,page_mat_clicks,page_share_clicks,page_call_clicks,expires_at,rep_video_url,page_enabled,rep,version,deleted_at,is_revision,inspection_note`);
+      if (estR1.ok) {
+        estRows = await estR1.json();
+      } else {
+        // Fallback: column may not exist yet — query without price_override
+        const estR2 = await sbFetch(`estimates?id=eq.${encodeURIComponent(id)}&select=id,account_id,pin_id,addr,owner,email,phone,total,sqft,mat,structures,photo_url,photo_data,all_photos,damage_photos,skylight,skylight_qty,chimney,gutters,gutter_lf,saved_at,source,page_views,page_first_viewed_at,page_last_viewed_at,page_time_spent,page_mat_clicks,page_share_clicks,page_call_clicks,expires_at,rep_video_url,page_enabled,rep,version,deleted_at,is_revision,inspection_note`);
+        estRows = await estR2.json();
+      }
       if (!estRows || !estRows.length) { res.status(404).json({ error: 'Estimate not found' }); return; }
       const est = estRows[0];
 
