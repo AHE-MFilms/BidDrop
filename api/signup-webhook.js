@@ -189,30 +189,48 @@ async function sendWelcomeEmail({ email, firstName, companyName, planName, tempP
 }
 
 // ============================================================
-// GHL PLACEHOLDER — Add when BidDrop GHL account is ready
+// GHL — Create contact in BidDrop sub-account on signup
+// Uses GHL API v2 with Private Integration token
+// Env vars: GHL_API_KEY, GHL_LOCATION_ID
 // ============================================================
-// async function createGHLContact({ firstName, lastName, email, phone, companyName, planName }) {
-//   const GHL_API_KEY = process.env.BIDDROP_GHL_API_KEY;
-//   const GHL_LOCATION_ID = process.env.BIDDROP_GHL_LOCATION_ID;
-//   if (!GHL_API_KEY || !GHL_LOCATION_ID) {
-//     console.warn('[signup-webhook] GHL not configured — skipping contact creation');
-//     return;
-//   }
-//   await fetch('https://rest.gohighlevel.com/v1/contacts/', {
-//     method: 'POST',
-//     headers: {
-//       'Authorization': `Bearer ${GHL_API_KEY}`,
-//       'Content-Type': 'application/json',
-//     },
-//     body: JSON.stringify({
-//       firstName, lastName, email, phone,
-//       companyName,
-//       locationId: GHL_LOCATION_ID,
-//       tags: ['biddrop-signup', `plan-${planName.toLowerCase()}`, 'trial-60-day'],
-//       source: 'BidDrop Signup Page',
-//     }),
-//   });
-// }
+async function createGHLContact({ firstName, lastName, email, phone, companyName, planName }) {
+  const GHL_API_KEY = process.env.GHL_API_KEY;
+  const GHL_LOCATION_ID = process.env.GHL_LOCATION_ID;
+  if (!GHL_API_KEY || !GHL_LOCATION_ID) {
+    console.warn('[signup-webhook] GHL not configured — skipping contact creation');
+    return null;
+  }
+  try {
+    const resp = await fetch('https://services.leadconnectorhq.com/contacts/', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${GHL_API_KEY}`,
+        'Version': '2021-07-28',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        firstName: firstName || '',
+        lastName: lastName || '',
+        email,
+        phone: phone || '',
+        companyName: companyName || '',
+        locationId: GHL_LOCATION_ID,
+        tags: ['biddrop-signup', `plan-${planName.toLowerCase()}`, 'trial-60-day'],
+        source: 'BidDrop Signup Page',
+      }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) {
+      console.error('[signup-webhook] GHL contact creation failed:', resp.status, JSON.stringify(data));
+      return null;
+    }
+    console.log('[signup-webhook] GHL contact created:', data?.contact?.id);
+    return data?.contact?.id || null;
+  } catch (err) {
+    console.error('[signup-webhook] GHL contact creation error:', err.message);
+    return null;
+  }
+}
 // ============================================================
 
 // Vercel: disable default body parsing so we get the raw buffer for Stripe signature verification
@@ -395,14 +413,22 @@ export default async function handler(req, res) {
       loginUrl,
     });
 
-    // ---- 5. GHL (placeholder — uncomment when BidDrop GHL is ready) ----
-    // await createGHLContact({
-    //   firstName, lastName,
-    //   email: customerEmail,
-    //   phone,
-    //   companyName,
-    //   planName: planConfig.name,
-    // });
+    // ---- 5. GHL — Create contact in BidDrop sub-account ----
+    const ghlContactId = await createGHLContact({
+      firstName,
+      lastName,
+      email: customerEmail,
+      phone,
+      companyName,
+      planName: planConfig.name,
+    });
+    // Optionally store ghl_contact_id on the account record
+    if (ghlContactId && newAccount?.id) {
+      await supabase
+        .from('accounts')
+        .update({ ghl_contact_id: ghlContactId })
+        .eq('id', newAccount.id);
+    }
 
     return res.status(200).json({ received: true, success: true, accountId: newAccount.id });
 
