@@ -939,6 +939,8 @@ function buildPage(firstName,lastName,email,phone){
         <span class="ep-mat-badge" style="background:${m.bb};color:${m.bc};">${m.badge}</span>
         <div class="ep-mat-name">${m.name}</div>
         <div class="ep-mat-desc">${m.desc}</div>
+        <div class="ep-mat-price" style="color:${m.mc};">${fmt(p)}</div>
+        ${mo?`<div class="ep-mat-mo">${mo}</div>`:''}
       </div>`;
     }).join('');
 

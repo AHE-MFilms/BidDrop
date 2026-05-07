@@ -1085,21 +1085,6 @@ tr:hover td{background:var(--card);}
         <div class="price-val" id="e-total">$0</div>
         <div class="price-sub" id="e-breakdown">Add a structure above to calculate</div>
       </div>
-      <!-- Price Override -->
-      <div id="price-override-section" style="margin:-12px 0 16px;">
-        <button id="price-override-toggle" onclick="togglePriceOverride()" style="width:100%;background:none;border:1.5px dashed rgba(255,255,255,.15);border-radius:8px;padding:9px 14px;color:rgba(255,255,255,.45);font-size:12px;font-weight:700;letter-spacing:.5px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px;transition:all .2s;" onmouseover="this.style.borderColor='rgba(242,92,5,.5)';this.style.color='rgba(242,92,5,.9)'" onmouseout="if(!window._priceOverrideOn){this.style.borderColor='rgba(255,255,255,.15)';this.style.color='rgba(255,255,255,.45)';}">
-          <span id="price-override-icon" style="font-size:14px;">✏️</span>
-          <span id="price-override-toggle-label">Override Price</span>
-        </button>
-        <div id="price-override-input-wrap" style="display:none;margin-top:8px;background:rgba(242,92,5,.08);border:1.5px solid rgba(242,92,5,.4);border-radius:10px;padding:12px 14px;">
-          <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:rgba(242,92,5,.9);margin-bottom:8px;">Manual Price Override</div>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span style="font-size:20px;font-weight:800;color:rgba(255,255,255,.6);">$</span>
-            <input id="e-price-override" type="number" min="0" step="100" placeholder="e.g. 12500" oninput="onPriceOverrideInput()" style="flex:1;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.15);border-radius:8px;padding:11px 12px;color:#fff;font-size:20px;font-weight:800;font-family:var(--font-h);outline:none;-webkit-appearance:none;" />
-          </div>
-          <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:8px;">Homeowner sees this price. Calculated total is kept for your records.</div>
-        </div>
-      </div>
       <!-- Primary action row -->
       <div style="display:flex;flex-direction:column;gap:8px;">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
