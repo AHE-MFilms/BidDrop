@@ -215,7 +215,7 @@ async function createGHLContact({ firstName, lastName, email, phone, companyName
         phone: phone || '',
         companyName: companyName || '',
         locationId: GHL_LOCATION_ID,
-        tags: ['biddrop-signup', `plan-${planName.toLowerCase()}`, 'trial-60-day'],
+        tags: ['biddrop - signup', `plan-${planName.toLowerCase()}`, 'trial-60-day'],
         source: 'BidDrop Signup Page',
       }),
     });
