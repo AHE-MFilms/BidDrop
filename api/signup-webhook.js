@@ -275,29 +275,50 @@ export default async function handler(req, res) {
 
   const session = event.data.object;
 
-  // Only handle sessions from signup page
-  if (session.metadata?.signup_source !== 'signup_page' && 
-      !session.metadata?.company_name) {
+  // Retrieve the full session with subscription expanded so we can access
+  // subscription metadata (set via subscription_data.metadata in signup.js)
+  let fullSession = session;
+  try {
+    fullSession = await stripe.checkout.sessions.retrieve(session.id, {
+      expand: ['subscription', 'customer'],
+    });
+  } catch (err) {
+    console.warn('[signup-webhook] Could not expand session:', err.message);
+  }
+
+  // Metadata can live in 3 places — check all of them in priority order:
+  // 1. session.metadata (set directly on checkout session)
+  // 2. subscription.metadata (set via subscription_data.metadata)
+  // 3. customer.metadata (set on the Stripe customer object)
+  const sessionMeta = fullSession.metadata || {};
+  const subMeta = fullSession.subscription?.metadata || {};
+  const customerMeta = fullSession.customer?.metadata || {};
+
+  const meta = { ...customerMeta, ...subMeta, ...sessionMeta };
+
+  console.log('[signup-webhook] Combined metadata:', JSON.stringify(meta));
+
+  // Only handle sessions from signup page — check all metadata sources
+  if (!meta.company_name && !meta.signup_source) {
+    console.log('[signup-webhook] Skipping — no signup metadata found');
     return res.status(200).json({ received: true, skipped: true });
   }
 
-  const {
-    company_name: companyName,
-    first_name: firstName,
-    last_name: lastName,
-    email,
-    phone,
-    state,
-    plan,
-    plan_name: planName,
-  } = session.metadata || {};
+  const companyName = meta.company_name;
+  const firstName   = meta.first_name;
+  const lastName    = meta.last_name;
+  const email       = meta.email;
+  const phone       = meta.phone;
+  const state       = meta.state;
+  const plan        = meta.plan;
+  const planName    = meta.plan_name;
 
   // Fallback to customer email if metadata email missing
-  const customerEmail = email || session.customer_details?.email;
+  const customerEmail = email || fullSession.customer_details?.email || fullSession.customer?.email;
 
   if (!customerEmail || !plan) {
-    console.error('[signup-webhook] Missing required metadata:', session.metadata);
-    return res.status(200).json({ received: true, error: 'Missing metadata' });
+    console.error('[signup-webhook] Missing required metadata. Combined meta:', JSON.stringify(meta));
+    return res.status(200).json({ received: true, error: 'Missing metadata', meta });
   }
 
   const planConfig = PLAN_CONFIG[plan] || PLAN_CONFIG.starter;
@@ -355,8 +376,8 @@ export default async function handler(req, res) {
       // Plan info
       plan: plan,
       plan_name: planConfig.name,
-      stripe_customer_id: session.customer,
-      stripe_subscription_id: session.subscription,
+      stripe_customer_id: fullSession.customer?.id || fullSession.customer || session.customer,
+      stripe_subscription_id: fullSession.subscription?.id || fullSession.subscription || session.subscription,
 
       // Trial
       trial_ends_at: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
