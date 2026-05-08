@@ -337,15 +337,16 @@ export default async function handler(req, res) {
     // accounts that were deleted. Also verify the linked account actually exists.
     const { data: existingProfiles } = await supabase
       .from('user_profiles')
-      .select('id, account_id, role, deleted_at')
+      .select('id, account_id, role')
       .eq('email', customerEmail);
     // Find a non-deleted profile that has a valid account
+    // NOTE: user_profiles has no deleted_at column — soft-delete is role='deleted'
     let existingProfile = null;
     let activeAccountExists = false;
     if (existingProfiles && existingProfiles.length > 0) {
       for (const p of existingProfiles) {
-        // Skip soft-deleted profiles
-        if (p.deleted_at || p.role === 'deleted') continue;
+        // Skip soft-deleted profiles (role='deleted' is the soft-delete marker)
+        if (p.role === 'deleted') continue;
         if (p.account_id) {
           // Verify the account actually exists in the accounts table
           const { data: acct } = await supabase
@@ -456,15 +457,16 @@ export default async function handler(req, res) {
         email: customerEmail,
         phone: phone || null,
         must_change_password: true,
-        deleted_at: null,  // clear any soft-delete from previous account
+        // NOTE: user_profiles has no deleted_at column — do not include it
       };
       const { error: profileError } = await supabase
         .from('user_profiles')
         .upsert(profileData, { onConflict: 'id' });
       if (profileError) {
-        console.error('[signup-webhook] user_profiles upsert error:', profileError.message);
-        // Non-fatal — account is created, just log it
+        // This is FATAL — without a profile row the user cannot log in
+        throw new Error(`user_profiles upsert failed: ${profileError.message}`);
       }
+      console.log('[signup-webhook] user_profiles row created/updated for:', authUserId);
     }
 
     // ---- 5. Send welcome email ----
