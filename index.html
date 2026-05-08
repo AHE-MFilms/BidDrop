@@ -639,7 +639,7 @@ tr:hover td{background:var(--card);}
           <option value="enterprise">Enterprise</option>
         </select>
       </div>
-      <div class="fg"><label class="fl">Mailer Rate ($/piece)</label><input class="fi" id="ec-rate" type="number" step="0.01" placeholder="2.50"></div>
+
     </div>
     <div class="fg"><label class="fl">Notes (internal)</label><input class="fi" id="ec-notes" placeholder="e.g. Net 30 billing, referral from..."></div>
     <!-- GHL Integration -->
@@ -9614,7 +9614,7 @@ function _renderAgencyAccountCards(accounts){
     return '<tr style="background:'+rowBg+';transition:background .1s;" onmouseover="this.style.background=\'var(--card2)\'" onmouseout="this.style.background=\''+rowBg+'\'">' +
       '<td style="'+td+'min-width:160px;">' +
         '<div style="font-weight:700;font-size:13px;color:var(--text);">'+(a.company_name||a.name)+'</div>' +
-        '<div style="font-size:10px;color:var(--muted);margin-top:2px;">'+users.length+' user'+(users.length!==1?'s':'')+' · $'+rate.toFixed(2)+'/piece</div>' +
+        '<div style="font-size:10px;color:var(--muted);margin-top:2px;">'+users.length+' user'+(users.length!==1?'s':'')+' · '+(a.plan||'starter')+'</div>' +
       '</td>' +
       '<td style="'+tdC+'">' +
         '<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:'+planColor+'22;color:'+planColor+';border:1px solid '+planColor+'44;text-transform:uppercase;">'+(a.plan||'starter')+'</span>' +
@@ -9714,7 +9714,7 @@ function editClientAccount(accountId){
     document.getElementById('ec-addr-zip').value    = parts[3]||'';
   })();
   document.getElementById('ec-plan').value  = a.plan||'starter';
-  document.getElementById('ec-rate').value  = parseFloat(a.mailer_rate)||2.50;
+
   document.getElementById('ec-notes').value = a.notes||'';
   document.getElementById('ec-ghl-key').value  = a.ghl_api_key||'';
   document.getElementById('ec-ghl-loc').value  = a.ghl_location_id||'';
@@ -9740,7 +9740,7 @@ async function saveClientAccount(){
   const addrZip    = document.getElementById('ec-addr-zip').value.trim();
   const addr = [addrStreet, addrCity, addrState, addrZip].filter(Boolean).join(', ');
   const plan   = document.getElementById('ec-plan').value;
-  const rate   = parseFloat(document.getElementById('ec-rate').value)||2.50;
+
   const notes  = document.getElementById('ec-notes').value.trim();
   const ghlKey  = document.getElementById('ec-ghl-key').value.trim();
   const ghlLoc  = document.getElementById('ec-ghl-loc').value.trim();
@@ -9756,11 +9756,11 @@ async function saveClientAccount(){
   try {
     const updated = await adminAPI('patch-account', {
       accountId,
-      updates: { name, company_name:name, company_phone:phone||null, company_addr:addr||null, plan, mailer_rate:rate, notes:notes||null, active, enable_postcard:enablePostcard, enable_letter:enableLetter, ghl_api_key:ghlKey||null, ghl_location_id:ghlLoc||null, ghl_pipeline_id:ghlPipe||null }
+      updates: { name, company_name:name, company_phone:phone||null, company_addr:addr||null, plan, notes:notes||null, active, enable_postcard:enablePostcard, enable_letter:enableLetter, ghl_api_key:ghlKey||null, ghl_location_id:ghlLoc||null, ghl_pipeline_id:ghlPipe||null }
     });
     // Update local cache
     const idx = _agencyData.accounts.findIndex(x=>x.id===accountId);
-    if(idx>=0) _agencyData.accounts[idx] = {..._agencyData.accounts[idx], name, company_name:name, company_phone:phone, company_addr:addr, plan, mailer_rate:rate, notes, active, enable_postcard:enablePostcard, enable_letter:enableLetter, ghl_api_key:ghlKey, ghl_location_id:ghlLoc, ghl_pipeline_id:ghlPipe};
+    if(idx>=0) _agencyData.accounts[idx] = {..._agencyData.accounts[idx], name, company_name:name, company_phone:phone, company_addr:addr, plan, notes, active, enable_postcard:enablePostcard, enable_letter:enableLetter, ghl_api_key:ghlKey, ghl_location_id:ghlLoc, ghl_pipeline_id:ghlPipe};
     resultEl.innerHTML = '✅ Saved!'; resultEl.style.color='var(--success)';
     toast('✅ '+name+' updated','success');
     renderAgencyAccounts();
@@ -12722,7 +12722,6 @@ function filterAdminAccounts(){
     const users = allProfiles.filter(p=>p.account_id===a.id);
     const planColor = {starter:'#3B82F6',pro:'#8B5CF6',agency:'#F25C05',enterprise:'#D97706'}[a.plan]||'#6688A8';
     const activeColor = a.active!==false ? '#22C55E' : '#EF4444';
-    const rate = parseFloat(a.mailer_rate)||2.50;
     return '<div class="ag-acct-card">' +
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">' +
         '<div class="ag-acct-name">'+(a.company_name||a.name)+'</div>' +
@@ -12732,7 +12731,6 @@ function filterAdminAccounts(){
         '</div>' +
       '</div>' +
       '<div class="ag-acct-meta">'+users.length+' user'+(users.length!==1?'s':'')+
-        (a.mailer_rate?' · $'+rate.toFixed(2)+'/mailer':'')+
       '</div>' +
       '<div style="margin:10px 0 6px;border-top:1px solid var(--border);padding-top:8px;">' +
         users.map(u=>'<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 0;">' +
@@ -12788,7 +12786,6 @@ function renderSuperAdminPanel(accounts, allProfiles){
       const users = allProfiles.filter(p=>p.account_id===a.id);
       const planColor = {starter:'#3B82F6',pro:'#8B5CF6',agency:'#F25C05',enterprise:'#D97706'}[a.plan]||'#6688A8';
       const activeColor = a.active!==false ? '#22C55E' : '#EF4444';
-      const rate = parseFloat(a.mailer_rate)||2.50;
       return '<div class="ag-acct-card">' +
         '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">' +
           '<div class="ag-acct-name">'+(a.company_name||a.name)+'</div>' +
@@ -12798,7 +12795,6 @@ function renderSuperAdminPanel(accounts, allProfiles){
           '</div>' +
         '</div>' +
         '<div class="ag-acct-meta">'+users.length+' user'+(users.length!==1?'s':'')+
-          (a.mailer_rate?' · $'+rate.toFixed(2)+'/mailer':'')+
           (a.slug?' · <a href="/q/'+a.slug+'" target="_blank" style="color:var(--accent);text-decoration:none;font-size:10px;">/q/'+a.slug+'</a>':'')+
         '</div>' +
         '<div style="margin:10px 0 6px;border-top:1px solid var(--border);padding-top:8px;">' +
@@ -12863,7 +12859,7 @@ function renderSuperAdminPanel(accounts, allProfiles){
               '<option value="enterprise">Enterprise</option>' +
             '</select>' +
           '</div>' +
-          '<div class="fg"><label class="fl">Your Mailer Rate ($/piece)</label><input class="fi" id="new-acct-rate" placeholder="2.50" type="number" step="0.01" value="2.50"></div>' +
+
         '</div>' +
         '<div style="margin-top:10px;">'+
           '<div class="fg"><label class="fl">Quote Page Slug <span style="font-weight:400;color:var(--muted);font-size:10px;">(e.g. rapidroof → /q/rapidroof)</span></label>'+
@@ -12984,7 +12980,7 @@ async function createAccount(){
   const zip    = document.getElementById('new-acct-zip').value.trim();
   const addr   = [street, city, state, zip].filter(Boolean).join(', ');
   const plan    = document.getElementById('new-acct-plan').value;
-  const rate    = parseFloat(document.getElementById('new-acct-rate').value)||2.50;
+
   const website = document.getElementById('new-acct-website').value.trim();
   const booking  = document.getElementById('new-acct-booking').value.trim();
   const slug    = document.getElementById('new-acct-slug') ? document.getElementById('new-acct-slug').value.trim().toLowerCase().replace(/[^a-z0-9_-]/g,'') : '';
@@ -13003,7 +12999,7 @@ async function createAccount(){
       name, company_name:name,
       company_phone: phone||null,
       company_addr: addr||null,
-      plan, mailer_rate: rate,
+      plan,
       active: true,
       created_by: currentUser.id,
       ...(website ? {company_website: website}  : {}),
