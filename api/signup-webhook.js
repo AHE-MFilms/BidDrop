@@ -146,9 +146,9 @@ async function sendWelcomeEmail({ email, firstName, companyName, planName, tempP
           Log In to BidDrop →
         </a>
 
-        <p style="font-size: 13px; color: #666666; line-height: 1.6; margin: 0;">
-          Questions? Reply to this email or contact us at
-          <a href="mailto:support@biddrop.io" style="color: #F97316;">support@biddrop.io</a>
+        <p style="font-size: 12px; color: #999999; line-height: 1.6; margin: 0; border-top: 1px solid #eeeeee; padding-top: 20px;">
+          This is a no-reply email — please do not reply directly to this message.<br>
+          For help, contact us at <a href="mailto:support@biddrop.io" style="color: #F97316;">support@biddrop.io</a>
         </p>
       </div>
     </div>
