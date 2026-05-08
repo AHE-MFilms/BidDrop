@@ -4489,7 +4489,8 @@ function openEstimatePage(eid){
   const slug=(S.cfg&&S.cfg.companyName?S.cfg.companyName.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''):'roofing');
   window.open('https://biddrop.us/'+slug+'/'+encodeURIComponent(eid),'_blank','noopener,noreferrer');
 }
-function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function escJs(s){return(s||'').replace(/\\/g,'\\\\').replace(/'/g,'\\x27').replace(/"/g,'\\x22');}
 function formatPhone(raw){
   const d=(raw||'').replace(/\D/g,'');
   if(!d) return raw||'';
@@ -10464,7 +10465,7 @@ async function renderTeam(){
     const estCount = S.pins.filter(pin=>(pin.rep||'').toLowerCase()===repName && pin.estimate).length;
     const initials = (p.name||p.email||'?').charAt(0).toUpperCase();
     const removeBtn = canRemove
-      ? '<button onclick="removeTeamMember(\''+p.id+'\',\''+escHtml(p.name||p.email)+'\')" '+
+      ? '<button onclick="removeTeamMember(\''+p.id+'\',\''+escJs(p.name||p.email)+'\')" '+
         'title="Remove from team" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:0 4px;line-height:1;" '+
         'onmouseover="this.style.color=\'var(--danger)\'" onmouseout="this.style.color=\'var(--muted)\'">×</button>'
       : '';
@@ -12741,8 +12742,8 @@ function filterAdminAccounts(){
             (u.email?' <span style="color:var(--muted);font-size:10px;">'+escHtml(u.email)+'</span>':'')+
           '</div>' +
           '<div style="display:flex;gap:4px;flex-shrink:0;">' +
-            '<button onclick="editUser(\''+u.id+'\',\''+escHtml(u.name||'')+'\',\''+escHtml(u.email||'')+'\',\''+u.role+'\',\''+a.id+'\')" style="background:none;border:1px solid var(--border);border-radius:5px;padding:2px 8px;color:var(--mid);font-size:10px;cursor:pointer;" title="Edit user">\u270F\uFE0F Edit</button>' +
-            '<button onclick="deleteUser(\''+u.id+'\',\''+escHtml(u.name||u.email||'user')+'\')" style="background:none;border:1px solid var(--danger);border-radius:5px;padding:2px 8px;color:var(--danger);font-size:10px;cursor:pointer;" title="Delete user">\uD83D\uDDD1 Delete</button>' +
+            '<button onclick="editUser(\''+u.id+'\',\''+escJs(u.name||'')+'\',\''+escJs(u.email||'')+'\',\''+u.role+'\',\''+a.id+'\')" style="background:none;border:1px solid var(--border);border-radius:5px;padding:2px 8px;color:var(--mid);font-size:10px;cursor:pointer;" title="Edit user">\u270F\uFE0F Edit</button>' +
+            '<button onclick="deleteUser(\''+u.id+'\',\''+escJs(u.name||u.email||'user')+'\')" style="background:none;border:1px solid var(--danger);border-radius:5px;padding:2px 8px;color:var(--danger);font-size:10px;cursor:pointer;" title="Delete user">\uD83D\uDDD1 Delete</button>' +
           '</div>' +
         '</div>').join('') +
       '</div>' +
@@ -12808,8 +12809,8 @@ function renderSuperAdminPanel(accounts, allProfiles){
               (u.email?' <span style="color:var(--muted);font-size:10px;">'+escHtml(u.email)+'</span>':'')+
             '</div>' +
             '<div style="display:flex;gap:4px;flex-shrink:0;">' +
-              '<button onclick="editUser(\''+u.id+'\',\''+escHtml(u.name||'')+'\',\''+escHtml(u.email||'')+'\',\''+u.role+'\',\''+a.id+'\')" style="background:none;border:1px solid var(--border);border-radius:5px;padding:2px 8px;color:var(--mid);font-size:10px;cursor:pointer;" title="Edit user">✏️ Edit</button>' +
-              '<button onclick="deleteUser(\''+u.id+'\',\''+escHtml(u.name||u.email||'user')+'\')" style="background:none;border:1px solid var(--danger);border-radius:5px;padding:2px 8px;color:var(--danger);font-size:10px;cursor:pointer;" title="Delete user">🗑 Delete</button>' +
+              '<button onclick="editUser(\''+u.id+'\',\''+escJs(u.name||'')+'\',\''+escJs(u.email||'')+'\',\''+u.role+'\',\''+a.id+'\')" style="background:none;border:1px solid var(--border);border-radius:5px;padding:2px 8px;color:var(--mid);font-size:10px;cursor:pointer;" title="Edit user">✏️ Edit</button>' +
+              '<button onclick="deleteUser(\''+u.id+'\',\''+escJs(u.name||u.email||'user')+'\')" style="background:none;border:1px solid var(--danger);border-radius:5px;padding:2px 8px;color:var(--danger);font-size:10px;cursor:pointer;" title="Delete user">🗑 Delete</button>' +
             '</div>' +
           '</div>').join('') +
         '</div>' +
@@ -12817,7 +12818,7 @@ function renderSuperAdminPanel(accounts, allProfiles){
         '<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;">'+
           '<button onclick="setAccountSlug(\''+a.id+'\',\''+escHtml(a.slug||'')+'\')" style="background:none;border:1px solid var(--border);border-radius:5px;padding:3px 10px;color:var(--muted);font-size:10px;cursor:pointer;font-weight:600;" title="Set quote page slug">🔗 Set Slug</button>'+
           (a.slug?'<a href="/q/'+a.slug+'" target="_blank" style="background:rgba(242,92,5,.1);border:1px solid rgba(242,92,5,.3);border-radius:5px;padding:3px 10px;color:var(--accent);font-size:10px;font-weight:600;text-decoration:none;">↗ /q/'+a.slug+'</a>':'') +
-          '<button onclick="deleteClientAccount(\''+a.id+'\',\''+escHtml(a.company_name||a.name||'this account')+'\')" style="background:none;border:1px solid var(--danger);border-radius:5px;padding:3px 10px;color:var(--danger);font-size:10px;cursor:pointer;font-weight:600;margin-left:auto;" title="Delete account">🗑 Delete</button>'+
+          '<button onclick="deleteClientAccount(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\')" style="background:none;border:1px solid var(--danger);border-radius:5px;padding:3px 10px;color:var(--danger);font-size:10px;cursor:pointer;font-weight:600;margin-left:auto;" title="Delete account">🗑 Delete</button>'+
         '</div>'+
         '</div>';
     }).join('') +
@@ -12894,7 +12895,7 @@ function renderSuperAdminPanel(accounts, allProfiles){
             '<div style="font-size:11px;color:var(--muted);">'+escHtml(p.email||'')+'</div>'+
           '</div>'+
           (!isOwner && currentUser && currentUser.email===OWNER_EMAIL
-            ? '<button onclick="removeSuperAdmin(\''+p.id+'\',\''+escHtml(p.email||p.id)+'\')" style="background:none;border:1px solid var(--danger);border-radius:6px;padding:4px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">Remove</button>'
+            ? '<button onclick="removeSuperAdmin(\''+p.id+'\',\''+escJs(p.email||p.id)+'\')" style="background:none;border:1px solid var(--danger);border-radius:6px;padding:4px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">Remove</button>'
             : '')+
           '</div>';
       }).join('') +
@@ -14064,8 +14065,8 @@ function renderManageTeam(accountId){
       '</div>' +
       '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
         '<button onclick="mtToggleEdit(\''+uid+'\')" style="background:none;border:1px solid var(--accent);border-radius:6px;padding:5px 10px;color:var(--accent);font-size:11px;font-weight:700;cursor:pointer;">✏️ Edit</button>' +
-        '<button onclick="mtResetPassword(\''+uid+'\',\''+((u.email||'').replace(/\'/g,"&apos;"))+'\')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--mid);font-size:11px;font-weight:700;cursor:pointer;">🔑 Reset Password</button>' +
-        '<button onclick="mtRemoveUser(\''+uid+'\',\''+((u.name||'Unnamed').replace(/\'/g,"&apos;"))+'\',\''+accountId+'\')" style="background:none;border:1px solid #EF444444;border-radius:6px;padding:5px 10px;color:#EF4444;font-size:11px;font-weight:700;cursor:pointer;">🗑 Remove</button>' +
+        '<button onclick="mtResetPassword(\''+uid+'\',\''+escJs(u.email||'')+'\')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--mid);font-size:11px;font-weight:700;cursor:pointer;">🔑 Reset Password</button>' +
+        '<button onclick="mtRemoveUser(\''+uid+'\',\''+escJs(u.name||'Unnamed')+'\',\''+accountId+'\')" style="background:none;border:1px solid #EF444444;border-radius:6px;padding:5px 10px;color:#EF4444;font-size:11px;font-weight:700;cursor:pointer;">🗑 Remove</button>' +
       '</div>' +
       '<div id="mt-edit-'+uid+'" style="display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">' +
         '<div class="frow">' +
