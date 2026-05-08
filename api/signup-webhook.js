@@ -421,6 +421,9 @@ export default async function handler(req, res) {
     // mailer_rate by plan (cost per mailer to the account)
     const mailerRateByPlan = { starter: 2.50, pro: 2.50, agency: 2.50, enterprise: 2.50 };
 
+    const stripeCustomerId = fullSession.customer?.id || session.customer || null;
+    const stripeSubscriptionId = fullSession.subscription?.id || fullSession.subscription || null;
+
     const accountRecord = {
       name: companyName || `${firstName} ${lastName}`,
       company_name: companyName || `${firstName} ${lastName}`,
@@ -432,7 +435,9 @@ export default async function handler(req, res) {
       lookup_credits: 0,
       free_lookups_used: 0,
       slug: slug,
-      notes: `Signed up via BidDrop signup page. Plan: ${planConfig.name}. Stripe customer: ${fullSession.customer?.id || session.customer}. Trial ends: ${new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toLocaleDateString()}.`,
+      stripe_customer_id: stripeCustomerId,
+      stripe_subscription_id: stripeSubscriptionId,
+      notes: `Signed up via BidDrop signup page. Plan: ${planConfig.name}. Stripe customer: ${stripeCustomerId}. Trial ends: ${new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toLocaleDateString()}.`,
     };
 
     const { data: newAccount, error: accountError } = await supabase
