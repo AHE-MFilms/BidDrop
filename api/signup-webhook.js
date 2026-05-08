@@ -437,6 +437,7 @@ export default async function handler(req, res) {
       slug: slug,
       stripe_customer_id: stripeCustomerId,
       stripe_subscription_id: stripeSubscriptionId,
+      trial_ends_at: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
       notes: `Signed up via BidDrop signup page. Plan: ${planConfig.name}. Stripe customer: ${stripeCustomerId}. Trial ends: ${new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toLocaleDateString()}.`,
     };
 

@@ -16,6 +16,7 @@ const SERVICE_KEY    = process.env.SUPABASE_SERVICE_KEY;
 const LOB_KEY        = process.env.LOB_API_KEY;
 const RENTCAST_KEY   = process.env.RENTCAST_API_KEY;
 const AGENCY_ACCT_ID = process.env.AGENCY_ACCOUNT_ID;
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const SUPABASE_PAT   = process.env.SUPABASE_PAT || 'sbp_145c8823fe7d9132f688eb40484dee8670e10393';
 
 // ── CORS helper ───────────────────────────────────────────────────────────────
@@ -114,6 +115,42 @@ module.exports = async function handler(req, res) {
         const d = await r.json();
         if (!r.ok) { res.status(r.status).json({ error: d.message || 'Reset failed' }); return; }
         res.status(200).json(d);
+        break;
+      }
+
+      // ── Cancel a Stripe subscription (super_admin only) ─────────────────────
+      case 'cancel-stripe-subscription': {
+        if (!isSuperAdmin) { res.status(403).json({ error: 'Super admin only' }); return; }
+        const { accountId: cancelAcctId } = req.body;
+        if (!cancelAcctId) { res.status(400).json({ error: 'accountId required' }); return; }
+        // Fetch the stripe_subscription_id from the account
+        const acctRes = await sbFetch(`accounts?id=eq.${cancelAcctId}&select=stripe_subscription_id,stripe_customer_id,company_name`);
+        if (!acctRes.ok) { res.status(500).json({ error: 'Failed to fetch account' }); return; }
+        const accts = await acctRes.json();
+        if (!accts.length) { res.status(404).json({ error: 'Account not found' }); return; }
+        const acct = accts[0];
+        const subId = acct.stripe_subscription_id;
+        if (!subId) {
+          // No subscription to cancel — just return success
+          res.status(200).json({ success: true, message: 'No Stripe subscription found — nothing to cancel.' });
+          return;
+        }
+        // Cancel the subscription immediately via Stripe API
+        const stripeRes = await fetch(`https://api.stripe.com/v1/subscriptions/${subId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Basic ${Buffer.from(STRIPE_SECRET_KEY + ':').toString('base64')}`,
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        });
+        const stripeData = await stripeRes.json();
+        if (!stripeRes.ok) {
+          console.error('[cancel-stripe-subscription] Stripe error:', stripeData);
+          res.status(stripeRes.status).json({ error: stripeData.error?.message || 'Stripe cancellation failed' });
+          return;
+        }
+        console.log(`[cancel-stripe-subscription] Cancelled sub ${subId} for ${acct.company_name}`);
+        res.status(200).json({ success: true, subscription_id: subId, status: stripeData.status });
         break;
       }
 
