@@ -12741,7 +12741,7 @@ function filterAdminAccounts(){
             (u.email?' <span style="color:var(--muted);font-size:10px;">'+escHtml(u.email)+'</span>':'')+
           '</div>' +
           '<div style="display:flex;gap:4px;flex-shrink:0;">' +
-            '<button onclick="editUser(\''+u.id+'\',\''+escHtml(u.name||'')+'\'\,\''+escHtml(u.email||'')+'\'\,\''+u.role+'\'\,\''+a.id+'\')" style="background:none;border:1px solid var(--border);border-radius:5px;padding:2px 8px;color:var(--mid);font-size:10px;cursor:pointer;" title="Edit user">\u270F\uFE0F Edit</button>' +
+            '<button onclick="editUser(\''+u.id+'\',\''+escHtml(u.name||'')+'\',\''+escHtml(u.email||'')+'\',\''+u.role+'\',\''+a.id+'\')" style="background:none;border:1px solid var(--border);border-radius:5px;padding:2px 8px;color:var(--mid);font-size:10px;cursor:pointer;" title="Edit user">\u270F\uFE0F Edit</button>' +
             '<button onclick="deleteUser(\''+u.id+'\',\''+escHtml(u.name||u.email||'user')+'\')" style="background:none;border:1px solid var(--danger);border-radius:5px;padding:2px 8px;color:var(--danger);font-size:10px;cursor:pointer;" title="Delete user">\uD83D\uDDD1 Delete</button>' +
           '</div>' +
         '</div>').join('') +
@@ -12808,7 +12808,7 @@ function renderSuperAdminPanel(accounts, allProfiles){
               (u.email?' <span style="color:var(--muted);font-size:10px;">'+escHtml(u.email)+'</span>':'')+
             '</div>' +
             '<div style="display:flex;gap:4px;flex-shrink:0;">' +
-              '<button onclick="editUser(\''+u.id+'\',\''+escHtml(u.name||'')+'\'\,\''+escHtml(u.email||'')+'\'\,\''+u.role+'\'\,\''+a.id+'\')" style="background:none;border:1px solid var(--border);border-radius:5px;padding:2px 8px;color:var(--mid);font-size:10px;cursor:pointer;" title="Edit user">✏️ Edit</button>' +
+              '<button onclick="editUser(\''+u.id+'\',\''+escHtml(u.name||'')+'\',\''+escHtml(u.email||'')+'\',\''+u.role+'\',\''+a.id+'\')" style="background:none;border:1px solid var(--border);border-radius:5px;padding:2px 8px;color:var(--mid);font-size:10px;cursor:pointer;" title="Edit user">✏️ Edit</button>' +
               '<button onclick="deleteUser(\''+u.id+'\',\''+escHtml(u.name||u.email||'user')+'\')" style="background:none;border:1px solid var(--danger);border-radius:5px;padding:2px 8px;color:var(--danger);font-size:10px;cursor:pointer;" title="Delete user">🗑 Delete</button>' +
             '</div>' +
           '</div>').join('') +
@@ -12817,6 +12817,7 @@ function renderSuperAdminPanel(accounts, allProfiles){
         '<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;">'+
           '<button onclick="setAccountSlug(\''+a.id+'\',\''+escHtml(a.slug||'')+'\')" style="background:none;border:1px solid var(--border);border-radius:5px;padding:3px 10px;color:var(--muted);font-size:10px;cursor:pointer;font-weight:600;" title="Set quote page slug">🔗 Set Slug</button>'+
           (a.slug?'<a href="/q/'+a.slug+'" target="_blank" style="background:rgba(242,92,5,.1);border:1px solid rgba(242,92,5,.3);border-radius:5px;padding:3px 10px;color:var(--accent);font-size:10px;font-weight:600;text-decoration:none;">↗ /q/'+a.slug+'</a>':'') +
+          '<button onclick="deleteClientAccount(\''+a.id+'\',\''+escHtml(a.company_name||a.name||'this account')+'\')" style="background:none;border:1px solid var(--danger);border-radius:5px;padding:3px 10px;color:var(--danger);font-size:10px;cursor:pointer;font-weight:600;margin-left:auto;" title="Delete account">🗑 Delete</button>'+
         '</div>'+
         '</div>';
     }).join('') +
@@ -13247,6 +13248,39 @@ async function deleteUser(userId, displayName){
     renderAdminPanel();
   } catch(e){
     toast('❌ '+(e.message||'Could not remove user.'),'error');
+  }
+}
+
+// ═══════════════════════════════
+//  DELETE CLIENT ACCOUNT
+// ═══════════════════════════════
+async function deleteClientAccount(accountId, accountName){
+  if(!isSuperAdmin()){ toast('Permission denied','error'); return; }
+  if(!confirm(
+    'Delete "'+accountName+'"?\n\n'+
+    '⚠️ This will permanently delete the account, all users, pins, estimates, and data.\n\n'+
+    'This CANNOT be undone. Are you absolutely sure?'
+  )){ return; }
+  const confirmName = prompt('Type the account name to confirm deletion:\n"'+accountName+'"');
+  if(!confirmName || confirmName.trim() !== accountName.trim()){
+    toast('Account name did not match. Deletion cancelled.','error');
+    return;
+  }
+  try {
+    // Delete all user_profiles for this account first
+    const {data: profiles} = await sb.from('user_profiles').select('id').eq('account_id', accountId);
+    if(profiles && profiles.length){
+      for(const p of profiles){
+        await adminAPI('delete-user', {userId: p.id}).catch(()=>{});
+      }
+    }
+    // Delete the account record
+    const {error} = await sb.from('accounts').delete().eq('id', accountId);
+    if(error) throw error;
+    toast('✅ Account "'+accountName+'" deleted.','success');
+    renderAdminPanel();
+  } catch(e){
+    toast('❌ '+(e.message||'Could not delete account.'),'error');
   }
 }
 
