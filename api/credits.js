@@ -38,7 +38,7 @@ const CREDIT_PACKS = {
 };
 
 // Free mailer credits per month by plan
-const PLAN_FREE_CREDITS = { starter: 5, pro: 15, agency: 30, enterprise: 60 };
+const PLAN_FREE_CREDITS = { starter: 0, pro: 0, agency: 0, enterprise: 0 };
 
 function cors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');

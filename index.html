@@ -6703,8 +6703,8 @@ const HIST_PAGE_SIZE = 25;
 async function loadHistory(){
   // Update balance display
   // Show total credits: free remaining + paid (same as header badge)
-  const planFreeMapH = {starter:15,pro:30,agency:60,enterprise:200};
-  const freeLimitH = planFreeMapH[(S.cfg.plan||'starter').toLowerCase()] || 5;
+  const planFreeMapH = {starter:0,pro:0,agency:0,enterprise:0};
+  const freeLimitH = planFreeMapH[(S.cfg.plan||'starter').toLowerCase()] || 0;
   const freeLeftH  = Math.max(0, freeLimitH - (S.cfg.freeMailerCreditsUsed || 0));
   const paidH      = S.cfg.mailerCredits || 0;
   const totalBal  = freeLeftH + paidH;
@@ -7600,7 +7600,7 @@ async function printEstimate(estId){
   // Pay-once print gate: 1 credit per estimate, free reprints after first payment
   if(!est.printPaid){
     // Check credits first
-    const freeLimit = {starter:15,pro:30,agency:60,enterprise:200}[(S.cfg&&S.cfg.plan||'starter').toLowerCase()] || 5;
+    const freeLimit = {starter:0,pro:0,agency:0,enterprise:0}[(S.cfg&&S.cfg.plan||'starter').toLowerCase()] || 0;
     const freeLeft  = Math.max(0, freeLimit - (S.cfg.freeMailerCreditsUsed||0));
     const paid      = S.cfg.mailerCredits||0;
     const total     = freeLeft + paid;
@@ -9597,8 +9597,8 @@ function _renderAgencyAccountCards(accounts){
     const activeColor = a.active!==false ? '#22C55E' : '#EF4444';
     const activeLabel = a.active!==false ? 'Active' : 'Inactive';
     const paidCredits = a.mailer_credits||0;
-    const planFreeMapA = {starter:15,pro:30,agency:60,enterprise:200};
-    const freeLimit = planFreeMapA[(a.plan||'starter').toLowerCase()] || 5;
+    const planFreeMapA = {starter:0,pro:0,agency:0,enterprise:0};
+    const freeLimit = planFreeMapA[(a.plan||'starter').toLowerCase()] || 0;
     const freeLeft = Math.max(0, freeLimit - (a.free_mailer_credits_used||0));
     // Last activity
     const allDates = [
@@ -9669,8 +9669,8 @@ async function setFreeLimit(accountId){
   if(!_agencyData) return;
   const a = _agencyData.accounts.find(x=>x.id===accountId);
   if(!a) return;
-  const planFreeMapSL = {starter:15,pro:30,agency:60,enterprise:200};
-  const currentLimit = planFreeMapSL[(a.plan||'starter').toLowerCase()] || 5;
+  const planFreeMapSL = {starter:0,pro:0,agency:0,enterprise:0};
+  const currentLimit = planFreeMapSL[(a.plan||'starter').toLowerCase()] || 0;
   const freeUsed     = a.free_mailer_credits_used || 0;
   const freeLeft     = Math.max(0, currentLimit - freeUsed);
   const input = prompt(
@@ -11113,8 +11113,8 @@ function updateCreditBadge(){
   if(!badge) return;
   // Use mailerCredits (new model: 1 credit = $4 = 1 postcard)
   const plan = (S.cfg.plan||'starter').toLowerCase();
-  const planFreeMap = {starter:15,pro:30,agency:60,enterprise:200};
-  const freeLimit = planFreeMap[plan] || 5;
+  const planFreeMap = {starter:0,pro:0,agency:0,enterprise:0};
+  const freeLimit = planFreeMap[plan] || 0;
   const freeLeft = Math.max(0, freeLimit - (S.cfg.freeMailerCreditsUsed||0));
   const paid     = S.cfg.mailerCredits || 0;
   const total    = freeLeft + paid;
@@ -11144,8 +11144,8 @@ function updateCreditBadge(){
 async function showBuyCreditsModal(){
   // Open modal immediately using cached values — don't block on network
   const plan2 = (S.cfg.plan||'starter').toLowerCase();
-  const planFreeMap2 = {starter:15,pro:30,agency:60,enterprise:200};
-  const freeLimit2 = planFreeMap2[plan2] || 5;
+  const planFreeMap2 = {starter:0,pro:0,agency:0,enterprise:0};
+  const freeLimit2 = planFreeMap2[plan2] || 0;
   const freeLeft = Math.max(0, freeLimit2 - (S.cfg.freeMailerCreditsUsed||0));
   const paid     = S.cfg.mailerCredits || 0;
   const fEl = document.getElementById('cb-free-remaining');
@@ -11164,7 +11164,7 @@ async function showBuyCreditsModal(){
         S.cfg.freeMailerCreditsUsed  = b.free_used;
         updateCreditBadge();
         const plan3 = (S.cfg.plan||'starter').toLowerCase();
-        const freeLimit3 = planFreeMap2[plan3] || 5;
+        const freeLimit3 = planFreeMap2[plan3] || 0;
         const freeLeft3 = Math.max(0, freeLimit3 - (S.cfg.freeMailerCreditsUsed||0));
         if(fEl) fEl.textContent = freeLeft3;
         if(pEl) pEl.textContent = S.cfg.mailerCredits || 0;
@@ -14254,8 +14254,8 @@ function startDripSequence(){
   if(!est){ toast('Estimate not found','error'); return; }
   // Credit pre-check: Follow-Up Blitz costs 3 credits (4 mailers × 1, but 4th is free = 3×1)
   const BLITZ_CREDITS = 3;
-  const planFreeMapD = {starter:15,pro:30,agency:60,enterprise:200};
-  const freeLimitD = planFreeMapD[(S.cfg.plan||'starter').toLowerCase()] || 5;
+  const planFreeMapD = {starter:0,pro:0,agency:0,enterprise:0};
+  const freeLimitD = planFreeMapD[(S.cfg.plan||'starter').toLowerCase()] || 0;
   const freeLeftD  = Math.max(0, freeLimitD - (S.cfg.freeMailerCreditsUsed || 0));
   const paid      = S.cfg.mailerCredits || 0;
   const total     = freeLeftD + paid;
