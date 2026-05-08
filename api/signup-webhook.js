@@ -446,21 +446,24 @@ export default async function handler(req, res) {
     console.log('[signup-webhook] Account created:', newAccount.id, customerEmail, plan);
 
     // ---- 4. Create user_profile record linking auth user to account ----
+    // Use upsert so that if a soft-deleted profile row already exists for this
+    // auth user ID (primary key conflict), it gets updated instead of failing.
     if (authUserId) {
+      const profileData = {
+        id: authUserId,
+        account_id: newAccount.id,
+        role: 'admin',
+        name: `${firstName || ''} ${lastName || ''}`.trim() || companyName,
+        email: customerEmail,
+        phone: phone || null,
+        must_change_password: true,
+        deleted_at: null,  // clear any soft-delete from previous account
+      };
       const { error: profileError } = await supabase
         .from('user_profiles')
-        .insert({
-          id: authUserId,
-          account_id: newAccount.id,
-          role: 'admin',
-          name: `${firstName || ''} ${lastName || ''}`.trim() || companyName,
-          email: customerEmail,
-          phone: phone || null,
-          must_change_password: true,
-        });
-
+        .upsert(profileData, { onConflict: 'id' });
       if (profileError) {
-        console.error('[signup-webhook] user_profiles insert error:', profileError.message);
+        console.error('[signup-webhook] user_profiles upsert error:', profileError.message);
         // Non-fatal — account is created, just log it
       }
     }
