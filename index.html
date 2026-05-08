@@ -4489,7 +4489,7 @@ function openEstimatePage(eid){
   const slug=(S.cfg&&S.cfg.companyName?S.cfg.companyName.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''):'roofing');
   window.open('https://biddrop.us/'+slug+'/'+encodeURIComponent(eid),'_blank','noopener,noreferrer');
 }
-function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function formatPhone(raw){
   const d=(raw||'').replace(/\D/g,'');
   if(!d) return raw||'';
