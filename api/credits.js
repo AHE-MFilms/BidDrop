@@ -138,6 +138,16 @@ module.exports = async function handler(req, res) {
   const profile = await getCallerProfile(caller.id);
   if (!profile) { res.status(403).json({ error: 'No profile found' }); return; }
 
+  // Super admins have no account_id — return a zero-balance response for balance checks
+  if (!profile.account_id) {
+    if (action === 'balance') {
+      res.status(200).json({ paid_credits: 0, free_used: 0, free_limit: 0, free_remaining: 0, plan: 'super_admin', packs: CREDIT_PACKS });
+      return;
+    }
+    res.status(403).json({ error: 'Super admins do not have a credit account' });
+    return;
+  }
+
   try {
     switch (action) {
 
