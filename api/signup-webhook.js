@@ -388,12 +388,27 @@ export default async function handler(req, res) {
 
       if (authError) {
         if (authError.message?.includes('already registered')) {
-          console.warn('[signup-webhook] Auth user already exists:', customerEmail);
+          // Auth user exists (e.g. from a previously deleted account).
+          // Look them up by email so we can reuse their ID and reset their password.
+          console.warn('[signup-webhook] Auth user already exists, looking up by email:', customerEmail);
+          const { data: existingAuthList } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+          const existingAuthUser = existingAuthList?.users?.find(u => u.email === customerEmail);
+          if (existingAuthUser) {
+            authUserId = existingAuthUser.id;
+            // Reset their password so the welcome email credentials work
+            await supabase.auth.admin.updateUserById(existingAuthUser.id, {
+              password: tempPassword,
+              user_metadata: { first_name: firstName, last_name: lastName, company_name: companyName, plan },
+            }).catch(e => console.warn('[signup-webhook] Could not update existing auth user:', e.message));
+          } else {
+            throw new Error('Auth user already registered but could not be found by email');
+          }
         } else {
           throw new Error(`Auth user creation failed: ${authError.message}`);
         }
+      } else {
+        authUserId = authData?.user?.id;
       }
-      authUserId = authData?.user?.id;
     }
 
     // ---- 3. Create account record using the REAL schema ----
