@@ -71,6 +71,24 @@ export default async function handler(req, res) {
     let customer;
     if (existingCustomers.data.length > 0) {
       customer = existingCustomers.data[0];
+
+      // Check if they already have an active or trialing subscription
+      // to prevent duplicate signups on the same account
+      const existingSubs = await stripe.subscriptions.list({
+        customer: customer.id,
+        status: 'all',
+        limit: 10,
+      });
+      const activeSub = existingSubs.data.find(s =>
+        ['active', 'trialing', 'past_due'].includes(s.status)
+      );
+      if (activeSub) {
+        return res.status(409).json({
+          error: 'active_subscription',
+          message: 'An active subscription already exists for this email address. Please log in to your existing BidDrop account, or contact support if you need help.',
+        });
+      }
+
       // Update metadata in case they're re-signing up
       customer = await stripe.customers.update(customer.id, {
         name: `${firstName} ${lastName}`,
