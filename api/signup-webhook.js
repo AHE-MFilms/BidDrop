@@ -28,11 +28,13 @@ const supabase = createClient(
 );
 
 // Plan config — must match api/signup.js
+// NOTE: mailer_credits here is the TRIAL starting amount (10 for all plans).
+// Monthly credit allotments only apply after the trial ends and billing begins.
 const PLAN_CONFIG = {
   starter: {
     name: 'Starter',
     price: 97,
-    mailer_credits: 10,
+    mailer_credits: 10,  // trial start credits
     max_reps: 1,
     max_pins_per_month: 250,
     offer_ghl: false,
@@ -45,7 +47,7 @@ const PLAN_CONFIG = {
   pro: {
     name: 'Pro',
     price: 197,
-    mailer_credits: 25,
+    mailer_credits: 10,  // trial start credits (25/mo kicks in after trial)
     max_reps: 3,
     max_pins_per_month: 1000,
     offer_ghl: true,
@@ -58,7 +60,7 @@ const PLAN_CONFIG = {
   agency: {
     name: 'Agency',
     price: 397,
-    mailer_credits: 50,
+    mailer_credits: 10,  // trial start credits (50/mo kicks in after trial)
     max_reps: 10,
     max_pins_per_month: null, // unlimited
     offer_ghl: true,
@@ -71,7 +73,7 @@ const PLAN_CONFIG = {
   enterprise: {
     name: 'Enterprise',
     price: 797,
-    mailer_credits: 100,
+    mailer_credits: 10,  // trial start credits (100/mo kicks in after trial)
     max_reps: null, // unlimited
     max_pins_per_month: null, // unlimited
     offer_ghl: true,
