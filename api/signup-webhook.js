@@ -371,44 +371,43 @@ export default async function handler(req, res) {
 
     // ---- 2. Create Supabase auth user ----
     const tempPassword = generatePassword(12);
-    let authUserId = existingProfile?.id || null;
+    let authUserId = null;
 
-    if (!authUserId) {
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: customerEmail,
-        password: tempPassword,
-        email_confirm: true,
-        user_metadata: {
-          first_name: firstName,
-          last_name: lastName,
-          company_name: companyName,
-          plan,
-        },
-      });
+    // Always try to create the auth user fresh.
+    // If the account was previously deleted, the auth user may or may not still exist.
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email: customerEmail,
+      password: tempPassword,
+      email_confirm: true,
+      user_metadata: {
+        first_name: firstName,
+        last_name: lastName,
+        company_name: companyName,
+        plan,
+      },
+    });
 
-      if (authError) {
-        if (authError.message?.includes('already registered')) {
-          // Auth user exists (e.g. from a previously deleted account).
-          // Look them up by email so we can reuse their ID and reset their password.
-          console.warn('[signup-webhook] Auth user already exists, looking up by email:', customerEmail);
-          const { data: existingAuthList } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-          const existingAuthUser = existingAuthList?.users?.find(u => u.email === customerEmail);
-          if (existingAuthUser) {
-            authUserId = existingAuthUser.id;
-            // Reset their password so the welcome email credentials work
-            await supabase.auth.admin.updateUserById(existingAuthUser.id, {
-              password: tempPassword,
-              user_metadata: { first_name: firstName, last_name: lastName, company_name: companyName, plan },
-            }).catch(e => console.warn('[signup-webhook] Could not update existing auth user:', e.message));
-          } else {
-            throw new Error('Auth user already registered but could not be found by email');
-          }
-        } else {
-          throw new Error(`Auth user creation failed: ${authError.message}`);
-        }
+    if (authError) {
+      // Auth user already exists — look them up by email and reuse their ID
+      console.warn('[signup-webhook] Auth user creation error:', authError.message, '— looking up existing user');
+      const { data: existingAuthList } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+      const existingAuthUser = existingAuthList?.users?.find(u => u.email?.toLowerCase() === customerEmail.toLowerCase());
+      if (existingAuthUser) {
+        authUserId = existingAuthUser.id;
+        // Reset their password so the welcome email credentials work
+        await supabase.auth.admin.updateUserById(existingAuthUser.id, {
+          password: tempPassword,
+          email_confirm: true,
+          user_metadata: { first_name: firstName, last_name: lastName, company_name: companyName, plan },
+        }).catch(e => console.warn('[signup-webhook] Could not update existing auth user:', e.message));
+        console.log('[signup-webhook] Reusing existing auth user:', authUserId);
       } else {
-        authUserId = authData?.user?.id;
+        // Auth user doesn't exist but createUser failed for another reason — hard fail
+        throw new Error(`Auth user creation failed: ${authError.message}`);
       }
+    } else {
+      authUserId = authData?.user?.id;
+      console.log('[signup-webhook] New auth user created:', authUserId);
     }
 
     // ---- 3. Create account record using the REAL schema ----
