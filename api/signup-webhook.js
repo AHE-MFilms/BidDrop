@@ -332,15 +332,40 @@ export default async function handler(req, res) {
 
   try {
     // ---- 1. Check if account already exists (idempotency) ----
-    // Check user_profiles table by email since accounts table has no email column
-    const { data: existingProfile } = await supabase
+    // Check user_profiles table by email since accounts table has no email column.
+    // IMPORTANT: Ignore soft-deleted profiles (role='deleted') — these are from
+    // accounts that were deleted. Also verify the linked account actually exists.
+    const { data: existingProfiles } = await supabase
       .from('user_profiles')
-      .select('id, account_id')
-      .eq('email', customerEmail)
-      .maybeSingle();
-
-    if (existingProfile?.account_id) {
-      console.log('[signup-webhook] Account already exists for:', customerEmail);
+      .select('id, account_id, role, deleted_at')
+      .eq('email', customerEmail);
+    // Find a non-deleted profile that has a valid account
+    let existingProfile = null;
+    let activeAccountExists = false;
+    if (existingProfiles && existingProfiles.length > 0) {
+      for (const p of existingProfiles) {
+        // Skip soft-deleted profiles
+        if (p.deleted_at || p.role === 'deleted') continue;
+        if (p.account_id) {
+          // Verify the account actually exists in the accounts table
+          const { data: acct } = await supabase
+            .from('accounts')
+            .select('id')
+            .eq('id', p.account_id)
+            .maybeSingle();
+          if (acct) {
+            existingProfile = p;
+            activeAccountExists = true;
+            break;
+          }
+        } else {
+          // Profile exists but no account linked — use this auth user ID
+          existingProfile = p;
+        }
+      }
+    }
+    if (activeAccountExists) {
+      console.log('[signup-webhook] Active account already exists for:', customerEmail);
       return res.status(200).json({ received: true, skipped: 'already_exists' });
     }
 
