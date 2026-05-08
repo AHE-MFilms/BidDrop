@@ -111,39 +111,46 @@ async function sendWelcomeEmail({ email, firstName, companyName, planName, tempP
 
   const subject = `Welcome to BidDrop — Your Account Is Ready 🎉`;
   const html = `
-    <div style="font-family: -apple-system, sans-serif; max-width: 600px; margin: 0 auto; background: #0a0a0a; color: #ffffff; padding: 40px 32px; border-radius: 12px;">
-      <div style="margin-bottom: 32px;">
-        <span style="font-size: 28px; font-weight: 900; color: #ffffff;">Bid<span style="color: #F97316;">Drop</span></span>
+    <div style="font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; color: #111111;">
+      <!-- Header -->
+      <div style="background: #111111; padding: 28px 32px; border-radius: 10px 10px 0 0;">
+        <span style="font-size: 26px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px;">Bid<span style="color: #F97316;">Drop</span></span>
       </div>
-      <h1 style="font-size: 28px; font-weight: 800; margin-bottom: 16px; color: #ffffff;">
-        You're in, ${firstName}! 🎉
-      </h1>
-      <p style="font-size: 16px; color: #aaaaaa; line-height: 1.6; margin-bottom: 24px;">
-        Your BidDrop account for <strong style="color: #ffffff;">${companyName}</strong> is ready to go. 
-        You're on the <strong style="color: #F97316;">${planName} Plan</strong> with a 60-day free trial — 
-        no charge until your trial ends.
-      </p>
-      
-      <div style="background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 24px; margin-bottom: 28px;">
-        <p style="font-size: 14px; color: #888; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">Your Login Credentials</p>
-        <p style="margin-bottom: 8px;"><strong style="color: #888;">Email:</strong> <span style="color: #ffffff;">${email}</span></p>
-        <p style="margin-bottom: 8px;"><strong style="color: #888;">Temp Password:</strong> <span style="color: #F97316; font-size: 18px; font-weight: 800; letter-spacing: 1px;">${tempPassword}</span></p>
-        <p style="font-size: 13px; color: #555; margin-top: 12px;">You can change your password after logging in.</p>
+      <!-- Body -->
+      <div style="padding: 36px 32px; background: #ffffff; border: 1px solid #e5e5e5; border-top: none; border-radius: 0 0 10px 10px;">
+        <h1 style="font-size: 26px; font-weight: 800; margin: 0 0 12px 0; color: #111111;">
+          You're in, ${firstName}! 🎉
+        </h1>
+        <p style="font-size: 16px; color: #333333; line-height: 1.6; margin: 0 0 28px 0;">
+          Your BidDrop account for <strong style="color: #111111;">${companyName}</strong> is ready to go.
+          You're on the <strong style="color: #F97316;">${planName} Plan</strong> with a 60-day free trial —
+          no charge until your trial ends.
+        </p>
+
+        <!-- Credentials Box -->
+        <div style="background: #f8f8f8; border: 1px solid #e0e0e0; border-left: 4px solid #F97316; border-radius: 8px; padding: 24px; margin-bottom: 28px;">
+          <p style="font-size: 12px; color: #666666; margin: 0 0 14px 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">Your Login Credentials</p>
+          <p style="margin: 0 0 10px 0; font-size: 15px; color: #111111;"><strong>Email:</strong> ${email}</p>
+          <p style="margin: 0 0 10px 0; font-size: 15px; color: #111111;"><strong>Temp Password:</strong> <span style="color: #F97316; font-size: 20px; font-weight: 800; letter-spacing: 1px;">${tempPassword}</span></p>
+          <p style="font-size: 13px; color: #666666; margin: 12px 0 0 0;">You'll be prompted to change your password after logging in.</p>
+        </div>
+
+        <!-- Credits Badge -->
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 14px 18px; margin-bottom: 28px;">
+          <p style="font-size: 14px; color: #16a34a; font-weight: 700; margin: 0 0 4px 0;">✓ 10 Free Mailer Credits Added</p>
+          <p style="font-size: 13px; color: #333333; margin: 0;">Your account has been loaded with 10 free mailer credits to get you started right away.</p>
+        </div>
+
+        <!-- CTA Button -->
+        <a href="${loginUrl}" style="display: block; background: #F97316; color: #ffffff; text-decoration: none; text-align: center; padding: 16px 24px; border-radius: 8px; font-size: 17px; font-weight: 800; margin-bottom: 28px;">
+          Log In to BidDrop →
+        </a>
+
+        <p style="font-size: 13px; color: #666666; line-height: 1.6; margin: 0;">
+          Questions? Reply to this email or contact us at
+          <a href="mailto:support@biddrop.io" style="color: #F97316;">support@biddrop.io</a>
+        </p>
       </div>
-
-      <div style="background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.25); border-radius: 10px; padding: 16px 20px; margin-bottom: 28px;">
-        <p style="font-size: 14px; color: #22c55e; font-weight: 700; margin-bottom: 4px;">✓ 10 Free Mailer Credits Added</p>
-        <p style="font-size: 13px; color: #aaa;">Your account has been loaded with 10 free mailer credits to get you started right away.</p>
-      </div>
-
-      <a href="${loginUrl}" style="display: block; background: #F97316; color: #ffffff; text-decoration: none; text-align: center; padding: 16px 24px; border-radius: 10px; font-size: 18px; font-weight: 800; margin-bottom: 24px;">
-        Log In to BidDrop →
-      </a>
-
-      <p style="font-size: 13px; color: #555; line-height: 1.6;">
-        Questions? Reply to this email or contact us at 
-        <a href="mailto:support@biddrop.io" style="color: #F97316;">support@biddrop.io</a>
-      </p>
     </div>
   `;
 
