@@ -325,90 +325,65 @@ export default async function handler(req, res) {
 
   try {
     // ---- 1. Check if account already exists (idempotency) ----
-    const { data: existingAccount } = await supabase
-      .from('accounts')
-      .select('id')
+    // Check user_profiles table by email since accounts table has no email column
+    const { data: existingProfile } = await supabase
+      .from('user_profiles')
+      .select('id, account_id')
       .eq('email', customerEmail)
-      .single();
+      .maybeSingle();
 
-    if (existingAccount) {
+    if (existingProfile?.account_id) {
       console.log('[signup-webhook] Account already exists for:', customerEmail);
       return res.status(200).json({ received: true, skipped: 'already_exists' });
     }
 
     // ---- 2. Create Supabase auth user ----
     const tempPassword = generatePassword(12);
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-      email: customerEmail,
-      password: tempPassword,
-      email_confirm: true, // auto-confirm so they can log in immediately
-      user_metadata: {
-        first_name: firstName,
-        last_name: lastName,
-        company_name: companyName,
-        plan,
-      },
-    });
+    let authUserId = existingProfile?.id || null;
 
-    if (authError) {
-      // If user already exists in auth, try to get their ID
-      if (authError.message?.includes('already registered')) {
-        console.warn('[signup-webhook] Auth user already exists:', customerEmail);
-      } else {
-        throw new Error(`Auth user creation failed: ${authError.message}`);
+    if (!authUserId) {
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: customerEmail,
+        password: tempPassword,
+        email_confirm: true,
+        user_metadata: {
+          first_name: firstName,
+          last_name: lastName,
+          company_name: companyName,
+          plan,
+        },
+      });
+
+      if (authError) {
+        if (authError.message?.includes('already registered')) {
+          console.warn('[signup-webhook] Auth user already exists:', customerEmail);
+        } else {
+          throw new Error(`Auth user creation failed: ${authError.message}`);
+        }
       }
+      authUserId = authData?.user?.id;
     }
 
-    const authUserId = authData?.user?.id;
+    // ---- 3. Create account record using the REAL schema ----
+    // accounts table columns: name, company_name, company_phone, plan, active,
+    // mailer_credits, mailer_rate, lookup_credits, slug, notes
+    const slug = generateSlug(companyName || `${firstName}-${lastName}`);
 
-    // ---- 3. Create account record in Supabase ----
-    const slug = generateSlug(companyName || firstName + '-' + lastName);
-    const accountSlug = slug;
+    // mailer_rate by plan (cost per mailer to the account)
+    const mailerRateByPlan = { starter: 2.50, pro: 2.50, agency: 2.50, enterprise: 2.50 };
 
     const accountRecord = {
-      // Core info
+      name: companyName || `${firstName} ${lastName}`,
       company_name: companyName || `${firstName} ${lastName}`,
-      email: customerEmail,
-      phone: phone || null,
-      state: state || null,
-      slug: accountSlug,
-
-      // Plan info
+      company_phone: phone || null,
       plan: plan,
-      plan_name: planConfig.name,
-      stripe_customer_id: fullSession.customer?.id || fullSession.customer || session.customer,
-      stripe_subscription_id: fullSession.subscription?.id || fullSession.subscription || session.subscription,
-
-      // Trial
-      trial_ends_at: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
-      is_trial: true,
-
-      // Credits — 10 free mailers on signup (NOT the monthly plan credits)
-      mailer_credits: 10, // signup bonus
-      free_mailer_credits_used: 0,
+      active: true,
+      mailer_credits: planConfig.mailer_credits || 10,
+      mailer_rate: mailerRateByPlan[plan] || 2.50,
       lookup_credits: 0,
       free_lookups_used: 0,
-
-      // Plan limits
-      max_reps: planConfig.max_reps,
-      max_pins_per_month: planConfig.max_pins_per_month,
-
-      // Feature flags
-      offer_ghl: planConfig.offer_ghl,
-      offer_estimate_pages: planConfig.offer_estimate_pages,
-      offer_analytics: planConfig.offer_analytics,
-      offer_solar: planConfig.offer_solar,
-      offer_multi_rep: planConfig.offer_multi_rep,
-      offer_white_label: planConfig.offer_white_label,
-
-      // Auth
-      auth_user_id: authUserId || null,
-
-      // Meta
-      trade: 'roofing',
-      signup_source: 'signup_page',
-      created_at: new Date().toISOString(),
-      is_active: true,
+      slug: slug,
+      notes: `Signed up via BidDrop signup page. Plan: ${planConfig.name}. Stripe customer: ${fullSession.customer?.id || session.customer}. Trial ends: ${new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toLocaleDateString()}.`,
     };
 
     const { data: newAccount, error: accountError } = await supabase
@@ -423,7 +398,27 @@ export default async function handler(req, res) {
 
     console.log('[signup-webhook] Account created:', newAccount.id, customerEmail, plan);
 
-    // ---- 4. Send welcome email ----
+    // ---- 4. Create user_profile record linking auth user to account ----
+    if (authUserId) {
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .insert({
+          id: authUserId,
+          account_id: newAccount.id,
+          role: 'admin',
+          name: `${firstName || ''} ${lastName || ''}`.trim() || companyName,
+          email: customerEmail,
+          phone: phone || null,
+          must_change_password: true,
+        });
+
+      if (profileError) {
+        console.error('[signup-webhook] user_profiles insert error:', profileError.message);
+        // Non-fatal — account is created, just log it
+      }
+    }
+
+    // ---- 5. Send welcome email ----
     const loginUrl = process.env.APP_URL || 'https://biddrop.americashomeexperts.com';
     await sendWelcomeEmail({
       email: customerEmail,
@@ -434,7 +429,7 @@ export default async function handler(req, res) {
       loginUrl,
     });
 
-    // ---- 5. GHL — Create contact in BidDrop sub-account ----
+    // ---- 6. GHL — Create contact in BidDrop sub-account ----
     const ghlContactId = await createGHLContact({
       firstName,
       lastName,
@@ -443,18 +438,11 @@ export default async function handler(req, res) {
       companyName,
       planName: planConfig.name,
     });
-    // Optionally store ghl_contact_id on the account record
-    if (ghlContactId && newAccount?.id) {
-      await supabase
-        .from('accounts')
-        .update({ ghl_contact_id: ghlContactId })
-        .eq('id', newAccount.id);
-    }
 
     return res.status(200).json({ received: true, success: true, accountId: newAccount.id });
 
   } catch (err) {
-    console.error('[signup-webhook] Error provisioning account:', err.message);
+    console.error('[signup-webhook] Error provisioning account:', err.message, err.stack);
     // Return 200 to Stripe so it doesn't retry — log the error for manual review
     return res.status(200).json({ received: true, error: err.message });
   }
