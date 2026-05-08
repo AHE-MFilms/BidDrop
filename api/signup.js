@@ -106,7 +106,9 @@ export default async function handler(req, res) {
 
     // Create Stripe Checkout Session
     // trial_period_days = 60 means $0 today, first charge in 60 days
-    const session = await stripe.checkout.sessions.create({
+    // IMPORTANT: When `customer` is set, `customer_email` must be completely omitted
+    // (not just undefined) — Stripe rejects requests that include both.
+    const sessionParams = {
       mode: 'subscription',
       customer: customer.id,
       line_items: [
@@ -131,7 +133,6 @@ export default async function handler(req, res) {
           max_reps: String(PLAN_MAX_REPS[plan] || 1),
         },
       },
-      customer_email: existingCustomers.data.length > 0 ? undefined : email,
       success_url: `https://biddrop.americashomeexperts.com/signup?success=1`,
       cancel_url: `https://biddrop.americashomeexperts.com/signup`,
       allow_promotion_codes: true,
@@ -145,7 +146,9 @@ export default async function handler(req, res) {
         state,
         plan,
       },
-    });
+    };
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     return res.status(200).json({ url: session.url });
 
