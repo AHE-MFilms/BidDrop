@@ -257,7 +257,7 @@ export default async function handler(req, res) {
 
   // Verify Stripe webhook signature
   const sig = req.headers['stripe-signature'];
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET_SIGNUP;
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET_SIGNUP || process.env.STRIPE_WEBHOOK_SECRET;
 
   let event;
   try {
