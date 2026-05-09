@@ -1507,7 +1507,10 @@ tr:hover td{background:var(--card);}
   <div class="tab-pane" id="tab-settings">
     <!-- ── SETTINGS HEADER ── -->
     <div class="stab-header-row">
-      <div style="font-family:var(--font-h);font-size:22px;font-weight:700;color:var(--text);letter-spacing:.5px;">⚙️ Settings</div>
+      <div>
+        <div style="font-family:var(--font-h);font-size:22px;font-weight:700;color:var(--text);letter-spacing:.5px;">⚙️ Settings</div>
+        <div style="font-family:var(--font-m);font-size:10px;color:var(--border);letter-spacing:.5px;margin-top:2px;">BidDrop v1.0</div>
+      </div>
       <div style="display:flex;gap:10px;align-items:center;">
         <button onclick="saveSettings()" class="stab-save-btn">&#128190; Save Settings</button>
         <button onclick="doLogout()" class="stab-signout-btn">Sign Out</button>
@@ -2236,9 +2239,7 @@ tr:hover td{background:var(--card);}
       <button onclick="saveSettings()" class="stab-save-btn stab-save-lg">&#128190; Save Settings</button>
       <button onclick="doLogout()" class="stab-signout-btn">Sign Out</button>
     </div>
-    <div style="text-align:center;padding-bottom:18px;">
-      <span style="font-family:var(--font-m);font-size:11px;color:var(--border);letter-spacing:.5px;">BidDrop v1.0</span>
-    </div>
+
   </div>
   <!-- CANVASS AREAS TAB -->
   <div class="tab-pane" id="tab-zones" style="flex-direction:row;overflow:hidden;">
