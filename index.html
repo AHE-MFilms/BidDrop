@@ -991,7 +991,7 @@ tr:hover td{background:var(--card);}
         <input class="fi" id="e-phone" placeholder="(555) 000-0000" type="tel">
       </div>
       <div class="fg" id="estimate-page-settings-section" style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:12px;">
-        <label class="fl" style="color:#10b981;">&#127758; Estimate Page Settings <span id="estimate-page-plan-badge" style="display:none;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;background:#D97706;color:#fff;margin-left:6px;text-transform:uppercase;letter-spacing:.5px;">Agency+ Only</span></label>
+        <label class="fl" style="color:#10b981;">&#127758; Estimate Page Settings <span id="estimate-page-plan-badge" style="display:none;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;background:#D97706;color:#fff;margin-left:6px;text-transform:uppercase;letter-spacing:.5px;">Pro+ Only</span></label>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px;">
           <div>
             <label style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Offer Expires</label>
@@ -12143,11 +12143,11 @@ function applyRoleUI(){
   applyPlanUI();
 }
 function applyPlanUI(){
-  // Estimate Page Settings section — Agency+ only
+  // Estimate Page Settings section — Pro+ only
   const epBadge = document.getElementById('estimate-page-plan-badge');
-  if(epBadge) epBadge.style.display = isPlanAtLeast('agency') ? 'none' : 'inline-block';
+  if(epBadge) epBadge.style.display = isPlanAtLeast('pro') ? 'none' : 'inline-block';
   const epSection = document.getElementById('estimate-page-settings-section');
-  if(epSection) epSection.style.opacity = isPlanAtLeast('agency') ? '1' : '0.5';
+  if(epSection) epSection.style.opacity = isPlanAtLeast('pro') ? '1' : '0.5';
   // GHL settings section — Pro+ only
   const ghlSection = document.querySelector('.stab-card-body #stab-body-integrations');
   // (GHL is shown to all but gates on send)
