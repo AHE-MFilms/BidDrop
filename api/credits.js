@@ -26,6 +26,9 @@ const SUPABASE_URL   = process.env.SUPABASE_URL || 'https://gtwbhxnrmfmdenogzuea
 const SERVICE_KEY    = process.env.SUPABASE_SERVICE_KEY;
 const STRIPE_KEY     = process.env.STRIPE_SECRET_KEY;
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
+// Pin to a stable API version — Stripe v22 defaults to 2026-03-25.dahlia
+// which has breaking changes for checkout sessions
+const STRIPE_API_VERSION = '2023-10-16';
 const APP_URL        = process.env.APP_URL || 'https://biddrop.americashomeexperts.com';
 
 // 1 credit = $4.00 = 1 postcard mailed. Volume discounts at 100+ credits.
@@ -85,7 +88,7 @@ module.exports = async function handler(req, res) {
     if (req.method !== 'POST') { res.status(405).end(); return; }
     if (!STRIPE_KEY) { res.status(400).json({ error: 'Stripe not configured' }); return; }
     const rawBody = await getRawBody(req);
-    const stripe = new Stripe(STRIPE_KEY);
+    const stripe = new Stripe(STRIPE_KEY, { apiVersion: STRIPE_API_VERSION });
     const sig = req.headers['stripe-signature'];
     let event;
     try {
@@ -154,7 +157,7 @@ module.exports = async function handler(req, res) {
       case 'checkout': {
         if (req.method !== 'POST') { res.status(405).end(); return; }
         if (!STRIPE_KEY) { res.status(500).json({ error: 'Stripe not configured' }); return; }
-        const stripe = new Stripe(STRIPE_KEY);
+        const stripe = new Stripe(STRIPE_KEY, { apiVersion: STRIPE_API_VERSION });
         const { pack_id } = req.body;
         const pack = CREDIT_PACKS[pack_id];
         if (!pack) { res.status(400).json({ error: 'Invalid pack_id' }); return; }
@@ -170,7 +173,6 @@ module.exports = async function handler(req, res) {
         const purchaseRows = await purchaseRes.json();
         const purchaseId = purchaseRows[0]?.id;
         const session = await stripe.checkout.sessions.create({
-          payment_method_types: ['card'],
           line_items: [{
             price_data: {
               currency: 'usd',
@@ -217,7 +219,7 @@ module.exports = async function handler(req, res) {
       case 'billing-portal': {
         // Create a Stripe Customer Portal session so users can manage their subscription
         if (!STRIPE_KEY) { res.status(500).json({ error: 'Stripe not configured' }); return; }
-        const stripe = new Stripe(STRIPE_KEY);
+        const stripe = new Stripe(STRIPE_KEY, { apiVersion: STRIPE_API_VERSION });
         // Fetch the stripe_customer_id for this account
         const bpAcctRes = await sbFetch(
           `accounts?id=eq.${profile.account_id}&select=stripe_customer_id,plan`
@@ -240,7 +242,7 @@ module.exports = async function handler(req, res) {
       case 'cancel-subscription': {
         // Cancel the subscription at end of current billing period
         if (!STRIPE_KEY) { res.status(500).json({ error: 'Stripe not configured' }); return; }
-        const stripe = new Stripe(STRIPE_KEY);
+        const stripe = new Stripe(STRIPE_KEY, { apiVersion: STRIPE_API_VERSION });
         const csAcctRes = await sbFetch(
           `accounts?id=eq.${profile.account_id}&select=stripe_subscription_id,stripe_customer_id,company_name,plan`
         );
@@ -272,7 +274,7 @@ module.exports = async function handler(req, res) {
       case 'reactivate-subscription': {
         // Undo a pending cancellation (cancel_at_period_end = false)
         if (!STRIPE_KEY) { res.status(500).json({ error: 'Stripe not configured' }); return; }
-        const stripe = new Stripe(STRIPE_KEY);
+        const stripe = new Stripe(STRIPE_KEY, { apiVersion: STRIPE_API_VERSION });
         const raAcctRes = await sbFetch(
           `accounts?id=eq.${profile.account_id}&select=stripe_subscription_id`
         );
