@@ -3932,6 +3932,73 @@ async function previewEstimatePostcard(estId){
   await _showPostcardCanvasModal('m-est-pc-modal', est.owner||'Homeowner', est.addr||'', syntheticItem);
 }
 
+// Preview the letter/mailer for a saved estimate (loads estimate data into estimator temporarily)
+function previewEstimateLetter(estId){
+  const est = (S.estimates||[]).find(e=>e.id===estId);
+  if(!est){ toast('Estimate not found','error'); return; }
+  const savedOwner = document.getElementById('e-owner').value;
+  const savedAddr  = document.getElementById('e-addr').value;
+  const savedPhoto = window._homePhotoData;
+  const savedStructures = JSON.parse(JSON.stringify(structures));
+  document.getElementById('e-owner').value = est.owner || '';
+  document.getElementById('e-addr').value  = est.addr  || '';
+  if(est.structures && est.structures.length){ structures = JSON.parse(JSON.stringify(est.structures)); }
+  window._homePhotoData = est.photo_data || est.photo_url || null;
+  calcP(); updatePreview();
+  const mailerEl   = document.getElementById('mailer-preview');
+  const mailerHtml = mailerEl ? mailerEl.innerHTML : '';
+  document.getElementById('e-owner').value = savedOwner;
+  document.getElementById('e-addr').value  = savedAddr;
+  window._homePhotoData = savedPhoto;
+  structures = savedStructures;
+  calcP(); updatePreview();
+  const existing = document.getElementById('m-letter-preview-modal');
+  if(existing) existing.remove();
+  const modal = document.createElement('div');
+  modal.id = 'm-letter-preview-modal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:10100;background:rgba(5,10,20,0.95);display:flex;flex-direction:column;align-items:center;overflow-y:auto;padding:20px 16px 40px;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);';
+  const ownerEsc = (est.owner||'Homeowner').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const addrEsc  = (est.addr||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  modal.innerHTML =
+    '<div style="width:100%;max-width:760px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-shrink:0;">' +
+      '<div>' +
+        '<div style="font-family:Oswald,sans-serif;font-size:18px;font-weight:700;color:#F0F6FF;letter-spacing:.5px;">&#128065; Letter Preview</div>' +
+        '<div style="font-size:12px;color:#6688A8;margin-top:2px;">' + ownerEsc + ' &mdash; ' + addrEsc + '</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:8px;flex-shrink:0;">' +
+        '<button onclick="(function(){var qpc=document.getElementById('queue-preview-content');if(qpc)qpc.innerHTML=document.getElementById('m-letter-preview-modal').querySelector('#letter-preview-pages').innerHTML;printQueuePreview();})()" ' +
+          'style="background:#1f3d68;border:1px solid #2E4060;color:#C8D8E8;font-size:13px;font-weight:700;padding:9px 16px;border-radius:8px;cursor:pointer;white-space:nowrap;">&#128424; Print</button>' +
+        '<button onclick="document.getElementById('m-letter-preview-modal').remove()" ' +
+          'style="background:#1e2d42;border:1px solid #2E4060;color:#C8D8E8;font-size:13px;font-weight:700;padding:9px 20px;border-radius:8px;cursor:pointer;white-space:nowrap;" ' +
+          'onmouseover="this.style.background='#F25C05';this.style.borderColor='#F25C05';this.style.color='#fff';" ' +
+          'onmouseout="this.style.background='#1e2d42';this.style.borderColor='#2E4060';this.style.color='#C8D8E8';">&times; Close</button>' +
+      '</div>' +
+    '</div>' +
+    '<div id="letter-preview-pages" style="width:100%;max-width:760px;display:flex;flex-direction:column;gap:24px;">' + mailerHtml + '</div>';
+  document.body.appendChild(modal);
+  setTimeout(function(){
+    var container = modal.querySelector('#letter-preview-pages');
+    if(!container) return;
+    var pages = container.querySelectorAll('.ml-page');
+    var containerW = container.offsetWidth;
+    var pageNativeW = 720;
+    var scale = Math.min(1, containerW / pageNativeW);
+    pages.forEach(function(page){
+      page.style.transformOrigin = 'top left';
+      page.style.transform = 'scale(' + scale + ')';
+      page.style.marginBottom = Math.round((page.offsetHeight * scale) - page.offsetHeight) + 'px';
+      var wrapper = document.createElement('div');
+      wrapper.style.cssText = 'width:' + Math.round(pageNativeW * scale) + 'px;height:' + Math.round(page.offsetHeight * scale) + 'px;overflow:hidden;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.5);';
+      page.parentNode.insertBefore(wrapper, page);
+      wrapper.appendChild(page);
+      page.style.marginBottom = '0';
+    });
+  }, 60);
+  modal.addEventListener('click', function(e){ if(e.target===modal) modal.remove(); });
+  function _ltrEsc(e){ if(e.key==='Escape'){ modal.remove(); document.removeEventListener('keydown',_ltrEsc); } }
+  document.addEventListener('keydown', _ltrEsc);
+}
+
 // LEGACY: old drip-sequence preview (Steps 2/3/4) kept for reference
 function showEstimatePostcards(estId){
   const est = (S.estimates||[]).find(e=>e.id===estId);
@@ -7145,6 +7212,7 @@ function renderEstimatesTab(){
           })()
             +(S.cfg && S.cfg.dripEnabled ? `<button onclick="openDripModal('${eid}')" style="background:#7C3AED;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🔥 Blitz</button>` : '')
             +`<button onclick="previewEstimatePostcard('${eid}')" style="background:#0e7490;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128247; Preview Postcard</button>`
+            +`<button onclick="previewEstimateLetter('${eid}')" style="background:#1f3d68;border:none;border-radius:6px;padding:6px 10px;color:#C8D8E8;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128065; Preview Letter</button>`
             +(isPlanAtLeast('pro')
               ? `<button onclick="printEstimate('${eid}')" style="background:#1f3d68;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128424; Print</button>`
               : `<button onclick="showPlanUpgradePrompt('Print Quote','pro')" title="Upgrade to Pro ($197/mo) to unlock printing" style="background:#1f3d68;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;opacity:.45;">&#128424; Print</button>`)
