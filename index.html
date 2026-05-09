@@ -13458,6 +13458,18 @@ async function onSignedIn(user){
       if(account) S.cfg = accountRowToCfg(account);
     }
 
+    // Block access if account is deactivated (trial expired, manually deactivated, etc.)
+    if(currentAccount && currentAccount.active === false){
+      showLoginScreen();
+      if(err) err.innerHTML = '<div style="background:#1a0a0a;border:1px solid #7f1d1d;border-radius:8px;padding:16px 18px;text-align:left;margin-top:8px;">'
+        + '<p style="color:#fca5a5;font-weight:700;margin:0 0 6px 0;font-size:15px;">&#9940; Account Deactivated</p>'
+        + '<p style="color:#fca5a5;margin:0;font-size:13px;line-height:1.5;">Your BidDrop account has been deactivated. This may be because your free trial has ended.</p>'
+        + '<p style="color:#fca5a5;margin:8px 0 0 0;font-size:13px;">Please contact <a href="mailto:support@biddrop.io" style="color:#F97316;">support@biddrop.io</a> to reactivate your account.</p>'
+        + '</div>';
+      try { await sb.auth.signOut(); } catch(_){}
+      return;
+    }
+
     // Check if user must change their password on first login
     if(currentProfile.must_change_password){
       showSetNewPassword();
