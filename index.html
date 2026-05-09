@@ -1092,7 +1092,7 @@ tr:hover td{background:var(--card);}
           <button style="background:#1a7f4b;border:none;border-radius:10px;padding:14px;color:#fff;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;" onclick="sendViaGHL()">
             <span style="font-size:16px;">⬆</span> Sync to GHL
           </button>
-          <button style="background:#1f3d68;border:none;border-radius:10px;padding:14px;color:#fff;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;" onclick="printNow()">
+          <button style="background:#1f3d68;border:none;border-radius:10px;padding:14px;color:#fff;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;" onclick="if(!isPlanAtLeast('pro')){showPlanUpgradePrompt('Print Now','pro');}else{printNow();}">
             <span style="font-size:16px;">🖨</span> Print Now
           </button>
         </div>
@@ -1102,7 +1102,7 @@ tr:hover td{background:var(--card);}
           <button onclick="saveEstimateNow()" style="background:var(--accent);border:none;border-radius:10px;padding:13px 18px;color:#fff;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.5px;">&#128190; Save Estimate</button>
         </div>
         <button class="btn-preview-toggle" onclick="toggleMailPreview()">👁 Preview Mailer</button>
-        <button class="btn-sec" onclick="printPreview()" style="background:var(--card2);border-color:var(--info);color:var(--info);">🖨 Print Preview (8.5×11)</button>
+        <button class="btn-sec" onclick="if(!isPlanAtLeast('pro')){showPlanUpgradePrompt('Print Preview','pro');}else{printPreview();}" style="background:var(--card2);border-color:var(--info);color:var(--info);">🖨 Print Preview (8.5×11)</button>
       </div>
     </div>
     <div class="est-preview" id="est-preview" style="flex-direction:column;align-items:center;">
@@ -11847,6 +11847,7 @@ async function sendViaGHL(){
 }
 
 function printNow(){
+  if(!isPlanAtLeast('pro')){ showPlanUpgradePrompt('Print Now','pro'); return; }
   // Build full print window and immediately trigger print
   const content = document.getElementById('mailer-preview').innerHTML;
   const win = window.open('','_blank','width=900,height=1100');
@@ -11901,6 +11902,7 @@ function updateFinPreview(){
 //  PRINT PREVIEW
 // ═══════════════════════════════
 function printPreview(){
+  if(!isPlanAtLeast('pro')){ showPlanUpgradePrompt('Print Preview','pro'); return; }
   const content=document.getElementById('mailer-preview').innerHTML;
   const win=window.open('','_blank','width=900,height=1100');
   win.document.write(`<!DOCTYPE html>
