@@ -1021,7 +1021,7 @@ function buildPage(firstName,lastName,email,phone){
   $('ep-owner-links').innerHTML=ownerLinks;
 
   $('ep-about-stats').innerHTML=[
-    {num:(acct.yearsInBusiness||'5')+'+'  ,lbl:'Years in Business'},
+    {num:(acct.yearsInBusiness||'5').replace(/\++$/,'')+'+'  ,lbl:'Years in Business'},
     {num:(acct.warrantyYears||'10')+'yr'  ,lbl:'Warranty'},
     {num:'5★'                             ,lbl:'Google Rated'},
   ].map(s=>`<div class="ep-stat-box"><div class="ep-stat-num">${esc(s.num)}</div><div class="ep-stat-label">${esc(s.lbl)}</div></div>`).join('');
