@@ -47,7 +47,7 @@ const RESEND_KEY   = process.env.RESEND_API_KEY;
 const SENDGRID_KEY = process.env.SENDGRID_API_KEY;
 const ADMIN_EMAIL  = 'john@americashomeexperts.com';
 const FROM_EMAIL   = 'BidDrop <noreply@biddrop.io>';
-const APP_URL      = process.env.APP_URL || 'https://biddrop.americashomeexperts.com';
+const APP_URL      = (process.env.APP_URL || 'https://biddrop.americashomeexperts.com').trim();
 
 // Monthly credit allotments per plan (after trial, once billing starts)
 const PLAN_MONTHLY_CREDITS = {

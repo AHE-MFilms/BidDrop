@@ -478,7 +478,7 @@ export default async function handler(req, res) {
     }
 
     // ---- 5. Send welcome email ----
-    const loginUrl = process.env.APP_URL || 'https://biddrop.americashomeexperts.com';
+    const loginUrl = (process.env.APP_URL || 'https://biddrop.americashomeexperts.com').trim();
     await sendWelcomeEmail({
       email: customerEmail,
       firstName: firstName || 'there',
