@@ -1572,6 +1572,13 @@ tr:hover td{background:var(--card);}
             </div>
             <div style="font-size:15px;color:var(--muted);margin-top:6px;">Events fired: <strong>EstimateViewed</strong> (when homeowner opens their page) · <strong>BookingClicked</strong> (when they tap Schedule) · <strong>CallClicked</strong> (when they tap your phone number)</div>
           </div>
+          <!-- Google Reviews -->
+          <div style="margin-top:14px;padding:14px;background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2);border-radius:10px;">
+            <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#22C55E;margin-bottom:10px;">&#11088; Google Reviews &#8212; Estimate Page</div>
+            <div style="font-size:15px;color:var(--muted);margin-bottom:12px;">Connect your Google My Business listing so real Google reviews appear on your homeowner estimate pages. Without this, placeholder reviews are shown.</div>
+            <div class="fg"><label class="fl">Google Place ID <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; powers real Google reviews on estimate pages</span></label><input class="fi" id="s-google-place-id" placeholder="ChIJN1t_tDeuEmsRUsoyG83frY4" autocomplete="off"></div>
+            <div style="font-size:13px;color:var(--muted);margin-top:8px;">Find your Place ID at <a href="https://developers.google.com/maps/documentation/javascript/examples/places-placeid-finder" target="_blank" style="color:#22C55E;">developers.google.com/maps &rarr; Place ID Finder</a></div>
+          </div>
         </div>
       </div>
       <!-- FULL WIDTH: Share & Embed -->
@@ -2614,7 +2621,8 @@ async function syncAccountToSupabase(){
     drip_enabled: cfg.dripEnabled||false,
     company_bio: cfg.companyBio||null,
     meta_pixel_id: cfg.metaPixelId||null,
-    google_tag_id: cfg.googleTagId||null
+    google_tag_id: cfg.googleTagId||null,
+    google_place_id: cfg.googlePlaceId||null
   }).eq('id', currentAccount.id);
   if(syncErr) console.error('[BidDrop] syncAccountToSupabase error:', syncErr.message, syncErr);
   else console.log('[BidDrop] Account synced to Supabase OK');
@@ -2725,6 +2733,7 @@ function accountRowToCfg(row){
     companyBio: row.company_bio || '',
     metaPixelId: row.meta_pixel_id || '',
     googleTagId: row.google_tag_id || '',
+    googlePlaceId: row.google_place_id || '',
   };
 }
 
@@ -10691,6 +10700,7 @@ function openSettings(){
   const sBioEl = document.getElementById('s-bio'); if(sBioEl) sBioEl.value=c.companyBio||'';
   const sMetaPixelEl = document.getElementById('s-meta-pixel-id'); if(sMetaPixelEl) sMetaPixelEl.value=c.metaPixelId||'';
   const sGoogleTagEl = document.getElementById('s-google-tag-id'); if(sGoogleTagEl) sGoogleTagEl.value=c.googleTagId||'';
+  const sGooglePlaceEl = document.getElementById('s-google-place-id'); if(sGooglePlaceEl) sGooglePlaceEl.value=c.googlePlaceId||'';
   document.getElementById('s-hook').value=c.hookLetter||'';
   document.getElementById('s-why').value=c.whyReceived||'';
   document.getElementById('s-pc-hook').value=c.postcardHook||'';
@@ -11013,7 +11023,8 @@ function saveSettings(){
     dripEnabled: isAdminOrAbove() ? !!(document.getElementById('s-drip-enabled') && document.getElementById('s-drip-enabled').checked) : (S.cfg.dripEnabled||false),
     companyBio: (document.getElementById('s-bio')||{}).value || '',
     metaPixelId: (document.getElementById('s-meta-pixel-id')||{}).value || '',
-    googleTagId: (document.getElementById('s-google-tag-id')||{}).value || ''
+    googleTagId: (document.getElementById('s-google-tag-id')||{}).value || '',
+    googlePlaceId: (document.getElementById('s-google-place-id')||{}).value || ''
   };
   applyBrand();save();updatePreview();
   // Update solar add-on row visibility immediately after save
