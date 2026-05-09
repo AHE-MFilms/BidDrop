@@ -1059,6 +1059,10 @@ tr:hover td{background:var(--card);}
           Gutters (+$8/lf)
           <input type="number" class="addon-qty" id="a-gut-q" value="120" min="1" onchange="calcP();updatePreview();scheduleDraftSave()"> lf
         </label>
+        <label class="addon-row">
+          <input type="checkbox" id="a-iws" onchange="calcP();updatePreview();scheduleDraftSave()">
+          Ice &amp; Water Shield (+$<span id="a-iws-price">42</span>/sq)
+        </label>
         <div id="solar-addon-row" style="display:none;">
           <label class="addon-row" style="align-items:flex-start;flex-direction:column;gap:6px;">
             <div style="display:flex;align-items:center;gap:8px;">
@@ -1719,17 +1723,16 @@ tr:hover td{background:var(--card);}
         <div class="stab-card-body" id="stab-body-pricing">
           <div class="stab-section-hdr">Material Cost Per Square</div>
           <div class="frow">
-            <div class="fg"><label class="fl">3-Tab Shingle ($/sq)</label><input type="number" class="fi" id="s-c3tab" placeholder="350"></div>
-            <div class="fg"><label class="fl">Architectural ($/sq)</label><input type="number" class="fi" id="s-carch" placeholder="450"></div>
+            <div class="fg"><label class="fl">3-Tab Shingle ($/sq)</label><input type="number" class="fi" id="s-c3tab" placeholder="220"></div>
+            <div class="fg"><label class="fl">Architectural ($/sq)</label><input type="number" class="fi" id="s-carch" placeholder="300"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Designer/Premium ($/sq)</label><input type="number" class="fi" id="s-cdes" placeholder="620"></div>
-            <div class="fg"><label class="fl">Metal Roofing ($/sq)</label><input type="number" class="fi" id="s-cmetal" placeholder="950"></div>
+            <div class="fg"><label class="fl">Designer/Premium ($/sq)</label><input type="number" class="fi" id="s-cdes" placeholder="420"></div>
+            <div class="fg"><label class="fl">Metal Roofing ($/sq)</label><input type="number" class="fi" id="s-cmetal" placeholder="680"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Per-Square Line Items</div>
           <div class="frow">
             <div class="fg"><label class="fl">Tear-off ($/sq)</label><input type="number" class="fi" id="s-tear" placeholder="75"></div>
-            <div class="fg"><label class="fl">Ice &amp; Water Shield ($/sq)</label><input type="number" class="fi" id="s-ice" placeholder="42"></div>
           </div>
           <div class="frow">
             <div class="fg"><label class="fl">Felt/Synthetic ($/sq)</label><input type="number" class="fi" id="s-felt" placeholder="22"></div>
@@ -1743,6 +1746,10 @@ tr:hover td{background:var(--card);}
           <div class="frow">
             <div class="fg"><label class="fl">Gutters ($/lf)</label><input type="number" class="fi" id="s-gut" placeholder="9"></div>
             <div class="fg"><label class="fl">Solar ($/watt) <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; used when kW entered</span></label><input type="number" class="fi" id="s-solar-pw" placeholder="3.50" step="0.05" min="0"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Ice &amp; Water Shield ($/sq)</label><input type="number" class="fi" id="s-ice" placeholder="42"></div>
+            <div class="fg"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Overhead &amp; Margin</div>
           <div class="frow">
@@ -2472,7 +2479,7 @@ const OWNER_EMAIL = 'john@mongoosefilms.com'; // Primary owner — cannot be del
 
 const DEFAULTS = {
   companyName:'Your Roofing Co', companyAddr:'123 Main St, Detroit MI 48000', companyPhone:'(313) 555-0100',
-  costArchitectural:450, cost3Tab:350, costDesigner:620, costMetal:950,
+  costArchitectural:300, cost3Tab:220, costDesigner:420, costMetal:680,
   costTearoff:75, costIceWater:42, costFelts:22, costDumpster:450,
   costSkylight:375, costChimney:295, costGutter:9,
   overhead:15, margin:20, brandColor:'#F25C05', lobKey:'',
@@ -2689,10 +2696,10 @@ function accountRowToCfg(row){
     costSolarPerWatt: parseFloat(row.cost_solar_per_watt)||3.50,
     referralAmt: row.referral_amt||'250',
     referralText: row.referral_text||'',
-    costArchitectural: row.cost_architectural||450,
-    cost3Tab: row.cost_3tab||350,
-    costDesigner: row.cost_designer||620,
-    costMetal: row.cost_metal||950,
+    costArchitectural: row.cost_architectural||300,
+    cost3Tab: row.cost_3tab||220,
+    costDesigner: row.cost_designer||420,
+    costMetal: row.cost_metal||680,
     costTearoff: row.cost_tearoff||75,
     costIceWater: row.cost_ice_water||42,
     costFelts: row.cost_felts||22,
@@ -2952,7 +2959,7 @@ function loadEstFromPicker(){
   if(document.getElementById('e-phone')) document.getElementById('e-phone').value = '';
   document.getElementById('e-addr').value = p.address || '';
   clearHomePhoto();
-  ['a-sky','a-chim','a-gut','a-solar'].forEach(function(id){var el=document.getElementById(id);if(el)el.checked=false;});
+  ['a-sky','a-chim','a-gut','a-iws','a-solar'].forEach(function(id){var el=document.getElementById(id);if(el)el.checked=false;});
   ['a-solar-kw','a-solar-flat'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   const solarInp=document.getElementById('solar-inputs'); if(solarInp) solarInp.style.display='none';
   const solarDisp=document.getElementById('solar-calc-display'); if(solarDisp) solarDisp.textContent='';
@@ -3010,6 +3017,7 @@ function saveDraft(){
     skylightQty: parseInt((document.getElementById('a-sky-q')||{}).value||1),
     chimney: (document.getElementById('a-chim')||{}).checked||false,
     gutters: (document.getElementById('a-gut')||{}).checked||false,
+    iceWaterShield: (document.getElementById('a-iws')||{}).checked||false,
     gutterLf: parseInt((document.getElementById('a-gut-q')||{}).value||120),
     solar: (document.getElementById('a-solar')||{}).checked||false,
     solarKw: parseFloat((document.getElementById('a-solar-kw')||{}).value||0),
@@ -3036,6 +3044,7 @@ function restoreDraft(pinId){
     const skyQ=document.getElementById('a-sky-q'); if(skyQ) skyQ.value=draft.skylightQty||1;
     const chim=document.getElementById('a-chim'); if(chim) chim.checked=!!draft.chimney;
     const gut=document.getElementById('a-gut'); if(gut) gut.checked=!!draft.gutters;
+    const iws=document.getElementById('a-iws'); if(iws) iws.checked=!!draft.iceWaterShield;
     const gutQ=document.getElementById('a-gut-q'); if(gutQ) gutQ.value=draft.gutterLf||120;
     const sol=document.getElementById('a-solar'); if(sol){ sol.checked=!!draft.solar; toggleSolarInputs(); }
     const solKw=document.getElementById('a-solar-kw'); if(solKw) solKw.value=draft.solarKw||'';
@@ -3131,6 +3140,7 @@ function saveEstimateNow(){
     skylightQty: parseInt((document.getElementById('a-sky-q')||{}).value||1),
     chimney: (document.getElementById('a-chim')||{}).checked||false,
     gutters: (document.getElementById('a-gut')||{}).checked||false,
+    iceWaterShield: (document.getElementById('a-iws')||{}).checked||false,
     gutterLf: parseInt((document.getElementById('a-gut-q')||{}).value||120),
     savedAt: new Date().toISOString(),
     sentAt: null, status: 'saved',
@@ -3196,6 +3206,7 @@ function saveEstimateNow(){
       skylight_qty: estRecord.skylightQty || 1,
       chimney: estRecord.chimney || false,
       gutters: estRecord.gutters || false,
+      ice_water_shield: estRecord.iceWaterShield || false,
       gutter_lf: estRecord.gutterLf || 120,
       version: estRecord.version || 1,
       is_revision: estRecord.isRevision || false,
@@ -3241,6 +3252,7 @@ function saveEstimateNow(){
       skylight_qty: estRecord.skylightQty || 1,
       chimney: estRecord.chimney || false,
       gutters: estRecord.gutters || false,
+      ice_water_shield: estRecord.iceWaterShield || false,
       gutter_lf: estRecord.gutterLf || 120,
       version: estRecord.version || 1,
       is_revision: estRecord.isRevision || false,
@@ -4514,6 +4526,7 @@ function _autoSaveEstimateOnLeave(){
     const chim = (document.getElementById('a-chim')||{}).checked||false;
     const gut  = (document.getElementById('a-gut')||{}).checked||false;
     const gutQ = parseInt((document.getElementById('a-gut-q')||{}).value||120);
+    const iws  = (document.getElementById('a-iws')||{}).checked||false;
 
     // Update in-memory pin
     pin.estimate = { owner, email, total, structures:(structures||[]).map(s=>({...s})) };
@@ -4539,6 +4552,7 @@ function _autoSaveEstimateOnLeave(){
       damage_photos: dmgPhotos||null,
       skylight: sky, skylight_qty: skyQ,
       chimney: chim, gutters: gut, gutter_lf: gutQ,
+      ice_water_shield: iws,
       // solar columns removed — not in DB schema yet
       version: (existing&&existing.version)||1,
       is_revision: false,
@@ -4559,6 +4573,7 @@ function _autoSaveEstimateOnLeave(){
             damage_photos: dmgPhotos||existing.damage_photos,
             skylight: sky, skylightQty: skyQ,
             chimney: chim, gutters: gut, gutterLf: gutQ,
+            iceWaterShield: iws,
             solar: estRow.solar, solarKw: estRow.solar_kw, solarFlat: estRow.solar_flat, solarPrice: estRow.solar_price,
             savedAt: estRow.saved_at
           });
@@ -4571,6 +4586,7 @@ function _autoSaveEstimateOnLeave(){
             all_photos: allPhotos||null, damage_photos: dmgPhotos||null,
             skylight: sky, skylightQty: skyQ,
             chimney: chim, gutters: gut, gutterLf: gutQ,
+            iceWaterShield: iws,
             solar: estRow.solar, solarKw: estRow.solar_kw, solarFlat: estRow.solar_flat, solarPrice: estRow.solar_price,
             version: 1, isRevision: false,
             savedAt: estRow.saved_at
@@ -5772,6 +5788,7 @@ function goEstFromPin(id){
       const chim=document.getElementById('a-chim'); if(chim) chim.checked=!!savedEst.chimney;
       const gut=document.getElementById('a-gut'); if(gut) gut.checked=!!savedEst.gutters;
       const gutQ=document.getElementById('a-gut-q'); if(gutQ) gutQ.value=savedEst.gutterLf||120;
+      const iwsEl=document.getElementById('a-iws'); if(iwsEl) iwsEl.checked=!!savedEst.iceWaterShield;
       window._editingEstimateId = savedEst.id;
     } else {
       window._editingEstimateId = null;
@@ -5975,15 +5992,14 @@ function calcStructPrice(s){
   const pitchMult=parseFloat(s.pitch)||1.31;
   const complexity=parseFloat(s.complexity)||1.12;
   const stories=parseFloat(s.stories)||1;
-  const sq=sqft/100*1.12*pitchMult;
+  const sq=sqft/100*1.10*pitchMult;
   const stMult=stories<=1?1:stories<=1.5?1.08:stories<=2?1.16:1.25;
   const matCost=getMatCost(s.mat);
   const tearoff=(parseFloat(c.costTearoff)||75)*sq;
-  const iceWater=(parseFloat(c.costIceWater)||42)*sq;
   const felts=(parseFloat(c.costFelts)||22)*sq;
   const dumpster=(parseFloat(c.costDumpster)||450);
   const labor=matCost*sq*stMult*complexity;
-  const sub=labor+tearoff+iceWater+felts+dumpster;
+  const sub=labor+tearoff+felts+dumpster;
   const ovh=sub*(parseFloat(c.overhead)||15)/100;
   const mgn=(sub+ovh)*(parseFloat(c.margin)||20)/100;
   return Math.round(sub+ovh+mgn);
@@ -5991,7 +6007,7 @@ function calcStructPrice(s){
 
 function getMatCost(matKey){
   const c=S.cfg;
-  return{'1.0':parseFloat(c.cost3Tab)||350,'1.3':parseFloat(c.costArchitectural)||450,'1.8':parseFloat(c.costDesigner)||620,'2.5':parseFloat(c.costMetal)||950}[matKey]||450;
+  return{'1.0':parseFloat(c.cost3Tab)||220,'1.3':parseFloat(c.costArchitectural)||300,'1.8':parseFloat(c.costDesigner)||420,'2.5':parseFloat(c.costMetal)||680}[matKey]||300;
 }
 
 // ═══════════════════════════════
@@ -6128,6 +6144,8 @@ function calcP(){
     grand+=(parseFloat(c.costChimney)||295);
   if(document.getElementById('a-gut')&&document.getElementById('a-gut').checked)
     grand+=(parseFloat(c.costGutter)||9)*(parseInt(document.getElementById('a-gut-q').value)||120);
+  if(document.getElementById('a-iws')&&document.getElementById('a-iws').checked)
+    grand+=(parseFloat(c.costIceWater)||42)*structures.reduce(function(sum,s){var sqft=parseFloat(s.sqft)||0;var pitchMult=parseFloat(s.pitch)||1.31;return sum+(sqft/100*1.10*pitchMult);},0);
   grand+=getSolarPrice();
   // Show override price in the display if active
   const overrideVal = window._priceOverrideOn ? (parseFloat((document.getElementById('e-price-override')||{}).value)||0) : 0;
@@ -6284,7 +6302,6 @@ function updatePreview(){
         '<div class="ml-row"><span class="rl">Material</span><span class="rv">'+(MATLBL[s.mat]||s.mat)+'</span></div>'+
         '<div class="ml-row"><span class="rl">Stories</span><span class="rv">'+s.stories+'</span></div>'+
         '<div class="ml-row"><span class="rl">Tear-off & Disposal</span><span class="rv">Included</span></div>'+
-        '<div class="ml-row"><span class="rl">Ice & Water Shield</span><span class="rv">Included</span></div>'+
         '<div class="ml-row"><span class="rl">Felt / Synthetic Underlayment</span><span class="rv">Included</span></div>'+
         '</div>'+
         '<div class="ml-subtotal" style="background:'+col+';">'+
@@ -6310,6 +6327,11 @@ function updatePreview(){
       const lf=parseInt(document.getElementById('a-gut-q').value)||120;
       const amt=(parseFloat(c2.costGutter)||9)*lf; addsTotal+=amt;
       addRows+='<div class="ml-row"><span class="rl">Gutters ('+lf+' lf)</span><span class="rv">$'+amt.toLocaleString()+'</span></div>';
+    }
+    if(document.getElementById('a-iws')&&document.getElementById('a-iws').checked){
+      const iwsAmt=(parseFloat(c2.costIceWater)||42)*structures.reduce(function(sum,s){var sqft=parseFloat(s.sqft)||0;var pitchMult=parseFloat(s.pitch)||1.31;return sum+(sqft/100*1.10*pitchMult);},0);
+      addsTotal+=iwsAmt;
+      addRows+='<div class="ml-row"><span class="rl">Ice & Water Shield</span><span class="rv">$'+iwsAmt.toLocaleString()+'</span></div>';
     }
     const solarAmt=getSolarPrice();
     if(solarAmt>0){
@@ -9041,7 +9063,6 @@ function buildLobMailerHtml(item){
         '<div style="display:flex;justify-content:space-between;padding:5px 14px;border-bottom:1px solid #eee;font-size:10px;"><span style="color:#555;">Material</span><span style="font-weight:600;color:#1a1a1a;">'+(MATLBL[s.mat]||s.mat)+'</span></div>'+
         '<div style="display:flex;justify-content:space-between;padding:5px 14px;border-bottom:1px solid #eee;font-size:10px;"><span style="color:#555;">Stories</span><span style="font-weight:600;color:#1a1a1a;">'+s.stories+'</span></div>'+
         '<div style="display:flex;justify-content:space-between;padding:5px 14px;border-bottom:1px solid #eee;font-size:10px;"><span style="color:#555;">Tear-off &amp; Disposal</span><span style="font-weight:600;color:#1a1a1a;">Included</span></div>'+
-        '<div style="display:flex;justify-content:space-between;padding:5px 14px;border-bottom:1px solid #eee;font-size:10px;"><span style="color:#555;">Ice &amp; Water Shield</span><span style="font-weight:600;color:#1a1a1a;">Included</span></div>'+
         '<div style="display:flex;justify-content:space-between;padding:5px 14px;font-size:10px;"><span style="color:#555;">Felt / Synthetic Underlayment</span><span style="font-weight:600;color:#1a1a1a;">Included</span></div>'+
         '</div>'+
         '<div style="display:flex;justify-content:space-between;padding:8px 14px;background:'+col+';color:#fff;">'+
@@ -10772,10 +10793,10 @@ function openSettings(){
   document.getElementById('s-off-custom').value=c.offerCustom||'';
   document.getElementById('s-refamt').value=c.referralAmt||'250';
   document.getElementById('s-reftext').value=c.referralText||'';
-  document.getElementById('s-c3tab').value=c.cost3Tab||350;
-  document.getElementById('s-carch').value=c.costArchitectural||450;
-  document.getElementById('s-cdes').value=c.costDesigner||620;
-  document.getElementById('s-cmetal').value=c.costMetal||950;
+  document.getElementById('s-c3tab').value=c.cost3Tab||220;
+  document.getElementById('s-carch').value=c.costArchitectural||300;
+  document.getElementById('s-cdes').value=c.costDesigner||420;
+  document.getElementById('s-cmetal').value=c.costMetal||680;
   document.getElementById('s-tear').value=c.costTearoff||75;
   document.getElementById('s-ice').value=c.costIceWater||42;
   document.getElementById('s-felt').value=c.costFelts||22;
@@ -10993,8 +11014,8 @@ function saveSettings(){
     offerCustom:v('s-off-custom'),
     referralAmt:v('s-refamt')||'250',
     referralText:v('s-reftext'),
-    cost3Tab:n('s-c3tab')||350, costArchitectural:n('s-carch')||450,
-    costDesigner:n('s-cdes')||620, costMetal:n('s-cmetal')||950,
+    cost3Tab:n('s-c3tab')||220, costArchitectural:n('s-carch')||300,
+    costDesigner:n('s-cdes')||420, costMetal:n('s-cmetal')||680,
     costTearoff:n('s-tear')||75, costIceWater:n('s-ice')||42,
     costFelts:n('s-felt')||22, costDumpster:n('s-dump')||450,
     costSkylight:n('s-sky')||375, costChimney:n('s-chim')||295, costGutter:n('s-gut')||9,
@@ -15361,15 +15382,14 @@ async function initQuotePage(slug) {
     const pitchMult = 1.31; // default 6/12 pitch
     const complexity = 1.12;
     const stories = 1;
-    const sq = sqft / 100 * 1.12 * pitchMult;
+    const sq = sqft / 100 * 1.10 * pitchMult;
     const stMult = 1;
-    const matCost = parseFloat(cfg.costArchitectural) || 450;
+    const matCost = parseFloat(cfg.costArchitectural) || 300;
     const tearoff = (parseFloat(cfg.costTearoff) || 75) * sq;
-    const iceWater = (parseFloat(cfg.costIceWater) || 42) * sq;
     const felts = (parseFloat(cfg.costFelts) || 22) * sq;
     const dumpster = parseFloat(cfg.costDumpster) || 450;
     const labor = matCost * sq * stMult * complexity;
-    const sub = labor + tearoff + iceWater + felts + dumpster;
+    const sub = labor + tearoff + felts + dumpster;
     const ovh = sub * (parseFloat(cfg.overhead) || 15) / 100;
     const mgn = (sub + ovh) * (parseFloat(cfg.margin) || 20) / 100;
     return Math.round(sub + ovh + mgn);
@@ -15870,16 +15890,15 @@ async function initEstimatePage(estId) {
     const pitchMult = parseFloat(s.pitch) || 1.31;
     const complexity = parseFloat(s.complexity) || 1.12;
     const stories = parseFloat(s.stories) || 1;
-    const sq = sqft / 100 * 1.12 * pitchMult;
+    const sq = sqft / 100 * 1.10 * pitchMult;
     const stMult = stories <= 1 ? 1 : stories <= 1.5 ? 1.08 : stories <= 2 ? 1.16 : 1.25;
     const matCostMap = { '1.0': cfg.cost3Tab, '1.3': cfg.costArchitectural, '1.8': cfg.costDesigner, '2.5': cfg.costMetal };
     const matCost = matCostMap[String(s.mat)] || cfg.costArchitectural;
     const tearoff = cfg.costTearoff * sq;
-    const iceWater = cfg.costIceWater * sq;
     const felts = cfg.costFelts * sq;
     const dumpster = cfg.costDumpster;
     const labor = matCost * sq * stMult * complexity;
-    const sub = labor + tearoff + iceWater + felts + dumpster;
+    const sub = labor + tearoff + felts + dumpster;
     const ovh = sub * cfg.overhead / 100;
     const mgn = (sub + ovh) * cfg.margin / 100;
     return Math.round(sub + ovh + mgn);
@@ -15890,10 +15909,10 @@ async function initEstimatePage(estId) {
   }
 
   const cfg = {
-    cost3Tab: acct.cost3Tab || 350,
-    costArchitectural: acct.costArchitectural || 450,
-    costDesigner: acct.costDesigner || 620,
-    costMetal: acct.costMetal || 950,
+    cost3Tab: acct.cost3Tab || 220,
+    costArchitectural: acct.costArchitectural || 300,
+    costDesigner: acct.costDesigner || 420,
+    costMetal: acct.costMetal || 680,
     costTearoff: acct.costTearoff || 75,
     costIceWater: acct.costIceWater || 42,
     costFelts: acct.costFelts || 22,
