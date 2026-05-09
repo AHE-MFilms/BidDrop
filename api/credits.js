@@ -196,30 +196,18 @@ module.exports = async function handler(req, res) {
 
       case 'balance': {
         const acctRes = await sbFetch(
-          `accounts?id=eq.${profile.account_id}&select=mailer_credits,free_mailer_credits_used,free_mailer_credits_reset,plan`
+          `accounts?id=eq.${profile.account_id}&select=mailer_credits,plan`
         );
         if (!acctRes.ok) { res.status(500).json({ error: 'Failed to fetch balance' }); return; }
         const accts = await acctRes.json();
         if (!accts.length) { res.status(404).json({ error: 'Account not found' }); return; }
         const acct = accts[0];
         const plan = (acct.plan || 'starter').toLowerCase();
-        const freeLimit = PLAN_FREE_CREDITS[plan] || PLAN_FREE_CREDITS.starter;
-        const today = new Date().toISOString().slice(0, 10);
-        const resetMonth = (acct.free_mailer_credits_reset || '').slice(0, 7);
-        const thisMonth  = today.slice(0, 7);
-        let freeUsed = acct.free_mailer_credits_used || 0;
-        if (resetMonth !== thisMonth) {
-          await sbFetch(`accounts?id=eq.${profile.account_id}`, {
-            method: 'PATCH',
-            body: JSON.stringify({ free_mailer_credits_used: 0, free_mailer_credits_reset: today })
-          });
-          freeUsed = 0;
-        }
         res.status(200).json({
           paid_credits:   acct.mailer_credits || 0,
-          free_used:      freeUsed,
-          free_limit:     freeLimit,
-          free_remaining: Math.max(0, freeLimit - freeUsed),
+          free_used:      0,
+          free_limit:     0,
+          free_remaining: 0,
           plan,
           packs: CREDIT_PACKS
         });

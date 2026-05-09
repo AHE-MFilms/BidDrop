@@ -188,52 +188,26 @@ function getDripStepMessage(step, cfg) {
 }
 
 // ── Credit deduction helper ───────────────────────────────────────────────────
-const PC_PLAN_FREE = { starter: 5, pro: 15, agency: 30, enterprise: 60 };
-
+// Uses only mailer_credits (no free credits system — removed in May 2026 refactor)
 async function deductCredit(accountId) {
-  const acctRes = await sb(`accounts?id=eq.${accountId}&select=id,plan,mailer_credits,free_mailer_credits_used,free_mailer_credits_reset`);
+  const acctRes = await sb(`accounts?id=eq.${accountId}&select=id,plan,mailer_credits`);
   if (!acctRes.ok) throw new Error('Failed to fetch account');
   const rows = await acctRes.json();
   if (!rows.length) throw new Error('Account not found');
   const acct = rows[0];
-
-  // Monthly reset
-  const today = new Date().toISOString().slice(0, 10);
-  if ((acct.free_mailer_credits_reset || '').slice(0, 7) !== today.slice(0, 7)) {
-    await sb(`accounts?id=eq.${accountId}`, {
-      method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ free_mailer_credits_used: 0, free_mailer_credits_reset: today })
-    });
-    acct.free_mailer_credits_used = 0;
-  }
-
-  const plan      = (acct.plan || 'starter').toLowerCase();
-  const freeLimit = PC_PLAN_FREE[plan] || PC_PLAN_FREE.starter;
-  const freeLeft  = Math.max(0, freeLimit - (acct.free_mailer_credits_used || 0));
-  const paid      = acct.mailer_credits || 0;
-  const total     = freeLeft + paid;
-  if (total < 1) throw new Error('no_credits');
-
-  const freeToUse = Math.min(freeLeft, 1);
-  const paidToUse = 1 - freeToUse;
-  const updates = {};
-  if (freeToUse > 0) updates.free_mailer_credits_used = (acct.free_mailer_credits_used || 0) + freeToUse;
-  if (paidToUse > 0) updates.mailer_credits = paid - paidToUse;
+  const paid = acct.mailer_credits || 0;
+  if (paid < 1) throw new Error('no_credits');
   await sb(`accounts?id=eq.${accountId}`, {
     method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
-    body: JSON.stringify(updates)
+    body: JSON.stringify({ mailer_credits: paid - 1 })
   });
-  return { acct, freeToUse, paidToUse, paid };
+  return { acct, freeToUse: 0, paidToUse: 1, paid };
 }
-
 async function refundCredit(accountId, acct, freeToUse, paidToUse) {
-  const refund = {};
-  if (freeToUse > 0) refund.free_mailer_credits_used = acct.free_mailer_credits_used || 0;
-  if (paidToUse > 0) refund.mailer_credits = acct.mailer_credits || 0;
-  if (Object.keys(refund).length) {
+  if (paidToUse > 0) {
     await sb(`accounts?id=eq.${accountId}`, {
       method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
-      body: JSON.stringify(refund)
+      body: JSON.stringify({ mailer_credits: (acct.mailer_credits || 0) + paidToUse })
     });
   }
 }
@@ -278,7 +252,7 @@ export default async function handler(req, res) {
     try {
       // 2. Fetch account config (branding, company info, drip messages)
       const cfgRes = await sb(
-        `accounts?id=eq.${accountId}&select=plan,mailer_credits,free_mailer_credits_used,free_mailer_credits_reset,` +
+        `accounts?id=eq.${accountId}&select=plan,mailer_credits,` +
         `company_name,company_addr,company_phone,brand_color,logo_data,financing_enabled,financing_apr,financing_term,financing_down,` +
         `drip2_headline,drip2_subtext,drip3_headline,drip3_subtext,drip4_headline,drip4_subtext`
       );
