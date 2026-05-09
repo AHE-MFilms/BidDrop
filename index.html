@@ -10793,8 +10793,11 @@ function openSettings(){
   });
   // Populate Share & Embed card
   populateEmbedCard();
+  // Billing card — only show to account admins (not super_admin, not reps)
+  const billingCard = document.getElementById('stab-billing-card');
+  if(billingCard) billingCard.style.display = (isAdminOrAbove() && !isSuperAdmin()) ? 'block' : 'none';
   // Load billing status (cancel_at_period_end, payment_failed)
-  loadBillingStatus();
+  if(isAdminOrAbove() && !isSuperAdmin()) loadBillingStatus();
 }
 function populateEmbedCard(){
   const slug = currentAccount && currentAccount.slug;

@@ -78,6 +78,9 @@
     },
     "api/billing-webhook.js": {
       "maxDuration": 30
+    },
+    "api/admin.js": {
+      "maxDuration": 30
     }
   },
   "headers": [
