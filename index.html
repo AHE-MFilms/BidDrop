@@ -527,18 +527,18 @@ tr:hover td{background:var(--card);}
       <div class="modal-title" style="margin-bottom:0;">💳 Mailer Credits</div>
       <button onclick="closeM('m-buy-credits')" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;">&times;</button>
     </div>
-    <p style="color:var(--muted);font-size:13px;margin:0 0 16px;"><strong>1 Credit = $4.00 = 1 postcard mailed.</strong> Credits are added to your account each billing cycle and never expire. Property lookups are always free &amp; unlimited.</p>
+    <p style="color:var(--muted);font-size:13px;margin:0 0 16px;"><strong>1 Credit = $4.00 = 1 postcard mailed.</strong> Credits never expire. Property lookups are always free &amp; unlimited.</p>
 
     <!-- Current balance -->
-    <div id="credits-balance-box" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:18px;display:flex;gap:20px;">
-      <div style="flex:1;text-align:center;">
-        <div style="font-size:22px;font-weight:800;color:var(--accent);" id="cb-free-remaining">—</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px;">Monthly Credits</div>
+    <div id="credits-balance-box" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Available Credits</div>
+        <div style="font-size:32px;font-weight:800;color:#4ade80;line-height:1;" id="cb-total-credits">—</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="cb-credits-subtext">credits available</div>
       </div>
-      <div style="width:1px;background:var(--border);"></div>
-      <div style="flex:1;text-align:center;">
-        <div style="font-size:22px;font-weight:800;color:#4ade80;" id="cb-paid-credits">—</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px;">Purchased Credits</div>
+      <div style="text-align:right;">
+        <div style="font-size:11px;color:var(--muted);">1 credit = 1 postcard</div>
+        <div style="font-size:11px;color:var(--muted);">= $4.00 value</div>
       </div>
     </div>
 
@@ -11167,32 +11167,21 @@ function updateCreditBadge(){
 }
 
 async function showBuyCreditsModal(){
-  // Open modal immediately using cached values — don't block on network
-  const plan2 = (S.cfg.plan||'starter').toLowerCase();
-  const planFreeMap2 = {starter:0,pro:0,agency:0,enterprise:0};
-  const freeLimit2 = planFreeMap2[plan2] || 0;
-  const freeLeft = Math.max(0, freeLimit2 - (S.cfg.freeMailerCreditsUsed||0));
-  const paid     = S.cfg.mailerCredits || 0;
-  const fEl = document.getElementById('cb-free-remaining');
-  const pEl = document.getElementById('cb-paid-credits');
-  if(fEl) fEl.textContent = freeLeft;
-  if(pEl) pEl.textContent = paid;
+  // Show cached balance immediately, then refresh from server
+  const totalEl = document.getElementById('cb-total-credits');
+  const total = S.cfg.mailerCredits || 0;
+  if(totalEl) totalEl.textContent = total;
   openM('m-buy-credits');
-  // Refresh balance from server in background and update if modal still open
+  // Refresh balance from server in background
   try{
     const sess = (await sb.auth.getSession()).data.session;
     if(sess){
       const r = await fetch('/api/credits?action=balance',{ headers:{ 'Authorization':'Bearer '+sess.access_token } });
       if(r.ok){
         const b = await r.json();
-        S.cfg.mailerCredits          = b.paid_credits;
-        S.cfg.freeMailerCreditsUsed  = b.free_used;
+        S.cfg.mailerCredits = b.paid_credits;
         updateCreditBadge();
-        const plan3 = (S.cfg.plan||'starter').toLowerCase();
-        const freeLimit3 = planFreeMap2[plan3] || 0;
-        const freeLeft3 = Math.max(0, freeLimit3 - (S.cfg.freeMailerCreditsUsed||0));
-        if(fEl) fEl.textContent = freeLeft3;
-        if(pEl) pEl.textContent = S.cfg.mailerCredits || 0;
+        if(totalEl) totalEl.textContent = S.cfg.mailerCredits || 0;
       }
     }
   }catch(_){}
