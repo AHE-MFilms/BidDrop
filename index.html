@@ -12065,7 +12065,7 @@ function isPlanAtLeast(minPlan){
 }
 // Show an upgrade prompt when a feature is gated
 function showPlanUpgradePrompt(featureName, requiredPlan){
-  const planNames = { starter: 'Starter ($97/mo)', pro: 'Pro ($197/mo)', agency: 'Agency ($397/mo)', enterprise: 'Enterprise ($797/mo)' };
+  const planNames = { starter: 'Starter ($97/mo)', pro: 'Pro ($197/mo)', agency: 'Agency ($397/mo)', enterprise: 'Enterprise (Custom)' };
   const currentPlan = (S.cfg && S.cfg.plan) ? S.cfg.plan : 'starter';
   toast(
     `🔒 ${featureName} requires the ${planNames[requiredPlan] || requiredPlan} plan or higher. You are on ${planNames[currentPlan] || currentPlan}. Contact support to upgrade.`,

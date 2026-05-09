@@ -8,17 +8,11 @@ import Stripe from 'stripe';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // Stripe Price IDs for each plan (monthly recurring).
-// These must be created in your Stripe dashboard as recurring prices.
-// Set these env vars in Vercel:
-//   STRIPE_PRICE_STARTER   — $97/mo
-//   STRIPE_PRICE_PRO       — $197/mo
-//   STRIPE_PRICE_AGENCY    — $397/mo
-//   STRIPE_PRICE_ENTERPRISE — $797/mo
+// Enterprise is custom/contact-us only — no Stripe price ID.
 const PRICE_IDS = {
   starter:    process.env.STRIPE_PRICE_STARTER,
   pro:        process.env.STRIPE_PRICE_PRO,
   agency:     process.env.STRIPE_PRICE_AGENCY,
-  enterprise: process.env.STRIPE_PRICE_ENTERPRISE,
 };
 
 // Monthly mailer credits per plan (given on signup as bonus)
@@ -57,6 +51,14 @@ export default async function handler(req, res) {
   // Basic validation
   if (!firstName || !lastName || !companyName || !email || !phone || !state || !plan) {
     return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  // Enterprise is custom — not available via self-serve checkout
+  if (plan === 'enterprise') {
+    return res.status(400).json({
+      error: 'enterprise_contact',
+      message: 'Enterprise is a custom plan. Please contact us at john@americashomeexperts.com to get started.',
+    });
   }
 
   const priceId = PRICE_IDS[plan];
