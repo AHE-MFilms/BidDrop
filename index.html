@@ -2073,7 +2073,7 @@ tr:hover td{background:var(--card);}
               <!-- Mini postcard preview -->
               <div style="flex-shrink:0;">
                 <div style="font-size:10px;font-weight:700;color:#A855F7;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">Preview</div>
-                <div id="s-drip2-preview" style="width:160px;height:107px;border-radius:6px;overflow:hidden;border:1px solid rgba(168,85,247,.3);background:#111827;position:relative;">
+                <div id="s-drip2-preview" onclick="openDripPreviewLightbox(2)" style="width:160px;height:107px;border-radius:6px;overflow:hidden;border:1px solid rgba(168,85,247,.3);background:#111827;position:relative;cursor:pointer;transition:border-color .2s;" onmouseover="this.style.borderColor='rgba(168,85,247,.8)'" onmouseout="this.style.borderColor='rgba(168,85,247,.3)'">
                   <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.1) 0%,rgba(0,0,0,.65) 100%);"></div>
                   <div style="position:absolute;bottom:0;left:0;right:0;padding:8px;">
                     <div id="s-drip2-preview-headline" style="font-size:11px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:2px;">Still thinking it over?</div>
@@ -2081,7 +2081,7 @@ tr:hover td{background:var(--card);}
                   </div>
                   <div style="position:absolute;top:6px;left:6px;background:rgba(242,92,5,.9);border-radius:3px;padding:1px 5px;font-size:8px;font-weight:800;color:#fff;">DAY 7</div>
                 </div>
-                <div style="font-size:9px;color:var(--muted);text-align:center;margin-top:3px;">House photo appears here</div>
+                <div style="font-size:9px;color:var(--muted);text-align:center;margin-top:3px;">Click to enlarge</div>
               </div>
               <!-- Fields -->
               <div style="flex:1;min-width:0;">
@@ -2096,7 +2096,7 @@ tr:hover td{background:var(--card);}
             <div style="display:flex;gap:14px;align-items:flex-start;">
               <div style="flex-shrink:0;">
                 <div style="font-size:10px;font-weight:700;color:#A855F7;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">Preview</div>
-                <div id="s-drip3-preview" style="width:160px;height:107px;border-radius:6px;overflow:hidden;border:1px solid rgba(168,85,247,.3);background:#111827;position:relative;">
+                <div id="s-drip3-preview" onclick="openDripPreviewLightbox(3)" style="width:160px;height:107px;border-radius:6px;overflow:hidden;border:1px solid rgba(168,85,247,.3);background:#111827;position:relative;cursor:pointer;transition:border-color .2s;" onmouseover="this.style.borderColor='rgba(168,85,247,.8)'" onmouseout="this.style.borderColor='rgba(168,85,247,.3)'">
                   <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.1) 0%,rgba(0,0,0,.65) 100%);"></div>
                   <div style="position:absolute;bottom:0;left:0;right:0;padding:8px;">
                     <div id="s-drip3-preview-headline" style="font-size:11px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:2px;">Storm season is coming.</div>
@@ -2104,7 +2104,7 @@ tr:hover td{background:var(--card);}
                   </div>
                   <div style="position:absolute;top:6px;left:6px;background:rgba(242,92,5,.9);border-radius:3px;padding:1px 5px;font-size:8px;font-weight:800;color:#fff;">DAY 14</div>
                 </div>
-                <div style="font-size:9px;color:var(--muted);text-align:center;margin-top:3px;">House photo appears here</div>
+                <div style="font-size:9px;color:var(--muted);text-align:center;margin-top:3px;">Click to enlarge</div>
               </div>
               <div style="flex:1;min-width:0;">
                 <div style="font-size:11px;font-weight:700;color:#A855F7;letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;">Step 3 &#8212; Urgency &nbsp;<span style="font-size:10px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;">Sent on Day 14</span></div>
@@ -2118,7 +2118,7 @@ tr:hover td{background:var(--card);}
             <div style="display:flex;gap:14px;align-items:flex-start;">
               <div style="flex-shrink:0;">
                 <div style="font-size:10px;font-weight:700;color:#22C55E;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">Preview</div>
-                <div id="s-drip4-preview" style="width:160px;height:107px;border-radius:6px;overflow:hidden;border:1px solid rgba(34,197,94,.3);background:#111827;position:relative;">
+                <div id="s-drip4-preview" onclick="openDripPreviewLightbox(4)" style="width:160px;height:107px;border-radius:6px;overflow:hidden;border:1px solid rgba(34,197,94,.3);background:#111827;position:relative;cursor:pointer;transition:border-color .2s;" onmouseover="this.style.borderColor='rgba(34,197,94,.8)'" onmouseout="this.style.borderColor='rgba(34,197,94,.3)'">
                   <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.1) 0%,rgba(0,0,0,.65) 100%);"></div>
                   <div style="position:absolute;bottom:0;left:0;right:0;padding:8px;">
                     <div id="s-drip4-preview-headline" style="font-size:11px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:2px;">Final notice.</div>
@@ -2126,7 +2126,7 @@ tr:hover td{background:var(--card);}
                   </div>
                   <div style="position:absolute;top:6px;left:6px;background:rgba(34,197,94,.9);border-radius:3px;padding:1px 5px;font-size:8px;font-weight:800;color:#fff;">DAY 28 &bull; FREE</div>
                 </div>
-                <div style="font-size:9px;color:var(--muted);text-align:center;margin-top:3px;">House photo appears here</div>
+                <div style="font-size:9px;color:var(--muted);text-align:center;margin-top:3px;">Click to enlarge</div>
               </div>
               <div style="flex:1;min-width:0;">
                 <div style="font-size:11px;font-weight:700;color:#22C55E;letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;">Step 4 &#8212; Final Notice &nbsp;<span style="font-size:10px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;">Sent on Day 28 &bull; FREE</span></div>
@@ -14607,6 +14607,48 @@ function updateDripStepPreview(step){
 }
 function updateAllDripPreviews(){
   [2,3,4].forEach(s=>updateDripStepPreview(s));
+}
+function openDripPreviewLightbox(step){
+  const stepLabels = { 2:'Step 2 — Follow-Up · Day 7', 3:'Step 3 — Urgency · Day 14', 4:'Step 4 — Final Notice · Day 28 (FREE)' };
+  const accentColors = { 2:'rgba(242,92,5,.9)', 3:'rgba(242,92,5,.9)', 4:'rgba(34,197,94,.9)' };
+  const dayBadges = { 2:'DAY 7', 3:'DAY 14', 4:'DAY 28 · FREE' };
+  const hEl = document.getElementById('s-drip'+step+'-headline');
+  const sEl = document.getElementById('s-drip'+step+'-subtext');
+  const defaults = {
+    2: { headline: 'Still thinking it over?', subtext: "Your estimate is still valid. We'd love to help." },
+    3: { headline: 'Storm season is coming.', subtext: "Now's the time to protect your home. Call us today." },
+    4: { headline: 'Final notice.', subtext: 'Your estimate expires soon. Secure your spot before prices rise.' },
+  };
+  const d = defaults[step] || { headline: '', subtext: '' };
+  const headline = (hEl && hEl.value) ? hEl.value : d.headline;
+  const subtext  = (sEl && sEl.value) ? sEl.value : d.subtext;
+  const accent   = accentColors[step];
+  const badge    = dayBadges[step];
+  const label    = stepLabels[step] || 'Step '+step;
+  const existing = document.getElementById('drip-preview-lightbox');
+  if(existing) existing.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'drip-preview-lightbox';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:50000;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;';
+  overlay.onclick = function(e){ if(e.target===overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.7);letter-spacing:.5px;text-transform:uppercase;">${label}</div>
+    <div style="position:relative;width:540px;height:360px;border-radius:12px;overflow:hidden;background:#111827;box-shadow:0 20px 60px rgba(0,0,0,.6);">
+      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.05) 0%,rgba(0,0,0,.7) 100%);"></div>
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+        <div style="text-align:center;color:rgba(255,255,255,.25);font-size:14px;">🏠 House photo will appear here</div>
+      </div>
+      <div style="position:absolute;bottom:0;left:0;right:0;padding:28px;">
+        <div style="font-size:28px;font-weight:900;color:#fff;line-height:1.2;margin-bottom:8px;text-shadow:0 2px 8px rgba(0,0,0,.5);">${headline}</div>
+        <div style="font-size:16px;color:rgba(255,255,255,.85);line-height:1.5;text-shadow:0 1px 4px rgba(0,0,0,.5);">${subtext}</div>
+      </div>
+      <div style="position:absolute;top:16px;left:16px;background:${accent};border-radius:5px;padding:4px 12px;font-size:12px;font-weight:800;color:#fff;letter-spacing:.5px;">${badge}</div>
+    </div>
+    <div style="font-size:11px;color:rgba(255,255,255,.4);">Click outside or press Esc to close</div>
+  `;
+  document.body.appendChild(overlay);
+  const closeOnEsc = (e)=>{ if(e.key==='Escape'){ overlay.remove(); document.removeEventListener('keydown',closeOnEsc); } };
+  document.addEventListener('keydown',closeOnEsc);
 }
 function updateDripToggleLabel(){
   const ck = document.getElementById('s-drip-enabled');
