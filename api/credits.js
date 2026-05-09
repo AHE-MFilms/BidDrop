@@ -214,6 +214,85 @@ module.exports = async function handler(req, res) {
         break;
       }
 
+      case 'billing-portal': {
+        // Create a Stripe Customer Portal session so users can manage their subscription
+        if (!STRIPE_KEY) { res.status(500).json({ error: 'Stripe not configured' }); return; }
+        const stripe = new Stripe(STRIPE_KEY);
+        // Fetch the stripe_customer_id for this account
+        const bpAcctRes = await sbFetch(
+          `accounts?id=eq.${profile.account_id}&select=stripe_customer_id,plan`
+        );
+        if (!bpAcctRes.ok) { res.status(500).json({ error: 'Failed to fetch account' }); return; }
+        const bpAccts = await bpAcctRes.json();
+        if (!bpAccts.length) { res.status(404).json({ error: 'Account not found' }); return; }
+        const bpAcct = bpAccts[0];
+        if (!bpAcct.stripe_customer_id) {
+          res.status(400).json({ error: 'No Stripe customer on file. Please contact support@biddrop.io.' });
+          return;
+        }
+        const portalSession = await stripe.billingPortal.sessions.create({
+          customer: bpAcct.stripe_customer_id,
+          return_url: `${APP_URL}?portal_return=1`,
+        });
+        res.status(200).json({ portal_url: portalSession.url });
+        break;
+      }
+      case 'cancel-subscription': {
+        // Cancel the subscription at end of current billing period
+        if (!STRIPE_KEY) { res.status(500).json({ error: 'Stripe not configured' }); return; }
+        const stripe = new Stripe(STRIPE_KEY);
+        const csAcctRes = await sbFetch(
+          `accounts?id=eq.${profile.account_id}&select=stripe_subscription_id,stripe_customer_id,company_name,plan`
+        );
+        if (!csAcctRes.ok) { res.status(500).json({ error: 'Failed to fetch account' }); return; }
+        const csAccts = await csAcctRes.json();
+        if (!csAccts.length) { res.status(404).json({ error: 'Account not found' }); return; }
+        const csAcct = csAccts[0];
+        if (!csAcct.stripe_subscription_id) {
+          res.status(400).json({ error: 'No active subscription on file. Please contact support@biddrop.io.' });
+          return;
+        }
+        // Set cancel_at_period_end = true (does NOT cancel immediately)
+        const updatedSub = await stripe.subscriptions.update(csAcct.stripe_subscription_id, {
+          cancel_at_period_end: true,
+        });
+        // Store cancellation intent in DB
+        await sbFetch(`accounts?id=eq.${profile.account_id}`, {
+          method: 'PATCH',
+          headers: { 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ cancel_at_period_end: true })
+        });
+        res.status(200).json({
+          ok: true,
+          cancel_at: updatedSub.cancel_at ? new Date(updatedSub.cancel_at * 1000).toISOString() : null,
+          current_period_end: updatedSub.current_period_end ? new Date(updatedSub.current_period_end * 1000).toISOString() : null,
+        });
+        break;
+      }
+      case 'reactivate-subscription': {
+        // Undo a pending cancellation (cancel_at_period_end = false)
+        if (!STRIPE_KEY) { res.status(500).json({ error: 'Stripe not configured' }); return; }
+        const stripe = new Stripe(STRIPE_KEY);
+        const raAcctRes = await sbFetch(
+          `accounts?id=eq.${profile.account_id}&select=stripe_subscription_id`
+        );
+        if (!raAcctRes.ok) { res.status(500).json({ error: 'Failed to fetch account' }); return; }
+        const raAccts = await raAcctRes.json();
+        if (!raAccts.length || !raAccts[0].stripe_subscription_id) {
+          res.status(400).json({ error: 'No active subscription on file.' });
+          return;
+        }
+        await stripe.subscriptions.update(raAccts[0].stripe_subscription_id, {
+          cancel_at_period_end: false,
+        });
+        await sbFetch(`accounts?id=eq.${profile.account_id}`, {
+          method: 'PATCH',
+          headers: { 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ cancel_at_period_end: false })
+        });
+        res.status(200).json({ ok: true });
+        break;
+      }
       default:
         res.status(400).json({ error: `Unknown action: ${action}` });
     }

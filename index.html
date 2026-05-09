@@ -2154,6 +2154,26 @@ tr:hover td{background:var(--card);}
 
     </div><!-- /stab-grid -->
 
+    <!-- ── SUBSCRIPTION & BILLING CARD ── -->
+    <div class="stab-card" id="stab-billing-card" style="margin-top:14px;">
+      <div class="stab-card-hdr" onclick="toggleStabCard('billing')">
+        <span>&#128179; Subscription &amp; Billing</span>
+        <span class="stab-chevron" id="stab-chevron-billing">&#9662;</span>
+      </div>
+      <div class="stab-card-body" id="stab-body-billing">
+        <div id="billing-status-row" style="margin-bottom:14px;"></div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+          <button id="btn-manage-subscription" onclick="openBillingPortal()" style="background:var(--accent);border:none;border-radius:8px;padding:10px 20px;color:#fff;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">&#128179; Manage Subscription</button>
+          <button id="btn-cancel-subscription" onclick="confirmCancelSubscription()" style="background:none;border:1px solid var(--danger);border-radius:8px;padding:10px 18px;color:var(--danger);font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;">Cancel Plan</button>
+          <button id="btn-reactivate-subscription" onclick="reactivateSubscription()" style="display:none;background:none;border:1px solid #22C55E;border-radius:8px;padding:10px 18px;color:#22C55E;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;">&#9989; Undo Cancellation</button>
+        </div>
+        <div style="margin-top:12px;font-size:11px;color:var(--muted);line-height:1.6;">
+          <strong>Manage Subscription</strong> opens the Stripe billing portal where you can upgrade, downgrade, update your payment method, or view invoices.<br>
+          <strong>Cancel Plan</strong> will cancel your subscription at the end of the current billing period &mdash; your account stays active until then.
+        </div>
+      </div>
+    </div>
+
     <!-- ── BOTTOM SAVE BUTTON ── -->
     <div style="display:flex;justify-content:center;gap:16px;padding:8px 0 24px;flex-shrink:0;">
       <button onclick="saveSettings()" class="stab-save-btn stab-save-lg">&#128190; Save Settings</button>
@@ -10773,6 +10793,8 @@ function openSettings(){
   });
   // Populate Share & Embed card
   populateEmbedCard();
+  // Load billing status (cancel_at_period_end, payment_failed)
+  loadBillingStatus();
 }
 function populateEmbedCard(){
   const slug = currentAccount && currentAccount.slug;
@@ -16269,4 +16291,101 @@ if('serviceWorker' in navigator){
 </script>
 
 </body>
+// ═══════════════════════════════
+//  SUBSCRIPTION & BILLING
+// ═══════════════════════════════
+async function openBillingPortal() {
+  const btn = document.getElementById('btn-manage-subscription');
+  if (btn) { btn.disabled = true; btn.textContent = 'Opening portal...'; }
+  try {
+    const sess = (await sb.auth.getSession()).data.session;
+    if (!sess) { toast('Please log in first.', 'error'); return; }
+    const r = await fetch('/api/credits?action=billing-portal', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + sess.access_token, 'Content-Type': 'application/json' }
+    });
+    const d = await r.json();
+    if (!r.ok || !d.portal_url) {
+      toast(d.error || 'Could not open billing portal. Please contact support@biddrop.io.', 'error');
+      return;
+    }
+    window.open(d.portal_url, '_blank');
+  } catch (e) {
+    toast('Error opening billing portal: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '&#128179; Manage Subscription'; }
+  }
+}
+async function confirmCancelSubscription() {
+  const confirmed = confirm('Cancel your BidDrop subscription?\n\nYour plan will remain active until the end of the current billing period. After that, your account will be deactivated.\n\nAre you sure you want to cancel?');
+  if (!confirmed) return;
+  const btn = document.getElementById('btn-cancel-subscription');
+  if (btn) { btn.disabled = true; btn.textContent = 'Cancelling...'; }
+  try {
+    const sess = (await sb.auth.getSession()).data.session;
+    if (!sess) { toast('Please log in first.', 'error'); return; }
+    const r = await fetch('/api/credits?action=cancel-subscription', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + sess.access_token, 'Content-Type': 'application/json' }
+    });
+    const d = await r.json();
+    if (!r.ok) { toast(d.error || 'Could not cancel subscription. Please contact support@biddrop.io.', 'error'); return; }
+    const endDate = d.current_period_end ? new Date(d.current_period_end).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'end of billing period';
+    toast('Subscription cancelled. Access continues until ' + endDate + '.', 'info');
+    const cancelBtn = document.getElementById('btn-cancel-subscription');
+    const reactivateBtn = document.getElementById('btn-reactivate-subscription');
+    const statusRow = document.getElementById('billing-status-row');
+    if (cancelBtn) cancelBtn.style.display = 'none';
+    if (reactivateBtn) reactivateBtn.style.display = '';
+    if (statusRow) statusRow.innerHTML = '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:7px;padding:10px 14px;font-size:12px;color:#dc2626;font-weight:600;">&#9888; Subscription cancelled \u2014 access ends ' + endDate + '. Click \u201cUndo Cancellation\u201d to keep your plan.</div>';
+  } catch (e) {
+    toast('Error cancelling subscription: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Cancel Plan'; }
+  }
+}
+async function reactivateSubscription() {
+  const btn = document.getElementById('btn-reactivate-subscription');
+  if (btn) { btn.disabled = true; btn.textContent = 'Reactivating...'; }
+  try {
+    const sess = (await sb.auth.getSession()).data.session;
+    if (!sess) { toast('Please log in first.', 'error'); return; }
+    const r = await fetch('/api/credits?action=reactivate-subscription', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + sess.access_token, 'Content-Type': 'application/json' }
+    });
+    const d = await r.json();
+    if (!r.ok) { toast(d.error || 'Could not reactivate. Please contact support@biddrop.io.', 'error'); return; }
+    toast('Subscription reactivated! Your plan will continue as normal.', 'success');
+    const cancelBtn = document.getElementById('btn-cancel-subscription');
+    const reactivateBtn = document.getElementById('btn-reactivate-subscription');
+    const statusRow = document.getElementById('billing-status-row');
+    if (cancelBtn) cancelBtn.style.display = '';
+    if (reactivateBtn) reactivateBtn.style.display = 'none';
+    if (statusRow) statusRow.innerHTML = '';
+  } catch (e) {
+    toast('Error reactivating: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '&#9989; Undo Cancellation'; }
+  }
+}
+async function loadBillingStatus() {
+  if (!currentAccount) return;
+  try {
+    const { data: acct } = await sb.from('accounts').select('cancel_at_period_end,payment_failed').eq('id', currentAccount.id).single();
+    if (!acct) return;
+    const statusRow = document.getElementById('billing-status-row');
+    const cancelBtn = document.getElementById('btn-cancel-subscription');
+    const reactivateBtn = document.getElementById('btn-reactivate-subscription');
+    if (!statusRow) return;
+    if (acct.payment_failed) {
+      statusRow.innerHTML = '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:7px;padding:10px 14px;font-size:12px;color:#dc2626;font-weight:600;">&#9888; Payment failed \u2014 please update your payment method via \u201cManage Subscription\u201d.</div>';
+    } else if (acct.cancel_at_period_end) {
+      statusRow.innerHTML = '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:7px;padding:10px 14px;font-size:12px;color:#dc2626;font-weight:600;">&#9888; Subscription is set to cancel at end of billing period. Click \u201cUndo Cancellation\u201d to keep your plan.</div>';
+      if (cancelBtn) cancelBtn.style.display = 'none';
+      if (reactivateBtn) reactivateBtn.style.display = '';
+    }
+  } catch (e) { /* silent */ }
+}
+
 </html>
