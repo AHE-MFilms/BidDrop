@@ -2040,17 +2040,7 @@ tr:hover td{background:var(--card);}
       <div class="stab-card" id="stab-drip-card" style="display:none;">
         <div class="stab-card-hdr" onclick="toggleStabCard('drip')">
           <span>&#128293; Follow-Up Blitz Settings</span>
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div id="drip-toggle-section" style="display:flex;align-items:center;gap:8px;">
-              <span style="font-size:12px;color:var(--muted);" id="drip-toggle-label">Off</span>
-              <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;" onclick="event.stopPropagation()">
-                <input type="checkbox" id="s-drip-enabled" style="opacity:0;width:0;height:0;position:absolute;" onchange="updateDripToggleLabel()">
-                <span id="drip-toggle-track" style="position:absolute;inset:0;background:var(--border);border-radius:12px;transition:.2s;"></span>
-                <span id="drip-toggle-knob" style="position:absolute;left:2px;top:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3);"></span>
-              </label>
-            </div>
-            <span class="stab-chevron" id="stab-chevron-drip">&#9662;</span>
-          </div>
+          <span class="stab-chevron" id="stab-chevron-drip">&#9662;</span>
         </div>
         <div class="stab-card-body" id="stab-body-drip">
           <!-- Explanation banner -->
