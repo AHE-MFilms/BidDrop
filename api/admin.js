@@ -162,7 +162,7 @@ module.exports = async function handler(req, res) {
         if (!userId) { res.status(400).json({ error: 'userId required' }); return; }
 
         // 1. Look up the profile of the user being deleted to get their account_id and name
-        const profResp = await sbFetch(`profiles?id=eq.${userId}&select=id,account_id,name,email`);
+        const profResp = await sbFetch(`user_profiles?id=eq.${userId}&select=id,account_id,name,email`);
         const profData = await profResp.json();
         if (!profResp.ok || !profData.length) {
           res.status(404).json({ error: 'User profile not found' }); return;
@@ -172,7 +172,7 @@ module.exports = async function handler(req, res) {
         const repName = delProfile.name || delProfile.email || 'Former Rep';
 
         // 2. Find the account owner (the admin user for this account)
-        const ownerResp = await sbFetch(`profiles?account_id=eq.${accountId}&role=eq.admin&select=id&limit=1`);
+        const ownerResp = await sbFetch(`user_profiles?account_id=eq.${accountId}&role=eq.admin&select=id&limit=1`);
         const ownerData = await ownerResp.json();
         const ownerId = ownerData?.[0]?.id || null;
 
@@ -201,7 +201,7 @@ module.exports = async function handler(req, res) {
           });
 
           // 3d. Soft-delete the profile row (keep for historical rep name lookups)
-          await sbFetch(`profiles?id=eq.${userId}`, {
+          await sbFetch(`user_profiles?id=eq.${userId}`, {
             method: 'PATCH',
             headers: { 'Prefer': 'return=minimal' },
             body: JSON.stringify({ deleted_at: new Date().toISOString(), role: 'deleted' })
@@ -818,7 +818,7 @@ module.exports = async function handler(req, res) {
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS postcard_quote TEXT`,
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS postcard_guarantee TEXT`,
           `ALTER TABLE queue ADD COLUMN IF NOT EXISTS rep_name TEXT`,
-          `ALTER TABLE profiles ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ`,
+          `ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ`,
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS postcard_headline1 TEXT`,
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS postcard_headline2 TEXT`,
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS postcard_badge_text TEXT`,
