@@ -18,8 +18,8 @@
  *     the BidDrop account and sends an admin notification.
  *
  * Monthly credit allotments (once billing starts):
- *   Starter:    25 credits/mo
- *   Pro:        50 credits/mo
+ *   Starter:    15 credits/mo
+ *   Pro:        40 credits/mo
  *   Agency:     100 credits/mo
  *   Enterprise: 200 credits/mo
  *
@@ -51,8 +51,8 @@ const APP_URL      = (process.env.APP_URL || 'https://biddrop.americashomeexpert
 
 // Monthly credit allotments per plan (after trial, once billing starts)
 const PLAN_MONTHLY_CREDITS = {
-  starter:    25,
-  pro:        50,
+  starter:    15,
+  pro:        40,
   agency:     100,
   enterprise: 200,
 };
