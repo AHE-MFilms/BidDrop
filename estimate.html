@@ -977,16 +977,25 @@ function buildPage(firstName,lastName,email,phone){
   // ── Video ──
   const vid=est.repVideoUrl||'';
   if(vid){
-    // Extract YouTube video ID (supports youtu.be, youtube.com/watch?v=, youtube.com/embed/)
+    let embedHtml='';
+    // YouTube (watch, youtu.be, embed, shorts)
     const ytMatch=vid.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{11})/);
-    if(ytMatch){
+    if(ytMatch) embedHtml=`<iframe src="https://www.youtube-nocookie.com/embed/${ytMatch[1]}?rel=0&modestbranding=1&playsinline=1" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>`;
+    // Vimeo (standard + unlisted with hash)
+    if(!embedHtml){
+      const vmMatch=vid.match(/vimeo\.com\/(?:video\/)?(\d+)(?:\/([a-f0-9]+))?/);
+      if(vmMatch){ const h=vmMatch[2]?`&h=${vmMatch[2]}`:''; embedHtml=`<iframe src="https://player.vimeo.com/video/${vmMatch[1]}?badge=0&autopause=0${h}" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen></iframe>`; }
+    }
+    // Loom
+    if(!embedHtml){
+      const lmMatch=vid.match(/loom\.com\/(?:share|embed)\/([a-zA-Z0-9]+)/);
+      if(lmMatch) embedHtml=`<iframe src="https://www.loom.com/embed/${lmMatch[1]}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true" allowfullscreen></iframe>`;
+    }
+    if(embedHtml){
       $('ep-video-section').style.display='block';
-      const inner=$('ep-video-inner');
-      // Use privacy-enhanced mode (youtube-nocookie.com) + rel=0 to suppress suggested videos
-      inner.innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${ytMatch[1]}?rel=0&modestbranding=1&playsinline=1" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>`;
+      $('ep-video-inner').innerHTML=embedHtml;
       $('ep-video-title').textContent='A personal message from '+(repName||acct.companyName||'your estimator');
     }
-    // Non-YouTube links are silently ignored — YouTube-only policy
   }
 
   // ── Rep Bio Row (top of page) — always use acct.repName (company owner from settings) ──

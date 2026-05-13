@@ -1001,12 +1001,16 @@ tr:hover td{background:var(--card);}
             <label style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Rep Video <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;">&#8212; shown on homeowner estimate page</span></label>
             <div style="margin-top:4px;display:flex;flex-direction:column;gap:5px;">
               <!-- YouTube link only -->
-              <div style="display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:7px 10px;">
-                <span style="font-size:16px;">&#127910;</span>
-                <span style="font-size:11px;color:var(--muted);font-weight:600;">YouTube</span>
+              <div style="display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:7px 10px;">
+                <span style="font-size:15px;">&#127910;</span>
+                <span style="font-size:11px;color:var(--mid);font-weight:700;">YouTube</span>
+                <span style="font-size:11px;color:var(--muted);">&#47;</span>
+                <span style="font-size:11px;color:var(--mid);font-weight:700;">Vimeo</span>
+                <span style="font-size:11px;color:var(--muted);">&#47;</span>
+                <span style="font-size:11px;color:var(--mid);font-weight:700;">Loom</span>
               </div>
-              <input class="fi" id="e-video" type="url" placeholder="Paste YouTube link (e.g. https://youtu.be/abc123)" style="font-size:12px;" oninput="onEstVideoUrlInput()">
-              <div style="font-size:10px;color:var(--muted);">&#127381; Keep it under 45 seconds &mdash; short &amp; personal wins every time. We embed it directly on the homeowner&rsquo;s estimate page.</div>
+              <input class="fi" id="e-video" type="url" placeholder="YouTube, Vimeo, or Loom link" style="font-size:12px;" oninput="onEstVideoUrlInput()">
+              <div style="font-size:10px;color:var(--muted);">&#127381; Keep it under 45 seconds &mdash; short &amp; personal wins every time. We embed it directly on the homeowner&rsquo;s estimate page.<br>Supports YouTube, Vimeo, and Loom.</div>
               <!-- Preview / status -->
               <div id="e-video-status" style="display:none;font-size:11px;color:var(--accent);font-weight:600;"></div>
               <div id="e-video-preview-wrap" style="display:none;border-radius:8px;overflow:hidden;background:#000;aspect-ratio:16/9;"></div>
@@ -1683,8 +1687,8 @@ tr:hover td{background:var(--card);}
             <div>
               <label class="fl">Default Rep Video <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; auto-fills on every new estimate</span></label>
               <div style="margin-top:6px;display:flex;flex-direction:column;gap:6px;">
-                <input class="fi" id="s-rep-video-url" type="url" placeholder="Paste YouTube link (e.g. https://youtu.be/abc123)" style="font-size:12px;" oninput="updateRepVideoPreview(this.value)">
-                <div style="font-size:12px;color:var(--muted);line-height:1.6;">&#127910; <strong style="color:var(--mid);">YouTube links only</strong> &mdash; paste the URL from YouTube. We embed it directly on every homeowner&rsquo;s estimate page. Reps can record a different video per estimate.<br>&#127381; <strong style="color:var(--mid);">Keep it under 45 seconds</strong> &mdash; introduce yourself, mention the address, and tell them their estimate is ready. Short and personal wins every time.</div>
+                <input class="fi" id="s-rep-video-url" type="url" placeholder="YouTube, Vimeo, or Loom link" style="font-size:12px;" oninput="updateRepVideoPreview(this.value)">
+                <div style="font-size:12px;color:var(--muted);line-height:1.6;">&#127910; Supports <strong style="color:var(--mid);">YouTube, Vimeo, and Loom</strong> &mdash; paste the link and we embed it directly on every homeowner&rsquo;s estimate page. Reps can record a different video per estimate.<br>&#127381; <strong style="color:var(--mid);">Keep it under 45 seconds</strong> &mdash; introduce yourself, mention the address, and tell them their estimate is ready. Short and personal wins every time.</div>
                 <div id="s-rep-video-preview" style="display:none;border-radius:8px;overflow:hidden;background:#000;aspect-ratio:16/9;"></div>
               </div>
             </div>
@@ -6018,17 +6022,15 @@ function getMatCost(matKey){
 // ═══════════════════════════════
 function videoEmbedPreview(url){
   if(!url) return '';
-  // YouTube
-  const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/);
-  if(ytMatch) return `<iframe src="https://www.youtube.com/embed/${ytMatch[1]}" frameborder="0" allow="autoplay;encrypted-media" allowfullscreen style="width:100%;height:100%;display:block;"></iframe>`;
+  // YouTube (watch, embed, youtu.be, shorts)
+  const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{11})/);
+  if(ytMatch) return `<iframe src="https://www.youtube-nocookie.com/embed/${ytMatch[1]}?rel=0&modestbranding=1&playsinline=1" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen style="width:100%;height:100%;display:block;"></iframe>`;
+  // Vimeo (standard + unlisted /video/ID/hash)
+  const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?(\d+)(?:\/([a-f0-9]+))?/);
+  if(vimeoMatch){ const h=vimeoMatch[2]?`&h=${vimeoMatch[2]}`:''; return `<iframe src="https://player.vimeo.com/video/${vimeoMatch[1]}?badge=0&autopause=0${h}" frameborder="0" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen style="width:100%;height:100%;display:block;"></iframe>`; }
   // Loom
-  const loomMatch = url.match(/loom\.com\/share\/([a-f0-9]+)/);
-  if(loomMatch) return `<iframe src="https://www.loom.com/embed/${loomMatch[1]}" frameborder="0" allowfullscreen style="width:100%;height:100%;display:block;"></iframe>`;
-  // Vimeo
-  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
-  if(vimeoMatch) return `<iframe src="https://player.vimeo.com/video/${vimeoMatch[1]}" frameborder="0" allowfullscreen style="width:100%;height:100%;display:block;"></iframe>`;
-  // Direct MP4 / video file
-  if(/\.(mp4|mov|webm|ogg)/i.test(url)) return `<video src="${url}" controls playsinline preload="metadata" style="width:100%;height:100%;display:block;"></video>`;
+  const loomMatch = url.match(/loom\.com\/(?:share|embed)\/([a-zA-Z0-9]+)/);
+  if(loomMatch) return `<iframe src="https://www.loom.com/embed/${loomMatch[1]}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true" frameborder="0" allowfullscreen style="width:100%;height:100%;display:block;"></iframe>`;
   return '';
 }
 function updateRepVideoPreview(url){
