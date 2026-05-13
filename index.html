@@ -12964,6 +12964,7 @@ function renderSuperAdminPanel(accounts, allProfiles){
           '<button onclick="adjustCredits(\''+a.id+'\')" style="background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);border-radius:5px;padding:2px 8px;color:#4ade80;font-size:10px;cursor:pointer;font-weight:700;" title="Adjust paid credits">✏️ Adjust</button>'+
         '</div>'+
         '<div style="margin-top:4px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;">'+
+          '<button onclick="openAddUserModal(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\')" style="background:rgba(242,92,5,.12);border:1px solid rgba(242,92,5,.4);border-radius:5px;padding:3px 10px;color:var(--accent);font-size:10px;cursor:pointer;font-weight:700;" title="Add user to this account">➕ Add User</button>'+
           '<button onclick="setAccountSlug(\''+a.id+'\',\''+escHtml(a.slug||'')+'\')" style="background:none;border:1px solid var(--border);border-radius:5px;padding:3px 10px;color:var(--muted);font-size:10px;cursor:pointer;font-weight:600;" title="Set quote page slug">🔗 Set Slug</button>'+
           (a.slug?'<a href="/q/'+a.slug+'" target="_blank" style="background:rgba(242,92,5,.1);border:1px solid rgba(242,92,5,.3);border-radius:5px;padding:3px 10px;color:var(--accent);font-size:10px;font-weight:600;text-decoration:none;">↗ /q/'+a.slug+'</a>':'') +
           '<button onclick="toggleAccountActive(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\','+(a.active!==false)+'" style="background:none;border:1px solid '+(a.active!==false?'#22C55E':'#6B7280')+';border-radius:5px;padding:3px 10px;color:'+(a.active!==false?'#22C55E':'#9CA3AF')+';font-size:10px;cursor:pointer;font-weight:600;" title="'+(a.active!==false?'Deactivate account':'Reactivate account')+'">'+(a.active!==false?'⏸ Deactivate':'▶ Reactivate')+'</button>'+
@@ -13187,6 +13188,67 @@ async function createAccount(){
   }
 }
 
+// ── Per-card Add User Modal ──────────────────────────────────────────────────
+function openAddUserModal(accountId, accountName){
+  // Remove any existing modal
+  const existing = document.getElementById('add-user-modal');
+  if(existing) existing.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'add-user-modal';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.innerHTML = `
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.5);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:700;color:var(--accent);">ADD USER TO <span style="color:var(--text);">${escHtml(accountName)}</span></div>
+        <button onclick="document.getElementById('add-user-modal').remove()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;">✕</button>
+      </div>
+      <div class="fg"><label class="fl">Name</label><input class="fi" id="aum-name" placeholder="Mike Johnson" autofocus></div>
+      <div class="fg"><label class="fl">Email</label><input class="fi" id="aum-email" placeholder="mike@company.com" type="email"></div>
+      <div class="fg"><label class="fl">Temp Password</label><input class="fi" id="aum-pass" placeholder="min 6 chars" type="password"></div>
+      <div class="fg"><label class="fl">Role</label>
+        <select class="fs" id="aum-role"><option value="rep">Rep (Field)</option><option value="admin">Admin</option></select>
+      </div>
+      <div id="aum-result" style="font-size:12px;min-height:18px;margin-bottom:10px;"></div>
+      <button id="aum-btn" onclick="submitAddUserModal('${accountId}','${escJs(accountName)}')" style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;">CREATE LOGIN</button>
+    </div>`;
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+  setTimeout(()=>{ const n=document.getElementById('aum-name'); if(n) n.focus(); }, 80);
+}
+async function submitAddUserModal(accountId, accountName){
+  const name  = (document.getElementById('aum-name')?.value||'').trim();
+  const email = (document.getElementById('aum-email')?.value||'').trim();
+  const pass  = (document.getElementById('aum-pass')?.value||'').trim();
+  const role  = document.getElementById('aum-role')?.value || 'rep';
+  const result= document.getElementById('aum-result');
+  const btn   = document.getElementById('aum-btn');
+  if(!name){ toast('Name is required','error'); return; }
+  if(!email||!pass){ toast('Email and password required','error'); return; }
+  if(pass.length < 6){ toast('Password must be at least 6 characters','error'); return; }
+  result.textContent='Creating...'; result.style.color='var(--muted)';
+  if(btn){ btn.disabled=true; btn.textContent='Creating...'; }
+  try{
+    const adminData = await adminAPI('create-user', { email, password:pass, name });
+    const userId = adminData.id;
+    if(!userId) throw new Error('No user ID returned from admin API');
+    const {error:profErr} = await sb.from('user_profiles').insert({
+      id: userId, account_id: accountId, role, name, email, must_change_password: true
+    });
+    if(profErr) throw profErr;
+    result.innerHTML = '✅ <strong>'+escHtml(name)+'</strong> added to '+escHtml(accountName)+'!<br>'
+      +'<span style="font-size:11px;color:var(--muted);">Email: '+escHtml(email)+'<br>'
+      +'Temp password: <code style="background:var(--card2);padding:2px 6px;border-radius:4px;">'+escHtml(pass)+'</code></span>';
+    result.style.color='var(--success)';
+    toast('✅ '+name+' added to '+accountName,'success');
+    if(btn){ btn.disabled=false; btn.textContent='CREATE ANOTHER'; }
+    setTimeout(()=>{ const m=document.getElementById('add-user-modal'); if(m) m.remove(); renderAdminPanel(); }, 2500);
+  }catch(e){
+    result.innerHTML='❌ '+escHtml(e.message);
+    result.style.color='var(--danger)';
+    toast('❌ '+e.message,'error');
+    if(btn){ btn.disabled=false; btn.textContent='CREATE LOGIN'; }
+  }
+}
 async function createUser(){
   const name  = document.getElementById('new-user-name').value.trim();
   const email = document.getElementById('new-user-email').value.trim();
