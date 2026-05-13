@@ -998,16 +998,15 @@ tr:hover td{background:var(--card);}
             <input class="fi" id="e-expires" type="date" style="margin-top:3px;font-size:12px;" title="Optional: set an expiration date shown as a countdown on the estimate page">
           </div>
           <div>
-            <label style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Rep Video</label>
+            <label style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Rep Video <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;">&#8212; shown on homeowner estimate page</span></label>
             <div style="margin-top:4px;display:flex;flex-direction:column;gap:5px;">
-              <!-- Upload button -->
-              <label id="e-video-upload-btn" style="display:flex;align-items:center;justify-content:center;gap:6px;background:var(--card);border:2px dashed var(--border);border-radius:8px;padding:9px 12px;cursor:pointer;color:var(--mid);font-size:12px;font-weight:600;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
-                <span id="e-video-upload-label">&#127909; Upload Video</span>
-                <input type="file" accept="video/*" style="display:none;" onchange="handleEstVideoUpload(this)">
-              </label>
-              <div style="text-align:center;font-size:10px;color:var(--muted);">MP4 / MOV &bull; max 100 MB &bull; or paste a link below</div>
-              <!-- URL paste -->
-              <input class="fi" id="e-video" type="url" placeholder="https://youtube.com/... or https://loom.com/..." style="font-size:12px;" oninput="onEstVideoUrlInput()" title="Paste a YouTube, Loom, Vimeo, or direct video URL">
+              <!-- YouTube link only -->
+              <div style="display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:7px 10px;">
+                <span style="font-size:16px;">&#127910;</span>
+                <span style="font-size:11px;color:var(--muted);font-weight:600;">YouTube</span>
+              </div>
+              <input class="fi" id="e-video" type="url" placeholder="Paste YouTube link (e.g. https://youtu.be/abc123)" style="font-size:12px;" oninput="onEstVideoUrlInput()">
+              <div style="font-size:10px;color:var(--muted);">&#127381; Keep it under 45 seconds &mdash; short &amp; personal wins every time. We embed it directly on the homeowner&rsquo;s estimate page.</div>
               <!-- Preview / status -->
               <div id="e-video-status" style="display:none;font-size:11px;color:var(--accent);font-weight:600;"></div>
               <div id="e-video-preview-wrap" style="display:none;border-radius:8px;overflow:hidden;background:#000;aspect-ratio:16/9;"></div>
@@ -1684,8 +1683,8 @@ tr:hover td{background:var(--card);}
             <div>
               <label class="fl">Default Rep Video <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; auto-fills on every new estimate</span></label>
               <div style="margin-top:6px;display:flex;flex-direction:column;gap:6px;">
-                <input class="fi" id="s-rep-video-url" type="url" placeholder="https://youtube.com/... or https://loom.com/..." style="font-size:12px;" oninput="updatePreview()">
-                <div style="font-size:15px;color:var(--muted);line-height:1.5;">Paste a YouTube, Loom, Vimeo, or direct MP4 link. This will pre-fill the video field on every new estimate. Reps can override it per estimate.</div>
+                <input class="fi" id="s-rep-video-url" type="url" placeholder="Paste YouTube link (e.g. https://youtu.be/abc123)" style="font-size:12px;" oninput="updateRepVideoPreview(this.value)">
+                <div style="font-size:12px;color:var(--muted);line-height:1.6;">&#127910; <strong style="color:var(--mid);">YouTube links only</strong> &mdash; paste the URL from YouTube. We embed it directly on every homeowner&rsquo;s estimate page. Reps can record a different video per estimate.<br>&#127381; <strong style="color:var(--mid);">Keep it under 45 seconds</strong> &mdash; introduce yourself, mention the address, and tell them their estimate is ready. Short and personal wins every time.</div>
                 <div id="s-rep-video-preview" style="display:none;border-radius:8px;overflow:hidden;background:#000;aspect-ratio:16/9;"></div>
               </div>
             </div>

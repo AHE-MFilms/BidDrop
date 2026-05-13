@@ -977,15 +977,16 @@ function buildPage(firstName,lastName,email,phone){
   // ── Video ──
   const vid=est.repVideoUrl||'';
   if(vid){
-    $('ep-video-section').style.display='block';
-    const inner=$('ep-video-inner');
-    const ytMatch=vid.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([A-Za-z0-9_-]{11})/);
+    // Extract YouTube video ID (supports youtu.be, youtube.com/watch?v=, youtube.com/embed/)
+    const ytMatch=vid.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{11})/);
     if(ytMatch){
-      inner.innerHTML=`<iframe src="https://www.youtube.com/embed/${ytMatch[1]}?rel=0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>`;
-    } else {
-      inner.innerHTML=`<video src="${vid}" controls playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"></video>`;
+      $('ep-video-section').style.display='block';
+      const inner=$('ep-video-inner');
+      // Use privacy-enhanced mode (youtube-nocookie.com) + rel=0 to suppress suggested videos
+      inner.innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${ytMatch[1]}?rel=0&modestbranding=1&playsinline=1" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>`;
+      $('ep-video-title').textContent='A personal message from '+(repName||acct.companyName||'your estimator');
     }
-    $('ep-video-title').textContent='A personal message from '+(repName||acct.companyName||'your estimator');
+    // Non-YouTube links are silently ignored — YouTube-only policy
   }
 
   // ── Rep Bio Row (top of page) — always use acct.repName (company owner from settings) ──
