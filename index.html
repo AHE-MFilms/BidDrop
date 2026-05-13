@@ -2925,7 +2925,8 @@ function buildPostcardBackInline({ fromName, fromAddr, fromCity, fromPhone, logo
         <strong style="display:block;font-size:9px;letter-spacing:.3px;">PRSRT STD</strong>U.S. POSTAGE<br>PAID<br>PERMIT #000
       </div>
       <div style="font-size:11px;line-height:1.7;color:#111;">
-        <div style="font-weight:700;font-size:12px;margin-bottom:4px;">\${toName||'Homeowner Name'}</div>
+        <div style="font-weight:700;font-size:12px;margin-bottom:2px;">\${toName||'Homeowner Name'}</div>
+        <div style="font-size:10px;color:#555;font-style:italic;margin-bottom:4px;">Or Current Resident</div>
         <div style="border-top:1px solid #eee;margin-bottom:5px;"></div>
         \${(toAddr||'123 Main Street, City, State 00000').split(',').map(l=>'<div>'+l.trim()+'</div>').join('')}
       </div>
@@ -3765,7 +3766,7 @@ function previewPostcardBackLightbox(step, toName, toAddr, fromName, fromAddr, f
           <!-- Right side: indicia + recipient address (2.5in of 6in = 42%) -->
           <div style="width:42%;padding:6% 5%;display:flex;flex-direction:column;justify-content:space-between;">
             <div style="border:1px solid #333;padding:2% 3%;font-size:1.1vw;color:#333;text-align:center;align-self:flex-end;"><strong style="font-size:1.4vw;display:block;">PRSRT STD</strong>U.S. POSTAGE<br>PAID<br>PERMIT #000</div>
-            <div style="font-size:1.6vw;color:#111;line-height:1.6;"><strong style="font-size:1.8vw;">${toName}</strong><br>${toAddr.split(',').map(l=>l.trim()).join('<br>')}</div>
+            <div style="font-size:1.6vw;color:#111;line-height:1.6;"><strong style="font-size:1.8vw;">${toName}</strong><br><span style="font-size:1.2vw;color:#555;font-style:italic;">Or Current Resident</span><br>${toAddr.split(',').map(l=>l.trim()).join('<br>')}</div>
             <div style="font-size:1.0vw;color:#bbb;border-top:1px dashed #ddd;padding-top:3%;letter-spacing:2px;">DELIVERY POINT BARCODE</div>
           </div>
         </div>
@@ -3910,6 +3911,7 @@ function buildPostcardBack({ toName, toAddr, fromName, fromAddr, fromCity, fromP
     </div>
     <div class="to-addr">
       <div class="name">${toName}</div>
+      <div style="font-size:8pt;color:#555;font-style:italic;margin-bottom:4px;">Or Current Resident</div>
       <hr class="divider">
       ${toAddr.split(',').map(l=>'<div>'+l.trim()+'</div>').join('')}
     </div>
@@ -11210,7 +11212,7 @@ async function manualRentcastLookup(){
       const pin = S.pins.find(p=>p.id===currentEstPinId);
       if(pin){ pin.equityData = { estValue: data.estValue, mortgageBalance: data.mortgageBalance, equity: data.equity }; }
     }
-    toast('🏠 '+(data.name ? 'Owner: '+data.name : 'Property data loaded'),'success');
+    toast('🏠 '+(data.name ? 'Owner: '+data.name : 'Property found — owner name unavailable, enter manually'),'success');
   } catch(e){
     toast('Lookup failed: '+e.message,'error');
   } finally{
