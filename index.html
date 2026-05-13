@@ -12285,6 +12285,9 @@ async function switchAccount(accountId){
     }catch(_){}
   })();
   toast('✅ Switched to '+escHtml(account.name||account.company_name||''),'success');
+  // If the Settings tab is currently active, refresh it with the new account's data
+  const settingsPane = document.getElementById('tab-settings');
+  if(settingsPane && settingsPane.classList.contains('active')) renderSettingsTab();
 }
 
 // ── SUPABASE PIN OPERATIONS (replace in-memory S.pins) ───────────────────────
