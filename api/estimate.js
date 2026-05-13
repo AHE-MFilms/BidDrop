@@ -517,6 +517,49 @@ export default async function handler(req, res) {
         }
       }
 
+      // ── Lead Alert Notification Email (fire-and-forget) ─────────────────────
+      // Send roofer an immediate alert with homeowner name, address, phone, email
+      if (est.account_id) {
+        try {
+          const alertAcctR = await sbFetch(`accounts?id=eq.${encodeURIComponent(est.account_id)}&select=email,lead_alert_email,company_name`);
+          const alertAcctRows = alertAcctR.ok ? await alertAcctR.json() : [];
+          const alertAcct = alertAcctRows[0] || {};
+          const alertTo = (alertAcct.lead_alert_email || alertAcct.email || '').trim();
+          const resendKey = process.env.RESEND_API_KEY;
+          if (alertTo && resendKey) {
+            const toList = alertTo.split(',').map(e => e.trim()).filter(Boolean);
+            const scanTime = new Date().toLocaleString('en-US', {
+              timeZone: 'America/Detroit', weekday: 'short', month: 'short',
+              day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true
+            });
+            const fmtPhone = phone ? phone.replace(/\D/g,'').replace(/(\d{3})(\d{3})(\d{4})/,'($1) $2-$3') : null;
+            const slugName = (alertAcct.company_name||'roofing').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+            const estLink = `https://biddrop.us/${slugName}/${estimate_id}`;
+            const rows = [
+              `<tr><td style="padding:7px 0;color:#6b7280;font-size:14px;width:80px;">Name</td><td style="padding:7px 0;font-size:14px;font-weight:600;color:#111827;">${fullName||'—'}</td></tr>`,
+              `<tr><td style="padding:7px 0;color:#6b7280;font-size:14px;">Address</td><td style="padding:7px 0;font-size:14px;color:#111827;">${est.addr||'—'}</td></tr>`,
+              fmtPhone ? `<tr><td style="padding:7px 0;color:#6b7280;font-size:14px;">Phone</td><td style="padding:7px 0;font-size:14px;"><a href="tel:${fmtPhone}" style="color:#f97316;font-weight:700;text-decoration:none;">${fmtPhone}</a></td></tr>` : '',
+              email ? `<tr><td style="padding:7px 0;color:#6b7280;font-size:14px;">Email</td><td style="padding:7px 0;font-size:14px;"><a href="mailto:${email}" style="color:#f97316;text-decoration:none;">${email}</a></td></tr>` : '',
+              est.total ? `<tr><td style="padding:7px 0;color:#6b7280;font-size:14px;">Estimate</td><td style="padding:7px 0;font-size:14px;font-weight:700;color:#111827;">$${Number(est.total).toLocaleString()}</td></tr>` : '',
+            ].join('');
+            const html = `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"><table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;"><tr><td align="center"><table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);"><tr><td style="background:#111827;padding:22px 32px;"><p style="margin:0;color:#f97316;font-size:20px;font-weight:700;">BidDrop</p><p style="margin:4px 0 0;color:#9ca3af;font-size:13px;">New Lead Alert</p></td></tr><tr><td style="padding:32px;"><p style="margin:0 0 6px;font-size:22px;font-weight:700;color:#111827;">🎯 ${fullName||'A homeowner'} just unlocked their estimate!</p><p style="margin:0 0 24px;font-size:15px;color:#6b7280;">They filled out their contact info at <strong>${scanTime}</strong>. Reach out now while they're reviewing their quote.</p><table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border-radius:8px;padding:16px 20px;margin-bottom:24px;"><tr><td colspan="2" style="padding:0 0 8px;font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;">Homeowner Info</td></tr>${rows}</table><a href="${estLink}" style="display:inline-block;background:#f97316;color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600;font-size:15px;">View Their Estimate →</a><p style="margin:24px 0 0;font-size:13px;color:#9ca3af;">This alert was sent because a homeowner filled out their contact info on a BidDrop estimate page linked to your account.</p></td></tr><tr><td style="background:#f9fafb;padding:14px 32px;border-top:1px solid #e5e7eb;"><p style="margin:0;font-size:12px;color:#9ca3af;">BidDrop · <a href="https://biddrop.americashomeexperts.com" style="color:#9ca3af;">biddrop.americashomeexperts.com</a></p></td></tr></table></td></tr></table></body></html>`;
+            fetch('https://api.resend.com/emails', {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                from: 'BidDrop Alerts <alerts@biddrop.io>',
+                to: toList,
+                subject: `🎯 ${fullName||'New lead'} filled out their estimate — ${est.addr||'address on file'}`,
+                html
+              })
+            }).then(r => { if (!r.ok) r.text().then(t => console.error('[capture_lead] alert email failed:', r.status, t)); else console.log('[capture_lead] alert email sent to', toList.join(', ')); })
+            .catch(e => console.error('[capture_lead] alert email error:', e.message));
+          }
+        } catch (alertErr) {
+          console.warn('[capture_lead] lead alert email error (non-fatal):', alertErr.message);
+        }
+      }
+
       res.json({ ok: true });
       return;
     }

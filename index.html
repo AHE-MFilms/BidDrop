@@ -1560,6 +1560,7 @@ tr:hover td{background:var(--card);}
             <div class="fg"><label class="fl">Rep Title</label><input class="fi" id="s-reptitle" placeholder="Owner, Sales Rep, etc."></div>
           </div>
           <div class="fg"><label class="fl">Booking / QR Code URL <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; QR auto-generates from this link</span></label><input class="fi" id="s-bookingurl" placeholder="https://calendly.com/yourname"></div>
+          <div class="fg stab-full"><label class="fl">Lead Alert Email <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; notified when a homeowner fills out their estimate page. Defaults to your account email. Separate multiple with commas.</span></label><input class="fi" id="s-lead-alert-email" type="text" placeholder="sales@yourcompany.com, manager@yourcompany.com"></div>
           <div class="frow">
             <div class="fg"><label class="fl">License / CCB #</label><input class="fi" id="s-lic" placeholder="CCB#226995"></div>
             <div class="fg"></div>
@@ -2572,7 +2573,7 @@ async function syncAccountToSupabase(){
     company_addr: cfg.companyAddr, rep_name: cfg.repName,
     rep_title: cfg.repTitle, license_num: cfg.licenseNum,
     years_in_business: cfg.yearsInBusiness, warranty_years: cfg.warrantyYears,
-    brand_color: cfg.brandColor, booking_url: cfg.bookingUrl,
+    brand_color: cfg.brandColor, booking_url: cfg.bookingUrl, lead_alert_email: cfg.leadAlertEmail||null,
     hook_letter: cfg.hookLetter, why_received: cfg.whyReceived,
     postcard_hook: cfg.postcardHook, postcard_why: cfg.postcardWhy,
     postcard_quote: cfg.postcardQuote, postcard_guarantee: cfg.postcardGuarantee,
@@ -2650,6 +2651,7 @@ function accountRowToCfg(row){
     warrantyYears: row.warranty_years||'10',
     brandColor: row.brand_color||'#F25C05',
     bookingUrl: row.booking_url||'',
+    leadAlertEmail: row.lead_alert_email||'',
     hookLetter: row.hook_letter||DEFAULTS.hookLetter,
     whyReceived: row.why_received||DEFAULTS.whyReceived,
     postcardHook: row.postcard_hook||DEFAULTS.postcardHook,
@@ -10850,6 +10852,7 @@ function openSettings(){
   document.getElementById('s-reptitle').value=c.repTitle||'';
   document.getElementById('s-hspos').value=c.headshotPos||'30';
   document.getElementById('s-bookingurl').value=c.bookingUrl||'';
+  document.getElementById('s-lead-alert-email').value=c.leadAlertEmail||'';
   const hp=document.getElementById('headshot-preview');
   if(hp){
     hp.innerHTML=c.headshot?'<img src="'+c.headshot+'" style="width:100%;height:100%;object-fit:cover;object-position:center '+((c.headshotPos||'30')+'%')+'">' :'No photo';
@@ -11045,6 +11048,7 @@ function saveSettings(){
     repTitle:document.getElementById('s-reptitle').value||'',
     headshotPos:document.getElementById('s-hspos').value||'30',
     bookingUrl:document.getElementById('s-bookingurl').value||'',
+    leadAlertEmail:document.getElementById('s-lead-alert-email').value.trim()||'',
     dripEnabled: isAdminOrAbove() ? !!(document.getElementById('s-drip-enabled') && document.getElementById('s-drip-enabled').checked) : (S.cfg.dripEnabled||false),
     companyBio: (document.getElementById('s-bio')||{}).value || '',
     metaPixelId: (document.getElementById('s-meta-pixel-id')||{}).value || '',
