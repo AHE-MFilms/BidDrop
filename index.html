@@ -12957,7 +12957,13 @@ function renderSuperAdminPanel(accounts, allProfiles){
           '</div>').join('') +
         '</div>' +
         (a.notes?'<div style="font-size:10px;color:var(--muted);margin-top:4px;font-style:italic;">'+escHtml(a.notes)+'</div>':'')+
-        '<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;">'+
+        '<div style="margin-top:8px;padding-top:6px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">'+
+          '<span style="font-size:10px;color:var(--muted);">Credits:</span>'+
+          '<span style="font-size:12px;font-weight:700;color:#4ade80;">'+(a.mailer_credits||0)+'</span>'+
+          '<span style="font-size:10px;color:var(--muted);">paid</span>'+
+          '<button onclick="adjustCredits(\''+a.id+'\')" style="background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);border-radius:5px;padding:2px 8px;color:#4ade80;font-size:10px;cursor:pointer;font-weight:700;" title="Adjust paid credits">✏️ Adjust</button>'+
+        '</div>'+
+        '<div style="margin-top:4px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;">'+
           '<button onclick="setAccountSlug(\''+a.id+'\',\''+escHtml(a.slug||'')+'\')" style="background:none;border:1px solid var(--border);border-radius:5px;padding:3px 10px;color:var(--muted);font-size:10px;cursor:pointer;font-weight:600;" title="Set quote page slug">🔗 Set Slug</button>'+
           (a.slug?'<a href="/q/'+a.slug+'" target="_blank" style="background:rgba(242,92,5,.1);border:1px solid rgba(242,92,5,.3);border-radius:5px;padding:3px 10px;color:var(--accent);font-size:10px;font-weight:600;text-decoration:none;">↗ /q/'+a.slug+'</a>':'') +
           '<button onclick="toggleAccountActive(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\','+(a.active!==false)+'" style="background:none;border:1px solid '+(a.active!==false?'#22C55E':'#6B7280')+';border-radius:5px;padding:3px 10px;color:'+(a.active!==false?'#22C55E':'#9CA3AF')+';font-size:10px;cursor:pointer;font-weight:600;" title="'+(a.active!==false?'Deactivate account':'Reactivate account')+'">'+(a.active!==false?'⏸ Deactivate':'▶ Reactivate')+'</button>'+
