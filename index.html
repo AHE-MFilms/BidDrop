@@ -15181,31 +15181,52 @@ function renderStormMarkers(){
     const sizeInches = (r.size / 100).toFixed(2);
     const dateFormatted = `20${r.date.slice(0,2)}-${r.date.slice(2,4)}-${r.date.slice(4,6)}`;
 
-    const circle = L.circleMarker([r.lat, r.lon], {
-      radius: 8,
+    // Use L.circle with real-world radius (~1 mile = 1609 meters)
+    // Larger hail gets a slightly larger radius (up to ~2 miles for baseball+)
+    let radiusMeters = 1609; // 1 mile default
+    if(r.size >= 200) radiusMeters = 3218;      // ~2 miles for baseball+
+    else if(r.size >= 150) radiusMeters = 2414; // ~1.5 miles for golf ball
+
+    const circle = L.circle([r.lat, r.lon], {
+      radius: radiusMeters,
+      fillColor: color,
+      color: color,
+      weight: 1,
+      opacity: 0.6,
+      fillOpacity: 0.2
+    });
+
+    // Add a small center dot so the exact report location is visible
+    const dot = L.circleMarker([r.lat, r.lon], {
+      radius: 5,
       fillColor: color,
       color: '#fff',
       weight: 1.5,
-      opacity: 0.9,
-      fillOpacity: 0.75
+      opacity: 1,
+      fillOpacity: 1
     });
 
-    circle.bindPopup(`
-      <div style="font-family:sans-serif;min-width:200px;">
+    const popupHtml = `
+      <div style="font-family:sans-serif;min-width:210px;">
         <div style="font-weight:700;font-size:14px;color:#fff;margin-bottom:6px;">\u26c8 Hail Report</div>
         <div style="font-size:12px;color:#e5e7eb;margin-bottom:4px;"><b style='color:#fff;'>Size:</b> ${sizeInches}\" (${label})</div>
         <div style="font-size:12px;color:#e5e7eb;margin-bottom:4px;"><b style='color:#fff;'>Location:</b> ${r.location}, ${r.county}, ${r.state}</div>
         <div style="font-size:12px;color:#e5e7eb;margin-bottom:4px;"><b style='color:#fff;'>Date:</b> ${dateFormatted}</div>
-        ${r.comment ? `<div style="font-size:11px;color:#9ca3af;margin-bottom:8px;font-style:italic;">${r.comment}</div>` : ''}
-        <button onclick="stormDropPin(${r.lat},${r.lon},'${r.location.replace(/'/g,"\\'")}, ${r.county}, ${r.state}')" 
-          style="width:100%;background:#F25C05;color:#fff;border:none;border-radius:6px;padding:8px;font-weight:700;font-size:12px;cursor:pointer;margin-top:4px;">
+        ${r.comment ? `<div style="font-size:11px;color:#9ca3af;margin-bottom:6px;font-style:italic;">${r.comment}</div>` : ''}
+        <div style="font-size:10px;color:#6b7280;background:rgba(255,255,255,.06);border-radius:4px;padding:5px 7px;margin-bottom:8px;">\u26a0\ufe0f Hail observed at this location. Impact area typically extends <b style='color:#9ca3af;'>1\u20132 miles</b> from this point.</div>
+        <button onclick="stormDropPin(${r.lat},${r.lon},'${r.location.replace(/'/g,\"\\'\")}, ${r.county}, ${r.state}')" 
+          style="width:100%;background:#F25C05;color:#fff;border:none;border-radius:6px;padding:8px;font-weight:700;font-size:12px;cursor:pointer;">
           \uD83D\uDCCD Drop Pin Here
         </button>
       </div>
-    `);
+    `;
+    circle.bindPopup(popupHtml);
+    dot.bindPopup(popupHtml);
 
     circle.addTo(map);
+    dot.addTo(map);
     _stormLayers.push(circle);
+    _stormLayers.push(dot);
   });
 
   if(statusEl){
@@ -15303,25 +15324,40 @@ function renderWindMarkers(){
     else if(r.speed >= 60)  color = '#FBBF24'; // strong
     else                    color = '#34d399'; // 50-59 mph
 
+    // Real-world radius: ~1 mile, larger for higher speeds
+    let radiusMeters = 1609; // 1 mile
+    if(r.speed >= 100) radiusMeters = 3218;      // ~2 miles extreme
+    else if(r.speed >= 75) radiusMeters = 2414;  // ~1.5 miles severe
+
     const dateFormatted = `20${r.date.slice(0,2)}-${r.date.slice(2,4)}-${r.date.slice(4,6)}`;
-    const circle = L.circleMarker([r.lat, r.lon], {
-      radius: 7, fillColor: color, color: '#fff', weight: 1.5, opacity: 0.9, fillOpacity: 0.7
+
+    const circle = L.circle([r.lat, r.lon], {
+      radius: radiusMeters, fillColor: color, color: color, weight: 1, opacity: 0.6, fillOpacity: 0.18
     });
-    circle.bindPopup(`
-      <div style="font-family:sans-serif;min-width:200px;">
+    const dot = L.circleMarker([r.lat, r.lon], {
+      radius: 5, fillColor: color, color: '#fff', weight: 1.5, opacity: 1, fillOpacity: 1
+    });
+
+    const popupHtml = `
+      <div style="font-family:sans-serif;min-width:210px;">
         <div style="font-weight:700;font-size:14px;color:#fff;margin-bottom:6px;">💨 Wind Report</div>
         <div style="font-size:12px;color:#e5e7eb;margin-bottom:4px;"><b style='color:#fff;'>Speed:</b> ${r.speed} MPH</div>
         <div style="font-size:12px;color:#e5e7eb;margin-bottom:4px;"><b style='color:#fff;'>Location:</b> ${r.location}, ${r.county}, ${r.state}</div>
         <div style="font-size:12px;color:#e5e7eb;margin-bottom:4px;"><b style='color:#fff;'>Date:</b> ${dateFormatted}</div>
-        ${r.comment ? `<div style="font-size:11px;color:#9ca3af;margin-bottom:8px;font-style:italic;">${r.comment}</div>` : ''}
+        ${r.comment ? `<div style="font-size:11px;color:#9ca3af;margin-bottom:6px;font-style:italic;">${r.comment}</div>` : ''}
+        <div style="font-size:10px;color:#6b7280;background:rgba(255,255,255,.06);border-radius:4px;padding:5px 7px;margin-bottom:8px;">⚠️ Wind observed at this location. Impact area typically extends <b style='color:#9ca3af;'>1–2 miles</b> from this point.</div>
         <button onclick="stormDropPin(${r.lat},${r.lon},'${r.location.replace(/'/g,\"'\")} ${r.county} ${r.state}')" 
-          style="width:100%;background:#F25C05;color:#fff;border:none;border-radius:6px;padding:8px;font-weight:700;font-size:12px;cursor:pointer;margin-top:4px;">
+          style="width:100%;background:#F25C05;color:#fff;border:none;border-radius:6px;padding:8px;font-weight:700;font-size:12px;cursor:pointer;">
           📍 Drop Pin Here
         </button>
       </div>
-    `);
+    `;
+    circle.bindPopup(popupHtml);
+    dot.bindPopup(popupHtml);
     circle.addTo(map);
+    dot.addTo(map);
     _windLayers.push(circle);
+    _windLayers.push(dot);
   });
   if(statusEl && _windData.length > 0) statusEl.textContent = `${_windData.length} wind report${_windData.length!==1?'s':''} shown (50+ MPH)`;
 }
