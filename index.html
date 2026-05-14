@@ -3119,6 +3119,15 @@ function saveEstimateNow(){
   }
   const pin = (S.pins||[]).find(p=>p.id===currentEstPinId);
   if(!pin){ toast('Pin not found','error'); return; }
+  // Block duplicate address: prevent saving a new estimate for an address already saved by a different pin
+  if(!window._editingEstimateId){
+    const thisAddr = (pin.address||'').trim().toLowerCase();
+    const dupEst = (S.estimates||[]).find(e=>!e.isRevision && !e.deletedAt && e.pinId !== currentEstPinId && (e.addr||'').trim().toLowerCase() === thisAddr);
+    if(dupEst){
+      toast('⚠️ An estimate already exists for this address ('+escHtml(dupEst.addr)+'). Delete the existing one first.','error');
+      return;
+    }
+  }
   const owner = (document.getElementById('e-owner')||{}).value.trim()||'Homeowner';
   const email = (document.getElementById('e-email')||{}).value.trim()||'';
   const phone = (document.getElementById('e-phone')||{}).value.trim()||'';
@@ -5418,6 +5427,7 @@ function removePinPhoto(idx){
 
 function resetPinModal(){
   window._pinDamagePhotos = [];
+  window._homePhotoData = null; // clear stale front photo from previous pin
   _clearAllPhotos(); // prevent stale photos from previous pin bleeding into new pin drop
   renderPinPhotosRow();
 }
@@ -7975,6 +7985,13 @@ async function sendLob(id){
           mailer_type: 'letter',
           sent_at: new Date().toISOString()
         }).then(({error})=>{ if(error) console.warn('mailer_log insert error:',error.message); });
+        // Also mark the linked estimate as sent so the badge shows in the Estimates list
+        if(item.estId){
+          const sentNow = new Date().toISOString();
+          const estIdx = (S.estimates||[]).findIndex(e=>e.id===item.estId);
+          if(estIdx>=0){ S.estimates[estIdx].sentAt = sentNow; }
+          sb.from('estimates').update({sent_at:sentNow}).eq('id',item.estId).then(({error})=>{if(error)console.warn('estimate sent_at:',error.message);});
+        }
       }
       save();renderQueue();toast('✅ Letter queued for mailing!','success');
     } else {
@@ -8101,6 +8118,13 @@ async function sendLobPostcard6x9(id){
           mailer_type:'postcard',
           sent_at:new Date().toISOString()
         }).then(({error})=>{if(error)console.warn('mailer_log insert:',error.message);});
+        // Also mark the linked estimate as sent so the badge shows in the Estimates list
+        if(item.estId){
+          const sentNow = new Date().toISOString();
+          const estIdx = (S.estimates||[]).findIndex(e=>e.id===item.estId);
+          if(estIdx>=0){ S.estimates[estIdx].sentAt = sentNow; }
+          sb.from('estimates').update({sent_at:sentNow}).eq('id',item.estId).then(({error})=>{if(error)console.warn('estimate sent_at:',error.message);});
+        }
       }
       save();renderQueue();toast('✅ Postcard queued for mailing!','success');
     } else {
