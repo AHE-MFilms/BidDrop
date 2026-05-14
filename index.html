@@ -5604,6 +5604,12 @@ async function bulkDeletePins(){
       await sbDeletePin(id);
       const _bp = S.pins.find(p=>p.id===id);
       if(_bp) _bp.deleted_at = new Date().toISOString();
+      // Cascade soft-delete: also soft-delete all linked estimates
+      const _bpNow = new Date().toISOString();
+      (S.estimates||[]).filter(e=>e.pinId===id && !e.deletedAt).forEach(e=>{
+        e.deletedAt = _bpNow;
+        if(sb) sb.from('estimates').update({deleted_at:_bpNow}).eq('id',e.id).then(()=>{});
+      });
       if(markers[id]){
         if(clusterGroup) clusterGroup.removeLayer(markers[id]);
         else if(map) map.removeLayer(markers[id]);
@@ -5784,6 +5790,12 @@ async function rmPin(id){
   // Soft-delete in memory: mark deleted_at so trash tab can show it
   const pin = S.pins.find(p=>p.id===id);
   if(pin) pin.deleted_at = new Date().toISOString();
+  // Cascade soft-delete: also soft-delete all linked estimates
+  const _now = new Date().toISOString();
+  (S.estimates||[]).filter(e=>e.pinId===id && !e.deletedAt).forEach(e=>{
+    e.deletedAt = _now;
+    if(sb) sb.from('estimates').update({deleted_at:_now}).eq('id',e.id).then(()=>{});
+  });
   // Remove from map
   if(markers[id]){
     if(clusterGroup) clusterGroup.removeLayer(markers[id]);
@@ -5815,12 +5827,18 @@ async function doDeletePin(){
   // Soft-delete in memory
   const _dp = S.pins.find(p=>p.id===id);
   if(_dp) _dp.deleted_at = new Date().toISOString();
+  // Cascade soft-delete: also soft-delete all linked estimates
+  const _dpNow = new Date().toISOString();
+  (S.estimates||[]).filter(e=>e.pinId===id && !e.deletedAt).forEach(e=>{
+    e.deletedAt = _dpNow;
+    if(sb) sb.from('estimates').update({deleted_at:_dpNow}).eq('id',e.id).then(()=>{});
+  });
   if(markers[id]){
     if(clusterGroup) clusterGroup.removeLayer(markers[id]);
     else map.removeLayer(markers[id]);
     delete markers[id];
   }
-  closeM('m-delete-pin');renderPinList();refreshZoneOverlays();save();toast('🗑 Pin deleted','info');
+  closeM('m-delete-pin');renderPinList();refreshZoneOverlays();if(typeof renderEstimatesTab==='function') renderEstimatesTab();save();toast('🗑 Pin deleted','info');
 }
 
 function cycleStatus(id){
@@ -7565,6 +7583,11 @@ async function restorePin(pinId){
   try{
     await sbRestorePin(pinId);
     delete pin.deleted_at;
+    // Cascade restore: also restore all linked estimates that were soft-deleted
+    (S.estimates||[]).filter(e=>e.pinId===pinId && e.deletedAt).forEach(e=>{
+      delete e.deletedAt;
+      if(sb) sb.from('estimates').update({deleted_at:null}).eq('id',e.id).then(()=>{});
+    });
     addMarker(pin);
     renderPinList();
     if(typeof renderEstimatesTab==='function') renderEstimatesTab();
