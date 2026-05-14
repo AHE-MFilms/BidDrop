@@ -2534,9 +2534,9 @@ const PITCH_OPTS = [
   {v:'1.50',l:'10/12 — Steep'},{v:'1.65',l:'11/12'},{v:'1.80',l:'12/12 — Very Steep'}
 ];
 const MAT_OPTS = [
-  {v:'1.0',l:'3-Tab Shingle'},{v:'1.3',l:'Architectural Shingle'},
+  {v:'1.3',l:'Architectural Shingle'},
   {v:'1.8',l:'Designer / Premium'},{v:'2.5',l:'Metal Roofing'}
-];
+];  // 3-Tab hidden — not commonly used
 const COMPLEX_OPTS = [
   {v:'1.0',l:'Simple — Gable, few angles'},{v:'1.12',l:'Moderate — Some hips/valleys'},
   {v:'1.25',l:'Complex — Many angles, dormers'},{v:'1.40',l:'Very Complex'}
@@ -2546,7 +2546,7 @@ const STORIES_OPTS = [
 ];
 
 const PITCHLBL = {'1.0':'4/12 Low','1.07':'5/12','1.15':'6/12 Std','1.23':'7/12','1.31':'8/12 Mod','1.40':'9/12','1.50':'10/12 Steep','1.65':'11/12','1.80':'12/12 Steep'};
-const MATLBL  = {'1.0':'3-Tab Shingle','1.3':'Architectural Shingle','1.8':'Designer/Premium','2.5':'Metal Roofing'};
+const MATLBL  = {'1.0':'3-Tab Shingle','1.3':'Architectural Shingle','1.8':'Designer/Premium','2.5':'Metal Roofing'}; // 1.0 kept for legacy display only
 
 function sColor(s){return{needs_roof:'#F25C05',contacted:'#A855F7',quoted:'#3B82F6',signed:'#22C55E',converted:'#22C55E',bid_sent:'#3B82F6',not_interested:'#3D5269',lost:'#EF4444'}[s]||'#3D5269';}
 function sLabel(s){return{needs_roof:'Needs Roof',contacted:'Contacted',quoted:'Quoted',signed:'Signed',converted:'Converted',bid_sent:'Bid Sent',not_interested:'Not Interested',lost:'Lost'}[s]||s;}
@@ -16161,7 +16161,7 @@ async function initEstimatePage(estId) {
   };
 
   const MAT_OPTIONS = [
-    { key: '1.0', label: '3-Tab Shingle', desc: 'Economy', icon: '\uD83C\uDFE0' },
+    // { key: '1.0', label: '3-Tab Shingle', desc: 'Economy', icon: '\uD83C\uDFE0' }, // hidden — not commonly used
     { key: '1.3', label: 'Architectural', desc: 'Most Popular', icon: '\u2B50', popular: true },
     { key: '1.8', label: 'Designer', desc: 'Premium', icon: '\uD83D\uDC8E' },
     { key: '2.5', label: 'Metal Roofing', desc: 'Lifetime', icon: '\uD83D\uDEE1\uFE0F' },
