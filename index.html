@@ -10598,7 +10598,7 @@ async function renderTeam(){
     return;
   }
   // Load real team members from Supabase
-  const {data:profiles, error} = await sb.from('user_profiles').select('id,name,email,role').eq('account_id', currentAccount.id);
+  const {data:profiles, error} = await sb.from('user_profiles').select('id,name,email,role,phone').eq('account_id', currentAccount.id);
   if(error || !profiles || !profiles.length){
     el.innerHTML='<div style="text-align:center;padding:18px;color:var(--muted);font-size:11px;">No team members yet. Use Admin Panel to add users.</div>';
     return;
@@ -10610,6 +10610,11 @@ async function renderTeam(){
     const pinCount = S.pins.filter(pin=>(pin.rep||'').toLowerCase()===repName).length;
     const estCount = S.pins.filter(pin=>(pin.rep||'').toLowerCase()===repName && pin.estimate).length;
     const initials = (p.name||p.email||'?').charAt(0).toUpperCase();
+    const editBtn = canRemove
+      ? '<button onclick="editTeamMember(\''+p.id+'\',\''+escJs(p.name||'')+'\',\''+escJs(p.email||'')+'\',\''+escJs(p.phone||'')+'\',\''+escJs(p.role||'rep')+'\')" '+
+        'title="Edit member" style="background:none;border:1px solid var(--border);border-radius:5px;color:var(--muted);cursor:pointer;font-size:11px;padding:2px 8px;font-weight:600;" '+
+        'onmouseover="this.style.borderColor=\'var(--accent)\';this.style.color=\'var(--accent)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--muted)\'">✏️ Edit</button>'
+      : '';
     const removeBtn = canRemove
       ? '<button onclick="removeTeamMember(\''+p.id+'\',\''+escJs(p.name||p.email)+'\')" '+
         'title="Remove from team" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:0 4px;line-height:1;" '+
@@ -10617,13 +10622,58 @@ async function renderTeam(){
       : '';
     return '<div class="team-row">'+
       '<div class="t-avatar">'+initials+'</div>'+
-      '<div class="t-name">'+escHtml(p.name||p.email||'Unnamed')+'</div>'+
-      '<div class="t-stats"><b>'+pinCount+'</b> pins · <b>'+estCount+'</b> est.</div>'+
+      '<div style="flex:1;min-width:0;">'+
+        '<div class="t-name">'+escHtml(p.name||p.email||'Unnamed')+'</div>'+
+        '<div class="t-stats"><b>'+pinCount+'</b> pins · <b>'+estCount+'</b> est. · '+escHtml(p.email||'')+'</div>'+
+      '</div>'+
+      editBtn+
       removeBtn+
       '</div>';
   }).join('');
 }
 
+function editTeamMember(profileId, name, email, phone, role){
+  // Build modal
+  const existing = document.getElementById('edit-member-modal');
+  if(existing) existing.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'edit-member-modal';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+  overlay.innerHTML = `
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;width:100%;max-width:420px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+        <div style="font-family:var(--font-h);font-size:15px;font-weight:700;color:var(--text);">EDIT TEAM MEMBER</div>
+        <button onclick="document.getElementById('edit-member-modal').remove()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;">&times;</button>
+      </div>
+      <label style="display:block;font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--muted);margin-bottom:4px;">NAME</label>
+      <input id="em-name" value="${escHtml(name)}" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;margin-bottom:12px;box-sizing:border-box;" />
+      <label style="display:block;font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--muted);margin-bottom:4px;">EMAIL</label>
+      <input id="em-email" value="${escHtml(email)}" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;margin-bottom:12px;box-sizing:border-box;" />
+      <label style="display:block;font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--muted);margin-bottom:4px;">PHONE</label>
+      <input id="em-phone" value="${escHtml(phone)}" placeholder="(555) 555-5555" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;margin-bottom:12px;box-sizing:border-box;" />
+      <label style="display:block;font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--muted);margin-bottom:4px;">ROLE</label>
+      <select id="em-role" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;margin-bottom:20px;box-sizing:border-box;">
+        <option value="admin" ${role==='admin'?'selected':''}>Admin</option>
+        <option value="rep" ${role==='rep'?'selected':''}>Rep (Field)</option>
+      </select>
+      <button onclick="saveTeamMember('${profileId}')" style="width:100%;background:var(--accent);border:none;border-radius:8px;padding:12px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;">SAVE CHANGES</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.remove(); });
+}
+async function saveTeamMember(profileId){
+  const name = document.getElementById('em-name').value.trim();
+  const email = document.getElementById('em-email').value.trim();
+  const phone = document.getElementById('em-phone').value.trim();
+  const role = document.getElementById('em-role').value;
+  if(!name){ toast('Name is required','error'); return; }
+  const {error} = await sb.from('user_profiles').update({name, email, phone, role}).eq('id', profileId);
+  if(error){ toast('Error: '+error.message,'error'); return; }
+  toast('Member updated','success');
+  document.getElementById('edit-member-modal').remove();
+  renderTeam();
+}
 async function removeTeamMember(profileId, name){
   if(!confirm('Remove '+name+' from the team?\n\nThis removes their profile but does NOT delete their login. You can re-add them via Admin Panel.')) return;
   const {error} = await sb.from('user_profiles').delete().eq('id', profileId);
