@@ -405,12 +405,14 @@ tr:hover td{background:var(--card);}
   .fab-pins{position:absolute;bottom:14px;right:14px;z-index:1000;background:var(--accent);border:none;border-radius:50%;width:54px;height:54px;font-size:24px;cursor:pointer;box-shadow:0 4px 20px rgba(242,92,5,.55);display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;}
   .map-toolbar{flex-direction:row;flex-wrap:wrap;justify-content:center;top:10px;left:4px;right:4px;transform:none;width:auto;gap:5px;}
   .mtool-btn{font-size:10px;padding:6px 10px;flex-shrink:0;}
-  .measure-hud{bottom:62px;left:50%;right:auto;transform:translateX(-50%);min-width:200px;max-width:calc(100vw - 32px);}
-  .mhud-lbl{font-size:9px;}
-  .mhud-sqft{font-size:24px;}
-  #mhud-bldg-count{font-size:10px;min-height:0;}
-  .mhud-btn{padding:5px 10px;font-size:11px;}
+  .measure-hud{bottom:70px;left:8px;right:8px;transform:none;min-width:0;max-width:100%;padding:8px 10px;gap:3px;border-radius:10px;}
+  .mhud-lbl{font-size:8px;margin-bottom:0;}
+  .mhud-sqft{font-size:20px;line-height:1.1;}
+  #mhud-bldg-count{font-size:9px;min-height:0;}
+  .mhud-hint{display:none;}
+  .mhud-btn{padding:6px 10px;font-size:11px;}
   #btn-use-measure{width:auto;}
+  #measure-hud .mhud-row{gap:6px;}
   #tab-estimate{flex-direction:column;overflow-y:auto;}
   .est-form{width:100%;border-right:none;padding:16px 16px 0;overflow-y:visible;}
   .est-preview{display:none;padding:16px;flex-direction:column;align-items:center;}
@@ -861,17 +863,21 @@ tr:hover td{background:var(--card);}
       <div id="storm-status" style="font-size:11px;color:var(--mid);text-align:center;min-height:16px;"></div>
     </div>
     <div class="measure-hud" id="measure-hud">
-      <div class="mhud-lbl">Total Roof Area</div>
-      <div class="mhud-sqft" id="mhud-sqft">0</div>
-      <div style="font-size:11px;color:var(--mid);">sq ft</div>
-      <div id="mhud-bldg-count" style="font-size:12px;color:var(--accent);font-weight:600;margin-top:2px;min-height:16px;"></div>
+      <div style="display:flex;align-items:baseline;gap:6px;">
+        <div>
+          <div class="mhud-lbl">Total Roof Area</div>
+          <div style="display:flex;align-items:baseline;gap:4px;">
+            <div class="mhud-sqft" id="mhud-sqft">0</div>
+            <div style="font-size:11px;color:var(--mid);">sq ft</div>
+          </div>
+          <div id="mhud-bldg-count" style="font-size:11px;color:var(--accent);font-weight:600;min-height:14px;"></div>
+        </div>
+      </div>
       <div class="mhud-hint" id="mhud-hint">Tap each corner of the roof. Double-tap to finish.</div>
-      <div style="display:flex;gap:6px;margin-top:10px;width:100%;">
+      <div class="mhud-row" style="display:flex;gap:6px;margin-top:8px;width:100%;">
         <button class="mhud-btn" onclick="undoMeasurePoint()">↩ Undo</button>
         <button class="mhud-btn" onclick="clearMeasure()">Clear</button>
-      </div>
-      <div style="margin-top:6px;width:100%;">
-        <button class="mhud-btn pr" id="btn-use-measure" onclick="useRoofMeasurement()" style="width:100%;opacity:.4;pointer-events:none;">📋 Add to Estimate</button>
+        <button class="mhud-btn pr" id="btn-use-measure" onclick="useRoofMeasurement()" style="opacity:.4;pointer-events:none;">📋 Add to Estimate</button>
       </div>
     </div>
     <button class="fab-pins" onclick="togglePinPanel()" id="fab-pins">📍</button>
