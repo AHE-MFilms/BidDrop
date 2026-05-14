@@ -1645,10 +1645,7 @@ tr:hover td{background:var(--card);}
               <div style="display:flex;gap:10px;align-items:center;margin-top:6px;">
                 <div id="logo-preview" style="width:80px;height:50px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--muted);overflow:hidden;flex-shrink:0;">No logo</div>
                 <div style="flex:1;">
-                  <label style="display:block;background:var(--card);border:2px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;cursor:pointer;color:var(--mid);font-size:12px;font-weight:600;">
-                    &#128193; Upload Logo
-                    <input type="file" accept="image/*" style="display:none;" onchange="handleLogoUpload(this)">
-                  </label>
+                  <button onclick="showPhotoActionSheet(function(files){handleLogoUpload({files:files});},{multiple:false})" style="display:block;width:100%;background:var(--card);border:2px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;cursor:pointer;color:var(--mid);font-size:12px;font-weight:600;">&#128193; Upload Logo</button>
                   <div style="font-size:15px;color:var(--muted);margin-top:5px;line-height:1.5;text-align:center;">
                     PNG or SVG &bull; transparent background<br>
                     <strong style="color:var(--mid);">400 &times; 200 px</strong> recommended &bull; max 2 MB
@@ -1663,10 +1660,7 @@ tr:hover td{background:var(--card);}
               <div style="display:flex;gap:10px;align-items:center;margin-top:6px;">
                 <div id="headshot-preview" style="width:70px;height:90px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--muted);overflow:hidden;flex-shrink:0;text-align:center;line-height:1.4;">No photo</div>
                 <div style="flex:1;">
-                  <label style="display:block;background:var(--card);border:2px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;cursor:pointer;color:var(--mid);font-size:12px;font-weight:600;">
-                    &#128100; Upload Headshot
-                    <input type="file" accept="image/*" style="display:none;" onchange="handleHeadshotUpload(this)">
-                  </label>
+                  <button onclick="showPhotoActionSheet(function(files){handleHeadshotUpload({files:files});},{multiple:false})" style="display:block;width:100%;background:var(--card);border:2px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;cursor:pointer;color:var(--mid);font-size:12px;font-weight:600;">&#128100; Upload Headshot</button>
                   <div style="font-size:15px;color:var(--muted);margin-top:5px;line-height:1.5;text-align:center;">
                     PNG preferred &bull; transparent background<br>
                     <strong style="color:var(--mid);">400 &times; 500 px</strong> (portrait) &bull; max 2 MB
@@ -4373,16 +4367,19 @@ function renderPhotoModal(){
       +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">'
       +thumbs
       +(canAdd
-        ? '<label for="'+inputId+'" style="width:80px;height:80px;border:2px dashed var(--border);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:11px;text-align:center;gap:4px;">'
-          +'<span style="font-size:22px;">+</span><span>Add Photo</span>'
-          +'<input type="file" id="'+inputId+'" accept="image/*" style="display:none;" onchange="_handlePhotoModalUpload(this,\''+cat.key+'\')">'
-          +'</label>'
+        ? '<button onclick="_openPhotoModalSheet(\''+cat.key+'\')" style="width:80px;height:80px;border:2px dashed var(--border);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:11px;text-align:center;gap:4px;background:none;"><span style="font-size:22px;">+</span><span>Add Photo</span></button>'
         : '')
       +'</div>'
       +'</div>';
   }).join('');
 }
 
+function _openPhotoModalSheet(catKey){
+  showPhotoActionSheet(function(files){
+    if(!files||!files[0]) return;
+    _handlePhotoModalUpload({files: files}, catKey);
+  }, {multiple: false});
+}
 function _removePhotoFromCat(catKey, idx){
   if(!window._allPhotos[catKey]) return;
   window._allPhotos[catKey].splice(idx, 1);
@@ -4662,6 +4659,64 @@ function openEstimatePage(eid){
   const slug=(S.cfg&&S.cfg.companyName?S.cfg.companyName.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''):'roofing');
   window.open('https://biddrop.us/'+slug+'/'+encodeURIComponent(eid),'_blank','noopener,noreferrer');
 }
+// ── PHOTO ACTION SHEET (camera vs gallery) ──────────────────────────────────
+// Usage: showPhotoActionSheet(callbackFn, {multiple: false})
+// callbackFn receives a FileList-like array of File objects
+let _photoSheetCallback = null;
+let _photoSheetMultiple = false;
+function showPhotoActionSheet(callback, opts){
+  _photoSheetCallback = callback;
+  _photoSheetMultiple = !!(opts && opts.multiple);
+  const existing = document.getElementById('photo-action-sheet');
+  if(existing) existing.remove();
+  const sheet = document.createElement('div');
+  sheet.id = 'photo-action-sheet';
+  sheet.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;justify-content:flex-end;';
+  sheet.innerHTML = `
+    <div id="photo-sheet-backdrop" style="position:absolute;inset:0;background:rgba(0,0,0,.55);" onclick="_closePhotoSheet()"></div>
+    <div style="position:relative;background:var(--card,#1a1a2e);border-radius:18px 18px 0 0;padding:20px 16px 32px;z-index:1;">
+      <div style="width:36px;height:4px;background:var(--border,#333);border-radius:2px;margin:0 auto 18px;"></div>
+      <div style="font-family:var(--font-h,sans-serif);font-size:13px;font-weight:700;letter-spacing:.5px;color:var(--muted,#888);text-align:center;margin-bottom:16px;">ADD PHOTO</div>
+      <button onclick="_photoSheetCamera()" style="width:100%;background:var(--accent,#e85d04);border:none;border-radius:10px;padding:15px;color:#fff;font-family:var(--font-h,sans-serif);font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px;">📷 Take Photo</button>
+      <button onclick="_photoSheetGallery()" style="width:100%;background:var(--card2,#252540);border:1px solid var(--border,#333);border-radius:10px;padding:15px;color:var(--text,#fff);font-family:var(--font-h,sans-serif);font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px;">🖼️ Choose from Gallery</button>
+      <button onclick="_closePhotoSheet()" style="width:100%;background:none;border:none;border-radius:10px;padding:12px;color:var(--muted,#888);font-size:13px;cursor:pointer;">Cancel</button>
+    </div>
+    <input type="file" id="_photo-sheet-camera-inp" accept="image/*" capture="environment" style="display:none;" onchange="_photoSheetHandleInput(this)">
+    <input type="file" id="_photo-sheet-gallery-inp" accept="image/*" style="display:none;" onchange="_photoSheetHandleInput(this)">
+  `;
+  document.body.appendChild(sheet);
+  // Set multiple attribute dynamically
+  sheet.querySelector('#_photo-sheet-camera-inp').multiple = _photoSheetMultiple;
+  sheet.querySelector('#_photo-sheet-gallery-inp').multiple = _photoSheetMultiple;
+}
+function _closePhotoSheet(){
+  const s = document.getElementById('photo-action-sheet');
+  if(s) s.remove();
+}
+function _photoSheetCamera(){
+  _closePhotoSheet();
+  // Re-create inputs outside the removed sheet
+  let inp = document.getElementById('_psa-camera');
+  if(!inp){ inp=document.createElement('input'); inp.type='file'; inp.id='_psa-camera'; inp.accept='image/*'; inp.setAttribute('capture','environment'); inp.style.display='none'; inp.onchange=e=>_photoSheetHandleInput(e.target); document.body.appendChild(inp); }
+  inp.multiple = _photoSheetMultiple;
+  inp.value='';
+  inp.click();
+}
+function _photoSheetGallery(){
+  _closePhotoSheet();
+  let inp = document.getElementById('_psa-gallery');
+  if(!inp){ inp=document.createElement('input'); inp.type='file'; inp.id='_psa-gallery'; inp.accept='image/*'; inp.style.display='none'; inp.onchange=e=>_photoSheetHandleInput(e.target); document.body.appendChild(inp); }
+  inp.multiple = _photoSheetMultiple;
+  inp.value='';
+  inp.click();
+}
+function _photoSheetHandleInput(inp){
+  if(!inp.files || !inp.files.length || !_photoSheetCallback) return;
+  const cb = _photoSheetCallback;
+  _photoSheetCallback = null;
+  cb(inp.files);
+}
+// ─────────────────────────────────────────────────────────────────────────────
 function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function escJs(s){return(s||'').replace(/\\/g,'\\\\').replace(/'/g,'\\x27').replace(/"/g,'\\x22');}
 function formatPhone(raw){
@@ -5282,7 +5337,17 @@ function savePin(){
 window._pinDamagePhotos = []; // array of base64 data URLs, max 3
 
 function addPinPhoto(){
-  document.getElementById('pin-photo-input').click();
+  showPhotoActionSheet(function(files){
+    // Simulate the original input handler
+    const inp = document.getElementById('pin-photo-input');
+    // Create a DataTransfer to set files on the real input
+    try{
+      const dt = new DataTransfer();
+      Array.from(files).forEach(f=>dt.items.add(f));
+      inp.files = dt.files;
+    }catch(e){}
+    handlePinPhotoInput({files: files});
+  }, {multiple: false});
 }
 
 function handlePinPhotoInput(inp){
@@ -5354,20 +5419,9 @@ function resetPinModal(){
 // ── ADD PHOTOS TO EXISTING PIN (from map popup) ──────────────────────────────
 function openPinPhotoAdder(pinId){
   window._addingPhotosForPin = pinId;
-  // Create or reuse a hidden file input
-  let inp = document.getElementById('popup-photo-input');
-  if(!inp){
-    inp = document.createElement('input');
-    inp.type = 'file';
-    inp.id = 'popup-photo-input';
-    inp.accept = 'image/*';
-    inp.multiple = true;
-    inp.style.display = 'none';
-    inp.onchange = handlePopupPhotoInput;
-    document.body.appendChild(inp);
-  }
-  inp.value = '';
-  inp.click();
+  showPhotoActionSheet(function(files){
+    handlePopupPhotoInput({target:{files: files}});
+  }, {multiple: true});
 }
 
 function handlePopupPhotoInput(e){
@@ -5854,19 +5908,9 @@ function removeStructure(id){
 // ── PER-STRUCTURE PHOTOS ──────────────────────────────────────────────
 function addStructurePhoto(sid){
   window._structPhotoTarget = sid;
-  let inp = document.getElementById('struct-photo-input');
-  if(!inp){
-    inp = document.createElement('input');
-    inp.type = 'file';
-    inp.id = 'struct-photo-input';
-    inp.accept = 'image/*';
-    inp.multiple = true;
-    inp.style.display = 'none';
-    inp.onchange = _handleStructPhotoInput;
-    document.body.appendChild(inp);
-  }
-  inp.value = '';
-  inp.click();
+  showPhotoActionSheet(function(files){
+    _handleStructPhotoInput({target:{files: files}});
+  }, {multiple: true});
 }
 
 function _handleStructPhotoInput(e){
