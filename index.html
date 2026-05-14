@@ -844,6 +844,10 @@ tr:hover td{background:var(--card);}
           <option value="7">Last 7 Days</option>
           <option value="14">Last 14 Days</option>
           <option value="30" selected>Last 30 Days</option>
+          <option value="60">Last 60 Days</option>
+          <option value="90">Last 90 Days</option>
+          <option value="180">Last 6 Months</option>
+          <option value="365">Last 1 Year</option>
         </select>
       </div>
       <div style="margin-bottom:12px;">
@@ -15016,7 +15020,7 @@ async function loadStormEvents(){
     dates.push(`${yy}${mm}${dd}`);
   }
 
-  // NOAA SPC sends Access-Control-Allow-Origin: * — fetch all dates in parallel
+  // NOAA SPC sends Access-Control-Allow-Origin: * — fetch in batches to avoid overloading browser
   let completed = 0;
   const fetchOne = async (dateStr) => {
     try {
@@ -15050,8 +15054,15 @@ async function loadStormEvents(){
     } catch(e){ completed++; return []; }
   };
 
-  const results = await Promise.all(dates.map(fetchOne));
-  _stormData = results.flat();
+  // Batch fetches: 30 at a time to avoid overwhelming the browser for large ranges
+  const BATCH = 30;
+  const allRows = [];
+  for(let b = 0; b < dates.length; b += BATCH){
+    const batch = dates.slice(b, b + BATCH);
+    const batchResults = await Promise.all(batch.map(fetchOne));
+    batchResults.flat().forEach(r => allRows.push(r));
+  }
+  _stormData = allRows;
 
   renderStormMarkers();
   if(_stormData.length === 0){
