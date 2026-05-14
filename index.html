@@ -830,41 +830,69 @@ tr:hover td{background:var(--card);}
       <button class="mtool-btn" id="btn-storm-toggle" onclick="toggleStormEvents()">⛈ Storm Events</button>
     </div>
     <!-- Storm Events Panel -->
-    <div id="storm-panel" style="display:none;position:absolute;top:12px;left:12px;z-index:2000;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;width:260px;box-shadow:0 4px 20px rgba(0,0,0,.5);">
+    <div id="storm-panel" style="display:none;position:absolute;top:12px;left:12px;z-index:2000;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;width:280px;box-shadow:0 4px 20px rgba(0,0,0,.5);">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <div style="font-size:13px;font-weight:700;color:var(--text);">⛈ Hail Strike Map</div>
-        <button onclick="toggleStormEvents()" style="background:none;border:none;color:var(--mid);font-size:16px;cursor:pointer;line-height:1;">✕</button>
+        <div style="font-size:13px;font-weight:700;color:var(--text);">⛈ Storm Overlay</div>
+        <button onclick="closeStormPanel()" style="background:none;border:none;color:var(--mid);font-size:16px;cursor:pointer;line-height:1;">✕</button>
       </div>
-      <div style="font-size:10px;color:var(--muted);margin-bottom:10px;">Source: NOAA Storm Prediction Center · Free</div>
-      <div style="margin-bottom:10px;">
-        <label style="font-size:11px;font-weight:700;color:var(--mid);display:block;margin-bottom:5px;">DATE RANGE</label>
-        <select id="storm-days" onchange="loadStormEvents()" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:7px 10px;font-size:12px;">
-          <option value="1">Today</option>
-          <option value="3">Last 3 Days</option>
-          <option value="7">Last 7 Days</option>
-          <option value="14">Last 14 Days</option>
-          <option value="30" selected>Last 30 Days</option>
-          <option value="60">Last 60 Days</option>
-          <option value="90">Last 90 Days</option>
-          <option value="180">Last 6 Months</option>
-          <option value="365">Last 1 Year</option>
-        </select>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:12px;">Source: NOAA Storm Prediction Center · Free</div>
+
+      <!-- Hail Layer Toggle -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="font-size:12px;font-weight:700;color:#60a5fa;">🧊 Hail Strikes</div>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <span style="font-size:10px;color:var(--muted);" id="hail-toggle-lbl">OFF</span>
+          <div onclick="toggleHailLayer()" id="hail-toggle-track" style="width:36px;height:20px;border-radius:10px;background:#374151;cursor:pointer;position:relative;transition:background .2s;">
+            <div id="hail-toggle-thumb" style="position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#9ca3af;transition:all .2s;"></div>
+          </div>
+        </label>
       </div>
-      <div style="margin-bottom:12px;">
-        <label style="font-size:11px;font-weight:700;color:var(--mid);display:block;margin-bottom:5px;">MIN HAIL SIZE</label>
-        <select id="storm-min-size" onchange="renderStormMarkers()" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:7px 10px;font-size:12px;">
-          <option value="75" selected>0.75"+ (Penny)</option>
-          <option value="100">1.00"+ (Quarter)</option>
-          <option value="150">1.50"+ (Golf Ball)</option>
-          <option value="200">2.00"+ (Baseball+)</option>
-        </select>
+      <div id="hail-controls" style="display:none;margin-bottom:10px;">
+        <div style="margin-bottom:8px;">
+          <label style="font-size:10px;font-weight:700;color:var(--mid);display:block;margin-bottom:4px;">DATE RANGE</label>
+          <select id="storm-days" onchange="loadStormEvents()" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:6px 10px;font-size:12px;">
+            <option value="1">Today</option>
+            <option value="3">Last 3 Days</option>
+            <option value="7">Last 7 Days</option>
+            <option value="14">Last 14 Days</option>
+            <option value="30" selected>Last 30 Days</option>
+            <option value="60">Last 60 Days</option>
+            <option value="90">Last 90 Days</option>
+            <option value="180">Last 6 Months</option>
+            <option value="365">Last 1 Year</option>
+          </select>
+        </div>
+        <div style="margin-bottom:8px;">
+          <label style="font-size:10px;font-weight:700;color:var(--mid);display:block;margin-bottom:4px;">MIN HAIL SIZE</label>
+          <select id="storm-min-size" onchange="renderStormMarkers()" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:6px 10px;font-size:12px;">
+            <option value="75" selected>0.75"+ (Penny)</option>
+            <option value="100">1.00"+ (Quarter)</option>
+            <option value="150">1.50"+ (Golf Ball)</option>
+            <option value="200">2.00"+ (Baseball+)</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:6px;font-size:10px;color:var(--mid);flex-wrap:wrap;">
+          <span style="display:flex;align-items:center;gap:3px;"><span style="width:9px;height:9px;border-radius:50%;background:#FBBF24;display:inline-block;"></span>Penny</span>
+          <span style="display:flex;align-items:center;gap:3px;"><span style="width:9px;height:9px;border-radius:50%;background:#F59E0B;display:inline-block;"></span>Quarter</span>
+          <span style="display:flex;align-items:center;gap:3px;"><span style="width:9px;height:9px;border-radius:50%;background:#F97316;display:inline-block;"></span>Golf Ball</span>
+          <span style="display:flex;align-items:center;gap:3px;"><span style="width:9px;height:9px;border-radius:50%;background:#EF4444;display:inline-block;"></span>Baseball+</span>
+        </div>
+        <div id="storm-status" style="font-size:10px;color:var(--mid);text-align:center;min-height:14px;"></div>
       </div>
-      <div style="display:flex;gap:10px;margin-bottom:12px;font-size:11px;color:var(--mid);">
-        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#F59E0B;display:inline-block;"></span>Quarter</span>
-        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#F97316;display:inline-block;"></span>Golf Ball</span>
-        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#EF4444;display:inline-block;"></span>Baseball+</span>
+
+      <div style="border-top:1px solid var(--border);margin:10px 0;"></div>
+
+      <!-- Wind Layer Toggle -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="font-size:12px;font-weight:700;color:#34d399;">💨 Wind 50 MPH+ (90 days)</div>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <span style="font-size:10px;color:var(--muted);" id="wind-toggle-lbl">OFF</span>
+          <div onclick="toggleWindLayer()" id="wind-toggle-track" style="width:36px;height:20px;border-radius:10px;background:#374151;cursor:pointer;position:relative;transition:background .2s;">
+            <div id="wind-toggle-thumb" style="position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#9ca3af;transition:all .2s;"></div>
+          </div>
+        </label>
       </div>
-      <div id="storm-status" style="font-size:11px;color:var(--mid);text-align:center;min-height:16px;"></div>
+      <div id="wind-status" style="font-size:10px;color:var(--mid);text-align:center;min-height:14px;"></div>
     </div>
     <div class="measure-hud" id="measure-hud">
       <div style="display:flex;align-items:baseline;gap:6px;">
@@ -14965,19 +14993,21 @@ function updateDripToggleLabel(){
 // ═══════════════════════════════════════════════════════════════
 //  STORM EVENTS — NOAA SPC Hail Overlay
 // ═══════════════════════════════════════════════════════════════
-let _stormActive = false;
-let _stormData = [];       // all fetched hail reports
-let _stormLayers = [];     // Leaflet circle layers on map
+let _stormPanelOpen = false;
+let _hailLayerOn = false;   // persistent: stays on even when panel closes
+let _windLayerOn = false;   // persistent: stays on even when panel closes
+let _stormData = [];        // fetched hail reports
+let _stormLayers = [];      // Leaflet hail circle layers
+let _windData = [];         // fetched wind reports
+let _windLayers = [];       // Leaflet wind circle layers
 
 function toggleStormEvents(){
-  _stormActive = !_stormActive;
+  _stormPanelOpen = !_stormPanelOpen;
   const btn = document.getElementById('btn-storm-toggle');
   const panel = document.getElementById('storm-panel');
-  if(_stormActive){
+  if(_stormPanelOpen){
     btn.classList.add('active');
-    btn.textContent = '\u2715 Hide Storm Events';
     panel.style.display = 'block';
-    // Position panel below the toolbar (4 buttons × ~42px each + gap)
     const toolbar = document.querySelector('.map-toolbar');
     if(toolbar){
       const tbRect = toolbar.getBoundingClientRect();
@@ -14986,13 +15016,73 @@ function toggleStormEvents(){
     } else {
       panel.style.top = '210px';
     }
-    loadStormEvents();
+    _syncHailToggleUI();
+    _syncWindToggleUI();
   } else {
     btn.classList.remove('active');
-    btn.textContent = '\u26c8 Storm Events';
     panel.style.display = 'none';
+    // Layers stay ON — closing panel does NOT clear them
+  }
+}
+
+function closeStormPanel(){
+  _stormPanelOpen = false;
+  document.getElementById('btn-storm-toggle').classList.remove('active');
+  document.getElementById('storm-panel').style.display = 'none';
+}
+
+// ── Hail toggle ──────────────────────────────────────────────────
+function toggleHailLayer(){
+  _hailLayerOn = !_hailLayerOn;
+  _syncHailToggleUI();
+  if(_hailLayerOn){
+    loadStormEvents();
+  } else {
     clearStormMarkers();
     _stormData = [];
+    const s = document.getElementById('storm-status'); if(s) s.textContent='';
+  }
+}
+function _syncHailToggleUI(){
+  const track = document.getElementById('hail-toggle-track');
+  const thumb = document.getElementById('hail-toggle-thumb');
+  const lbl   = document.getElementById('hail-toggle-lbl');
+  const ctrl  = document.getElementById('hail-controls');
+  if(!track) return;
+  if(_hailLayerOn){
+    track.style.background='#3b82f6'; thumb.style.left='19px'; thumb.style.background='#fff';
+    if(lbl){ lbl.textContent='ON'; lbl.style.color='#60a5fa'; }
+    if(ctrl) ctrl.style.display='block';
+  } else {
+    track.style.background='#374151'; thumb.style.left='3px'; thumb.style.background='#9ca3af';
+    if(lbl){ lbl.textContent='OFF'; lbl.style.color='var(--muted)'; }
+    if(ctrl) ctrl.style.display='none';
+  }
+}
+
+// ── Wind toggle ──────────────────────────────────────────────────
+function toggleWindLayer(){
+  _windLayerOn = !_windLayerOn;
+  _syncWindToggleUI();
+  if(_windLayerOn){
+    loadWindEvents();
+  } else {
+    clearWindMarkers();
+    _windData = [];
+    const s = document.getElementById('wind-status'); if(s) s.textContent='';
+  }
+}
+function _syncWindToggleUI(){
+  const track = document.getElementById('wind-toggle-track');
+  const thumb = document.getElementById('wind-toggle-thumb');
+  const lbl   = document.getElementById('wind-toggle-lbl');
+  if(!track) return;
+  if(_windLayerOn){
+    track.style.background='#10b981'; thumb.style.left='19px'; thumb.style.background='#fff';
+    if(lbl){ lbl.textContent='ON'; lbl.style.color='#34d399'; }
+  } else {
+    track.style.background='#374151'; thumb.style.left='3px'; thumb.style.background='#9ca3af';
+    if(lbl){ lbl.textContent='OFF'; lbl.style.color='var(--muted)'; }
   }
 }
 
@@ -15000,9 +15090,13 @@ function clearStormMarkers(){
   _stormLayers.forEach(l => map.removeLayer(l));
   _stormLayers = [];
 }
+function clearWindMarkers(){
+  _windLayers.forEach(l => map.removeLayer(l));
+  _windLayers = [];
+}
 
 async function loadStormEvents(){
-  if(!_stormActive) return;
+  if(!_hailLayerOn) return;
   clearStormMarkers();
   _stormData = [];
   const days = parseInt(document.getElementById('storm-days').value) || 7;
@@ -15098,11 +15192,11 @@ function renderStormMarkers(){
 
     circle.bindPopup(`
       <div style="font-family:sans-serif;min-width:200px;">
-        <div style="font-weight:700;font-size:14px;color:#1a1a1a;margin-bottom:6px;">\u26c8 Hail Report</div>
-        <div style="font-size:12px;color:#333;margin-bottom:4px;"><b>Size:</b> ${sizeInches}\" (${label})</div>
-        <div style="font-size:12px;color:#333;margin-bottom:4px;"><b>Location:</b> ${r.location}, ${r.county}, ${r.state}</div>
-        <div style="font-size:12px;color:#333;margin-bottom:4px;"><b>Date:</b> ${dateFormatted}</div>
-        ${r.comment ? `<div style="font-size:11px;color:#666;margin-bottom:8px;font-style:italic;">${r.comment}</div>` : ''}
+        <div style="font-weight:700;font-size:14px;color:#fff;margin-bottom:6px;">\u26c8 Hail Report</div>
+        <div style="font-size:12px;color:#e5e7eb;margin-bottom:4px;"><b style='color:#fff;'>Size:</b> ${sizeInches}\" (${label})</div>
+        <div style="font-size:12px;color:#e5e7eb;margin-bottom:4px;"><b style='color:#fff;'>Location:</b> ${r.location}, ${r.county}, ${r.state}</div>
+        <div style="font-size:12px;color:#e5e7eb;margin-bottom:4px;"><b style='color:#fff;'>Date:</b> ${dateFormatted}</div>
+        ${r.comment ? `<div style="font-size:11px;color:#9ca3af;margin-bottom:8px;font-style:italic;">${r.comment}</div>` : ''}
         <button onclick="stormDropPin(${r.lat},${r.lon},'${r.location.replace(/'/g,"\\'")}, ${r.county}, ${r.state}')" 
           style="width:100%;background:#F25C05;color:#fff;border:none;border-radius:6px;padding:8px;font-weight:700;font-size:12px;cursor:pointer;margin-top:4px;">
           \uD83D\uDCCD Drop Pin Here
@@ -15143,6 +15237,94 @@ function stormDropPin(lat, lon, locationHint){
   });
 }
 
+// ── Wind Events (50 MPH+, past 90 days) ──────────────────────────────
+async function loadWindEvents(){
+  if(!_windLayerOn) return;
+  clearWindMarkers();
+  _windData = [];
+  const statusEl = document.getElementById('wind-status');
+  if(statusEl) statusEl.textContent = 'Loading wind data...';
+
+  const dates = [];
+  for(let i = 0; i < 90; i++){
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const yy = String(d.getFullYear()).slice(2);
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
+    dates.push(`${yy}${mm}${dd}`);
+  }
+
+  let completed = 0;
+  const fetchWind = async (dateStr) => {
+    try {
+      const url = `https://www.spc.noaa.gov/climo/reports/${dateStr}_rpts_filtered_wind.csv`;
+      const res = await fetch(url);
+      completed++;
+      if(statusEl) statusEl.textContent = `Loading wind… ${completed}/90`;
+      if(!res.ok) return [];
+      const text = await res.text();
+      const lines = text.trim().split('\n');
+      const rows = [];
+      for(let i = 1; i < lines.length; i++){
+        const parts = lines[i].split(',');
+        if(parts.length < 7) continue;
+        const speed = parseInt(parts[1]); // knots from NOAA, convert to mph
+        const lat = parseFloat(parts[5]);
+        const lon = parseFloat(parts[6]);
+        if(isNaN(lat)||isNaN(lon)||isNaN(speed)) continue;
+        const mph = Math.round(speed * 1.15078);
+        if(mph < 50) continue; // filter to 50 MPH+
+        rows.push({ date: dateStr, time: parts[0], speed: mph, location: (parts[2]||'').trim(), county: (parts[3]||'').trim(), state: (parts[4]||'').trim(), lat, lon, comment: parts.slice(7).join(',').trim() });
+      }
+      return rows;
+    } catch(e){ completed++; return []; }
+  };
+
+  const BATCH = 30;
+  const allRows = [];
+  for(let b = 0; b < dates.length; b += BATCH){
+    const batch = dates.slice(b, b + BATCH);
+    const batchResults = await Promise.all(batch.map(fetchWind));
+    batchResults.flat().forEach(r => allRows.push(r));
+  }
+  _windData = allRows;
+  renderWindMarkers();
+  if(_windData.length === 0 && statusEl) statusEl.textContent = 'No 50 MPH+ wind reports in past 90 days.';
+}
+
+function renderWindMarkers(){
+  clearWindMarkers();
+  const statusEl = document.getElementById('wind-status');
+  _windData.forEach(r => {
+    let color;
+    if(r.speed >= 100)      color = '#EF4444'; // extreme
+    else if(r.speed >= 75)  color = '#F97316'; // severe
+    else if(r.speed >= 60)  color = '#FBBF24'; // strong
+    else                    color = '#34d399'; // 50-59 mph
+
+    const dateFormatted = `20${r.date.slice(0,2)}-${r.date.slice(2,4)}-${r.date.slice(4,6)}`;
+    const circle = L.circleMarker([r.lat, r.lon], {
+      radius: 7, fillColor: color, color: '#fff', weight: 1.5, opacity: 0.9, fillOpacity: 0.7
+    });
+    circle.bindPopup(`
+      <div style="font-family:sans-serif;min-width:200px;">
+        <div style="font-weight:700;font-size:14px;color:#fff;margin-bottom:6px;">💨 Wind Report</div>
+        <div style="font-size:12px;color:#e5e7eb;margin-bottom:4px;"><b style='color:#fff;'>Speed:</b> ${r.speed} MPH</div>
+        <div style="font-size:12px;color:#e5e7eb;margin-bottom:4px;"><b style='color:#fff;'>Location:</b> ${r.location}, ${r.county}, ${r.state}</div>
+        <div style="font-size:12px;color:#e5e7eb;margin-bottom:4px;"><b style='color:#fff;'>Date:</b> ${dateFormatted}</div>
+        ${r.comment ? `<div style="font-size:11px;color:#9ca3af;margin-bottom:8px;font-style:italic;">${r.comment}</div>` : ''}
+        <button onclick="stormDropPin(${r.lat},${r.lon},'${r.location.replace(/'/g,\"'\")} ${r.county} ${r.state}')" 
+          style="width:100%;background:#F25C05;color:#fff;border:none;border-radius:6px;padding:8px;font-weight:700;font-size:12px;cursor:pointer;margin-top:4px;">
+          📍 Drop Pin Here
+        </button>
+      </div>
+    `);
+    circle.addTo(map);
+    _windLayers.push(circle);
+  });
+  if(statusEl && _windData.length > 0) statusEl.textContent = `${_windData.length} wind report${_windData.length!==1?'s':''} shown (50+ MPH)`;
+}
 
 // ═══════════════════════════════
 //  HAMBURGER NAV MENU
