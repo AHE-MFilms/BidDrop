@@ -13134,6 +13134,7 @@ function renderAccountAdminPanel(profiles){
       '<div style="font-size:11px;color:var(--muted);">'+(u.email||'')+'</div>' +
       '</div>' +
       '<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:9px;background:var(--accent-dim);color:var(--accent);text-transform:uppercase;">'+u.role+'</span>' +
+      '<button onclick="editTeamMember(\'' +u.id+ '\',\'' +escJs(u.name||'')+ '\',\'' +escJs(u.email||'')+ '\',\'' +escJs(u.phone||'')+ '\',\'' +escJs(u.role||'rep')+ '\')" style="background:none;border:1px solid var(--border);border-radius:5px;color:var(--muted);cursor:pointer;font-size:11px;padding:3px 10px;font-weight:600;white-space:nowrap;margin-left:6px;">✏️ Edit</button>' +
       '</div>').join('') +
     '</div>' +
     renderAddUserForm();
