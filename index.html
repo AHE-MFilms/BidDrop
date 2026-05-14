@@ -865,10 +865,10 @@ tr:hover td{background:var(--card);}
         <div style="margin-bottom:8px;">
           <label style="font-size:10px;font-weight:700;color:var(--mid);display:block;margin-bottom:4px;">MIN HAIL SIZE</label>
           <select id="storm-min-size" onchange="renderStormMarkers()" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:6px 10px;font-size:12px;">
-            <option value="75" selected>0.75"+ (Penny)</option>
-            <option value="100">1.00"+ (Quarter)</option>
-            <option value="150">1.50"+ (Golf Ball)</option>
-            <option value="200">2.00"+ (Baseball+)</option>
+            <option value="0.75" selected>0.75"+ (Penny)</option>
+            <option value="1.00">1.00"+ (Quarter)</option>
+            <option value="1.50">1.50"+ (Golf Ball)</option>
+            <option value="2.00">2.00"+ (Baseball+)</option>
           </select>
         </div>
         <div style="display:flex;gap:8px;margin-bottom:6px;font-size:10px;color:var(--mid);flex-wrap:wrap;">
@@ -15129,7 +15129,7 @@ async function loadStormEvents(){
       for(let i = 1; i < lines.length; i++){
         const parts = lines[i].split(',');
         if(parts.length < 7) continue;
-        const size = parseInt(parts[1]);
+        const size = parseFloat(parts[1]);
         const lat = parseFloat(parts[5]);
         const lon = parseFloat(parts[6]);
         if(isNaN(lat)||isNaN(lon)||isNaN(size)) continue;
@@ -15166,26 +15166,26 @@ async function loadStormEvents(){
 
 function renderStormMarkers(){
   clearStormMarkers();
-  const minSize = parseInt(document.getElementById('storm-min-size').value) || 100;
+  const minSize = parseFloat(document.getElementById('storm-min-size').value) || 0.75;
   const filtered = _stormData.filter(r => r.size >= minSize);
   const statusEl = document.getElementById('storm-status');
 
   filtered.forEach(r => {
-    // Color by size
+    // Color by size (size is stored as decimal inches e.g. 1.00, 1.50, 2.00)
     let color, label;
-    if(r.size >= 200){       color='#EF4444'; label='Baseball+'; }
-    else if(r.size >= 150){ color='#F97316'; label='Golf Ball'; }
-    else if(r.size >= 100){ color='#F59E0B'; label='Quarter'; }
-    else {                   color='#FBBF24'; label='Penny'; }
+    if(r.size >= 2.00){       color='#EF4444'; label='Baseball+'; }
+    else if(r.size >= 1.50){ color='#F97316'; label='Golf Ball'; }
+    else if(r.size >= 1.00){ color='#F59E0B'; label='Quarter'; }
+    else {                    color='#FBBF24'; label='Penny'; }
 
-    const sizeInches = (r.size / 100).toFixed(2);
+    const sizeInches = r.size.toFixed(2);
     const dateFormatted = `20${r.date.slice(0,2)}-${r.date.slice(2,4)}-${r.date.slice(4,6)}`;
 
     // Use L.circle with real-world radius (~1 mile = 1609 meters)
     // Larger hail gets a slightly larger radius (up to ~2 miles for baseball+)
     let radiusMeters = 1609; // 1 mile default
-    if(r.size >= 200) radiusMeters = 3218;      // ~2 miles for baseball+
-    else if(r.size >= 150) radiusMeters = 2414; // ~1.5 miles for golf ball
+    if(r.size >= 2.00) radiusMeters = 3218;      // ~2 miles for baseball+
+    else if(r.size >= 1.50) radiusMeters = 2414; // ~1.5 miles for golf ball
 
     const circle = L.circle([r.lat, r.lon], {
       radius: radiusMeters,
