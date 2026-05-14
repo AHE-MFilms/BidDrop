@@ -10577,8 +10577,14 @@ async function loadAnalytics(){
       }
     }
   }catch(e){
-    console.error('Analytics error:',e);
-    setStat('an-postcards','Err'); setStat('an-scans','Err');
+    console.error('[BidDrop] Analytics error:',e.message||e);
+    // Show 0 instead of Err so the UI doesn't look broken on empty accounts
+    setStat('an-postcards','0'); setStat('an-scans','0');
+    setStat('an-open-rate','0%'); setStat('an-signed','0');
+    setStat('an-estimates','0'); setStat('an-pins','0');
+    setStat('an-pipeline','$0'); setStat('an-close-rate','0%');
+    setStat('an-page-views','0'); setStat('an-booking-clicks','0');
+    setStat('an-call-clicks','0'); setStat('an-view-rate','0%');
   }
 }
 
