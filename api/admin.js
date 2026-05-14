@@ -14,7 +14,7 @@
 const SUPABASE_URL   = process.env.SUPABASE_URL    || 'https://gtwbhxnrmfmdenogzuea.supabase.co';
 const SERVICE_KEY    = process.env.SUPABASE_SERVICE_KEY;
 const LOB_KEY        = process.env.LOB_API_KEY;
-const RENTCAST_KEY   = process.env.RENTCAST_API_KEY;
+const RENTCAST_KEY   = process.env.RENTCAST_API_KEY; // updated key
 const AGENCY_ACCT_ID = process.env.AGENCY_ACCOUNT_ID;
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const SUPABASE_PAT   = process.env.SUPABASE_PAT || 'sbp_145c8823fe7d9132f688eb40484dee8670e10393';
