@@ -1757,10 +1757,21 @@ tr:hover td{background:var(--card);}
           <span class="stab-chevron" id="stab-chevron-pricing">&#9662;</span>
         </div>
         <div class="stab-card-body" id="stab-body-pricing">
-          <div class="stab-section-hdr">Material Cost Per Square</div>
+          <div class="stab-section-hdr">Pricing Mode</div>
+          <div style="display:flex;gap:8px;margin-bottom:14px;">
+            <button id="s-mode-persq" onclick="setPricingMode('per_square')" style="flex:1;padding:10px;border-radius:8px;border:2px solid var(--accent);background:var(--accent);color:#fff;font-weight:700;font-size:13px;cursor:pointer;">&#128290; Price Per Square</button>
+            <button id="s-mode-detailed" onclick="setPricingMode('detailed')" style="flex:1;padding:10px;border-radius:8px;border:2px solid var(--border);background:transparent;color:var(--mid);font-weight:700;font-size:13px;cursor:pointer;">&#128203; Detailed Line Items</button>
+          </div>
+          <input type="hidden" id="s-pricing-mode-val" value="detailed">
+          <div id="s-persq-fields" style="display:none;margin-bottom:14px;">
+            <div class="fg"><label class="fl">Price Per Square (all-in $/sq)</label><input type="number" class="fi" id="s-pps" placeholder="450" min="0"></div>
+            <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:9px 13px;font-size:13px;color:var(--mid);">&#128161; Formula: Squares (footprint × pitch × 1.10 waste) × $/sq = Total. Simple, fast, and how most roofers price.</div>
+          </div>
+          <div id="s-detailed-fields">
+          <div class="stab-section-hdr" style="margin-top:4px;">Material Cost Per Square</div>
           <div class="frow">
-            <div class="fg"><label class="fl">3-Tab Shingle ($/sq)</label><input type="number" class="fi" id="s-c3tab" placeholder="220"></div>
             <div class="fg"><label class="fl">Architectural ($/sq)</label><input type="number" class="fi" id="s-carch" placeholder="300"></div>
+            <div class="fg"></div>
           </div>
           <div class="frow">
             <div class="fg"><label class="fl">Designer/Premium ($/sq)</label><input type="number" class="fi" id="s-cdes" placeholder="420"></div>
@@ -1795,6 +1806,7 @@ tr:hover td{background:var(--card);}
           <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:15px;color:var(--mid);margin-top:4px;">
             &#128161; Formula: (Material+Labor+Tearoff+Accessories) &times; (1 + Overhead%) &times; (1 + Margin%) = Estimate
           </div>
+          </div><!-- /s-detailed-fields -->
           <div class="stab-section-hdr" style="margin-top:16px;">Financing Options</div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
             <input type="checkbox" id="s-fin-enabled" style="accent-color:var(--accent);width:16px;height:16px;" checked>
@@ -2516,6 +2528,7 @@ const OWNER_EMAIL = 'john@mongoosefilms.com'; // Primary owner — cannot be del
 const DEFAULTS = {
   companyName:'Your Roofing Co', companyAddr:'123 Main St, Detroit MI 48000', companyPhone:'(313) 555-0100',
   costArchitectural:300, cost3Tab:220, costDesigner:420, costMetal:680,
+  pricingMode:'detailed', pricePerSquare:450,
   costTearoff:75, costIceWater:42, costFelts:22, costDumpster:450,
   costSkylight:375, costChimney:295, costGutter:9,
   overhead:15, margin:20, brandColor:'#F25C05', lobKey:'',
@@ -2561,9 +2574,9 @@ let realtimeChannel = null;
 let structures = [];
 
 const PITCH_OPTS = [
-  {v:'1.0',l:'4/12 — Low'},{v:'1.07',l:'5/12'},{v:'1.15',l:'6/12 — Standard'},
-  {v:'1.23',l:'7/12'},{v:'1.31',l:'8/12 — Moderate'},{v:'1.40',l:'9/12'},
-  {v:'1.50',l:'10/12 — Steep'},{v:'1.65',l:'11/12'},{v:'1.80',l:'12/12 — Very Steep'}
+  {v:'1.054',l:'4/12 — Low'},{v:'1.083',l:'5/12'},{v:'1.118',l:'6/12 — Standard'},
+  {v:'1.158',l:'7/12'},{v:'1.202',l:'8/12 — Moderate'},{v:'1.250',l:'9/12'},
+  {v:'1.302',l:'10/12 — Steep'},{v:'1.357',l:'11/12'},{v:'1.414',l:'12/12 — Very Steep'}
 ];
 const MAT_OPTS = [
   {v:'1.3',l:'Architectural Shingle'},
@@ -2577,7 +2590,9 @@ const STORIES_OPTS = [
   {v:'1',l:'1 Story'},{v:'1.5',l:'1.5 Stories'},{v:'2',l:'2 Stories'},{v:'2.5',l:'2+ Stories'}
 ];
 
-const PITCHLBL = {'1.0':'4/12 Low','1.07':'5/12','1.15':'6/12 Std','1.23':'7/12','1.31':'8/12 Mod','1.40':'9/12','1.50':'10/12 Steep','1.65':'11/12','1.80':'12/12 Steep'};
+const PITCHLBL = {'1.054':'4/12 Low','1.083':'5/12','1.118':'6/12 Std','1.158':'7/12','1.202':'8/12 Mod','1.250':'9/12','1.302':'10/12 Steep','1.357':'11/12','1.414':'12/12 Steep',
+  // legacy keys kept for old saved estimates
+  '1.0':'4/12 Low','1.07':'5/12','1.15':'6/12 Std','1.23':'7/12','1.31':'8/12 Mod','1.40':'9/12','1.50':'10/12 Steep','1.65':'11/12','1.80':'12/12 Steep'};
 const MATLBL  = {'1.0':'3-Tab Shingle','1.3':'Architectural Shingle','1.8':'Designer/Premium','2.5':'Metal Roofing'}; // 1.0 kept for legacy display only
 
 function sColor(s){return{needs_roof:'#F25C05',contacted:'#A855F7',quoted:'#3B82F6',signed:'#22C55E',converted:'#22C55E',bid_sent:'#3B82F6',not_interested:'#3D5269',lost:'#EF4444'}[s]||'#3D5269';}
@@ -3010,7 +3025,7 @@ function loadEstFromPicker(){
     if(savedEst.email) document.getElementById('e-email').value = savedEst.email;
     if(savedEst.phone && document.getElementById('e-phone')) document.getElementById('e-phone').value = savedEst.phone||'';
     if(savedEst.structures && savedEst.structures.length) structures = savedEst.structures.map(function(s){return normStruct(s);});
-    else structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'1.15',mat:'1.3',complexity:'1.12',pts:null}];
+    else structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'1.118',mat:'1.3',complexity:'1.12',pts:null}];
     // Load all photos via unified system (migrates legacy fields automatically)
     _loadAllPhotosFromEst(savedEst, p);
     window._editingEstimateId = savedEst.id;
@@ -3020,11 +3035,11 @@ function loadEstFromPicker(){
     if(est.email) document.getElementById('e-email').value = est.email;
     if(est.phone && document.getElementById('e-phone')) document.getElementById('e-phone').value = est.phone||'';
     if(est.structures && est.structures.length) structures = est.structures.map(function(s){return normStruct(s);})
-    else structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'1.15',mat:'1.3',complexity:'1.12',pts:null}];
+    else structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'1.118',mat:'1.3',complexity:'1.12',pts:null}];
     // Load all photos via unified system
     _loadAllPhotosFromEst(est, p);
   } else {
-    structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'1.15',mat:'1.3',complexity:'1.12',pts:null}];
+    structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'1.118',mat:'1.3',complexity:'1.12',pts:null}];
     // Load photos from pin (no estimate yet)
     _loadAllPhotosFromPin(p);
   }
@@ -3126,7 +3141,7 @@ function newEstimate(){
   clearDraftBanner();
   hideEquityBadge();
   _resetPriceOverride();
-  structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'1.15',mat:'1.3',complexity:'1.12',pts:null}];
+  structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'1.118',mat:'1.3',complexity:'1.12',pts:null}];
   renderStructures(); calcP(); updatePreview();
   const sel = document.getElementById('est-pin-picker');
   if(sel) sel.value = '';
@@ -5902,7 +5917,7 @@ function goEstFromPin(id){
   document.getElementById('e-email').value = '';
   if(document.getElementById('e-phone')) document.getElementById('e-phone').value = '';
   document.getElementById('e-addr').value = p.address||'';
-  structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'1.15',mat:'1.3',complexity:'1.12',pts:null}];
+  structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'1.118',mat:'1.3',complexity:'1.12',pts:null}];
   if(est){
     if(est.owner) document.getElementById('e-owner').value = est.owner;
     if(est.email) document.getElementById('e-email').value = est.email;
@@ -5960,7 +5975,7 @@ function addStructure(sqft, name, pts){
   const id='s'+Date.now();
   structures.push({
     id, name:name||(structures.length===0?'Main House':'Structure '+(structures.length+1)),
-    sqft:sqft||0, pitch:'1.31', mat:'1.3', stories:'1', complexity:'1.12',
+    sqft:sqft||0, pitch:'1.202', mat:'1.3', stories:'1', complexity:'1.12',
     pts:pts||null
   });
   renderStructures();calcP();updatePreview();
@@ -6091,7 +6106,7 @@ function applyDataSid(selectHtml,sid){
 // Migrate old structure objects that used string field names (e.g. material:'arch_shingle', pitch:'6/12')
 function normStruct(s){
   const matMap = {'arch_shingle':'1.3','3tab':'1.0','3_tab':'1.0','designer':'1.8','metal':'2.5'};
-  const pitchMap = {'4/12':'1.0','5/12':'1.07','6/12':'1.15','7/12':'1.23','8/12':'1.31','9/12':'1.40','10/12':'1.50','11/12':'1.65','12/12':'1.80'};
+  const pitchMap = {'4/12':'1.054','5/12':'1.083','6/12':'1.118','7/12':'1.158','8/12':'1.202','9/12':'1.250','10/12':'1.302','11/12':'1.357','12/12':'1.414'};
   const complexMap = {'simple':'1.0','moderate':'1.12','complex':'1.25','very_complex':'1.40'};
   const out = Object.assign({}, s);
   // Fix mat field (was sometimes stored as 'material')
@@ -6106,10 +6121,17 @@ function normStruct(s){
 function calcStructPrice(s){
   const c=S.cfg;
   const sqft=parseFloat(s.sqft)||0;if(!sqft)return 0;
-  const pitchMult=parseFloat(s.pitch)||1.31;
+  const pitchMult=parseFloat(s.pitch)||1.118; // default 6/12
   const complexity=parseFloat(s.complexity)||1.12;
   const stories=parseFloat(s.stories)||1;
-  const sq=sqft/100*1.10*pitchMult;
+  const sq=sqft/100*1.10*pitchMult; // footprint → actual roof squares w/ 10% waste
+  // ── Simple mode: price per square ──
+  if((c.pricingMode||'detailed')==='per_square'){
+    const pps=parseFloat(c.pricePerSquare)||450;
+    const stMult=stories<=1?1:stories<=1.5?1.08:stories<=2?1.16:1.25;
+    return Math.round(sq*pps*stMult*complexity);
+  }
+  // ── Detailed mode ──
   const stMult=stories<=1?1:stories<=1.5?1.08:stories<=2?1.16:1.25;
   const matCost=getMatCost(s.mat);
   const tearoff=(parseFloat(c.costTearoff)||75)*sq;
@@ -6260,7 +6282,7 @@ function calcP(){
   if(document.getElementById('a-gut')&&document.getElementById('a-gut').checked)
     grand+=(parseFloat(c.costGutter)||9)*(parseInt(document.getElementById('a-gut-q').value)||120);
   if(document.getElementById('a-iws')&&document.getElementById('a-iws').checked)
-    grand+=(parseFloat(c.costIceWater)||42)*structures.reduce(function(sum,s){var sqft=parseFloat(s.sqft)||0;var pitchMult=parseFloat(s.pitch)||1.31;return sum+(sqft/100*1.10*pitchMult);},0);
+    grand+=(parseFloat(c.costIceWater)||42)*structures.reduce(function(sum,s){var sqft=parseFloat(s.sqft)||0;var pitchMult=parseFloat(s.pitch)||1.118;return sum+(sqft/100*1.10*pitchMult);},0);
   grand+=getSolarPrice();
   // Show override price in the display if active
   const overrideVal = window._priceOverrideOn ? (parseFloat((document.getElementById('e-price-override')||{}).value)||0) : 0;
@@ -6406,7 +6428,7 @@ function updatePreview(){
     structures.forEach((s,i)=>{
       const sp = calcStructPrice(s);
       grandTotal += sp;
-      const sq = ((parseFloat(s.sqft)||0)/100*1.12*(parseFloat(s.pitch)||1.31)).toFixed(1);
+      const sq = ((parseFloat(s.sqft)||0)/100*1.12*(parseFloat(s.pitch)||1.118)).toFixed(1);
       const col = i===0 ? color : '#444';
       structSectionsP2 +=
         '<div class="ml-box" style="border:2px solid '+col+';margin-bottom:14px;">'+
@@ -6444,7 +6466,7 @@ function updatePreview(){
       addRows+='<div class="ml-row"><span class="rl">Gutters ('+lf+' lf)</span><span class="rv">$'+amt.toLocaleString()+'</span></div>';
     }
     if(document.getElementById('a-iws')&&document.getElementById('a-iws').checked){
-      const iwsAmt=(parseFloat(c2.costIceWater)||42)*structures.reduce(function(sum,s){var sqft=parseFloat(s.sqft)||0;var pitchMult=parseFloat(s.pitch)||1.31;return sum+(sqft/100*1.10*pitchMult);},0);
+      const iwsAmt=(parseFloat(c2.costIceWater)||42)*structures.reduce(function(sum,s){var sqft=parseFloat(s.sqft)||0;var pitchMult=parseFloat(s.pitch)||1.118;return sum+(sqft/100*1.10*pitchMult);},0);
       addsTotal+=iwsAmt;
       addRows+='<div class="ml-row"><span class="rl">Ice & Water Shield</span><span class="rv">$'+iwsAmt.toLocaleString()+'</span></div>';
     }
@@ -9192,7 +9214,7 @@ function buildLobMailerHtml(item){
   if(iStructures.length){
     iStructures.forEach((s,i)=>{
       const sp = calcStructPrice ? calcStructPrice(s) : (s.price||0);
-      const sq = ((parseFloat(s.sqft)||0)/100*1.12*(parseFloat(s.pitch)||1.31)).toFixed(1);
+      const sq = ((parseFloat(s.sqft)||0)/100*1.12*(parseFloat(s.pitch)||1.118)).toFixed(1);
       const col = i===0 ? color : '#444';
       structSectionsP2 +=
         '<div style="border:2px solid '+col+';border-radius:6px;overflow:hidden;margin-bottom:10px;">'+
@@ -9697,7 +9719,7 @@ function editEstimate(id){
   if(item.structures&&item.structures.length){
     structures=JSON.parse(JSON.stringify(item.structures));
   } else {
-    structures=[{id:'s'+Date.now(),name:'Main House',sqft:item.sqft||0,pitch:'1.31',mat:'1.3',stories:'1',complexity:'1.12'}];
+    structures=[{id:'s'+Date.now(),name:'Main House',sqft:item.sqft||0,pitch:'1.202',mat:'1.3',stories:'1',complexity:'1.12'}];
   }
   if(item.photo_data){
     window._homePhotoData=item.photo_data;
@@ -10989,7 +11011,9 @@ function openSettings(){
   document.getElementById('s-off-custom').value=c.offerCustom||'';
   document.getElementById('s-refamt').value=c.referralAmt||'250';
   document.getElementById('s-reftext').value=c.referralText||'';
-  document.getElementById('s-c3tab').value=c.cost3Tab||220;
+  // Pricing mode
+  setPricingMode(c.pricingMode||'detailed');
+  const ppsEl=document.getElementById('s-pps'); if(ppsEl) ppsEl.value=c.pricePerSquare||450;
   document.getElementById('s-carch').value=c.costArchitectural||300;
   document.getElementById('s-cdes').value=c.costDesigner||420;
   document.getElementById('s-cmetal').value=c.costMetal||680;
@@ -11145,6 +11169,30 @@ function copyEmbedText(elId){
   });
 }
 
+function setPricingMode(mode){
+  const modeVal=document.getElementById('s-pricing-mode-val');
+  const persqBtn=document.getElementById('s-mode-persq');
+  const detBtn=document.getElementById('s-mode-detailed');
+  const persqFields=document.getElementById('s-persq-fields');
+  const detFields=document.getElementById('s-detailed-fields');
+  if(!modeVal)return;
+  modeVal.value=mode;
+  if(mode==='per_square'){
+    if(persqBtn){persqBtn.style.background='var(--accent)';persqBtn.style.color='#fff';persqBtn.style.borderColor='var(--accent)';}
+    if(detBtn){detBtn.style.background='transparent';detBtn.style.color='var(--mid)';detBtn.style.borderColor='var(--border)';}
+    if(persqFields)persqFields.style.display='block';
+    if(detFields)detFields.style.display='none';
+  }else{
+    if(detBtn){detBtn.style.background='var(--accent)';detBtn.style.color='#fff';detBtn.style.borderColor='var(--accent)';}
+    if(persqBtn){persqBtn.style.background='transparent';persqBtn.style.color='var(--mid)';persqBtn.style.borderColor='var(--border)';}
+    if(persqFields)persqFields.style.display='none';
+    if(detFields)detFields.style.display='block';
+  }
+  // Update live cfg so estimate recalculates immediately
+  if(S.cfg)S.cfg.pricingMode=mode;
+  if(typeof calcP==='function')calcP();
+}
+
 function saveSettings(){
   const n=id=>parseFloat(document.getElementById(id).value)||0;
   const v=id=>document.getElementById(id).value;
@@ -11211,7 +11259,9 @@ function saveSettings(){
     offerCustom:v('s-off-custom'),
     referralAmt:v('s-refamt')||'250',
     referralText:v('s-reftext'),
-    cost3Tab:n('s-c3tab')||220, costArchitectural:n('s-carch')||300,
+    pricingMode:(document.getElementById('s-pricing-mode-val')||{value:'detailed'}).value||'detailed',
+    pricePerSquare:n('s-pps')||450,
+    cost3Tab:220, costArchitectural:n('s-carch')||300,
     costDesigner:n('s-cdes')||420, costMetal:n('s-cmetal')||680,
     costTearoff:n('s-tear')||75, costIceWater:n('s-ice')||42,
     costFelts:n('s-felt')||22, costDumpster:n('s-dump')||450,
@@ -15847,7 +15897,7 @@ async function initQuotePage(slug) {
   // Pricing engine (mirrors calcStructPrice from the app)
   function calcQuotePrice(sqft, cfg) {
     if (!sqft) return 0;
-    const pitchMult = 1.31; // default 6/12 pitch
+    const pitchMult = 1.118; // default 6/12 pitch
     const complexity = 1.12;
     const stories = 1;
     const sq = sqft / 100 * 1.10 * pitchMult;
@@ -16355,7 +16405,7 @@ async function initEstimatePage(estId) {
   // Pricing engine
   function calcStructPrice(s, cfg) {
     const sqft = parseFloat(s.sqft) || 0; if (!sqft) return 0;
-    const pitchMult = parseFloat(s.pitch) || 1.31;
+    const pitchMult = parseFloat(s.pitch) || 1.118;
     const complexity = parseFloat(s.complexity) || 1.12;
     const stories = parseFloat(s.stories) || 1;
     const sq = sqft / 100 * 1.10 * pitchMult;
@@ -16441,7 +16491,9 @@ async function initEstimatePage(estId) {
     const total = calcTotal(currentMat, cfg);
     const monthly = monthlyPayment(total);
     const matLabel = (MAT_OPTIONS.find(m => m.key === currentMat) || {}).label || 'Architectural';
-    const pitchMap = { '1.0': 'Flat (0-2/12)', '1.05': 'Low (2-4/12)', '1.15': 'Standard (4-6/12)', '1.31': 'Steep (6-9/12)', '1.5': 'Very Steep (9-12/12)', '1.7': 'Extreme (12+/12)' };
+    const pitchMap = { '1.054': '4/12 Low', '1.083': '5/12', '1.118': '6/12 Standard', '1.158': '7/12', '1.202': '8/12 Moderate', '1.250': '9/12', '1.302': '10/12 Steep', '1.357': '11/12', '1.414': '12/12 Very Steep',
+      // legacy keys
+      '1.0': '4/12 Low', '1.07': '5/12', '1.15': '6/12 Standard', '1.23': '7/12', '1.31': '8/12 Moderate', '1.40': '9/12', '1.50': '10/12 Steep', '1.65': '11/12', '1.80': '12/12 Very Steep' };
     const firstStruct = (est.structures || [])[0] || {};
     const pitchLabel = pitchMap[String(firstStruct.pitch)] || 'Standard';
     const sqft = (est.structures || []).reduce((s, st) => s + (parseFloat(st.sqft) || 0), 0);
