@@ -177,36 +177,32 @@ module.exports = async function handler(req, res) {
         const ownerId = ownerData?.[0]?.id || null;
 
         if (ownerId && ownerId !== userId) {
-          // 3a. Reassign pins: update created_by to owner, but preserve rep_name snapshot
+          // 3a. Reassign pins: update created_by to owner, preserve rep_name snapshot
           await sbFetch(`pins?created_by=eq.${userId}&account_id=eq.${accountId}`, {
             method: 'PATCH',
             headers: { 'Prefer': 'return=minimal' },
             body: JSON.stringify({ created_by: ownerId, rep_name: repName })
-          });
+          }).catch(e => console.warn('[delete-user] pins reassign failed:', e.message));
 
-          // 3b. Reassign estimates: update owner_id to account owner (estimates use 'rep' text field for rep name — already a snapshot, no change needed)
-          // estimates table uses 'owner' as homeowner name and 'rep' as rep name text — rep is already a snapshot, just reassign created_by if it exists
-          // Check if estimates has a created_by column; if not, skip (rep text field already tracks attribution)
-          await sbFetch(`estimates?pin_id=in.(select id from pins where account_id=eq.${accountId})`, {
-            method: 'PATCH',
-            headers: { 'Prefer': 'return=minimal' },
-            body: JSON.stringify({})
-          }).catch(() => {}); // best-effort, rep name already stored as text
+          // 3b. Reassign estimates by account_id + rep field match (rep is a text snapshot, no FK)
+          // Note: estimates table does not have a created_by FK — rep name is already stored as text snapshot
+          // No reassignment needed; rep name is preserved as-is on each estimate record
 
           // 3c. Reassign queue items: update created_by to owner, preserve rep_name snapshot
           await sbFetch(`queue?created_by=eq.${userId}&account_id=eq.${accountId}`, {
             method: 'PATCH',
             headers: { 'Prefer': 'return=minimal' },
-            body: JSON.stringify({ created_by: ownerId, rep_name: repName })
-          });
-
-          // 3d. Soft-delete the profile row (keep for historical rep name lookups)
-          await sbFetch(`user_profiles?id=eq.${userId}`, {
-            method: 'PATCH',
-            headers: { 'Prefer': 'return=minimal' },
-            body: JSON.stringify({ deleted_at: new Date().toISOString(), role: 'deleted' })
-          });
+            body: JSON.stringify({ created_by: ownerId })
+          }).catch(e => console.warn('[delete-user] queue reassign failed (non-fatal):', e.message));
         }
+
+        // 3d. Soft-delete the profile row (keep for historical rep name lookups)
+        // Always attempt this regardless of whether ownerId was found
+        await sbFetch(`user_profiles?id=eq.${userId}`, {
+          method: 'PATCH',
+          headers: { 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ role: 'deleted' })
+        }).catch(e => console.warn('[delete-user] profile soft-delete failed (non-fatal):', e.message));
 
         // 4. Delete the Supabase Auth user (revokes login)
         const r = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${userId}`, {
