@@ -1757,6 +1757,36 @@ tr:hover td{background:var(--card);}
           <span class="stab-chevron" id="stab-chevron-pricing">&#9662;</span>
         </div>
         <div class="stab-card-body" id="stab-body-pricing">
+          <div class="stab-section-hdr">Materials Offered to Homeowner</div>
+          <div style="background:var(--card2);border-radius:8px;padding:12px 14px;margin-bottom:14px;">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Check the materials you want homeowners to see and choose from on their estimate page.</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);">
+                <input type="checkbox" id="s-mat-arch" style="accent-color:var(--accent);width:15px;height:15px;" checked>
+                &#127968; Architectural
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);">
+                <input type="checkbox" id="s-mat-des" style="accent-color:var(--accent);width:15px;height:15px;">
+                &#128142; Designer/Premium
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);">
+                <input type="checkbox" id="s-mat-impact" style="accent-color:var(--accent);width:15px;height:15px;">
+                &#127961; Impact-Resistant
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);">
+                <input type="checkbox" id="s-mat-metal" style="accent-color:var(--accent);width:15px;height:15px;">
+                &#128737; Metal Roofing
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);">
+                <input type="checkbox" id="s-mat-flat" style="accent-color:var(--accent);width:15px;height:15px;">
+                &#127783; Flat / TPO / EPDM
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);">
+                <input type="checkbox" id="s-mat-tile" style="accent-color:var(--accent);width:15px;height:15px;">
+                &#127963; Tile / Clay
+              </label>
+            </div>
+          </div>
           <div class="stab-section-hdr">Pricing Mode</div>
           <div style="display:flex;gap:8px;margin-bottom:14px;">
             <button id="s-mode-persq" onclick="setPricingMode('per_square')" style="flex:1;padding:10px;border-radius:8px;border:2px solid var(--accent);background:var(--accent);color:#fff;font-weight:700;font-size:13px;cursor:pointer;">&#128290; Price Per Square</button>
@@ -11033,10 +11063,17 @@ function openSettings(){
   document.getElementById('s-off-custom').value=c.offerCustom||'';
   document.getElementById('s-refamt').value=c.referralAmt||'250';
   document.getElementById('s-reftext').value=c.referralText||'';
+  // Material visibility toggles
+  const el=id=>document.getElementById(id);
+  if(el('s-mat-arch'))   el('s-mat-arch').checked   = c.matArch   !== false;
+  if(el('s-mat-des'))    el('s-mat-des').checked    = !!c.matDes;
+  if(el('s-mat-impact')) el('s-mat-impact').checked = !!c.matImpact;
+  if(el('s-mat-metal'))  el('s-mat-metal').checked  = !!c.matMetal;
+  if(el('s-mat-flat'))   el('s-mat-flat').checked   = !!c.matFlat;
+  if(el('s-mat-tile'))   el('s-mat-tile').checked   = !!c.matTile;
   // Pricing mode
   setPricingMode(c.pricingMode||'detailed');
   // Per-square rates
-  const el=id=>document.getElementById(id);
   if(el('s-pps-arch')) el('s-pps-arch').value=c.ppsArchitectural||450;
   if(el('s-pps-des'))  el('s-pps-des').value=c.ppsDesigner||580;
   if(el('s-pps-impact')) el('s-pps-impact').value=c.ppsImpact||520;
@@ -11292,6 +11329,9 @@ function saveSettings(){
     offerCustom:v('s-off-custom'),
     referralAmt:v('s-refamt')||'250',
     referralText:v('s-reftext'),
+    matArch:  ck('s-mat-arch'),  matDes:    ck('s-mat-des'),
+    matImpact:ck('s-mat-impact'), matMetal:  ck('s-mat-metal'),
+    matFlat:  ck('s-mat-flat'),   matTile:   ck('s-mat-tile'),
     pricingMode:(document.getElementById('s-pricing-mode-val')||{value:'detailed'}).value||'detailed',
     pricePerSquare:n('s-pps')||450,
     ppsArchitectural:n('s-pps-arch')||450, ppsDesigner:n('s-pps-des')||580,
@@ -16493,14 +16533,21 @@ async function initEstimatePage(estId) {
     margin: acct.margin || 20,
   };
 
-  const MAT_OPTIONS = [
-    { key: '1.3', label: 'Architectural', desc: 'Most Popular', icon: '\u2B50', popular: true },
-    { key: '1.8', label: 'Designer', desc: 'Premium Look', icon: '\uD83D\uDC8E' },
-    { key: '1.5', label: 'Impact-Resistant', desc: 'Class 4 / Hail', icon: '\uD83D\uDEE1\uFE0F' },
-    { key: '2.5', label: 'Metal Roofing', desc: 'Lifetime', icon: '\uD83C\uDFE0' },
-    { key: '0.9', label: 'Flat / TPO', desc: 'Low-Slope', icon: '\uD83D\uDCCF' },
-    { key: '3.2', label: 'Tile / Clay', desc: 'Classic Style', icon: '\uD83C\uDFDB\uFE0F' },
+  const ALL_MAT_OPTIONS = [
+    { key: '1.3', label: 'Architectural', desc: 'Most Popular', icon: '\u2B50', popular: true,  flag: 'matArch' },
+    { key: '1.8', label: 'Designer',      desc: 'Premium Look', icon: '\uD83D\uDC8E',           flag: 'matDes' },
+    { key: '1.5', label: 'Impact-Resistant', desc: 'Class 4 / Hail', icon: '\uD83D\uDEE1\uFE0F', flag: 'matImpact' },
+    { key: '2.5', label: 'Metal Roofing', desc: 'Lifetime',     icon: '\uD83C\uDFE0',           flag: 'matMetal' },
+    { key: '0.9', label: 'Flat / TPO',    desc: 'Low-Slope',    icon: '\uD83D\uDCCF',           flag: 'matFlat' },
+    { key: '3.2', label: 'Tile / Clay',   desc: 'Classic Style',icon: '\uD83C\uDFDB\uFE0F',    flag: 'matTile' },
   ];
+  // Filter to only materials the roofer has enabled (matArch defaults to true if not set)
+  const MAT_OPTIONS = ALL_MAT_OPTIONS.filter(m => {
+    if (m.flag === 'matArch') return acct.matArch !== false;
+    return !!acct[m.flag];
+  });
+  // Ensure at least one option is shown (fallback to Architectural)
+  if (MAT_OPTIONS.length === 0) MAT_OPTIONS.push(ALL_MAT_OPTIONS[0]);
 
   let currentMat = (est.structures && est.structures[0] && est.structures[0].mat) || '1.3';
 
