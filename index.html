@@ -1764,18 +1764,34 @@ tr:hover td{background:var(--card);}
           </div>
           <input type="hidden" id="s-pricing-mode-val" value="detailed">
           <div id="s-persq-fields" style="display:none;margin-bottom:14px;">
-            <div class="fg"><label class="fl">Price Per Square (all-in $/sq)</label><input type="number" class="fi" id="s-pps" placeholder="450" min="0"></div>
-            <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:9px 13px;font-size:13px;color:var(--mid);">&#128161; Formula: Squares (footprint × pitch × 1.10 waste) × $/sq = Total. Simple, fast, and how most roofers price.</div>
+            <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:9px 13px;font-size:12px;color:var(--mid);margin-bottom:12px;">&#128161; Set your all-in $/sq for each material. Formula: Squares × $/sq = Total. The homeowner sees pricing for each option.</div>
+            <div class="frow">
+              <div class="fg"><label class="fl">&#127968; Architectural ($/sq)</label><input type="number" class="fi" id="s-pps-arch" placeholder="450" min="0"></div>
+              <div class="fg"><label class="fl">&#128142; Designer/Premium ($/sq)</label><input type="number" class="fi" id="s-pps-des" placeholder="580" min="0"></div>
+            </div>
+            <div class="frow">
+              <div class="fg"><label class="fl">&#127961; Impact-Resistant ($/sq)</label><input type="number" class="fi" id="s-pps-impact" placeholder="520" min="0"></div>
+              <div class="fg"><label class="fl">&#128737; Metal Roofing ($/sq)</label><input type="number" class="fi" id="s-pps-metal" placeholder="950" min="0"></div>
+            </div>
+            <div class="frow">
+              <div class="fg"><label class="fl">&#127783; Flat/TPO/EPDM ($/sq)</label><input type="number" class="fi" id="s-pps-flat" placeholder="400" min="0"></div>
+              <div class="fg"><label class="fl">&#127963; Tile/Clay ($/sq)</label><input type="number" class="fi" id="s-pps-tile" placeholder="1400" min="0"></div>
+            </div>
+            <input type="hidden" id="s-pps" value="450">
           </div>
           <div id="s-detailed-fields">
-          <div class="stab-section-hdr" style="margin-top:4px;">Material Cost Per Square</div>
+          <div class="stab-section-hdr" style="margin-top:4px;">Material Cost Per Square (Labor + Material)</div>
           <div class="frow">
             <div class="fg"><label class="fl">Architectural ($/sq)</label><input type="number" class="fi" id="s-carch" placeholder="300"></div>
-            <div class="fg"></div>
+            <div class="fg"><label class="fl">Designer/Premium ($/sq)</label><input type="number" class="fi" id="s-cdes" placeholder="420"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Designer/Premium ($/sq)</label><input type="number" class="fi" id="s-cdes" placeholder="420"></div>
+            <div class="fg"><label class="fl">Impact-Resistant ($/sq)</label><input type="number" class="fi" id="s-cimpact" placeholder="380"></div>
             <div class="fg"><label class="fl">Metal Roofing ($/sq)</label><input type="number" class="fi" id="s-cmetal" placeholder="680"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Flat/TPO/EPDM ($/sq)</label><input type="number" class="fi" id="s-cflat" placeholder="320"></div>
+            <div class="fg"><label class="fl">Tile/Clay ($/sq)</label><input type="number" class="fi" id="s-ctile" placeholder="950"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Per-Square Line Items</div>
           <div class="frow">
@@ -2527,8 +2543,9 @@ const OWNER_EMAIL = 'john@mongoosefilms.com'; // Primary owner — cannot be del
 
 const DEFAULTS = {
   companyName:'Your Roofing Co', companyAddr:'123 Main St, Detroit MI 48000', companyPhone:'(313) 555-0100',
-  costArchitectural:300, cost3Tab:220, costDesigner:420, costMetal:680,
+  costArchitectural:300, cost3Tab:220, costDesigner:420, costImpact:380, costMetal:680, costFlat:320, costTile:950,
   pricingMode:'detailed', pricePerSquare:450,
+  ppsArchitectural:450, ppsDesigner:580, ppsImpact:520, ppsMetal:950, ppsFlat:400, ppsTile:1400,
   costTearoff:75, costIceWater:42, costFelts:22, costDumpster:450,
   costSkylight:375, costChimney:295, costGutter:9,
   overhead:15, margin:20, brandColor:'#F25C05', lobKey:'',
@@ -2580,7 +2597,11 @@ const PITCH_OPTS = [
 ];
 const MAT_OPTS = [
   {v:'1.3',l:'Architectural Shingle'},
-  {v:'1.8',l:'Designer / Premium'},{v:'2.5',l:'Metal Roofing'}
+  {v:'1.8',l:'Designer / Premium'},
+  {v:'1.5',l:'Impact-Resistant (Class 4)'},
+  {v:'2.5',l:'Metal Roofing'},
+  {v:'0.9',l:'Flat Roof (TPO/EPDM)'},
+  {v:'3.2',l:'Tile (Clay/Concrete)'}
 ];  // 3-Tab hidden — not commonly used
 const COMPLEX_OPTS = [
   {v:'1.0',l:'Simple — Gable, few angles'},{v:'1.12',l:'Moderate — Some hips/valleys'},
@@ -2593,7 +2614,7 @@ const STORIES_OPTS = [
 const PITCHLBL = {'1.054':'4/12 Low','1.083':'5/12','1.118':'6/12 Std','1.158':'7/12','1.202':'8/12 Mod','1.250':'9/12','1.302':'10/12 Steep','1.357':'11/12','1.414':'12/12 Steep',
   // legacy keys kept for old saved estimates
   '1.0':'4/12 Low','1.07':'5/12','1.15':'6/12 Std','1.23':'7/12','1.31':'8/12 Mod','1.40':'9/12','1.50':'10/12 Steep','1.65':'11/12','1.80':'12/12 Steep'};
-const MATLBL  = {'1.0':'3-Tab Shingle','1.3':'Architectural Shingle','1.8':'Designer/Premium','2.5':'Metal Roofing'}; // 1.0 kept for legacy display only
+const MATLBL  = {'1.0':'3-Tab Shingle','1.3':'Architectural Shingle','1.8':'Designer/Premium','1.5':'Impact-Resistant','2.5':'Metal Roofing','0.9':'Flat Roof (TPO/EPDM)','3.2':'Tile (Clay/Concrete)'}; // 1.0 kept for legacy display only
 
 function sColor(s){return{needs_roof:'#F25C05',contacted:'#A855F7',quoted:'#3B82F6',signed:'#22C55E',converted:'#22C55E',bid_sent:'#3B82F6',not_interested:'#3D5269',lost:'#EF4444'}[s]||'#3D5269';}
 function sLabel(s){return{needs_roof:'Needs Roof',contacted:'Contacted',quoted:'Quoted',signed:'Signed',converted:'Converted',bid_sent:'Bid Sent',not_interested:'Not Interested',lost:'Lost'}[s]||s;}
@@ -6125,9 +6146,10 @@ function calcStructPrice(s){
   const complexity=parseFloat(s.complexity)||1.12;
   const stories=parseFloat(s.stories)||1;
   const sq=sqft/100*1.10*pitchMult; // footprint → actual roof squares w/ 10% waste
-  // ── Simple mode: price per square ──
+  // ── Simple mode: price per square (per-material rates) ──
   if((c.pricingMode||'detailed')==='per_square'){
-    const pps=parseFloat(c.pricePerSquare)||450;
+    const ppsMap={'1.3':parseFloat(c.ppsArchitectural)||450,'1.8':parseFloat(c.ppsDesigner)||580,'1.5':parseFloat(c.ppsImpact)||520,'2.5':parseFloat(c.ppsMetal)||950,'0.9':parseFloat(c.ppsFlat)||400,'3.2':parseFloat(c.ppsTile)||1400};
+    const pps=ppsMap[String(s.mat)]||(parseFloat(c.pricePerSquare)||450);
     const stMult=stories<=1?1:stories<=1.5?1.08:stories<=2?1.16:1.25;
     return Math.round(sq*pps*stMult*complexity);
   }
@@ -6146,7 +6168,7 @@ function calcStructPrice(s){
 
 function getMatCost(matKey){
   const c=S.cfg;
-  return{'1.0':parseFloat(c.cost3Tab)||220,'1.3':parseFloat(c.costArchitectural)||300,'1.8':parseFloat(c.costDesigner)||420,'2.5':parseFloat(c.costMetal)||680}[matKey]||300;
+  return{'1.0':parseFloat(c.cost3Tab)||220,'1.3':parseFloat(c.costArchitectural)||300,'1.8':parseFloat(c.costDesigner)||420,'1.5':parseFloat(c.costImpact)||380,'2.5':parseFloat(c.costMetal)||680,'0.9':parseFloat(c.costFlat)||320,'3.2':parseFloat(c.costTile)||950}[matKey]||300;
 }
 
 // ═══════════════════════════════
@@ -11013,10 +11035,21 @@ function openSettings(){
   document.getElementById('s-reftext').value=c.referralText||'';
   // Pricing mode
   setPricingMode(c.pricingMode||'detailed');
-  const ppsEl=document.getElementById('s-pps'); if(ppsEl) ppsEl.value=c.pricePerSquare||450;
-  document.getElementById('s-carch').value=c.costArchitectural||300;
-  document.getElementById('s-cdes').value=c.costDesigner||420;
-  document.getElementById('s-cmetal').value=c.costMetal||680;
+  // Per-square rates
+  const el=id=>document.getElementById(id);
+  if(el('s-pps-arch')) el('s-pps-arch').value=c.ppsArchitectural||450;
+  if(el('s-pps-des'))  el('s-pps-des').value=c.ppsDesigner||580;
+  if(el('s-pps-impact')) el('s-pps-impact').value=c.ppsImpact||520;
+  if(el('s-pps-metal')) el('s-pps-metal').value=c.ppsMetal||950;
+  if(el('s-pps-flat')) el('s-pps-flat').value=c.ppsFlat||400;
+  if(el('s-pps-tile')) el('s-pps-tile').value=c.ppsTile||1400;
+  // Detailed material costs
+  el('s-carch').value=c.costArchitectural||300;
+  el('s-cdes').value=c.costDesigner||420;
+  if(el('s-cimpact')) el('s-cimpact').value=c.costImpact||380;
+  el('s-cmetal').value=c.costMetal||680;
+  if(el('s-cflat')) el('s-cflat').value=c.costFlat||320;
+  if(el('s-ctile')) el('s-ctile').value=c.costTile||950;
   document.getElementById('s-tear').value=c.costTearoff||75;
   document.getElementById('s-ice').value=c.costIceWater||42;
   document.getElementById('s-felt').value=c.costFelts||22;
@@ -11261,8 +11294,12 @@ function saveSettings(){
     referralText:v('s-reftext'),
     pricingMode:(document.getElementById('s-pricing-mode-val')||{value:'detailed'}).value||'detailed',
     pricePerSquare:n('s-pps')||450,
+    ppsArchitectural:n('s-pps-arch')||450, ppsDesigner:n('s-pps-des')||580,
+    ppsImpact:n('s-pps-impact')||520, ppsMetal:n('s-pps-metal')||950,
+    ppsFlat:n('s-pps-flat')||400, ppsTile:n('s-pps-tile')||1400,
     cost3Tab:220, costArchitectural:n('s-carch')||300,
-    costDesigner:n('s-cdes')||420, costMetal:n('s-cmetal')||680,
+    costDesigner:n('s-cdes')||420, costImpact:n('s-cimpact')||380,
+    costMetal:n('s-cmetal')||680, costFlat:n('s-cflat')||320, costTile:n('s-ctile')||950,
     costTearoff:n('s-tear')||75, costIceWater:n('s-ice')||42,
     costFelts:n('s-felt')||22, costDumpster:n('s-dump')||450,
     costSkylight:n('s-sky')||375, costChimney:n('s-chim')||295, costGutter:n('s-gut')||9,
@@ -16410,7 +16447,14 @@ async function initEstimatePage(estId) {
     const stories = parseFloat(s.stories) || 1;
     const sq = sqft / 100 * 1.10 * pitchMult;
     const stMult = stories <= 1 ? 1 : stories <= 1.5 ? 1.08 : stories <= 2 ? 1.16 : 1.25;
-    const matCostMap = { '1.0': cfg.cost3Tab, '1.3': cfg.costArchitectural, '1.8': cfg.costDesigner, '2.5': cfg.costMetal };
+    // Per-square mode
+    if ((cfg.pricingMode || 'detailed') === 'per_square') {
+      const ppsMap = { '1.3': cfg.ppsArchitectural||450, '1.8': cfg.ppsDesigner||580, '1.5': cfg.ppsImpact||520, '2.5': cfg.ppsMetal||950, '0.9': cfg.ppsFlat||400, '3.2': cfg.ppsTile||1400 };
+      const pps = ppsMap[String(s.mat)] || cfg.ppsArchitectural || 450;
+      return Math.round(sq * pps * stMult * complexity);
+    }
+    // Detailed mode
+    const matCostMap = { '1.0': cfg.cost3Tab, '1.3': cfg.costArchitectural, '1.8': cfg.costDesigner, '1.5': cfg.costImpact, '2.5': cfg.costMetal, '0.9': cfg.costFlat, '3.2': cfg.costTile };
     const matCost = matCostMap[String(s.mat)] || cfg.costArchitectural;
     const tearoff = cfg.costTearoff * sq;
     const felts = cfg.costFelts * sq;
@@ -16427,10 +16471,20 @@ async function initEstimatePage(estId) {
   }
 
   const cfg = {
+    pricingMode: acct.pricingMode || 'detailed',
     cost3Tab: acct.cost3Tab || 220,
     costArchitectural: acct.costArchitectural || 300,
     costDesigner: acct.costDesigner || 420,
+    costImpact: acct.costImpact || 380,
     costMetal: acct.costMetal || 680,
+    costFlat: acct.costFlat || 320,
+    costTile: acct.costTile || 950,
+    ppsArchitectural: acct.ppsArchitectural || 450,
+    ppsDesigner: acct.ppsDesigner || 580,
+    ppsImpact: acct.ppsImpact || 520,
+    ppsMetal: acct.ppsMetal || 950,
+    ppsFlat: acct.ppsFlat || 400,
+    ppsTile: acct.ppsTile || 1400,
     costTearoff: acct.costTearoff || 75,
     costIceWater: acct.costIceWater || 42,
     costFelts: acct.costFelts || 22,
@@ -16440,10 +16494,12 @@ async function initEstimatePage(estId) {
   };
 
   const MAT_OPTIONS = [
-    // { key: '1.0', label: '3-Tab Shingle', desc: 'Economy', icon: '\uD83C\uDFE0' }, // hidden — not commonly used
     { key: '1.3', label: 'Architectural', desc: 'Most Popular', icon: '\u2B50', popular: true },
-    { key: '1.8', label: 'Designer', desc: 'Premium', icon: '\uD83D\uDC8E' },
-    { key: '2.5', label: 'Metal Roofing', desc: 'Lifetime', icon: '\uD83D\uDEE1\uFE0F' },
+    { key: '1.8', label: 'Designer', desc: 'Premium Look', icon: '\uD83D\uDC8E' },
+    { key: '1.5', label: 'Impact-Resistant', desc: 'Class 4 / Hail', icon: '\uD83D\uDEE1\uFE0F' },
+    { key: '2.5', label: 'Metal Roofing', desc: 'Lifetime', icon: '\uD83C\uDFE0' },
+    { key: '0.9', label: 'Flat / TPO', desc: 'Low-Slope', icon: '\uD83D\uDCCF' },
+    { key: '3.2', label: 'Tile / Clay', desc: 'Classic Style', icon: '\uD83C\uDFDB\uFE0F' },
   ];
 
   let currentMat = (est.structures && est.structures[0] && est.structures[0].mat) || '1.3';
