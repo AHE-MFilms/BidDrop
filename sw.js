@@ -1,7 +1,7 @@
 // BidDrop Service Worker — v2.3
 // Network-first for index.html (always get latest code), cache-first for static assets
 
-const CACHE_NAME = 'biddrop-v5';
+const CACHE_NAME = 'biddrop-v6';
 
 // Core app shell files to cache on install
 const PRECACHE_URLS = [
