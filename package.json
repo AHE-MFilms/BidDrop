@@ -1,6 +1,12 @@
 {
+  "scripts": {
+    "build": "node build.js"
+  },
   "dependencies": {
-    "stripe": "^22.0.2",
-    "@supabase/supabase-js": "^2.105.4"
+    "@supabase/supabase-js": "^2.105.4",
+    "stripe": "^22.0.2"
+  },
+  "devDependencies": {
+    "javascript-obfuscator": "^5.4.2"
   }
 }

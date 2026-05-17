@@ -4,3 +4,4 @@
 .env.prod
 _pc_back_patch.js
 node_modules/
+dist/
