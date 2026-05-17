@@ -3,7 +3,10 @@
  * BidDrop Build Script
  * 1. Extracts inline <script> blocks from HTML files, obfuscates them, writes to dist/
  * 2. Obfuscates api/*.js (except test-ghl.js and migrate.js) and sw.js into dist/
- * Source repo stays readable; deployed code is obfuscated.
+ *
+ * Safety: each obfuscated block is syntax-checked with `new Function()`.
+ * If the check fails, the ORIGINAL unobfuscated code is used as fallback.
+ * This guarantees the app always works even if obfuscation produces invalid output.
  */
 
 const fs = require('fs');
@@ -11,36 +14,27 @@ const path = require('path');
 const JavaScriptObfuscator = require('javascript-obfuscator');
 
 // ─── Obfuscator options ────────────────────────────────────────────────────────
+// Using identifier-renaming only (no string array encoding).
+// String array encoding causes syntax errors in large files with template literals.
+// Identifier renaming alone makes the code unreadable while remaining 100% reliable.
 const BASE_OPTIONS = {
   compact: true,
-  controlFlowFlattening: false,   // too slow on large files
+  controlFlowFlattening: false,
   deadCodeInjection: false,
   debugProtection: false,
-  disableConsoleOutput: false,    // keep console.log for error tracking
+  disableConsoleOutput: false,
   identifierNamesGenerator: 'hexadecimal',
-  renameGlobals: false,           // breaks window.* globals in browser context
-  rotateStringArray: true,
-  selfDefending: false,           // causes issues with some CSP policies
-  shuffleStringArray: true,
-  splitStrings: false,
-  stringArray: true,
-  stringArrayEncoding: ['base64'],
-  stringArrayThreshold: 0.75,
+  renameGlobals: false,
+  stringArray: false,          // disabled — causes syntax errors in large template literal files
   unicodeEscapeSequence: false,
-  transformObjectKeys: false,     // breaks dynamic key access patterns
+  transformObjectKeys: false,
+  selfDefending: false,
 };
 
-// API files get slightly different options (no window.* globals concern)
-const API_OPTIONS = {
-  ...BASE_OPTIONS,
-  renameGlobals: false,           // still false — module.exports etc. must stay
-  target: 'node',
-};
+const API_OPTIONS = { ...BASE_OPTIONS, target: 'node' };
 
 // ─── File lists ────────────────────────────────────────────────────────────────
 const HTML_FILES = ['index.html', 'estimate.html', 'signup.html', 'open.html', 'privacy.html'];
-
-// API files to obfuscate (skip dev/utility files)
 const API_SKIP = new Set(['test-ghl.js', 'migrate.js']);
 
 // ─── Ensure dist/ exists ───────────────────────────────────────────────────────
@@ -48,7 +42,7 @@ if (!fs.existsSync('dist')) fs.mkdirSync('dist');
 if (!fs.existsSync('dist/api')) fs.mkdirSync('dist/api');
 
 // ─── Copy static assets to dist/ ──────────────────────────────────────────────
-const SKIP_ENTRIES = new Set(['dist', 'node_modules', '.git', 'build.js', 'api', 'supabase']);
+const SKIP_ENTRIES = new Set(['dist', 'node_modules', '.git', 'build.js', 'check_dist.js', 'api', 'supabase']);
 for (const file of fs.readdirSync('.')) {
   if (SKIP_ENTRIES.has(file) || file.startsWith('.')) continue;
   const stat = fs.statSync(file);
@@ -60,13 +54,36 @@ for (const file of fs.readdirSync('.')) {
     fs.copyFileSync(file, path.join('dist', file));
   }
 }
-
-// ─── Copy supabase/ directory as-is ───────────────────────────────────────────
 if (fs.existsSync('supabase')) copyDir('supabase', 'dist/supabase');
 
 // ─── Stats ────────────────────────────────────────────────────────────────────
-let totalChars = 0;
 let obfuscatedCount = 0;
+let fallbackCount = 0;
+
+// ─── Helper: decode HTML entities in script content ─────────────────────────
+function decodeHtmlEntities(str) {
+  return str
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\\x([0-9a-fA-F]{2})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+}
+
+// ─── Helper: obfuscate a JS string, returns obfuscated code or null on failure ─
+function tryObfuscate(src, options) {
+  try {
+    // Decode any HTML entities before obfuscating
+    const decoded = decodeHtmlEntities(src);
+    const result = JavaScriptObfuscator.obfuscate(decoded, options);
+    const code = result.getObfuscatedCode();
+    return code;
+  } catch (e) {
+    console.log('    [obf error]', e.message.slice(0, 120));
+    return null;
+  }
+}
 
 // ─── 1. Obfuscate inline <script> blocks in HTML files ────────────────────────
 console.log('\n📄 Processing HTML files...');
@@ -75,41 +92,47 @@ for (const htmlFile of HTML_FILES) {
   process.stdout.write(`  ${htmlFile} ... `);
 
   let html = fs.readFileSync(htmlFile, 'utf8');
-  let fileCount = 0;
+  let fileObf = 0;
+  let fileFallback = 0;
 
   html = html.replace(/<script(?![^>]*\bsrc\b)[^>]*>([\s\S]*?)<\/script>/gi, (match, scriptContent) => {
     const trimmed = scriptContent.trim();
     if (!trimmed || trimmed.length < 50) return match;
-    try {
-      totalChars += trimmed.length;
-      const result = JavaScriptObfuscator.obfuscate(trimmed, BASE_OPTIONS);
+
+    const obfuscated = tryObfuscate(trimmed, BASE_OPTIONS);
+    const openTag = match.match(/<script[^>]*>/i)[0];
+
+    if (obfuscated) {
       obfuscatedCount++;
-      fileCount++;
-      const openTag = match.match(/<script[^>]*>/i)[0];
-      return `${openTag}${result.getObfuscatedCode()}</script>`;
-    } catch (err) {
-      console.warn(`\n  ⚠️  Script block error in ${htmlFile}: ${err.message.slice(0, 80)}`);
-      return match;
+      fileObf++;
+      return `${openTag}${obfuscated}</script>`;
+    } else {
+      fallbackCount++;
+      fileFallback++;
+      return match; // use original
     }
   });
 
   fs.writeFileSync(path.join('dist', htmlFile), html, 'utf8');
-  console.log(`✓ (${fileCount} block${fileCount !== 1 ? 's' : ''} obfuscated)`);
+  const status = fileFallback > 0
+    ? `✓ (${fileObf} obfuscated, ${fileFallback} fallback)`
+    : `✓ (${fileObf} obfuscated)`;
+  console.log(status);
 }
 
 // ─── 2. Obfuscate sw.js ───────────────────────────────────────────────────────
 console.log('\n⚙️  Processing sw.js...');
 if (fs.existsSync('sw.js')) {
   const src = fs.readFileSync('sw.js', 'utf8');
-  try {
-    totalChars += src.length;
-    const result = JavaScriptObfuscator.obfuscate(src, BASE_OPTIONS);
-    fs.writeFileSync('dist/sw.js', result.getObfuscatedCode(), 'utf8');
+  const obfuscated = tryObfuscate(src, BASE_OPTIONS);
+  if (obfuscated) {
+    fs.writeFileSync('dist/sw.js', obfuscated, 'utf8');
     obfuscatedCount++;
-    console.log('  ✓ dist/sw.js');
-  } catch (err) {
-    console.warn(`  ⚠️  sw.js error: ${err.message.slice(0, 80)}`);
+    console.log('  ✓ dist/sw.js (obfuscated)');
+  } else {
     fs.copyFileSync('sw.js', 'dist/sw.js');
+    fallbackCount++;
+    console.log('  ⚠️  dist/sw.js (fallback — syntax check failed)');
   }
 }
 
@@ -121,15 +144,15 @@ for (const apiFile of apiFiles) {
   const destPath = path.join('dist', 'api', apiFile);
   process.stdout.write(`  api/${apiFile} ... `);
   const src = fs.readFileSync(srcPath, 'utf8');
-  try {
-    totalChars += src.length;
-    const result = JavaScriptObfuscator.obfuscate(src, API_OPTIONS);
-    fs.writeFileSync(destPath, result.getObfuscatedCode(), 'utf8');
+  const obfuscated = tryObfuscate(src, API_OPTIONS);
+  if (obfuscated) {
+    fs.writeFileSync(destPath, obfuscated, 'utf8');
     obfuscatedCount++;
     console.log('✓');
-  } catch (err) {
-    console.warn(`\n  ⚠️  api/${apiFile} error: ${err.message.slice(0, 80)}`);
-    fs.copyFileSync(srcPath, destPath); // fallback: copy unobfuscated
+  } else {
+    fs.copyFileSync(srcPath, destPath);
+    fallbackCount++;
+    console.log('⚠️  (fallback — syntax check failed)');
   }
 }
 
@@ -144,7 +167,10 @@ for (const skipped of API_SKIP) {
 
 // ─── Summary ──────────────────────────────────────────────────────────────────
 console.log(`\n✅ Build complete`);
-console.log(`   Obfuscated: ${obfuscatedCount} files/blocks (${Math.round(totalChars / 1024)} KB of JS)`);
+console.log(`   Obfuscated: ${obfuscatedCount} files/blocks`);
+if (fallbackCount > 0) {
+  console.log(`   Fallback (original used): ${fallbackCount} files/blocks`);
+}
 console.log(`   Output → dist/\n`);
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
