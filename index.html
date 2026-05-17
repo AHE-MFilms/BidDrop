@@ -14063,6 +14063,8 @@ async function onSignedIn(user){
     }
     // Mark app as fully initialized — prevents duplicate onSignedIn calls on token refresh
     _appInitialized = true;
+    // Always open on the canvas map after login
+    goTab('map');
 
   } catch(e) {
     console.error('[onSignedIn] error:', e);
