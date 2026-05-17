@@ -99,6 +99,13 @@ for (const htmlFile of HTML_FILES) {
     const trimmed = scriptContent.trim();
     if (!trimmed || trimmed.length < 50) return match;
 
+    // Skip very large blocks (>200KB) — too complex for reliable obfuscation
+    if (trimmed.length > 200000) {
+      fallbackCount++;
+      fileFallback++;
+      return match;
+    }
+
     const obfuscated = tryObfuscate(trimmed, BASE_OPTIONS);
     const openTag = match.match(/<script[^>]*>/i)[0];
 
