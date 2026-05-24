@@ -4947,40 +4947,59 @@ function initMap(){
     const lat = marker._bidDropLat;
     const lng = marker._bidDropLng;
     if(!lat || !lng) return;
-    const pin = S.pins.find(p => p.id === pid);
-    // Inject solar row into popup (loading state)
-    const popupEl = e.popup.getElement();
+    const pin = S.pins.find(function(p){ return p.id === pid; });
+    // Helper: build the solar row HTML and inject into popup
+    function injectSolarRow(popupEl, contentHtml, isLoading){
+      // Remove any existing row first (popup DOM is recreated on each open)
+      var old = popupEl.querySelector('#solar-popup-row');
+      if(old) old.parentNode.removeChild(old);
+      var firstBtn = popupEl.querySelector('button');
+      if(!firstBtn) return;
+      var row = document.createElement('div');
+      row.id = 'solar-popup-row';
+      row.style.cssText = 'background:rgba(242,92,5,.1);border:1px solid rgba(242,92,5,.3);border-radius:7px;padding:7px 10px;margin-bottom:7px;font-family:inherit;';
+      row.innerHTML = '<div style="font-size:9px;font-weight:700;letter-spacing:.6px;color:#F25C05;margin-bottom:4px;">🛰 SATELLITE MEASUREMENT</div>'
+        + '<div id="solar-popup-content" style="font-size:11px;color:#A8BECE;">' + contentHtml + '</div>';
+      firstBtn.parentNode.insertBefore(row, firstBtn);
+      return row;
+    }
+    function buildResultHtml(data){
+      return '<span style="color:#fff;font-weight:700;font-size:13px;">' + data.sqft.toLocaleString() + ' sq ft</span>'
+        + '<span style="color:#6b7a8d;margin:0 5px;">·</span>'
+        + '<span style="color:#F25C05;font-weight:700;">' + data.squares + ' sq</span>'
+        + '<span style="color:#6b7a8d;margin:0 5px;">·</span>'
+        + '<span style="color:#22C55E;font-weight:700;">' + data.pitchLabel + ' pitch</span>';
+    }
+    var popupEl = e.popup.getElement();
     if(!popupEl) return;
-    // Avoid duplicate fetches if already loaded
-    if(popupEl.querySelector('#solar-popup-row')) return;
-    // Insert loading row before the first button
-    const firstBtn = popupEl.querySelector('button');
-    if(!firstBtn) return;
-    const solarRow = document.createElement('div');
-    solarRow.id = 'solar-popup-row';
-    solarRow.style.cssText = 'background:rgba(242,92,5,.1);border:1px solid rgba(242,92,5,.3);border-radius:7px;padding:7px 10px;margin-bottom:7px;font-family:inherit;';
-    solarRow.innerHTML = '<div style="font-size:9px;font-weight:700;letter-spacing:.6px;color:#F25C05;margin-bottom:4px;">🛰 SATELLITE MEASUREMENT</div><div id="solar-popup-content" style="font-size:11px;color:#A8BECE;">Measuring…</div>';
-    firstBtn.parentNode.insertBefore(solarRow, firstBtn);
-    // Fetch solar data
+    // If we already have cached data, inject immediately (no loading state)
+    var cached = marker._solarData || (pin && pin._solarCache) || null;
+    if(cached && cached.status === 'ok' && cached.sqft){
+      injectSolarRow(popupEl, buildResultHtml(cached));
+      return;
+    }
+    // No cache yet — show loading state and fetch
+    injectSolarRow(popupEl, 'Measuring…');
     fetchSolarData(lat, lng).then(function(data){
-      const contentEl = document.getElementById('solar-popup-content');
-      if(!contentEl) return;
+      // Cache on marker (survives popup close/reopen)
       if(data && data.status === 'ok' && data.sqft){
-        // Cache on pin for use when building estimate
+        marker._solarData = data;
         if(pin) pin._solarCache = data;
-        contentEl.innerHTML =
-          '<span style="color:#fff;font-weight:700;font-size:13px;">' + data.sqft.toLocaleString() + ' sq ft</span>' +
-          '<span style="color:var(--muted,#6b7a8d);margin:0 5px;">·</span>' +
-          '<span style="color:#F25C05;font-weight:700;">' + data.squares + ' sq</span>' +
-          '<span style="color:var(--muted,#6b7a8d);margin:0 5px;">·</span>' +
-          '<span style="color:#22C55E;font-weight:700;">' + data.pitchLabel + ' pitch</span>';
-        // Resize popup to fit new content
+      }
+      // Re-inject into current popup DOM (may have changed)
+      var currentPopupEl = e.popup.getElement ? e.popup.getElement() : null;
+      if(!currentPopupEl) return;
+      if(data && data.status === 'ok' && data.sqft){
+        injectSolarRow(currentPopupEl, buildResultHtml(data));
         if(e.popup && e.popup.update) e.popup.update();
       } else {
-        contentEl.style.display = 'none';
-        if(solarRow) solarRow.style.display = 'none';
+        var row = currentPopupEl.querySelector('#solar-popup-row');
+        if(row) row.parentNode.removeChild(row);
       }
-    }).catch(function(){ if(solarRow) solarRow.style.display='none'; });
+    }).catch(function(){
+      var currentPopupEl = e.popup.getElement ? e.popup.getElement() : null;
+      if(currentPopupEl){ var row = currentPopupEl.querySelector('#solar-popup-row'); if(row) row.parentNode.removeChild(row); }
+    });
   });
   // ── Viewport-based pin loading on map move ──────────────────────────────────
   map.on('moveend', function(){
