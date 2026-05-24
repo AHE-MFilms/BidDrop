@@ -4939,14 +4939,15 @@ function initMap(){
   map.on('dblclick',onMapDblClick);
   // ── Solar API: fetch roof measurement when a pin popup opens ───────────────
   map.on('popupopen', function(e){
-    // Find which pin this popup belongs to
+    // Find which pin this popup belongs to using stored ID
     const marker = e.popup._source;
     if(!marker) return;
-    // Find pin by matching marker in our markers object
-    const pid = Object.keys(markers).find(k => markers[k] === marker);
+    const pid = marker._bidDropPinId;
     if(!pid) return;
+    const lat = marker._bidDropLat;
+    const lng = marker._bidDropLng;
+    if(!lat || !lng) return;
     const pin = S.pins.find(p => p.id === pid);
-    if(!pin || !pin.lat || !pin.lng) return;
     // Inject solar row into popup (loading state)
     const popupEl = e.popup.getElement();
     if(!popupEl) return;
@@ -4961,12 +4962,12 @@ function initMap(){
     solarRow.innerHTML = '<div style="font-size:9px;font-weight:700;letter-spacing:.6px;color:#F25C05;margin-bottom:4px;">🛰 SATELLITE MEASUREMENT</div><div id="solar-popup-content" style="font-size:11px;color:#A8BECE;">Measuring…</div>';
     firstBtn.parentNode.insertBefore(solarRow, firstBtn);
     // Fetch solar data
-    fetchSolarData(pin.lat, pin.lng).then(function(data){
+    fetchSolarData(lat, lng).then(function(data){
       const contentEl = document.getElementById('solar-popup-content');
       if(!contentEl) return;
       if(data && data.status === 'ok' && data.sqft){
         // Cache on pin for use when building estimate
-        pin._solarCache = data;
+        if(pin) pin._solarCache = data;
         contentEl.innerHTML =
           '<span style="color:#fff;font-weight:700;font-size:13px;">' + data.sqft.toLocaleString() + ' sq ft</span>' +
           '<span style="color:var(--muted,#6b7a8d);margin:0 5px;">·</span>' +
@@ -5485,6 +5486,10 @@ function addMarker(pin){
     </div>
   `,{maxWidth:260});
   markers[pid]=m;
+  // Store pin data on marker for Solar API popup lookup
+  m._bidDropPinId = pid;
+  m._bidDropLat = pin.lat;
+  m._bidDropLng = pin.lng;
   // Add to cluster group (falls back to direct map add if cluster not ready)
   if(clusterGroup) clusterGroup.addLayer(m);
   else m.addTo(map);
@@ -5531,6 +5536,8 @@ function savePin(){
   const _totalPhotos = _allPhotosCount() || dmgPhotos.length;
   _clearAllPhotos(); // clear after saving so next pin starts fresh
   save();closeM('m-pin');toast('📍 Pin saved'+(_totalPhotos?' with '+_totalPhotos+' photo'+(_totalPhotos>1?'s':''):''),'success');
+  // Open popup on new pin so satellite measurement loads immediately
+  setTimeout(function(){ if(markers[pin.id]) markers[pin.id].openPopup(); }, 300);
 }
 
 // ── PIN DAMAGE PHOTOS ──────────────────────────────────────────────────────
