@@ -1002,6 +1002,34 @@ tr:hover td{background:var(--card);}
         <label class="fl">Property Address</label>
         <input class="fi" id="e-addr" placeholder="123 Oak St, Detroit MI 48000" oninput="updatePreview();scheduleDraftSave()">
       </div>
+      <!-- Satellite Roof Measurement banner (shown after Solar API lookup) -->
+      <div id="solar-roof-banner" style="display:none;background:linear-gradient(135deg,#0a1628,#0f2a1a);border:1px solid rgba(242,92,5,.35);border-radius:10px;padding:12px 14px;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:#F25C05;">🛰 SATELLITE ROOF MEASUREMENT</div>
+          <div id="solar-imagery-date" style="font-size:9px;color:var(--muted);"></div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start;">
+          <div style="flex:1;min-width:70px;">
+            <div style="font-size:10px;color:#A8BECE;margin-bottom:2px;">Roof Area</div>
+            <div id="solar-sqft" style="font-size:18px;font-weight:700;color:#FFFFFF;">—</div>
+            <div style="font-size:9px;color:var(--muted);">sq ft footprint</div>
+          </div>
+          <div style="flex:1;min-width:70px;">
+            <div style="font-size:10px;color:#A8BECE;margin-bottom:2px;">Squares</div>
+            <div id="solar-squares" style="font-size:18px;font-weight:700;color:#F25C05;">—</div>
+            <div style="font-size:9px;color:var(--muted);">roofing squares</div>
+          </div>
+          <div style="flex:1;min-width:70px;">
+            <div style="font-size:10px;color:#A8BECE;margin-bottom:2px;">Pitch</div>
+            <div id="solar-pitch" style="font-size:18px;font-weight:700;color:#22C55E;">—</div>
+            <div style="font-size:9px;color:var(--muted);">dominant slope</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
+          <button onclick="applySolarToEstimate()" style="background:#F25C05;border:none;border-radius:7px;padding:7px 14px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">✓ Apply to Estimate</button>
+          <span style="font-size:10px;color:var(--muted);">Auto-fills sq ft &amp; pitch below</span>
+        </div>
+      </div>
       <!-- Equity snapshot badge (shown after RentCast lookup) -->
       <div id="equity-badge" style="display:none;background:linear-gradient(135deg,#0f2027,#1a3a2a);border:1px solid #22C55E44;border-radius:10px;padding:12px 14px;margin-bottom:10px;">
         <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:#22C55E;margin-bottom:6px;">🏠 PROPERTY SNAPSHOT</div>
@@ -3102,6 +3130,20 @@ function loadEstFromPicker(){
   if(masterRentcastKey && p.address && !document.getElementById('e-owner').value.trim()){
     autoFillOwnerIfEmpty(p.address);
   }
+  // Fetch satellite roof measurement (non-blocking)
+  hideSolarBanner();
+  if(p.lat && p.lng){
+    fetchSolarData(p.lat, p.lng).then(function(solarData){
+      if(solarData && solarData.status==='ok'){
+        showSolarBanner(solarData);
+        // Auto-apply only if sqft is still 0
+        const mainStruct = structures[0];
+        if(mainStruct && (!mainStruct.sqft || mainStruct.sqft===0)){
+          applySolarToEstimate();
+        }
+      }
+    }).catch(function(){});
+  }
 }
 // ── AUTO-SAVE DRAFT ──────────────────────────────────────────────────────
 let _draftTimer = null;
@@ -3191,6 +3233,7 @@ function newEstimate(){
   clearHomePhoto(); // always wipe photo when starting fresh
   clearDraftBanner();
   hideEquityBadge();
+  if(typeof hideSolarBanner==='function') hideSolarBanner();
   _resetPriceOverride();
   structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'1.118',mat:'1.3',complexity:'1.12',pts:null}];
   renderStructures(); calcP(); updatePreview();
@@ -6018,6 +6061,20 @@ function goEstFromPin(id){
   renderStructures();calcP();updatePreview();
   if(p.equityData) showEquityBadge(p.equityData); else hideEquityBadge();
   toast('📋 '+p.address.split(',')[0],'info');
+  // Fetch satellite roof measurement from Google Solar API (non-blocking)
+  hideSolarBanner();
+  if(p.lat && p.lng){
+    fetchSolarData(p.lat, p.lng).then(function(solarData){
+      if(solarData && solarData.status==='ok'){
+        showSolarBanner(solarData);
+        // Auto-apply only if sqft is still 0 (not yet manually entered)
+        const mainStruct = structures[0];
+        if(mainStruct && (!mainStruct.sqft || mainStruct.sqft===0)){
+          applySolarToEstimate();
+        }
+      }
+    }).catch(function(){});
+  }
 }
 // ═══════════════════════════════
 //  STRUCTURES ENGINEE
@@ -6135,8 +6192,8 @@ function renderStructures(){
       '</div>'+
       (s.photos&&s.photos.length ? '<div style="display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;">'+s.photos.map((src,pi)=>'<div style="position:relative;display:inline-block;"><img src="'+src+'" style="width:72px;height:60px;object-fit:cover;border-radius:6px;display:block;"><button onclick="removeStructurePhoto(\"'+s.id+'\",'+pi+')" style="position:absolute;top:-4px;right:-4px;background:#EF4444;border:none;border-radius:50%;width:16px;height:16px;color:white;font-size:10px;cursor:pointer;line-height:16px;padding:0;">×</button></div>').join('')+'</div>' : '')+
       '<div class="frow" style="gap:8px;margin-bottom:8px;">'+
-      '<div class="fg" style="margin-bottom:0;"><label class="fl">Sq Ft</label>'+
-      '<input type="number" class="fi" style="font-size:14px;padding:9px 10px;" data-sid="'+s.id+'" value="'+(s.sqft||'')+'" placeholder="2400" oninput="_structField(this,\'sqft\')"></div>'+
+      '<div class="fg" style="margin-bottom:0;"><label class="fl">Sq Ft'+(s.solarFilled?'<span style="margin-left:5px;background:rgba(242,92,5,.15);border:1px solid rgba(242,92,5,.4);border-radius:4px;padding:1px 5px;font-size:9px;color:#F25C05;font-weight:700;letter-spacing:.3px;">🛰 SATELLITE</span>':'')+' </label>'+
+      '<input type="number" class="fi" style="font-size:14px;padding:9px 10px;" data-sid="'+s.id+'" value="'+(s.sqft||'')+'" placeholder="2400" oninput="_structField(this,\'sqft\');s_clearSolarFilled(this.dataset.sid)"></div>'+
       '<div class="fg" style="margin-bottom:0;"><label class="fl">Stories</label>'+applyDataSid(mkSel(STORIES_OPTS,s.stories,'stories'),s.id)+'</div>'+
       '</div>'+
       '<div class="frow" style="gap:8px;margin-bottom:8px;">'+
@@ -11504,6 +11561,69 @@ function hideEquityBadge(){
   const badge = document.getElementById('equity-badge');
   if(badge) badge.style.display='none';
 }
+
+// ═══════════════════════════════
+//  GOOGLE SOLAR API — Roof Measurement
+// ═══════════════════════════════
+window._solarData = null; // last fetched solar data for current pin
+
+function showSolarBanner(data){
+  const banner = document.getElementById('solar-roof-banner');
+  if(!banner) return;
+  if(!data || data.status !== 'ok' || !data.sqft){ banner.style.display='none'; return; }
+  window._solarData = data;
+  const sqftEl   = document.getElementById('solar-sqft');
+  const sqEl     = document.getElementById('solar-squares');
+  const pitchEl  = document.getElementById('solar-pitch');
+  const dateEl   = document.getElementById('solar-imagery-date');
+  if(sqftEl)  sqftEl.textContent  = data.sqft.toLocaleString();
+  if(sqEl)    sqEl.textContent    = data.squares + ' sq';
+  if(pitchEl) pitchEl.textContent = data.pitchLabel;
+  if(dateEl && data.imageryDate){
+    const d = data.imageryDate;
+    dateEl.textContent = 'Imagery: ' + (d.month||'') + '/' + (d.year||'');
+  } else if(dateEl) dateEl.textContent = '';
+  banner.style.display = 'block';
+}
+
+function hideSolarBanner(){
+  const banner = document.getElementById('solar-roof-banner');
+  if(banner) banner.style.display='none';
+  window._solarData = null;
+}
+
+function applySolarToEstimate(){
+  const data = window._solarData;
+  if(!data || data.status !== 'ok') return;
+  // Apply sqft and pitch to the first (Main House) structure
+  if(!structures.length) addStructure(0,'Main House',null);
+  const s = structures[0];
+  s.sqft = data.sqft;
+  s.pitch = String(data.pitchMultiplier);
+  s.solarFilled = true;
+  renderStructures();
+  calcP();
+  updatePreview();
+  toast('🛰 Satellite measurement applied — ' + data.sqft.toLocaleString() + ' sq ft, ' + data.pitchLabel + ' pitch', 'success');
+}
+
+function s_clearSolarFilled(sid){
+  const s = structures.find(x=>x.id===sid);
+  if(s){ s.solarFilled = false; renderStructures(); }
+}
+
+async function fetchSolarData(lat, lng){
+  try{
+    const res = await fetch('/api/solar?lat='+lat+'&lng='+lng);
+    if(!res.ok) return null;
+    const data = await res.json();
+    return data;
+  } catch(e){
+    console.warn('Solar API fetch failed:', e);
+    return null;
+  }
+}
+
 async function manualRentcastLookup(){
   const btn = document.getElementById('rc-lookup-btn');
   const addrEl = document.getElementById('e-addr');

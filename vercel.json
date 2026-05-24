@@ -83,6 +83,9 @@
     },
     "api/admin.js": {
       "maxDuration": 30
+    },
+    "api/solar.js": {
+      "maxDuration": 10
     }
   },
   "headers": [
