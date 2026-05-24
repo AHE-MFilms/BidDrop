@@ -1429,6 +1429,7 @@ tr:hover td{background:var(--card);}
             <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">CALL CLICKS</th>
             <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">FIRST VIEWED</th>
             <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">VIEW PAGE</th>
+            <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;"></th>
           </tr></thead>
           <tbody id="an-est-table"></tbody>
         </table>
@@ -10717,6 +10718,24 @@ async function _doSendToGHL(btn, estId, owner, addr, email, total, rep){
 //  ANALYTICS DASHBOARD
 // ═══════════════════════════════
 let _anChartPostcards=null, _anChartScans=null, _anChartStatus=null;
+async function deleteAnalyticsRow(estId, btn){
+  if(!confirm('Delete this estimate record from analytics? This cannot be undone.')) return;
+  btn.disabled = true;
+  btn.textContent = '…';
+  try{
+    const { error } = await sb.from('estimates').delete().eq('id', estId);
+    if(error) throw error;
+    // Remove the row from the DOM
+    const tr = btn.closest('tr');
+    if(tr) tr.remove();
+    toast('Estimate deleted from analytics','success');
+  } catch(e){
+    btn.disabled = false;
+    btn.textContent = '🗑';
+    toast('Failed to delete: '+(e.message||e),'error');
+  }
+}
+
 async function loadAnalytics(){
   if(!currentAccount) return;
   const periodEl = document.getElementById('an-period');
@@ -10874,10 +10893,11 @@ async function loadAnalytics(){
             '<td style="padding:9px 14px;text-align:center;color:'+(calls>0?'#A855F7':'var(--muted)')+';font-weight:'+(calls>0?'700':'400')+';">'+calls+'</td>'+
             '<td style="padding:9px 14px;text-align:center;color:var(--muted);font-size:11px;">'+firstViewed+'</td>'+
             '<td style="padding:9px 14px;text-align:center;">'+(e.id?'<a href="https://biddrop.us/'+(e.slug||'roofing')+'/'+encodeURIComponent(e.id)+'" target="_blank" style="color:var(--accent);font-size:11px;font-weight:700;text-decoration:none;">View ↗</a>':'—')+'</td>'+
+            '<td style="padding:9px 14px;text-align:center;">'+(e.id?'<button onclick="deleteAnalyticsRow(\''+e.id+'\',this)" style="background:transparent;border:1px solid #EF444455;border-radius:5px;padding:3px 8px;color:#EF4444;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">🗑</button>':'')+'</td>'+
           '</tr>';
         }).join('');
       } else {
-        estTbody.innerHTML = '<tr><td colspan="8" style="padding:18px;text-align:center;color:var(--muted);">No estimates in this period. Send some postcards to start tracking!</td></tr>';
+        estTbody.innerHTML = '<tr><td colspan="9" style="padding:18px;text-align:center;color:var(--muted);">No estimates in this period. Send some postcards to start tracking!</td></tr>';
       }
     }
     // ── Material breakdown ────────────────────────────────────────────────────
