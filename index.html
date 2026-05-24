@@ -4937,6 +4937,50 @@ function initMap(){
   map.addLayer(clusterGroup);
   map.on('click',onMapClick);
   map.on('dblclick',onMapDblClick);
+  // ── Solar API: fetch roof measurement when a pin popup opens ───────────────
+  map.on('popupopen', function(e){
+    // Find which pin this popup belongs to
+    const marker = e.popup._source;
+    if(!marker) return;
+    // Find pin by matching marker in our markers object
+    const pid = Object.keys(markers).find(k => markers[k] === marker);
+    if(!pid) return;
+    const pin = S.pins.find(p => p.id === pid);
+    if(!pin || !pin.lat || !pin.lng) return;
+    // Inject solar row into popup (loading state)
+    const popupEl = e.popup.getElement();
+    if(!popupEl) return;
+    // Avoid duplicate fetches if already loaded
+    if(popupEl.querySelector('#solar-popup-row')) return;
+    // Insert loading row before the first button
+    const firstBtn = popupEl.querySelector('button');
+    if(!firstBtn) return;
+    const solarRow = document.createElement('div');
+    solarRow.id = 'solar-popup-row';
+    solarRow.style.cssText = 'background:rgba(242,92,5,.1);border:1px solid rgba(242,92,5,.3);border-radius:7px;padding:7px 10px;margin-bottom:7px;font-family:inherit;';
+    solarRow.innerHTML = '<div style="font-size:9px;font-weight:700;letter-spacing:.6px;color:#F25C05;margin-bottom:4px;">🛰 SATELLITE MEASUREMENT</div><div id="solar-popup-content" style="font-size:11px;color:#A8BECE;">Measuring…</div>';
+    firstBtn.parentNode.insertBefore(solarRow, firstBtn);
+    // Fetch solar data
+    fetchSolarData(pin.lat, pin.lng).then(function(data){
+      const contentEl = document.getElementById('solar-popup-content');
+      if(!contentEl) return;
+      if(data && data.status === 'ok' && data.sqft){
+        // Cache on pin for use when building estimate
+        pin._solarCache = data;
+        contentEl.innerHTML =
+          '<span style="color:#fff;font-weight:700;font-size:13px;">' + data.sqft.toLocaleString() + ' sq ft</span>' +
+          '<span style="color:var(--muted,#6b7a8d);margin:0 5px;">·</span>' +
+          '<span style="color:#F25C05;font-weight:700;">' + data.squares + ' sq</span>' +
+          '<span style="color:var(--muted,#6b7a8d);margin:0 5px;">·</span>' +
+          '<span style="color:#22C55E;font-weight:700;">' + data.pitchLabel + ' pitch</span>';
+        // Resize popup to fit new content
+        if(e.popup && e.popup.update) e.popup.update();
+      } else {
+        contentEl.style.display = 'none';
+        if(solarRow) solarRow.style.display = 'none';
+      }
+    }).catch(function(){ if(solarRow) solarRow.style.display='none'; });
+  });
   // ── Viewport-based pin loading on map move ──────────────────────────────────
   map.on('moveend', function(){
     clearTimeout(_viewportLoadTimer);
@@ -6064,16 +6108,25 @@ function goEstFromPin(id){
   // Fetch satellite roof measurement from Google Solar API (non-blocking)
   hideSolarBanner();
   if(p.lat && p.lng){
-    fetchSolarData(p.lat, p.lng).then(function(solarData){
-      if(solarData && solarData.status==='ok'){
-        showSolarBanner(solarData);
-        // Auto-apply only if sqft is still 0 (not yet manually entered)
-        const mainStruct = structures[0];
-        if(mainStruct && (!mainStruct.sqft || mainStruct.sqft===0)){
-          applySolarToEstimate();
+    // Use cached data from popup if available, otherwise fetch fresh
+    const cachedSolar = p._solarCache || null;
+    if(cachedSolar && cachedSolar.status === 'ok'){
+      showSolarBanner(cachedSolar);
+      const mainStruct = structures[0];
+      if(mainStruct && (!mainStruct.sqft || mainStruct.sqft===0)) applySolarToEstimate();
+    } else {
+      fetchSolarData(p.lat, p.lng).then(function(solarData){
+        if(solarData && solarData.status==='ok'){
+          p._solarCache = solarData;
+          showSolarBanner(solarData);
+          // Auto-apply only if sqft is still 0 (not yet manually entered)
+          const mainStruct = structures[0];
+          if(mainStruct && (!mainStruct.sqft || mainStruct.sqft===0)){
+            applySolarToEstimate();
+          }
         }
-      }
-    }).catch(function(){});
+      }).catch(function(){});
+    }
   }
 }
 // ═══════════════════════════════
