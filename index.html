@@ -5492,11 +5492,21 @@ function addMarker(pin){
         <div style="flex:1;"><div style="font-size:9px;color:#A8BECE;">Mortgage</div><div style="font-size:13px;font-weight:700;color:#F25C05;">${fmtMoney(_eq.mortgageBalance)||'—'}</div></div>
       </div>
     </div>` : '';
+  // Solar measurement row — always shown, content updates after fetch
+  const _solar = pin._solarCache;
+  const _solarContent = _solar && _solar.status==='ok'
+    ? _solar.sqft.toLocaleString()+' sq ft &nbsp;&middot;&nbsp; <span style="color:#F25C05;font-weight:700;">'+_solar.squares+' sq</span> &nbsp;&middot;&nbsp; <span style="color:#22C55E;font-weight:700;">'+_solar.pitchLabel+' pitch</span>'
+    : '<span style="color:#A8BECE;">Measuring…</span>';
+  const _popupSolar = `<div id="solar-row-${pid}" style="background:rgba(242,92,5,.1);border:1px solid rgba(242,92,5,.3);border-radius:7px;padding:7px 10px;margin-bottom:7px;">
+    <div style="font-size:9px;font-weight:700;letter-spacing:.6px;color:#F25C05;margin-bottom:3px;">🛰 SATELLITE MEASUREMENT</div>
+    <div id="solar-val-${pid}" style="font-size:12px;color:#fff;font-weight:600;">${_solarContent}</div>
+  </div>`;
   m.bindPopup(`
     <div style="min-width:200px;max-width:240px;">
       <div style="font-weight:700;font-size:13px;margin-bottom:5px;color:#FFFFFF;line-height:1.3;">${escHtml(pin.address||'Unknown')}</div>
       <div style="display:inline-block;background:${sColor(pin.status)};color:white;font-size:11px;padding:2px 8px;border-radius:5px;font-weight:700;margin-bottom:8px;">${sLabel(pin.status)}</div>
       ${pin.photo_url ? '<img src="'+pin.photo_url+'" style="width:100%;max-height:90px;object-fit:cover;border-radius:6px;margin-bottom:8px;display:block;" onerror="this.style.display=\'none\'">' : ''}
+      ${_popupSolar}
       ${pin.estimate && pin.estimate.total ? `<div style="background:#0a1628;border:1px solid #3B82F655;border-radius:6px;padding:5px 8px;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;"><span style="font-size:9px;font-weight:700;color:#3B82F6;">✓ ESTIMATE</span><span style="font-size:13px;font-weight:700;color:#FFF;">$${(pin.estimate.total||0).toLocaleString()}</span></div>` : ''}
       <button onclick="goEstFromPin('${pid}')" style="background:#F25C05;border:none;border-radius:7px;padding:8px;color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">${pin.estimate && pin.estimate.total ? '📋 Edit Estimate' : '📋 Build Estimate'}</button>
       <button onclick="measureForPin('${pid}')" style="background:transparent;border:1.5px solid #F25C05;border-radius:7px;padding:6px;color:#F25C05;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">📐 Measure Roof</button>
@@ -5512,6 +5522,35 @@ function addMarker(pin){
   // Add to cluster group (falls back to direct map add if cluster not ready)
   if(clusterGroup) clusterGroup.addLayer(m);
   else m.addTo(map);
+  // If no cached solar data yet, fetch and update the popup content when ready
+  if(!_solar && pin.lat && pin.lng){
+    fetchSolarData(pin.lat, pin.lng).then(function(data){
+      if(!data || data.status !== 'ok' || !data.sqft) return;
+      pin._solarCache = data;
+      m._solarData = data;
+      // Update the value element if popup is currently open
+      const valEl = document.getElementById('solar-val-'+pid);
+      if(valEl){
+        valEl.innerHTML = data.sqft.toLocaleString()+' sq ft &nbsp;&middot;&nbsp; <span style="color:#F25C05;font-weight:700;">'+data.squares+' sq</span> &nbsp;&middot;&nbsp; <span style="color:#22C55E;font-weight:700;">'+data.pitchLabel+' pitch</span>';
+        if(m.getPopup && m.getPopup() && m.getPopup().update) m.getPopup().update();
+      }
+      // Rebuild popup so future opens show the cached data immediately
+      addMarker_updateSolar(m, pid, pin);
+    }).catch(function(){});
+  }
+}
+
+// Rebuild a marker's popup HTML with fresh solar data (called after async fetch)
+function addMarker_updateSolar(m, pid, pin){
+  // Re-run addMarker logic to rebuild popup with cached solar data
+  // Only update if marker still exists
+  if(!markers[pid]) return;
+  // Remove and re-add marker with updated popup
+  const wasOpen = m.isPopupOpen ? m.isPopupOpen() : false;
+  if(clusterGroup) clusterGroup.removeLayer(m); else if(map) map.removeLayer(m);
+  delete markers[pid];
+  addMarker(pin);
+  if(wasOpen && markers[pid]) setTimeout(function(){ markers[pid].openPopup(); }, 50);
 }
 
 function savePin(){
