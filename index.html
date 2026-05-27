@@ -895,16 +895,40 @@ tr:hover td{background:var(--card);}
       <div id="wind-status" style="font-size:10px;color:var(--mid);text-align:center;min-height:14px;"></div>
     </div>
     <div class="measure-hud" id="measure-hud">
-      <div style="display:flex;align-items:baseline;gap:6px;">
-        <div>
-          <div class="mhud-lbl">Total Roof Area</div>
-          <div style="display:flex;align-items:baseline;gap:4px;">
-            <div class="mhud-sqft" id="mhud-sqft">0</div>
-            <div style="font-size:11px;color:var(--mid);">sq ft</div>
+      <!-- Row 1: Footprint + Actual Roof Area side by side -->
+      <div style="display:flex;gap:12px;align-items:flex-start;width:100%;">
+        <div style="flex:1;">
+          <div class="mhud-lbl">Footprint</div>
+          <div style="display:flex;align-items:baseline;gap:3px;">
+            <div class="mhud-sqft" id="mhud-sqft" style="font-size:22px;">0</div>
+            <div style="font-size:10px;color:var(--mid);">sq ft</div>
           </div>
-          <div id="mhud-bldg-count" style="font-size:11px;color:var(--accent);font-weight:600;min-height:14px;"></div>
+        </div>
+        <div style="flex:1;">
+          <div class="mhud-lbl" style="color:var(--accent);">Actual Roof Area</div>
+          <div style="display:flex;align-items:baseline;gap:3px;">
+            <div class="mhud-sqft" id="mhud-actual-sqft" style="font-size:22px;">0</div>
+            <div style="font-size:10px;color:var(--mid);">sq ft</div>
+          </div>
+          <div style="font-size:11px;color:var(--accent);font-weight:700;" id="mhud-squares">0 sq</div>
         </div>
       </div>
+      <!-- Row 2: Pitch selector -->
+      <div style="width:100%;margin-top:8px;">
+        <div class="mhud-lbl" style="margin-bottom:4px;">Pitch</div>
+        <select id="mhud-pitch-sel" onchange="updateMeasurePitch()" style="width:100%;background:var(--card);color:var(--fg,var(--text));border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px;font-family:var(--font-b);">
+          <option value="1.054">4/12 — Low</option>
+          <option value="1.083">5/12</option>
+          <option value="1.118" selected>6/12 — Standard</option>
+          <option value="1.158">7/12</option>
+          <option value="1.202">8/12 — Moderate</option>
+          <option value="1.250">9/12</option>
+          <option value="1.302">10/12 — Steep</option>
+          <option value="1.357">11/12</option>
+          <option value="1.414">12/12 — Very Steep</option>
+        </select>
+      </div>
+      <div id="mhud-bldg-count" style="font-size:11px;color:var(--accent);font-weight:600;min-height:14px;width:100%;"></div>
       <div class="mhud-hint" id="mhud-hint">Tap each corner of the roof. Double-tap to finish.</div>
       <div class="mhud-row" style="display:flex;gap:6px;margin-top:8px;width:100%;">
         <button class="mhud-btn" onclick="undoMeasurePoint()">↩ Undo</button>
@@ -5035,6 +5059,12 @@ function toggleMeasure(){
     if(map.getZoom()<17)map.setZoom(18);
     document.getElementById('map-panel').classList.remove('open');
     clearMeasureData();
+    // Pre-set pitch from solar data if available for the current pin
+    const solarForMeasure = window._solarData || (window._currentPopupMarker && window._currentPopupMarker._solarData);
+    if(solarForMeasure && solarForMeasure.pitchMultiplier){
+      const pitchSel=document.getElementById('mhud-pitch-sel');
+      if(pitchSel) pitchSel.value=String(solarForMeasure.pitchMultiplier);
+    }
     document.getElementById('mhud-hint').textContent='Click corners of the roof. Double-click to finish.';
   } else {
     btn.classList.remove('active');btn.textContent='📐 Measure Roof';
@@ -5048,6 +5078,22 @@ function toggleMeasure(){
   }
 }
 
+// Helper: update the Actual Roof Area and Squares display based on current footprint + pitch
+function updateMeasureActual(footprintSqft){
+  const sel=document.getElementById('mhud-pitch-sel');
+  const mult=sel?parseFloat(sel.value)||1.118:1.118;
+  const actual=Math.round(footprintSqft*mult);
+  const squares=Math.round(footprintSqft*mult/100*10)/10;
+  const actualEl=document.getElementById('mhud-actual-sqft');
+  const sqEl=document.getElementById('mhud-squares');
+  if(actualEl)actualEl.textContent=actual>0?actual.toLocaleString():'0';
+  if(sqEl)sqEl.textContent=squares>0?squares.toFixed(1)+' sq':'0 sq';
+}
+// Called when pitch dropdown changes
+function updateMeasurePitch(){
+  const footprint=parseInt((document.getElementById('mhud-sqft').textContent||'0').replace(/,/g,''))||0;
+  updateMeasureActual(footprint);
+}
 function clearMeasureData(){
   measurePts=[];
   measureMarkers.forEach(m=>map.removeLayer(m));measureMarkers=[];
@@ -5055,6 +5101,7 @@ function clearMeasureData(){
   allPolygons.forEach(p=>map.removeLayer(p));
   allPolygons=[];allPolygonPts=[];totalSqFt=0;
   document.getElementById('mhud-sqft').textContent='0';
+  updateMeasureActual(0);
   document.getElementById('mhud-bldg-count').textContent='';
   const ub=document.getElementById('btn-use-measure');
   if(ub){ub.style.opacity='.4';ub.style.pointerEvents='none';}
@@ -5080,6 +5127,7 @@ function addMeasurePoint(latlng){
   if(measurePts.length>=3){
     const sqft=calcPolygonSqFt(measurePts);
     document.getElementById('mhud-sqft').textContent=sqft.toLocaleString();
+    updateMeasureActual(sqft);
     const bldgNum=allPolygons.length+1;
     document.getElementById('mhud-hint').textContent='Bldg '+bldgNum+': '+measurePts.length+' pts — drag to adjust. Dbl-click to finish.';
     const ub=document.getElementById('btn-use-measure');
@@ -5096,6 +5144,7 @@ function redrawPoly(){
     if(measurePts.length>=3){
       const thisSqft=calcPolygonSqFt(measurePts);
       document.getElementById('mhud-sqft').textContent=(totalSqFt+thisSqft).toLocaleString();
+      updateMeasureActual(totalSqFt+thisSqft);
       if(allPolygons.length>0)
         document.getElementById('mhud-bldg-count').textContent=allPolygons.length+' done + this: '+thisSqft.toLocaleString()+' sq ft';
     }
@@ -5110,6 +5159,7 @@ function undoMeasurePoint(){
     map.removeLayer(lastPoly);
     totalSqFt=Math.max(0,totalSqFt-calcPolygonSqFt(lastPts));
     document.getElementById('mhud-sqft').textContent=totalSqFt.toLocaleString();
+    updateMeasureActual(totalSqFt);
     document.getElementById('mhud-bldg-count').textContent=allPolygons.length?allPolygons.length+' building'+(allPolygons.length>1?'s':''):'';
     if(!totalSqFt){const ub=document.getElementById('btn-use-measure');if(ub){ub.style.opacity='.4';ub.style.pointerEvents='none';}}
     toast('Last building removed','info');return;
@@ -5120,6 +5170,7 @@ function undoMeasurePoint(){
   redrawPoly();
   if(!measurePts.length){
     document.getElementById('mhud-sqft').textContent=totalSqFt.toLocaleString()||'0';
+    updateMeasureActual(totalSqFt||0);
     document.getElementById('mhud-hint').textContent=allPolygons.length?'✅ Add another building or tap Add to Estimate.':'Tap roof corners. Double-click to finish a building.';
   } else {
     document.getElementById('mhud-hint').textContent=measurePts.length+' pts — keep clicking corners.';
@@ -5171,6 +5222,7 @@ function onMapDblClick(e){
   measureMarkers.forEach(m=>map.removeLayer(m));
   measurePts=[];measureMarkers=[];measurePoly=null;
   document.getElementById('mhud-sqft').textContent=totalSqFt.toLocaleString();
+  updateMeasureActual(totalSqFt);
   document.getElementById('mhud-bldg-count').textContent=num+' building'+(num>1?'s':'')+' · Bldg '+num+': '+thisSqft.toLocaleString()+' sq ft';
   document.getElementById('mhud-hint').textContent='✅ Bldg '+num+' done! Tap corners to add another, or tap Add to Estimate.';
   const ub=document.getElementById('btn-use-measure');
@@ -5203,8 +5255,13 @@ function useRoofMeasurement(){
     measureMarkers.forEach(m=>map.removeLayer(m));
     measurePts=[];measureMarkers=[];measurePoly=null;
   }
-  const sqft=totalSqFt||parseInt(document.getElementById('mhud-sqft').textContent.replace(/,/g,''));
-  if(!sqft){toast('Draw the roof outline first','error');return;}
+  const footprint=totalSqFt||parseInt(document.getElementById('mhud-sqft').textContent.replace(/,/g,''));
+  if(!footprint){toast('Draw the roof outline first','error');return;}
+  // Apply pitch multiplier so the estimate gets the actual sloped roof area
+  const pitchSel=document.getElementById('mhud-pitch-sel');
+  const pitchMult=pitchSel?parseFloat(pitchSel.value)||1.118:1.118;
+  const sqft=Math.round(footprint*pitchMult);
+  const pitchVal=pitchSel?pitchSel.value:'1.118';
   // Stop measuring
   measuring=false;
   document.getElementById('btn-measure').classList.remove('active');
@@ -5232,6 +5289,7 @@ function useRoofMeasurement(){
     const s=structures.find(x=>x.id===sid);
     if(s){
       s.sqft=sqft;
+      s.pitch=pitchVal; // apply selected pitch from measure tool
       if(_lastMeasurePts)s.pts=_lastMeasurePts;
       _lastMeasurePts=null;
       goTab('estimate');
@@ -5244,7 +5302,7 @@ function useRoofMeasurement(){
   if(window._addingToExisting){
     window._addingToExisting=false;
     goTab('estimate');
-    addStructure(sqft,'Structure '+(structures.length+1),_lastMeasurePts);
+    addStructure(sqft,'Structure '+(structures.length+1),_lastMeasurePts,pitchVal);
     _lastMeasurePts=null;
     toast('📐 '+sqft.toLocaleString()+' sq ft added as new structure!','success');
     return;
@@ -5282,7 +5340,7 @@ function useRoofMeasurement(){
       }
       // Reset structures and apply measurement
       structures = [];
-      addStructure(sqft,'Main House',_lastMeasurePts);
+      addStructure(sqft,'Main House',_lastMeasurePts,pitchVal);
       _lastMeasurePts=null;
       goTab('estimate');
       // Update picker dropdown to show this pin
@@ -5337,6 +5395,7 @@ function measureForStructure(sid){
       // Update HUD with current area
       const sqft=calcPolygonSqFt(measurePts);
       document.getElementById('mhud-sqft').textContent=sqft.toLocaleString();
+      updateMeasureActual(sqft);
       const ub=document.getElementById('btn-use-measure');
       if(ub){ub.style.opacity='1';ub.style.pointerEvents='auto';}
       document.getElementById('mhud-hint').textContent='Drag any vertex to adjust. Double-click to finish & save.';
@@ -5355,7 +5414,9 @@ function measureForStructure(sid){
 function applyMeasureToEstimate(sqft){
   window._editingQueueId=null;
   goTab('estimate');
-  addStructure(sqft,'Main House',_lastMeasurePts);
+  const pitchSel2=document.getElementById('mhud-pitch-sel');
+  const pitchVal2=pitchSel2?pitchSel2.value:'1.118';
+  addStructure(sqft,'Main House',_lastMeasurePts,pitchVal2);
   _lastMeasurePts=null;
   toast('📐 '+sqft.toLocaleString()+' sq ft added!','success');
 }
@@ -6134,11 +6195,11 @@ function goEstFromPin(id){
 // ═══════════════════════════════
 //  STRUCTURES ENGINEE
 // ═══════════════════════════════
-function addStructure(sqft, name, pts){
+function addStructure(sqft, name, pts, pitch){
   const id='s'+Date.now();
   structures.push({
     id, name:name||(structures.length===0?'Main House':'Structure '+(structures.length+1)),
-    sqft:sqft||0, pitch:'1.202', mat:'1.3', stories:'1', complexity:'1.12',
+    sqft:sqft||0, pitch:pitch||'1.202', mat:'1.3', stories:'1', complexity:'1.12',
     pts:pts||null
   });
   renderStructures();calcP();updatePreview();
