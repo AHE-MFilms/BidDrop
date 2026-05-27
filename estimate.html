@@ -669,8 +669,14 @@ function fmtMo(total,apr,term){
 function stars(n){return'★'.repeat(Math.round(n))+'☆'.repeat(5-Math.round(n));}
 function slugify(s){return(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');}
 function pitchLabel(mul){
-  const map={'1.00':'4/12 Low','1.07':'5/12','1.15':'6/12 Std','1.23':'7/12','1.31':'8/12 Mod','1.40':'9/12','1.50':'10/12 Steep','1.65':'11/12','1.80':'12/12 Steep'};
-  return map[parseFloat(mul).toFixed(2)]||map[parseFloat(mul).toFixed(1)]||(mul+'/12');
+  const map={
+    // new Solar API keys
+    '1.054':'4/12','1.083':'5/12','1.118':'6/12','1.158':'7/12','1.202':'8/12','1.250':'9/12','1.302':'10/12','1.357':'11/12','1.414':'12/12',
+    // legacy keys
+    '1.00':'4/12','1.07':'5/12','1.15':'6/12','1.23':'7/12','1.31':'8/12','1.40':'9/12','1.50':'10/12','1.65':'11/12','1.80':'12/12'
+  };
+  const k=parseFloat(mul).toFixed(3);
+  return map[k]||map[parseFloat(mul).toFixed(2)]||map[parseFloat(mul).toFixed(1)]||'—';
 }
 function initials(s){return(s||'').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
 function fmtDate(iso){if(!iso)return'';const d=new Date(iso);return d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});}
@@ -913,7 +919,6 @@ function buildPage(firstName,lastName,email,phone){
 
   // ── Materials ──
   const MATS=[
-    {key:'1.0',name:'3-Tab Shingle',   desc:'Budget-friendly, reliable protection for 20–25 years.',    mc:'#64748b',badge:'Economy',    bb:'rgba(100,116,139,.12)',bc:'#64748b'},
     {key:'1.3',name:'Architectural',   desc:'Most popular — dimensional look, 30-year warranty.',       mc:'#3b82f6',badge:'Most Popular',bb:'rgba(59,130,246,.12)', bc:'#3b82f6'},
     {key:'1.8',name:'Designer Shingle',desc:'Premium curb appeal with enhanced impact resistance.',     mc:'#8b5cf6',badge:'Premium',     bb:'rgba(139,92,246,.12)', bc:'#8b5cf6'},
     {key:'2.5',name:'Metal Roofing',   desc:'50+ year lifespan, energy efficient, maintenance-free.',  mc:'#10b981',badge:'Best Value',  bb:'rgba(16,185,129,.12)', bc:'#10b981'},
