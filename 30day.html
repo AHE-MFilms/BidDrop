@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>30-Day Free Trial — BidDrop</title>
+  <meta name="description" content="Start your 30-day free trial of BidDrop. Drop pins, send personalized postcards, and close more roofs — no credit card required." />
+  <!-- Facebook Pixel / UTM params pass-through friendly -->
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet" />
+
+<style>
+/* ============================================================
+   BIDDROP — 30-Day Free Trial Funnel Page
+   Facebook Ad Landing Page — No nav, single CTA
+   Dark navy bg, orange accent, Montserrat font
+   Zero JavaScript — pure HTML + CSS
+============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy:        #0a0f1e;
+  --navy-mid:    #0f1829;
+  --navy-card:   #131d30;
+  --navy-border: #1e2d47;
+  --orange:      #f5620f;
+  --orange-light:#ff7a2f;
+  --orange-pale: #fff3ed;
+  --white:       #ffffff;
+  --green:       #22c55e;
+  --text-light:  rgba(255,255,255,0.85);
+  --text-muted:  rgba(255,255,255,0.5);
+  --font:        'Montserrat', sans-serif;
+  --radius:      10px;
+  --radius-lg:   16px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--navy);
+  color: var(--white);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+a { text-decoration: none; color: inherit; }
+img { max-width: 100%; display: block; }
+ul { list-style: none; }
+
+.container {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ── Top Bar ── */
+.top-bar {
+  background: var(--orange);
+  text-align: center;
+  padding: 10px 16px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.02em;
+}
+.top-bar span { opacity: 0.85; font-weight: 500; }
+
+/* ── Minimal Logo Header ── */
+.logo-bar {
+  padding: 18px 0 0;
+  text-align: center;
+}
+.logo-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--white);
+  letter-spacing: -0.01em;
+}
+.logo-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--orange);
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.logo-icon svg { width: 18px; height: 18px; fill: #fff; }
+
+/* ── Hero ── */
+.hero {
+  padding: 52px 0 48px;
+  text-align: center;
+}
+
+.trial-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(245,98,15,0.15);
+  border: 1px solid rgba(245,98,15,0.4);
+  color: var(--orange);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 7px 16px;
+  border-radius: 100px;
+  margin-bottom: 28px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.trial-badge-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--orange);
+  animation: pulse 1.8s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+.hero h1 {
+  font-size: clamp(2.4rem, 6vw, 4rem);
+  font-weight: 900;
+  line-height: 1.05;
+  color: var(--white);
+  margin-bottom: 20px;
+  letter-spacing: -0.02em;
+}
+.hero h1 .accent { color: var(--orange); }
+
+.hero-sub {
+  font-size: 1.15rem;
+  color: var(--text-light);
+  max-width: 580px;
+  margin: 0 auto 36px;
+  line-height: 1.7;
+}
+
+/* Trust pills */
+.trust-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 48px;
+}
+.trust-pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 100px;
+  padding: 7px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-light);
+}
+.trust-pill svg {
+  width: 14px; height: 14px;
+  stroke: var(--green);
+  fill: none;
+  stroke-width: 2.5;
+  flex-shrink: 0;
+}
+
+/* ── How It Works ── */
+.steps-section {
+  padding: 0 0 64px;
+}
+.steps-label {
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin-bottom: 14px;
+}
+.steps-title {
+  text-align: center;
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 800;
+  color: var(--white);
+  margin-bottom: 40px;
+}
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  max-width: 860px;
+  margin: 0 auto;
+}
+.step-card {
+  background: var(--navy-card);
+  border: 1px solid var(--navy-border);
+  border-radius: var(--radius-lg);
+  padding: 32px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.step-num {
+  position: absolute;
+  top: 14px; right: 16px;
+  font-size: 3rem;
+  font-weight: 900;
+  color: var(--orange);
+  opacity: 0.07;
+  line-height: 1;
+}
+.step-icon {
+  width: 52px; height: 52px;
+  background: rgba(245,98,15,0.12);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+.step-icon svg {
+  width: 24px; height: 24px;
+  stroke: var(--orange);
+  fill: none;
+  stroke-width: 2;
+}
+.step-card h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+.step-card p {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+/* ── Postcard Proof ── */
+.proof-section {
+  padding: 0 0 72px;
+}
+.proof-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: center;
+  max-width: 960px;
+  margin: 0 auto;
+}
+.proof-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.proof-card-img {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 20px 56px rgba(0,0,0,0.5);
+  border: 1px solid var(--navy-border);
+}
+.proof-card-img img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.proof-card-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  text-align: center;
+}
+.proof-copy h2 {
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  font-weight: 800;
+  color: var(--white);
+  line-height: 1.2;
+  margin-bottom: 16px;
+}
+.proof-copy h2 .accent { color: var(--orange); }
+.proof-copy p {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+.proof-bullets {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.proof-bullet {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.9rem;
+  color: var(--text-light);
+}
+.proof-bullet svg {
+  width: 16px; height: 16px;
+  stroke: var(--orange);
+  fill: none;
+  stroke-width: 2.5;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+/* ── Pricing ── */
+.pricing-section {
+  background: var(--navy-mid);
+  padding: 72px 0;
+}
+.section-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+.section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin-bottom: 12px;
+}
+.section-header h2 {
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  font-weight: 800;
+  color: var(--white);
+  margin-bottom: 12px;
+}
+.section-header p {
+  font-size: 1rem;
+  color: var(--text-muted);
+}
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.pricing-card {
+  background: var(--navy-card);
+  border: 1px solid var(--navy-border);
+  border-radius: var(--radius-lg);
+  padding: 28px 22px 24px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.pricing-card--popular {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 1px var(--orange), 0 20px 48px rgba(245,98,15,0.18);
+}
+.popular-badge {
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--orange);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 14px;
+  border-radius: 100px;
+  white-space: nowrap;
+}
+.plan-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  margin-bottom: 12px;
+}
+.pricing-plan {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--white);
+  margin-bottom: 6px;
+}
+.pricing-desc {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 16px;
+  min-height: 52px;
+}
+.pricing-price {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  margin-bottom: 4px;
+}
+.pricing-dollar { font-size: 1.1rem; font-weight: 700; color: var(--white); }
+.pricing-num { font-size: 2.6rem; font-weight: 900; color: var(--white); line-height: 1; }
+.pricing-period { font-size: 0.9rem; color: var(--text-muted); margin-left: 2px; }
+.lets-talk {
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--orange);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.trial-line {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--green);
+  margin-bottom: 16px;
+}
+.pricing-divider {
+  height: 1px;
+  background: var(--navy-border);
+  margin: 14px 0;
+}
+.pricing-features {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.pricing-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--text-light);
+  line-height: 1.4;
+}
+.pricing-features li svg {
+  width: 14px; height: 14px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.pricing-features li.feat-bold {
+  font-weight: 700;
+  color: var(--green);
+}
+.pricing-features li.feat-bold svg { stroke: var(--green); fill: none; stroke-width: 2.5; }
+.pricing-features li.feat-off {
+  color: #ef4444;
+}
+.pricing-features li.feat-off svg { stroke: #ef4444; fill: none; stroke-width: 2.5; }
+.pricing-features li svg.check { stroke: var(--orange); fill: none; stroke-width: 2.5; }
+
+.btn-pricing {
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-family: var(--font);
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-decoration: none;
+}
+.btn-pricing:active { transform: scale(0.97); }
+.btn-pricing--primary {
+  background: var(--orange);
+  color: #fff;
+  border-color: var(--orange);
+}
+.btn-pricing--primary:hover { background: var(--orange-light); border-color: var(--orange-light); }
+.btn-pricing--outline {
+  background: transparent;
+  color: var(--white);
+  border-color: var(--navy-border);
+}
+.btn-pricing--outline:hover { border-color: rgba(255,255,255,0.4); }
+.btn-pricing--contact {
+  background: var(--orange);
+  color: #fff;
+  border-color: var(--orange);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+.btn-pricing--contact:hover { background: var(--orange-light); }
+
+.pricing-note {
+  text-align: center;
+  margin-top: 28px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.pricing-note strong { color: var(--white); }
+
+/* ── Social Proof / Testimonials ── */
+.testimonials-section {
+  padding: 72px 0;
+}
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.testimonial-card {
+  background: var(--navy-card);
+  border: 1px solid var(--navy-border);
+  border-radius: var(--radius-lg);
+  padding: 28px 24px;
+}
+.stars {
+  color: #f59e0b;
+  font-size: 1rem;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+.testimonial-quote {
+  font-size: 0.92rem;
+  color: var(--text-light);
+  line-height: 1.7;
+  margin-bottom: 16px;
+  font-style: italic;
+}
+.testimonial-author {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.avatar {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: var(--orange);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+}
+.author-name { font-size: 0.88rem; font-weight: 700; color: var(--white); }
+.author-role { font-size: 0.78rem; color: var(--text-muted); }
+.testimonial-result {
+  margin-top: 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--orange);
+  background: rgba(245,98,15,0.1);
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+
+/* ── Final CTA ── */
+.final-cta {
+  background: var(--orange);
+  padding: 72px 0;
+  text-align: center;
+}
+.final-cta h2 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.1;
+  margin-bottom: 16px;
+}
+.final-cta p {
+  font-size: 1.1rem;
+  color: rgba(255,255,255,0.85);
+  margin-bottom: 32px;
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.cta-btn-big {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--navy);
+  color: #fff;
+  font-family: var(--font);
+  font-size: 1.1rem;
+  font-weight: 800;
+  padding: 18px 40px;
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  transition: all 0.18s ease;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+.cta-btn-big:hover { background: #0f1829; transform: translateY(-2px); }
+.cta-btn-big:active { transform: scale(0.97); }
+.final-cta-note {
+  margin-top: 18px;
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.7);
+}
+
+/* ── Minimal Footer ── */
+.mini-footer {
+  background: var(--navy);
+  border-top: 1px solid var(--navy-border);
+  padding: 24px 0;
+  text-align: center;
+}
+.mini-footer p {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.mini-footer a { color: var(--text-muted); text-decoration: underline; }
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .steps-grid { grid-template-columns: 1fr 1fr; }
+  .proof-inner { grid-template-columns: 1fr; }
+  .pricing-grid { grid-template-columns: 1fr 1fr; }
+  .testimonials-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .steps-grid { grid-template-columns: 1fr; }
+  .pricing-grid { grid-template-columns: 1fr; }
+  .trust-row { gap: 8px; }
+  .trust-pill { font-size: 0.78rem; padding: 6px 12px; }
+  .hero h1 { font-size: 2.2rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOP URGENCY BAR -->
+<div class="top-bar">
+  🎉 30-Day Free Trial — No Credit Card Charged Today &nbsp;·&nbsp; <span>Cancel anytime</span>
+</div>
+
+<!-- LOGO ONLY -->
+<div class="logo-bar">
+  <div class="logo-mark">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+    </div>
+    BidDrop
+  </div>
+</div>
+
+<!-- ============================================================
+     HERO
+============================================================ -->
+<section class="hero">
+  <div class="container">
+    <div class="trial-badge">
+      <div class="trial-badge-dot"></div>
+      30 Days Free — No Card Required
+    </div>
+
+    <h1>Stop Knocking Doors.<br>Start <span class="accent">Dropping Pins.</span></h1>
+
+    <p class="hero-sub">
+      BidDrop identifies homes that need a new roof, builds a personalized estimate, and mails a branded postcard with the real price on it — automatically. You just show up and close.
+    </p>
+
+    <div class="trust-row">
+      <div class="trust-pill">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        30 days free
+      </div>
+      <div class="trust-pill">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        No credit card required
+      </div>
+      <div class="trust-pill">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        Cancel anytime
+      </div>
+      <div class="trust-pill">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        $4 per postcard lead
+      </div>
+      <div class="trust-pill">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        GHL included on Pro+
+      </div>
+    </div>
+
+    <a href="https://biddrop.us/signup.html" class="cta-btn-big" style="display:inline-flex; background:var(--orange); margin-bottom:12px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Start My 30-Day Free Trial
+    </a>
+    <p style="font-size:0.82rem; color:var(--text-muted);">No credit card charged today &nbsp;·&nbsp; Instant account setup</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     HOW IT WORKS
+============================================================ -->
+<section class="steps-section">
+  <div class="container">
+    <div class="steps-label">How It Works</div>
+    <h2 class="steps-title">Four steps to your next roof job</h2>
+
+    <div class="steps-grid">
+
+      <div class="step-card">
+        <div class="step-num">01</div>
+        <div class="step-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+        </div>
+        <h3>Drop a Pin</h3>
+        <p>Open BidDrop and drop a pin on any neighborhood you want to target. That's the entire input required from you.</p>
+      </div>
+
+      <div class="step-card">
+        <div class="step-num">02</div>
+        <div class="step-icon">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <h3>BidDrop Finds the Roofs</h3>
+        <p>Our platform scans property data, roof age, permit history, and storm activity to surface every home that's a real opportunity.</p>
+      </div>
+
+      <div class="step-card">
+        <div class="step-num">03</div>
+        <div class="step-icon">
+          <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </div>
+        <h3>Snap a Photo of the Roof</h3>
+        <p>Take a photo of the house from the street. That exact photo prints on the postcard front and appears on the homeowner's personalized estimate page.</p>
+      </div>
+
+      <div class="step-card">
+        <div class="step-num">04</div>
+        <div class="step-icon">
+          <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+        </div>
+        <h3>Postcard Mails — QR Tracks Every Scan</h3>
+        <p>Branded postcards mail automatically. Every postcard has a unique trackable QR code — when they scan it, you're notified instantly.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     POSTCARD PROOF
+============================================================ -->
+<section class="proof-section">
+  <div class="container">
+    <div class="proof-inner">
+
+      <div class="proof-cards">
+        <div>
+          <div class="proof-card-label">Front — Their House. Their Price.</div>
+          <div class="proof-card-img">
+            <img src="https://biddrop.io/wp-content/uploads/2026/05/Postcard_Front.png" alt="BidDrop postcard front" />
+          </div>
+        </div>
+        <div>
+          <div class="proof-card-label">Back — Trackable QR Code</div>
+          <div class="proof-card-img">
+            <img src="https://biddrop.io/wp-content/uploads/2026/05/Postcard_Back.png" alt="BidDrop postcard back" />
+          </div>
+          <div style="margin-top:8px; display:flex; align-items:center; gap:6px; justify-content:center;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <span style="font-size:0.7rem; font-weight:600; color:var(--text-muted);">QR code is unique per mailer — every scan is tracked &amp; attributed</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="proof-copy">
+        <div class="steps-label" style="text-align:left;">Why It Works</div>
+        <h2>The homeowner recognizes <span class="accent">their own house.</span> That's the hook.</h2>
+        <p>Generic postcards get thrown away. BidDrop postcards get opened — because the homeowner sees their own house on the front, with a real price already on it. No guessing. No "call for a quote." Just their number, ready to go.</p>
+
+        <div class="proof-bullets">
+          <div class="proof-bullet">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            <div><strong style="color:var(--white);">Rep snaps the photo</strong> — it prints on the postcard front and their estimate page</div>
+          </div>
+          <div class="proof-bullet">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            <div><strong style="color:var(--white);">Satellite data builds the estimate</strong> — real dollar amount, automatically</div>
+          </div>
+          <div class="proof-bullet">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            <div><strong style="color:var(--white);">Trackable QR code</strong> — know exactly who scanned, which neighborhood converted, and when</div>
+          </div>
+          <div class="proof-bullet">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            <div><strong style="color:var(--white);">$4 per postcard</strong> — same cost as a generic mailer, but with a real estimate on it</div>
+          </div>
+        </div>
+
+        <a href="https://biddrop.us/signup.html" style="display:inline-flex; align-items:center; gap:8px; background:var(--orange); color:#fff; font-family:var(--font); font-size:1rem; font-weight:700; padding:14px 28px; border-radius:var(--radius); text-decoration:none; transition:all 0.18s ease;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Start Free — 30 Days on Us
+        </a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     PRICING
+============================================================ -->
+<section class="pricing-section" id="pricing">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">Pricing</div>
+      <h2>Start free. Scale as you grow.</h2>
+      <p>All plans include a 30-day free trial. No credit card required.</p>
+    </div>
+
+    <div class="pricing-grid">
+
+      <!-- Starter -->
+      <div class="pricing-card">
+        <div class="plan-dot" style="background:#6b7280;"></div>
+        <div class="pricing-plan">Starter</div>
+        <p class="pricing-desc">Solo reps getting started with canvassing and digital estimates.</p>
+        <div class="pricing-price">
+          <span class="pricing-dollar">$</span>
+          <span class="pricing-num">97</span>
+          <span class="pricing-period">/mo</span>
+        </div>
+        <div class="trial-line">✓ FREE for 30 days</div>
+        <div class="pricing-divider"></div>
+        <ul class="pricing-features">
+          <li class="feat-bold"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>5 Reps / 1 Admin</li>
+          <li class="feat-bold"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Unlimited pins</li>
+          <li class="feat-bold"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>15 mailers/mo (after trial)</li>
+          <div class="pricing-divider"></div>
+          <li><svg class="check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Map canvassing &amp; pin drops</li>
+          <li><svg class="check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Estimate builder</li>
+          <li><svg class="check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Postcard &amp; letter preview</li>
+          <li><svg class="check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Mail queue</li>
+          <li><svg class="check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Property lookups (free)</li>
+          <li class="feat-off"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>No GHL integration</li>
+        </ul>
+        <a href="https://biddrop.us/signup.html?plan=starter" class="btn-pricing btn-pricing--outline">Select Starter</a>
+      </div>
+
+      <!-- Pro -->
+      <div class="pricing-card pricing-card--popular">
+        <div class="popular-badge">★ Most Popular</div>
+        <div class="plan-dot" style="background:#8b5cf6;"></div>
+        <div class="pricing-plan">Pro</div>
+        <p class="pricing-desc">Growing roofing companies ready to automate follow-up and retargeting.</p>
+        <div class="pricing-price">
+          <span class="pricing-dollar">$</span>
+          <span class="pricing-num">197</span>
+          <span class="pricing-period">/mo</span>
+        </div>
+        <div class="trial-line">✓ FREE for 30 days</div>
+        <div class="pricing-divider"></div>
+        <ul class="pricing-features">
+          <li class="feat-bold"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>15 Reps / 3 Admins</li>
+          <li class="feat-bold"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Unlimited pins</li>
+          <li class="feat-bold"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>40 mailers/mo (after trial)</li>
+          <div class="pricing-divider"></div>
+          <li><svg class="check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Everything in Starter</li>
+          <li><svg class="check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Estimate pages (biddrop.us)</li>
+          <li><svg class="check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>GHL integration</li>
+          <li><svg class="check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Analytics dashboard</li>
+          <li><svg class="check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>QR scan tracking</li>
+        </ul>
+        <a href="https://biddrop.us/signup.html?plan=pro" class="btn-pricing btn-pricing--primary">Select Pro</a>
+      </div>
+
+      <!-- Agency -->
+      <div class="pricing-card">
+        <div class="plan-dot" style="background:var(--orange);"></div>
+        <div class="pricing-plan">Agency</div>
+        <p class="pricing-desc">Multi-rep teams and roofing companies scaling their canvass operation.</p>
+        <div class="pricing-price">
+          <span class="pricing-dollar">$</span>
+          <span class="pricing-num">397</span>
+          <span class="pricing-period">/mo</span>
+        </div>
+        <div class="trial-line">✓ FREE for 30 days</div>
+        <div class="pricing-divider"></div>
+        <ul class="pricing-features">
+          <li class="feat-bold"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>100 Reps / 5 Admins</li>
+          <li class="feat-bold"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Unlimited pins</li>
+          <li class="feat-bold"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>100 mailers/mo (after trial)</li>
+          <div class="pricing-divider"></div>
+          <li><svg class="check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Everything in Pro</li>
+          <li><svg class="check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Multi-rep management</li>
+          <li><svg class="check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Rep analytics &amp; leaderboard</li>
+          <li><svg class="check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Custom postcard design</li>
+          <li><svg class="check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Priority support</li>
+        </ul>
+        <a href="https://biddrop.us/signup.html?plan=agency" class="btn-pricing btn-pricing--outline">Select Agency</a>
+      </div>
+
+      <!-- Enterprise -->
+      <div class="pricing-card">
+        <div class="plan-dot" style="background:#f59e0b;"></div>
+        <div class="pricing-plan">Enterprise</div>
+        <p class="pricing-desc">Roofing franchises, large agencies, and multi-location companies. Custom pricing tailored to your team.</p>
+        <div class="lets-talk">Let's Talk</div>
+        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:16px;">Custom pricing &amp; onboarding</p>
+        <div class="pricing-divider"></div>
+        <ul class="pricing-features">
+          <li class="feat-bold"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Unlimited Reps &amp; Admins</li>
+          <li class="feat-bold"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Unlimited pins</li>
+          <li class="feat-bold"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Custom mailer volume</li>
+          <div class="pricing-divider"></div>
+          <li><svg class="check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Everything in Agency</li>
+          <li><svg class="check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>White label branding</li>
+          <li><svg class="check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Sub-accounts (reseller)</li>
+          <li><svg class="check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Dedicated account manager</li>
+        </ul>
+        <a href="mailto:john@americashomeexperts.com" class="btn-pricing btn-pricing--contact">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 3.07 9.81a19.79 19.79 0 0 1-3.07-8.68A2 2 0 0 1 2 0h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L6.09 7.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          Contact Us to Get Started
+        </a>
+      </div>
+
+    </div>
+
+    <p class="pricing-note">No credit card required. <strong>30 days free</strong> on all plans. Cancel anytime.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     TESTIMONIALS
+============================================================ -->
+<section class="testimonials-section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">Real Results</div>
+      <h2>What contractors are saying</h2>
+      <p>Real roofing teams. Real numbers.</p>
+    </div>
+
+    <div class="testimonials-grid">
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p class="testimonial-quote">"We were spending $3,000/month on door-to-door canvassing. BidDrop replaced that entire operation for $197. The ROI is embarrassing how good it is."</p>
+        <div class="testimonial-author">
+          <div class="avatar">MR</div>
+          <div>
+            <div class="author-name">Mike Ramirez</div>
+            <div class="author-role">Owner, Apex Roofing · Dallas, TX</div>
+          </div>
+        </div>
+        <div class="testimonial-result">📍 42 leads in first 30 days · $168 total</div>
+      </div>
+
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p class="testimonial-quote">"The GHL integration is a game changer. Leads drop straight into my pipeline, the drip sequence fires automatically, and I just show up to the appointments."</p>
+        <div class="testimonial-author">
+          <div class="avatar">SL</div>
+          <div>
+            <div class="author-name">Sarah Lindqvist</div>
+            <div class="author-role">Owner, Skyline Roofing · Nashville, TN</div>
+          </div>
+        </div>
+        <div class="testimonial-result">🔗 Full GHL automation · 40 leads/month</div>
+      </div>
+
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p class="testimonial-quote">"After a hailstorm I used BidDrop to pin 400 homes in two hours. Postcards went out the next day with real prices on them. We booked 11 jobs that week."</p>
+        <div class="testimonial-author">
+          <div class="avatar">JC</div>
+          <div>
+            <div class="author-name">James Chen</div>
+            <div class="author-role">Owner, Summit Roofing · Denver, CO</div>
+          </div>
+        </div>
+        <div class="testimonial-result">⚡ 400 pins · 11 jobs booked · $1,600 spent</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FINAL CTA
+============================================================ -->
+<section class="final-cta">
+  <div class="container">
+    <h2>Your next roof is already<br>out there. Go find it.</h2>
+    <p>Join 1,200+ contractors who stopped knocking doors and started dropping pins. 30-day free trial. No credit card required.</p>
+    <a href="https://biddrop.us/signup.html" class="cta-btn-big">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Start My 30-Day Free Trial
+    </a>
+    <p class="final-cta-note">30-day free trial &nbsp;·&nbsp; No credit card &nbsp;·&nbsp; Cancel anytime</p>
+  </div>
+</section>
+
+<!-- MINIMAL FOOTER -->
+<div class="mini-footer">
+  <p>© 2026 BidDrop. All rights reserved. &nbsp;·&nbsp; <a href="https://biddrop.io/privacy">Privacy Policy</a> &nbsp;·&nbsp; <a href="https://biddrop.io/terms">Terms of Service</a></p>
+</div>
+
+</body>
+</html>
