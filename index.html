@@ -2350,6 +2350,18 @@ tr:hover td{background:var(--card);}
           <div style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:8px 12px;font-size:15px;color:var(--muted);margin-bottom:10px;">Use <code style="background:var(--card2);padding:1px 5px;border-radius:3px;color:var(--accent);">{name}</code> <code style="background:var(--card2);padding:1px 5px;border-radius:3px;color:var(--accent);">{rep}</code> <code style="background:var(--card2);padding:1px 5px;border-radius:3px;color:var(--accent);">{company}</code> <code style="background:var(--card2);padding:1px 5px;border-radius:3px;color:var(--accent);">{address}</code> as tokens.</div>
           <div class="fg"><label class="fl">SMS Template</label><textarea class="fi" id="s-ghl-sms-tpl" rows="3" style="resize:vertical;" placeholder="Hi {name}! This is {rep} from {company}..."></textarea></div>
           <div class="fg"><label class="fl">Email Template</label><textarea class="fi" id="s-ghl-email-tpl" rows="4" style="resize:vertical;" placeholder="Hi {name}, I hope this message finds you well!..."></textarea></div>
+          <!-- ── JobNimbus Integration ── -->
+          <div class="stab-section-hdr" style="margin-top:20px;">JobNimbus Integration</div>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:8px 12px;font-size:15px;color:var(--muted);margin-bottom:10px;">Connect your JobNimbus CRM. When a pin is saved or an estimate is created, BidDrop will automatically create or update a contact in JobNimbus. Get your API key from <strong>Settings &gt; API Keys</strong> in your JobNimbus account.</div>
+          <div class="fg"><label class="fl">JobNimbus API Key</label><input class="fi" id="s-jn-key" placeholder="eyJhbGci..." type="password" autocomplete="off"></div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Contact Record Type</label><input class="fi" id="s-jn-record-type" placeholder="Customer" value="Customer"></div>
+            <div class="fg"><label class="fl">Contact Status</label><input class="fi" id="s-jn-status" placeholder="Lead" value="Lead"></div>
+          </div>
+          <div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <button onclick="jnTestConnection()" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:9px 16px;color:var(--mid);font-family:var(--font-b);font-size:12px;font-weight:700;cursor:pointer;">&#128279; Test Connection</button>
+            <span id="jn-test-status" style="font-size:12px;color:var(--muted);"></span>
+          </div>
           <div id="rentcast-settings-section" style="display:none;">
             <div class="stab-section-hdr" style="margin-top:16px;">Property Owner Lookup (RentCast) &#8212; Agency Key</div>
             <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:15px;color:var(--mid);margin-bottom:10px;">
@@ -2634,6 +2646,7 @@ const DEFAULTS = {
   overhead:15, margin:20, brandColor:'#F25C05', lobKey:'',
   ghlApiKey:'', ghlLocationId:'gz85VU6SxGXS7lqHAQGx', ghlPipelineId:'bxskBIBdbklHry0B63qx', ghlStageId:'',
   ghlSmsTpl:'Hi {name}! This is {rep} from {company}. Following up about your roof at {address}. Free assessment available this week — reply YES to schedule!',
+  jnApiKey:'', jnRecordType:'Customer', jnStatus:'Lead',
   ghlEmailTpl:'Hi {name},\n\nI hope this message finds you well! I\'m {rep} from {company}. I recently visited your property at {address} and noticed your roof may need attention.\n\nWe\'re offering free storm damage assessments this week. Would you like to schedule a time?\n\nBest,\n{rep}\n{company}',
   // Letter & pitch
   repName:'', repVideoUrl:'', licenseNum:'', yearsInBusiness:'5+', warrantyYears:'10',
@@ -2771,6 +2784,7 @@ async function syncAccountToSupabase(){
     ghl_api_key: cfg.ghlApiKey, ghl_location_id: cfg.ghlLocationId,
     ghl_pipeline_id: cfg.ghlPipelineId, ghl_stage_id: cfg.ghlStageId,
     ghl_sms_tpl: cfg.ghlSmsTpl||null, ghl_email_tpl: cfg.ghlEmailTpl||null,
+    jn_api_key: cfg.jnApiKey||null, jn_record_type: cfg.jnRecordType||null, jn_status: cfg.jnStatus||null,
     // lob_key and rentcast_key intentionally omitted — both are master keys stored only on the agency account row
     logo_data: cfg.logoData,
     headshot: cfg.headshot, headshot_pos: cfg.headshotPos,
@@ -2871,6 +2885,9 @@ function accountRowToCfg(row){
     ghlStageId: row.ghl_stage_id||'',
     ghlSmsTpl: row.ghl_sms_tpl||DEFAULTS.ghlSmsTpl,
     ghlEmailTpl: row.ghl_email_tpl||DEFAULTS.ghlEmailTpl,
+    jnApiKey: row.jn_api_key||'',
+    jnRecordType: row.jn_record_type||'Customer',
+    jnStatus: row.jn_status||'Lead',
     // lobKey and rentcastKey intentionally not loaded from client account rows — master keys used at agency level
     logoData: row.logo_data||null,
     headshot: row.headshot||null,
@@ -3471,6 +3488,9 @@ function saveEstimateNow(){
   addAct('Estimate saved for <strong>'+escHtml(pin.address||'')+'</strong> — <strong>$'+total.toLocaleString()+'</strong>','bid_sent');
   // Auto-sync estimate total to GHL opportunity (fire-and-forget)
   ghlUpdateOpportunityValue(pin, total).catch(e=>console.warn('GHL opp update:', e));
+  // Also upsert contact in JobNimbus with updated owner info (fire-and-forget)
+  if(pin.owner || document.getElementById('e-owner')?.value){ pin.owner = document.getElementById('e-owner')?.value||pin.owner; }
+  jnUpsertContact(pin).catch(e=>console.warn('[JN] estimate save push:', e.message));
   toast('✅ Estimate saved!','success');
   setTimeout(()=>{ newEstimate(); goTab('estimates'); }, 600);
 }
@@ -11153,6 +11173,8 @@ async function savePin_withOffline(pin){
     return;
   }
   await sbSavePin(pin);
+  // Auto-push to JobNimbus (fire-and-forget, never blocks)
+  jnUpsertContact(pin).catch(e=>console.warn("[JN] auto-push error:", e.message));
 }
 
 function renderActFeed(){
@@ -11301,6 +11323,10 @@ function openSettings(){
   document.getElementById('s-ghl-pipe').value=c.ghlPipelineId||'';
   document.getElementById('s-ghl-sms-tpl').value=c.ghlSmsTpl||DEFAULTS.ghlSmsTpl;
   document.getElementById('s-ghl-email-tpl').value=c.ghlEmailTpl||DEFAULTS.ghlEmailTpl;
+  // JobNimbus settings
+  const _jnKey=document.getElementById('s-jn-key'); if(_jnKey) _jnKey.value=c.jnApiKey||'';
+  const _jnRt=document.getElementById('s-jn-record-type'); if(_jnRt) _jnRt.value=c.jnRecordType||'Customer';
+  const _jnSt=document.getElementById('s-jn-status'); if(_jnSt) _jnSt.value=c.jnStatus||'Lead';
   // Restore stage dropdown — if stages already fetched, keep selection
   const stgSel=document.getElementById('s-ghl-stage');
   if(stgSel){
@@ -11543,6 +11569,9 @@ function saveSettings(){
     ghlStageId:document.getElementById('s-ghl-stage').value||'',
     ghlSmsTpl:v('s-ghl-sms-tpl')||DEFAULTS.ghlSmsTpl,
     ghlEmailTpl:v('s-ghl-email-tpl')||DEFAULTS.ghlEmailTpl,
+    jnApiKey:(document.getElementById('s-jn-key')||{}).value||'',
+    jnRecordType:(document.getElementById('s-jn-record-type')||{}).value||'Customer',
+    jnStatus:(document.getElementById('s-jn-status')||{}).value||'Lead',
     // lobKey and rentcastKey intentionally excluded from client cfg — master keys at agency level only
     mailerCostPerPiece: isSuperAdmin() ? (v('s-mailer-cost')||'0.85') : (S.cfg.mailerCostPerPiece||'0.85'),
     logoData:S.cfg.logoData||null,
@@ -11931,6 +11960,100 @@ async function ghlRequest(path, method='GET', body=null){
   const data = await adminAPI('ghl', { path, method, body: body||undefined });
   return data;
 }
+
+// ── JobNimbus Integration ──────────────────────────────────────────────────
+// Test the JN API key connection
+async function jnTestConnection(){
+  const apiKey = (document.getElementById('s-jn-key')||{}).value||S.cfg.jnApiKey||'';
+  const statusEl = document.getElementById('jn-test-status');
+  if(!apiKey){ if(statusEl) statusEl.textContent='⚠️ Enter an API key first'; return; }
+  if(statusEl){ statusEl.textContent='Testing…'; statusEl.style.color='var(--muted)'; }
+  try{
+    const res = await fetch('/api/jobnimbus', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'test_connection', apiKey })
+    });
+    const data = await res.json();
+    if(data.ok){
+      if(statusEl){ statusEl.textContent='✅ Connected!'; statusEl.style.color='#22C55E'; }
+    } else {
+      if(statusEl){ statusEl.textContent='❌ '+( data.error||'Connection failed'); statusEl.style.color='#f87171'; }
+    }
+  }catch(e){
+    if(statusEl){ statusEl.textContent='❌ '+e.message; statusEl.style.color='#f87171'; }
+  }
+}
+// Upsert a contact in JobNimbus — creates or updates based on jnContactId stored on pin
+// Never throws — errors are swallowed so the main flow is unaffected.
+async function jnUpsertContact(pin){
+  const apiKey = S.cfg.jnApiKey||'';
+  if(!apiKey) return null; // JN not configured — skip silently
+  try{
+    // Parse name from owner field or rep name
+    const ownerName = pin.owner || pin.estimate?.owner || pin.rep || 'Homeowner';
+    const nameParts = ownerName.trim().split(/\s+/);
+    const firstName = nameParts[0]||'';
+    const lastName = nameParts.slice(1).join(' ')||'';
+    // Parse address into components (best-effort)
+    const addrStr = pin.address||'';
+    const addrMatch = addrStr.match(/^(.+?),\s*([^,]+),\s*([A-Z]{2})\s*(\d{5}(?:-\d{4})?)?$/);
+    const address_line1 = addrMatch ? addrMatch[1].trim() : addrStr;
+    const city = addrMatch ? addrMatch[2].trim() : '';
+    const state_text = addrMatch ? addrMatch[3].trim() : '';
+    const zip = addrMatch ? (addrMatch[4]||'').trim() : '';
+    const contactBody = {
+      first_name: firstName||undefined,
+      last_name: lastName||undefined,
+      display_name: ownerName,
+      record_type_name: S.cfg.jnRecordType||'Customer',
+      status_name: S.cfg.jnStatus||'Lead',
+      address_line1: address_line1||undefined,
+      city: city||undefined,
+      state_text: state_text||undefined,
+      zip: zip||undefined,
+      source_name: 'BidDrop',
+      tags: ['biddrop-lead'],
+    };
+    if(pin.phone){ contactBody.phone = [{ number: pin.phone.replace(/\D/g,''), type: 'mobile' }]; }
+    // Geo coordinates
+    if(pin.lat && pin.lng){ contactBody.geo = { lat: pin.lat, lon: pin.lng }; }
+    let jnContactId = pin.jnContactId || null;
+    if(jnContactId){
+      // Update existing contact
+      const res = await fetch('/api/jobnimbus', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'update_contact', apiKey, jnid: jnContactId, contactBody })
+      });
+      const data = await res.json();
+      if(!data.ok) console.warn('[JN] update_contact failed:', data.error);
+      return jnContactId;
+    } else {
+      // Create new contact
+      const res = await fetch('/api/jobnimbus', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'create_contact', apiKey, contactBody })
+      });
+      const data = await res.json();
+      if(!data.ok){ console.warn('[JN] create_contact failed:', data.error); return null; }
+      const newId = data.contact?.jnid || data.contact?.id || null;
+      if(newId && pin.id && currentAccount){
+        // Persist jnContactId on the pin row
+        pin.jnContactId = newId;
+        sb.from('pins').update({ jn_contact_id: newId }).eq('id', pin.id).then(({error})=>{
+          if(error) console.warn('[JN] Could not save jn_contact_id:', error.message);
+        });
+      }
+      return newId;
+    }
+  }catch(e){
+    console.warn('[JN] jnUpsertContact silent error:', e.message);
+    return null;
+  }
+}
+
 
 // ── Bulk sync all existing pins to GHL ──────────────────────────────────
 async function ghlBulkSync(){
@@ -12972,7 +13095,8 @@ function _rowToPin(row){
     damage_photos: row.damage_photos||(est && est.damage_photos && est.damage_photos.length ? est.damage_photos : null),
     equityData: row.equity_data||null,
     ghlContactId: row.ghl_contact_id||null,
-    ghlOpportunityId: row.ghl_opportunity_id||null
+    ghlOpportunityId: row.ghl_opportunity_id||null,
+    jnContactId: row.jn_contact_id||null
   };
 }
 
@@ -13287,7 +13411,8 @@ function subscribeRealtime(){
             at_est: nw.at_est||null,
             equityData: nw.equity_data||null,
             ghlContactId: nw.ghl_contact_id||null,
-            ghlOpportunityId: nw.ghl_opportunity_id||null
+            ghlOpportunityId: nw.ghl_opportunity_id||null,
+            jnContactId: nw.jn_contact_id||null
           };
           const existing = S.pins.findIndex(p=>p.id===pin.id);
           if(existing>=0){

@@ -86,6 +86,9 @@
     },
     "api/solar.js": {
       "maxDuration": 10
+    },
+    "api/jobnimbus.js": {
+      "maxDuration": 15
     }
   },
   "headers": [
