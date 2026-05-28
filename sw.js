@@ -1,7 +1,7 @@
-// BidDrop Service Worker — v2.3
+// BidDrop Service Worker — v2.4
 // Network-first for index.html (always get latest code), cache-first for static assets
 
-const CACHE_NAME = 'biddrop-v7';
+const CACHE_NAME = 'biddrop-v8';
 
 // Core app shell files to cache on install
 const PRECACHE_URLS = [
@@ -41,7 +41,7 @@ self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   if (!url.protocol.startsWith('http')) return;
 
-  // Network-first for Supabase, GHL, NOAA, Vercel API, and other external APIs
+  // Network-first (pass-through) for all external APIs — never cache these
   const isExternal = (
     url.hostname.includes('supabase.co') ||
     url.hostname.includes('supabase.in') ||
@@ -52,9 +52,12 @@ self.addEventListener('fetch', event => {
     url.hostname.includes('api.rentcast.io') ||
     url.hostname.includes('nominatim.openstreetmap.org') ||
     url.hostname.includes('lob.com') ||
+    url.hostname.includes('app.jobnimbus.com') ||
     url.hostname.includes('tile.openstreetmap.org') ||
     url.hostname.includes('unpkg.com') ||
-    url.hostname.includes('cdnjs.cloudflare.com')
+    url.hostname.includes('cdnjs.cloudflare.com') ||
+    url.hostname.includes('maps.googleapis.com') ||
+    url.hostname.includes('maps.gstatic.com')
   );
 
   // Network-first for HTML pages, API calls, and special routes (/e/, /open, /r/, /q/)
@@ -73,7 +76,7 @@ self.addEventListener('fetch', event => {
     event.respondWith(
       fetch(event.request)
         .then(response => {
-          // Cache map tiles and CDN resources for offline use
+          // Only cache map tiles and CDN resources for offline use
           if (
             url.hostname.includes('tile.openstreetmap.org') ||
             url.hostname.includes('unpkg.com') ||
@@ -84,20 +87,27 @@ self.addEventListener('fetch', event => {
           }
           return response;
         })
-        .catch(() => caches.match(event.request))
+        .catch(() => {
+          // Fall back to cache if available, otherwise let the browser handle it
+          return caches.match(event.request).then(cached => cached || Response.error());
+        })
     );
     return;
   }
 
   // Cache-first for static assets (icons, manifest, etc.)
+  // Always ensure a valid Response is returned — never return undefined
   event.respondWith(
     caches.match(event.request).then(cached => {
-      const networkFetch = fetch(event.request).then(response => {
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+      if (cached) return cached;
+      // Not in cache — fetch from network and cache for next time
+      return fetch(event.request).then(response => {
+        if (response && response.status === 200) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        }
         return response;
-      });
-      return cached || networkFetch;
+      }).catch(() => Response.error());
     })
   );
 });
