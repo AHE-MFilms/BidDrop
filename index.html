@@ -11046,12 +11046,31 @@ function doPwaInstall(){
     _pwaInstallEvent=null;
   });
 }
-function updateOfflineBanner(){
+// Real connectivity probe — navigator.onLine is unreliable on some devices/networks
+async function checkRealConnectivity(){
+  // First fast-path: if browser says online, do a quick probe to confirm
+  // If browser says offline, trust it immediately (saves a network round-trip)
+  if(!navigator.onLine) return false;
+  try{
+    // Probe Supabase health endpoint — tiny, no auth needed, same domain we use anyway
+    const ctrl = new AbortController();
+    const tid = setTimeout(()=>ctrl.abort(), 3000);
+    const r = await fetch('https://gtwbhxnrmfmdenogzuea.supabase.co/rest/v1/', {
+      method:'HEAD', signal:ctrl.signal,
+      cache:'no-store', headers:{'apikey': SUPABASE_ANON_KEY||''}
+    });
+    clearTimeout(tid);
+    return r.status < 600; // any real HTTP response = we're online
+  } catch(e){
+    return false;
+  }
+}
+async function updateOfflineBanner(){
   const banner = document.getElementById('offline-banner');
   const cnt = document.getElementById('offline-queue-count');
   if(!banner) return;
-  const isOffline = !navigator.onLine;
-  banner.style.display = isOffline ? 'block' : 'none';
+  const isOnline = await checkRealConnectivity();
+  banner.style.display = isOnline ? 'none' : 'block';
   if(cnt) cnt.textContent = (S.offlineQueue||[]).length;
 }
 window.addEventListener('online', async ()=>{
@@ -11077,7 +11096,8 @@ async function flushOfflineQueue(){
   updateOfflineBanner();
 }
 async function savePin_withOffline(pin){
-  if(!navigator.onLine){
+  const isOnline = await checkRealConnectivity();
+  if(!isOnline){
     S.offlineQueue = S.offlineQueue||[];
     S.offlineQueue.push(pin);
     save();
