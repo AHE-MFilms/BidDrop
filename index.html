@@ -11069,9 +11069,16 @@ async function updateOfflineBanner(){
   const banner = document.getElementById('offline-banner');
   const cnt = document.getElementById('offline-queue-count');
   if(!banner) return;
-  const isOnline = await checkRealConnectivity();
-  banner.style.display = isOnline ? 'none' : 'block';
-  if(cnt) cnt.textContent = (S.offlineQueue||[]).length;
+  const queueLen = (S.offlineQueue||[]).length;
+  if(cnt) cnt.textContent = queueLen;
+  // Only show the banner if there are actually pins waiting to sync
+  // (avoids false alarms from unreliable navigator.onLine)
+  if(queueLen > 0){
+    const isOnline = await checkRealConnectivity();
+    banner.style.display = isOnline ? 'none' : 'block';
+  } else {
+    banner.style.display = 'none';
+  }
 }
 window.addEventListener('online', async ()=>{
   updateOfflineBanner();
