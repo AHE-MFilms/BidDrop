@@ -1547,7 +1547,6 @@ tr:hover td{background:var(--card);}
             <span style="color:var(--muted);font-size:11px;">to</span>
             <input type="date" id="ag-log-date-to" onchange="renderAgencyMailerLog()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:4px 8px;color:var(--text);font-size:11px;cursor:pointer;" />
           </span>
-          <button onclick="exportInvoicePDF()" style="background:var(--accent);border:none;border-radius:7px;padding:6px 14px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font-b);white-space:nowrap;">📄 Export Invoice PDF</button>
         </div>
       </div>
       <div id="agency-mailer-log" style="overflow-x:auto;">
@@ -2372,8 +2371,7 @@ tr:hover td{background:var(--card);}
           <div id="lob-settings-section" style="display:none;">
             <div class="stab-section-hdr" style="margin-top:16px;">Direct Mail &#8212; Agency Master Key</div>
             <div class="fg"><label class="fl">API Key</label><input class="fi" id="s-lob" placeholder="live_c39f..."></div>
-            <div class="stab-section-hdr" style="margin-top:16px;">Billing</div>
-            <div class="fg"><label class="fl">Mailer Cost Per Piece ($)</label><input class="fi" id="s-mailer-cost" type="number" step="0.01" min="0" placeholder="0.85" value="0.85"></div>
+
           </div>
         </div>
       </div>
@@ -2665,7 +2663,6 @@ const DEFAULTS = {
   // Referral
   referralAmt:'250', referralText:'For every customer you send our way who moves forward with a project, we\'ll send you a Visa gift card as a thank you.',
   // Billing
-  mailerCostPerPiece:'0.85'
 };
 
 let S = { pins:[], queue:[], estimates:[], team:[], activity:[], cfg:{...DEFAULTS}, offlineQueue:[] };
@@ -10315,90 +10312,6 @@ async function saveClientAccount(){
   }
 }
 
-// ═══════════════════════════════
-//  INVOICE PDF EXPORT
-// ═══════════════════════════════
-async function exportInvoicePDF(){
-  // Gather data from current mailer log filter
-  const clientFilter = (document.getElementById('ag-log-filter')||{}).value||'all';
-  const period = parseInt((document.getElementById('ag-log-period')||{}).value||'30');
-  const cutoff = period>0 ? new Date(Date.now()-period*86400000) : null;
-  // Fetch mailer_log from Supabase
-  let query = sb.from('mailer_log').select('*,accounts(name)').order('sent_at',{ascending:false});
-  if(clientFilter!=='all') query = query.eq('account_id',clientFilter);
-  const {data:logs, error} = await query;
-  if(error){toast('Could not load mailer log: '+error.message,'error');return;}
-  const rows = (logs||[]).filter(r=>!cutoff||new Date(r.sent_at)>=cutoff);
-  // Build invoice HTML
-  const today = new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
-  const company = S.cfg.companyName||'America\'s Home Experts';
-  const perMailer = parseFloat(S.cfg.mailerCostPerPiece||0.85);
-  const subtotal = rows.length * perMailer;
-  const tax = subtotal * 0.0;
-  const total = subtotal + tax;
-  const invoiceNum = 'INV-'+Date.now().toString().slice(-6);
-  // Group by client
-  const byClient={};
-  rows.forEach(r=>{
-    const cName = r.accounts?.name||r.account_id||'Unknown';
-    if(!byClient[cName]) byClient[cName]={name:cName,count:0,subtotal:0};
-    byClient[cName].count++;
-    byClient[cName].subtotal+=perMailer;
-  });
-  const clientRows = Object.values(byClient).map(c=>
-    '<tr><td style="padding:8px 12px;border-bottom:1px solid #eee;">'+c.name+'</td>'+
-    '<td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:center;">'+c.count+'</td>'+
-    '<td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;">$'+perMailer.toFixed(2)+'</td>'+
-    '<td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700;">$'+c.subtotal.toFixed(2)+'</td></tr>'
-  ).join('');
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
-  <style>
-    body{font-family:Arial,sans-serif;color:#1a1a2e;margin:0;padding:40px;font-size:14px;}
-    .inv-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:40px;}
-    .inv-logo{font-size:28px;font-weight:900;color:#F25C05;letter-spacing:2px;}
-    .inv-meta{text-align:right;font-size:13px;color:#666;}
-    .inv-meta strong{color:#1a1a2e;font-size:15px;display:block;margin-bottom:4px;}
-    h2{font-size:18px;margin:24px 0 12px;color:#1a1a2e;border-bottom:2px solid #F25C05;padding-bottom:6px;}
-    table{width:100%;border-collapse:collapse;}
-    th{background:#F25C05;color:#fff;padding:10px 12px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;}
-    th:nth-child(2),th:nth-child(3),th:nth-child(4){text-align:center;}
-    th:nth-child(4){text-align:right;}
-    .totals{margin-top:24px;text-align:right;}
-    .totals table{width:280px;margin-left:auto;}
-    .totals td{padding:6px 12px;}
-    .grand-total{background:#F25C05;color:#fff;font-weight:900;font-size:16px;}
-    .footer{margin-top:48px;font-size:11px;color:#aaa;text-align:center;border-top:1px solid #eee;padding-top:16px;}
-  </style></head><body>
-  <div class="inv-header">
-    <div>
-      <img src="https://biddrop.us/biddrop-wordmark.webp" alt="BidDrop" style="height:44px;max-width:200px;object-fit:contain;">
-      <div style="font-size:12px;color:#888;margin-top:4px;">${company}</div>
-    </div>
-    <div class="inv-meta">
-      <strong>INVOICE ${invoiceNum}</strong>
-      Date: ${today}<br>
-      Period: ${period>0?'Last '+period+' days':'All time'}
-    </div>
-  </div>
-  <h2>Mailer Services Summary</h2>
-  <table><thead><tr><th>Client</th><th>Mailers Sent</th><th>Rate / Piece</th><th>Subtotal</th></tr></thead>
-  <tbody>${clientRows}</tbody></table>
-  <div class="totals"><table>
-    <tr><td>Subtotal</td><td style="text-align:right;">$${subtotal.toFixed(2)}</td></tr>
-    <tr class="grand-total"><td>Total Due</td><td style="text-align:right;">$${total.toFixed(2)}</td></tr>
-  </table></div>
-  <div class="footer">Thank you for your business! • Generated by BidDrop • ${today}</div>
-  </body></html>`;
-  // Open in new window for printing/saving
-  const win = window.open('','_blank','width=900,height=700');
-  if(win){
-    win.document.write(html);
-    win.document.close();
-    setTimeout(()=>win.print(),600);
-  } else {
-    toast('Pop-up blocked — allow pop-ups to export PDF','error');
-  }
-}
 
 function agMailerLogPeriodChange(){
   const sel = document.getElementById('ag-log-period');
@@ -11337,9 +11250,9 @@ function openSettings(){
     }
     if(c.ghlStageId) stgSel.value=c.ghlStageId;
   }
-  // Integrations card (GHL, Lob, RentCast) — super_admin only
+  // Integrations card (GHL, JobNimbus) — visible to all admins; RentCast/Lob sub-sections remain super_admin only
   const intCard = document.getElementById('stab-integrations-card');
-  if(intCard) intCard.style.display = isSuperAdmin() ? 'block' : 'none';
+  if(intCard) intCard.style.display = isAdminOrAbove() ? 'block' : 'none';
   // Show Lob and RentCast key fields only to super_admin
   const lobSection = document.getElementById('lob-settings-section');
   if(lobSection) lobSection.style.display = isSuperAdmin() ? 'block' : 'none';
@@ -11349,7 +11262,6 @@ function openSettings(){
     const lobEl = document.getElementById('s-lob'); if(lobEl) lobEl.value = masterLobKey||'';
     const rcKeyEl = document.getElementById('s-rentcast-key'); if(rcKeyEl) rcKeyEl.value = masterRentcastKey||'';
   }
-  if(isSuperAdmin()){ const mc=document.getElementById('s-mailer-cost'); if(mc) mc.value=c.mailerCostPerPiece||'0.85'; }
   const lp=document.getElementById('logo-preview');
   if(lp){
     lp.innerHTML=c.logoData?'<img src="'+c.logoData+'" style="max-width:100%;max-height:100%;object-fit:contain;">':'No logo';
@@ -11573,7 +11485,6 @@ function saveSettings(){
     jnRecordType:(document.getElementById('s-jn-record-type')||{}).value||'Customer',
     jnStatus:(document.getElementById('s-jn-status')||{}).value||'Lead',
     // lobKey and rentcastKey intentionally excluded from client cfg — master keys at agency level only
-    mailerCostPerPiece: isSuperAdmin() ? (v('s-mailer-cost')||'0.85') : (S.cfg.mailerCostPerPiece||'0.85'),
     logoData:S.cfg.logoData||null,
     headshot:S.cfg.headshot||null,
     review1:S.cfg.review1||null,
