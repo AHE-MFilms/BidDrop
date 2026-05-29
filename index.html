@@ -14826,7 +14826,7 @@ function renderZoneOverlays(){
     const _statusLabels = {needs_roof:'Needs Roof',contacted:'Contacted',quoted:'Quoted',signed:'Signed',bid_sent:'Bid Sent',converted:'Converted',not_interested:'Not Interested',lost:'Lost'};
     const _tipStatus = _statusLabels[pin.status] || pin.status || '';
     const _tipEst = pin.estimate ? (()=>{ try{ const e=typeof pin.estimate==='string'?JSON.parse(pin.estimate):pin.estimate; return e&&e.total?' · $'+Number(e.total).toLocaleString():''; }catch(ex){ return ''; } })() : '';
-    dot.bindTooltip('<b>'+escHtml(pin.address||'Pin')+'</b><br><span style="font-size:11px;color:#aaa;">'+_tipStatus+_tipEst+' — tap to open estimate</span>', {sticky:true});
+    dot.bindTooltip('<b>'+escHtml(pin.address||'Pin')+'</b><br><span style="font-size:11px;color:#aaa;">'+_tipStatus+_tipEst+' — tap to view details</span>', {sticky:true});
     dot.on('click', ()=>showZonePinCard(pin));
   });
   const _zc = document.getElementById('zones-count'); if(_zc) _zc.textContent = S_zones.length;
