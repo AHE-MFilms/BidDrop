@@ -14827,7 +14827,7 @@ function renderZoneOverlays(){
     const _tipStatus = _statusLabels[pin.status] || pin.status || '';
     const _tipEst = pin.estimate ? (()=>{ try{ const e=typeof pin.estimate==='string'?JSON.parse(pin.estimate):pin.estimate; return e&&e.total?' · $'+Number(e.total).toLocaleString():''; }catch(ex){ return ''; } })() : '';
     dot.bindTooltip('<b>'+escHtml(pin.address||'Pin')+'</b><br><span style="font-size:11px;color:#aaa;">'+_tipStatus+_tipEst+' — tap to view details</span>', {sticky:true});
-    dot.on('click', ()=>showZonePinCard(pin));
+    dot.on('click', function(e){ L.DomEvent.stopPropagation(e); showZonePinCard(pin); });
   });
   const _zc = document.getElementById('zones-count'); if(_zc) _zc.textContent = S_zones.length;
 }
@@ -14930,7 +14930,7 @@ function showZonePinCard(pin){
   const photoEl=document.getElementById('zpc-photo');
   const photoUrl=pin.photo_url||pin.photo_data||null;
   if(photoUrl){photoEl.innerHTML='<img src="'+photoUrl+'" style="width:100%;height:100%;object-fit:cover;">';}
-  else{photoEl.textContent='\u{1F3E0}';}
+  else{photoEl.textContent='\uD83C\uDFE0';}
   document.getElementById('zpc-open-btn').style.display=pin.id?'inline-block':'none';
   const card=document.getElementById('zone-pin-card');
   if(card)card.style.transform='translateY(0)';
