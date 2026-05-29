@@ -544,6 +544,33 @@ tr:hover td{background:var(--card);}
       </div>
     </div>
 
+    <!-- 90-Day Sale Bundle -->
+    <div id="blitz-sale-banner" style="background:linear-gradient(135deg,#7C3AED22,#16a34a22);border:2px solid #7C3AED;border-radius:12px;padding:14px 16px;margin-bottom:14px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;right:0;background:#7C3AED;color:#fff;font-size:9px;font-weight:800;padding:3px 10px;border-radius:0 0 0 8px;letter-spacing:.5px;">🔥 LIMITED TIME</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <div>
+          <div style="font-family:var(--font-h);font-size:15px;font-weight:800;color:var(--text);margin-bottom:2px;">🔥 90-Day Sale — Buy 3 Get 6 Credits!</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Pay for 3 postcards, get 6 — <strong style="color:#22C55E;">3 postcards FREE</strong></div>
+          <div id="blitz-sale-countdown" style="font-size:11px;color:#a78bfa;font-weight:600;"></div>
+        </div>
+        <button onclick="buyCredits('pack_blitz_sale',this)" style="background:#7C3AED;border:none;border-radius:10px;padding:12px 20px;color:#fff;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">
+          Get 6 for $12 →
+        </button>
+      </div>
+    </div>
+    <script>
+    (function(){
+      var end = new Date('2026-08-26T23:59:59');
+      function tick(){
+        var now = new Date(), diff = end - now;
+        if(diff <= 0){ var el=document.getElementById('blitz-sale-countdown'); if(el) el.textContent='Sale ended'; return; }
+        var d=Math.floor(diff/864e5), h=Math.floor((diff%864e5)/36e5), m=Math.floor((diff%36e5)/6e4);
+        var el=document.getElementById('blitz-sale-countdown');
+        if(el) el.textContent='⏳ Sale ends in '+d+'d '+h+'h '+m+'m';
+      }
+      tick(); setInterval(tick,60000);
+    })();
+    </script>
     <!-- Credit packs -->
     <div style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Buy Credits — Volume discounts at 100+ credits</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
@@ -2216,7 +2243,7 @@ tr:hover td{background:var(--card);}
               <div style="background:rgba(168,85,247,.15);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#A855F7;">Step 1 — Day 0 &nbsp;&#183;&nbsp; Sent immediately</div>
               <div style="background:rgba(168,85,247,.15);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#A855F7;">Step 2 — Day 7</div>
               <div style="background:rgba(168,85,247,.15);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#A855F7;">Step 3 — Day 14</div>
-              <div style="background:rgba(22,197,94,.15);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#22C55E;">Step 4 — Day 28 &nbsp;&#183;&nbsp; FREE</div>
+              <div style="background:rgba(22,197,94,.15);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#22C55E;">Step 4 — Day 21 &nbsp;&#183;&nbsp; FREE</div>
             </div>
           </div>
           <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:12px;">Customize Your Postcard Messages</div>
@@ -2277,12 +2304,12 @@ tr:hover td{background:var(--card);}
                     <div id="s-drip4-preview-headline" style="font-size:11px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:2px;">Final notice.</div>
                     <div id="s-drip4-preview-subtext" style="font-size:8px;color:rgba(255,255,255,.8);line-height:1.3;">Your estimate expires soon. Secure your spot before prices rise.</div>
                   </div>
-                  <div style="position:absolute;top:6px;left:6px;background:rgba(34,197,94,.9);border-radius:3px;padding:1px 5px;font-size:8px;font-weight:800;color:#fff;">DAY 28 &bull; FREE</div>
+                  <div style="position:absolute;top:6px;left:6px;background:rgba(34,197,94,.9);border-radius:3px;padding:1px 5px;font-size:8px;font-weight:800;color:#fff;">DAY 21 &bull; FREE</div>
                 </div>
                 <div style="font-size:9px;color:var(--muted);text-align:center;margin-top:3px;">Click to enlarge</div>
               </div>
               <div style="flex:1;min-width:0;">
-                <div style="font-size:11px;font-weight:700;color:#22C55E;letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;">Step 4 &#8212; Final Notice &nbsp;<span style="font-size:15px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;">Sent on Day 28 &bull; FREE</span></div>
+                <div style="font-size:11px;font-weight:700;color:#22C55E;letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;">Step 4 &#8212; Final Notice &nbsp;<span style="font-size:15px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;">Sent on Day 21 &bull; FREE</span></div>
                 <div style="margin-bottom:8px;"><label class="fl">Headline <span style="color:var(--muted);font-weight:400;">(max 40 chars)</span></label><input class="fi" id="s-drip4-headline" placeholder="Final notice." maxlength="40" oninput="updateDripStepPreview(4)"></div>
                 <div><label class="fl">Subtext <span style="color:var(--muted);font-weight:400;">(max 80 chars)</span></label><input class="fi" id="s-drip4-subtext" placeholder="Your estimate expires soon. Secure your spot before prices rise." maxlength="80" oninput="updateDripStepPreview(4)"></div>
               </div>
@@ -2795,6 +2822,10 @@ async function syncAccountToSupabase(){
     drip3_subtext:  cfg.drip3Subtext||null,
     drip4_headline: cfg.drip4Headline||null,
     drip4_subtext:  cfg.drip4Subtext||null,
+    drip5_headline: cfg.drip5Headline||null,
+    drip5_subtext:  cfg.drip5Subtext||null,
+    drip6_headline: cfg.drip6Headline||null,
+    drip6_subtext:  cfg.drip6Subtext||null,
     drip_enabled: cfg.dripEnabled||false,
     company_bio: cfg.companyBio||null,
     meta_pixel_id: cfg.metaPixelId||null,
@@ -2900,6 +2931,10 @@ function accountRowToCfg(row){
     drip3Subtext:  row.drip3_subtext||null,
     drip4Headline: row.drip4_headline||null,
     drip4Subtext:  row.drip4_subtext||null,
+    drip5Headline: row.drip5_headline||null,
+    drip5Subtext:  row.drip5_subtext||null,
+    drip6Headline: row.drip6_headline||null,
+    drip6Subtext:  row.drip6_subtext||null,
     dripEnabled: row.drip_enabled||false,
     plan:             (row.plan||'starter').toLowerCase(),
     enablePostcard:   row.enable_postcard!==false,
@@ -3011,7 +3046,7 @@ function renderSettingsTab(){
 
 function renderFollowUpTab(){
   const cfg = S.cfg || {};
-  [2,3,4].forEach(step=>{
+  [2,3,4,5,6].forEach(step=>{
     const url = cfg['postcardStep'+step];
     const frontEl = document.getElementById('fu-pc'+step+'-front');
     const backEl  = document.getElementById('fu-pc'+step+'-back');
@@ -3830,7 +3865,7 @@ function refreshDripPostcardPreviews(){
   const fromName    = cfg.companyName || 'Your Company';
   const fromAddr    = cfg.companyAddress || '1 Company Dr';
   const placeholder = 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22200%22><rect width=%22300%22 height=%22200%22 fill=%22%23111827%22/><text x=%22150%22 y=%2290%22 text-anchor=%22middle%22 fill=%22%236B7280%22 font-size=%2214%22 font-family=%22Arial%22>House photo</text><text x=%22150%22 y=%22112%22 text-anchor=%22middle%22 fill=%22%236B7280%22 font-size=%2212%22 font-family=%22Arial%22>will appear here</text></svg>';
-  [2,3,4].forEach(step=>{
+  [2,3,4,5,6].forEach(step=>{
     const msg     = getDripStepMessage(step);
     const thumb   = document.getElementById('drip-pc'+step+'-thumb');
     const missing = document.getElementById('drip-pc'+step+'-missing');
@@ -4308,7 +4343,7 @@ function showEstimatePostcards(estId){
   modal.addEventListener('click', e=>{ if(e.target===modal) modal.remove(); });
   document.body.appendChild(modal);
   requestAnimationFrame(()=>{
-    [2,3,4].forEach(n=>{
+    [2,3,4,5,6].forEach(n=>{
       const iframe = document.getElementById('drip-est-iframe-'+n);
       if(!iframe) return;
       const container = iframe.parentElement;
@@ -11313,7 +11348,7 @@ function openSettings(){
     r2p.innerHTML=c.review2?'<img src="'+c.review2+'" style="width:100%;height:100%;object-fit:cover;border-radius:5px;">':'No image';
     if(c.review2){r2p.style.cursor='zoom-in';r2p.onclick=()=>openBrandingLightbox(c.review2,'Review Image 2');}else{r2p.style.cursor='';r2p.onclick=null;}
   }
-  [2,3,4].forEach(step=>{
+  [2,3,4,5,6].forEach(step=>{
     const pcp=document.getElementById('pc'+step+'-preview');
     const url=c['postcardStep'+step];
     if(pcp)pcp.innerHTML=url?'<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;border-radius:5px;">':'No design<br>uploaded';
@@ -11329,6 +11364,10 @@ function openSettings(){
     ['s-drip3-subtext','drip3Subtext',"Now's the time to protect your home. Call us today."],
     ['s-drip4-headline','drip4Headline','Final notice.'],
     ['s-drip4-subtext','drip4Subtext','Your estimate expires soon. Secure your spot before prices rise.'],
+    ['s-drip5-headline','drip5Headline',"We're still here for you."],
+    ['s-drip5-subtext','drip5Subtext',"Your roof won't fix itself. Let's get started today."],
+    ['s-drip6-headline','drip6Headline','One last thing...'],
+    ['s-drip6-subtext','drip6Subtext',"We'd love to earn your business. Call us anytime."],
   ];
   dripMsgFields.forEach(([id,key,def])=>{ const el=document.getElementById(id); if(el) el.value=c[key]||def; });
   // Sync live previews with loaded values
@@ -11525,6 +11564,10 @@ function saveSettings(){
     drip3Subtext:  (document.getElementById('s-drip3-subtext')||{}).value  || S.cfg.drip3Subtext  || "Now's the time to protect your home. Call us today.",
     drip4Headline: (document.getElementById('s-drip4-headline')||{}).value || S.cfg.drip4Headline || 'Final notice.',
     drip4Subtext:  (document.getElementById('s-drip4-subtext')||{}).value  || S.cfg.drip4Subtext  || 'Your estimate expires soon. Secure your spot before prices rise.',
+    drip5Headline: (document.getElementById('s-drip5-headline')||{}).value || S.cfg.drip5Headline || "We're still here for you.",
+    drip5Subtext:  (document.getElementById('s-drip5-subtext')||{}).value  || S.cfg.drip5Subtext  || "Your roof won't fix itself. Let's get started today.",
+    drip6Headline: (document.getElementById('s-drip6-headline')||{}).value || S.cfg.drip6Headline || 'One last thing...',
+    drip6Subtext:  (document.getElementById('s-drip6-subtext')||{}).value  || S.cfg.drip6Subtext  || "We'd love to earn your business. Call us anytime.",
     repTitle:document.getElementById('s-reptitle').value||'',
     headshotPos:document.getElementById('s-hspos').value||'30',
     bookingUrl:document.getElementById('s-bookingurl').value||'',
@@ -15127,7 +15170,7 @@ function startDripSequence(){
   if(!isPlanAtLeast('agency')){ showPlanUpgradePrompt('Follow-Up Blitz','agency'); return; }
   const est = (S.estimates||[]).find(e=>e.id===_dripEstId);
   if(!est){ toast('Estimate not found','error'); return; }
-  // Credit pre-check: Follow-Up Blitz costs 3 credits (4 mailers × 1, but 4th is free = 3×1)
+  // Credit pre-check: Follow-Up Blitz costs 3 credits (6 mailers, but steps 4-6 are free = 3×1)
   const BLITZ_CREDITS = 3;
   const planFreeMapD = {starter:0,pro:0,agency:0,enterprise:0};
   const freeLimitD = planFreeMapD[(S.cfg.plan||'starter').toLowerCase()] || 0;
@@ -15135,36 +15178,40 @@ function startDripSequence(){
   const paid      = S.cfg.mailerCredits || 0;
   const total     = freeLeftD + paid;
   if(total < BLITZ_CREDITS){
-    toast(`Not enough credits for Follow-Up Blitz. Need 3 credits ($12.00), you have ${total}. Please purchase more credits.`,'error');
+    toast(`Not enough credits for Follow-Up Blitz. Need 3 credits ($12.00) for 6 postcards, you have ${total}. Please purchase more credits.`,'error');
     setTimeout(()=>showBuyCreditsModal(), 800);
     return;
   }
   const d2 = parseInt(document.getElementById('drip-delay-2').value)||7;
   const d3 = parseInt(document.getElementById('drip-delay-3').value)||14;
-  const d4 = parseInt(document.getElementById('drip-delay-4').value)||28;
+  const d4 = parseInt(document.getElementById('drip-delay-4').value)||21;
+  const d5 = parseInt(document.getElementById('drip-delay-5').value)||30;
+  const d6 = parseInt(document.getElementById('drip-delay-6').value)||45;
   const now = new Date();
   const msDay = 86400000;
   est.drip = {
     startedAt: now.toISOString(),
     blitz: true, // marks this as a Follow-Up Blitz (discount pricing)
     steps: [
-      { step:1, type:'postcard', label:'First Postcard',      sendAt: now.toISOString(),                              sentAt:null, queueId:null },
-      { step:2, type:'postcard', label:'Follow-Up Postcard',  sendAt: new Date(now.getTime()+d2*msDay).toISOString(), sentAt:null, queueId:null },
-      { step:3, type:'postcard', label:'Urgency Postcard',    sendAt: new Date(now.getTime()+d3*msDay).toISOString(), sentAt:null, queueId:null },
-      { step:4, type:'postcard', label:'Final Postcard (Free)',sendAt: new Date(now.getTime()+d4*msDay).toISOString(), sentAt:null, queueId:null }
+      { step:1, type:'postcard', label:'First Postcard',       sendAt: now.toISOString(),                              sentAt:null, queueId:null },
+      { step:2, type:'postcard', label:'Follow-Up Postcard',   sendAt: new Date(now.getTime()+d2*msDay).toISOString(), sentAt:null, queueId:null },
+      { step:3, type:'postcard', label:'Urgency Postcard',     sendAt: new Date(now.getTime()+d3*msDay).toISOString(), sentAt:null, queueId:null },
+      { step:4, type:'postcard', label:'Final Notice (Free)',  sendAt: new Date(now.getTime()+d4*msDay).toISOString(), sentAt:null, queueId:null },
+      { step:5, type:'postcard', label:'Re-Engage (Free)',     sendAt: new Date(now.getTime()+d5*msDay).toISOString(), sentAt:null, queueId:null },
+      { step:6, type:'postcard', label:'Final Goodbye (Free)', sendAt: new Date(now.getTime()+d6*msDay).toISOString(), sentAt:null, queueId:null }
     ]
   };
   // Add step 1 to mail queue immediately
   addEstimateToMailQueueWithDripTag(est, 1);
-  // Schedule steps 2-4 as future queue items (status='scheduled')
-  [1,2,3].forEach(i=>{
+  // Schedule steps 2-6 as future queue items (status='scheduled')
+  [1,2,3,4,5].forEach(i=>{
     const step = est.drip.steps[i];
     scheduleDripStep(est, step);
   });
   save();
   closeM('m-drip');
   renderEstimatesTab();
-  toast('🔥 Follow-Up Blitz started! Step 1 added to Mail Queue. Steps 2–4 scheduled automatically.','success');
+  toast('🔥 Follow-Up Blitz started! Step 1 added to Mail Queue. Steps 2–6 scheduled automatically.','success');
 }
 
 function addEstimateToMailQueueWithDripTag(est, stepNum){
@@ -15371,6 +15418,8 @@ function updateDripStepPreview(step){
     2: { headline: 'Still thinking it over?', subtext: "Your estimate is still valid. We'd love to help." },
     3: { headline: 'Storm season is coming.', subtext: "Now's the time to protect your home. Call us today." },
     4: { headline: 'Final notice.', subtext: 'Your estimate expires soon. Secure your spot before prices rise.' },
+    5: { headline: "We're still here for you.", subtext: "Your roof won't fix itself. Let's get started today." },
+    6: { headline: 'One last thing...', subtext: "We'd love to earn your business. Call us anytime." },
   };
   const d = defaults[step] || { headline: '', subtext: '' };
   const headline = (hEl && hEl.value) ? hEl.value : d.headline;
@@ -15381,18 +15430,20 @@ function updateDripStepPreview(step){
   if(ps) ps.textContent = subtext;
 }
 function updateAllDripPreviews(){
-  [2,3,4].forEach(s=>updateDripStepPreview(s));
+  [2,3,4,5,6].forEach(s=>updateDripStepPreview(s));
 }
 function openDripPreviewLightbox(step){
-  const stepLabels = { 2:'Step 2 — Follow-Up · Day 7', 3:'Step 3 — Urgency · Day 14', 4:'Step 4 — Final Notice · Day 28 (FREE)' };
-  const accentColors = { 2:'rgba(242,92,5,.9)', 3:'rgba(242,92,5,.9)', 4:'rgba(34,197,94,.9)' };
-  const dayBadges = { 2:'DAY 7', 3:'DAY 14', 4:'DAY 28 · FREE' };
+  const stepLabels = { 2:'Step 2 — Follow-Up · Day 7', 3:'Step 3 — Urgency · Day 14', 4:'Step 4 — Final Notice · Day 21 (FREE)', 5:'Step 5 — Re-Engage · Day 30 (FREE)', 6:'Step 6 — Final Goodbye · Day 45 (FREE)' };
+  const accentColors = { 2:'rgba(242,92,5,.9)', 3:'rgba(242,92,5,.9)', 4:'rgba(34,197,94,.9)', 5:'rgba(34,197,94,.9)', 6:'rgba(34,197,94,.9)' };
+  const dayBadges = { 2:'DAY 7', 3:'DAY 14', 4:'DAY 21 · FREE', 5:'DAY 30 · FREE', 6:'DAY 45 · FREE' };
   const hEl = document.getElementById('s-drip'+step+'-headline');
   const sEl = document.getElementById('s-drip'+step+'-subtext');
   const defaults = {
     2: { headline: 'Still thinking it over?', subtext: "Your estimate is still valid. We'd love to help." },
     3: { headline: 'Storm season is coming.', subtext: "Now's the time to protect your home. Call us today." },
     4: { headline: 'Final notice.', subtext: 'Your estimate expires soon. Secure your spot before prices rise.' },
+    5: { headline: "We're still here for you.", subtext: "Your roof won't fix itself. Let's get started today." },
+    6: { headline: 'One last thing...', subtext: "We'd love to earn your business. Call us anytime." },
   };
   const d = defaults[step] || { headline: '', subtext: '' };
   const headline = (hEl && hEl.value) ? hEl.value : d.headline;
@@ -16635,7 +16686,7 @@ function spmSelect(choice){
       btn.textContent='🏠 Send 1 Postcard — 1 Credit';
       btn.style.background='var(--accent)';
     } else {
-      btn.textContent='🔥 Start Follow-Up Blitz — 3 Credits';
+      btn.textContent='🔥 Start Follow-Up Blitz — 3 Credits (6 Postcards)';
       btn.style.background='#7C3AED';
     }
     btn.style.opacity='1'; btn.style.pointerEvents='auto';
@@ -17246,9 +17297,9 @@ async function initEstimatePage(estId) {
       <div onclick="spmSelect('blitz')" id="spm-opt-blitz" style="cursor:pointer;border:2px solid var(--border);border-radius:12px;padding:18px 14px;text-align:center;transition:border-color .15s,background .15s;">
         <div style="font-size:28px;margin-bottom:8px;">🔥</div>
         <div style="font-family:var(--font-h);font-size:14px;font-weight:700;margin-bottom:4px;">Follow-Up Blitz</div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">4 postcards over 5 weeks<br>to the same homeowner</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">6 postcards over 45 days<br>to the same homeowner</div>
         <div style="font-size:20px;font-weight:700;color:#a855f7;font-family:var(--font-h);">3 credits</div>
-        <div style="font-size:11px;color:#22C55E;font-weight:600;">4th postcard FREE</div>
+        <div style="font-size:11px;color:#22C55E;font-weight:600;">🔥 90-Day Sale: Buy 3 Get 6!</div>
       </div>
     </div>
     <!-- Confirm button -->
@@ -17365,13 +17416,73 @@ async function initEstimatePage(estId) {
         </div>
         <div id="drip-pc4-missing" style="margin-top:8px;background:rgba(124,58,237,.08);border:1px dashed rgba(124,58,237,.3);border-radius:5px;padding:6px 10px;font-size:10px;color:#C4B5FD;display:none;">⚠️ No postcard design uploaded yet — go to Settings → Drip Postcard Designs to upload your artwork.</div>
       </div>
+      <!-- Step 5 -->
+      <div style="background:var(--card2);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:14px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <div style="background:#16a34a;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 5</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);">Re-Engage Postcard <span style="font-size:11px;background:#22C55E22;color:#22C55E;border-radius:8px;padding:1px 7px;font-weight:700;">FREE</span></div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+            <input type="number" id="drip-delay-5" value="30" min="1" max="180" style="width:52px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 6px;color:var(--text);font-size:12px;text-align:center;">
+            <span style="font-size:12px;color:var(--muted);">days after step 1</span>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);">Re-engage — "We're still here. Your roof won't fix itself."</div>
+        <div id="drip-pc5-thumb" style="margin-top:8px;display:none;">
+          <div style="cursor:zoom-in;" onclick="previewDripFront(5)" title="Click to enlarge — 6x9 Postcard">
+            <div id="drip-pc5-front-wrap" style="overflow:hidden;border-radius:5px;border:1px solid var(--border);"></div>
+          </div>
+          <div id="drip-pc5-back" onclick="previewPostcardBack(5)" title="Click to enlarge back" style="margin-top:5px;background:#fff;border-radius:5px;border:1px solid var(--border);padding:6px;display:flex;gap:6px;font-family:Arial,sans-serif;cursor:zoom-in;font-size:7px;color:#111;">
+            <div style="flex:1.4;border-right:1px solid #ccc;padding-right:6px;">
+              <div id="drip-pc5-back-from" style="font-size:7px;color:#333;line-height:1.4;"></div>
+              <div style="font-size:5px;color:#bbb;border-top:1px dashed #ddd;margin-top:3px;letter-spacing:1px;">|||||||||||||||||||||||||</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:space-between;">
+              <div style="border:1px solid #333;padding:2px 4px;font-size:5px;color:#333;text-align:center;align-self:flex-end;"><strong>PRSRT STD</strong><br>U.S. POSTAGE<br>PAID<br>PERMIT #000</div>
+              <div id="drip-pc5-back-to" style="font-size:7px;color:#111;line-height:1.4;"></div>
+              <div style="font-size:4px;color:#bbb;border-top:1px dashed #ddd;margin-top:2px;letter-spacing:1px;">DELIVERY POINT BARCODE</div>
+            </div>
+          </div>
+          <div style="text-align:center;font-size:9px;color:#6B7280;margin-top:2px;">Click back to enlarge</div>
+        </div>
+        <div id="drip-pc5-missing" style="margin-top:8px;background:rgba(34,197,94,.08);border:1px dashed rgba(34,197,94,.3);border-radius:5px;padding:6px 10px;font-size:10px;color:#86efac;display:none;">⚠️ No postcard design uploaded yet — go to Settings → Drip Postcard Designs to upload your artwork.</div>
+      </div>
+      <!-- Step 6 -->
+      <div style="background:var(--card2);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:14px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <div style="background:#16a34a;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 6</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);">Final Goodbye <span style="font-size:11px;background:#22C55E22;color:#22C55E;border-radius:8px;padding:1px 7px;font-weight:700;">FREE</span></div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+            <input type="number" id="drip-delay-6" value="45" min="1" max="180" style="width:52px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 6px;color:var(--text);font-size:12px;text-align:center;">
+            <span style="font-size:12px;color:var(--muted);">days after step 1</span>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);">Final goodbye — "One last thing. We'd love to earn your business."</div>
+        <div id="drip-pc6-thumb" style="margin-top:8px;display:none;">
+          <div style="cursor:zoom-in;" onclick="previewDripFront(6)" title="Click to enlarge — 6x9 Postcard">
+            <div id="drip-pc6-front-wrap" style="overflow:hidden;border-radius:5px;border:1px solid var(--border);"></div>
+          </div>
+          <div id="drip-pc6-back" onclick="previewPostcardBack(6)" title="Click to enlarge back" style="margin-top:5px;background:#fff;border-radius:5px;border:1px solid var(--border);padding:6px;display:flex;gap:6px;font-family:Arial,sans-serif;cursor:zoom-in;font-size:7px;color:#111;">
+            <div style="flex:1.4;border-right:1px solid #ccc;padding-right:6px;">
+              <div id="drip-pc6-back-from" style="font-size:7px;color:#333;line-height:1.4;"></div>
+              <div style="font-size:5px;color:#bbb;border-top:1px dashed #ddd;margin-top:3px;letter-spacing:1px;">|||||||||||||||||||||||||</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:space-between;">
+              <div style="border:1px solid #333;padding:2px 4px;font-size:5px;color:#333;text-align:center;align-self:flex-end;"><strong>PRSRT STD</strong><br>U.S. POSTAGE<br>PAID<br>PERMIT #000</div>
+              <div id="drip-pc6-back-to" style="font-size:7px;color:#111;line-height:1.4;"></div>
+              <div style="font-size:4px;color:#bbb;border-top:1px dashed #ddd;margin-top:2px;letter-spacing:1px;">DELIVERY POINT BARCODE</div>
+            </div>
+          </div>
+          <div style="text-align:center;font-size:9px;color:#6B7280;margin-top:2px;">Click back to enlarge</div>
+        </div>
+        <div id="drip-pc6-missing" style="margin-top:8px;background:rgba(34,197,94,.08);border:1px dashed rgba(34,197,94,.3);border-radius:5px;padding:6px 10px;font-size:10px;color:#86efac;display:none;">⚠️ No postcard design uploaded yet — go to Settings → Drip Postcard Designs to upload your artwork.</div>
+      </div>
     </div>
     <!-- Info note -->
     <div style="background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:10px 14px;font-size:12px;color:#C4B5FD;margin-bottom:18px;">
-      <strong>Follow-Up Blitz:</strong> 4 postcards sent to the same homeowner over time. Step 1 goes out immediately — Steps 2–4 are scheduled automatically. <strong style="color:#4ade80;">4th postcard FREE — 3 credits total ($12) instead of $16.</strong> Cancel anytime from the Estimates tab.
+      <strong>🔥 90-Day Sale — Buy 3 Get 6!</strong> 6 postcards sent to the same homeowner over 45 days. Step 1 goes out immediately — Steps 2–6 are scheduled automatically. <strong style="color:#4ade80;">Steps 4, 5 &amp; 6 are FREE — only 3 credits ($12) for all 6 postcards.</strong> Sale ends Aug 26, 2026. Cancel anytime from the Estimates tab.
     </div>
     <div style="display:flex;gap:10px;">
-      <button onclick="startDripSequence()" style="flex:1;background:#7C3AED;border:none;border-radius:8px;padding:14px;color:#fff;font-family:var(--font-b);font-size:14px;font-weight:700;cursor:pointer;">🔥 Start Follow-Up Blitz — 3 Credits ($12)</button>
+      <button onclick="startDripSequence()" style="flex:1;background:#7C3AED;border:none;border-radius:8px;padding:14px;color:#fff;font-family:var(--font-b);font-size:14px;font-weight:700;cursor:pointer;">🔥 Start Follow-Up Blitz — 3 Credits ($12) · 6 Postcards</button>
       <button onclick="closeM('m-drip')" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:14px 20px;color:var(--muted);font-family:var(--font-b);font-size:14px;cursor:pointer;">Cancel</button>
     </div>
   </div>
