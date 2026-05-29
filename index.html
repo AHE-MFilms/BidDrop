@@ -2437,7 +2437,7 @@ tr:hover td{background:var(--card);}
     <!-- Sidebar -->
     <div style="width:280px;min-width:220px;max-width:320px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid var(--border);overflow:hidden;">
       <div style="padding:14px 16px 10px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:8px;">
-        <div style="font-family:var(--font-h);font-size:15px;font-weight:700;letter-spacing:.4px;">🗂 Canvass Areas</div>
+        <div style="font-family:var(--font-h);font-size:15px;font-weight:700;letter-spacing:.4px;display:flex;align-items:center;gap:7px;">🗂 Canvass Areas<span id="zones-count" style="background:var(--accent);color:#fff;font-family:var(--font-m);font-size:10px;padding:2px 7px;border-radius:9px;display:none;"></span></div>
         <div style="display:flex;gap:6px;">
           <button id="btn-draw-zone" onclick="startDrawZone()" style="display:none;background:var(--accent);border:none;border-radius:7px;padding:7px 12px;color:#fff;font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">+ Draw Zone</button>
           <button id="btn-cancel-draw" onclick="cancelDrawZone()" style="display:none;background:var(--danger);border:none;border-radius:7px;padding:7px 12px;color:#fff;font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">✕ Cancel</button>
@@ -14713,7 +14713,8 @@ async function populateZoneRepSelect(){
   sel.innerHTML = '<option value="">— Select a rep —</option>';
   if(!currentAccount) return;
   const {data} = await sb.from('user_profiles').select('id,name,email').eq('account_id', currentAccount.id);
-  (data||[]).forEach(p=>{
+  _zonesProfiles = data || [];
+  _zonesProfiles.forEach(p=>{
     const opt = document.createElement('option');
     opt.value = p.id;
     opt.textContent = p.name || p.email || 'Unnamed';
@@ -14747,11 +14748,16 @@ async function saveZone(){
   toast('Zone saved!','success');
 }
 
+let _zonesProfiles = [];  // cached profiles for rep name lookup
 async function loadZonesFromSupabase(){
   if(!currentAccount) return;
-  const {data, error} = await sb.from('canvass_zones').select('*').eq('account_id', currentAccount.id);
+  const [{data: zoneData, error}, {data: profData}] = await Promise.all([
+    sb.from('canvass_zones').select('*').eq('account_id', currentAccount.id),
+    sb.from('user_profiles').select('id,name,email').eq('account_id', currentAccount.id)
+  ]);
   if(error){ console.error('Load zones error:', error); return; }
-  S_zones = data || [];
+  S_zones = zoneData || [];
+  _zonesProfiles = profData || [];
   renderZoneOverlays();
   renderZonesList();
 }
@@ -14798,7 +14804,7 @@ function renderZoneOverlays(){
     dot.bindTooltip(escHtml(pin.address||'Pin'), {sticky:true});
     dot.on('click', ()=>showZonePinDetail(pin));
   });
-  document.getElementById('zones-count').textContent = S_zones.length;
+  const _zc = document.getElementById('zones-count'); if(_zc) _zc.textContent = S_zones.length;
 }
 
 function renderZonesList(){
@@ -14954,8 +14960,8 @@ function previewZonePin(){
 
 function getRepName(repId){
   if(!repId) return null;
-  // Try to find in user_profiles cache — we don't cache them, so return repId for now
-  return repId;
+  const p = (_zonesProfiles||[]).find(x=>x.id===repId);
+  return p ? (p.name || p.email || 'Rep') : null;
 }
 
 function initZonesTab(){
