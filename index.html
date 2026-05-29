@@ -2447,7 +2447,17 @@ tr:hover td{background:var(--card);}
       <div id="zones-list" style="flex:1;overflow-y:auto;padding:8px;"></div>
     </div>
     <!-- Map -->
-    <div id="zones-map" style="flex:1;min-width:0;"></div>
+    <div style="flex:1;min-width:0;position:relative;overflow:hidden;">
+      <!-- Address search overlay -->
+      <div style="position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:1000;width:320px;max-width:calc(100% - 80px);">
+        <div style="display:flex;gap:0;position:relative;">
+          <input id="zones-search-inp" class="map-search-inp" placeholder="🔍 Search address..." oninput="onZonesSearchInput()" onkeydown="if(event.key==='Enter')zonesSearchAddress()" style="flex:1;">
+          <button class="map-search-btn" onclick="zonesSearchAddress()">→</button>
+        </div>
+        <div id="zones-search-results" class="map-search-results"></div>
+      </div>
+      <div id="zones-map" style="width:100%;height:100%;"></div>
+    </div>
   </div>
   <!-- ADMIN TAB -->
   <div class="tab-pane" id="tab-admin" style="flex-direction:column;overflow-y:auto;padding:28px;gap:0;">
@@ -14591,6 +14601,57 @@ async function doLogout(){
 }
 
 // ── CANVASS AREAS ─────────────────────────────────────────────────────────────
+
+// ── ZONES MAP ADDRESS SEARCH ─────────────────────────────────────────────────
+let _zonesSearchTimer = null;
+function onZonesSearchInput(){
+  clearTimeout(_zonesSearchTimer);
+  _zonesSearchTimer = setTimeout(function(){ zonesSearchAddress(true); }, 400);
+}
+async function zonesSearchAddress(suggest){
+  suggest = suggest || false;
+  const inp = document.getElementById('zones-search-inp');
+  const q = inp ? inp.value.trim() : '';
+  if(!q) return;
+  try{
+    const MB = window._mapboxToken||['pk.eyJ1IjoibW9uZ29vc2VmaWxtcyIsImEiOiJjbW52M2kyNnMxM3pk','MnJvYTYxZnE1YW51In0.nC5GKWDHIAB4DTAP9hV3hQ'].join('');
+    const res = await fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/'+encodeURIComponent(q)+'.json?country=us&types=address,place&limit=5&access_token='+MB);
+    const data = await res.json();
+    const results = data.features||[];
+    if(!results.length){ if(!suggest) toast('Address not found','error'); return; }
+    if(suggest){
+      window._zonesSrResults = results;
+      const el = document.getElementById('zones-search-results');
+      if(el){
+        el.innerHTML = results.map(function(r,i){ return '<div class="msr-item" onclick="flyToZonesResultIdx('+i+')">'+escHtml(r.place_name)+'</div>'; }).join('');
+        el.classList.add('show');
+      }
+    } else {
+      const c = results[0].center;
+      flyToZonesResult(c[1], c[0], results[0].place_name);
+    }
+  }catch(e){ toast('Search error','error'); }
+}
+function flyToZonesResultIdx(i){
+  const r = (window._zonesSrResults||[])[i];
+  if(!r) return;
+  flyToZonesResult(r.center[1], r.center[0], r.place_name);
+}
+function flyToZonesResult(lat, lon, name){
+  const el = document.getElementById('zones-search-results');
+  if(el) el.classList.remove('show');
+  const inp = document.getElementById('zones-search-inp');
+  if(inp) inp.value = (name||'').split(',').slice(0,2).join(',').trim();
+  if(zonesMap) zonesMap.flyTo([parseFloat(lat), parseFloat(lon)], 16, {duration:0.8});
+}
+document.addEventListener('click', function(e){
+  const inp = document.getElementById('zones-search-inp');
+  const res = document.getElementById('zones-search-results');
+  if(res && inp && !inp.contains(e.target) && !res.contains(e.target)){
+    res.classList.remove('show');
+  }
+});
+
 let zonesMap = null;
 let zonesDrawControl = null;
 let zonesDrawLayer = null;   // FeatureGroup holding drawn polygons
