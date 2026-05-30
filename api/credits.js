@@ -37,7 +37,7 @@ const CREDIT_PACKS = {
   pack_50:  { credits:    50, amount_cents:  20000, label: '50 Credits',    description: '50 postcards — $4.00 each',                              savings:     0  },
   pack_100: { credits:   100, amount_cents:  38000, label: '100 Credits',   description: '100 postcards — $3.80 each — Save $20 (5% off)',         savings:  2000  },
   pack_500: { credits:   500, amount_cents: 180000, label: '500 Credits',   description: '500 postcards — $3.60 each — Save $200 (10% off)',       savings: 20000  },
-  pack_1k:  { credits:  1000, amount_cents: 400000, label: '1,000 Credits', description: '1,000 postcards — $4.00 each',                              savings: null   },
+  pack_1k:  { credits:  1000, amount_cents: 360000, label: '1,000 Credits', description: '1,000 postcards — $3.60 each — Save $400 (10% off)',     savings: 40000  },
   // 90-Day Sale: Buy 3 Get 6 — expires Aug 26, 2026
   pack_blitz_sale: { credits: 6, amount_cents: 1200, label: '🔥 Buy 3 Get 6 — 90-Day Sale', description: '6 postcards for $12 — 3 FREE (sale ends Aug 26, 2026)', savings: 1200, sale_expires: '2026-08-26' },
 };
