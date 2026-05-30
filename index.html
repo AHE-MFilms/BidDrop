@@ -544,33 +544,6 @@ tr:hover td{background:var(--card);}
       </div>
     </div>
 
-    <!-- 90-Day Sale Bundle -->
-    <div id="blitz-sale-banner" style="background:linear-gradient(135deg,#7C3AED22,#16a34a22);border:2px solid #7C3AED;border-radius:12px;padding:14px 16px;margin-bottom:14px;position:relative;overflow:hidden;">
-      <div style="position:absolute;top:0;right:0;background:#7C3AED;color:#fff;font-size:9px;font-weight:800;padding:3px 10px;border-radius:0 0 0 8px;letter-spacing:.5px;">🔥 LIMITED TIME</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
-        <div>
-          <div style="font-family:var(--font-h);font-size:15px;font-weight:800;color:var(--text);margin-bottom:2px;">🔥 90-Day Sale — Buy 3 Get 6 Credits!</div>
-          <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Pay for 3 postcards, get 6 — <strong style="color:#22C55E;">3 postcards FREE</strong></div>
-          <div id="blitz-sale-countdown" style="font-size:11px;color:#a78bfa;font-weight:600;"></div>
-        </div>
-        <button onclick="buyCredits('pack_blitz_sale',this)" style="background:#7C3AED;border:none;border-radius:10px;padding:12px 20px;color:#fff;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">
-          Get 6 for $12 →
-        </button>
-      </div>
-    </div>
-    <script>
-    (function(){
-      var end = new Date('2026-08-26T23:59:59');
-      function tick(){
-        var now = new Date(), diff = end - now;
-        if(diff <= 0){ var el=document.getElementById('blitz-sale-countdown'); if(el) el.textContent='Sale ended'; return; }
-        var d=Math.floor(diff/864e5), h=Math.floor((diff%864e5)/36e5), m=Math.floor((diff%36e5)/6e4);
-        var el=document.getElementById('blitz-sale-countdown');
-        if(el) el.textContent='⏳ Sale ends in '+d+'d '+h+'h '+m+'m';
-      }
-      tick(); setInterval(tick,60000);
-    })();
-    </script>
     <!-- Credit packs -->
     <div style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Buy Credits — Volume discounts at 100+ credits</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
