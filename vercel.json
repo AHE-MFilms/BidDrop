@@ -89,6 +89,12 @@
     },
     "api/jobnimbus.js": {
       "maxDuration": 15
+    },
+    "api/send-proposal.js": {
+      "maxDuration": 15
+    },
+    "api/migrate.js": {
+      "maxDuration": 30
     }
   },
   "headers": [

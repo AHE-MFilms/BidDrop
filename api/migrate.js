@@ -63,6 +63,11 @@ export default async function handler(req, res) {
       check: "SELECT column_name FROM information_schema.columns WHERE table_name='accounts' AND column_name='cost_solar_per_watt'",
       sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS cost_solar_per_watt numeric DEFAULT 3.50"
     },
+    {
+      name: 'accounts.tax_rate',
+      check: "SELECT column_name FROM information_schema.columns WHERE table_name='accounts' AND column_name='tax_rate'",
+      sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS tax_rate numeric DEFAULT 0"
+    },
   ];
 
   // Try to run DDL via rpc/run_ddl (if the function exists)
