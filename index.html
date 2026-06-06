@@ -18022,12 +18022,12 @@ function buildProposalHTML(forPrint) {
   const tierCardsHtml = tierTotals.map(t => {
     const isSel = t.key === _selectedProposalTier;
     return `<div style="border:2px solid ${isSel?t.color:t.color+'44'};border-radius:10px;padding:14px;text-align:center;background:${isSel?t.color+'12':'#f9fafb'};">
-      ${t.badge?`<div style="font-size:9px;font-weight:700;letter-spacing:.6px;background:${t.color};color:#fff;border-radius:4px;padding:2px 6px;margin-bottom:6px;">${t.badge}</div>`:'<div style="height:19px;margin-bottom:6px;"></div>'}
+      ${t.badge?'<div style="font-size:9px;font-weight:700;letter-spacing:.6px;background:'+t.color+';color:#fff;border-radius:4px;padding:2px 6px;margin-bottom:6px;">'+t.badge+'</div>':'<div style="height:19px;margin-bottom:6px;"></div>'}
       <div style="font-family:'Oswald',sans-serif;font-size:18px;font-weight:700;color:${t.color};">${t.label}</div>
       <div style="font-size:10px;color:#6b7280;margin-bottom:8px;">${t.sub}</div>
       <div style="font-family:'Oswald',sans-serif;font-size:22px;font-weight:700;color:#111827;">$${t.total.toLocaleString()}</div>
-      ${tax>0?`<div style="font-size:10px;color:#9ca3af;">Incl. ${tax}% tax</div>`:''}
-      ${isSel?`<div style="font-size:10px;font-weight:700;color:${t.color};margin-top:6px;">✓ SELECTED</div>`:''}
+      ${tax>0?'<div style="font-size:10px;color:#9ca3af;">Incl. '+tax+'% tax</div>':''}
+      ${isSel?'<div style="font-size:10px;font-weight:700;color:'+t.color+';margin-top:6px;">✓ SELECTED</div>':''}
     </div>`;
   }).join('');
 
@@ -18075,7 +18075,7 @@ function buildProposalHTML(forPrint) {
 
   <!-- Cover Header -->
   <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:20px;border-bottom:3px solid ${color};">
-    <div>${logoHtml}<div style="font-size:12px;color:#6b7280;margin-top:6px;">${escHtml(coAddr)}</div><div style="font-size:12px;color:#6b7280;">${escHtml(coPh)}</div>${lic?`<div style="font-size:11px;color:#9ca3af;">Lic. ${escHtml(lic)}</div>`:''}</div>
+    <div>${logoHtml}<div style="font-size:12px;color:#6b7280;margin-top:6px;">${escHtml(coAddr)}</div><div style="font-size:12px;color:#6b7280;">${escHtml(coPh)}</div>${lic?'<div style="font-size:11px;color:#9ca3af;">Lic. '+escHtml(lic)+'</div>':''}</div>
     <div style="text-align:right;">
       <div style="font-family:'Oswald',sans-serif;font-size:22px;font-weight:700;color:${color};">ROOFING PROPOSAL</div>
       <div style="font-size:12px;color:#6b7280;margin-top:4px;">Estimate #${estNum}</div>
@@ -18092,11 +18092,11 @@ function buildProposalHTML(forPrint) {
       <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#6b7280;margin-bottom:4px;">Prepared For</div>
       <div style="font-size:16px;font-weight:700;color:#111827;">${escHtml(owner)}</div>
       <div style="font-size:13px;color:#374151;">${escHtml(addr)}</div>
-      ${phone?`<div style="font-size:12px;color:#6b7280;">${escHtml(phone)}</div>`:''}
+      ${phone?'<div style="font-size:12px;color:#6b7280;">'+escHtml(phone)+'</div>':''}
     </div>
     <div>
       <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#6b7280;margin-bottom:4px;">Prepared By</div>
-      <div style="display:flex;align-items:center;gap:10px;">${headshotHtml}<div><div style="font-size:14px;font-weight:700;color:#111827;">${escHtml(cfg.repName||co)}</div>${cfg.repTitle?`<div style="font-size:12px;color:#6b7280;">${escHtml(cfg.repTitle)}</div>`:''}<div style="font-size:12px;color:#6b7280;">${escHtml(yrs)} years in business · ${escHtml(warr)}-yr warranty</div></div></div>
+      <div style="display:flex;align-items:center;gap:10px;">${headshotHtml}<div><div style="font-size:14px;font-weight:700;color:#111827;">${escHtml(cfg.repName||co)}</div>${cfg.repTitle?'<div style="font-size:12px;color:#6b7280;">'+escHtml(cfg.repTitle)+'</div>':''}<div style="font-size:12px;color:#6b7280;">${escHtml(yrs)} years in business · ${escHtml(warr)}-yr warranty</div></div></div>
     </div>
   </div>
 
@@ -18111,11 +18111,11 @@ function buildProposalHTML(forPrint) {
     <div style="font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;letter-spacing:.4px;color:#111827;margin-bottom:12px;">SCOPE OF WORK — ${selectedTier.label.toUpperCase()} PACKAGE</div>
     <table style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
       <thead><tr style="background:${color};color:#fff;"><th style="padding:10px;text-align:left;font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:.4px;">ITEM</th><th style="padding:10px;text-align:right;font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:.4px;">AMOUNT</th></tr></thead>
-      <tbody>${lineItemsHtml}${taxAmt>0?`<tr><td style="padding:7px 10px;border-bottom:1px solid #e5e7eb;color:#374151;">Sales Tax (${tax}%)</td><td style="padding:7px 10px;border-bottom:1px solid #e5e7eb;text-align:right;font-weight:600;color:#111827;">$${taxAmt.toLocaleString()}</td></tr>`:''}<tr style="background:#f9fafb;"><td style="padding:10px;font-weight:700;font-family:'Oswald',sans-serif;font-size:15px;color:#111827;">TOTAL</td><td style="padding:10px;text-align:right;font-weight:700;font-family:'Oswald',sans-serif;font-size:18px;color:${color};">$${total.toLocaleString()}</td></tr></tbody>
+      <tbody>${lineItemsHtml}${taxAmt>0?'<tr><td style="padding:7px 10px;border-bottom:1px solid #e5e7eb;color:#374151;">Sales Tax ('+tax+'%)</td><td style="padding:7px 10px;border-bottom:1px solid #e5e7eb;text-align:right;font-weight:600;color:#111827;">$'+taxAmt.toLocaleString()+'</td></tr>':''}<tr style="background:#f9fafb;"><td style="padding:10px;font-weight:700;font-family:'Oswald',sans-serif;font-size:15px;color:#111827;">TOTAL</td><td style="padding:10px;text-align:right;font-weight:700;font-family:'Oswald',sans-serif;font-size:18px;color:${color};">$${total.toLocaleString()}</td></tr></tbody>
     </table>
   </div>
 
-  ${notes?`<div style="margin-bottom:20px;padding:14px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;"><div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#92400e;margin-bottom:6px;">NOTES</div><div style="font-size:13px;color:#374151;">${escHtml(notes)}</div></div>`:''}
+  ${notes?'<div style="margin-bottom:20px;padding:14px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;"><div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#92400e;margin-bottom:6px;">NOTES</div><div style="font-size:13px;color:#374151;">'+escHtml(notes)+'</div></div>':''}
 
   <!-- Warranty & Trust -->
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:24px;">
