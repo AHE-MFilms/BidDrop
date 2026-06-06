@@ -1216,8 +1216,9 @@ tr:hover td{background:var(--card);}
     <div class="est-preview" id="est-preview" style="flex-direction:column;align-items:center;">
       <!-- Preview mode toggle tabs (sticky inside panel) -->
       <div id="preview-mode-bar" style="width:100%;max-width:680px;display:flex;gap:0;margin-bottom:20px;border-radius:8px;overflow:hidden;border:1px solid var(--border);flex-shrink:0;">
-        <button id="preview-tab-letter" onclick="setPreviewMode('letter')" style="flex:1;padding:10px 0;font-family:var(--font-b);font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--accent);color:#fff;letter-spacing:.4px;">&#128228; Letter Preview</button>
-        <button id="preview-tab-postcard" onclick="previewEstimatorPostcardFullscreen()" style="flex:1;padding:10px 0;font-family:var(--font-b);font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--card2);color:var(--muted);letter-spacing:.4px;">&#127968; Postcard Preview</button>
+        <button id="preview-tab-letter" onclick="setPreviewMode('letter')" style="flex:1;padding:10px 0;font-family:var(--font-b);font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--accent);color:#fff;letter-spacing:.4px;">&#128228; Letter</button>
+        <button id="preview-tab-proposal" onclick="setPreviewMode('proposal')" style="flex:1;padding:10px 0;font-family:var(--font-b);font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--card2);color:var(--muted);letter-spacing:.4px;">&#128203; Proposal</button>
+        <button id="preview-tab-postcard" onclick="previewEstimatorPostcardFullscreen()" style="flex:1;padding:10px 0;font-family:var(--font-b);font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--card2);color:var(--muted);letter-spacing:.4px;">&#127968; Postcard</button>
       </div>
       <!-- Letter preview -->
       <div class="mailer" id="mailer-preview"></div>
@@ -6989,6 +6990,87 @@ function updatePreview(){
     '</div>';
 
   // ════════════════════════════════════════════
+  //  PAGE 2 — PROPOSAL: Good / Better / Best
+  // ════════════════════════════════════════════
+  // Compute tax
+  const taxRate = parseFloat(S.cfg.taxRate)||0;
+  const taxAmt  = Math.round(grandTotal * taxRate / 100);
+  const totalWithTax = grandTotal + taxAmt;
+  // GBB tier multipliers (relative to current grandTotal which uses 'better' mat 1.5x by default)
+  // We derive Good/Best from the current total using mat cost ratios
+  const matCostGood   = 1.3, matCostBetter = 1.5, matCostBest = 1.8;
+  // Approximate: adjust total by mat ratio (mat is ~40% of total cost)
+  const matFraction = 0.40;
+  function gbbTotal(mult){
+    const base = grandTotal;
+    const adj  = base * (1 - matFraction) + base * matFraction * (mult / matCostBetter);
+    return Math.round(adj);
+  }
+  const totGood   = gbbTotal(matCostGood);
+  const totBetter = grandTotal;
+  const totBest   = gbbTotal(matCostBest);
+  const taxGood   = Math.round(totGood   * taxRate / 100);
+  const taxBetter = Math.round(totBetter * taxRate / 100);
+  const taxBest   = Math.round(totBest   * taxRate / 100);
+  const finGood   = (finEnabled && totGood)   ? calcMonthly(totGood)   : 0;
+  const finBetter = (finEnabled && totBetter) ? calcMonthly(totBetter) : 0;
+  const finBest   = (finEnabled && totBest)   ? calcMonthly(totBest)   : 0;
+  const isProposalMode = (window._previewMode === 'proposal');
+  const page2Proposal =
+    '<div class="ml-page" data-page="2">'+
+    pageHdr(2)+
+    '<div class="ml-body">'+
+    '<div style="font-family:Oswald,sans-serif;font-size:18px;font-weight:700;letter-spacing:.5px;margin-bottom:2px;color:#1a1a1a;">YOUR ROOFING PROPOSAL</div>'+
+    '<div style="font-size:10px;color:#888;margin-bottom:12px;">Choose the option that fits your needs — '+escHtml(addr)+'</div>'+
+    // GBB cards
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;">'+
+    // GOOD
+    '<div style="border:2px solid #22C55E;border-radius:8px;overflow:hidden;">'+
+    '<div style="background:#22C55E;color:#fff;font-family:Oswald,sans-serif;font-size:13px;font-weight:700;padding:7px 10px;text-align:center;letter-spacing:.5px;">&#128994; GOOD</div>'+
+    '<div style="padding:10px;background:#f9fdf9;">'+
+    '<div style="font-size:9px;color:#555;font-weight:700;margin-bottom:4px;">Architectural Shingle</div>'+
+    '<div style="font-size:8px;color:#777;margin-bottom:8px;line-height:1.5;">25-yr warranty · Standard performance · Great value</div>'+
+    '<div style="font-size:18px;font-weight:700;color:#1a1a1a;font-family:Oswald,sans-serif;">$'+(totGood+taxGood).toLocaleString()+'</div>'+
+    (taxRate>0?'<div style="font-size:8px;color:#888;">incl. '+taxRate+'% tax ($'+taxGood.toLocaleString()+')</div>':'')+
+    (finGood?'<div style="font-size:9px;color:#22C55E;font-weight:700;margin-top:4px;">~$'+finGood.toLocaleString()+'/mo</div>':'')+
+    '</div></div>'+
+    // BETTER
+    '<div style="border:2px solid '+color+';border-radius:8px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.12);">'+
+    '<div style="background:'+color+';color:#fff;font-family:Oswald,sans-serif;font-size:13px;font-weight:700;padding:7px 10px;text-align:center;letter-spacing:.5px;">&#11088; BETTER — POPULAR</div>'+
+    '<div style="padding:10px;background:#fffdf9;">'+
+    '<div style="font-size:9px;color:#555;font-weight:700;margin-bottom:4px;">Impact-Resistant Class 4</div>'+
+    '<div style="font-size:8px;color:#777;margin-bottom:8px;line-height:1.5;">Hail protection · Insurance discount · 30-yr warranty</div>'+
+    '<div style="font-size:18px;font-weight:700;color:#1a1a1a;font-family:Oswald,sans-serif;">$'+(totBetter+taxBetter).toLocaleString()+'</div>'+
+    (taxRate>0?'<div style="font-size:8px;color:#888;">incl. '+taxRate+'% tax ($'+taxBetter.toLocaleString()+')</div>':'')+
+    (finBetter?'<div style="font-size:9px;color:'+color+';font-weight:700;margin-top:4px;">~$'+finBetter.toLocaleString()+'/mo</div>':'')+
+    '</div></div>'+
+    // BEST
+    '<div style="border:2px solid #A855F7;border-radius:8px;overflow:hidden;">'+
+    '<div style="background:#A855F7;color:#fff;font-family:Oswald,sans-serif;font-size:13px;font-weight:700;padding:7px 10px;text-align:center;letter-spacing:.5px;">&#128309; BEST</div>'+
+    '<div style="padding:10px;background:#fdf9ff;">'+
+    '<div style="font-size:9px;color:#555;font-weight:700;margin-bottom:4px;">Designer / Premium</div>'+
+    '<div style="font-size:8px;color:#777;margin-bottom:8px;line-height:1.5;">Lifetime warranty · Premium curb appeal · Top-tier</div>'+
+    '<div style="font-size:18px;font-weight:700;color:#1a1a1a;font-family:Oswald,sans-serif;">$'+(totBest+taxBest).toLocaleString()+'</div>'+
+    (taxRate>0?'<div style="font-size:8px;color:#888;">incl. '+taxRate+'% tax ($'+taxBest.toLocaleString()+')</div>':'')+
+    (finBest?'<div style="font-size:9px;color:#A855F7;font-weight:700;margin-top:4px;">~$'+finBest.toLocaleString()+'/mo</div>':'')+
+    '</div></div>'+
+    '</div>'+
+    // Line items
+    '<div style="border:1px solid #e5e5e5;border-radius:6px;overflow:hidden;margin-bottom:10px;">'+
+    '<div style="background:#1a1a1a;color:#fff;font-family:Oswald,sans-serif;font-size:11px;font-weight:700;padding:6px 12px;letter-spacing:.5px;">SCOPE OF WORK — SELECTED OPTION</div>'+
+    structSectionsP2+
+    (taxRate>0?'<div class="ml-row" style="border-top:1px solid #e5e5e5;"><span class="rl" style="font-weight:700;">Sales Tax ('+taxRate+'%)</span><span class="rv" style="font-weight:700;">$'+taxBetter.toLocaleString()+'</span></div>':'')+
+    '</div>'+
+    '<div class="ml-grand">'+
+    '<span class="ml-grand-lbl">TOTAL INVESTMENT</span>'+
+    '<span class="ml-grand-amt">$'+(totBetter+taxBetter).toLocaleString()+'</span>'+
+    '</div>'+
+    (finBetter?'<div style="text-align:center;margin-top:7px;font-size:11px;color:#555;">Est. Financing: <strong style="color:'+color+';">$'+finBetter.toLocaleString()+'/mo</strong> · '+escHtml(finTrm)+'</div>':'')+
+    '<div style="margin-top:7px;font-size:8px;color:#bbb;line-height:1.5;">Estimates are created using satellite imagery. Final pricing confirmed at assessment. Factors that may affect price include skylights, chimneys, special vents, plywood decking, and manufacturer price increases.</div>'+
+    '</div>'+
+    pageFooter()+
+    '</div>';
+  // ════════════════════════════════════════════
   //  PAGE 3 — The Company Difference
   // ════════════════════════════════════════════
   const compareRows = diffs.map((d,i)=>{
@@ -7064,7 +7146,78 @@ function updatePreview(){
     pageFooter()+
     '</div>';
 
-  document.getElementById('mailer-preview').innerHTML = page1 + page2 + page3 + page4;
+  // ════════════════════════════════════════════
+  //  PAGE 4 — PROPOSAL: E-Sign / Acceptance
+  // ════════════════════════════════════════════
+  const page4Proposal =
+    '<div class="ml-page" data-page="4">'+
+    pageHdr(4)+
+    '<div class="ml-body">'+
+    '<div style="font-family:Oswald,sans-serif;font-size:16px;font-weight:700;letter-spacing:.5px;margin-bottom:4px;color:#1a1a1a;">PROPOSAL ACCEPTANCE</div>'+
+    '<div style="font-size:10px;color:#888;margin-bottom:14px;">Review and sign below to accept this proposal. Your signature is legally binding under the U.S. ESIGN Act.</div>'+
+    // Summary box
+    '<div style="border:2px solid '+color+';border-radius:8px;padding:12px;margin-bottom:14px;background:#fffdf9;">'+
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">'+
+    '<div>'+
+    '<div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Property</div>'+
+    '<div style="font-size:11px;font-weight:700;color:#1a1a1a;">'+escHtml(addr)+'</div>'+
+    '<div style="font-size:10px;color:#555;margin-top:6px;">'+escHtml(owner)+'</div>'+
+    '</div>'+
+    '<div style="text-align:right;">'+
+    '<div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Accepted Total</div>'+
+    '<div style="font-family:Oswald,sans-serif;font-size:22px;font-weight:700;color:'+color+';">$'+(totBetter+taxBetter).toLocaleString()+'</div>'+
+    (taxRate>0?'<div style="font-size:8px;color:#aaa;">incl. '+taxRate+'% tax</div>':'')+
+    '</div>'+
+    '</div>'+
+    '</div>'+
+    // Terms
+    '<div style="font-size:8.5px;color:#555;line-height:1.6;margin-bottom:14px;padding:10px;background:#f8f8f8;border-radius:6px;">'+
+    '<strong style="color:#333;display:block;margin-bottom:4px;">Terms & Conditions</strong>'+
+    'This proposal is valid for 30 days from the date of issue. A 50% deposit is required to schedule work. Final pricing is subject to confirmation upon physical inspection. '+
+    'All work will be performed in accordance with local building codes. Manufacturer warranties apply to materials; workmanship warranty as stated. '+
+    'Homeowner is responsible for HOA approvals where applicable. Payment in full is due upon project completion.'+
+    '</div>'+
+    // Signature block
+    '<div style="border:2px solid #1a1a1a;border-radius:8px;padding:14px;margin-bottom:10px;">'+
+    '<div style="font-size:10px;font-weight:700;color:#1a1a1a;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;">&#9997; Customer Acceptance</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px;">'+
+    '<div>'+
+    '<div style="font-size:8px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;">Print Full Name</div>'+
+    '<div style="border-bottom:1.5px solid #1a1a1a;height:28px;"></div>'+
+    '</div>'+
+    '<div>'+
+    '<div style="font-size:8px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;">Date</div>'+
+    '<div style="border-bottom:1.5px solid #1a1a1a;height:28px;"></div>'+
+    '</div>'+
+    '</div>'+
+    '<div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;">'+
+    '<div>'+
+    '<div style="font-size:8px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;">Signature</div>'+
+    '<div style="border-bottom:1.5px solid #1a1a1a;height:36px;"></div>'+
+    '<div style="font-size:7.5px;color:#aaa;margin-top:3px;">By signing, I agree this constitutes my legal electronic/written signature</div>'+
+    '</div>'+
+    '<div>'+
+    '<div style="font-size:8px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;">Option Selected</div>'+
+    '<div style="border-bottom:1.5px solid #1a1a1a;height:36px;"></div>'+
+    '</div>'+
+    '</div>'+
+    '</div>'+
+    // Contractor signature
+    '<div style="border:1px solid #e5e5e5;border-radius:6px;padding:10px;display:flex;justify-content:space-between;align-items:center;gap:10px;">'+
+    '<div>'+
+    '<div style="font-size:8px;color:#888;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;">Authorized by</div>'+
+    '<div style="font-size:11px;font-weight:700;color:#1a1a1a;">'+escHtml(rep)+'</div>'+
+    '<div style="font-size:9px;color:#555;">'+escHtml(co)+' · '+escHtml(ph)+(lic?' · Lic# '+escHtml(lic):'')+'</div>'+
+    '</div>'+
+    '<div style="text-align:right;">'+
+    '<div style="font-size:8px;color:#888;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;">Proposal Date</div>'+
+    '<div style="font-size:10px;font-weight:700;color:#1a1a1a;">'+new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})+'</div>'+
+    '</div>'+
+    '</div>'+
+    '</div>'+
+    pageFooter()+
+    '</div>';
+  document.getElementById('mailer-preview').innerHTML = isProposalMode ? (page1 + page2Proposal + page3 + page4Proposal) : (page1 + page2 + page3 + page4);
 
   // If postcard mode is active, also refresh the postcard preview
   if(window._previewMode === 'postcard') _refreshPostcardPreview();
@@ -7078,19 +7231,25 @@ function setPreviewMode(mode){
   const letterWrap  = document.getElementById('mailer-preview');
   const pcWrap      = document.getElementById('postcard-preview-wrap');
   const tabLetter   = document.getElementById('preview-tab-letter');
+  const tabProposal = document.getElementById('preview-tab-proposal');
   const tabPostcard = document.getElementById('preview-tab-postcard');
   if(!letterWrap || !pcWrap) return;
+  // Reset all tabs
+  [tabLetter, tabProposal, tabPostcard].forEach(t=>{ if(t){ t.style.background='var(--card2)'; t.style.color='var(--muted)'; } });
   if(mode === 'postcard'){
     letterWrap.style.display  = 'none';
     pcWrap.style.display      = 'block';
-    tabLetter.style.background   = 'var(--card2)'; tabLetter.style.color   = 'var(--muted)';
-    tabPostcard.style.background = 'var(--accent)'; tabPostcard.style.color = '#fff';
+    if(tabPostcard){ tabPostcard.style.background = 'var(--accent)'; tabPostcard.style.color = '#fff'; }
     _refreshPostcardPreview();
   } else {
     letterWrap.style.display  = '';
     pcWrap.style.display      = 'none';
-    tabLetter.style.background   = 'var(--accent)'; tabLetter.style.color   = '#fff';
-    tabPostcard.style.background = 'var(--card2)';  tabPostcard.style.color = 'var(--muted)';
+    if(mode === 'proposal'){
+      if(tabProposal){ tabProposal.style.background = '#1a3a6b'; tabProposal.style.color = '#60a5fa'; }
+    } else {
+      if(tabLetter){ tabLetter.style.background = 'var(--accent)'; tabLetter.style.color = '#fff'; }
+    }
+    updatePreview();
   }
 }
 
