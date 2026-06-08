@@ -1367,6 +1367,99 @@ tr:hover td{background:var(--card);}
         </div>
       </div>
 
+      <!-- ── WINDOWS FORM ── -->
+      <div id="trade-form-windows" style="display:none;">
+        <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--accent);margin-bottom:12px;">🪟 WINDOWS ESTIMATE</div>
+
+          <!-- Method selector -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:14px;">
+            <button onclick="setWinMethod('A')" id="win-method-A" style="padding:10px 4px;border-radius:8px;border:2px solid var(--accent);background:rgba(242,92,5,.12);color:var(--accent);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;text-align:center;">
+              🏠 Method A<br><span style="font-size:10px;font-weight:400;color:var(--muted);">By home size</span>
+            </button>
+            <button onclick="setWinMethod('B')" id="win-method-B" style="padding:10px 4px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;text-align:center;">
+              🔢 Method B<br><span style="font-size:10px;font-weight:400;color:var(--muted);">Window type mix</span>
+            </button>
+            <button onclick="setWinMethod('C')" id="win-method-C" style="padding:10px 4px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;text-align:center;">
+              📐 Method C<br><span style="font-size:10px;font-weight:400;color:var(--muted);">Count each window</span>
+            </button>
+          </div>
+
+          <!-- METHOD A: By home size -->
+          <div id="win-form-A">
+            <div class="fg" style="margin-bottom:10px;">
+              <label class="fl">Home Size</label>
+              <select class="fs" id="te-win-size" onchange="calcTradeWindows()">
+                <option value="sm">Small (&lt; 1,200 sqft) — ~9 windows</option>
+                <option value="md" selected>Medium (1,200–2,000 sqft) — ~13 windows</option>
+                <option value="lg">Large (2,000–3,000 sqft) — ~18 windows</option>
+                <option value="xl">XL (3,000+ sqft) — ~25 windows</option>
+              </select>
+            </div>
+            <div class="fg" style="margin-bottom:10px;">
+              <label class="fl">Dominant Window Type</label>
+              <select class="fs" id="te-win-type-A" onchange="calcTradeWindows()">
+                <option value="dbl_hung">Double-Hung (most common)</option>
+                <option value="casement">Casement</option>
+                <option value="picture">Picture / Fixed</option>
+                <option value="sliding">Sliding</option>
+              </select>
+            </div>
+            <div class="fg" style="margin-bottom:10px;">
+              <label class="fl">Estimated Window Count <span style="font-weight:400;color:var(--muted);font-size:10px;">— adjust if you can see the house</span></label>
+              <input type="number" class="fi" id="te-win-count-A" placeholder="13" min="1" oninput="calcTradeWindows()">
+            </div>
+          </div>
+
+          <!-- METHOD B: Window type mix -->
+          <div id="win-form-B" style="display:none;">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Enter approximate quantities for each window type you observed:</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+              <div><label class="fl" style="margin-bottom:4px;">Double-Hung</label><input type="number" class="fi" id="te-win-b-dblhung" placeholder="0" min="0" oninput="calcTradeWindows()"></div>
+              <div><label class="fl" style="margin-bottom:4px;">Casement</label><input type="number" class="fi" id="te-win-b-casement" placeholder="0" min="0" oninput="calcTradeWindows()"></div>
+              <div><label class="fl" style="margin-bottom:4px;">Picture / Fixed</label><input type="number" class="fi" id="te-win-b-picture" placeholder="0" min="0" oninput="calcTradeWindows()"></div>
+              <div><label class="fl" style="margin-bottom:4px;">Sliding</label><input type="number" class="fi" id="te-win-b-sliding" placeholder="0" min="0" oninput="calcTradeWindows()"></div>
+              <div><label class="fl" style="margin-bottom:4px;">Bay / Bow</label><input type="number" class="fi" id="te-win-b-bay" placeholder="0" min="0" oninput="calcTradeWindows()"></div>
+              <div><label class="fl" style="margin-bottom:4px;">Storm Windows</label><input type="number" class="fi" id="te-win-b-storm" placeholder="0" min="0" oninput="calcTradeWindows()"></div>
+            </div>
+            <div id="te-win-b-count-display" style="font-size:12px;color:var(--muted);margin-bottom:10px;text-align:center;"></div>
+          </div>
+
+          <!-- METHOD C: Count each window individually -->
+          <div id="win-form-C" style="display:none;">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Walk the house and count each window type:</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+              <div><label class="fl" style="margin-bottom:4px;">Double-Hung</label><input type="number" class="fi" id="te-win-c-dblhung" placeholder="0" min="0" oninput="calcTradeWindows()"></div>
+              <div><label class="fl" style="margin-bottom:4px;">Casement</label><input type="number" class="fi" id="te-win-c-casement" placeholder="0" min="0" oninput="calcTradeWindows()"></div>
+              <div><label class="fl" style="margin-bottom:4px;">Picture / Fixed</label><input type="number" class="fi" id="te-win-c-picture" placeholder="0" min="0" oninput="calcTradeWindows()"></div>
+              <div><label class="fl" style="margin-bottom:4px;">Sliding</label><input type="number" class="fi" id="te-win-c-sliding" placeholder="0" min="0" oninput="calcTradeWindows()"></div>
+              <div><label class="fl" style="margin-bottom:4px;">Bay / Bow</label><input type="number" class="fi" id="te-win-c-bay" placeholder="0" min="0" oninput="calcTradeWindows()"></div>
+              <div><label class="fl" style="margin-bottom:4px;">Skylight</label><input type="number" class="fi" id="te-win-c-skylight" placeholder="0" min="0" oninput="calcTradeWindows()"></div>
+              <div><label class="fl" style="margin-bottom:4px;">Storm Windows</label><input type="number" class="fi" id="te-win-c-storm" placeholder="0" min="0" oninput="calcTradeWindows()"></div>
+              <div><label class="fl" style="margin-bottom:4px;">Egress</label><input type="number" class="fi" id="te-win-c-egress" placeholder="0" min="0" oninput="calcTradeWindows()"></div>
+            </div>
+            <div id="te-win-c-count-display" style="font-size:12px;color:var(--muted);margin-bottom:10px;text-align:center;"></div>
+          </div>
+
+          <!-- Shared add-ons (all methods) -->
+          <div class="fg" style="margin-bottom:10px;">
+            <label class="fl">Add-Ons</label>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-win-lowe" style="accent-color:var(--accent);" onchange="calcTradeWindows()"> Low-E / Energy glass upgrade</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-win-triple" style="accent-color:var(--accent);" onchange="calcTradeWindows()"> Triple pane upgrade</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-win-trim" style="accent-color:var(--accent);" onchange="calcTradeWindows()"> Trim / casing upgrade</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-win-removal" style="accent-color:var(--accent);" onchange="calcTradeWindows()"> Old window removal</label>
+            </div>
+          </div>
+
+          <div id="te-win-total-box" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Windows Estimate</div>
+            <div id="te-win-total" style="font-size:28px;font-weight:800;color:var(--accent);font-family:var(--font-h);">$0</div>
+            <div id="te-win-breakdown" style="font-size:11px;color:var(--muted);margin-top:4px;"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- ── MULTI-TRADE BUNDLE BAR ── -->
       <div id="trade-bundle-bar" style="display:none;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:12px 14px;margin-bottom:8px;">
         <div style="font-size:11px;font-weight:700;color:#22C55E;margin-bottom:8px;">📦 BUNDLED PROPOSAL</div>
@@ -2240,6 +2333,7 @@ tr:hover td{background:var(--card);}
       <button class="stab-tab"        id="ptab-insulation" onclick="switchPricingTab('insulation')">🏠 Insulation</button>
       <button class="stab-tab"        id="ptab-paint"    onclick="switchPricingTab('paint')">🎨 Ext. Paint</button>
       <button class="stab-tab"        id="ptab-doors"    onclick="switchPricingTab('doors')">🚪 Doors</button>
+      <button class="stab-tab"        id="ptab-windows"  onclick="switchPricingTab('windows')">🪟 Windows</button>
     </div>
 
     <!-- ══════════════════════════════════════════════════════════════════════
@@ -3017,6 +3111,70 @@ tr:hover td{background:var(--card);}
       </div>
     </div>
     </div><!-- /ptabpane-doors -->
+    <div id="ptabpane-windows" class="ptab-pane">
+    <div class="stab-grid">
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:0;display:flex;align-items:center;justify-content:space-between;gap:12px;grid-column:1/-1;">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);">🪟 Windows Estimator</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Window replacement estimates &amp; proposals — enable to show this trade in the estimator</div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex-shrink:0;">
+          <span style="font-size:12px;color:var(--muted);" id="s-trade-windows-lbl">Disabled</span>
+          <div onclick="toggleTradeEnabled('windows')" id="s-trade-windows-toggle" style="width:44px;height:24px;border-radius:12px;background:var(--border);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;">
+            <div id="s-trade-windows-knob" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;"></div>
+          </div>
+        </label>
+      </div>
+    </div>
+    <div class="stab-grid">
+      <div class="stab-card stab-full">
+        <div class="stab-card-hdr" onclick="toggleStabCard('windows-pricing')">
+          <span>🪟 Windows Pricing</span>
+          <span class="stab-chevron" id="stab-chevron-windows-pricing">▾</span>
+        </div>
+        <div class="stab-card-body" id="stab-body-windows-pricing">
+          <div class="stab-section-hdr">Price Per Window by Type</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+            <div class="fg"><label class="fl">Double-Hung Standard ($/window)</label><input type="number" class="fi" id="s-win-dbl-hung" placeholder="450"></div>
+            <div class="fg"><label class="fl">Casement ($/window)</label><input type="number" class="fi" id="s-win-casement" placeholder="550"></div>
+            <div class="fg"><label class="fl">Picture / Fixed ($/window)</label><input type="number" class="fi" id="s-win-picture" placeholder="400"></div>
+            <div class="fg"><label class="fl">Sliding ($/window)</label><input type="number" class="fi" id="s-win-sliding" placeholder="480"></div>
+            <div class="fg"><label class="fl">Bay / Bow ($/window)</label><input type="number" class="fi" id="s-win-bay" placeholder="1800"></div>
+            <div class="fg"><label class="fl">Skylight ($/unit)</label><input type="number" class="fi" id="s-win-skylight" placeholder="1200"></div>
+            <div class="fg"><label class="fl">Storm Window ($/window)</label><input type="number" class="fi" id="s-win-storm" placeholder="200"></div>
+            <div class="fg"><label class="fl">Egress Window ($/window)</label><input type="number" class="fi" id="s-win-egress" placeholder="2500"></div>
+          </div>
+          <div class="stab-section-hdr">Add-On Pricing</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+            <div class="fg"><label class="fl">Low-E / Energy Glass upgrade ($/window)</label><input type="number" class="fi" id="s-win-lowe" placeholder="75"></div>
+            <div class="fg"><label class="fl">Triple pane upgrade ($/window)</label><input type="number" class="fi" id="s-win-triple" placeholder="120"></div>
+            <div class="fg"><label class="fl">Trim / casing ($/window)</label><input type="number" class="fi" id="s-win-trim" placeholder="85"></div>
+            <div class="fg"><label class="fl">Old window removal ($/window)</label><input type="number" class="fi" id="s-win-removal" placeholder="50"></div>
+          </div>
+          <div class="stab-section-hdr">Home Size → Window Count Estimates</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Used for Method A (quick estimate by home size)</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+            <div class="fg"><label class="fl">Small home (&lt;1,200 sqft) — windows</label><input type="number" class="fi" id="s-win-cnt-sm" placeholder="9"></div>
+            <div class="fg"><label class="fl">Medium (1,200–2,000 sqft) — windows</label><input type="number" class="fi" id="s-win-cnt-md" placeholder="13"></div>
+            <div class="fg"><label class="fl">Large (2,000–3,000 sqft) — windows</label><input type="number" class="fi" id="s-win-cnt-lg" placeholder="18"></div>
+            <div class="fg"><label class="fl">XL (3,000+ sqft) — windows</label><input type="number" class="fi" id="s-win-cnt-xl" placeholder="25"></div>
+          </div>
+          <div class="stab-section-hdr">Overhead &amp; Margin</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+            <div class="fg"><label class="fl">Overhead %</label><input type="number" class="fi" id="s-win-ovh" placeholder="15"></div>
+            <div class="fg"><label class="fl">Profit Margin %</label><input type="number" class="fi" id="s-win-mgn" placeholder="20"></div>
+            <div class="fg"><label class="fl">Sales Tax %</label><input type="number" class="fi" id="s-win-tax" placeholder="6"></div>
+          </div>
+          <div class="stab-section-hdr">Financing</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div class="fg"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);"><input type="checkbox" id="s-win-fin" style="accent-color:var(--accent);width:15px;height:15px;"> Offer financing</label></div>
+            <div class="fg"><label class="fl">APR %</label><input type="number" class="fi" id="s-win-apr" placeholder="9.9" step="0.1"></div>
+            <div class="fg"><label class="fl">Term (months)</label><input type="number" class="fi" id="s-win-term" placeholder="60"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div><!-- /ptabpane-windows -->
 
     </div><!-- /stab-tab-pane pricing -->
     <!-- ══ TAB: MARKETING ══
@@ -4213,7 +4371,7 @@ function _updateTradeToggleUI(tradeId, enabled){
 }
 function refreshAllTradeToggles(){
   const et = (S.cfg && S.cfg.enabledTrades) || {roofing:true};
-  const ALL_TRADES = ['roofing','solar','fencing','siding','gutters','insulation','paint','doors'];
+  const ALL_TRADES = ['roofing','solar','fencing','siding','gutters','insulation','paint','doors','windows'];
   ALL_TRADES.forEach(t => _updateTradeToggleUI(t, et[t] !== false && (t==='roofing' ? true : !!et[t])));
 }
 
@@ -4227,6 +4385,7 @@ const TRADE_META = {
   insulation: {label:'🏠 Insulation',     color:'#FB923C'},
   paint:      {label:'🎨 Ext. Paint',     color:'#F472B6'},
   doors:      {label:'🚪 Doors',          color:'#FBBF24'},
+  windows:    {label:'🪟 Windows',        color:'#67E8F9'},
 };
 window._activeTrade = null;
 window._tradeBundle = []; // [{trade, total, details}]
@@ -4529,6 +4688,81 @@ function _getTradeEstimateData(){
 // ── Store last solar data for auto-calc ──────────────────────────────────────
 // Hook into existing solar data population — store roofSqft and systemKw
 const _origPopulateSolarBanner = typeof populateSolarBanner === 'function' ? populateSolarBanner : null;
+
+// ── Windows trade calculator ──────────────────────────────────────────────────
+window._winMethod = 'A';
+function setWinMethod(m){
+  window._winMethod = m;
+  ['A','B','C'].forEach(x=>{
+    const btn = document.getElementById('win-method-'+x);
+    const form = document.getElementById('win-form-'+x);
+    if(btn){
+      btn.style.border = x===m ? '2px solid var(--accent)' : '1px solid var(--border)';
+      btn.style.background = x===m ? 'rgba(242,92,5,.12)' : 'none';
+      btn.style.color = x===m ? 'var(--accent)' : 'var(--mid)';
+    }
+    if(form) form.style.display = x===m ? '' : 'none';
+  });
+  // Auto-populate Method A count from home size
+  if(m==='A') _autoFillWinCountA();
+  calcTradeWindows();
+}
+function _autoFillWinCountA(){
+  const c = S.cfg || {};
+  const size = (document.getElementById('te-win-size')||{}).value || 'md';
+  const cntMap = {sm:c.winCntSm||9, md:c.winCntMd||13, lg:c.winCntLg||18, xl:c.winCntXl||25};
+  const el = document.getElementById('te-win-count-A');
+  if(el && !el.value) el.value = cntMap[size] || 13;
+}
+function calcTradeWindows(){
+  const c = S.cfg || {};
+  const m = window._winMethod || 'A';
+  const ppwMap = {dbl_hung:c.winDblHung||450, casement:c.winCasement||550, picture:c.winPicture||400, sliding:c.winSliding||480, bay:c.winBay||1800, skylight:c.winSkylight||1200, storm:c.winStorm||200, egress:c.winEgress||2500};
+  let base = 0;
+  let totalCount = 0;
+  let breakdownParts = [];
+
+  if(m==='A'){
+    const size = (document.getElementById('te-win-size')||{}).value || 'md';
+    const cntMap = {sm:c.winCntSm||9, md:c.winCntMd||13, lg:c.winCntLg||18, xl:c.winCntXl||25};
+    const autoCount = cntMap[size] || 13;
+    const manualCount = parseInt((document.getElementById('te-win-count-A')||{}).value) || autoCount;
+    const typeA = (document.getElementById('te-win-type-A')||{}).value || 'dbl_hung';
+    totalCount = manualCount;
+    base = manualCount * (ppwMap[typeA] || 450);
+    breakdownParts.push(manualCount+' windows × $'+(ppwMap[typeA]||450));
+  } else if(m==='B'){
+    const fields = [{id:'te-win-b-dblhung',type:'dbl_hung'},{id:'te-win-b-casement',type:'casement'},{id:'te-win-b-picture',type:'picture'},{id:'te-win-b-sliding',type:'sliding'},{id:'te-win-b-bay',type:'bay'},{id:'te-win-b-storm',type:'storm'}];
+    fields.forEach(f=>{
+      const qty = parseInt((document.getElementById(f.id)||{}).value)||0;
+      if(qty>0){ base+=qty*(ppwMap[f.type]||450); totalCount+=qty; breakdownParts.push(qty+'× '+f.type.replace('_',' ')); }
+    });
+    const disp = document.getElementById('te-win-b-count-display');
+    if(disp) disp.textContent = totalCount+' window'+(totalCount!==1?'s':'')+' total';
+  } else { // C
+    const fields = [{id:'te-win-c-dblhung',type:'dbl_hung'},{id:'te-win-c-casement',type:'casement'},{id:'te-win-c-picture',type:'picture'},{id:'te-win-c-sliding',type:'sliding'},{id:'te-win-c-bay',type:'bay'},{id:'te-win-c-skylight',type:'skylight'},{id:'te-win-c-storm',type:'storm'},{id:'te-win-c-egress',type:'egress'}];
+    fields.forEach(f=>{
+      const qty = parseInt((document.getElementById(f.id)||{}).value)||0;
+      if(qty>0){ base+=qty*(ppwMap[f.type]||450); totalCount+=qty; breakdownParts.push(qty+'× '+f.type.replace('_',' ')); }
+    });
+    const disp = document.getElementById('te-win-c-count-display');
+    if(disp) disp.textContent = totalCount+' window'+(totalCount!==1?'s':'')+' total';
+  }
+
+  // Add-ons (per window)
+  if((document.getElementById('te-win-lowe')||{}).checked && totalCount>0) base += totalCount*(c.winLowe||75);
+  if((document.getElementById('te-win-triple')||{}).checked && totalCount>0) base += totalCount*(c.winTriple||120);
+  if((document.getElementById('te-win-trim')||{}).checked && totalCount>0) base += totalCount*(c.winTrim||85);
+  if((document.getElementById('te-win-removal')||{}).checked && totalCount>0) base += totalCount*(c.winRemoval||50);
+
+  const total = base * (1+(c.winOverhead||15)/100) * (1+(c.winMargin||20)/100) * (1+(c.winTax||0)/100);
+  const el = document.getElementById('te-win-total');
+  if(el) el.textContent = _fmtMoney(total);
+  const bd = document.getElementById('te-win-breakdown');
+  if(bd) bd.textContent = breakdownParts.join(' · ') || 'Enter window details above';
+  window._currentTradeTotal = total;
+  updateBundleBar();
+}
 
 function switchPricingTab(tab){
   document.querySelectorAll('#pricing-subtabs .stab-tab').forEach(b=>b.classList.remove('active'));
@@ -13107,6 +13341,12 @@ function openSettings(){
   _sset('s-dor-frame-repair',  c.dorFrameRepair||200);  _sset('s-dor-hardware',      c.dorHardware||125);
   _sset('s-dor-weatherstrip',  c.dorWeatherstrip||75);  _sset('s-dor-paint',         c.dorPaint||150);
   _sset('s-dor-ovh', c.dorOverhead||15); _sset('s-dor-mgn', c.dorMargin||20); _sset('s-dor-tax', c.dorTax||0);
+  _sset('s-win-dbl-hung', c.winDblHung||450); _sset('s-win-casement', c.winCasement||550); _sset('s-win-picture', c.winPicture||400);
+  _sset('s-win-sliding', c.winSliding||480); _sset('s-win-bay', c.winBay||1800); _sset('s-win-skylight', c.winSkylight||1200);
+  _sset('s-win-storm', c.winStorm||200); _sset('s-win-egress', c.winEgress||2500);
+  _sset('s-win-lowe', c.winLowe||75); _sset('s-win-triple', c.winTriple||120); _sset('s-win-trim', c.winTrim||85); _sset('s-win-removal', c.winRemoval||50);
+  _sset('s-win-cnt-sm', c.winCntSm||9); _sset('s-win-cnt-md', c.winCntMd||13); _sset('s-win-cnt-lg', c.winCntLg||18); _sset('s-win-cnt-xl', c.winCntXl||25);
+  _sset('s-win-ovh', c.winOverhead||15); _sset('s-win-mgn', c.winMargin||20); _sset('s-win-tax', c.winTax||0);
   _sck('s-dor-fin-enabled', c.dorFinEnabled!==false); _sset('s-dor-fin-apr', c.dorFinApr||9.99); _sset('s-dor-fin-term', c.dorFinTerm||36);
   // ── Load Siding pricing fields ──
   _sck('s-sid-vinyl',    c.sidVinyl!==false);
@@ -13487,6 +13727,12 @@ function saveSettings(){
     dorFrameRepair:n('s-dor-frame-repair')||200, dorHardware:n('s-dor-hardware')||125,
     dorWeatherstrip:n('s-dor-weatherstrip')||75, dorPaint:n('s-dor-paint')||150,
     dorOverhead:n('s-dor-ovh')||15, dorMargin:n('s-dor-mgn')||20, dorTax:n('s-dor-tax')||0,
+    winDblHung:n('s-win-dbl-hung')||450, winCasement:n('s-win-casement')||550, winPicture:n('s-win-picture')||400,
+    winSliding:n('s-win-sliding')||480, winBay:n('s-win-bay')||1800, winSkylight:n('s-win-skylight')||1200,
+    winStorm:n('s-win-storm')||200, winEgress:n('s-win-egress')||2500,
+    winLowe:n('s-win-lowe')||75, winTriple:n('s-win-triple')||120, winTrim:n('s-win-trim')||85, winRemoval:n('s-win-removal')||50,
+    winCntSm:n('s-win-cnt-sm')||9, winCntMd:n('s-win-cnt-md')||13, winCntLg:n('s-win-cnt-lg')||18, winCntXl:n('s-win-cnt-xl')||25,
+    winOverhead:n('s-win-ovh')||15, winMargin:n('s-win-mgn')||20, winTax:n('s-win-tax')||0,
     dorFinEnabled:ck('s-dor-fin-enabled'), dorFinApr:parseFloat(v('s-dor-fin-apr'))||9.99, dorFinTerm:parseInt(v('s-dor-fin-term'))||36,
     brandColor:v('s-color')||'#F25C05',
     ghlApiKey:v('s-ghl-key'),
