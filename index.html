@@ -15776,6 +15776,33 @@ function openAdminPanel(){
   goTab('admin');
 }
 
+
+async function adminToggleTrade(accountId, tradeKey){
+  if(!_adminPanelData) return;
+  const a = _adminPanelData.clientAccounts.find(x=>x.id===accountId);
+  if(!a) return;
+  let enabled = Array.isArray(a.enabled_trades) ? [...a.enabled_trades] : ['roofing'];
+  if(enabled.includes(tradeKey)){
+    enabled = enabled.filter(t=>t!==tradeKey);
+  } else {
+    enabled.push(tradeKey);
+  }
+  // Optimistic update
+  a.enabled_trades = enabled;
+  // Re-render cards
+  filterAdminAccounts();
+  // Save to DB
+  const {error} = await sb.from('accounts').update({enabled_trades: enabled}).eq('id', accountId);
+  if(error){
+    toast('Failed to save trade settings: '+error.message, 'error');
+    // Revert
+    a.enabled_trades = enabled.includes(tradeKey) ? enabled.filter(t=>t!==tradeKey) : [...enabled, tradeKey];
+    filterAdminAccounts();
+  } else {
+    toast('Trade settings saved', 'success');
+  }
+}
+
 async function renderAdminPanel(){
   const el = document.getElementById('admin-panel-body');
   if(!el) return;
@@ -15957,6 +15984,35 @@ function renderSuperAdminPanel(accounts, allProfiles){
           '<span style="font-size:10px;color:var(--muted);">paid</span>'+
           '<button onclick="adjustCredits(\''+a.id+'\')" style="background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);border-radius:5px;padding:2px 8px;color:#4ade80;font-size:10px;cursor:pointer;font-weight:700;" title="Adjust paid credits">✏️ Adjust</button>'+
         '</div>'+
+        // ── Trade Chips ──
+        (()=>{
+          const TRADES = [
+            {key:'roofing',   icon:'🏠', label:'Roofing'},
+            {key:'solar',     icon:'☀️', label:'Solar'},
+            {key:'fencing',   icon:'🪵', label:'Fencing'},
+            {key:'siding',    icon:'🏗', label:'Siding'},
+            {key:'gutters',   icon:'🌊', label:'Gutters'},
+            {key:'insulation',icon:'🏠', label:'Insul.'},
+            {key:'paint',     icon:'🎨', label:'Paint'},
+            {key:'doors',     icon:'🚪', label:'Doors'},
+            {key:'windows',   icon:'🪟', label:'Windows'},
+          ];
+          const enabledTrades = a.enabled_trades || ['roofing'];
+          const chips = TRADES.map(t=>{
+            const on = enabledTrades.includes(t.key);
+            const bg = on ? 'rgba(242,92,5,.15)' : 'rgba(255,255,255,.04)';
+            const border = on ? 'rgba(242,92,5,.5)' : 'var(--border)';
+            const color = on ? 'var(--accent)' : 'var(--muted)';
+            const opacity = on ? '1' : '0.5';
+            return '<button onclick="adminToggleTrade(\''+a.id+'\',\''+t.key+'\')" '+
+              'style="background:'+bg+';border:1px solid '+border+';border-radius:5px;padding:2px 7px;color:'+color+';font-size:10px;cursor:pointer;font-weight:'+(on?'700':'500')+';opacity:'+opacity+';transition:all .15s;" '+
+              'title="'+(on?'Disable':'Enable')+' '+t.label+'">'+t.icon+' '+t.label+'</button>';
+          }).join('');
+          return '<div style="margin-top:8px;padding-top:6px;border-top:1px solid var(--border);margin-bottom:6px;">'+
+            '<div style="font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;">TRADES</div>'+
+            '<div style="display:flex;flex-wrap:wrap;gap:4px;">'+chips+'</div>'+
+            '</div>';
+        })()+
         '<div style="margin-top:4px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;">'+
           '<button onclick="openAddUserModal(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\')" style="background:rgba(242,92,5,.12);border:1px solid rgba(242,92,5,.4);border-radius:5px;padding:3px 10px;color:var(--accent);font-size:10px;cursor:pointer;font-weight:700;" title="Add user to this account">➕ Add User</button>'+
           '<button onclick="setAccountSlug(\''+a.id+'\',\''+escHtml(a.slug||'')+'\')" style="background:none;border:1px solid var(--border);border-radius:5px;padding:3px 10px;color:var(--muted);font-size:10px;cursor:pointer;font-weight:600;" title="Set quote page slug">🔗 Set Slug</button>'+
