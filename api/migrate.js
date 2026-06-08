@@ -85,7 +85,7 @@ export default async function handler(req, res) {
     try {
       const r = await sbFetch('rpc/exec_sql', {
         method: 'POST',
-        body: JSON.stringify({ query: m.sql })
+        body: JSON.stringify({ sql: m.sql })
       });
       const body = await r.text();
       results.push({ name: m.name, status: r.status, body: body.substring(0, 100) });
