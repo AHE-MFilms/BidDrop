@@ -83,6 +83,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
   .stab-chevron.collapsed{transform:rotate(-90deg);}
   .stab-section-hdr{font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin-bottom:12px;}
   .stab-header-row{display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+
+  /* ── Settings Tabs ── */
+  .stab-tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:18px;overflow-x:auto;flex-shrink:0;}
+  .stab-tab{background:none;border:none;border-bottom:3px solid transparent;padding:10px 20px;font-family:var(--font-h);font-size:13px;font-weight:700;letter-spacing:.5px;color:var(--muted);cursor:pointer;white-space:nowrap;margin-bottom:-2px;transition:color .15s,border-color .15s;}
+  .stab-tab:hover{color:var(--text);}
+  .stab-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+  .stab-tab-pane{display:none;}
+  .stab-tab-pane.active{display:block;}
   .stab-save-btn{background:var(--accent);border:none;border-radius:9px;padding:10px 28px;color:#fff;font-family:var(--font-h);font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 14px rgba(242,92,5,.35);}
   .stab-save-lg{font-size:16px;padding:14px 48px;border-radius:10px;box-shadow:0 4px 18px rgba(242,92,5,.4);}
   .stab-signout-btn{background:none;border:1px solid var(--danger);border-radius:8px;padding:10px 18px;color:var(--danger);font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;}
@@ -1670,7 +1678,18 @@ tr:hover td{background:var(--card);}
       </div>
     </div>
 
-    <!-- ── TWO-COLUMN GRID ── -->
+    <!-- ── SETTINGS TABS NAV ── -->
+    <div class="stab-tabs">
+      <button class="stab-tab active" id="stab-tab-profile" onclick="switchSettingsTab('profile')">👤 Profile</button>
+      <button class="stab-tab" id="stab-tab-pricing" onclick="switchSettingsTab('pricing')">💰 Pricing</button>
+      <button class="stab-tab" id="stab-tab-marketing" onclick="switchSettingsTab('marketing')">📬 Marketing</button>
+      <button class="stab-tab" id="stab-tab-integrations" onclick="switchSettingsTab('integrations')">🔗 Integrations</button>
+      <button class="stab-tab" id="stab-tab-billing" onclick="switchSettingsTab('billing')">💳 Billing</button>
+    </div>
+
+    <!-- ══ TAB: PROFILE ══ -->
+    <div class="stab-tab-pane active" id="stab-tabpane-profile">
+  <!-- ── TWO-COLUMN GRID ── -->
     <div class="stab-grid">
 
       <!-- LEFT: Team Members -->
@@ -1859,7 +1878,13 @@ tr:hover td{background:var(--card);}
       </div>
 
       <!-- LEFT: Pricing & Estimator -->
-      <div class="stab-card">
+    </div><!-- /stab-grid profile -->
+    </div><!-- /stab-tab-pane profile -->
+
+    <!-- ══ TAB: PRICING ══ -->
+    <div class="stab-tab-pane" id="stab-tabpane-pricing">
+    <div class="stab-grid">
+      <div class="stab-card stab-full">
         <div class="stab-card-hdr" onclick="toggleStabCard('pricing')">
           <span>&#128176; Pricing &amp; Estimator</span>
           <span class="stab-chevron" id="stab-chevron-pricing">&#9662;</span>
@@ -1995,8 +2020,14 @@ tr:hover td{background:var(--card);}
         </div>
       </div>
 
-      <!-- RIGHT: Mailer & Postcard Content -->
-      <div class="stab-card">
+    </div><!-- /stab-grid pricing -->
+    </div><!-- /stab-tab-pane pricing -->
+
+    <!-- ══ TAB: MARKETING ══ -->
+    <div class="stab-tab-pane" id="stab-tabpane-marketing">
+    <div class="stab-grid">
+      <!-- Mailer & Postcard Content -->
+      <div class="stab-card stab-full">
         <div class="stab-card-hdr" onclick="toggleStabCard('mailer')">
           <span>&#128236; Mailer &amp; Postcard Content</span>
           <span class="stab-chevron" id="stab-chevron-mailer">&#9662;</span>
@@ -2353,6 +2384,13 @@ tr:hover td{background:var(--card);}
 
       <!-- RIGHT: Integrations — super_admin only -->
       <div class="stab-card" id="stab-integrations-card" style="display:none;">
+    </div><!-- /stab-grid marketing -->
+    </div><!-- /stab-tab-pane marketing -->
+
+    <!-- ══ TAB: INTEGRATIONS ══ -->
+    <div class="stab-tab-pane" id="stab-tabpane-integrations">
+    <div class="stab-grid">
+      <div class="stab-card stab-full">
         <div class="stab-card-hdr" onclick="toggleStabCard('integrations')">
           <span>&#128279; Integrations</span>
           <span class="stab-chevron" id="stab-chevron-integrations">&#9662;</span>
@@ -2436,8 +2474,11 @@ tr:hover td{background:var(--card);}
         </div>
       </div>
 
-    </div><!-- /stab-grid -->
+    </div><!-- /stab-grid integrations -->
+    </div><!-- /stab-tab-pane integrations -->
 
+    <!-- ══ TAB: BILLING ══ -->
+    <div class="stab-tab-pane" id="stab-tabpane-billing">
     <!-- ── SUBSCRIPTION & BILLING CARD ── -->
     <div class="stab-card" id="stab-billing-card" style="margin-top:14px;">
       <div class="stab-card-hdr" onclick="toggleStabCard('billing')">
@@ -2458,6 +2499,7 @@ tr:hover td{background:var(--card);}
       </div>
     </div>
 
+    </div><!-- /stab-tab-pane billing -->
     <!-- ── BOTTOM SAVE BUTTON ── -->
     <div style="display:flex;justify-content:center;gap:16px;padding:8px 0 24px;flex-shrink:0;">
       <button onclick="saveSettings()" class="stab-save-btn stab-save-lg">&#128190; Save Settings</button>
@@ -3026,6 +3068,22 @@ function accountRowToCfg(row){
 let currentEstPinId = null;
 
 
+
+function switchSettingsTab(tab){
+  document.querySelectorAll('.stab-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.stab-tab-pane').forEach(p=>p.classList.remove('active'));
+  const btn=document.getElementById('stab-tab-'+tab);
+  const pane=document.getElementById('stab-tabpane-'+tab);
+  if(btn) btn.classList.add('active');
+  if(pane) pane.classList.add('active');
+  try{ localStorage.setItem('bd_settings_tab', tab); }catch(e){}
+}
+function restoreSettingsTab(){
+  try{
+    const t=localStorage.getItem('bd_settings_tab');
+    if(t) switchSettingsTab(t);
+  }catch(e){}
+}
 function toggleStabCard(name){
   const body = document.getElementById('stab-body-'+name);
   const chevron = document.getElementById('stab-chevron-'+name);
