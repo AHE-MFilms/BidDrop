@@ -1028,30 +1028,74 @@ tr:hover td{background:var(--card);}
       </div>
       <!-- Satellite Roof Measurement banner (shown after Solar API lookup) -->
       <div id="solar-roof-banner" style="display:none;background:linear-gradient(135deg,#0a1628,#0f2a1a);border:1px solid rgba(242,92,5,.35);border-radius:10px;padding:12px 14px;margin-bottom:10px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:#F25C05;">🛰 SATELLITE ROOF MEASUREMENT</div>
+        <!-- Header row -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:#F25C05;">&#128752; SATELLITE ROOF &amp; SOLAR ANALYSIS</div>
           <div id="solar-imagery-date" style="font-size:9px;color:var(--muted);"></div>
         </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start;">
-          <div style="flex:1;min-width:70px;">
-            <div style="font-size:10px;color:#A8BECE;margin-bottom:2px;">Roof Area</div>
-            <div id="solar-sqft" style="font-size:18px;font-weight:700;color:#FFFFFF;">—</div>
-            <div style="font-size:9px;color:var(--muted);">sq ft footprint</div>
+        <!-- Row 1: Roof measurements -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+          <div style="flex:1;min-width:65px;background:rgba(255,255,255,.04);border-radius:6px;padding:7px 8px;">
+            <div style="font-size:9px;color:#A8BECE;margin-bottom:2px;">Roof Area</div>
+            <div id="solar-sqft" style="font-size:17px;font-weight:700;color:#FFFFFF;">—</div>
+            <div style="font-size:8px;color:var(--muted);">sq ft</div>
           </div>
-          <div style="flex:1;min-width:70px;">
-            <div style="font-size:10px;color:#A8BECE;margin-bottom:2px;">Squares</div>
-            <div id="solar-squares" style="font-size:18px;font-weight:700;color:#F25C05;">—</div>
-            <div style="font-size:9px;color:var(--muted);">roofing squares</div>
+          <div style="flex:1;min-width:65px;background:rgba(255,255,255,.04);border-radius:6px;padding:7px 8px;">
+            <div style="font-size:9px;color:#A8BECE;margin-bottom:2px;">Squares</div>
+            <div id="solar-squares" style="font-size:17px;font-weight:700;color:#F25C05;">—</div>
+            <div style="font-size:8px;color:var(--muted);">roofing sq</div>
           </div>
-          <div style="flex:1;min-width:70px;">
-            <div style="font-size:10px;color:#A8BECE;margin-bottom:2px;">Pitch</div>
-            <div id="solar-pitch" style="font-size:18px;font-weight:700;color:#22C55E;">—</div>
-            <div style="font-size:9px;color:var(--muted);">dominant slope</div>
+          <div style="flex:1;min-width:65px;background:rgba(255,255,255,.04);border-radius:6px;padding:7px 8px;">
+            <div style="font-size:9px;color:#A8BECE;margin-bottom:2px;">Pitch</div>
+            <div id="solar-pitch" style="font-size:17px;font-weight:700;color:#22C55E;">—</div>
+            <div style="font-size:8px;color:var(--muted);">dominant</div>
+          </div>
+          <div style="flex:1;min-width:65px;background:rgba(255,255,255,.04);border-radius:6px;padding:7px 8px;">
+            <div style="font-size:9px;color:#A8BECE;margin-bottom:2px;">Shading</div>
+            <div id="solar-shading" style="font-size:17px;font-weight:700;color:#22C55E;">—</div>
+            <div style="font-size:8px;color:var(--muted);">roof quality</div>
           </div>
         </div>
-        <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
-          <button onclick="applySolarToEstimate()" style="background:#F25C05;border:none;border-radius:7px;padding:7px 14px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">✓ Apply to Estimate</button>
-          <span style="font-size:10px;color:var(--muted);">Auto-fills sq ft &amp; pitch below</span>
+        <!-- Row 2: Solar potential (hidden until data available) -->
+        <div id="solar-potential-row" style="display:none;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:8px;padding:9px 10px;margin-bottom:10px;">
+          <div style="font-size:9px;font-weight:700;letter-spacing:.6px;color:#22C55E;margin-bottom:8px;">&#9728;&#65039; SOLAR POTENTIAL (Project Sunroof)</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:70px;">
+              <div style="font-size:9px;color:#A8BECE;margin-bottom:1px;">System Size</div>
+              <div id="solar-system-kw" style="font-size:15px;font-weight:700;color:#FFFFFF;">—</div>
+              <div style="font-size:8px;color:var(--muted);">kW max</div>
+            </div>
+            <div style="flex:1;min-width:70px;">
+              <div style="font-size:9px;color:#A8BECE;margin-bottom:1px;">Max Panels</div>
+              <div id="solar-max-panels" style="font-size:15px;font-weight:700;color:#F25C05;">—</div>
+              <div id="solar-panel-w" style="font-size:8px;color:var(--muted);">— W each</div>
+            </div>
+            <div style="flex:1;min-width:70px;">
+              <div style="font-size:9px;color:#A8BECE;margin-bottom:1px;">Annual Output</div>
+              <div id="solar-annual-kwh" style="font-size:15px;font-weight:700;color:#22C55E;">—</div>
+              <div style="font-size:8px;color:var(--muted);">kWh/yr (AC)</div>
+            </div>
+            <div style="flex:1;min-width:70px;">
+              <div style="font-size:9px;color:#A8BECE;margin-bottom:1px;">Peak Sun</div>
+              <div id="solar-peak-sun" style="font-size:15px;font-weight:700;color:#FCD34D;">—</div>
+              <div style="font-size:8px;color:var(--muted);">hrs/day</div>
+            </div>
+          </div>
+          <!-- Carbon offset row -->
+          <div id="solar-carbon-row" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid rgba(34,197,94,.15);display:flex;gap:10px;flex-wrap:wrap;">
+            <div style="font-size:9px;color:#86EFAC;">&#127807; Carbon offset: <span id="solar-carbon-kg" style="font-weight:700;color:#22C55E;">—</span> kg CO&#8322;/yr &nbsp;&#8776;&nbsp; <span id="solar-trees" style="font-weight:700;color:#22C55E;">—</span> trees planted/yr</div>
+          </div>
+        </div>
+        <!-- Segment shading breakdown (collapsible) -->
+        <div id="solar-segments-wrap" style="display:none;margin-bottom:10px;">
+          <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'" style="font-size:9px;font-weight:700;color:#6688A8;cursor:pointer;margin-bottom:4px;letter-spacing:.4px;">&#9660; ROOF SEGMENTS &amp; SHADING</div>
+          <div id="solar-segments-list" style="display:none;"></div>
+        </div>
+        <!-- Action buttons -->
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <button onclick="applySolarToEstimate()" style="background:#F25C05;border:none;border-radius:7px;padding:7px 14px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">&#10003; Apply to Estimate</button>
+          <button id="solar-autofill-kw-btn" onclick="applySolarKwToAddon()" style="display:none;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);border-radius:7px;padding:7px 12px;color:#22C55E;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#9728;&#65039; Add Solar Add-On (<span id="solar-autofill-kw-label">—</span> kW)</button>
+          <span style="font-size:10px;color:var(--muted);">Auto-fills sq ft &amp; pitch</span>
         </div>
       </div>
       <!-- Equity snapshot badge (shown after RentCast lookup) -->
@@ -11898,18 +11942,98 @@ function showSolarBanner(data){
   if(!banner) return;
   if(!data || data.status !== 'ok' || !data.sqft){ banner.style.display='none'; return; }
   window._solarData = data;
+
+  // ── Roof measurements ──
   const sqftEl   = document.getElementById('solar-sqft');
   const sqEl     = document.getElementById('solar-squares');
   const pitchEl  = document.getElementById('solar-pitch');
+  const shadingEl= document.getElementById('solar-shading');
   const dateEl   = document.getElementById('solar-imagery-date');
   if(sqftEl)  sqftEl.textContent  = data.sqft.toLocaleString();
   if(sqEl)    sqEl.textContent    = data.squares + ' sq';
   if(pitchEl) pitchEl.textContent = data.pitchLabel;
+  if(shadingEl && data.roofShadingLabel){
+    shadingEl.textContent  = data.roofShadingLabel;
+    shadingEl.style.color  = data.roofShadingColor || '#22C55E';
+  }
   if(dateEl && data.imageryDate){
     const d = data.imageryDate;
     dateEl.textContent = 'Imagery: ' + (d.month||'') + '/' + (d.year||'');
   } else if(dateEl) dateEl.textContent = '';
+
+  // ── Solar potential row ──
+  const potRow = document.getElementById('solar-potential-row');
+  if(potRow && data.systemKw){
+    potRow.style.display = 'block';
+    const kwEl     = document.getElementById('solar-system-kw');
+    const panelsEl = document.getElementById('solar-max-panels');
+    const panelWEl = document.getElementById('solar-panel-w');
+    const kwhEl    = document.getElementById('solar-annual-kwh');
+    const sunEl    = document.getElementById('solar-peak-sun');
+    if(kwEl)     kwEl.textContent     = data.systemKw + ' kW';
+    if(panelsEl) panelsEl.textContent = data.maxPanels ? data.maxPanels.toLocaleString() : '—';
+    if(panelWEl) panelWEl.textContent = data.panelCapacityW ? data.panelCapacityW + ' W each' : '— W each';
+    if(kwhEl)    kwhEl.textContent    = data.annualEnergyAcKwh ? data.annualEnergyAcKwh.toLocaleString() : '—';
+    if(sunEl)    sunEl.textContent    = data.peakSunHoursPerDay ? data.peakSunHoursPerDay : '—';
+
+    // Carbon offset
+    const carbonRow = document.getElementById('solar-carbon-row');
+    if(carbonRow && data.carbonOffsetKgPerYear){
+      carbonRow.style.display = 'flex';
+      const kgEl    = document.getElementById('solar-carbon-kg');
+      const treesEl = document.getElementById('solar-trees');
+      if(kgEl)    kgEl.textContent    = data.carbonOffsetKgPerYear.toLocaleString();
+      if(treesEl) treesEl.textContent = data.treesEquivalent ? data.treesEquivalent.toLocaleString() : '—';
+    }
+
+    // Auto-fill kW button
+    const autoBtn   = document.getElementById('solar-autofill-kw-btn');
+    const autoLabel = document.getElementById('solar-autofill-kw-label');
+    if(autoBtn && data.systemKw){
+      autoBtn.style.display = 'inline-flex';
+      if(autoLabel) autoLabel.textContent = data.systemKw;
+    }
+  }
+
+  // ── Segment shading breakdown ──
+  const segsWrap = document.getElementById('solar-segments-wrap');
+  const segsList = document.getElementById('solar-segments-list');
+  if(segsWrap && segsList && data.segments && data.segments.length > 0){
+    segsWrap.style.display = 'block';
+    segsList.innerHTML = data.segments.map((seg, i) => {
+      const dir = azimuthToDir(seg.azimuthDeg);
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:9px;color:#A8BECE;">' +
+        '<span style="min-width:60px;">Seg '+(i+1)+' ('+dir+')</span>' +
+        '<span style="min-width:50px;">'+seg.sqft.toLocaleString()+' sqft</span>' +
+        '<span style="min-width:40px;">'+seg.pitchLabel+'</span>' +
+        '<span style="min-width:50px;">'+seg.sunshineHoursPerYear.toLocaleString()+' hrs/yr</span>' +
+        '<span style="color:'+seg.shadingColor+';font-weight:700;min-width:55px;">'+seg.shadingLabel+' ('+seg.shadingPct+'%)</span>' +
+        '</div>';
+    }).join('');
+  }
+
   banner.style.display = 'block';
+}
+
+function azimuthToDir(deg){
+  if(deg === null || deg === undefined) return '—';
+  const dirs = ['N','NE','E','SE','S','SW','W','NW','N'];
+  return dirs[Math.round(((deg % 360) + 360) % 360 / 45)];
+}
+
+function applySolarKwToAddon(){
+  const data = window._solarData;
+  if(!data || !data.systemKw) return;
+  // Show and check the solar add-on
+  const solarRow = document.getElementById('solar-addon-row');
+  if(solarRow) solarRow.style.display = 'block';
+  const solarChk = document.getElementById('a-solar');
+  if(solarChk){ solarChk.checked = true; toggleSolarInputs(); }
+  // Fill in the kW
+  const kwInput = document.getElementById('a-solar-kw');
+  if(kwInput){ kwInput.value = data.systemKw; onSolarKwInput(); }
+  calcP(); updatePreview(); scheduleDraftSave();
+  toast('☀️ Solar Add-On added — ' + data.systemKw + ' kW system (' + data.maxPanels + ' panels)', 'success');
 }
 
 function hideSolarBanner(){
@@ -11930,7 +12054,12 @@ function applySolarToEstimate(){
   renderStructures();
   calcP();
   updatePreview();
-  toast('🛰 Satellite measurement applied — ' + data.sqft.toLocaleString() + ' sq ft, ' + data.pitchLabel + ' pitch', 'success');
+  // Show solar add-on row if solar potential data available
+  if(data.systemKw){
+    const solarRow = document.getElementById('solar-addon-row');
+    if(solarRow) solarRow.style.display = 'block';
+  }
+  toast('🛰 Satellite measurement applied — ' + data.sqft.toLocaleString() + ' sq ft, ' + data.pitchLabel + ' pitch' + (data.systemKw ? ' · ☀️ ' + data.systemKw + ' kW solar potential' : ''), 'success');
 }
 
 function s_clearSolarFilled(sid){
