@@ -4547,6 +4547,7 @@ function calcTradeFencing(){
   if(bd) bd.textContent = lf+' lf × $'+(plfMap[type]||28)+'/lf';
   window._currentTradeTotal = total;
   updateBundleBar();
+  if(typeof updatePreview==='function') updatePreview();
 }
 
 function calcTradeSiding(){
@@ -4567,6 +4568,7 @@ function calcTradeSiding(){
   if(bd) bd.textContent = sqft+' sqft × $'+(psfMap[type]||4.50)+'/sqft';
   window._currentTradeTotal = total;
   updateBundleBar();
+  if(typeof updatePreview==='function') updatePreview();
 }
 
 function calcTradeGutters(){
@@ -4587,6 +4589,7 @@ function calcTradeGutters(){
   if(bd) bd.textContent = lf+' lf × $'+(plfMap[type]||6)+'/lf + '+ds+' downspouts';
   window._currentTradeTotal = total;
   updateBundleBar();
+  if(typeof updatePreview==='function') updatePreview();
 }
 
 function calcTradeInsulation(){
@@ -4605,6 +4608,7 @@ function calcTradeInsulation(){
   if(bd) bd.textContent = sqft+' sqft × $'+(psfMap[type]||1.20)+'/sqft';
   window._currentTradeTotal = total;
   updateBundleBar();
+  if(typeof updatePreview==='function') updatePreview();
 }
 
 function calcTradePaint(){
@@ -4625,6 +4629,7 @@ function calcTradePaint(){
   if(bd) bd.textContent = sqft+' sqft × $'+(psfMap[surface]||1.50)+'/sqft';
   window._currentTradeTotal = total;
   updateBundleBar();
+  if(typeof updatePreview==='function') updatePreview();
 }
 
 function calcTradeDoors(){
@@ -4648,6 +4653,7 @@ function calcTradeDoors(){
   if(bd) bd.textContent = totalDoors+' door'+(totalDoors!==1?'s':'')+' total';
   window._currentTradeTotal = total;
   updateBundleBar();
+  if(typeof updatePreview==='function') updatePreview();
 }
 
 // ── Bundle bar ────────────────────────────────────────────────────────────────
@@ -4778,6 +4784,7 @@ function calcTradeWindows(){
   if(bd) bd.textContent = breakdownParts.join(' · ') || 'Enter window details above';
   window._currentTradeTotal = total;
   updateBundleBar();
+  if(typeof updatePreview==='function') updatePreview();
 }
 
 function switchPricingTab(tab){
@@ -8439,8 +8446,23 @@ function calcP(){
   const displayTotal = (window._priceOverrideOn && overrideVal > 0) ? overrideVal : grand;
   const lbl = document.getElementById('price-box-lbl');
   if(lbl) lbl.textContent = (window._priceOverrideOn && overrideVal > 0) ? '⚡ Override Price (Homeowner Sees This)' : 'Estimated Total';
-  document.getElementById('e-total').textContent='$'+displayTotal.toLocaleString();
-  document.getElementById('e-breakdown').textContent=structures.length+' structure'+(structures.length>1?'s':'')+' · Calc: $'+grand.toLocaleString()+(window._priceOverrideOn&&overrideVal>0?' · Override: $'+overrideVal.toLocaleString():'');
+  // If non-roofing trade is active, show that trade's total instead
+  const _calcActiveTr = window._activeTrade;
+  const _calcIsNonRoof = _calcActiveTr && _calcActiveTr !== 'roofing';
+  const _calcTradeTotal = _calcIsNonRoof ? (window._currentTradeTotal || 0) : 0;
+  const _calcBundleItems = window._tradeBundle || [];
+  const _calcBundleTotal = _calcBundleItems.reduce((s,b)=>s+b.total,0);
+  const _calcAlreadyInBundle = _calcBundleItems.some(b=>b.trade===_calcActiveTr);
+  const _calcFinalTotal = _calcIsNonRoof
+    ? (_calcBundleTotal > 0
+        ? (_calcBundleTotal + (!_calcAlreadyInBundle && _calcTradeTotal > 0 ? _calcTradeTotal : 0))
+        : _calcTradeTotal)
+    : displayTotal;
+  const _calcDisplayFinal = (window._priceOverrideOn && overrideVal > 0) ? overrideVal : (_calcFinalTotal || displayTotal);
+  document.getElementById('e-total').textContent='$'+_calcDisplayFinal.toLocaleString();
+  document.getElementById('e-breakdown').textContent=_calcIsNonRoof
+    ? (_calcActiveTr.charAt(0).toUpperCase()+_calcActiveTr.slice(1)+' estimate · $'+_calcDisplayFinal.toLocaleString())
+    : (structures.length+' structure'+(structures.length>1?'s':'')+' · Calc: $'+grand.toLocaleString()+(window._priceOverrideOn&&overrideVal>0?' · Override: $'+overrideVal.toLocaleString():''));
   structures.forEach(s=>{
     const el=document.getElementById('sp-'+s.id);
     if(el)el.textContent='$'+calcStructPrice(s).toLocaleString();
@@ -8570,10 +8592,34 @@ function updatePreview(){
     : (bookingUrl || 'https://biddrop.us');
   const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&margin=6&data='+encodeURIComponent(_previewEstUrl);
 
-  // ── Calc totals ──────────────────────────────
+  // ── Calc totals ────────────────────────────────────────────
+  // Trade-aware variables
+  const _activeTr = window._activeTrade;
+  const _isNonRoofing = _activeTr && _activeTr !== 'roofing';
+  const TRADE_WHY_MAP = {
+    solar:"We analyzed your roof's solar potential and identified your home as an excellent candidate for solar panels. Your roof orientation, pitch, and sun exposure make it ideal for generating clean energy and reducing your monthly utility bills.",
+    fencing:"We identified your property as a great candidate for a new fence installation. Whether for privacy, security, or curb appeal, we can provide a professional installation with quality materials built to last.",
+    siding:"We assessed your home's exterior and identified your siding as a candidate for replacement or upgrade. New siding improves energy efficiency, protects against moisture, and dramatically boosts curb appeal.",
+    gutters:"We inspected your home's drainage system and identified your gutters as a candidate for replacement or upgrade. Properly functioning gutters protect your foundation, landscaping, and siding from water damage.",
+    insulation:"We assessed your home's energy profile and identified your attic insulation as a candidate for upgrade. Improved insulation can reduce heating and cooling costs by up to 20% and improve year-round comfort.",
+    paint:"We assessed your home's exterior and identified it as a candidate for a fresh coat of paint. Exterior painting protects against weather damage, prevents wood rot, and significantly improves curb appeal.",
+    doors:"We identified your home as a candidate for door replacement or upgrade. New entry and interior doors improve energy efficiency, security, and the overall aesthetic of your home.",
+    windows:"We identified your home as a candidate for window replacement. New energy-efficient windows can reduce heating and cooling costs by up to 15% and eliminate drafts and condensation issues."
+  };
+  const TRADE_HOOK_MAP = {
+    solar:"Most homeowners don't realize how much they're overpaying for electricity. I skip the sales pitch and lead with real numbers — here's exactly what solar would cost and save for your home.",
+    fencing:"Most homeowners get overcharged for fencing because contractors don't lead with their pricing. I do things differently — here's your upfront, itemized fence estimate with no surprises.",
+    siding:"Most homeowners are surprised by how much new siding can transform a home — and by how affordable it can be when you work with a contractor who leads with transparent pricing.",
+    gutters:"Most homeowners don't think about gutters until there's a problem. I identify homes that need attention before damage occurs — and I lead with my price, no door-knocking required.",
+    insulation:"Most homeowners are losing hundreds of dollars a year through poor insulation without knowing it. I skip the energy audit sales pitch and lead directly with what it would cost to fix it.",
+    paint:"Most homeowners are tired of pushy painters who won't give a price until after a long sales visit. I lead with my price upfront so you can make an informed decision.",
+    doors:"Most homeowners don't realize how much a new door can improve their home's security, energy efficiency, and curb appeal. I lead with transparent pricing so you can decide without pressure.",
+    windows:"Most homeowners are overpaying for heating and cooling because of old, inefficient windows. I skip the sales pitch and lead with a real number — here's what new windows would cost for your home."
+  };
+  const _tradeWhy = _isNonRoofing ? (TRADE_WHY_MAP[_activeTr] || why) : why;
+  const _tradeHook = _isNonRoofing ? (TRADE_HOOK_MAP[_activeTr] || hook) : hook;
   let grandTotal = 0;
   let structSectionsP2 = '';  // page 2 detail boxes
-
   if(structures.length){
     structures.forEach((s,i)=>{
       const sp = calcStructPrice(s);
@@ -8639,6 +8685,17 @@ function updatePreview(){
     structSectionsP2='<div style="padding:20px;text-align:center;color:#999;font-style:italic;">No structures added yet.</div>';
   }
 
+  // If non-roofing trade is active, override grandTotal with trade total
+  if(_isNonRoofing){
+    const _bundleItems = window._tradeBundle || [];
+    const _bundleTotal = _bundleItems.reduce((s,b)=>s+b.total,0);
+    const _currentTotal = window._currentTradeTotal || 0;
+    const _alreadyInBundle = _bundleItems.some(b=>b.trade===_activeTr);
+    const _tradeGrand = _bundleTotal > 0
+      ? (_bundleTotal + (!_alreadyInBundle && _currentTotal > 0 ? _currentTotal : 0))
+      : _currentTotal;
+    if(_tradeGrand > 0) grandTotal = _tradeGrand;
+  }
   // Compute finMo now that grandTotal is final
   const finMo  = (finEnabled && grandTotal) ? calcMonthly(grandTotal) : 0;
   const finTrm = finApr+'% APR · '+finTerm+' mo · $0 down';
@@ -8730,7 +8787,7 @@ function updatePreview(){
     '</div>'+
     '<div style="display:table-cell;vertical-align:top;">'+
     '<div class="ml-greeting">Dear '+escHtml(owner)+',</div>'+
-    '<p style="font-size:11px;line-height:1.6;color:#333;margin:5px 0 0;">'+escHtml(hook)+'</p>'+
+    '<p style="font-size:11px;line-height:1.6;color:#333;margin:5px 0 0;">'+escHtml(_tradeHook||hook)+'</p>'+
     '</div>'+
     '</div>'+
 
@@ -8738,7 +8795,7 @@ function updatePreview(){
     '<div style="display:table;width:100%;border-collapse:separate;border-spacing:10px 0;margin:0 -10px;">'+
     '<div style="display:table-cell;width:50%;vertical-align:top;">'+
     '<div class="ml-section-hdr" style="background:'+color+';display:block;">Why Did You Receive This?</div>'+
-    '<p style="font-size:10px;line-height:1.6;color:#555;margin:4px 0 0;">'+escHtml(why)+'</p>'+damageMailerSection+
+    '<p style="font-size:10px;line-height:1.6;color:#555;margin:4px 0 0;">'+escHtml(_tradeWhy||why)+'</p>'+damageMailerSection+
     '</div>'+
     '<div style="display:table-cell;width:50%;vertical-align:top;">'+
     '<div class="ml-section-hdr" style="background:#222;display:block;">How We Stand Out</div>'+
@@ -11639,13 +11696,13 @@ function buildLobMailerHtml(item){
     '</div>'+
     '<div style="display:table-cell;vertical-align:top;">'+
     '<div style="font-size:13px;margin-bottom:7px;color:#2a2a2a;">Dear '+escHtml(owner)+',</div>'+
-    '<p style="font-size:11px;line-height:1.6;color:#333;margin:5px 0 0;">'+escHtml(hook)+'</p>'+
+    '<p style="font-size:11px;line-height:1.6;color:#333;margin:5px 0 0;">'+escHtml(_tradeHook||hook)+'</p>'+
     '</div>'+
     '</div>'+
     '<div style="display:table;width:100%;border-collapse:separate;border-spacing:10px 0;margin:0 -10px;">'+
     '<div style="display:table-cell;width:50%;vertical-align:top;">'+
     '<div style="font-weight:700;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#fff;padding:5px 11px;border-radius:4px;margin:10px 0 6px;display:block;background:'+color+';">Why Did You Receive This?</div>'+
-    '<p style="font-size:10px;line-height:1.6;color:#555;margin:4px 0 0;">'+escHtml(why)+'</p>'+damageMailerSection+
+    '<p style="font-size:10px;line-height:1.6;color:#555;margin:4px 0 0;">'+escHtml(_tradeWhy||why)+'</p>'+damageMailerSection+
     '</div>'+
     '<div style="display:table-cell;width:50%;vertical-align:top;">'+
     '<div style="font-weight:700;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#fff;padding:5px 11px;border-radius:4px;margin:10px 0 6px;display:block;background:#222;">How We Stand Out</div>'+
