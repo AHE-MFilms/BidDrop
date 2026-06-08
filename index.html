@@ -4312,6 +4312,12 @@ function accountRowToCfg(row){
     googleTagId: row.google_tag_id || '',
     googlePlaceId: row.google_place_id || '',
     taxRate: parseFloat(row.tax_rate)||0,
+    enabledTrades: (()=>{
+      const arr = Array.isArray(row.enabled_trades) ? row.enabled_trades : ['roofing'];
+      const obj = {};
+      arr.forEach(t => { obj[t] = true; });
+      return obj;
+    })(),
   };
 }
 
@@ -4346,11 +4352,18 @@ function restoreSettingsTab(){
 function toggleTradeEnabled(tradeId){
   if(!S.cfg) S.cfg = {};
   if(!S.cfg.enabledTrades) S.cfg.enabledTrades = {roofing:true};
-  const cur = S.cfg.enabledTrades[tradeId] !== false;
+  const cur = !!S.cfg.enabledTrades[tradeId];
   S.cfg.enabledTrades[tradeId] = !cur;
   _updateTradeToggleUI(tradeId, !cur);
   save();
   renderTradeSelector();
+  // Persist enabled_trades array to DB
+  const enabledArr = Object.keys(S.cfg.enabledTrades).filter(t => S.cfg.enabledTrades[t]);
+  if(sb && currentAccount && currentAccount.id){
+    sb.from('accounts').update({enabled_trades: enabledArr}).eq('id', currentAccount.id).then(({error}) => {
+      if(error) console.warn('[BidDrop] save enabled_trades:', error.message);
+    });
+  }
   toast((S.cfg.enabledTrades[tradeId] ? '✅' : '⛔') + ' ' + tradeId.charAt(0).toUpperCase()+tradeId.slice(1) + ' ' + (S.cfg.enabledTrades[tradeId] ? 'enabled' : 'disabled'), 'info');
 }
 function _updateTradeToggleUI(tradeId, enabled){
@@ -4364,7 +4377,7 @@ function _updateTradeToggleUI(tradeId, enabled){
 function refreshAllTradeToggles(){
   const et = (S.cfg && S.cfg.enabledTrades) || {roofing:true};
   const ALL_TRADES = ['roofing','solar','fencing','siding','gutters','insulation','paint','doors','windows'];
-  ALL_TRADES.forEach(t => _updateTradeToggleUI(t, et[t] !== false && (t==='roofing' ? true : !!et[t])));
+  ALL_TRADES.forEach(t => _updateTradeToggleUI(t, !!(et[t])));
 }
 
 // ── Trade selector (Estimator) ────────────────────────────────────────────────
