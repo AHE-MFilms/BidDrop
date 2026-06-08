@@ -1034,6 +1034,352 @@ tr:hover td{background:var(--card);}
         <label class="fl">Property Address</label>
         <input class="fi" id="e-addr" placeholder="123 Oak St, Detroit MI 48000" oninput="updatePreview();scheduleDraftSave()">
       </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════════
+           TRADE SELECTOR — shown after address, before trade form
+      ═══════════════════════════════════════════════════════════════════ -->
+      <div id="trade-selector-wrap" style="margin-bottom:4px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">🔧 Select Trade</div>
+        <div id="trade-selector-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <!-- Populated dynamically by renderTradeSelector() -->
+        </div>
+        <div id="trade-selector-empty" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:12px;font-size:12px;color:#EF4444;text-align:center;">
+          ⚠️ No trades enabled. Go to Settings → Pricing and enable at least one trade.
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════════
+           TRADE FORMS — one per trade, shown/hidden based on selection
+      ═══════════════════════════════════════════════════════════════════ -->
+
+      <!-- ── ROOFING FORM (existing structures system) ── -->
+      <div id="trade-form-roofing" style="display:none;">
+        <!-- Existing roofing content is kept below; this wrapper just controls visibility -->
+      </div>
+
+      <!-- ── SOLAR FORM ── -->
+      <div id="trade-form-solar" style="display:none;">
+        <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:#22C55E;margin-bottom:12px;">☀️ SOLAR ESTIMATE</div>
+          <div id="solar-autocalc-banner" style="display:none;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#22C55E;">
+            📡 Auto-calculated from satellite data — adjust below if needed
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <label class="fl">System Size (kW) <span style="font-weight:400;color:var(--muted);font-size:10px;">— auto from satellite</span></label>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <input type="number" class="fi" id="te-solar-kw" placeholder="8.5" step="0.1" min="0" oninput="calcTradeSolar()" style="flex:1;margin-bottom:0;">
+              <button onclick="autoCalcSolar()" style="flex-shrink:0;padding:0 10px;height:38px;background:rgba(34,197,94,.15);color:#22C55E;border:1px solid rgba(34,197,94,.3);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🛰 Auto</button>
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <label class="fl">Battery Add-On</label>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="checkbox" id="te-solar-battery" style="accent-color:var(--accent);width:16px;height:16px;" onchange="calcTradeSolar()">
+              <label for="te-solar-battery" style="font-size:12px;color:var(--mid);cursor:pointer;">Include battery storage</label>
+              <span id="te-solar-battery-price" style="font-size:11px;color:var(--muted);margin-left:auto;"></span>
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <label class="fl">Panel Upgrade</label>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="checkbox" id="te-solar-panel-upgrade" style="accent-color:var(--accent);width:16px;height:16px;" onchange="calcTradeSolar()">
+              <label for="te-solar-panel-upgrade" style="font-size:12px;color:var(--mid);cursor:pointer;">Premium panel upgrade</label>
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <label class="fl">Electrical Panel Upgrade</label>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="checkbox" id="te-solar-elec-upgrade" style="accent-color:var(--accent);width:16px;height:16px;" onchange="calcTradeSolar()">
+              <label for="te-solar-elec-upgrade" style="font-size:12px;color:var(--mid);cursor:pointer;">Electrical panel upgrade</label>
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <label class="fl">Roof Reinforcement</label>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="checkbox" id="te-solar-roof-reinforce" style="accent-color:var(--accent);width:16px;height:16px;" onchange="calcTradeSolar()">
+              <label for="te-solar-roof-reinforce" style="font-size:12px;color:var(--mid);cursor:pointer;">Roof reinforcement needed</label>
+            </div>
+          </div>
+          <div id="te-solar-incentives-row" style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.15);border-radius:8px;padding:10px;margin-bottom:10px;font-size:12px;color:var(--mid);">
+            <div style="font-weight:700;color:#22C55E;margin-bottom:6px;">💰 Incentives Applied</div>
+            <div id="te-solar-incentives-detail"></div>
+          </div>
+          <div id="te-solar-total-box" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Net Solar Estimate</div>
+            <div id="te-solar-total" style="font-size:28px;font-weight:800;color:var(--accent);font-family:var(--font-h);">$0</div>
+            <div id="te-solar-monthly" style="font-size:11px;color:#22C55E;margin-top:4px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── FENCING FORM ── -->
+      <div id="trade-form-fencing" style="display:none;">
+        <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--accent);margin-bottom:12px;">🪵 FENCING ESTIMATE</div>
+          <div class="fg" style="margin-bottom:10px;">
+            <label class="fl">Fence Type</label>
+            <select class="fs" id="te-fen-type" onchange="calcTradeFencing()">
+              <option value="wood">🪵 Wood</option>
+              <option value="vinyl">🏠 Vinyl</option>
+              <option value="chain">⛓ Chain Link</option>
+              <option value="aluminum">🏗 Aluminum</option>
+              <option value="split">🌲 Split Rail</option>
+              <option value="cedar">🌳 Cedar</option>
+            </select>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <label class="fl">Linear Footage <span style="font-weight:400;color:var(--muted);font-size:10px;">— auto from property perimeter</span></label>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <input type="number" class="fi" id="te-fen-lf" placeholder="150" min="1" oninput="calcTradeFencing()" style="flex:1;margin-bottom:0;">
+              <button onclick="autoCalcFencing()" style="flex-shrink:0;padding:0 10px;height:38px;background:rgba(242,92,5,.15);color:var(--accent);border:1px solid rgba(242,92,5,.3);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🛰 Auto</button>
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <label class="fl">Gates</label>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-fen-gate-single" style="accent-color:var(--accent);" onchange="calcTradeFencing()"> Single Gate</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-fen-gate-double" style="accent-color:var(--accent);" onchange="calcTradeFencing()"> Double Gate</label>
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <label class="fl">Old Fence Removal</label>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="checkbox" id="te-fen-removal" style="accent-color:var(--accent);width:16px;height:16px;" onchange="calcTradeFencing()">
+              <label for="te-fen-removal" style="font-size:12px;color:var(--mid);cursor:pointer;">Remove existing fence</label>
+            </div>
+          </div>
+          <div id="te-fen-total-box" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Fencing Estimate</div>
+            <div id="te-fen-total" style="font-size:28px;font-weight:800;color:var(--accent);font-family:var(--font-h);">$0</div>
+            <div id="te-fen-breakdown" style="font-size:11px;color:var(--muted);margin-top:4px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SIDING FORM ── -->
+      <div id="trade-form-siding" style="display:none;">
+        <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--accent);margin-bottom:12px;">🏗 SIDING ESTIMATE</div>
+          <div class="fg" style="margin-bottom:10px;">
+            <label class="fl">Siding Material</label>
+            <select class="fs" id="te-sid-type" onchange="calcTradeSiding()">
+              <option value="vinyl">🏠 Vinyl</option>
+              <option value="hardie">🧱 Fiber Cement (Hardie)</option>
+              <option value="wood">🪵 Wood / Cedar</option>
+              <option value="engwood">🌲 Engineered Wood</option>
+              <option value="metal">🏗 Metal / Steel</option>
+              <option value="stucco">🏛 Stucco</option>
+            </select>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <label class="fl">Wall Square Footage <span style="font-weight:400;color:var(--muted);font-size:10px;">— auto from building footprint</span></label>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <input type="number" class="fi" id="te-sid-sqft" placeholder="1200" min="1" oninput="calcTradeSiding()" style="flex:1;margin-bottom:0;">
+              <button onclick="autoCalcSiding()" style="flex-shrink:0;padding:0 10px;height:38px;background:rgba(242,92,5,.15);color:var(--accent);border:1px solid rgba(242,92,5,.3);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🛰 Auto</button>
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <label class="fl">Add-Ons</label>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-sid-removal" style="accent-color:var(--accent);" onchange="calcTradeSiding()"> Old siding removal</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-sid-housewrap" style="accent-color:var(--accent);" onchange="calcTradeSiding()"> House wrap / moisture barrier</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-sid-insulation" style="accent-color:var(--accent);" onchange="calcTradeSiding()"> Insulation backer</label>
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <label class="fl">Trim / Fascia (linear ft)</label>
+            <input type="number" class="fi" id="te-sid-trim-lf" placeholder="0" min="0" oninput="calcTradeSiding()">
+          </div>
+          <div id="te-sid-total-box" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Siding Estimate</div>
+            <div id="te-sid-total" style="font-size:28px;font-weight:800;color:var(--accent);font-family:var(--font-h);">$0</div>
+            <div id="te-sid-breakdown" style="font-size:11px;color:var(--muted);margin-top:4px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── GUTTERS FORM ── -->
+      <div id="trade-form-gutters" style="display:none;">
+        <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--accent);margin-bottom:12px;">🌊 GUTTERS ESTIMATE</div>
+          <div class="fg" style="margin-bottom:10px;">
+            <label class="fl">Gutter Type</label>
+            <select class="fs" id="te-gut-type" onchange="calcTradeGutters()">
+              <option value="alum5">Aluminum 5" K-Style</option>
+              <option value="alum6">Aluminum 6" K-Style</option>
+              <option value="seamless">Seamless Aluminum</option>
+              <option value="copper">Copper</option>
+              <option value="halfrnd">Half-Round</option>
+              <option value="vinyl">Vinyl</option>
+            </select>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <label class="fl">Linear Footage <span style="font-weight:400;color:var(--muted);font-size:10px;">— auto from roof perimeter</span></label>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <input type="number" class="fi" id="te-gut-lf" placeholder="180" min="1" oninput="calcTradeGutters()" style="flex:1;margin-bottom:0;">
+              <button onclick="autoCalcGutters()" style="flex-shrink:0;padding:0 10px;height:38px;background:rgba(242,92,5,.15);color:var(--accent);border:1px solid rgba(242,92,5,.3);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🛰 Auto</button>
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <label class="fl">Downspouts (qty)</label>
+            <input type="number" class="fi" id="te-gut-downspouts" placeholder="4" min="0" oninput="calcTradeGutters()">
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <label class="fl">Add-Ons</label>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-gut-guard" style="accent-color:var(--accent);" onchange="calcTradeGutters()"> Gutter guard / screen</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-gut-removal" style="accent-color:var(--accent);" onchange="calcTradeGutters()"> Old gutter removal</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-gut-fascia" style="accent-color:var(--accent);" onchange="calcTradeGutters()"> Fascia board repair</label>
+            </div>
+          </div>
+          <div id="te-gut-total-box" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Gutters Estimate</div>
+            <div id="te-gut-total" style="font-size:28px;font-weight:800;color:var(--accent);font-family:var(--font-h);">$0</div>
+            <div id="te-gut-breakdown" style="font-size:11px;color:var(--muted);margin-top:4px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── INSULATION FORM ── -->
+      <div id="trade-form-insulation" style="display:none;">
+        <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--accent);margin-bottom:12px;">🏠 INSULATION ESTIMATE</div>
+          <div class="fg" style="margin-bottom:10px;">
+            <label class="fl">Insulation Type</label>
+            <select class="fs" id="te-ins-type" onchange="calcTradeInsulation()">
+              <option value="blowR30">Blown-In Fiberglass R-30</option>
+              <option value="blowR38">Blown-In Fiberglass R-38</option>
+              <option value="cellR30">Blown-In Cellulose R-30</option>
+              <option value="cellR38">Blown-In Cellulose R-38</option>
+              <option value="foamOpen">Open-Cell Spray Foam</option>
+              <option value="foamClosed">Closed-Cell Spray Foam</option>
+              <option value="battR13">Fiberglass Batt R-13</option>
+              <option value="battR19">Fiberglass Batt R-19</option>
+            </select>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <label class="fl">Attic Square Footage <span style="font-weight:400;color:var(--muted);font-size:10px;">— auto from roof area</span></label>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <input type="number" class="fi" id="te-ins-sqft" placeholder="1200" min="1" oninput="calcTradeInsulation()" style="flex:1;margin-bottom:0;">
+              <button onclick="autoCalcInsulation()" style="flex-shrink:0;padding:0 10px;height:38px;background:rgba(242,92,5,.15);color:var(--accent);border:1px solid rgba(242,92,5,.3);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🛰 Auto</button>
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <label class="fl">Add-Ons</label>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-ins-removal" style="accent-color:var(--accent);" onchange="calcTradeInsulation()"> Old insulation removal</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-ins-airsealing" style="accent-color:var(--accent);" onchange="calcTradeInsulation()"> Air sealing</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-ins-vapor" style="accent-color:var(--accent);" onchange="calcTradeInsulation()"> Vapor barrier</label>
+            </div>
+          </div>
+          <div id="te-ins-total-box" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Insulation Estimate</div>
+            <div id="te-ins-total" style="font-size:28px;font-weight:800;color:var(--accent);font-family:var(--font-h);">$0</div>
+            <div id="te-ins-breakdown" style="font-size:11px;color:var(--muted);margin-top:4px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── EXTERIOR PAINT FORM ── -->
+      <div id="trade-form-paint" style="display:none;">
+        <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--accent);margin-bottom:12px;">🎨 EXTERIOR PAINT ESTIMATE</div>
+          <div class="fg" style="margin-bottom:10px;">
+            <label class="fl">Primary Surface</label>
+            <select class="fs" id="te-pnt-surface" onchange="calcTradePaint()">
+              <option value="siding1c">Siding — 1 Coat</option>
+              <option value="siding2c">Siding — 2 Coats</option>
+              <option value="deck1c">Deck / Porch — 1 Coat</option>
+              <option value="deck2c">Deck / Porch — 2 Coats</option>
+              <option value="masonry">Foundation / Masonry</option>
+            </select>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <label class="fl">Square Footage <span style="font-weight:400;color:var(--muted);font-size:10px;">— auto from building footprint</span></label>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <input type="number" class="fi" id="te-pnt-sqft" placeholder="1200" min="1" oninput="calcTradePaint()" style="flex:1;margin-bottom:0;">
+              <button onclick="autoCalcPaint()" style="flex-shrink:0;padding:0 10px;height:38px;background:rgba(242,92,5,.15);color:var(--accent);border:1px solid rgba(242,92,5,.3);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🛰 Auto</button>
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <label class="fl">Trim / Fascia (linear ft)</label>
+            <input type="number" class="fi" id="te-pnt-trim-lf" placeholder="0" min="0" oninput="calcTradePaint()">
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <label class="fl">Add-Ons</label>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-pnt-powerwash" style="accent-color:var(--accent);" onchange="calcTradePaint()"> Power washing</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-pnt-primer" style="accent-color:var(--accent);" onchange="calcTradePaint()"> Primer coat</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-pnt-garage-door" style="accent-color:var(--accent);" onchange="calcTradePaint()"> Garage door painting</label>
+            </div>
+          </div>
+          <div id="te-pnt-total-box" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Paint Estimate</div>
+            <div id="te-pnt-total" style="font-size:28px;font-weight:800;color:var(--accent);font-family:var(--font-h);">$0</div>
+            <div id="te-pnt-breakdown" style="font-size:11px;color:var(--muted);margin-top:4px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── DOORS FORM ── -->
+      <div id="trade-form-doors" style="display:none;">
+        <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--accent);margin-bottom:12px;">🚪 DOORS ESTIMATE</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+            <div>
+              <label class="fl" style="margin-bottom:6px;">Steel Entry Door</label>
+              <input type="number" class="fi" id="te-dor-steel-entry" placeholder="0" min="0" oninput="calcTradeDoors()">
+            </div>
+            <div>
+              <label class="fl" style="margin-bottom:6px;">Fiberglass Entry Door</label>
+              <input type="number" class="fi" id="te-dor-fiber-entry" placeholder="0" min="0" oninput="calcTradeDoors()">
+            </div>
+            <div>
+              <label class="fl" style="margin-bottom:6px;">Wood Entry Door</label>
+              <input type="number" class="fi" id="te-dor-wood-entry" placeholder="0" min="0" oninput="calcTradeDoors()">
+            </div>
+            <div>
+              <label class="fl" style="margin-bottom:6px;">Storm Door</label>
+              <input type="number" class="fi" id="te-dor-storm" placeholder="0" min="0" oninput="calcTradeDoors()">
+            </div>
+            <div>
+              <label class="fl" style="margin-bottom:6px;">Single Garage Door</label>
+              <input type="number" class="fi" id="te-dor-garage-single" placeholder="0" min="0" oninput="calcTradeDoors()">
+            </div>
+            <div>
+              <label class="fl" style="margin-bottom:6px;">Double Garage Door</label>
+              <input type="number" class="fi" id="te-dor-garage-double" placeholder="0" min="0" oninput="calcTradeDoors()">
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <label class="fl">Add-Ons</label>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-dor-hardware" style="accent-color:var(--accent);" onchange="calcTradeDoors()"> Hardware / deadbolt upgrade (per door)</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-dor-weatherstrip" style="accent-color:var(--accent);" onchange="calcTradeDoors()"> Weatherstripping (per door)</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-dor-opener" style="accent-color:var(--accent);" onchange="calcTradeDoors()"> Garage door opener</label>
+            </div>
+          </div>
+          <div id="te-dor-total-box" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Doors Estimate</div>
+            <div id="te-dor-total" style="font-size:28px;font-weight:800;color:var(--accent);font-family:var(--font-h);">$0</div>
+            <div id="te-dor-breakdown" style="font-size:11px;color:var(--muted);margin-top:4px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── MULTI-TRADE BUNDLE BAR ── -->
+      <div id="trade-bundle-bar" style="display:none;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:12px 14px;margin-bottom:8px;">
+        <div style="font-size:11px;font-weight:700;color:#22C55E;margin-bottom:8px;">📦 BUNDLED PROPOSAL</div>
+        <div id="trade-bundle-list" style="font-size:12px;color:var(--mid);margin-bottom:10px;"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:10px;color:var(--muted);">Bundle Total</div>
+            <div id="trade-bundle-total" style="font-size:22px;font-weight:800;color:#22C55E;font-family:var(--font-h);">$0</div>
+          </div>
+          <button onclick="addAnotherTrade()" style="background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:8px 14px;color:#22C55E;font-size:12px;font-weight:700;cursor:pointer;">+ Add Another Trade</button>
+        </div>
+      </div>
+
       <!-- Satellite Roof Measurement banner (shown after Solar API lookup) -->
       <div id="solar-roof-banner" style="display:none;background:linear-gradient(135deg,#0a1628,#0f2a1a);border:1px solid rgba(242,92,5,.35);border-radius:10px;padding:12px 14px;margin-bottom:10px;">
         <!-- Header row -->
@@ -1901,6 +2247,20 @@ tr:hover td{background:var(--card);}
     ══════════════════════════════════════════════════════════════════════ -->
     <div id="ptabpane-roofing" class="ptab-pane active">
     <div class="stab-grid">
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:0;display:flex;align-items:center;justify-content:space-between;gap:12px;grid-column:1/-1;">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);">🏠 Roofing Estimator</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Roofing estimates &amp; proposals — enable to show this trade in the estimator</div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex-shrink:0;">
+          <span style="font-size:12px;color:var(--muted);" id="s-trade-roofing-lbl">Enabled</span>
+          <div onclick="toggleTradeEnabled('roofing')" id="s-trade-roofing-toggle" style="width:44px;height:24px;border-radius:12px;background:var(--accent);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;">
+            <div id="s-trade-roofing-knob" style="position:absolute;top:3px;left:21px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;"></div>
+          </div>
+        </label>
+      </div>
+    </div>
+    <div class="stab-grid">
       <div class="stab-card stab-full">
         <div class="stab-card-hdr" onclick="toggleStabCard('pricing')">
           <span>🏠 Roofing Pricing &amp; Estimator</span>
@@ -2024,6 +2384,19 @@ tr:hover td{background:var(--card);}
     ══════════════════════════════════════════════════════════════════════ -->
     <div id="ptabpane-solar" class="ptab-pane" style="display:none;">
     <div class="stab-grid">
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:0;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);">☀️ Solar Estimator</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Solar panel estimates &amp; proposals — enable to show this trade in the estimator</div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex-shrink:0;">
+          <span style="font-size:12px;color:var(--muted);" id="s-trade-solar-lbl">Disabled</span>
+          <div onclick="toggleTradeEnabled('solar')" id="s-trade-solar-toggle" style="width:44px;height:24px;border-radius:12px;background:var(--border);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;">
+            <div id="s-trade-solar-knob" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;"></div>
+          </div>
+        </label>
+      </div>
+    </div>
       <div class="stab-card stab-full">
         <div class="stab-card-hdr" onclick="toggleStabCard('solar-pricing')">
           <span>☀️ Solar Pricing &amp; Estimator</span>
@@ -2096,6 +2469,19 @@ tr:hover td{background:var(--card);}
     ══════════════════════════════════════════════════════════════════════ -->
     <div id="ptabpane-fencing" class="ptab-pane" style="display:none;">
     <div class="stab-grid">
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:0;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);">🪵 Fencing Estimator</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Fencing estimates &amp; proposals — enable to show this trade in the estimator</div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex-shrink:0;">
+          <span style="font-size:12px;color:var(--muted);" id="s-trade-fencing-lbl">Disabled</span>
+          <div onclick="toggleTradeEnabled('fencing')" id="s-trade-fencing-toggle" style="width:44px;height:24px;border-radius:12px;background:var(--border);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;">
+            <div id="s-trade-fencing-knob" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;"></div>
+          </div>
+        </label>
+      </div>
+    </div>
       <div class="stab-card stab-full">
         <div class="stab-card-hdr" onclick="toggleStabCard('fencing-pricing')">
           <span>🪵 Fencing Pricing &amp; Estimator</span>
@@ -2178,6 +2564,19 @@ tr:hover td{background:var(--card);}
     ══════════════════════════════════════════════════════════════════════ -->
     <div id="ptabpane-siding" class="ptab-pane" style="display:none;">
     <div class="stab-grid">
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:0;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);">🏗 Siding Estimator</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Siding estimates &amp; proposals — enable to show this trade in the estimator</div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex-shrink:0;">
+          <span style="font-size:12px;color:var(--muted);" id="s-trade-siding-lbl">Disabled</span>
+          <div onclick="toggleTradeEnabled('siding')" id="s-trade-siding-toggle" style="width:44px;height:24px;border-radius:12px;background:var(--border);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;">
+            <div id="s-trade-siding-knob" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;"></div>
+          </div>
+        </label>
+      </div>
+    </div>
       <div class="stab-card stab-full">
         <div class="stab-card-hdr" onclick="toggleStabCard('siding-pricing')">
           <span>🏗 Siding Pricing &amp; Estimator</span>
@@ -2265,6 +2664,19 @@ tr:hover td{background:var(--card);}
     ══════════════════════════════════════════════════════════════════════ -->
     <div id="ptabpane-gutters" class="ptab-pane" style="display:none;">
     <div class="stab-grid">
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:0;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);">🌊 Gutters Estimator</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Gutter estimates &amp; proposals — enable to show this trade in the estimator</div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex-shrink:0;">
+          <span style="font-size:12px;color:var(--muted);" id="s-trade-gutters-lbl">Disabled</span>
+          <div onclick="toggleTradeEnabled('gutters')" id="s-trade-gutters-toggle" style="width:44px;height:24px;border-radius:12px;background:var(--border);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;">
+            <div id="s-trade-gutters-knob" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;"></div>
+          </div>
+        </label>
+      </div>
+    </div>
       <div class="stab-card stab-full">
         <div class="stab-card-hdr" onclick="toggleStabCard('gutters-pricing')">
           <span>🌊 Gutters Pricing &amp; Estimator</span>
@@ -2339,6 +2751,19 @@ tr:hover td{background:var(--card);}
     ══════════════════════════════════════════════════════════════════════ -->
     <div id="ptabpane-insulation" class="ptab-pane" style="display:none;">
     <div class="stab-grid">
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:0;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);">🏠 Insulation Estimator</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Insulation estimates &amp; proposals — enable to show this trade in the estimator</div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex-shrink:0;">
+          <span style="font-size:12px;color:var(--muted);" id="s-trade-insulation-lbl">Disabled</span>
+          <div onclick="toggleTradeEnabled('insulation')" id="s-trade-insulation-toggle" style="width:44px;height:24px;border-radius:12px;background:var(--border);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;">
+            <div id="s-trade-insulation-knob" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;"></div>
+          </div>
+        </label>
+      </div>
+    </div>
       <div class="stab-card stab-full">
         <div class="stab-card-hdr" onclick="toggleStabCard('insulation-pricing')">
           <span>🏠 Insulation Pricing &amp; Estimator</span>
@@ -2415,6 +2840,19 @@ tr:hover td{background:var(--card);}
     ══════════════════════════════════════════════════════════════════════ -->
     <div id="ptabpane-paint" class="ptab-pane" style="display:none;">
     <div class="stab-grid">
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:0;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);">🎨 Ext. Paint Estimator</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Exterior paint estimates &amp; proposals — enable to show this trade in the estimator</div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex-shrink:0;">
+          <span style="font-size:12px;color:var(--muted);" id="s-trade-paint-lbl">Disabled</span>
+          <div onclick="toggleTradeEnabled('paint')" id="s-trade-paint-toggle" style="width:44px;height:24px;border-radius:12px;background:var(--border);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;">
+            <div id="s-trade-paint-knob" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;"></div>
+          </div>
+        </label>
+      </div>
+    </div>
       <div class="stab-card stab-full">
         <div class="stab-card-hdr" onclick="toggleStabCard('paint-pricing')">
           <span>🎨 Exterior Paint Pricing &amp; Estimator</span>
@@ -2488,6 +2926,19 @@ tr:hover td{background:var(--card);}
     ══════════════════════════════════════════════════════════════════════ -->
     <div id="ptabpane-doors" class="ptab-pane" style="display:none;">
     <div class="stab-grid">
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:0;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);">🚪 Doors Estimator</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Door replacement estimates &amp; proposals — enable to show this trade in the estimator</div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex-shrink:0;">
+          <span style="font-size:12px;color:var(--muted);" id="s-trade-doors-lbl">Disabled</span>
+          <div onclick="toggleTradeEnabled('doors')" id="s-trade-doors-toggle" style="width:44px;height:24px;border-radius:12px;background:var(--border);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;">
+            <div id="s-trade-doors-knob" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;"></div>
+          </div>
+        </label>
+      </div>
+    </div>
       <div class="stab-card stab-full">
         <div class="stab-card-hdr" onclick="toggleStabCard('doors-pricing')">
           <span>🚪 Doors Pricing &amp; Estimator</span>
@@ -3737,6 +4188,348 @@ function restoreSettingsTab(){
     if(t) switchSettingsTab(t);
   }catch(e){}
 }
+// ════════════════════════════════════════════════════════════════════════════
+// MULTI-TRADE ESTIMATOR — Trade toggles, selector, calculators, bundle logic
+// ════════════════════════════════════════════════════════════════════════════
+
+// ── Trade toggle (Settings → Pricing) ────────────────────────────────────────
+function toggleTradeEnabled(tradeId){
+  if(!S.cfg) S.cfg = {};
+  if(!S.cfg.enabledTrades) S.cfg.enabledTrades = {roofing:true};
+  const cur = S.cfg.enabledTrades[tradeId] !== false;
+  S.cfg.enabledTrades[tradeId] = !cur;
+  _updateTradeToggleUI(tradeId, !cur);
+  save();
+  renderTradeSelector();
+  toast((S.cfg.enabledTrades[tradeId] ? '✅' : '⛔') + ' ' + tradeId.charAt(0).toUpperCase()+tradeId.slice(1) + ' ' + (S.cfg.enabledTrades[tradeId] ? 'enabled' : 'disabled'), 'info');
+}
+function _updateTradeToggleUI(tradeId, enabled){
+  const toggle = document.getElementById('s-trade-'+tradeId+'-toggle');
+  const knob   = document.getElementById('s-trade-'+tradeId+'-knob');
+  const lbl    = document.getElementById('s-trade-'+tradeId+'-lbl');
+  if(toggle) toggle.style.background = enabled ? 'var(--accent)' : 'var(--border)';
+  if(knob)   knob.style.left = enabled ? '21px' : '3px';
+  if(lbl)    lbl.textContent = enabled ? 'Enabled' : 'Disabled';
+}
+function refreshAllTradeToggles(){
+  const et = (S.cfg && S.cfg.enabledTrades) || {roofing:true};
+  const ALL_TRADES = ['roofing','solar','fencing','siding','gutters','insulation','paint','doors'];
+  ALL_TRADES.forEach(t => _updateTradeToggleUI(t, et[t] !== false && (t==='roofing' ? true : !!et[t])));
+}
+
+// ── Trade selector (Estimator) ────────────────────────────────────────────────
+const TRADE_META = {
+  roofing:    {label:'🏠 Roofing',       color:'#F25C05'},
+  solar:      {label:'☀️ Solar',          color:'#22C55E'},
+  fencing:    {label:'🪵 Fencing',        color:'#A78BFA'},
+  siding:     {label:'🏗 Siding',         color:'#60A5FA'},
+  gutters:    {label:'🌊 Gutters',        color:'#38BDF8'},
+  insulation: {label:'🏠 Insulation',     color:'#FB923C'},
+  paint:      {label:'🎨 Ext. Paint',     color:'#F472B6'},
+  doors:      {label:'🚪 Doors',          color:'#FBBF24'},
+};
+window._activeTrade = null;
+window._tradeBundle = []; // [{trade, total, details}]
+
+function renderTradeSelector(){
+  const grid = document.getElementById('trade-selector-grid');
+  const empty = document.getElementById('trade-selector-empty');
+  if(!grid) return;
+  const et = (S.cfg && S.cfg.enabledTrades) || {roofing:true};
+  const enabled = Object.keys(TRADE_META).filter(t => {
+    if(t === 'roofing') return et.roofing !== false;
+    return !!et[t];
+  });
+  if(enabled.length === 0){
+    grid.innerHTML = '';
+    if(empty) empty.style.display = '';
+    return;
+  }
+  if(empty) empty.style.display = 'none';
+  grid.innerHTML = enabled.map(t => {
+    const m = TRADE_META[t];
+    const isActive = window._activeTrade === t;
+    return `<button onclick="selectTrade('${t}')" style="padding:12px 8px;border-radius:10px;border:2px solid ${isActive ? m.color : 'var(--border)'};background:${isActive ? 'rgba('+hexToRgb(m.color)+',.12)' : 'var(--card2)'};color:${isActive ? m.color : 'var(--mid)'};font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s;">${m.label}</button>`;
+  }).join('');
+}
+function hexToRgb(hex){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return r+','+g+','+b;
+}
+function selectTrade(tradeId){
+  window._activeTrade = tradeId;
+  renderTradeSelector();
+  // Hide all trade forms
+  ['roofing','solar','fencing','siding','gutters','insulation','paint','doors'].forEach(t=>{
+    const f = document.getElementById('trade-form-'+t);
+    if(f) f.style.display = 'none';
+  });
+  // Show roofing structures + existing form elements for roofing
+  const roofingEls = ['gbb-selector-wrap','price-box-wrap'];
+  roofingEls.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display = tradeId==='roofing' ? '' : 'none';
+  });
+  // Show the structures add button for roofing
+  const addStructBtn = document.querySelector('[onclick="addStructure(0,\'\')"]');
+  if(addStructBtn) addStructBtn.style.display = tradeId==='roofing' ? '' : 'none';
+  const structWrap = document.getElementById('structures-render-wrap');
+  if(structWrap) structWrap.style.display = tradeId==='roofing' ? '' : 'none';
+  // Show selected trade form
+  const form = document.getElementById('trade-form-'+tradeId);
+  if(form) form.style.display = '';
+  // Auto-populate measurements from satellite data
+  autoPopulateTradeMeasurements(tradeId);
+  toast('🔧 '+TRADE_META[tradeId].label+' selected','info');
+}
+function autoPopulateTradeMeasurements(tradeId){
+  // Use last known satellite data (stored in window._lastSolarData)
+  const sd = window._lastSolarData;
+  if(!sd) return;
+  const roofSqft = sd.roofSqft || 0;
+  const perimeterLf = Math.round(Math.sqrt(roofSqft) * 4); // rough perimeter estimate
+  const wallSqft = Math.round(roofSqft * 0.85); // walls ≈ 85% of roof area as rough estimate
+  switch(tradeId){
+    case 'solar':
+      const kwEl = document.getElementById('te-solar-kw');
+      if(kwEl && !kwEl.value && sd.systemKw) { kwEl.value = sd.systemKw; calcTradeSolar(); }
+      const banner = document.getElementById('solar-autocalc-banner');
+      if(banner && sd.systemKw) banner.style.display = '';
+      break;
+    case 'fencing':
+      const fenEl = document.getElementById('te-fen-lf');
+      if(fenEl && !fenEl.value && perimeterLf) { fenEl.value = perimeterLf; calcTradeFencing(); }
+      break;
+    case 'siding':
+      const sidEl = document.getElementById('te-sid-sqft');
+      if(sidEl && !sidEl.value && wallSqft) { sidEl.value = wallSqft; calcTradeSiding(); }
+      break;
+    case 'gutters':
+      const gutEl = document.getElementById('te-gut-lf');
+      if(gutEl && !gutEl.value && perimeterLf) { gutEl.value = perimeterLf; calcTradeGutters(); }
+      break;
+    case 'insulation':
+      const insEl = document.getElementById('te-ins-sqft');
+      if(insEl && !insEl.value && roofSqft) { insEl.value = Math.round(roofSqft * 0.9); calcTradeInsulation(); }
+      break;
+    case 'paint':
+      const pntEl = document.getElementById('te-pnt-sqft');
+      if(pntEl && !pntEl.value && wallSqft) { pntEl.value = wallSqft; calcTradePaint(); }
+      break;
+  }
+}
+
+// ── Auto-calc buttons (trigger satellite lookup then populate) ────────────────
+function autoCalcSolar(){ if(window._lastSolarData && window._lastSolarData.systemKw){ const el=document.getElementById('te-solar-kw'); if(el) el.value=window._lastSolarData.systemKw; calcTradeSolar(); } else toast('🛰 Run a satellite lookup first (enter address above)','warn'); }
+function autoCalcFencing(){ if(window._lastSolarData && window._lastSolarData.roofSqft){ const lf=Math.round(Math.sqrt(window._lastSolarData.roofSqft)*4); const el=document.getElementById('te-fen-lf'); if(el) el.value=lf; calcTradeFencing(); } else toast('🛰 Run a satellite lookup first','warn'); }
+function autoCalcSiding(){ if(window._lastSolarData && window._lastSolarData.roofSqft){ const el=document.getElementById('te-sid-sqft'); if(el) el.value=Math.round(window._lastSolarData.roofSqft*0.85); calcTradeSiding(); } else toast('🛰 Run a satellite lookup first','warn'); }
+function autoCalcGutters(){ if(window._lastSolarData && window._lastSolarData.roofSqft){ const lf=Math.round(Math.sqrt(window._lastSolarData.roofSqft)*4); const el=document.getElementById('te-gut-lf'); if(el) el.value=lf; calcTradeGutters(); } else toast('🛰 Run a satellite lookup first','warn'); }
+function autoCalcInsulation(){ if(window._lastSolarData && window._lastSolarData.roofSqft){ const el=document.getElementById('te-ins-sqft'); if(el) el.value=Math.round(window._lastSolarData.roofSqft*0.9); calcTradeInsulation(); } else toast('🛰 Run a satellite lookup first','warn'); }
+function autoCalcPaint(){ if(window._lastSolarData && window._lastSolarData.roofSqft){ const el=document.getElementById('te-pnt-sqft'); if(el) el.value=Math.round(window._lastSolarData.roofSqft*0.85); calcTradePaint(); } else toast('🛰 Run a satellite lookup first','warn'); }
+
+// ── Trade calculators ─────────────────────────────────────────────────────────
+function _fmtMoney(n){ return '$'+Math.round(n).toLocaleString(); }
+function _applyMargin(base, ovh, mgn){ return base * (1 + (ovh||15)/100) * (1 + (mgn||20)/100); }
+
+function calcTradeSolar(){
+  const c = S.cfg || {};
+  const kw = parseFloat((document.getElementById('te-solar-kw')||{}).value) || 0;
+  const ppw = parseFloat(c.solarPricePerWatt) || 3.50;
+  let total = kw * 1000 * ppw;
+  if((document.getElementById('te-solar-battery')||{}).checked) total += (c.solarBattery||8000);
+  if((document.getElementById('te-solar-panel-upgrade')||{}).checked) total += (c.solarPanelUpgrade||150)*Math.ceil(kw/0.4);
+  if((document.getElementById('te-solar-elec-upgrade')||{}).checked) total += (c.solarElecUpgrade||2500);
+  if((document.getElementById('te-solar-roof-reinforce')||{}).checked) total += (c.solarRoofReinforce||1500);
+  total = _applyMargin(total, c.solarOverhead||12, c.solarMargin||18);
+  // Apply incentives
+  const fedCredit = total * ((c.solarFedCredit||30)/100);
+  const stateRebate = c.solarStateRebate || 0;
+  const utilityRebate = c.solarUtilityRebate || 0;
+  const net = total - fedCredit - stateRebate - utilityRebate;
+  const el = document.getElementById('te-solar-total');
+  if(el) el.textContent = _fmtMoney(net);
+  const monthly = document.getElementById('te-solar-monthly');
+  if(monthly && c.solarMonthlySavings) monthly.textContent = 'Est. monthly savings: $'+(c.solarMonthlySavings||150)+'/mo';
+  const detail = document.getElementById('te-solar-incentives-detail');
+  if(detail) detail.innerHTML = `Federal Tax Credit (${c.solarFedCredit||30}%): -${_fmtMoney(fedCredit)}<br>State Rebate: -${_fmtMoney(stateRebate)}<br>Utility Rebate: -${_fmtMoney(utilityRebate)}<br><strong>Net after incentives: ${_fmtMoney(net)}</strong>`;
+  window._currentTradeTotal = net;
+  updateBundleBar();
+}
+
+function calcTradeFencing(){
+  const c = S.cfg || {};
+  const type = (document.getElementById('te-fen-type')||{}).value || 'wood';
+  const lf = parseFloat((document.getElementById('te-fen-lf')||{}).value) || 0;
+  const plfMap = {wood:c.fenWoodPlf||28, vinyl:c.fenVinylPlf||35, chain:c.fenChainPlf||18, aluminum:c.fenAlumPlf||45, split:c.fenSplitPlf||22, cedar:c.fenCedarPlf||38};
+  let base = lf * (plfMap[type] || 28);
+  if((document.getElementById('te-fen-gate-single')||{}).checked) base += (c.fenGateSingle||350);
+  if((document.getElementById('te-fen-gate-double')||{}).checked) base += (c.fenGateDouble||650);
+  if((document.getElementById('te-fen-removal')||{}).checked) base += lf * (c.fenRemoval||5);
+  const total = _applyMargin(base, c.fenOverhead||15, c.fenMargin||20);
+  const el = document.getElementById('te-fen-total');
+  if(el) el.textContent = _fmtMoney(total);
+  const bd = document.getElementById('te-fen-breakdown');
+  if(bd) bd.textContent = lf+' lf × $'+(plfMap[type]||28)+'/lf';
+  window._currentTradeTotal = total;
+  updateBundleBar();
+}
+
+function calcTradeSiding(){
+  const c = S.cfg || {};
+  const type = (document.getElementById('te-sid-type')||{}).value || 'vinyl';
+  const sqft = parseFloat((document.getElementById('te-sid-sqft')||{}).value) || 0;
+  const psfMap = {vinyl:c.sidVinylPsf||4.50, hardie:c.sidHardiePsf||8.00, wood:c.sidWoodPsf||7.00, engwood:c.sidEngWoodPsf||6.50, metal:c.sidMetalPsf||9.00, stucco:c.sidStuccoPsf||10.00};
+  let base = sqft * (psfMap[type] || 4.50);
+  if((document.getElementById('te-sid-removal')||{}).checked) base += sqft * (c.sidRemoval||1.50);
+  if((document.getElementById('te-sid-housewrap')||{}).checked) base += sqft * (c.sidHousewrap||0.75);
+  if((document.getElementById('te-sid-insulation')||{}).checked) base += sqft * (c.sidInsulation||0.50);
+  const trimLf = parseFloat((document.getElementById('te-sid-trim-lf')||{}).value) || 0;
+  if(trimLf) base += trimLf * (c.sidTrim||6.00);
+  const total = _applyMargin(base, c.sidOverhead||15, c.sidMargin||20);
+  const el = document.getElementById('te-sid-total');
+  if(el) el.textContent = _fmtMoney(total);
+  const bd = document.getElementById('te-sid-breakdown');
+  if(bd) bd.textContent = sqft+' sqft × $'+(psfMap[type]||4.50)+'/sqft';
+  window._currentTradeTotal = total;
+  updateBundleBar();
+}
+
+function calcTradeGutters(){
+  const c = S.cfg || {};
+  const type = (document.getElementById('te-gut-type')||{}).value || 'alum5';
+  const lf = parseFloat((document.getElementById('te-gut-lf')||{}).value) || 0;
+  const ds = parseInt((document.getElementById('te-gut-downspouts')||{}).value) || 0;
+  const plfMap = {alum5:c.gutAlum5||6, alum6:c.gutAlum6||8, seamless:c.gutSeamless||9, copper:c.gutCopper||22, halfrnd:c.gutHalfrnd||10, vinyl:c.gutVinyl||4.50};
+  let base = lf * (plfMap[type] || 6);
+  base += ds * (c.gutDownspout||75);
+  if((document.getElementById('te-gut-guard')||{}).checked) base += lf * (c.gutGuard||5);
+  if((document.getElementById('te-gut-removal')||{}).checked) base += lf * (c.gutRemoval||1.50);
+  if((document.getElementById('te-gut-fascia')||{}).checked) base += lf * (c.gutFascia||8);
+  const total = _applyMargin(base, c.gutOverhead||15, c.gutMargin||20);
+  const el = document.getElementById('te-gut-total');
+  if(el) el.textContent = _fmtMoney(total);
+  const bd = document.getElementById('te-gut-breakdown');
+  if(bd) bd.textContent = lf+' lf × $'+(plfMap[type]||6)+'/lf + '+ds+' downspouts';
+  window._currentTradeTotal = total;
+  updateBundleBar();
+}
+
+function calcTradeInsulation(){
+  const c = S.cfg || {};
+  const type = (document.getElementById('te-ins-type')||{}).value || 'blowR30';
+  const sqft = parseFloat((document.getElementById('te-ins-sqft')||{}).value) || 0;
+  const psfMap = {blowR30:c.insBlowR30||1.20, blowR38:c.insBlowR38||1.50, cellR30:c.insCellR30||1.10, cellR38:c.insCellR38||1.40, foamOpen:c.insFoamOpen||1.50, foamClosed:c.insFoamClosed||3.00, battR13:c.insBattR13||0.65, battR19:c.insBattR19||0.85};
+  let base = sqft * (psfMap[type] || 1.20);
+  if((document.getElementById('te-ins-removal')||{}).checked) base += sqft * (c.insRemoval||0.75);
+  if((document.getElementById('te-ins-airsealing')||{}).checked) base += (c.insAirsealing||350);
+  if((document.getElementById('te-ins-vapor')||{}).checked) base += sqft * (c.insVapor||0.45);
+  const total = _applyMargin(base, c.insOverhead||15, c.insMargin||20);
+  const el = document.getElementById('te-ins-total');
+  if(el) el.textContent = _fmtMoney(total);
+  const bd = document.getElementById('te-ins-breakdown');
+  if(bd) bd.textContent = sqft+' sqft × $'+(psfMap[type]||1.20)+'/sqft';
+  window._currentTradeTotal = total;
+  updateBundleBar();
+}
+
+function calcTradePaint(){
+  const c = S.cfg || {};
+  const surface = (document.getElementById('te-pnt-surface')||{}).value || 'siding1c';
+  const sqft = parseFloat((document.getElementById('te-pnt-sqft')||{}).value) || 0;
+  const trimLf = parseFloat((document.getElementById('te-pnt-trim-lf')||{}).value) || 0;
+  const psfMap = {siding1c:c.pntSiding1c||1.50, siding2c:c.pntSiding2c||2.25, deck1c:c.pntDeck1c||1.75, deck2c:c.pntDeck2c||2.75, masonry:c.pntMasonry||2.50};
+  let base = sqft * (psfMap[surface] || 1.50);
+  if(trimLf) base += trimLf * (c.pntTrim1c||2.00);
+  if((document.getElementById('te-pnt-powerwash')||{}).checked) base += sqft * (c.pntPowerwash||0.35);
+  if((document.getElementById('te-pnt-primer')||{}).checked) base += sqft * (c.pntPrimer||0.50);
+  if((document.getElementById('te-pnt-garage-door')||{}).checked) base += (c.pntGarageDoor||150);
+  const total = _applyMargin(base, c.pntOverhead||15, c.pntMargin||20);
+  const el = document.getElementById('te-pnt-total');
+  if(el) el.textContent = _fmtMoney(total);
+  const bd = document.getElementById('te-pnt-breakdown');
+  if(bd) bd.textContent = sqft+' sqft × $'+(psfMap[surface]||1.50)+'/sqft';
+  window._currentTradeTotal = total;
+  updateBundleBar();
+}
+
+function calcTradeDoors(){
+  const c = S.cfg || {};
+  const qty = (id) => parseInt((document.getElementById(id)||{}).value) || 0;
+  let base = 0;
+  base += qty('te-dor-steel-entry') * (c.dorSteelEntry||850);
+  base += qty('te-dor-fiber-entry') * (c.dorFiberEntry||1200);
+  base += qty('te-dor-wood-entry')  * (c.dorWoodEntry||1500);
+  base += qty('te-dor-storm')       * (c.dorStormStd||450);
+  base += qty('te-dor-garage-single') * (c.dorGarageSingle||1100);
+  base += qty('te-dor-garage-double') * (c.dorGarageDouble||1800);
+  const totalDoors = qty('te-dor-steel-entry')+qty('te-dor-fiber-entry')+qty('te-dor-wood-entry')+qty('te-dor-storm')+qty('te-dor-garage-single')+qty('te-dor-garage-double');
+  if((document.getElementById('te-dor-hardware')||{}).checked) base += totalDoors * (c.dorHardware||125);
+  if((document.getElementById('te-dor-weatherstrip')||{}).checked) base += totalDoors * (c.dorWeatherstrip||75);
+  if((document.getElementById('te-dor-opener')||{}).checked) base += (qty('te-dor-garage-single')+qty('te-dor-garage-double')) * (c.dorOpener||350);
+  const total = _applyMargin(base, c.dorOverhead||15, c.dorMargin||20);
+  const el = document.getElementById('te-dor-total');
+  if(el) el.textContent = _fmtMoney(total);
+  const bd = document.getElementById('te-dor-breakdown');
+  if(bd) bd.textContent = totalDoors+' door'+(totalDoors!==1?'s':'')+' total';
+  window._currentTradeTotal = total;
+  updateBundleBar();
+}
+
+// ── Bundle bar ────────────────────────────────────────────────────────────────
+function updateBundleBar(){
+  const bar = document.getElementById('trade-bundle-bar');
+  if(!bar) return;
+  if(!window._tradeBundle || window._tradeBundle.length === 0){ bar.style.display='none'; return; }
+  bar.style.display = '';
+  const list = document.getElementById('trade-bundle-list');
+  const totalEl = document.getElementById('trade-bundle-total');
+  let grand = 0;
+  const lines = window._tradeBundle.map(b => {
+    grand += b.total;
+    return `<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>${TRADE_META[b.trade]?TRADE_META[b.trade].label:b.trade}</span><span style="font-weight:700;">${_fmtMoney(b.total)}</span></div>`;
+  });
+  if(list) list.innerHTML = lines.join('');
+  if(totalEl) totalEl.textContent = _fmtMoney(grand);
+}
+function addAnotherTrade(){
+  // Commit current trade to bundle
+  if(window._activeTrade && window._currentTradeTotal > 0){
+    const existing = (window._tradeBundle||[]).findIndex(b=>b.trade===window._activeTrade);
+    const entry = {trade:window._activeTrade, total:window._currentTradeTotal};
+    if(existing >= 0) window._tradeBundle[existing] = entry;
+    else window._tradeBundle.push(entry);
+  }
+  // Reset trade selector so rep can pick another
+  window._activeTrade = null;
+  window._currentTradeTotal = 0;
+  renderTradeSelector();
+  ['roofing','solar','fencing','siding','gutters','insulation','paint','doors'].forEach(t=>{
+    const f=document.getElementById('trade-form-'+t); if(f) f.style.display='none';
+  });
+  updateBundleBar();
+  toast('✅ Trade added to bundle — select another trade','success');
+}
+
+// ── Extend saveEstimateNow to capture trade data ──────────────────────────────
+const _origSaveEstimateNow = typeof saveEstimateNow === 'function' ? saveEstimateNow : null;
+// We patch saveEstimateNow after it's defined — see _patchSaveEstimate() called on load
+
+function _getTradeEstimateData(){
+  const trade = window._activeTrade || 'roofing';
+  const bundle = (window._tradeBundle && window._tradeBundle.length > 0) ? [...window._tradeBundle] : null;
+  // Add current trade to bundle snapshot if not already there
+  if(bundle && window._activeTrade && window._currentTradeTotal > 0){
+    const exists = bundle.findIndex(b=>b.trade===window._activeTrade);
+    if(exists < 0) bundle.push({trade:window._activeTrade, total:window._currentTradeTotal});
+  }
+  const grandTotal = bundle ? bundle.reduce((s,b)=>s+b.total,0) : (window._currentTradeTotal||0);
+  return { trade, bundle, grandTotal };
+}
+
+// ── Store last solar data for auto-calc ──────────────────────────────────────
+// Hook into existing solar data population — store roofSqft and systemKw
+const _origPopulateSolarBanner = typeof populateSolarBanner === 'function' ? populateSolarBanner : null;
+
 function switchPricingTab(tab){
   document.querySelectorAll('#pricing-subtabs .stab-tab').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.ptab-pane').forEach(p=>{p.classList.remove('active');p.style.display='none';});
@@ -12342,6 +13135,9 @@ function openSettings(){
   _sset('s-sid-fin-term', c.sidFinTerm||60);
   // Restore pricing sub-tab
   restorePricingTab();
+  // Refresh trade toggles and selector
+  if(typeof refreshAllTradeToggles==='function') refreshAllTradeToggles();
+  if(typeof renderTradeSelector==='function') renderTradeSelector();
   const repVidEl=document.getElementById('s-rep-video-url'); if(repVidEl){ repVidEl.value=c.repVideoUrl||''; updateRepVideoPreview(c.repVideoUrl||''); }
   const offSolarEl=document.getElementById('s-off-solar'); if(offSolarEl) offSolarEl.checked=!!c.offerSolar;
   // Show/hide solar add-on row in estimate builder
