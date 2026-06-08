@@ -1883,112 +1883,104 @@ tr:hover td{background:var(--card);}
 
     <!-- ══ TAB: PRICING ══ -->
     <div class="stab-tab-pane" id="stab-tabpane-pricing">
+
+    <!-- ── Pricing Sub-Tabs ── -->
+    <div class="stab-tabs" id="pricing-subtabs" style="margin-bottom:18px;">
+      <button class="stab-tab active" id="ptab-roofing"  onclick="switchPricingTab('roofing')">🏠 Roofing</button>
+      <button class="stab-tab"        id="ptab-solar"    onclick="switchPricingTab('solar')">☀️ Solar</button>
+      <button class="stab-tab"        id="ptab-fencing"  onclick="switchPricingTab('fencing')">🪵 Fencing</button>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         SUB-TAB: ROOFING
+    ══════════════════════════════════════════════════════════════════════ -->
+    <div id="ptabpane-roofing" class="ptab-pane active">
     <div class="stab-grid">
       <div class="stab-card stab-full">
         <div class="stab-card-hdr" onclick="toggleStabCard('pricing')">
-          <span>&#128176; Pricing &amp; Estimator</span>
-          <span class="stab-chevron" id="stab-chevron-pricing">&#9662;</span>
+          <span>🏠 Roofing Pricing &amp; Estimator</span>
+          <span class="stab-chevron" id="stab-chevron-pricing">▾</span>
         </div>
         <div class="stab-card-body" id="stab-body-pricing">
           <div class="stab-section-hdr">Materials Offered to Homeowner</div>
           <div style="background:var(--card2);border-radius:8px;padding:12px 14px;margin-bottom:14px;">
             <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Check the materials you want homeowners to see and choose from on their estimate page.</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);">
-                <input type="checkbox" id="s-mat-arch" style="accent-color:var(--accent);width:15px;height:15px;" checked>
-                &#127968; Architectural
-              </label>
-              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);">
-                <input type="checkbox" id="s-mat-des" style="accent-color:var(--accent);width:15px;height:15px;">
-                &#128142; Designer/Premium
-              </label>
-              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);">
-                <input type="checkbox" id="s-mat-impact" style="accent-color:var(--accent);width:15px;height:15px;">
-                &#127961; Impact-Resistant
-              </label>
-              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);">
-                <input type="checkbox" id="s-mat-metal" style="accent-color:var(--accent);width:15px;height:15px;">
-                &#128737; Metal Roofing
-              </label>
-              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);">
-                <input type="checkbox" id="s-mat-flat" style="accent-color:var(--accent);width:15px;height:15px;">
-                &#127783; Flat / TPO / EPDM
-              </label>
-              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);">
-                <input type="checkbox" id="s-mat-tile" style="accent-color:var(--accent);width:15px;height:15px;">
-                &#127963; Tile / Clay
-              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);"><input type="checkbox" id="s-mat-arch"   style="accent-color:var(--accent);width:15px;height:15px;" checked> 🏠 Architectural</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);"><input type="checkbox" id="s-mat-des"    style="accent-color:var(--accent);width:15px;height:15px;"> 💎 Designer/Premium</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);"><input type="checkbox" id="s-mat-impact" style="accent-color:var(--accent);width:15px;height:15px;"> 🏙 Impact-Resistant</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);"><input type="checkbox" id="s-mat-metal"  style="accent-color:var(--accent);width:15px;height:15px;"> 🛡 Metal Roofing</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);"><input type="checkbox" id="s-mat-flat"   style="accent-color:var(--accent);width:15px;height:15px;"> 🌧 Flat / TPO / EPDM</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);"><input type="checkbox" id="s-mat-tile"   style="accent-color:var(--accent);width:15px;height:15px;"> 🏛 Tile / Clay</label>
             </div>
           </div>
           <div class="stab-section-hdr">Pricing Mode</div>
           <div style="display:flex;gap:8px;margin-bottom:14px;">
-            <button id="s-mode-persq" onclick="setPricingMode('per_square')" style="flex:1;padding:10px;border-radius:8px;border:2px solid var(--accent);background:var(--accent);color:#fff;font-weight:700;font-size:13px;cursor:pointer;">&#128290; Price Per Square</button>
-            <button id="s-mode-detailed" onclick="setPricingMode('detailed')" style="flex:1;padding:10px;border-radius:8px;border:2px solid var(--border);background:transparent;color:var(--mid);font-weight:700;font-size:13px;cursor:pointer;">&#128203; Detailed Line Items</button>
+            <button id="s-mode-persq"    onclick="setPricingMode('per_square')" style="flex:1;padding:10px;border-radius:8px;border:2px solid var(--accent);background:var(--accent);color:#fff;font-weight:700;font-size:13px;cursor:pointer;">🔢 Price Per Square</button>
+            <button id="s-mode-detailed" onclick="setPricingMode('detailed')"   style="flex:1;padding:10px;border-radius:8px;border:2px solid var(--border);background:transparent;color:var(--mid);font-weight:700;font-size:13px;cursor:pointer;">📋 Detailed Line Items</button>
           </div>
           <input type="hidden" id="s-pricing-mode-val" value="detailed">
+          <!-- Per-Square Mode -->
           <div id="s-persq-fields" style="display:none;margin-bottom:14px;">
-            <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:9px 13px;font-size:12px;color:var(--mid);margin-bottom:12px;">&#128161; Set your all-in $/sq for each material. Formula: Squares × $/sq = Total. The homeowner sees pricing for each option.</div>
+            <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:9px 13px;font-size:12px;color:var(--mid);margin-bottom:12px;">💡 Set your all-in $/sq for each material. Formula: Squares × $/sq = Total.</div>
             <div class="frow">
-              <div class="fg"><label class="fl">&#127968; Architectural ($/sq)</label><input type="number" class="fi" id="s-pps-arch" placeholder="450" min="0"></div>
-              <div class="fg"><label class="fl">&#128142; Designer/Premium ($/sq)</label><input type="number" class="fi" id="s-pps-des" placeholder="580" min="0"></div>
+              <div class="fg"><label class="fl">Architectural ($/sq)</label><input type="number" class="fi" id="s-pps-arch"   placeholder="450"></div>
+              <div class="fg"><label class="fl">Designer/Premium ($/sq)</label><input type="number" class="fi" id="s-pps-des"  placeholder="580"></div>
             </div>
             <div class="frow">
-              <div class="fg"><label class="fl">&#127961; Impact-Resistant ($/sq)</label><input type="number" class="fi" id="s-pps-impact" placeholder="520" min="0"></div>
-              <div class="fg"><label class="fl">&#128737; Metal Roofing ($/sq)</label><input type="number" class="fi" id="s-pps-metal" placeholder="950" min="0"></div>
+              <div class="fg"><label class="fl">Impact-Resistant ($/sq)</label><input type="number" class="fi" id="s-pps-impact" placeholder="520"></div>
+              <div class="fg"><label class="fl">Metal Roofing ($/sq)</label><input type="number" class="fi" id="s-pps-metal"  placeholder="950"></div>
             </div>
             <div class="frow">
-              <div class="fg"><label class="fl">&#127783; Flat/TPO/EPDM ($/sq)</label><input type="number" class="fi" id="s-pps-flat" placeholder="400" min="0"></div>
-              <div class="fg"><label class="fl">&#127963; Tile/Clay ($/sq)</label><input type="number" class="fi" id="s-pps-tile" placeholder="1400" min="0"></div>
+              <div class="fg"><label class="fl">Flat/TPO/EPDM ($/sq)</label><input type="number" class="fi" id="s-pps-flat"  placeholder="400"></div>
+              <div class="fg"><label class="fl">Tile/Clay ($/sq)</label><input type="number" class="fi" id="s-pps-tile"  placeholder="1400"></div>
             </div>
-            <input type="hidden" id="s-pps" value="450">
           </div>
+          <!-- Detailed Mode -->
           <div id="s-detailed-fields">
-          <div class="stab-section-hdr" style="margin-top:4px;">Material Cost Per Square (Labor + Material)</div>
-          <div class="frow">
-            <div class="fg"><label class="fl">Architectural ($/sq)</label><input type="number" class="fi" id="s-carch" placeholder="300"></div>
-            <div class="fg"><label class="fl">Designer/Premium ($/sq)</label><input type="number" class="fi" id="s-cdes" placeholder="420"></div>
-          </div>
-          <div class="frow">
-            <div class="fg"><label class="fl">Impact-Resistant ($/sq)</label><input type="number" class="fi" id="s-cimpact" placeholder="380"></div>
-            <div class="fg"><label class="fl">Metal Roofing ($/sq)</label><input type="number" class="fi" id="s-cmetal" placeholder="680"></div>
-          </div>
-          <div class="frow">
-            <div class="fg"><label class="fl">Flat/TPO/EPDM ($/sq)</label><input type="number" class="fi" id="s-cflat" placeholder="320"></div>
-            <div class="fg"><label class="fl">Tile/Clay ($/sq)</label><input type="number" class="fi" id="s-ctile" placeholder="950"></div>
-          </div>
-          <div class="stab-section-hdr" style="margin-top:16px;">Per-Square Line Items</div>
-          <div class="frow">
-            <div class="fg"><label class="fl">Tear-off ($/sq)</label><input type="number" class="fi" id="s-tear" placeholder="75"></div>
-          </div>
-          <div class="frow">
-            <div class="fg"><label class="fl">Felt/Synthetic ($/sq)</label><input type="number" class="fi" id="s-felt" placeholder="22"></div>
-            <div class="fg"><label class="fl">Dumpster (flat $)</label><input type="number" class="fi" id="s-dump" placeholder="450"></div>
-          </div>
-          <div class="stab-section-hdr" style="margin-top:16px;">Add-On Pricing</div>
-          <div class="frow">
-            <div class="fg"><label class="fl">Skylight ($/each)</label><input type="number" class="fi" id="s-sky" placeholder="375"></div>
-            <div class="fg"><label class="fl">Chimney Flashing ($)</label><input type="number" class="fi" id="s-chim" placeholder="295"></div>
-          </div>
-          <div class="frow">
-            <div class="fg"><label class="fl">Gutters ($/lf)</label><input type="number" class="fi" id="s-gut" placeholder="9"></div>
-            <div class="fg"><label class="fl">Solar ($/watt) <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; used when kW entered</span></label><input type="number" class="fi" id="s-solar-pw" placeholder="3.50" step="0.05" min="0"></div>
-          </div>
-          <div class="frow">
-            <div class="fg"><label class="fl">Ice &amp; Water Shield ($/sq)</label><input type="number" class="fi" id="s-ice" placeholder="42"></div>
-            <div class="fg"></div>
-          </div>
-          <div class="stab-section-hdr" style="margin-top:16px;">Overhead &amp; Margin</div>
-          <div class="frow">
-            <div class="fg"><label class="fl">Overhead %</label><input type="number" class="fi" id="s-ovh" placeholder="15"></div>
-            <div class="fg"><label class="fl">Profit Margin %</label><input type="number" class="fi" id="s-mgn" placeholder="20"></div>
-          </div>
-          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:15px;color:var(--mid);margin-top:4px;">
-            &#128161; Formula: (Material+Labor+Tearoff+Accessories) &times; (1 + Overhead%) &times; (1 + Margin%) + Tax = Estimate
-          </div>
-          <div class="frow" style="margin-top:10px;">
-            <div class="fg"><label class="fl">Sales Tax % <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; added to proposal total (0 = no tax)</span></label><input type="number" class="fi" id="s-tax" placeholder="0" step="0.01" min="0" max="30"></div>
-            <div class="fg"></div>
-          </div>
+            <div class="stab-section-hdr">Material Cost Per Square (Labor + Material)</div>
+            <div class="frow">
+              <div class="fg"><label class="fl">Architectural ($/sq)</label><input type="number" class="fi" id="s-carch"   placeholder="300"></div>
+              <div class="fg"><label class="fl">Designer/Premium ($/sq)</label><input type="number" class="fi" id="s-cdes"  placeholder="420"></div>
+            </div>
+            <div class="frow">
+              <div class="fg"><label class="fl">Impact-Resistant ($/sq)</label><input type="number" class="fi" id="s-cimpact" placeholder="380"></div>
+              <div class="fg"><label class="fl">Metal Roofing ($/sq)</label><input type="number" class="fi" id="s-cmetal" placeholder="680"></div>
+            </div>
+            <div class="frow">
+              <div class="fg"><label class="fl">Flat/TPO/EPDM ($/sq)</label><input type="number" class="fi" id="s-cflat" placeholder="320"></div>
+              <div class="fg"><label class="fl">Tile/Clay ($/sq)</label><input type="number" class="fi" id="s-ctile" placeholder="950"></div>
+            </div>
+            <div class="stab-section-hdr" style="margin-top:16px;">Per-Square Line Items</div>
+            <div class="frow">
+              <div class="fg"><label class="fl">Tear-off ($/sq)</label><input type="number" class="fi" id="s-tear" placeholder="75"></div>
+              <div class="fg"></div>
+            </div>
+            <div class="frow">
+              <div class="fg"><label class="fl">Felt/Synthetic ($/sq)</label><input type="number" class="fi" id="s-felt" placeholder="22"></div>
+              <div class="fg"><label class="fl">Dumpster (flat $)</label><input type="number" class="fi" id="s-dump" placeholder="450"></div>
+            </div>
+            <div class="stab-section-hdr" style="margin-top:16px;">Add-On Pricing</div>
+            <div class="frow">
+              <div class="fg"><label class="fl">Skylight ($/each)</label><input type="number" class="fi" id="s-sky"  placeholder="375"></div>
+              <div class="fg"><label class="fl">Chimney Flashing ($)</label><input type="number" class="fi" id="s-chim" placeholder="295"></div>
+            </div>
+            <div class="frow">
+              <div class="fg"><label class="fl">Gutters ($/lf)</label><input type="number" class="fi" id="s-gut" placeholder="9"></div>
+              <div class="fg"><label class="fl">Ice &amp; Water Shield ($/sq)</label><input type="number" class="fi" id="s-ice" placeholder="42"></div>
+            </div>
+            <div class="stab-section-hdr" style="margin-top:16px;">Overhead &amp; Margin</div>
+            <div class="frow">
+              <div class="fg"><label class="fl">Overhead %</label><input type="number" class="fi" id="s-ovh" placeholder="15"></div>
+              <div class="fg"><label class="fl">Profit Margin %</label><input type="number" class="fi" id="s-mgn" placeholder="20"></div>
+            </div>
+            <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:13px;color:var(--mid);margin-top:4px;">
+              💡 Formula: (Material+Labor+Tearoff+Accessories) × (1 + Overhead%) × (1 + Margin%) + Tax = Estimate
+            </div>
+            <div class="frow" style="margin-top:10px;">
+              <div class="fg"><label class="fl">Sales Tax % <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— added to proposal total (0 = no tax)</span></label><input type="number" class="fi" id="s-tax" placeholder="0" step="0.01" min="0" max="30"></div>
+              <div class="fg"></div>
+            </div>
           </div><!-- /s-detailed-fields -->
           <div class="stab-section-hdr" style="margin-top:16px;">Financing Options</div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
@@ -2012,16 +2004,172 @@ tr:hover td{background:var(--card);}
           <div class="frow">
             <div class="fg"><label class="fl">Down Payment %</label><input type="number" class="fi" id="s-fin-down" placeholder="0" value="0" min="0" max="50"></div>
             <div class="fg" style="display:flex;align-items:flex-end;padding-bottom:2px;">
-              <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:8px 12px;font-size:15px;color:var(--mid);width:100%;">
-                &#128161; Preview: <strong id="fin-preview-val" style="color:var(--accent);">&#8212;</strong>/mo
+              <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:8px 12px;font-size:13px;color:var(--mid);width:100%;">
+                💡 Preview: <strong id="fin-preview-val" style="color:var(--accent);">—</strong>/mo
               </div>
             </div>
           </div>
         </div>
       </div>
+    </div><!-- /stab-grid roofing -->
+    </div><!-- /ptabpane-roofing -->
 
-    </div><!-- /stab-grid pricing -->
+    <!-- ══════════════════════════════════════════════════════════════════════
+         SUB-TAB: SOLAR
+    ══════════════════════════════════════════════════════════════════════ -->
+    <div id="ptabpane-solar" class="ptab-pane" style="display:none;">
+    <div class="stab-grid">
+      <div class="stab-card stab-full">
+        <div class="stab-card-hdr" onclick="toggleStabCard('solar-pricing')">
+          <span>☀️ Solar Pricing &amp; Estimator</span>
+          <span class="stab-chevron" id="stab-chevron-solar-pricing">▾</span>
+        </div>
+        <div class="stab-card-body" id="stab-body-solar-pricing">
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:13px;color:var(--mid);margin-bottom:16px;">
+            ☀️ Solar estimates use <strong>price per watt</strong>. The estimator multiplies system size (kW) × 1000 × $/watt to calculate the total.
+          </div>
+          <div class="stab-section-hdr">System Pricing</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Price Per Watt ($)</label><input type="number" class="fi" id="s-solar-pw" placeholder="3.50" step="0.05" min="0"></div>
+            <div class="fg"><label class="fl">Min System Size (kW)</label><input type="number" class="fi" id="s-solar-min-kw" placeholder="4" step="0.5" min="0"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Max System Size (kW)</label><input type="number" class="fi" id="s-solar-max-kw" placeholder="20" step="0.5" min="0"></div>
+            <div class="fg"><label class="fl">Avg Install Time (days)</label><input type="number" class="fi" id="s-solar-install-days" placeholder="2" min="1"></div>
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Add-On Costs</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Battery Storage (flat $)</label><input type="number" class="fi" id="s-solar-battery" placeholder="8000"></div>
+            <div class="fg"><label class="fl">Panel Upgrade ($/panel)</label><input type="number" class="fi" id="s-solar-panel-upgrade" placeholder="150"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Electrical Upgrade (flat $)</label><input type="number" class="fi" id="s-solar-elec-upgrade" placeholder="2500"></div>
+            <div class="fg"><label class="fl">Roof Reinforcement (flat $)</label><input type="number" class="fi" id="s-solar-roof-reinforce" placeholder="1500"></div>
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Incentives &amp; Rebates (shown on estimate)</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Federal Tax Credit %</label><input type="number" class="fi" id="s-solar-fed-credit" placeholder="30" min="0" max="100"></div>
+            <div class="fg"><label class="fl">State Rebate (flat $)</label><input type="number" class="fi" id="s-solar-state-rebate" placeholder="0"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Utility Rebate (flat $)</label><input type="number" class="fi" id="s-solar-utility-rebate" placeholder="0"></div>
+            <div class="fg"><label class="fl">Avg Monthly Savings ($)</label><input type="number" class="fi" id="s-solar-monthly-savings" placeholder="150"></div>
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Overhead &amp; Margin</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Overhead %</label><input type="number" class="fi" id="s-solar-ovh" placeholder="12"></div>
+            <div class="fg"><label class="fl">Profit Margin %</label><input type="number" class="fi" id="s-solar-mgn" placeholder="18"></div>
+          </div>
+          <div class="frow" style="margin-top:10px;">
+            <div class="fg"><label class="fl">Sales Tax % <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— added to proposal total (0 = no tax)</span></label><input type="number" class="fi" id="s-solar-tax" placeholder="0" step="0.01" min="0" max="30"></div>
+            <div class="fg"></div>
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Financing Options</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <input type="checkbox" id="s-solar-fin-enabled" style="accent-color:var(--accent);width:16px;height:16px;" checked>
+            <label for="s-solar-fin-enabled" style="font-size:13px;font-weight:700;color:var(--mid);cursor:pointer;">Show financing on solar estimate <span style="font-weight:400;color:var(--muted);font-size:11px;">(auto-calculates)</span></label>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">APR %</label><input type="number" class="fi" id="s-solar-fin-apr" placeholder="4.99" step="0.01" value="4.99"></div>
+            <div class="fg"><label class="fl">Term (months)</label>
+              <select class="fs" id="s-solar-fin-term">
+                <option value="60">60 months (5 yr)</option>
+                <option value="120">120 months (10 yr)</option>
+                <option value="180" selected>180 months (15 yr)</option>
+                <option value="240">240 months (20 yr)</option>
+                <option value="300">300 months (25 yr)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /stab-grid solar -->
+    </div><!-- /ptabpane-solar -->
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         SUB-TAB: FENCING
+    ══════════════════════════════════════════════════════════════════════ -->
+    <div id="ptabpane-fencing" class="ptab-pane" style="display:none;">
+    <div class="stab-grid">
+      <div class="stab-card stab-full">
+        <div class="stab-card-hdr" onclick="toggleStabCard('fencing-pricing')">
+          <span>🪵 Fencing Pricing &amp; Estimator</span>
+          <span class="stab-chevron" id="stab-chevron-fencing-pricing">▾</span>
+        </div>
+        <div class="stab-card-body" id="stab-body-fencing-pricing">
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:13px;color:var(--mid);margin-bottom:16px;">
+            🪵 Fencing estimates use <strong>price per linear foot</strong>. The estimator multiplies linear footage × $/lf to calculate the total.
+          </div>
+          <div class="stab-section-hdr">Fence Types Offered</div>
+          <div style="background:var(--card2);border-radius:8px;padding:12px 14px;margin-bottom:14px;">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Check the fence types you offer. Each gets its own price per linear foot.</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);"><input type="checkbox" id="s-fen-wood"    style="accent-color:var(--accent);width:15px;height:15px;" checked> 🪵 Wood</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);"><input type="checkbox" id="s-fen-vinyl"   style="accent-color:var(--accent);width:15px;height:15px;"> ⬜ Vinyl / PVC</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);"><input type="checkbox" id="s-fen-chain"   style="accent-color:var(--accent);width:15px;height:15px;"> 🔗 Chain Link</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);"><input type="checkbox" id="s-fen-aluminum" style="accent-color:var(--accent);width:15px;height:15px;"> 🏗 Aluminum / Iron</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);"><input type="checkbox" id="s-fen-split"   style="accent-color:var(--accent);width:15px;height:15px;"> 🌲 Split Rail</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);"><input type="checkbox" id="s-fen-cedar"   style="accent-color:var(--accent);width:15px;height:15px;"> 🌳 Cedar / Redwood</label>
+            </div>
+          </div>
+          <div class="stab-section-hdr">Price Per Linear Foot (Labor + Material)</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Wood ($/lf)</label><input type="number" class="fi" id="s-fen-wood-plf"    placeholder="28"></div>
+            <div class="fg"><label class="fl">Vinyl / PVC ($/lf)</label><input type="number" class="fi" id="s-fen-vinyl-plf"   placeholder="35"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Chain Link ($/lf)</label><input type="number" class="fi" id="s-fen-chain-plf"   placeholder="18"></div>
+            <div class="fg"><label class="fl">Aluminum / Iron ($/lf)</label><input type="number" class="fi" id="s-fen-alum-plf"    placeholder="45"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Split Rail ($/lf)</label><input type="number" class="fi" id="s-fen-split-plf"   placeholder="22"></div>
+            <div class="fg"><label class="fl">Cedar / Redwood ($/lf)</label><input type="number" class="fi" id="s-fen-cedar-plf"   placeholder="38"></div>
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Add-On Pricing</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Gate — Single ($/each)</label><input type="number" class="fi" id="s-fen-gate-single" placeholder="350"></div>
+            <div class="fg"><label class="fl">Gate — Double ($/each)</label><input type="number" class="fi" id="s-fen-gate-double" placeholder="650"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Old Fence Removal ($/lf)</label><input type="number" class="fi" id="s-fen-removal" placeholder="5"></div>
+            <div class="fg"><label class="fl">Post Setting — Concrete ($/post)</label><input type="number" class="fi" id="s-fen-post-concrete" placeholder="25"></div>
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Overhead &amp; Margin</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Overhead %</label><input type="number" class="fi" id="s-fen-ovh" placeholder="15"></div>
+            <div class="fg"><label class="fl">Profit Margin %</label><input type="number" class="fi" id="s-fen-mgn" placeholder="20"></div>
+          </div>
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:13px;color:var(--mid);margin-top:4px;">
+            💡 Formula: (Linear Ft × $/lf + Gates + Removal) × (1 + Overhead%) × (1 + Margin%) + Tax = Estimate
+          </div>
+          <div class="frow" style="margin-top:10px;">
+            <div class="fg"><label class="fl">Sales Tax % <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— added to proposal total (0 = no tax)</span></label><input type="number" class="fi" id="s-fen-tax" placeholder="0" step="0.01" min="0" max="30"></div>
+            <div class="fg"></div>
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Financing Options</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <input type="checkbox" id="s-fen-fin-enabled" style="accent-color:var(--accent);width:16px;height:16px;" checked>
+            <label for="s-fen-fin-enabled" style="font-size:13px;font-weight:700;color:var(--mid);cursor:pointer;">Show financing on fencing estimate <span style="font-weight:400;color:var(--muted);font-size:11px;">(auto-calculates)</span></label>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">APR %</label><input type="number" class="fi" id="s-fen-fin-apr" placeholder="9.99" step="0.01" value="9.99"></div>
+            <div class="fg"><label class="fl">Term (months)</label>
+              <select class="fs" id="s-fen-fin-term">
+                <option value="24">24 months (2 yr)</option>
+                <option value="36">36 months (3 yr)</option>
+                <option value="48">48 months (4 yr)</option>
+                <option value="60" selected>60 months (5 yr)</option>
+                <option value="84">84 months (7 yr)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /stab-grid fencing -->
+    </div><!-- /ptabpane-fencing -->
+
     </div><!-- /stab-tab-pane pricing -->
+    <!-- ══ TAB: MARKETING ══
 
     <!-- ══ TAB: MARKETING ══ -->
     <div class="stab-tab-pane" id="stab-tabpane-marketing">
@@ -3188,6 +3336,21 @@ function restoreSettingsTab(){
   try{
     const t=localStorage.getItem('bd_settings_tab');
     if(t) switchSettingsTab(t);
+  }catch(e){}
+}
+function switchPricingTab(tab){
+  document.querySelectorAll('#pricing-subtabs .stab-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.ptab-pane').forEach(p=>{p.classList.remove('active');p.style.display='none';});
+  const btn=document.getElementById('ptab-'+tab);
+  const pane=document.getElementById('ptabpane-'+tab);
+  if(btn) btn.classList.add('active');
+  if(pane){pane.classList.add('active');pane.style.display='';}
+  try{ localStorage.setItem('bd_pricing_tab', tab); }catch(e){}
+}
+function restorePricingTab(){
+  try{
+    const t=localStorage.getItem('bd_pricing_tab');
+    if(t) switchPricingTab(t);
   }catch(e){}
 }
 function toggleStabCard(name){
@@ -11671,7 +11834,52 @@ function openSettings(){
   document.getElementById('s-sky').value=c.costSkylight||375;
   document.getElementById('s-chim').value=c.costChimney||295;
   document.getElementById('s-gut').value=c.costGutter||9;
-  const solarPwEl=document.getElementById('s-solar-pw'); if(solarPwEl) solarPwEl.value=c.costSolarPerWatt||3.50;
+  const solarPwEl=document.getElementById('s-solar-pw'); if(solarPwEl) solarPwEl.value=c.solarPricePerWatt||c.costSolarPerWatt||3.50;
+  // ── Load Solar pricing fields ──
+  const _sset=(id,val)=>{const e=document.getElementById(id);if(e)e.value=val;};
+  const _sck=(id,val)=>{const e=document.getElementById(id);if(e)e.checked=!!val;};
+  _sset('s-solar-min-kw', c.solarMinKw||4);
+  _sset('s-solar-max-kw', c.solarMaxKw||20);
+  _sset('s-solar-install-days', c.solarInstallDays||2);
+  _sset('s-solar-battery', c.solarBattery||8000);
+  _sset('s-solar-panel-upgrade', c.solarPanelUpgrade||150);
+  _sset('s-solar-elec-upgrade', c.solarElecUpgrade||2500);
+  _sset('s-solar-roof-reinforce', c.solarRoofReinforce||1500);
+  _sset('s-solar-fed-credit', c.solarFedCredit||30);
+  _sset('s-solar-state-rebate', c.solarStateRebate||0);
+  _sset('s-solar-utility-rebate', c.solarUtilityRebate||0);
+  _sset('s-solar-monthly-savings', c.solarMonthlySavings||150);
+  _sset('s-solar-ovh', c.solarOverhead||12);
+  _sset('s-solar-mgn', c.solarMargin||18);
+  _sset('s-solar-tax', c.solarTax||0);
+  _sck('s-solar-fin-enabled', c.solarFinEnabled!==false);
+  _sset('s-solar-fin-apr', c.solarFinApr||4.99);
+  _sset('s-solar-fin-term', c.solarFinTerm||180);
+  // ── Load Fencing pricing fields ──
+  _sck('s-fen-wood',    c.fenWood!==false);
+  _sck('s-fen-vinyl',   !!c.fenVinyl);
+  _sck('s-fen-chain',   !!c.fenChain);
+  _sck('s-fen-aluminum',!!c.fenAluminum);
+  _sck('s-fen-split',   !!c.fenSplit);
+  _sck('s-fen-cedar',   !!c.fenCedar);
+  _sset('s-fen-wood-plf',    c.fenWoodPlf||28);
+  _sset('s-fen-vinyl-plf',   c.fenVinylPlf||35);
+  _sset('s-fen-chain-plf',   c.fenChainPlf||18);
+  _sset('s-fen-alum-plf',    c.fenAlumPlf||45);
+  _sset('s-fen-split-plf',   c.fenSplitPlf||22);
+  _sset('s-fen-cedar-plf',   c.fenCedarPlf||38);
+  _sset('s-fen-gate-single', c.fenGateSingle||350);
+  _sset('s-fen-gate-double', c.fenGateDouble||650);
+  _sset('s-fen-removal',     c.fenRemoval||5);
+  _sset('s-fen-post-concrete',c.fenPostConcrete||25);
+  _sset('s-fen-ovh', c.fenOverhead||15);
+  _sset('s-fen-mgn', c.fenMargin||20);
+  _sset('s-fen-tax', c.fenTax||0);
+  _sck('s-fen-fin-enabled', c.fenFinEnabled!==false);
+  _sset('s-fen-fin-apr', c.fenFinApr||9.99);
+  _sset('s-fen-fin-term', c.fenFinTerm||60);
+  // Restore pricing sub-tab
+  restorePricingTab();
   const repVidEl=document.getElementById('s-rep-video-url'); if(repVidEl){ repVidEl.value=c.repVideoUrl||''; updateRepVideoPreview(c.repVideoUrl||''); }
   const offSolarEl=document.getElementById('s-off-solar'); if(offSolarEl) offSolarEl.checked=!!c.offerSolar;
   // Show/hide solar add-on row in estimate builder
@@ -11932,6 +12140,37 @@ function saveSettings(){
     costFelts:n('s-felt')||22, costDumpster:n('s-dump')||450,
     costSkylight:n('s-sky')||375, costChimney:n('s-chim')||295, costGutter:n('s-gut')||9,
     overhead:n('s-ovh')||15, margin:n('s-mgn')||20, taxRate:n('s-tax')||0,
+    // ── Solar pricing ──
+    solarPricePerWatt:parseFloat(v('s-solar-pw'))||3.50,
+    solarMinKw:parseFloat(v('s-solar-min-kw'))||4,
+    solarMaxKw:parseFloat(v('s-solar-max-kw'))||20,
+    solarInstallDays:parseInt(v('s-solar-install-days'))||2,
+    solarBattery:n('s-solar-battery')||8000,
+    solarPanelUpgrade:n('s-solar-panel-upgrade')||150,
+    solarElecUpgrade:n('s-solar-elec-upgrade')||2500,
+    solarRoofReinforce:n('s-solar-roof-reinforce')||1500,
+    solarFedCredit:n('s-solar-fed-credit')||30,
+    solarStateRebate:n('s-solar-state-rebate')||0,
+    solarUtilityRebate:n('s-solar-utility-rebate')||0,
+    solarMonthlySavings:n('s-solar-monthly-savings')||150,
+    solarOverhead:n('s-solar-ovh')||12,
+    solarMargin:n('s-solar-mgn')||18,
+    solarTax:n('s-solar-tax')||0,
+    solarFinEnabled:ck('s-solar-fin-enabled'),
+    solarFinApr:parseFloat(v('s-solar-fin-apr'))||4.99,
+    solarFinTerm:parseInt(v('s-solar-fin-term'))||180,
+    // ── Fencing pricing ──
+    fenWood:ck('s-fen-wood'), fenVinyl:ck('s-fen-vinyl'), fenChain:ck('s-fen-chain'),
+    fenAluminum:ck('s-fen-aluminum'), fenSplit:ck('s-fen-split'), fenCedar:ck('s-fen-cedar'),
+    fenWoodPlf:n('s-fen-wood-plf')||28, fenVinylPlf:n('s-fen-vinyl-plf')||35,
+    fenChainPlf:n('s-fen-chain-plf')||18, fenAlumPlf:n('s-fen-alum-plf')||45,
+    fenSplitPlf:n('s-fen-split-plf')||22, fenCedarPlf:n('s-fen-cedar-plf')||38,
+    fenGateSingle:n('s-fen-gate-single')||350, fenGateDouble:n('s-fen-gate-double')||650,
+    fenRemoval:n('s-fen-removal')||5, fenPostConcrete:n('s-fen-post-concrete')||25,
+    fenOverhead:n('s-fen-ovh')||15, fenMargin:n('s-fen-mgn')||20, fenTax:n('s-fen-tax')||0,
+    fenFinEnabled:ck('s-fen-fin-enabled'),
+    fenFinApr:parseFloat(v('s-fen-fin-apr'))||9.99,
+    fenFinTerm:parseInt(v('s-fen-fin-term'))||60,
     brandColor:v('s-color')||'#F25C05',
     ghlApiKey:v('s-ghl-key'),
     ghlLocationId:v('s-ghl-loc'),
