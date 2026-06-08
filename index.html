@@ -1890,6 +1890,10 @@ tr:hover td{background:var(--card);}
       <button class="stab-tab"        id="ptab-solar"    onclick="switchPricingTab('solar')">☀️ Solar</button>
       <button class="stab-tab"        id="ptab-fencing"  onclick="switchPricingTab('fencing')">🪵 Fencing</button>
       <button class="stab-tab"        id="ptab-siding"   onclick="switchPricingTab('siding')">🏗 Siding</button>
+      <button class="stab-tab"        id="ptab-gutters"  onclick="switchPricingTab('gutters')">🌊 Gutters</button>
+      <button class="stab-tab"        id="ptab-insulation" onclick="switchPricingTab('insulation')">🏠 Insulation</button>
+      <button class="stab-tab"        id="ptab-paint"    onclick="switchPricingTab('paint')">🎨 Ext. Paint</button>
+      <button class="stab-tab"        id="ptab-doors"    onclick="switchPricingTab('doors')">🚪 Doors</button>
     </div>
 
     <!-- ══════════════════════════════════════════════════════════════════════
@@ -2255,6 +2259,313 @@ tr:hover td{background:var(--card);}
       </div>
     </div><!-- /stab-grid siding -->
     </div><!-- /ptabpane-siding -->
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         SUB-TAB: GUTTERS
+    ══════════════════════════════════════════════════════════════════════ -->
+    <div id="ptabpane-gutters" class="ptab-pane" style="display:none;">
+    <div class="stab-grid">
+      <div class="stab-card stab-full">
+        <div class="stab-card-hdr" onclick="toggleStabCard('gutters-pricing')">
+          <span>🌊 Gutters Pricing &amp; Estimator</span>
+          <span class="stab-chevron" id="stab-chevron-gutters-pricing">▾</span>
+        </div>
+        <div class="stab-card-body" id="stab-body-gutters-pricing">
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:13px;color:var(--mid);margin-bottom:16px;">
+            🌊 Gutter estimates use <strong>price per linear foot</strong>. The estimator multiplies total linear footage × $/lf to calculate the total.
+          </div>
+          <div class="stab-section-hdr">Gutter Types &amp; Pricing ($/lf)</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Aluminum 5" K-Style ($/lf)</label><input type="number" class="fi" id="s-gut-alum5" placeholder="6.00" step="0.25" min="0"></div>
+            <div class="fg"><label class="fl">Aluminum 6" K-Style ($/lf)</label><input type="number" class="fi" id="s-gut-alum6" placeholder="8.00" step="0.25" min="0"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Seamless Aluminum ($/lf)</label><input type="number" class="fi" id="s-gut-seamless" placeholder="9.00" step="0.25" min="0"></div>
+            <div class="fg"><label class="fl">Copper ($/lf)</label><input type="number" class="fi" id="s-gut-copper" placeholder="22.00" step="0.50" min="0"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Half-Round ($/lf)</label><input type="number" class="fi" id="s-gut-halfrnd" placeholder="10.00" step="0.25" min="0"></div>
+            <div class="fg"><label class="fl">Vinyl ($/lf)</label><input type="number" class="fi" id="s-gut-vinyl" placeholder="4.50" step="0.25" min="0"></div>
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Add-On Pricing</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Gutter Guard / Screen ($/lf)</label><input type="number" class="fi" id="s-gut-guard" placeholder="5.00" step="0.25" min="0"></div>
+            <div class="fg"><label class="fl">Downspout ($/each)</label><input type="number" class="fi" id="s-gut-downspout" placeholder="75" min="0"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Downspout Extension ($/each)</label><input type="number" class="fi" id="s-gut-ds-ext" placeholder="25" min="0"></div>
+            <div class="fg"><label class="fl">Old Gutter Removal ($/lf)</label><input type="number" class="fi" id="s-gut-removal" placeholder="1.50" step="0.25" min="0"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Fascia Board Repair ($/lf)</label><input type="number" class="fi" id="s-gut-fascia" placeholder="8.00" step="0.25" min="0"></div>
+            <div class="fg"><label class="fl">End Caps ($/pair)</label><input type="number" class="fi" id="s-gut-endcaps" placeholder="12" min="0"></div>
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Overhead &amp; Margin</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Overhead %</label><input type="number" class="fi" id="s-gut-ovh" placeholder="15"></div>
+            <div class="fg"><label class="fl">Profit Margin %</label><input type="number" class="fi" id="s-gut-mgn" placeholder="20"></div>
+          </div>
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:13px;color:var(--mid);margin-top:4px;">
+            💡 Formula: (Linear Ft × $/lf + Guards + Downspouts + Removal) × (1 + Overhead%) × (1 + Margin%) + Tax = Estimate
+          </div>
+          <div class="frow" style="margin-top:10px;">
+            <div class="fg"><label class="fl">Sales Tax % <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— added to proposal total (0 = no tax)</span></label><input type="number" class="fi" id="s-gut-tax" placeholder="0" step="0.01" min="0" max="30"></div>
+            <div class="fg"></div>
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Financing Options</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <input type="checkbox" id="s-gut-fin-enabled" style="accent-color:var(--accent);width:16px;height:16px;" checked>
+            <label for="s-gut-fin-enabled" style="font-size:13px;font-weight:700;color:var(--mid);cursor:pointer;">Show financing on gutter estimate <span style="font-weight:400;color:var(--muted);font-size:11px;">(auto-calculates)</span></label>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">APR %</label><input type="number" class="fi" id="s-gut-fin-apr" placeholder="9.99" step="0.01" value="9.99"></div>
+            <div class="fg"><label class="fl">Term (months)</label>
+              <select class="fs" id="s-gut-fin-term">
+                <option value="12">12 months (1 yr)</option>
+                <option value="24">24 months (2 yr)</option>
+                <option value="36" selected>36 months (3 yr)</option>
+                <option value="48">48 months (4 yr)</option>
+                <option value="60">60 months (5 yr)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div><!-- /ptabpane-gutters -->
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         SUB-TAB: INSULATION
+    ══════════════════════════════════════════════════════════════════════ -->
+    <div id="ptabpane-insulation" class="ptab-pane" style="display:none;">
+    <div class="stab-grid">
+      <div class="stab-card stab-full">
+        <div class="stab-card-hdr" onclick="toggleStabCard('insulation-pricing')">
+          <span>🏠 Insulation Pricing &amp; Estimator</span>
+          <span class="stab-chevron" id="stab-chevron-insulation-pricing">▾</span>
+        </div>
+        <div class="stab-card-body" id="stab-body-insulation-pricing">
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:13px;color:var(--mid);margin-bottom:16px;">
+            🏠 Insulation estimates use <strong>price per square foot</strong> by insulation type and R-value. Common storm damage upsell.
+          </div>
+          <div class="stab-section-hdr">Blown-In / Attic Insulation ($/sqft)</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Blown-In Fiberglass R-30 ($/sqft)</label><input type="number" class="fi" id="s-ins-blow-r30" placeholder="1.20" step="0.05" min="0"></div>
+            <div class="fg"><label class="fl">Blown-In Fiberglass R-38 ($/sqft)</label><input type="number" class="fi" id="s-ins-blow-r38" placeholder="1.50" step="0.05" min="0"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Blown-In Cellulose R-30 ($/sqft)</label><input type="number" class="fi" id="s-ins-cell-r30" placeholder="1.10" step="0.05" min="0"></div>
+            <div class="fg"><label class="fl">Blown-In Cellulose R-38 ($/sqft)</label><input type="number" class="fi" id="s-ins-cell-r38" placeholder="1.40" step="0.05" min="0"></div>
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Spray Foam Insulation ($/sqft)</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Open-Cell Spray Foam ($/sqft)</label><input type="number" class="fi" id="s-ins-foam-open" placeholder="1.50" step="0.05" min="0"></div>
+            <div class="fg"><label class="fl">Closed-Cell Spray Foam ($/sqft)</label><input type="number" class="fi" id="s-ins-foam-closed" placeholder="3.00" step="0.05" min="0"></div>
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Batt Insulation ($/sqft)</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Fiberglass Batt R-13 ($/sqft)</label><input type="number" class="fi" id="s-ins-batt-r13" placeholder="0.65" step="0.05" min="0"></div>
+            <div class="fg"><label class="fl">Fiberglass Batt R-19 ($/sqft)</label><input type="number" class="fi" id="s-ins-batt-r19" placeholder="0.85" step="0.05" min="0"></div>
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Add-On Pricing</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Old Insulation Removal ($/sqft)</label><input type="number" class="fi" id="s-ins-removal" placeholder="0.75" step="0.05" min="0"></div>
+            <div class="fg"><label class="fl">Air Sealing (flat $)</label><input type="number" class="fi" id="s-ins-airsealing" placeholder="350" min="0"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Vapor Barrier ($/sqft)</label><input type="number" class="fi" id="s-ins-vapor" placeholder="0.45" step="0.05" min="0"></div>
+            <div class="fg"><label class="fl">Attic Hatch Insulation (flat $)</label><input type="number" class="fi" id="s-ins-hatch" placeholder="125" min="0"></div>
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Overhead &amp; Margin</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Overhead %</label><input type="number" class="fi" id="s-ins-ovh" placeholder="15"></div>
+            <div class="fg"><label class="fl">Profit Margin %</label><input type="number" class="fi" id="s-ins-mgn" placeholder="20"></div>
+          </div>
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:13px;color:var(--mid);margin-top:4px;">
+            💡 Formula: (Sq Ft × $/sqft + Removal + Air Sealing + Vapor Barrier) × (1 + Overhead%) × (1 + Margin%) + Tax = Estimate
+          </div>
+          <div class="frow" style="margin-top:10px;">
+            <div class="fg"><label class="fl">Sales Tax % <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— added to proposal total (0 = no tax)</span></label><input type="number" class="fi" id="s-ins-tax" placeholder="0" step="0.01" min="0" max="30"></div>
+            <div class="fg"></div>
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Financing Options</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <input type="checkbox" id="s-ins-fin-enabled" style="accent-color:var(--accent);width:16px;height:16px;" checked>
+            <label for="s-ins-fin-enabled" style="font-size:13px;font-weight:700;color:var(--mid);cursor:pointer;">Show financing on insulation estimate <span style="font-weight:400;color:var(--muted);font-size:11px;">(auto-calculates)</span></label>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">APR %</label><input type="number" class="fi" id="s-ins-fin-apr" placeholder="9.99" step="0.01" value="9.99"></div>
+            <div class="fg"><label class="fl">Term (months)</label>
+              <select class="fs" id="s-ins-fin-term">
+                <option value="12">12 months (1 yr)</option>
+                <option value="24">24 months (2 yr)</option>
+                <option value="36" selected>36 months (3 yr)</option>
+                <option value="48">48 months (4 yr)</option>
+                <option value="60">60 months (5 yr)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div><!-- /ptabpane-insulation -->
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         SUB-TAB: EXTERIOR PAINT
+    ══════════════════════════════════════════════════════════════════════ -->
+    <div id="ptabpane-paint" class="ptab-pane" style="display:none;">
+    <div class="stab-grid">
+      <div class="stab-card stab-full">
+        <div class="stab-card-hdr" onclick="toggleStabCard('paint-pricing')">
+          <span>🎨 Exterior Paint Pricing &amp; Estimator</span>
+          <span class="stab-chevron" id="stab-chevron-paint-pricing">▾</span>
+        </div>
+        <div class="stab-card-body" id="stab-body-paint-pricing">
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:13px;color:var(--mid);margin-bottom:16px;">
+            🎨 Exterior paint estimates use <strong>price per square foot</strong> by surface type. Multi-coat jobs multiply automatically.
+          </div>
+          <div class="stab-section-hdr">Price Per Square Foot by Surface (Labor + Paint)</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Siding — 1 Coat ($/sqft)</label><input type="number" class="fi" id="s-pnt-siding-1c" placeholder="1.50" step="0.10" min="0"></div>
+            <div class="fg"><label class="fl">Siding — 2 Coats ($/sqft)</label><input type="number" class="fi" id="s-pnt-siding-2c" placeholder="2.25" step="0.10" min="0"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Trim / Fascia — 1 Coat ($/lf)</label><input type="number" class="fi" id="s-pnt-trim-1c" placeholder="2.00" step="0.10" min="0"></div>
+            <div class="fg"><label class="fl">Trim / Fascia — 2 Coats ($/lf)</label><input type="number" class="fi" id="s-pnt-trim-2c" placeholder="3.00" step="0.10" min="0"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Deck / Porch — 1 Coat ($/sqft)</label><input type="number" class="fi" id="s-pnt-deck-1c" placeholder="1.75" step="0.10" min="0"></div>
+            <div class="fg"><label class="fl">Deck / Porch — 2 Coats ($/sqft)</label><input type="number" class="fi" id="s-pnt-deck-2c" placeholder="2.75" step="0.10" min="0"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Foundation / Masonry ($/sqft)</label><input type="number" class="fi" id="s-pnt-masonry" placeholder="2.50" step="0.10" min="0"></div>
+            <div class="fg"><label class="fl">Garage Door ($/door)</label><input type="number" class="fi" id="s-pnt-garage-door" placeholder="150" min="0"></div>
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Add-On Pricing</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Power Washing ($/sqft)</label><input type="number" class="fi" id="s-pnt-powerwash" placeholder="0.35" step="0.05" min="0"></div>
+            <div class="fg"><label class="fl">Caulking / Prep ($/lf)</label><input type="number" class="fi" id="s-pnt-caulk" placeholder="1.25" step="0.10" min="0"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Primer Coat ($/sqft)</label><input type="number" class="fi" id="s-pnt-primer" placeholder="0.50" step="0.05" min="0"></div>
+            <div class="fg"><label class="fl">Stain / Solid Stain ($/sqft)</label><input type="number" class="fi" id="s-pnt-stain" placeholder="1.80" step="0.10" min="0"></div>
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Overhead &amp; Margin</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Overhead %</label><input type="number" class="fi" id="s-pnt-ovh" placeholder="15"></div>
+            <div class="fg"><label class="fl">Profit Margin %</label><input type="number" class="fi" id="s-pnt-mgn" placeholder="20"></div>
+          </div>
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:13px;color:var(--mid);margin-top:4px;">
+            💡 Formula: (Sq Ft × $/sqft by surface + Power Wash + Caulk + Primer) × (1 + Overhead%) × (1 + Margin%) + Tax = Estimate
+          </div>
+          <div class="frow" style="margin-top:10px;">
+            <div class="fg"><label class="fl">Sales Tax % <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— added to proposal total (0 = no tax)</span></label><input type="number" class="fi" id="s-pnt-tax" placeholder="0" step="0.01" min="0" max="30"></div>
+            <div class="fg"></div>
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Financing Options</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <input type="checkbox" id="s-pnt-fin-enabled" style="accent-color:var(--accent);width:16px;height:16px;" checked>
+            <label for="s-pnt-fin-enabled" style="font-size:13px;font-weight:700;color:var(--mid);cursor:pointer;">Show financing on paint estimate <span style="font-weight:400;color:var(--muted);font-size:11px;">(auto-calculates)</span></label>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">APR %</label><input type="number" class="fi" id="s-pnt-fin-apr" placeholder="9.99" step="0.01" value="9.99"></div>
+            <div class="fg"><label class="fl">Term (months)</label>
+              <select class="fs" id="s-pnt-fin-term">
+                <option value="12">12 months (1 yr)</option>
+                <option value="24" selected>24 months (2 yr)</option>
+                <option value="36">36 months (3 yr)</option>
+                <option value="48">48 months (4 yr)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div><!-- /ptabpane-paint -->
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         SUB-TAB: DOORS
+    ══════════════════════════════════════════════════════════════════════ -->
+    <div id="ptabpane-doors" class="ptab-pane" style="display:none;">
+    <div class="stab-grid">
+      <div class="stab-card stab-full">
+        <div class="stab-card-hdr" onclick="toggleStabCard('doors-pricing')">
+          <span>🚪 Doors Pricing &amp; Estimator</span>
+          <span class="stab-chevron" id="stab-chevron-doors-pricing">▾</span>
+        </div>
+        <div class="stab-card-body" id="stab-body-doors-pricing">
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:13px;color:var(--mid);margin-bottom:16px;">
+            🚪 Door estimates use <strong>flat price per unit</strong> by door type. The estimator multiplies unit count × price per unit.
+          </div>
+          <div class="stab-section-hdr">Entry Doors ($/door installed)</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Steel Entry Door ($/door)</label><input type="number" class="fi" id="s-dor-steel-entry" placeholder="850" min="0"></div>
+            <div class="fg"><label class="fl">Fiberglass Entry Door ($/door)</label><input type="number" class="fi" id="s-dor-fiber-entry" placeholder="1200" min="0"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Wood Entry Door ($/door)</label><input type="number" class="fi" id="s-dor-wood-entry" placeholder="1500" min="0"></div>
+            <div class="fg"><label class="fl">Double Entry Door ($/pair)</label><input type="number" class="fi" id="s-dor-double-entry" placeholder="2800" min="0"></div>
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Storm &amp; Screen Doors ($/door installed)</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Standard Storm Door ($/door)</label><input type="number" class="fi" id="s-dor-storm-std" placeholder="450" min="0"></div>
+            <div class="fg"><label class="fl">Full-View Storm Door ($/door)</label><input type="number" class="fi" id="s-dor-storm-full" placeholder="650" min="0"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Screen Door ($/door)</label><input type="number" class="fi" id="s-dor-screen" placeholder="300" min="0"></div>
+            <div class="fg"><label class="fl">Sliding Glass Door ($/door)</label><input type="number" class="fi" id="s-dor-sliding" placeholder="1800" min="0"></div>
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Garage Doors ($/door installed)</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Single Garage Door ($/door)</label><input type="number" class="fi" id="s-dor-garage-single" placeholder="1100" min="0"></div>
+            <div class="fg"><label class="fl">Double Garage Door ($/door)</label><input type="number" class="fi" id="s-dor-garage-double" placeholder="1800" min="0"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Insulated Garage Door ($/door)</label><input type="number" class="fi" id="s-dor-garage-insul" placeholder="1400" min="0"></div>
+            <div class="fg"><label class="fl">Garage Door Opener ($/unit)</label><input type="number" class="fi" id="s-dor-opener" placeholder="350" min="0"></div>
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Add-On Pricing</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Frame / Jamb Repair ($/door)</label><input type="number" class="fi" id="s-dor-frame-repair" placeholder="200" min="0"></div>
+            <div class="fg"><label class="fl">Deadbolt / Hardware Upgrade ($/door)</label><input type="number" class="fi" id="s-dor-hardware" placeholder="125" min="0"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Weatherstripping ($/door)</label><input type="number" class="fi" id="s-dor-weatherstrip" placeholder="75" min="0"></div>
+            <div class="fg"><label class="fl">Door Painting ($/door)</label><input type="number" class="fi" id="s-dor-paint" placeholder="150" min="0"></div>
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Overhead &amp; Margin</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Overhead %</label><input type="number" class="fi" id="s-dor-ovh" placeholder="15"></div>
+            <div class="fg"><label class="fl">Profit Margin %</label><input type="number" class="fi" id="s-dor-mgn" placeholder="20"></div>
+          </div>
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:13px;color:var(--mid);margin-top:4px;">
+            💡 Formula: (Unit Count × $/unit + Add-ons) × (1 + Overhead%) × (1 + Margin%) + Tax = Estimate
+          </div>
+          <div class="frow" style="margin-top:10px;">
+            <div class="fg"><label class="fl">Sales Tax % <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— added to proposal total (0 = no tax)</span></label><input type="number" class="fi" id="s-dor-tax" placeholder="0" step="0.01" min="0" max="30"></div>
+            <div class="fg"></div>
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Financing Options</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <input type="checkbox" id="s-dor-fin-enabled" style="accent-color:var(--accent);width:16px;height:16px;" checked>
+            <label for="s-dor-fin-enabled" style="font-size:13px;font-weight:700;color:var(--mid);cursor:pointer;">Show financing on door estimate <span style="font-weight:400;color:var(--muted);font-size:11px;">(auto-calculates)</span></label>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">APR %</label><input type="number" class="fi" id="s-dor-fin-apr" placeholder="9.99" step="0.01" value="9.99"></div>
+            <div class="fg"><label class="fl">Term (months)</label>
+              <select class="fs" id="s-dor-fin-term">
+                <option value="12">12 months (1 yr)</option>
+                <option value="24">24 months (2 yr)</option>
+                <option value="36" selected>36 months (3 yr)</option>
+                <option value="48">48 months (4 yr)</option>
+                <option value="60">60 months (5 yr)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div><!-- /ptabpane-doors -->
 
     </div><!-- /stab-tab-pane pricing -->
     <!-- ══ TAB: MARKETING ══
@@ -11966,6 +12277,44 @@ function openSettings(){
   _sck('s-fen-fin-enabled', c.fenFinEnabled!==false);
   _sset('s-fen-fin-apr', c.fenFinApr||9.99);
   _sset('s-fen-fin-term', c.fenFinTerm||60);
+  // ── Load Gutters pricing fields ──
+  _sset('s-gut-alum5',    c.gutAlum5||6.00);   _sset('s-gut-alum6',    c.gutAlum6||8.00);
+  _sset('s-gut-seamless', c.gutSeamless||9.00); _sset('s-gut-copper',   c.gutCopper||22.00);
+  _sset('s-gut-halfrnd',  c.gutHalfrnd||10.00); _sset('s-gut-vinyl',    c.gutVinyl||4.50);
+  _sset('s-gut-guard',    c.gutGuard||5.00);    _sset('s-gut-downspout',c.gutDownspout||75);
+  _sset('s-gut-ds-ext',   c.gutDsExt||25);      _sset('s-gut-removal',  c.gutRemoval||1.50);
+  _sset('s-gut-fascia',   c.gutFascia||8.00);   _sset('s-gut-endcaps',  c.gutEndcaps||12);
+  _sset('s-gut-ovh', c.gutOverhead||15); _sset('s-gut-mgn', c.gutMargin||20); _sset('s-gut-tax', c.gutTax||0);
+  _sck('s-gut-fin-enabled', c.gutFinEnabled!==false); _sset('s-gut-fin-apr', c.gutFinApr||9.99); _sset('s-gut-fin-term', c.gutFinTerm||36);
+  // ── Load Insulation pricing fields ──
+  _sset('s-ins-blow-r30',   c.insBlowR30||1.20);  _sset('s-ins-blow-r38',   c.insBlowR38||1.50);
+  _sset('s-ins-cell-r30',   c.insCellR30||1.10);  _sset('s-ins-cell-r38',   c.insCellR38||1.40);
+  _sset('s-ins-foam-open',  c.insFoamOpen||1.50); _sset('s-ins-foam-closed', c.insFoamClosed||3.00);
+  _sset('s-ins-batt-r13',   c.insBattR13||0.65);  _sset('s-ins-batt-r19',   c.insBattR19||0.85);
+  _sset('s-ins-removal',    c.insRemoval||0.75);   _sset('s-ins-airsealing', c.insAirsealing||350);
+  _sset('s-ins-vapor',      c.insVapor||0.45);     _sset('s-ins-hatch',      c.insHatch||125);
+  _sset('s-ins-ovh', c.insOverhead||15); _sset('s-ins-mgn', c.insMargin||20); _sset('s-ins-tax', c.insTax||0);
+  _sck('s-ins-fin-enabled', c.insFinEnabled!==false); _sset('s-ins-fin-apr', c.insFinApr||9.99); _sset('s-ins-fin-term', c.insFinTerm||36);
+  // ── Load Exterior Paint pricing fields ──
+  _sset('s-pnt-siding-1c', c.pntSiding1c||1.50); _sset('s-pnt-siding-2c', c.pntSiding2c||2.25);
+  _sset('s-pnt-trim-1c',   c.pntTrim1c||2.00);   _sset('s-pnt-trim-2c',   c.pntTrim2c||3.00);
+  _sset('s-pnt-deck-1c',   c.pntDeck1c||1.75);   _sset('s-pnt-deck-2c',   c.pntDeck2c||2.75);
+  _sset('s-pnt-masonry',   c.pntMasonry||2.50);   _sset('s-pnt-garage-door', c.pntGarageDoor||150);
+  _sset('s-pnt-powerwash', c.pntPowerwash||0.35); _sset('s-pnt-caulk',     c.pntCaulk||1.25);
+  _sset('s-pnt-primer',    c.pntPrimer||0.50);    _sset('s-pnt-stain',     c.pntStain||1.80);
+  _sset('s-pnt-ovh', c.pntOverhead||15); _sset('s-pnt-mgn', c.pntMargin||20); _sset('s-pnt-tax', c.pntTax||0);
+  _sck('s-pnt-fin-enabled', c.pntFinEnabled!==false); _sset('s-pnt-fin-apr', c.pntFinApr||9.99); _sset('s-pnt-fin-term', c.pntFinTerm||24);
+  // ── Load Doors pricing fields ──
+  _sset('s-dor-steel-entry',   c.dorSteelEntry||850);   _sset('s-dor-fiber-entry',   c.dorFiberEntry||1200);
+  _sset('s-dor-wood-entry',    c.dorWoodEntry||1500);   _sset('s-dor-double-entry',  c.dorDoubleEntry||2800);
+  _sset('s-dor-storm-std',     c.dorStormStd||450);     _sset('s-dor-storm-full',    c.dorStormFull||650);
+  _sset('s-dor-screen',        c.dorScreen||300);        _sset('s-dor-sliding',       c.dorSliding||1800);
+  _sset('s-dor-garage-single', c.dorGarageSingle||1100); _sset('s-dor-garage-double', c.dorGarageDouble||1800);
+  _sset('s-dor-garage-insul',  c.dorGarageInsul||1400); _sset('s-dor-opener',        c.dorOpener||350);
+  _sset('s-dor-frame-repair',  c.dorFrameRepair||200);  _sset('s-dor-hardware',      c.dorHardware||125);
+  _sset('s-dor-weatherstrip',  c.dorWeatherstrip||75);  _sset('s-dor-paint',         c.dorPaint||150);
+  _sset('s-dor-ovh', c.dorOverhead||15); _sset('s-dor-mgn', c.dorMargin||20); _sset('s-dor-tax', c.dorTax||0);
+  _sck('s-dor-fin-enabled', c.dorFinEnabled!==false); _sset('s-dor-fin-apr', c.dorFinApr||9.99); _sset('s-dor-fin-term', c.dorFinTerm||36);
   // ── Load Siding pricing fields ──
   _sck('s-sid-vinyl',    c.sidVinyl!==false);
   _sck('s-sid-hardie',   !!c.sidHardie);
@@ -12305,6 +12654,44 @@ function saveSettings(){
     sidFinEnabled:ck('s-sid-fin-enabled'),
     sidFinApr:parseFloat(v('s-sid-fin-apr'))||9.99,
     sidFinTerm:parseInt(v('s-sid-fin-term'))||60,
+    // ── Gutters pricing ──
+    gutAlum5:parseFloat(v('s-gut-alum5'))||6.00, gutAlum6:parseFloat(v('s-gut-alum6'))||8.00,
+    gutSeamless:parseFloat(v('s-gut-seamless'))||9.00, gutCopper:parseFloat(v('s-gut-copper'))||22.00,
+    gutHalfrnd:parseFloat(v('s-gut-halfrnd'))||10.00, gutVinyl:parseFloat(v('s-gut-vinyl'))||4.50,
+    gutGuard:parseFloat(v('s-gut-guard'))||5.00, gutDownspout:n('s-gut-downspout')||75,
+    gutDsExt:n('s-gut-ds-ext')||25, gutRemoval:parseFloat(v('s-gut-removal'))||1.50,
+    gutFascia:parseFloat(v('s-gut-fascia'))||8.00, gutEndcaps:n('s-gut-endcaps')||12,
+    gutOverhead:n('s-gut-ovh')||15, gutMargin:n('s-gut-mgn')||20, gutTax:n('s-gut-tax')||0,
+    gutFinEnabled:ck('s-gut-fin-enabled'), gutFinApr:parseFloat(v('s-gut-fin-apr'))||9.99, gutFinTerm:parseInt(v('s-gut-fin-term'))||36,
+    // ── Insulation pricing ──
+    insBlowR30:parseFloat(v('s-ins-blow-r30'))||1.20, insBlowR38:parseFloat(v('s-ins-blow-r38'))||1.50,
+    insCellR30:parseFloat(v('s-ins-cell-r30'))||1.10, insCellR38:parseFloat(v('s-ins-cell-r38'))||1.40,
+    insFoamOpen:parseFloat(v('s-ins-foam-open'))||1.50, insFoamClosed:parseFloat(v('s-ins-foam-closed'))||3.00,
+    insBattR13:parseFloat(v('s-ins-batt-r13'))||0.65, insBattR19:parseFloat(v('s-ins-batt-r19'))||0.85,
+    insRemoval:parseFloat(v('s-ins-removal'))||0.75, insAirsealing:n('s-ins-airsealing')||350,
+    insVapor:parseFloat(v('s-ins-vapor'))||0.45, insHatch:n('s-ins-hatch')||125,
+    insOverhead:n('s-ins-ovh')||15, insMargin:n('s-ins-mgn')||20, insTax:n('s-ins-tax')||0,
+    insFinEnabled:ck('s-ins-fin-enabled'), insFinApr:parseFloat(v('s-ins-fin-apr'))||9.99, insFinTerm:parseInt(v('s-ins-fin-term'))||36,
+    // ── Exterior Paint pricing ──
+    pntSiding1c:parseFloat(v('s-pnt-siding-1c'))||1.50, pntSiding2c:parseFloat(v('s-pnt-siding-2c'))||2.25,
+    pntTrim1c:parseFloat(v('s-pnt-trim-1c'))||2.00, pntTrim2c:parseFloat(v('s-pnt-trim-2c'))||3.00,
+    pntDeck1c:parseFloat(v('s-pnt-deck-1c'))||1.75, pntDeck2c:parseFloat(v('s-pnt-deck-2c'))||2.75,
+    pntMasonry:parseFloat(v('s-pnt-masonry'))||2.50, pntGarageDoor:n('s-pnt-garage-door')||150,
+    pntPowerwash:parseFloat(v('s-pnt-powerwash'))||0.35, pntCaulk:parseFloat(v('s-pnt-caulk'))||1.25,
+    pntPrimer:parseFloat(v('s-pnt-primer'))||0.50, pntStain:parseFloat(v('s-pnt-stain'))||1.80,
+    pntOverhead:n('s-pnt-ovh')||15, pntMargin:n('s-pnt-mgn')||20, pntTax:n('s-pnt-tax')||0,
+    pntFinEnabled:ck('s-pnt-fin-enabled'), pntFinApr:parseFloat(v('s-pnt-fin-apr'))||9.99, pntFinTerm:parseInt(v('s-pnt-fin-term'))||24,
+    // ── Doors pricing ──
+    dorSteelEntry:n('s-dor-steel-entry')||850, dorFiberEntry:n('s-dor-fiber-entry')||1200,
+    dorWoodEntry:n('s-dor-wood-entry')||1500, dorDoubleEntry:n('s-dor-double-entry')||2800,
+    dorStormStd:n('s-dor-storm-std')||450, dorStormFull:n('s-dor-storm-full')||650,
+    dorScreen:n('s-dor-screen')||300, dorSliding:n('s-dor-sliding')||1800,
+    dorGarageSingle:n('s-dor-garage-single')||1100, dorGarageDouble:n('s-dor-garage-double')||1800,
+    dorGarageInsul:n('s-dor-garage-insul')||1400, dorOpener:n('s-dor-opener')||350,
+    dorFrameRepair:n('s-dor-frame-repair')||200, dorHardware:n('s-dor-hardware')||125,
+    dorWeatherstrip:n('s-dor-weatherstrip')||75, dorPaint:n('s-dor-paint')||150,
+    dorOverhead:n('s-dor-ovh')||15, dorMargin:n('s-dor-mgn')||20, dorTax:n('s-dor-tax')||0,
+    dorFinEnabled:ck('s-dor-fin-enabled'), dorFinApr:parseFloat(v('s-dor-fin-apr'))||9.99, dorFinTerm:parseInt(v('s-dor-fin-term'))||36,
     brandColor:v('s-color')||'#F25C05',
     ghlApiKey:v('s-ghl-key'),
     ghlLocationId:v('s-ghl-loc'),
