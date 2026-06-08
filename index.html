@@ -111,6 +111,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 .fchip.active[data-s="pipeline"]{background:rgba(242,92,5,.15);border-color:var(--accent);color:var(--accent);}
 .fchip.active[data-s="archive"]{background:rgba(150,176,200,.12);border-color:var(--muted);color:var(--mid);}
 .fchip.active[data-s="needs_roof"]{background:rgba(242,92,5,.15);border-color:var(--accent);color:var(--accent);}
+.fchip.active[data-s="interested"]{background:rgba(234,179,8,.15);border-color:#EAB308;color:#EAB308;}
 .fchip.active[data-s="bid_sent"]{background:rgba(59,130,246,.15);border-color:var(--info);color:var(--info);}
 .fchip.active[data-s="converted"]{background:rgba(34,197,94,.15);border-color:var(--success);color:var(--success);}
 .fchip.active[data-s="not_interested"]{background:rgba(61,82,105,.2);border-color:var(--muted);color:var(--mid);}
@@ -968,6 +969,7 @@ tr:hover td{background:var(--card);}
         <div class="filters" id="pipeline-chips">
           <button class="fchip active" data-s="pipeline" onclick="filterPins('pipeline')">All Active</button>
           <button class="fchip" data-s="needs_roof" onclick="filterPins('needs_roof')">🟠 Needs Roof</button>
+          <button class="fchip" data-s="interested" onclick="filterPins('interested')">🟡 Interested</button>
           <button class="fchip" data-s="quoted" onclick="filterPins('quoted')">🔵 Quoted</button>
           <button class="fchip" data-s="signed" onclick="filterPins('signed')">🟢 Signed</button>
         </div>
@@ -990,6 +992,7 @@ tr:hover td{background:var(--card);}
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
           <button onclick="bulkDeletePins()" style="background:#EF4444;border:none;border-radius:6px;padding:5px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">🗑 Delete</button>
           <button onclick="bulkSetPinStatus('needs_roof')" style="background:rgba(242,92,5,.2);border:1px solid var(--accent);border-radius:6px;padding:5px 10px;color:var(--accent);font-size:11px;font-weight:700;cursor:pointer;">🟠 Needs Roof</button>
+            <button onclick="bulkSetPinStatus('interested')" style="background:rgba(234,179,8,.2);border:1px solid #EAB308;border-radius:6px;padding:5px 10px;color:#EAB308;font-size:11px;font-weight:700;cursor:pointer;">🟡 Interested</button>
           <button onclick="bulkSetPinStatus('contacted')" style="background:rgba(168,85,247,.15);border:1px solid #A855F7;border-radius:6px;padding:5px 10px;color:#A855F7;font-size:11px;font-weight:700;cursor:pointer;">🟣 Contacted</button>
           <button onclick="bulkSetPinStatus('quoted')" style="background:rgba(59,130,246,.15);border:1px solid var(--info);border-radius:6px;padding:5px 10px;color:var(--info);font-size:11px;font-weight:700;cursor:pointer;">🔵 Quoted</button>
           <button onclick="bulkSetPinStatus('signed')" style="background:rgba(34,197,94,.15);border:1px solid var(--success);border-radius:6px;padding:5px 10px;color:var(--success);font-size:11px;font-weight:700;cursor:pointer;">🟢 Signed</button>
@@ -1038,9 +1041,9 @@ tr:hover td{background:var(--card);}
       <!-- ═══════════════════════════════════════════════════════════════════
            TRADE SELECTOR — shown after address, before trade form
       ═══════════════════════════════════════════════════════════════════ -->
-      <div id="trade-selector-wrap" style="margin-bottom:4px;">
-        <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">🔧 Select Trade</div>
-        <div id="trade-selector-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div id="trade-selector-wrap" style="margin-bottom:12px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--accent);margin-bottom:12px;display:flex;align-items:center;gap:6px;">🔧 Select Trade <span style="font-weight:400;color:var(--muted);font-size:10px;text-transform:none;letter-spacing:0;">— choose one to build estimate</span></div>
+        <div id="trade-selector-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
           <!-- Populated dynamically by renderTradeSelector() -->
         </div>
         <div id="trade-selector-empty" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:12px;font-size:12px;color:#EF4444;text-align:center;">
@@ -3842,6 +3845,7 @@ tr:hover td{background:var(--card);}
     <div class="fg"><label class="fl">Status</label>
       <select class="fs" id="p-status">
         <option value="needs_roof">🟠 Needs Roof</option>
+        <option value="interested">🟡 Interested</option>
         <option value="contacted">🟣 Contacted</option>
         <option value="quoted">🔵 Quoted</option>
         <option value="signed">🟢 Signed</option>
@@ -3850,7 +3854,14 @@ tr:hover td{background:var(--card);}
         <option value="lost">🔴 Lost</option>
       </select>
     </div>
-    <div class="fg"><label class="fl">Notes</label><input class="fi" id="p-notes" placeholder="e.g. Missing shingles, storm damage visible…"></div>
+    <div class="fg"><label class="fl">Notes</label><input class="fi" id="p-notes" placeholder="e.g. Interested in roof + solar, storm damage visible…"></div>
+    <!-- Trade Interest Chips -->
+    <div class="fg" id="p-trades-wrap" style="margin-bottom:0;">
+      <label class="fl">Interested In <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">(select all that apply)</span></label>
+      <div id="p-trades-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">
+        <!-- Populated by renderPinTradeChips() -->
+      </div>
+    </div>
     <div class="fg"><label class="fl">Canvasser Name</label><input class="fi" id="p-rep" placeholder="Your name"></div>
     <div class="fg"><label class="fl">Homeowner Phone <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);">(optional, for follow-up)</span></label><input class="fi" id="p-phone" type="tel" placeholder="(313) 555-0100" oninput="autoFormatPhone(this)"></div>
     <!-- Photos -->
@@ -4093,8 +4104,8 @@ const PITCHLBL = {'1.054':'4/12 Low','1.083':'5/12','1.118':'6/12 Std','1.158':'
   '1.0':'4/12 Low','1.07':'5/12','1.15':'6/12 Std','1.23':'7/12','1.31':'8/12 Mod','1.40':'9/12','1.50':'10/12 Steep','1.65':'11/12','1.80':'12/12 Steep'};
 const MATLBL  = {'1.0':'3-Tab Shingle','1.3':'Architectural Shingle','1.8':'Designer/Premium','1.5':'Impact-Resistant','2.5':'Metal Roofing','0.9':'Flat Roof (TPO/EPDM)','3.2':'Tile (Clay/Concrete)'}; // 1.0 kept for legacy display only
 
-function sColor(s){return{needs_roof:'#F25C05',contacted:'#A855F7',quoted:'#3B82F6',signed:'#22C55E',converted:'#22C55E',bid_sent:'#3B82F6',not_interested:'#3D5269',lost:'#EF4444'}[s]||'#3D5269';}
-function sLabel(s){return{needs_roof:'Needs Roof',contacted:'Contacted',quoted:'Quoted',signed:'Signed',converted:'Converted',bid_sent:'Bid Sent',not_interested:'Not Interested',lost:'Lost'}[s]||s;}
+function sColor(s){return{needs_roof:'#F25C05',interested:'#EAB308',contacted:'#A855F7',quoted:'#3B82F6',signed:'#22C55E',converted:'#22C55E',bid_sent:'#3B82F6',not_interested:'#3D5269',lost:'#EF4444'}[s]||'#3D5269';}
+function sLabel(s){return{needs_roof:'Needs Roof',interested:'Interested',contacted:'Contacted',quoted:'Quoted',signed:'Signed',converted:'Converted',bid_sent:'Bid Sent',not_interested:'Not Interested',lost:'Lost'}[s]||s;}
 
 // ═══════════════════════════════
 //  PERSIST — Supabase + localStorage fallback
@@ -4413,7 +4424,7 @@ function renderTradeSelector(){
   grid.innerHTML = enabled.map(t => {
     const m = TRADE_META[t];
     const isActive = window._activeTrade === t;
-    return `<button onclick="selectTrade('${t}')" style="padding:12px 8px;border-radius:10px;border:2px solid ${isActive ? m.color : 'var(--border)'};background:${isActive ? 'rgba('+hexToRgb(m.color)+',.12)' : 'var(--card2)'};color:${isActive ? m.color : 'var(--mid)'};font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s;">${m.label}</button>`;
+    return `<button onclick="selectTrade('${t}')" style="padding:14px 8px;border-radius:10px;border:2px solid ${isActive ? m.color : 'var(--border)'};background:${isActive ? 'rgba('+hexToRgb(m.color)+',.15)' : 'var(--card2)'};color:${isActive ? m.color : 'var(--mid)'};font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s;box-shadow:${isActive ? '0 0 0 1px '+m.color : 'none'};">${m.label}${isActive ? '<br><span style="font-size:9px;font-weight:400;opacity:.8;letter-spacing:.5px;text-transform:uppercase;">Selected</span>' : ''}</button>`;
   }).join('');
 }
 function hexToRgb(hex){
@@ -4812,6 +4823,7 @@ function goTab(t){
   if(t==='estimates')renderEstimatesTab();
   if(t==='estimate'){
     populateEstPinPicker();updatePreview();scheduleDraftSave&&clearTimeout(_draftTimer);
+    if(typeof renderTradeSelector==='function') renderTradeSelector();
     // Restore home photo if it was cleared during tab switch
     if(!window._homePhotoData && currentEstPinId){
       try{
@@ -7447,6 +7459,7 @@ function savePin(){
     address:document.getElementById('p-addr').value.trim()||tempLL.lat.toFixed(4)+', '+tempLL.lng.toFixed(4),
     status:document.getElementById('p-status').value,
     notes:document.getElementById('p-notes').value.trim(),
+    interested_trades: (window._pinSelectedTrades && window._pinSelectedTrades.length) ? [...window._pinSelectedTrades] : null,
     rep:document.getElementById('p-rep').value.trim()||'Unknown',
     phone:document.getElementById('p-phone').value.trim()||null,
     at:new Date().toISOString(),
@@ -7549,11 +7562,47 @@ function removePinPhoto(idx){
   renderPinPhotosRow();
 }
 
+function renderPinTradeChips(){
+  const wrap = document.getElementById('p-trades-chips');
+  if(!wrap) return;
+  const et = (S.cfg && S.cfg.enabledTrades) || {roofing:true};
+  const ALL_TRADES = ['roofing','solar','fencing','siding','gutters','insulation','paint','doors','windows'];
+  const TRADE_LABELS = {roofing:'🏠 Roof',solar:'☀️ Solar',fencing:'🪵 Fence',siding:'🏗 Siding',gutters:'🌊 Gutters',insulation:'🏠 Insulation',paint:'🎨 Paint',doors:'🚪 Doors',windows:'🪟 Windows'};
+  const TRADE_COLORS = {roofing:'#F25C05',solar:'#22C55E',fencing:'#A78BFA',siding:'#60A5FA',gutters:'#38BDF8',insulation:'#FB923C',paint:'#F472B6',doors:'#FBBF24',windows:'#67E8F9'};
+  const enabled = ALL_TRADES.filter(t => !!(et[t]));
+  if(enabled.length <= 1){
+    // Only roofing enabled — hide the section
+    const section = document.getElementById('p-trades-wrap');
+    if(section) section.style.display = 'none';
+    return;
+  }
+  const section = document.getElementById('p-trades-wrap');
+  if(section) section.style.display = '';
+  if(!window._pinSelectedTrades) window._pinSelectedTrades = [];
+  wrap.innerHTML = enabled.map(t => {
+    const sel = window._pinSelectedTrades.includes(t);
+    const col = TRADE_COLORS[t];
+    return `<button type="button" onclick="togglePinTrade('${t}')" id="p-trade-chip-${t}" style="padding:5px 12px;border-radius:20px;border:1.5px solid ${sel ? col : 'var(--border)'};background:${sel ? 'rgba('+_hexToRgbStr(col)+',.15)' : 'var(--card2)'};color:${sel ? col : 'var(--muted)'};font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font-b);transition:all .15s;">${TRADE_LABELS[t]}</button>`;
+  }).join('');
+}
+function _hexToRgbStr(hex){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return r+','+g+','+b;
+}
+function togglePinTrade(t){
+  if(!window._pinSelectedTrades) window._pinSelectedTrades = [];
+  const idx = window._pinSelectedTrades.indexOf(t);
+  if(idx>=0) window._pinSelectedTrades.splice(idx,1);
+  else window._pinSelectedTrades.push(t);
+  renderPinTradeChips();
+}
 function resetPinModal(){
   window._pinDamagePhotos = [];
   window._homePhotoData = null; // clear stale front photo from previous pin
+  window._pinSelectedTrades = []; // clear trade interest selections
   _clearAllPhotos(); // prevent stale photos from previous pin bleeding into new pin drop
   renderPinPhotosRow();
+  renderPinTradeChips();
 }
 
 // ── ADD PHOTOS TO EXISTING PIN (from map popup) ──────────────────────────────
@@ -7637,7 +7686,7 @@ function handlePopupPhotoInput(e){
 }
 
 // Pipeline statuses (active working leads)
-const PIPELINE_STATUSES = new Set(['needs_roof','quoted','signed']);
+const PIPELINE_STATUSES = new Set(['needs_roof','interested','quoted','signed']);
 // Archive statuses (closed / parked leads)
 const ARCHIVE_STATUSES  = new Set(['contacted','converted','not_interested','lost']);
 
@@ -7804,7 +7853,7 @@ function renderPinList(){
     const clickHandler = _pinBulkMode
       ? 'onclick="togglePinSelect(\''+pid+'\');this.querySelector(\'.pin-cb\')&&(this.querySelector(\'.pin-cb\').checked=_selectedPinIds.has(\''+pid+'\'))"'
       : 'onclick="togglePinCard(\''+pid+'\')"';
-    return '<div class="pc" id="pc-'+pid+'" '+clickHandler+'>'+'<div class="pc-summary">'+cbHtml+dmgThumb+'<div style="flex:1;min-width:0;"><div class="pc-addr">'+escHtml(p.address)+'</div><div class="pc-meta"><span>'+timeAgo(p.at)+'</span>'+(p.rep?'<span>· '+escHtml(p.rep)+'</span>':'')+'</div></div>'+dmgCount+'<div class="sdot" style="background:'+sColor(p.status)+';margin-top:0;"></div>'+(! _pinBulkMode?'<span class="pc-chevron">›</span>':'')+'</div>'+(!_pinBulkMode?'<div class="pc-body">'+(p.notes?'<div class="pc-note" style="margin-bottom:8px;">"'+escHtml(p.notes)+'"</div>':'')+'<div class="pc-acts">'+'<button class="btn-xs pr" onclick="event.stopPropagation();goEstFromPin(\''+pid+'\')">'+'📋 Estimate</button>'+'<button class="btn-xs" onclick="event.stopPropagation();openFollowUp(\''+pid+'\')">'+'✉️ Follow Up</button>'+'<button class="btn-xs" onclick="event.stopPropagation();cycleStatus(\''+pid+'\')">'+'↻ Status</button>'+(S.cfg.ghlLocationId?'<button class="btn-xs" style="background:'+(p.ghlContactId?'#166534':'#1e3a5f')+';border:1px solid '+(p.ghlContactId?'#22c55e':'#3b82f6')+';color:'+(p.ghlContactId?'#4ade80':'#93c5fd')+';" onclick="event.stopPropagation();ghlPushPin(\''+pid+'\')" title="'+(p.ghlContactId?'✓ Synced to GHL — click to re-sync':'Send to GHL')+'">'+(p.ghlContactId?'✓ GHL':'⬆ GHL')+'</button>':'')+'<button class="btn-xs danger" onclick="event.stopPropagation();rmPin(\''+pid+'\')">'+'✕</button>'+'</div></div>':'')+'</div>';
+    return '<div class="pc" id="pc-'+pid+'" '+clickHandler+'>'+'<div class="pc-summary">'+cbHtml+dmgThumb+'<div style="flex:1;min-width:0;"><div class="pc-addr">'+escHtml(p.address)+'</div><div class="pc-meta"><span>'+timeAgo(p.at)+'</span>'+(p.rep?'<span>· '+escHtml(p.rep)+'</span>':'')+'</div></div>'+dmgCount+'<div class="sdot" style="background:'+sColor(p.status)+';margin-top:0;"></div>'+(! _pinBulkMode?'<span class="pc-chevron">›</span>':'')+'</div>'+(!_pinBulkMode?'<div class="pc-body">'+(p.interested_trades&&p.interested_trades.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">'+p.interested_trades.map(t=>{const TRADE_COLORS_PC={roofing:'#F25C05',solar:'#22C55E',fencing:'#A78BFA',siding:'#60A5FA',gutters:'#38BDF8',insulation:'#FB923C',paint:'#F472B6',doors:'#FBBF24',windows:'#67E8F9'};const TRADE_LABELS_PC={roofing:'🏠 Roof',solar:'☀️ Solar',fencing:'🪵 Fence',siding:'🏗 Siding',gutters:'🌊 Gutters',insulation:'🏠 Insulation',paint:'🎨 Paint',doors:'🚪 Doors',windows:'🪟 Windows'};const col=TRADE_COLORS_PC[t]||'#96B0C8';return'<span style="padding:2px 8px;border-radius:10px;border:1px solid '+col+';background:rgba('+col.replace('#','').match(/../g).map(h=>parseInt(h,16)).join(',')+',.12);color:'+col+';font-size:10px;font-weight:700;font-family:var(--font-b);">'+(TRADE_LABELS_PC[t]||t)+'</span>';}).join('')+'</div>':'')+(p.notes?'<div class="pc-note" style="margin-bottom:8px;">"'+escHtml(p.notes)+'"</div>':'')+'<div class="pc-acts">'+'<button class="btn-xs pr" onclick="event.stopPropagation();goEstFromPin(\''+pid+'\')">'+'📋 Estimate</button>'+'<button class="btn-xs" onclick="event.stopPropagation();openFollowUp(\''+pid+'\')">'+'✉️ Follow Up</button>'+'<button class="btn-xs" onclick="event.stopPropagation();cycleStatus(\''+pid+'\')">'+'↻ Status</button>'+(S.cfg.ghlLocationId?'<button class="btn-xs" style="background:'+(p.ghlContactId?'#166534':'#1e3a5f')+';border:1px solid '+(p.ghlContactId?'#22c55e':'#3b82f6')+';color:'+(p.ghlContactId?'#4ade80':'#93c5fd')+';" onclick="event.stopPropagation();ghlPushPin(\''+pid+'\')" title="'+(p.ghlContactId?'✓ Synced to GHL — click to re-sync':'Send to GHL')+'">'+(p.ghlContactId?'✓ GHL':'⬆ GHL')+'</button>':'')+'<button class="btn-xs danger" onclick="event.stopPropagation();rmPin(\''+pid+'\')">'+'✕</button>'+'</div></div>':'')+'</div>';
   }).join('');
   if(hasMore){
     el.insertAdjacentHTML('beforeend',
@@ -7967,7 +8016,7 @@ async function doDeletePin(){
 
 function cycleStatus(id){
   const p=S.pins.find(x=>x.id===id);if(!p)return;
-  const opts=['needs_roof','contacted','quoted','signed','converted','not_interested','lost'];
+  const opts=['needs_roof','interested','contacted','quoted','signed','converted','not_interested','lost'];
   p.status=opts[(opts.indexOf(p.status)+1)%opts.length];
   if(markers[id]){
     if(clusterGroup) clusterGroup.removeLayer(markers[id]);
@@ -15346,7 +15395,11 @@ async function sbSavePin(pin){
     lat: pin.lat, lng: pin.lng, address: pin.address,
     status: pin.status, notes: pin.notes, pts: pin.pts||null,
     photo_url: photoUrl,
-    estimate: pin.estimate || null,
+    estimate: (()=>{
+      const est = pin.estimate ? (typeof pin.estimate==='string'?JSON.parse(pin.estimate):pin.estimate) : {};
+      if(pin.interested_trades && pin.interested_trades.length) est.interested_trades = pin.interested_trades;
+      return Object.keys(est).length ? est : null;
+    })(),
     all_photos: _allPhotosForSupabase(pin.all_photos),
     updated_at: new Date().toISOString()
   }, {onConflict:'id'}).select('id').single();
@@ -15404,7 +15457,8 @@ function _rowToPin(row){
     equityData: row.equity_data||null,
     ghlContactId: row.ghl_contact_id||null,
     ghlOpportunityId: row.ghl_opportunity_id||null,
-    jnContactId: row.jn_contact_id||null
+    jnContactId: row.jn_contact_id||null,
+    interested_trades: (est && est.interested_trades) || null
   };
 }
 
@@ -17189,7 +17243,7 @@ function renderZoneOverlays(){
     const dot = L.circleMarker([pin.lat, pin.lng],{
       radius:6, color:'#0F1623', weight:1.5, fillColor:color, fillOpacity:0.95
     }).addTo(zonesMap);
-    const _statusLabels = {needs_roof:'Needs Roof',contacted:'Contacted',quoted:'Quoted',signed:'Signed',bid_sent:'Bid Sent',converted:'Converted',not_interested:'Not Interested',lost:'Lost'};
+    const _statusLabels = {needs_roof:'Needs Roof',interested:'Interested',contacted:'Contacted',quoted:'Quoted',signed:'Signed',bid_sent:'Bid Sent',converted:'Converted',not_interested:'Not Interested',lost:'Lost'};
     const _tipStatus = _statusLabels[pin.status] || pin.status || '';
     const _tipEst = pin.estimate ? (()=>{ try{ const e=typeof pin.estimate==='string'?JSON.parse(pin.estimate):pin.estimate; return e&&e.total?' · $'+Number(e.total).toLocaleString():''; }catch(ex){ return ''; } })() : '';
     dot.bindTooltip('<b>'+escHtml(pin.address||'Pin')+'</b><br><span style="font-size:11px;color:#aaa;">'+_tipStatus+_tipEst+' — tap to view details</span>', {sticky:true});
