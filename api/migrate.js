@@ -80,12 +80,12 @@ export default async function handler(req, res) {
     },
   ];
 
-  // Try to run DDL via rpc/run_ddl (if the function exists)
+  // Try to run DDL via rpc/exec_sql
   for (const m of migrations) {
     try {
-      const r = await sbFetch('rpc/run_ddl', {
+      const r = await sbFetch('rpc/exec_sql', {
         method: 'POST',
-        body: JSON.stringify({ ddl: m.sql })
+        body: JSON.stringify({ query: m.sql })
       });
       const body = await r.text();
       results.push({ name: m.name, status: r.status, body: body.substring(0, 100) });
