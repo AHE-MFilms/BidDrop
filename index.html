@@ -15803,7 +15803,7 @@ function buildAdminTradeChips(a){
       'font-weight:'+fw+';opacity:'+op+';transition:all .15s;"'+
       ' title="'+(on?'Disable':'Enable')+' '+t.label+'">'+t.icon+' '+t.label+'</button>';
   }).join('');
-  return '<div style="margin-top:8px;padding-top:6px;border-top:1px solid var(--border);margin-bottom:6px;">'+
+  return '<div data-trade-chips="'+a.id+'" style="margin-top:8px;padding-top:6px;border-top:1px solid var(--border);margin-bottom:6px;">'+
     '<div style="font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;">TRADES</div>'+
     '<div style="display:flex;flex-wrap:wrap;gap:4px;">'+chips+'</div>'+
     '</div>';
@@ -15821,15 +15821,17 @@ async function adminToggleTrade(accountId, tradeKey){
   }
   // Optimistic update
   a.enabled_trades = enabled;
-  // Re-render cards
-  filterAdminAccounts();
+  // Update chips in-place (avoid full re-render which loses buttons)
+  const chipsEl = document.querySelector('[data-trade-chips="'+accountId+'"]');
+  if(chipsEl) chipsEl.outerHTML = buildAdminTradeChips(a);
   // Save to DB
   const {error} = await sb.from('accounts').update({enabled_trades: enabled}).eq('id', accountId);
   if(error){
     toast('Failed to save trade settings: '+error.message, 'error');
     // Revert
     a.enabled_trades = enabled.includes(tradeKey) ? enabled.filter(t=>t!==tradeKey) : [...enabled, tradeKey];
-    filterAdminAccounts();
+    const chipsEl2 = document.querySelector('[data-trade-chips="'+accountId+'"]');
+    if(chipsEl2) chipsEl2.outerHTML = buildAdminTradeChips(a);
   } else {
     toast('Trade settings saved', 'success');
   }
@@ -15945,6 +15947,14 @@ function filterAdminAccounts(){
         '</div>').join('') +
       '</div>' +
       (a.notes?'<div style="font-size:10px;color:var(--muted);margin-top:4px;font-style:italic;">'+escHtml(a.notes)+'</div>':'')+
+      buildAdminTradeChips(a)+
+      '<div style="margin-top:4px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;">'+
+        '<button onclick="openAddUserModal(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\')" style="background:rgba(242,92,5,.12);border:1px solid rgba(242,92,5,.4);border-radius:5px;padding:3px 10px;color:var(--accent);font-size:10px;cursor:pointer;font-weight:700;">➕ Add User</button>'+
+        '<button onclick="setAccountSlug(\''+a.id+'\',\''+escHtml(a.slug||'')+'\')" style="background:none;border:1px solid var(--border);border-radius:5px;padding:3px 10px;color:var(--muted);font-size:10px;cursor:pointer;font-weight:600;">🔗 Set Slug</button>'+
+        (a.slug?'<a href="/q/'+a.slug+'" target="_blank" style="background:rgba(242,92,5,.1);border:1px solid rgba(242,92,5,.3);border-radius:5px;padding:3px 10px;color:var(--accent);font-size:10px;font-weight:600;text-decoration:none;">↗ /q/'+a.slug+'</a>':'') +
+        '<button onclick="toggleAccountActive(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\',' +(a.active!==false)+')" style="background:none;border:1px solid '+(a.active!==false?'#22C55E':'#6B7280')+';border-radius:5px;padding:3px 10px;color:'+(a.active!==false?'#22C55E':'#9CA3AF')+';font-size:10px;cursor:pointer;font-weight:600;">'+(a.active!==false?'⏸ Deactivate':'▶ Reactivate')+'</button>'+
+        '<button onclick="deleteClientAccount(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\')" style="background:none;border:1px solid var(--danger);border-radius:5px;padding:3px 10px;color:var(--danger);font-size:10px;cursor:pointer;font-weight:600;margin-left:auto;">🗑 Delete</button>'+
+      '</div>'+
       '</div>';
   }).join('');
 }
