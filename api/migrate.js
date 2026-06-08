@@ -78,6 +78,11 @@ export default async function handler(req, res) {
       check: "SELECT column_name FROM information_schema.columns WHERE table_name='accounts' AND column_name='webhook_url'",
       sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS webhook_url text"
     },
+    {
+      name: 'accounts.enabled_trades',
+      check: "SELECT column_name FROM information_schema.columns WHERE table_name='accounts' AND column_name='enabled_trades'",
+      sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS enabled_trades text[] DEFAULT ARRAY['roofing']"
+    },
   ];
 
   // Try to run DDL via rpc/exec_sql
