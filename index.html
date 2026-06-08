@@ -1889,6 +1889,7 @@ tr:hover td{background:var(--card);}
       <button class="stab-tab active" id="ptab-roofing"  onclick="switchPricingTab('roofing')">🏠 Roofing</button>
       <button class="stab-tab"        id="ptab-solar"    onclick="switchPricingTab('solar')">☀️ Solar</button>
       <button class="stab-tab"        id="ptab-fencing"  onclick="switchPricingTab('fencing')">🪵 Fencing</button>
+      <button class="stab-tab"        id="ptab-siding"   onclick="switchPricingTab('siding')">🏗 Siding</button>
     </div>
 
     <!-- ══════════════════════════════════════════════════════════════════════
@@ -2167,6 +2168,93 @@ tr:hover td{background:var(--card);}
       </div>
     </div><!-- /stab-grid fencing -->
     </div><!-- /ptabpane-fencing -->
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         SUB-TAB: SIDING
+    ══════════════════════════════════════════════════════════════════════ -->
+    <div id="ptabpane-siding" class="ptab-pane" style="display:none;">
+    <div class="stab-grid">
+      <div class="stab-card stab-full">
+        <div class="stab-card-hdr" onclick="toggleStabCard('siding-pricing')">
+          <span>🏗 Siding Pricing &amp; Estimator</span>
+          <span class="stab-chevron" id="stab-chevron-siding-pricing">▾</span>
+        </div>
+        <div class="stab-card-body" id="stab-body-siding-pricing">
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:13px;color:var(--mid);margin-bottom:16px;">
+            🏗 Siding estimates use <strong>price per square foot</strong>. The estimator multiplies wall sq ft × $/sqft to calculate the total.
+          </div>
+          <div class="stab-section-hdr">Siding Types Offered</div>
+          <div style="background:var(--card2);border-radius:8px;padding:12px 14px;margin-bottom:14px;">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Check the siding types you offer. Each gets its own price per square foot.</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);"><input type="checkbox" id="s-sid-vinyl"    style="accent-color:var(--accent);width:15px;height:15px;" checked> 🏠 Vinyl</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);"><input type="checkbox" id="s-sid-hardie"   style="accent-color:var(--accent);width:15px;height:15px;"> 🧱 Fiber Cement (Hardie)</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);"><input type="checkbox" id="s-sid-wood"     style="accent-color:var(--accent);width:15px;height:15px;"> 🪵 Wood / Cedar</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);"><input type="checkbox" id="s-sid-eng-wood" style="accent-color:var(--accent);width:15px;height:15px;"> 🌲 Engineered Wood</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);"><input type="checkbox" id="s-sid-metal"    style="accent-color:var(--accent);width:15px;height:15px;"> 🏗 Metal / Steel</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);"><input type="checkbox" id="s-sid-stucco"   style="accent-color:var(--accent);width:15px;height:15px;"> 🏛 Stucco</label>
+            </div>
+          </div>
+          <div class="stab-section-hdr">Price Per Square Foot (Labor + Material)</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Vinyl ($/sqft)</label><input type="number" class="fi" id="s-sid-vinyl-psf"    placeholder="4.50" step="0.25" min="0"></div>
+            <div class="fg"><label class="fl">Fiber Cement / Hardie ($/sqft)</label><input type="number" class="fi" id="s-sid-hardie-psf"   placeholder="8.00" step="0.25" min="0"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Wood / Cedar ($/sqft)</label><input type="number" class="fi" id="s-sid-wood-psf"     placeholder="7.00" step="0.25" min="0"></div>
+            <div class="fg"><label class="fl">Engineered Wood ($/sqft)</label><input type="number" class="fi" id="s-sid-engwood-psf" placeholder="6.50" step="0.25" min="0"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Metal / Steel ($/sqft)</label><input type="number" class="fi" id="s-sid-metal-psf"    placeholder="9.00" step="0.25" min="0"></div>
+            <div class="fg"><label class="fl">Stucco ($/sqft)</label><input type="number" class="fi" id="s-sid-stucco-psf"   placeholder="10.00" step="0.25" min="0"></div>
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Add-On Pricing</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Old Siding Removal ($/sqft)</label><input type="number" class="fi" id="s-sid-removal" placeholder="1.50" step="0.25" min="0"></div>
+            <div class="fg"><label class="fl">House Wrap / Moisture Barrier ($/sqft)</label><input type="number" class="fi" id="s-sid-housewrap" placeholder="0.75" step="0.05" min="0"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Trim / Fascia ($/lf)</label><input type="number" class="fi" id="s-sid-trim" placeholder="6.00" step="0.25" min="0"></div>
+            <div class="fg"><label class="fl">Corner Posts ($/each)</label><input type="number" class="fi" id="s-sid-corners" placeholder="45" min="0"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Window / Door Wrap ($/opening)</label><input type="number" class="fi" id="s-sid-window-wrap" placeholder="85" min="0"></div>
+            <div class="fg"><label class="fl">Insulation Backer ($/sqft)</label><input type="number" class="fi" id="s-sid-insulation" placeholder="0.50" step="0.05" min="0"></div>
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Overhead &amp; Margin</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Overhead %</label><input type="number" class="fi" id="s-sid-ovh" placeholder="15"></div>
+            <div class="fg"><label class="fl">Profit Margin %</label><input type="number" class="fi" id="s-sid-mgn" placeholder="20"></div>
+          </div>
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:13px;color:var(--mid);margin-top:4px;">
+            💡 Formula: (Wall Sq Ft × $/sqft + Removal + Wrap + Trim + Corners) × (1 + Overhead%) × (1 + Margin%) + Tax = Estimate
+          </div>
+          <div class="frow" style="margin-top:10px;">
+            <div class="fg"><label class="fl">Sales Tax % <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— added to proposal total (0 = no tax)</span></label><input type="number" class="fi" id="s-sid-tax" placeholder="0" step="0.01" min="0" max="30"></div>
+            <div class="fg"></div>
+          </div>
+          <div class="stab-section-hdr" style="margin-top:16px;">Financing Options</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <input type="checkbox" id="s-sid-fin-enabled" style="accent-color:var(--accent);width:16px;height:16px;" checked>
+            <label for="s-sid-fin-enabled" style="font-size:13px;font-weight:700;color:var(--mid);cursor:pointer;">Show financing on siding estimate <span style="font-weight:400;color:var(--muted);font-size:11px;">(auto-calculates)</span></label>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">APR %</label><input type="number" class="fi" id="s-sid-fin-apr" placeholder="9.99" step="0.01" value="9.99"></div>
+            <div class="fg"><label class="fl">Term (months)</label>
+              <select class="fs" id="s-sid-fin-term">
+                <option value="24">24 months (2 yr)</option>
+                <option value="36">36 months (3 yr)</option>
+                <option value="48">48 months (4 yr)</option>
+                <option value="60" selected>60 months (5 yr)</option>
+                <option value="84">84 months (7 yr)</option>
+                <option value="120">120 months (10 yr)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /stab-grid siding -->
+    </div><!-- /ptabpane-siding -->
 
     </div><!-- /stab-tab-pane pricing -->
     <!-- ══ TAB: MARKETING ══
@@ -11878,6 +11966,31 @@ function openSettings(){
   _sck('s-fen-fin-enabled', c.fenFinEnabled!==false);
   _sset('s-fen-fin-apr', c.fenFinApr||9.99);
   _sset('s-fen-fin-term', c.fenFinTerm||60);
+  // ── Load Siding pricing fields ──
+  _sck('s-sid-vinyl',    c.sidVinyl!==false);
+  _sck('s-sid-hardie',   !!c.sidHardie);
+  _sck('s-sid-wood',     !!c.sidWood);
+  _sck('s-sid-eng-wood', !!c.sidEngWood);
+  _sck('s-sid-metal',    !!c.sidMetal);
+  _sck('s-sid-stucco',   !!c.sidStucco);
+  _sset('s-sid-vinyl-psf',    c.sidVinylPsf||4.50);
+  _sset('s-sid-hardie-psf',   c.sidHardiePsf||8.00);
+  _sset('s-sid-wood-psf',     c.sidWoodPsf||7.00);
+  _sset('s-sid-engwood-psf',  c.sidEngWoodPsf||6.50);
+  _sset('s-sid-metal-psf',    c.sidMetalPsf||9.00);
+  _sset('s-sid-stucco-psf',   c.sidStuccoPsf||10.00);
+  _sset('s-sid-removal',      c.sidRemoval||1.50);
+  _sset('s-sid-housewrap',    c.sidHousewrap||0.75);
+  _sset('s-sid-trim',         c.sidTrim||6.00);
+  _sset('s-sid-corners',      c.sidCorners||45);
+  _sset('s-sid-window-wrap',  c.sidWindowWrap||85);
+  _sset('s-sid-insulation',   c.sidInsulation||0.50);
+  _sset('s-sid-ovh', c.sidOverhead||15);
+  _sset('s-sid-mgn', c.sidMargin||20);
+  _sset('s-sid-tax', c.sidTax||0);
+  _sck('s-sid-fin-enabled', c.sidFinEnabled!==false);
+  _sset('s-sid-fin-apr', c.sidFinApr||9.99);
+  _sset('s-sid-fin-term', c.sidFinTerm||60);
   // Restore pricing sub-tab
   restorePricingTab();
   const repVidEl=document.getElementById('s-rep-video-url'); if(repVidEl){ repVidEl.value=c.repVideoUrl||''; updateRepVideoPreview(c.repVideoUrl||''); }
@@ -12171,6 +12284,27 @@ function saveSettings(){
     fenFinEnabled:ck('s-fen-fin-enabled'),
     fenFinApr:parseFloat(v('s-fen-fin-apr'))||9.99,
     fenFinTerm:parseInt(v('s-fen-fin-term'))||60,
+    // ── Siding pricing ──
+    sidVinyl:ck('s-sid-vinyl'), sidHardie:ck('s-sid-hardie'), sidWood:ck('s-sid-wood'),
+    sidEngWood:ck('s-sid-eng-wood'), sidMetal:ck('s-sid-metal'), sidStucco:ck('s-sid-stucco'),
+    sidVinylPsf:parseFloat(v('s-sid-vinyl-psf'))||4.50,
+    sidHardiePsf:parseFloat(v('s-sid-hardie-psf'))||8.00,
+    sidWoodPsf:parseFloat(v('s-sid-wood-psf'))||7.00,
+    sidEngWoodPsf:parseFloat(v('s-sid-engwood-psf'))||6.50,
+    sidMetalPsf:parseFloat(v('s-sid-metal-psf'))||9.00,
+    sidStuccoPsf:parseFloat(v('s-sid-stucco-psf'))||10.00,
+    sidRemoval:parseFloat(v('s-sid-removal'))||1.50,
+    sidHousewrap:parseFloat(v('s-sid-housewrap'))||0.75,
+    sidTrim:parseFloat(v('s-sid-trim'))||6.00,
+    sidCorners:n('s-sid-corners')||45,
+    sidWindowWrap:n('s-sid-window-wrap')||85,
+    sidInsulation:parseFloat(v('s-sid-insulation'))||0.50,
+    sidOverhead:n('s-sid-ovh')||15,
+    sidMargin:n('s-sid-mgn')||20,
+    sidTax:n('s-sid-tax')||0,
+    sidFinEnabled:ck('s-sid-fin-enabled'),
+    sidFinApr:parseFloat(v('s-sid-fin-apr'))||9.99,
+    sidFinTerm:parseInt(v('s-sid-fin-term'))||60,
     brandColor:v('s-color')||'#F25C05',
     ghlApiKey:v('s-ghl-key'),
     ghlLocationId:v('s-ghl-loc'),
