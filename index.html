@@ -16748,15 +16748,28 @@ window.addEventListener('load', ()=>{
   // ─────────────────────────────────────────────────────────────────────────
 
   // Step 1 — bootstrap from existing session on every page load / hard refresh
-  sb.auth.getSession().then(({ data: { session } }) => {
-    if(session && session.user && !_appInitialized){
-      onSignedIn(session.user).catch(e => {
-        console.error('[Auth] onSignedIn error (getSession bootstrap):', e);
-        showLoginScreen();
-        sb.auth.signOut().catch(()=>{});
-      });
-    }
-  }).catch(e => console.warn('[Auth] getSession error:', e));
+  // IMPORTANT: If the URL hash contains type=recovery, this is a password reset link.
+  // Supabase v2 parses the hash and returns a valid session from getSession() immediately,
+  // which would auto-log the user in BEFORE onAuthStateChange fires PASSWORD_RECOVERY.
+  // We must skip the bootstrap in this case and let onAuthStateChange handle it.
+  const _urlHash = window.location.hash || '';
+  const _isPasswordRecovery = _urlHash.includes('type=recovery') || _urlHash.includes('type%3Drecovery');
+  if(_isPasswordRecovery){
+    // Mark recovery mode immediately so SIGNED_IN event is also blocked
+    window._inPasswordRecovery = true;
+    // onAuthStateChange will fire PASSWORD_RECOVERY and show the set-password form
+    console.log('[Auth] Password recovery link detected — skipping getSession bootstrap');
+  } else {
+    sb.auth.getSession().then(({ data: { session } }) => {
+      if(session && session.user && !_appInitialized){
+        onSignedIn(session.user).catch(e => {
+          console.error('[Auth] onSignedIn error (getSession bootstrap):', e);
+          showLoginScreen();
+          sb.auth.signOut().catch(()=>{});
+        });
+      }
+    }).catch(e => console.warn('[Auth] getSession error:', e));
+  }
 
   // Step 2 — listen only for explicit user-triggered events
   sb.auth.onAuthStateChange((event, session) => {
@@ -17065,6 +17078,10 @@ async function doSetNewPassword(){
     const { error } = await sb.auth.updateUser({ password: pw1 });
     if(error) throw error;
     window._inPasswordRecovery = false;
+    // Clear the recovery hash from the URL so a page refresh doesn't re-trigger recovery
+    if(window.history && window.history.replaceState){
+      window.history.replaceState(null, '', window.location.pathname);
+    }
     msg.style.color = '#1a7f4b';
     msg.textContent = '✅ Password updated! Loading your account...';
     // Clear must_change_password flag if this was a first-login forced change
