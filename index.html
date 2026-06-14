@@ -1715,6 +1715,18 @@ tr:hover td{background:var(--card);}
       </div>
       <!-- Letter preview -->
       <div class="mailer" id="mailer-preview"></div>
+      <!-- Proposal preview (new Asbury-style layout in iframe) -->
+      <div id="proposal-preview-wrap" style="display:none;width:100%;max-width:680px;">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px;text-align:center;">Proposal preview — what the homeowner receives</div>
+        <div id="prop-preview-scaler" style="width:100%;overflow:hidden;border-radius:8px;border:1px solid var(--border);position:relative;background:#fff;">
+          <iframe id="prop-preview-iframe" style="width:850px;height:1100px;border:none;background:#fff;transform-origin:top left;display:block;" frameborder="0"></iframe>
+        </div>
+        <!-- Print button below proposal preview -->
+        <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <button id="prop-preview-print-btn" onclick="printProposalWithCredit()" style="background:var(--accent);border:none;border-radius:10px;padding:13px;color:#fff;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">&#128424; Print / Save PDF <span id="prop-print-cost-badge" style="font-size:10px;font-weight:600;background:rgba(255,255,255,.2);border-radius:20px;padding:2px 8px;">1 Credit</span></button>
+          <button onclick="emailProposal()" style="background:linear-gradient(135deg,#1a3a6b,#0f2040);border:1px solid rgba(59,130,246,.5);border-radius:10px;padding:13px;color:#60a5fa;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">&#128231; Email to Homeowner</button>
+        </div>
+      </div>
       <!-- Postcard preview (6x9 front + back) using scaled iframes -->
       <div id="postcard-preview-wrap" style="display:none;width:100%;max-width:680px;">
         <div style="font-size:11px;color:var(--muted);margin-bottom:12px;text-align:center;">6&times;9 postcard &mdash; front on top, back below. Actual print size: 9&quot;&times;6&quot;.</div>
@@ -9136,28 +9148,70 @@ let _previewMode = 'letter';
 
 function setPreviewMode(mode){
   _previewMode = mode;
-  const letterWrap  = document.getElementById('mailer-preview');
-  const pcWrap      = document.getElementById('postcard-preview-wrap');
-  const tabLetter   = document.getElementById('preview-tab-letter');
-  const tabProposal = document.getElementById('preview-tab-proposal');
-  const tabPostcard = document.getElementById('preview-tab-postcard');
+  const letterWrap   = document.getElementById('mailer-preview');
+  const pcWrap       = document.getElementById('postcard-preview-wrap');
+  const propWrap     = document.getElementById('proposal-preview-wrap');
+  const tabLetter    = document.getElementById('preview-tab-letter');
+  const tabProposal  = document.getElementById('preview-tab-proposal');
+  const tabPostcard  = document.getElementById('preview-tab-postcard');
   if(!letterWrap || !pcWrap) return;
   // Reset all tabs
   [tabLetter, tabProposal, tabPostcard].forEach(t=>{ if(t){ t.style.background='var(--card2)'; t.style.color='var(--muted)'; } });
   if(mode === 'postcard'){
     letterWrap.style.display  = 'none';
+    if(propWrap) propWrap.style.display = 'none';
     pcWrap.style.display      = 'block';
     if(tabPostcard){ tabPostcard.style.background = 'var(--accent)'; tabPostcard.style.color = '#fff'; }
     _refreshPostcardPreview();
+  } else if(mode === 'proposal'){
+    letterWrap.style.display  = 'none';
+    pcWrap.style.display      = 'none';
+    if(propWrap) propWrap.style.display = 'block';
+    if(tabProposal){ tabProposal.style.background = '#1a3a6b'; tabProposal.style.color = '#60a5fa'; }
+    _refreshProposalPreview();
   } else {
     letterWrap.style.display  = '';
+    if(propWrap) propWrap.style.display = 'none';
     pcWrap.style.display      = 'none';
-    if(mode === 'proposal'){
-      if(tabProposal){ tabProposal.style.background = '#1a3a6b'; tabProposal.style.color = '#60a5fa'; }
-    } else {
-      if(tabLetter){ tabLetter.style.background = 'var(--accent)'; tabLetter.style.color = '#fff'; }
-    }
+    if(tabLetter){ tabLetter.style.background = 'var(--accent)'; tabLetter.style.color = '#fff'; }
     updatePreview();
+  }
+}
+
+function _refreshProposalPreview(){
+  const iframe = document.getElementById('prop-preview-iframe');
+  const scaler = document.getElementById('prop-preview-scaler');
+  if(!iframe) return;
+  // Build the proposal HTML
+  const html = buildProposalHTML(false);
+  iframe.srcdoc = html;
+  // Scale iframe to fit container width
+  setTimeout(()=>{
+    const containerW = (scaler ? scaler.offsetWidth : 680) || 680;
+    const scale = containerW / 850;
+    iframe.style.transform = 'scale('+scale+')';
+    iframe.style.transformOrigin = 'top left';
+    if(scaler) scaler.style.height = Math.round(1100 * scale) + 'px';
+  }, 100);
+  // Update print cost badge — free if estimate already has print_paid
+  const estId = window._editingEstimateId || null;
+  const est = estId ? (S.estimates||[]).find(e=>e.id===estId) : null;
+  const badge = document.getElementById('prop-print-cost-badge');
+  if(badge){
+    if(est && est.printPaid){
+      badge.textContent = 'FREE (already unlocked)';
+      badge.style.background = 'rgba(34,197,94,.25)';
+    } else {
+      // Check if a postcard was sent for this estimate
+      const qItem = (S.queue||[]).find(q=>(q.estId===estId || (est && q.addr===(est.addr||''))) && q.status==='sent');
+      if(qItem){
+        badge.textContent = 'FREE (postcard sent)';
+        badge.style.background = 'rgba(34,197,94,.25)';
+      } else {
+        badge.textContent = '1 Credit';
+        badge.style.background = 'rgba(255,255,255,.2)';
+      }
+    }
   }
 }
 
@@ -20040,6 +20094,60 @@ function printProposalPDF() {
   w.document.close();
   w.focus();
   setTimeout(() => { w.print(); }, 600);
+}
+
+async function printProposalWithCredit(){
+  if(!isPlanAtLeast('pro')){ showPlanUpgradePrompt('Print Proposal','pro'); return; }
+  const estId = window._editingEstimateId || null;
+  const btn = document.getElementById('prop-preview-print-btn');
+  if(btn){ btn.disabled=true; btn.innerHTML='⏳ Unlocking...'; }
+  try{
+    // Check if already unlocked via postcard or previous print
+    const est = estId ? (S.estimates||[]).find(e=>e.id===estId) : null;
+    const qItem = estId ? (S.queue||[]).find(q=>(q.estId===estId || (est && q.addr===(est.addr||''))) && q.status==='sent') : null;
+    let canPrint = false;
+    if(est && est.printPaid){
+      // Already paid — free reprint
+      canPrint = true;
+    } else if(qItem){
+      // Postcard was sent — unlock for free
+      if(estId) _unlockPrintForEstimate(estId);
+      canPrint = true;
+    } else if(estId){
+      // Charge 1 credit via print-unlock API
+      const sess = await sb.auth.getSession();
+      const token = sess?.data?.session?.access_token;
+      if(!token){ toast('Please log in to print','warning'); return; }
+      const d = await adminAPI('print-unlock', { estId });
+      if(d && d.error === 'no_credits'){
+        toast('Not enough credits to print. Please purchase more credits (1 credit = $4.00).','error');
+        setTimeout(()=>showBuyCreditsModal(), 800);
+        return;
+      }
+      if(d && (d.success || d.already_paid)){
+        if(d._credits){ S.cfg.mailerCredits = d._credits.paid_credits ?? S.cfg.mailerCredits; updateCreditBadge(); }
+        // Update local estimate record
+        if(est) est.printPaid = true;
+        canPrint = true;
+      } else {
+        toast('Could not unlock print — please try again','error');
+        return;
+      }
+    } else {
+      // No saved estimate — allow print without credit (unsaved)
+      canPrint = true;
+    }
+    if(canPrint){
+      printProposalPDF();
+      // Update badge to show free
+      const badge = document.getElementById('prop-print-cost-badge');
+      if(badge){ badge.textContent='FREE (unlocked)'; badge.style.background='rgba(34,197,94,.25)'; }
+    }
+  } catch(e){
+    toast('Print error: '+e.message,'error');
+  } finally {
+    if(btn){ btn.disabled=false; btn.innerHTML='\u{1F5A8} Print / Save PDF <span id="prop-print-cost-badge" style="font-size:10px;font-weight:600;background:rgba(255,255,255,.2);border-radius:20px;padding:2px 8px;">1 Credit</span>'; }
+  }
 }
 
 async function emailProposal() {
