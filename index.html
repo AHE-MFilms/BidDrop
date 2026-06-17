@@ -1568,6 +1568,9 @@ tr:hover td{background:var(--card);}
             <div id="eq-mortgage" style="font-size:15px;font-weight:700;color:#F25C05;">—</div>
           </div>
         </div>
+        <div id="eq-property-row" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid rgba(34,197,94,.2);font-size:12px;color:#A8BECE;line-height:1.6;">
+          <span id="eq-year-built"></span>
+        </div>
       </div>
       <div class="fg">
         <label class="fl">Homeowner Email <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— syncs to GHL contact</span></label>
@@ -7391,14 +7394,15 @@ function addMarker(pin){
   const _popupNotes = pin.notes ? '<div style="font-size:13px;color:#A8BECE;margin-bottom:10px;font-style:italic;">"'+escHtml(pin.notes)+'"</div>' : '';
   // Equity snapshot for popup
   const _eq = pin.equityData;
-  const _popupEquity = _eq && (_eq.estValue || _eq.equity) ? `
+  const _popupEquity = _eq && (_eq.estValue || _eq.equity || _eq.yearBuilt) ? `
     <div style="background:linear-gradient(135deg,#0f2027,#1a3a2a);border:1px solid #22C55E55;border-radius:8px;padding:10px 12px;margin-bottom:10px;">
       <div style="font-size:9px;font-weight:700;letter-spacing:.7px;color:#22C55E;margin-bottom:6px;">🏠 PROPERTY SNAPSHOT</div>
-      <div style="display:flex;gap:8px;">
+      <div style="display:flex;gap:8px;margin-bottom:${_eq.yearBuilt ? '8px' : '0'};">
         <div style="flex:1;"><div style="font-size:9px;color:#A8BECE;">Est. Value</div><div style="font-size:13px;font-weight:700;color:#FFF;">${fmtMoney(_eq.estValue)||'—'}</div></div>
         <div style="flex:1;"><div style="font-size:9px;color:#A8BECE;">Equity</div><div style="font-size:13px;font-weight:700;color:#22C55E;">${fmtMoney(_eq.equity)||'—'}</div></div>
         <div style="flex:1;"><div style="font-size:9px;color:#A8BECE;">Mortgage</div><div style="font-size:13px;font-weight:700;color:#F25C05;">${fmtMoney(_eq.mortgageBalance)||'—'}</div></div>
       </div>
+      ${_eq.yearBuilt ? `<div style="font-size:11px;color:#A8BECE;border-top:1px solid rgba(34,197,94,.2);padding-top:6px;">🏠 Built ${_eq.yearBuilt} &nbsp;·&nbsp; <span style="color:#F25C05;font-weight:700;">Est. ${new Date().getFullYear()-_eq.yearBuilt}-yr roof</span>${_eq.roofType ? ' &nbsp;·&nbsp; '+_eq.roofType : ''}</div>` : ''}
     </div>` : '';
   // Solar measurement row — always shown, content updates after fetch
   const _solar = pin._solarCache;
@@ -14046,7 +14050,14 @@ async function lookupPropertyData(address){
     const estValue = r.estimatedValue || null;
     const mortgageBalance = (r.mortgage && r.mortgage.amount) ? r.mortgage.amount : null;
     const equity = (estValue && mortgageBalance) ? Math.max(0, estValue - mortgageBalance) : (estValue ? estValue : null);
-    return { name, estValue, mortgageBalance, equity };
+    const yearBuilt = r.yearBuilt || null;
+    const roofType = (r.features && r.features.roofType) || null;
+    const bedrooms = r.bedrooms || null;
+    const bathrooms = r.bathrooms || null;
+    const squareFootage = r.squareFootage || null;
+    const lastSaleDate = r.lastSaleDate ? r.lastSaleDate.substring(0,10) : null;
+    const lastSalePrice = r.lastSalePrice || null;
+    return { name, estValue, mortgageBalance, equity, yearBuilt, roofType, bedrooms, bathrooms, squareFootage, lastSaleDate, lastSalePrice };
   } catch(e){
     console.warn('RentCast lookup failed:', e);
     return null;
@@ -14057,13 +14068,40 @@ async function lookupOwnerName(address){ const d=await lookupPropertyData(addres
 function showEquityBadge(data){
   const badge = document.getElementById('equity-badge');
   if(!badge) return;
-  if(!data || (!data.estValue && !data.equity)) { badge.style.display='none'; return; }
+  if(!data || (!data.estValue && !data.equity && !data.yearBuilt)) { badge.style.display='none'; return; }
   const valEl = document.getElementById('eq-value');
   const eqEl  = document.getElementById('eq-equity');
   const mortEl= document.getElementById('eq-mortgage');
   if(valEl)  valEl.textContent  = fmtMoney(data.estValue)      || '—';
   if(eqEl)   eqEl.textContent   = fmtMoney(data.equity)         || '—';
   if(mortEl) mortEl.textContent = fmtMoney(data.mortgageBalance) || '—';
+  // Property details row
+  const propRow = document.getElementById('eq-property-row');
+  const yrEl    = document.getElementById('eq-year-built');
+  if(propRow && yrEl){
+    const parts = [];
+    if(data.yearBuilt){
+      const age = new Date().getFullYear() - data.yearBuilt;
+      parts.push('🏠 Built ' + data.yearBuilt + ' &nbsp;·&nbsp; <span style="color:#F25C05;font-weight:700;">Est. ' + age + '-yr roof</span>');
+    }
+    if(data.roofType) parts.push('Roof: ' + data.roofType);
+    if(data.bedrooms || data.bathrooms){
+      const bd = data.bedrooms ? data.bedrooms + ' bd' : '';
+      const ba = data.bathrooms ? data.bathrooms + ' ba' : '';
+      parts.push([bd,ba].filter(Boolean).join(' / '));
+    }
+    if(data.lastSaleDate){
+      const saleYear = data.lastSaleDate.substring(0,4);
+      const salePart = data.lastSalePrice ? saleYear + ' · ' + fmtMoney(data.lastSalePrice) : saleYear;
+      parts.push('Last sold: ' + salePart);
+    }
+    if(parts.length){
+      yrEl.innerHTML = parts.join('&nbsp;&nbsp;·&nbsp;&nbsp;');
+      propRow.style.display = 'block';
+    } else {
+      propRow.style.display = 'none';
+    }
+  }
   badge.style.display = 'block';
 }
 function hideEquityBadge(){
@@ -14243,7 +14281,7 @@ async function manualRentcastLookup(){
     showEquityBadge(data);
     if(currentEstPinId){
       const pin = S.pins.find(p=>p.id===currentEstPinId);
-      if(pin){ pin.equityData = { estValue: data.estValue, mortgageBalance: data.mortgageBalance, equity: data.equity }; }
+      if(pin){ pin.equityData = { estValue: data.estValue, mortgageBalance: data.mortgageBalance, equity: data.equity, yearBuilt: data.yearBuilt, roofType: data.roofType, bedrooms: data.bedrooms, bathrooms: data.bathrooms, lastSaleDate: data.lastSaleDate, lastSalePrice: data.lastSalePrice }; }
     }
     toast('🏠 '+(data.name ? 'Owner: '+data.name : 'Property found — owner name unavailable, enter manually'),'success');
   } catch(e){
@@ -14276,7 +14314,7 @@ async function autoFillOwnerIfEmpty(address){
   if(currentEstPinId){
     const pin = S.pins.find(p=>p.id===currentEstPinId);
     if(pin){
-      pin.equityData = { estValue: data.estValue, mortgageBalance: data.mortgageBalance, equity: data.equity };
+      pin.equityData = { estValue: data.estValue, mortgageBalance: data.mortgageBalance, equity: data.equity, yearBuilt: data.yearBuilt, roofType: data.roofType, bedrooms: data.bedrooms, bathrooms: data.bathrooms, lastSaleDate: data.lastSaleDate, lastSalePrice: data.lastSalePrice };
       // Refresh the map marker popup to show equity
       if(markers[currentEstPinId]) addMarker(pin);
     }
