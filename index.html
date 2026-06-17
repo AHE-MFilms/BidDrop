@@ -859,7 +859,7 @@ tr:hover td{background:var(--card);}
       <div id="hail-controls" style="display:none;margin-bottom:10px;">
         <div style="margin-bottom:8px;">
           <label style="font-size:10px;font-weight:700;color:var(--mid);display:block;margin-bottom:4px;">DATE RANGE</label>
-          <select id="storm-days" onchange="loadStormEvents()" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:6px 10px;font-size:12px;">
+          <select id="storm-days" onchange="loadStormEvents();_saveStormState()" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:6px 10px;font-size:12px;">
             <option value="1">Today</option>
             <option value="3">Last 3 Days</option>
             <option value="7">Last 7 Days</option>
@@ -873,7 +873,7 @@ tr:hover td{background:var(--card);}
         </div>
         <div style="margin-bottom:8px;">
           <label style="font-size:10px;font-weight:700;color:var(--mid);display:block;margin-bottom:4px;">MIN HAIL SIZE</label>
-          <select id="storm-min-size" onchange="renderStormMarkers()" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:6px 10px;font-size:12px;">
+          <select id="storm-min-size" onchange="renderStormMarkers();_saveStormState()" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:6px 10px;font-size:12px;">
             <option value="0.75" selected>0.75"+ (Penny)</option>
             <option value="1.00">1.00"+ (Quarter)</option>
             <option value="1.50">1.50"+ (Golf Ball)</option>
@@ -16955,6 +16955,7 @@ async function onSignedIn(user){
     // Agency model: fetch master Lob key from AHE account (service role — clients cannot read this)
     await fetchMasterLobKey();
     initMap();
+    setTimeout(restoreStormState, 1500);
     renderStructures();
     updatePreview();
     applyRoleUI();
@@ -18173,6 +18174,43 @@ function closeStormPanel(){
   document.getElementById('storm-panel').style.display = 'none';
 }
 
+// ── Storm state persistence ──────────────────────────────────────────────────
+function _saveStormState(){
+  try{
+    const days = (document.getElementById('storm-days')||{}).value || '30';
+    const minSize = (document.getElementById('storm-min-size')||{}).value || '0.75';
+    localStorage.setItem('bd_storm_state', JSON.stringify({
+      hailOn: _hailLayerOn,
+      windOn: _windLayerOn,
+      days: days,
+      minSize: minSize
+    }));
+  }catch(e){}
+}
+function restoreStormState(){
+  try{
+    const raw = localStorage.getItem('bd_storm_state');
+    if(!raw) return;
+    const st = JSON.parse(raw);
+    // Restore select values first
+    const daysEl = document.getElementById('storm-days');
+    const sizeEl = document.getElementById('storm-min-size');
+    if(daysEl && st.days) daysEl.value = st.days;
+    if(sizeEl && st.minSize) sizeEl.value = st.minSize;
+    // Restore hail layer
+    if(st.hailOn){
+      _hailLayerOn = true;
+      _syncHailToggleUI();
+      loadStormEvents();
+    }
+    // Restore wind layer
+    if(st.windOn){
+      _windLayerOn = true;
+      _syncWindToggleUI();
+      loadWindEvents();
+    }
+  }catch(e){}
+}
 // ── Hail toggle ──────────────────────────────────────────────────
 function toggleHailLayer(){
   _hailLayerOn = !_hailLayerOn;
@@ -18184,6 +18222,7 @@ function toggleHailLayer(){
     _stormData = [];
     const s = document.getElementById('storm-status'); if(s) s.textContent='';
   }
+  _saveStormState();
 }
 function _syncHailToggleUI(){
   const track = document.getElementById('hail-toggle-track');
@@ -18213,6 +18252,7 @@ function toggleWindLayer(){
     _windData = [];
     const s = document.getElementById('wind-status'); if(s) s.textContent='';
   }
+  _saveStormState();
 }
 function _syncWindToggleUI(){
   const track = document.getElementById('wind-toggle-track');
