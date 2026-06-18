@@ -7646,9 +7646,23 @@ function addMarker_updatePropData(m, pid, pin){
 function savePin(){
   if(!tempLL)return;
   const dmgPhotos = window._pinDamagePhotos || [];
-  // ── Deduplicate: if a pin already exists at this address, offer to open it instead
+  // ── Deduplicate: if a pin already exists at this address OR within 30m, offer to open it instead
   const newAddr = (document.getElementById('p-addr').value.trim()||(tempLL.lat.toFixed(4)+', '+tempLL.lng.toFixed(4))).toLowerCase();
-  const dupPin = S.pins.find(p=>(p.address||'').toLowerCase()===newAddr);
+  function _haversineM(lat1,lng1,lat2,lng2){
+    const R=6371000,dLat=(lat2-lat1)*Math.PI/180,dLng=(lng2-lng1)*Math.PI/180;
+    const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  }
+  // Only check for duplicates within the same account
+  const currentAccountId = currentAccount && currentAccount.id;
+  const dupPin = S.pins.find(p=>{
+    // Must be same account (or both null/undefined for legacy pins)
+    const sameAccount = !currentAccountId || !p.account_id || p.account_id === currentAccountId;
+    if(!sameAccount) return false;
+    if((p.address||'').toLowerCase()===newAddr) return true;
+    if(p.lat && p.lng && tempLL) return _haversineM(p.lat,p.lng,tempLL.lat,tempLL.lng) < 30;
+    return false;
+  });
   if(dupPin){
     closeM('m-pin');
     toast('📍 A pin already exists at this address — opening it','info');
