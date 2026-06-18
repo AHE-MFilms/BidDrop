@@ -7603,44 +7603,75 @@ async function lookupContactInfo(pid){
 }
 
 // Rebuild a marker's popup HTML with fresh solar data (called after async fetch)
-function addMarker_updateSolar(m, pid, pin){
-  // Re-run addMarker logic to rebuild popup with cached solar data
-  // Only update if marker still exists
-  if(!markers[pid]) return;
-  // Capture any in-progress contact info HTML before rebuild
-  const prevContactEl = document.getElementById('contact-info-'+pid);
-  const savedContactHTML = prevContactEl ? prevContactEl.innerHTML : null;
-  const wasOpen = m.isPopupOpen ? m.isPopupOpen() : false;
-  if(clusterGroup) clusterGroup.removeLayer(m); else if(map) map.removeLayer(m);
-  delete markers[pid];
-  addMarker(pin);
-  if(wasOpen && markers[pid]) setTimeout(function(){
-    markers[pid].openPopup();
-    // Restore contact info HTML if it was showing (e.g. lookup in progress or results)
-    if(savedContactHTML){
-      const newEl = document.getElementById('contact-info-'+pid);
-      if(newEl && savedContactHTML !== newEl.innerHTML) newEl.innerHTML = savedContactHTML;
-    }
-  }, 50);
+// ── Popup HTML builder (shared by addMarker + rebind helpers) ──────────────
+function _buildPinPopupHTML(pin){
+  const pid = pin.id;
+  const _dmgPhotos = pin.damage_photos||[];
+  const _popupPhotos = _dmgPhotos.length
+    ? '<div style="display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap;">' + _dmgPhotos.map(src=>'<img src="'+src+'" style="width:calc(33% - 3px);height:80px;object-fit:cover;border-radius:6px;display:block;" onerror="this.style.display=\'none\'">').join('') + '</div>'
+    : pin.photo_url
+      ? '<img src="'+pin.photo_url+'" style="width:100%;max-height:90px;object-fit:cover;border-radius:6px;margin-bottom:8px;display:block;" onerror="this.style.display=\'none\'">'
+      : '';
+  const _solar = pin._solarCache;
+  const _solarContent = _solar && _solar.status==='ok'
+    ? _solar.sqft.toLocaleString()+' sq ft &nbsp;&middot;&nbsp; <span style="color:#F25C05;font-weight:700;">'+_solar.squares+' sq</span> &nbsp;&middot;&nbsp; <span style="color:#22C55E;font-weight:700;">'+_solar.pitchLabel+' pitch</span>'
+    : '<span style="color:#A8BECE;">Measuring\u2026</span>';
+  const _popupSolar = `<div id="solar-row-${pid}" style="background:rgba(242,92,5,.1);border:1px solid rgba(242,92,5,.3);border-radius:7px;padding:7px 10px;margin-bottom:7px;">
+    <div style="font-size:9px;font-weight:700;letter-spacing:.6px;color:#F25C05;margin-bottom:3px;">\ud83d\udef0 SATELLITE MEASUREMENT</div>
+    <div id="solar-val-${pid}" style="font-size:12px;color:#fff;font-weight:600;">${_solarContent}</div>
+  </div>`;
+  const _eq2 = pin.equityData;
+  const _propSnap = _eq2 ? buildPropertySnapHTML(pid, _eq2) : `<div id="prop-snap-${pid}" style="background:linear-gradient(135deg,#0f2027,#1a3a2a);border:1px solid #22C55E33;border-radius:8px;padding:8px 10px;margin-bottom:7px;font-size:11px;color:#A8BECE;">\ud83c\udfe0 <span id="prop-snap-val-${pid}">Loading property data\u2026</span></div>`;
+  const _contactHTML = pin.contactData ? buildContactInfoHTML(pid, pin.contactData) : `<button onclick="event.stopPropagation();lookupContactInfo('${pid}')" style="background:transparent;border:1.5px solid #A78BFA;border-radius:7px;padding:6px;color:#A78BFA;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;display:block;">\ud83d\udcde Get Contact Info</button>`;
+  return `<div style="min-width:200px;max-width:240px;">
+      <div style="font-weight:700;font-size:13px;margin-bottom:5px;color:#FFFFFF;line-height:1.3;">${escHtml(pin.address||'Unknown')}</div>
+      <div style="display:inline-block;background:${sColor(pin.status)};color:white;font-size:11px;padding:2px 8px;border-radius:5px;font-weight:700;margin-bottom:8px;">${sLabel(pin.status)}</div>
+      ${_popupPhotos}
+      ${_propSnap}
+      ${_popupSolar}
+      ${pin.estimate && pin.estimate.total ? `<div style="background:#0a1628;border:1px solid #3B82F655;border-radius:6px;padding:5px 8px;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;"><span style="font-size:9px;font-weight:700;color:#3B82F6;">\u2713 ESTIMATE</span><span style="font-size:13px;font-weight:700;color:#FFF;">$${(pin.estimate.total||0).toLocaleString()}</span></div>` : ''}
+      <button onclick="goEstFromPin('${pid}')" style="background:#F25C05;border:none;border-radius:7px;padding:8px;color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">${pin.estimate && pin.estimate.total ? '\ud83d\udccb Edit Estimate' : '\ud83d\udccb Build Estimate'}</button>
+      <button onclick="measureForPin('${pid}')" style="background:transparent;border:1.5px solid #F25C05;border-radius:7px;padding:6px;color:#F25C05;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">\ud83d\udcd0 Measure Roof</button>
+      <button onclick="openPhotoModal('${pid}')" style="background:transparent;border:1.5px solid #22C55E;border-radius:7px;padding:6px;color:#22C55E;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">\ud83d\udcf7 Manage Photos</button>
+      <div id="contact-info-${pid}" style="margin-bottom:5px;">${_contactHTML}</div>
+      <button onclick="confirmDeletePin('${pid}')" style="background:transparent;border:1.5px solid #EF4444;border-radius:7px;padding:5px;color:#EF4444;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;display:block;">\ud83d\uddd1 Delete Pin</button>
+    </div>`;
 }
-// Rebuild a marker's popup HTML with fresh property data (called after async RentCast fetch)
-function addMarker_updatePropData(m, pid, pin){
-  if(!markers[pid]) return;
-  // Capture any in-progress contact info HTML before rebuild
+// Rebind popup with fresh solar data — NO marker destroy/recreate (prevents duplicate markers)
+function addMarker_updateSolar(m, pid, pin){
+  const cur = markers[pid];
+  if(!cur) return;
+  // Save contact info HTML if popup is currently open
   const prevContactEl = document.getElementById('contact-info-'+pid);
   const savedContactHTML = prevContactEl ? prevContactEl.innerHTML : null;
-  const wasOpen = m.isPopupOpen ? m.isPopupOpen() : false;
-  if(clusterGroup) clusterGroup.removeLayer(m); else if(map) map.removeLayer(m);
-  delete markers[pid];
-  addMarker(pin);
-  if(wasOpen && markers[pid]) setTimeout(function(){
-    markers[pid].openPopup();
-    // Restore contact info HTML if it was showing (e.g. lookup in progress or results)
-    if(savedContactHTML){
+  const wasOpen = cur.isPopupOpen ? cur.isPopupOpen() : false;
+  // Rebind popup on the EXISTING marker — no destroy, no new async fetches
+  cur.bindPopup(_buildPinPopupHTML(pin), {maxWidth:260});
+  if(wasOpen){
+    cur.openPopup();
+    if(savedContactHTML) setTimeout(function(){
       const newEl = document.getElementById('contact-info-'+pid);
       if(newEl && savedContactHTML !== newEl.innerHTML) newEl.innerHTML = savedContactHTML;
-    }
-  }, 50);
+    }, 30);
+  }
+}
+// Rebind popup with fresh property data — NO marker destroy/recreate (prevents duplicate markers)
+function addMarker_updatePropData(m, pid, pin){
+  const cur = markers[pid];
+  if(!cur) return;
+  // Save contact info HTML if popup is currently open
+  const prevContactEl = document.getElementById('contact-info-'+pid);
+  const savedContactHTML = prevContactEl ? prevContactEl.innerHTML : null;
+  const wasOpen = cur.isPopupOpen ? cur.isPopupOpen() : false;
+  // Rebind popup on the EXISTING marker — no destroy, no new async fetches
+  cur.bindPopup(_buildPinPopupHTML(pin), {maxWidth:260});
+  if(wasOpen){
+    cur.openPopup();
+    if(savedContactHTML) setTimeout(function(){
+      const newEl = document.getElementById('contact-info-'+pid);
+      if(newEl && savedContactHTML !== newEl.innerHTML) newEl.innerHTML = savedContactHTML;
+    }, 30);
+  }
 }
 
 function savePin(){
