@@ -7428,6 +7428,7 @@ function addMarker(pin){
       <button onclick="goEstFromPin('${pid}')" style="background:#F25C05;border:none;border-radius:7px;padding:8px;color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">${pin.estimate && pin.estimate.total ? '📋 Edit Estimate' : '📋 Build Estimate'}</button>
       <button onclick="measureForPin('${pid}')" style="background:transparent;border:1.5px solid #F25C05;border-radius:7px;padding:6px;color:#F25C05;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">📐 Measure Roof</button>
       <button onclick="openPhotoModal('${pid}')" style="background:transparent;border:1.5px solid #22C55E;border-radius:7px;padding:6px;color:#22C55E;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">📷 Manage Photos</button>
+      <div id="contact-info-${pid}" style="margin-bottom:5px;">${pin.contactData ? buildContactInfoHTML(pid, pin.contactData) : `<button onclick="lookupContactInfo('${pid}')" style="background:transparent;border:1.5px solid #A78BFA;border-radius:7px;padding:6px;color:#A78BFA;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;display:block;">📞 Get Contact Info</button>`}</div>
       <button onclick="confirmDeletePin('${pid}')" style="background:transparent;border:1.5px solid #EF4444;border-radius:7px;padding:5px;color:#EF4444;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;display:block;">🗑 Delete Pin</button>
     </div>
   `,{maxWidth:260});
@@ -7513,6 +7514,72 @@ function buildPropertySnapHTML(pid, eq){
     ${financialRow}
     ${lastSale}
   </div>`;
+}
+
+// ── Tracerfy Contact Info ──────────────────────────────────────────────────
+function buildContactInfoHTML(pid, cd){
+  if(!cd) return '';
+  const phones = (cd.phones||[]).slice(0,3);
+  const emails = (cd.emails||[]).slice(0,2);
+  if(!phones.length && !emails.length) return '<div style="font-size:10px;color:#96B0C8;text-align:center;padding:4px;">No contact data found</div>';
+  let html = '<div style="background:linear-gradient(135deg,#1a0f2e,#2a1a3e);border:1px solid #A78BFA44;border-radius:8px;padding:8px 10px;">';
+  html += '<div style="font-size:9px;font-weight:700;letter-spacing:.6px;color:#A78BFA;margin-bottom:5px;">📞 CONTACT INFO</div>';
+  phones.forEach(function(p){
+    const num = p.number||p;
+    const dnc = p.dnc ? ' <span style="font-size:8px;color:#EF4444;">[DNC]</span>' : '';
+    html += '<div style="font-size:12px;color:#FFF;font-weight:600;margin-bottom:2px;"><a href="tel:'+num+'" style="color:#A78BFA;text-decoration:none;">'+num+'</a>'+dnc+'</div>';
+  });
+  emails.forEach(function(e){
+    const addr = e.address||e;
+    html += '<div style="font-size:11px;color:#C4B5FD;margin-bottom:2px;">'+addr+'</div>';
+  });
+  html += '</div>';
+  return html;
+}
+async function lookupContactInfo(pid){
+  const pin = (S.pins||[]).find(function(p){ return p.id===pid; });
+  if(!pin) return;
+  const el = document.getElementById('contact-info-'+pid);
+  if(el) el.innerHTML = '<div style="font-size:11px;color:#A78BFA;text-align:center;padding:6px;">⏳ Looking up…</div>';
+  try{
+    const parts = (pin.address||'').split(',').map(function(s){ return s.trim(); });
+    const streetAddr = parts[0]||'';
+    const cityPart   = parts[1]||'';
+    const stateZip   = (parts[2]||'').trim().split(/\s+/);
+    const stateCode  = stateZip[0]||'';
+    const zipCode    = stateZip[1]||'';
+    const ownerName  = (pin.estimate && pin.estimate.owner) || pin.owner || '';
+    const result = await adminAPI('tracerfy', {
+      ownerName: ownerName,
+      address:   streetAddr,
+      city:      cityPart,
+      state:     stateCode,
+      zip:       zipCode
+    });
+    const phones = [];
+    const emails = [];
+    if(result && result.phones){
+      result.phones.forEach(function(p){ phones.push({ number: p.number||p, dnc: p.dnc||false }); });
+    }
+    if(result && result.emails){
+      result.emails.forEach(function(e){ emails.push({ address: e.address||e }); });
+    }
+    if(result && result.phone_numbers){
+      result.phone_numbers.forEach(function(p){ phones.push({ number: p.phone_number||p.number||p, dnc: p.dnc||false }); });
+    }
+    if(result && result.email_addresses){
+      result.email_addresses.forEach(function(e){ emails.push({ address: e.email||e.address||e }); });
+    }
+    const cd = { phones: phones, emails: emails };
+    pin.contactData = cd;
+    if(sb && pin.id) sb.from('pins').update({ contact_data: cd }).eq('id', pin.id).then(function(){});
+    if(el) el.innerHTML = buildContactInfoHTML(pid, cd);
+    const m = markers[pid];
+    if(m && m.getPopup && m.getPopup() && m.getPopup().update) m.getPopup().update();
+  } catch(err){
+    console.error('Tracerfy error:', err);
+    if(el) el.innerHTML = '<div style="font-size:10px;color:#EF4444;text-align:center;padding:4px;">Lookup failed — try again</div>';
+  }
 }
 
 // Rebuild a marker's popup HTML with fresh solar data (called after async fetch)

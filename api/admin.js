@@ -18,6 +18,7 @@ const RENTCAST_KEY   = process.env.RENTCAST_API_KEY; // updated key
 const AGENCY_ACCT_ID = process.env.AGENCY_ACCOUNT_ID;
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const SUPABASE_PAT   = process.env.SUPABASE_PAT || 'sbp_145c8823fe7d9132f688eb40484dee8670e10393';
+const TRACERFY_KEY   = process.env.TRACERFY_API_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjozMjUwNTk2MTEzLCJpYXQiOjE3ODE3OTYxMTMsImp0aSI6ImFhYmIyYjc1OWE2MzQ3NjViNDVhZWFjMTA3ZmFhYzI3IiwidXNlcl9pZCI6ODI2OH0.ymqyjLor60uQpotAKibSzV5XMYeOG_CsmkGzGMDARLo';
 
 // ── CORS helper ───────────────────────────────────────────────────────────────
 function cors(res) {
@@ -840,6 +841,38 @@ module.exports = async function handler(req, res) {
         return res.json({ results });
       }
 
+      case 'tracerfy': {
+        // Skip-trace a homeowner by name + address using Tracerfy API
+        // Returns phones (with DNC flag) and emails for the property owner
+        const { ownerName, address: tfAddress, city: tfCity, state: tfState, zip: tfZip } = req.body;
+        if (!tfAddress) { res.status(400).json({ error: 'address required' }); return; }
+        // Parse owner name into first/last
+        let tfFirst = '';
+        let tfLast  = '';
+        if (ownerName) {
+          const parts = ownerName.trim().split(/\s+/);
+          tfFirst = parts[0] || '';
+          tfLast  = parts.slice(1).join(' ') || '';
+        }
+        const tfPayload = {
+          address: tfAddress,
+          ...(tfCity  && { city:  tfCity  }),
+          ...(tfState && { state: tfState }),
+          ...(tfZip   && { zip:   tfZip   }),
+          ...(tfFirst && { first_name: tfFirst }),
+          ...(tfLast  && { last_name:  tfLast  }),
+        };
+        const tfRes = await fetch('https://www.tracerfy.com/v1/api/trace/lookup/', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${TRACERFY_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(tfPayload)
+        });
+        const tfData = await tfRes.json();
+        return res.status(tfRes.status).json(tfData);
+      }
       default:
         res.status(400).json({ error: `Unknown action: ${action}` });
     }
