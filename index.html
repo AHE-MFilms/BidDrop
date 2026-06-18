@@ -8242,6 +8242,17 @@ function goEstFromPin(id){
     if(est.owner) document.getElementById('e-owner').value = est.owner;
     if(est.email) document.getElementById('e-email').value = est.email;
     if(est.phone && document.getElementById('e-phone')) document.getElementById('e-phone').value = est.phone;
+    // Fill any still-empty fields from Tracerfy contact data
+    if(p.contactData){
+      if(!document.getElementById('e-owner').value && p.contactData.ownerName)
+        document.getElementById('e-owner').value = p.contactData.ownerName;
+      if(!document.getElementById('e-email').value && p.contactData.emails && p.contactData.emails.length)
+        document.getElementById('e-email').value = p.contactData.emails[0];
+      if(document.getElementById('e-phone') && !document.getElementById('e-phone').value && p.contactData.phones && p.contactData.phones.length){
+        const bp = p.contactData.phones.find(ph=>!ph.dnc) || p.contactData.phones[0];
+        if(bp) document.getElementById('e-phone').value = bp.number;
+      }
+    }
     if(est.structures && est.structures.length) structures = est.structures.map(s=>normStruct(s));
     if(savedEst){
       // Restore add-ons from estimates table record
@@ -8257,6 +8268,17 @@ function goEstFromPin(id){
     }
   } else {
     window._editingEstimateId = null;
+    // No saved estimate — try to pre-fill from Tracerfy contact data
+    if(p.contactData){
+      if(p.contactData.ownerName && !document.getElementById('e-owner').value)
+        document.getElementById('e-owner').value = p.contactData.ownerName;
+      if(p.contactData.emails && p.contactData.emails.length && !document.getElementById('e-email').value)
+        document.getElementById('e-email').value = p.contactData.emails[0];
+      if(p.contactData.phones && p.contactData.phones.length && document.getElementById('e-phone') && !document.getElementById('e-phone').value){
+        const bestPhone = p.contactData.phones.find(ph=>!ph.dnc) || p.contactData.phones[0];
+        if(bestPhone) document.getElementById('e-phone').value = bestPhone.number;
+      }
+    }
   }
   // Load all photos via unified system (estimates table → pin fallback)
   _clearAllPhotos();
@@ -15797,7 +15819,8 @@ function _rowToPin(row){
     ghlContactId: row.ghl_contact_id||null,
     ghlOpportunityId: row.ghl_opportunity_id||null,
     jnContactId: row.jn_contact_id||null,
-    interested_trades: (est && est.interested_trades) || null
+    interested_trades: (est && est.interested_trades) || null,
+    contactData: row.contact_data || null
   };
 }
 
