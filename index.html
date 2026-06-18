@@ -1574,11 +1574,15 @@ tr:hover td{background:var(--card);}
       </div>
       <div class="fg">
         <label class="fl">Homeowner Email <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— syncs to GHL contact</span></label>
-        <input class="fi" id="e-email" placeholder="jane@email.com" type="email">
+        <div id="e-email-wrap">
+          <input class="fi" id="e-email" placeholder="jane@email.com" type="email">
+        </div>
       </div>
       <div class="fg">
         <label class="fl">Homeowner Phone <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— syncs to GHL contact</span></label>
-        <input class="fi" id="e-phone" placeholder="(555) 000-0000" type="tel">
+        <div id="e-phone-wrap">
+          <input class="fi" id="e-phone" placeholder="(555) 000-0000" type="tel">
+        </div>
       </div>
       <div class="fg" id="estimate-page-settings-section" style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:12px;">
         <label class="fl" style="color:#10b981;">&#127758; Estimate Page Settings <span id="estimate-page-plan-badge" style="display:none;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;background:#D97706;color:#fff;margin-left:6px;text-transform:uppercase;letter-spacing:.5px;">Pro+ Only</span></label>
@@ -8224,6 +8228,68 @@ function cycleStatus(id){
   save();toast('Status → '+sLabel(p.status),'info');
 }
 
+// Render email/phone dropdowns in estimate builder from Tracerfy contactData
+function _renderContactDropdowns(p){
+  const cd = p && p.contactData;
+  const emailWrap = document.getElementById('e-email-wrap');
+  const phoneWrap = document.getElementById('e-phone-wrap');
+  const curEmail = (document.getElementById('e-email')||{}).value||'';
+  const curPhone = (document.getElementById('e-phone')||{}).value||'';
+  const fi = 'width:100%;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:9px 11px;color:var(--fg);font-size:13px;font-family:inherit;outline:none;';
+  if(emailWrap){
+    const emails = cd && cd.emails && cd.emails.length ? cd.emails : null;
+    if(emails && emails.length > 1){
+      const sel = document.createElement('select');
+      sel.id = 'e-email'; sel.style.cssText = fi;
+      const blank = document.createElement('option'); blank.value=''; blank.textContent='— select email —'; sel.appendChild(blank);
+      emails.forEach(function(em){
+        const e = typeof em === 'string' ? em : (em.email||em.address||String(em));
+        const opt = document.createElement('option'); opt.value=e; opt.textContent=e;
+        if(e===curEmail) opt.selected=true;
+        sel.appendChild(opt);
+      });
+      if(!curEmail && emails.length) sel.value = typeof emails[0]==='string'?emails[0]:(emails[0].email||emails[0].address||'');
+      emailWrap.innerHTML=''; emailWrap.appendChild(sel);
+    } else {
+      // Single or no email — use plain input
+      emailWrap.innerHTML = '<input class="fi" id="e-email" placeholder="jane@email.com" type="email" style="width:100%;">';
+      const inp = document.getElementById('e-email');
+      if(curEmail) inp.value = curEmail;
+      else if(emails && emails.length){
+        const e = typeof emails[0]==='string'?emails[0]:(emails[0].email||emails[0].address||'');
+        inp.value = e;
+      }
+    }
+  }
+  if(phoneWrap){
+    const phones = cd && cd.phones && cd.phones.length ? cd.phones : null;
+    function fmtPhone(n){ const d=(n||'').replace(/\D/g,''); return d.length===10?'('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6):n; }
+    if(phones && phones.length > 1){
+      const sel = document.createElement('select');
+      sel.id = 'e-phone'; sel.style.cssText = fi;
+      const blank = document.createElement('option'); blank.value=''; blank.textContent='— select phone —'; sel.appendChild(blank);
+      phones.forEach(function(ph){
+        const num = fmtPhone(ph.number||ph);
+        const raw = (ph.number||ph||'').replace(/\D/g,'');
+        const label = num + (ph.type?' · '+ph.type:'') + (ph.dnc?' ⚠ DNC':'');
+        const opt = document.createElement('option'); opt.value=num; opt.textContent=label;
+        if(num===curPhone||raw===curPhone.replace(/\D/g,'')) opt.selected=true;
+        sel.appendChild(opt);
+      });
+      if(!curPhone){
+        const best = phones.find(function(ph){return !ph.dnc;}) || phones[0];
+        sel.value = fmtPhone(best.number||best);
+      }
+      phoneWrap.innerHTML=''; phoneWrap.appendChild(sel);
+    } else {
+      phoneWrap.innerHTML = '<input class="fi" id="e-phone" placeholder="(555) 000-0000" type="tel" style="width:100%;">';
+      const inp = document.getElementById('e-phone');
+      if(curPhone) inp.value = curPhone;
+      else if(phones && phones.length) inp.value = fmtPhone(phones[0].number||phones[0]);
+    }
+  }
+}
+
 function goEstFromPin(id){
   const p=S.pins.find(x=>x.id===id);if(!p)return;
   currentEstPinId = id;
@@ -8242,17 +8308,9 @@ function goEstFromPin(id){
     if(est.owner) document.getElementById('e-owner').value = est.owner;
     if(est.email) document.getElementById('e-email').value = est.email;
     if(est.phone && document.getElementById('e-phone')) document.getElementById('e-phone').value = est.phone;
-    // Fill any still-empty fields from Tracerfy contact data
-    if(p.contactData){
-      if(!document.getElementById('e-owner').value && p.contactData.ownerName)
-        document.getElementById('e-owner').value = p.contactData.ownerName;
-      if(!document.getElementById('e-email').value && p.contactData.emails && p.contactData.emails.length)
-        document.getElementById('e-email').value = p.contactData.emails[0];
-      if(document.getElementById('e-phone') && !document.getElementById('e-phone').value && p.contactData.phones && p.contactData.phones.length){
-        const bp = p.contactData.phones.find(ph=>!ph.dnc) || p.contactData.phones[0];
-        if(bp) document.getElementById('e-phone').value = bp.number;
-      }
-    }
+    // Fill owner name from Tracerfy if still empty
+    if(p.contactData && !document.getElementById('e-owner').value && p.contactData.ownerName)
+      document.getElementById('e-owner').value = p.contactData.ownerName;
     if(est.structures && est.structures.length) structures = est.structures.map(s=>normStruct(s));
     if(savedEst){
       // Restore add-ons from estimates table record
@@ -8272,14 +8330,10 @@ function goEstFromPin(id){
     if(p.contactData){
       if(p.contactData.ownerName && !document.getElementById('e-owner').value)
         document.getElementById('e-owner').value = p.contactData.ownerName;
-      if(p.contactData.emails && p.contactData.emails.length && !document.getElementById('e-email').value)
-        document.getElementById('e-email').value = p.contactData.emails[0];
-      if(p.contactData.phones && p.contactData.phones.length && document.getElementById('e-phone') && !document.getElementById('e-phone').value){
-        const bestPhone = p.contactData.phones.find(ph=>!ph.dnc) || p.contactData.phones[0];
-        if(bestPhone) document.getElementById('e-phone').value = bestPhone.number;
-      }
     }
   }
+  // Render contact dropdowns from Tracerfy data (always, after est/no-est branch)
+  _renderContactDropdowns(p);
   // Load all photos via unified system (estimates table → pin fallback)
   _clearAllPhotos();
   if(est){
