@@ -7519,19 +7519,24 @@ function buildPropertySnapHTML(pid, eq){
 // ── Tracerfy Contact Info ──────────────────────────────────────────────────
 function buildContactInfoHTML(pid, cd){
   if(!cd) return '';
-  const phones = (cd.phones||[]).slice(0,3);
+  const phones = (cd.phones||[]).slice(0,4);
   const emails = (cd.emails||[]).slice(0,2);
   if(!phones.length && !emails.length) return '<div style="font-size:10px;color:#96B0C8;text-align:center;padding:4px;">No contact data found</div>';
+  // Format 10-digit number as (XXX) XXX-XXXX
+  function fmtPhone(n){ const d=(n||'').replace(/\D/g,''); return d.length===10?'('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6):n; }
   let html = '<div style="background:linear-gradient(135deg,#1a0f2e,#2a1a3e);border:1px solid #A78BFA44;border-radius:8px;padding:8px 10px;">';
-  html += '<div style="font-size:9px;font-weight:700;letter-spacing:.6px;color:#A78BFA;margin-bottom:5px;">📞 CONTACT INFO</div>';
+  html += '<div style="font-size:9px;font-weight:700;letter-spacing:.6px;color:#A78BFA;margin-bottom:4px;">📞 CONTACT INFO</div>';
+  if(cd.ownerName) html += '<div style="font-size:11px;font-weight:700;color:#FFF;margin-bottom:5px;">'+cd.ownerName+'</div>';
   phones.forEach(function(p){
-    const num = p.number||p;
-    const dnc = p.dnc ? ' <span style="font-size:8px;color:#EF4444;">[DNC]</span>' : '';
-    html += '<div style="font-size:12px;color:#FFF;font-weight:600;margin-bottom:2px;"><a href="tel:'+num+'" style="color:#A78BFA;text-decoration:none;">'+num+'</a>'+dnc+'</div>';
+    const raw = p.number||p;
+    const num = fmtPhone(raw);
+    const dnc = p.dnc ? ' <span style="font-size:8px;color:#EF4444;background:#EF444422;padding:1px 4px;border-radius:3px;">DNC</span>' : '';
+    const type = p.type ? ' <span style="font-size:8px;color:#96B0C8;">'+p.type+'</span>' : '';
+    html += '<div style="font-size:12px;color:#FFF;font-weight:600;margin-bottom:3px;"><a href="tel:'+raw+'" style="color:#A78BFA;text-decoration:none;">'+num+'</a>'+type+dnc+'</div>';
   });
   emails.forEach(function(e){
     const addr = e.address||e;
-    html += '<div style="font-size:11px;color:#C4B5FD;margin-bottom:2px;">'+addr+'</div>';
+    html += '<div style="font-size:10px;color:#C4B5FD;margin-bottom:2px;word-break:break-all;">✉ '+addr+'</div>';
   });
   html += '</div>';
   return html;
@@ -7558,19 +7563,22 @@ async function lookupContactInfo(pid){
     });
     const phones = [];
     const emails = [];
-    if(result && result.phones){
+    let ownerFullName = '';
+    // Tracerfy returns data nested under persons[]
+    const persons = (result && result.persons) ? result.persons : [];
+    persons.forEach(function(person){
+      if(!ownerFullName && person.full_name) ownerFullName = person.full_name;
+      (person.phones||[]).forEach(function(p){ phones.push({ number: p.number||p, dnc: p.dnc||false, type: p.type||'' }); });
+      (person.emails||[]).forEach(function(e){ emails.push({ address: e.address||e.email||e }); });
+    });
+    // Fallback: top-level phones/emails (older API shape)
+    if(!phones.length && result && result.phones){
       result.phones.forEach(function(p){ phones.push({ number: p.number||p, dnc: p.dnc||false }); });
     }
-    if(result && result.emails){
+    if(!emails.length && result && result.emails){
       result.emails.forEach(function(e){ emails.push({ address: e.address||e }); });
     }
-    if(result && result.phone_numbers){
-      result.phone_numbers.forEach(function(p){ phones.push({ number: p.phone_number||p.number||p, dnc: p.dnc||false }); });
-    }
-    if(result && result.email_addresses){
-      result.email_addresses.forEach(function(e){ emails.push({ address: e.email||e.address||e }); });
-    }
-    const cd = { phones: phones, emails: emails };
+    const cd = { phones: phones, emails: emails, ownerName: ownerFullName };
     pin.contactData = cd;
     if(sb && pin.id) sb.from('pins').update({ contact_data: cd }).eq('id', pin.id).then(function(){});
     if(el) el.innerHTML = buildContactInfoHTML(pid, cd);
