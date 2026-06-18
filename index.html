@@ -7588,7 +7588,7 @@ async function lookupContactInfo(pid){
     if(m && m.getPopup && m.getPopup() && m.getPopup().update) m.getPopup().update();
   } catch(err){
     console.error('Tracerfy error:', err);
-    if(el) el.innerHTML = '<div style="font-size:10px;color:#EF4444;text-align:center;padding:4px;">Lookup failed — try again</div>';
+    if(el) el.innerHTML = '<div style="font-size:10px;color:#EF4444;text-align:center;padding:4px;">Lookup failed: '+(err&&err.message?err.message.substring(0,80):'unknown error')+'</div>';
   }
 }
 
