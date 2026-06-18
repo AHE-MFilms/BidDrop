@@ -7597,21 +7597,40 @@ function addMarker_updateSolar(m, pid, pin){
   // Re-run addMarker logic to rebuild popup with cached solar data
   // Only update if marker still exists
   if(!markers[pid]) return;
-  // Remove and re-add marker with updated popup
+  // Capture any in-progress contact info HTML before rebuild
+  const prevContactEl = document.getElementById('contact-info-'+pid);
+  const savedContactHTML = prevContactEl ? prevContactEl.innerHTML : null;
   const wasOpen = m.isPopupOpen ? m.isPopupOpen() : false;
   if(clusterGroup) clusterGroup.removeLayer(m); else if(map) map.removeLayer(m);
   delete markers[pid];
   addMarker(pin);
-  if(wasOpen && markers[pid]) setTimeout(function(){ markers[pid].openPopup(); }, 50);
+  if(wasOpen && markers[pid]) setTimeout(function(){
+    markers[pid].openPopup();
+    // Restore contact info HTML if it was showing (e.g. lookup in progress or results)
+    if(savedContactHTML){
+      const newEl = document.getElementById('contact-info-'+pid);
+      if(newEl && savedContactHTML !== newEl.innerHTML) newEl.innerHTML = savedContactHTML;
+    }
+  }, 50);
 }
 // Rebuild a marker's popup HTML with fresh property data (called after async RentCast fetch)
 function addMarker_updatePropData(m, pid, pin){
   if(!markers[pid]) return;
+  // Capture any in-progress contact info HTML before rebuild
+  const prevContactEl = document.getElementById('contact-info-'+pid);
+  const savedContactHTML = prevContactEl ? prevContactEl.innerHTML : null;
   const wasOpen = m.isPopupOpen ? m.isPopupOpen() : false;
   if(clusterGroup) clusterGroup.removeLayer(m); else if(map) map.removeLayer(m);
   delete markers[pid];
   addMarker(pin);
-  if(wasOpen && markers[pid]) setTimeout(function(){ markers[pid].openPopup(); }, 50);
+  if(wasOpen && markers[pid]) setTimeout(function(){
+    markers[pid].openPopup();
+    // Restore contact info HTML if it was showing (e.g. lookup in progress or results)
+    if(savedContactHTML){
+      const newEl = document.getElementById('contact-info-'+pid);
+      if(newEl && savedContactHTML !== newEl.innerHTML) newEl.innerHTML = savedContactHTML;
+    }
+  }, 50);
 }
 
 function savePin(){
