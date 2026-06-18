@@ -7413,11 +7413,16 @@ function addMarker(pin){
     <div style="font-size:9px;font-weight:700;letter-spacing:.6px;color:#F25C05;margin-bottom:3px;">🛰 SATELLITE MEASUREMENT</div>
     <div id="solar-val-${pid}" style="font-size:12px;color:#fff;font-weight:600;">${_solarContent}</div>
   </div>`;
+  // Build property snapshot row from cached equityData
+  const _eq2 = pin.equityData;
+  const _propSnap = _eq2 ? buildPropertySnapHTML(pid, _eq2) : `<div id="prop-snap-${pid}" style="background:linear-gradient(135deg,#0f2027,#1a3a2a);border:1px solid #22C55E33;border-radius:8px;padding:8px 10px;margin-bottom:7px;font-size:11px;color:#A8BECE;">🏠 <span id="prop-snap-val-${pid}">Loading property data…</span></div>`;
+
   m.bindPopup(`
     <div style="min-width:200px;max-width:240px;">
       <div style="font-weight:700;font-size:13px;margin-bottom:5px;color:#FFFFFF;line-height:1.3;">${escHtml(pin.address||'Unknown')}</div>
       <div style="display:inline-block;background:${sColor(pin.status)};color:white;font-size:11px;padding:2px 8px;border-radius:5px;font-weight:700;margin-bottom:8px;">${sLabel(pin.status)}</div>
       ${pin.photo_url ? '<img src="'+pin.photo_url+'" style="width:100%;max-height:90px;object-fit:cover;border-radius:6px;margin-bottom:8px;display:block;" onerror="this.style.display=\'none\'">' : ''}
+      ${_propSnap}
       ${_popupSolar}
       ${pin.estimate && pin.estimate.total ? `<div style="background:#0a1628;border:1px solid #3B82F655;border-radius:6px;padding:5px 8px;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;"><span style="font-size:9px;font-weight:700;color:#3B82F6;">✓ ESTIMATE</span><span style="font-size:13px;font-weight:700;color:#FFF;">$${(pin.estimate.total||0).toLocaleString()}</span></div>` : ''}
       <button onclick="goEstFromPin('${pid}')" style="background:#F25C05;border:none;border-radius:7px;padding:8px;color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">${pin.estimate && pin.estimate.total ? '📋 Edit Estimate' : '📋 Build Estimate'}</button>
@@ -7450,6 +7455,58 @@ function addMarker(pin){
       addMarker_updateSolar(m, pid, pin);
     }).catch(function(){});
   }
+  // Auto-fetch property data if not cached yet
+  if(!pin.equityData && pin.address){
+    lookupPropertyData(pin.address).then(function(data){
+      if(!data) return;
+      pin.equityData = {
+        estValue: data.estValue, mortgageBalance: data.mortgageBalance, equity: data.equity,
+        yearBuilt: data.yearBuilt, roofType: data.roofType, bedrooms: data.bedrooms,
+        bathrooms: data.bathrooms, lastSaleDate: data.lastSaleDate, lastSalePrice: data.lastSalePrice
+      };
+      if(data.name && pin.estimate && !pin.estimate.owner){
+        pin.estimate.owner = data.name;
+        sb.from('pins').update({ estimate: pin.estimate }).eq('id', pid)
+          .then(({error})=>{ if(error) console.warn('Owner persist:', error); });
+      }
+      const snapEl = document.getElementById('prop-snap-val-'+pid);
+      if(snapEl){
+        const parts = [];
+        if(data.yearBuilt){ const age = new Date().getFullYear()-data.yearBuilt; parts.push('Built '+data.yearBuilt+' · <strong style="color:#F25C05;">Est. '+age+'-yr roof</strong>'); }
+        if(data.roofType) parts.push(data.roofType);
+        if(data.bedrooms||data.bathrooms) parts.push((data.bedrooms||'')+' bd / '+(data.bathrooms||'')+' ba');
+        if(data.estValue) parts.push('Value: <strong style="color:#22C55E;">'+fmtMoney(data.estValue)+'</strong>');
+        snapEl.innerHTML = parts.length ? parts.join(' &nbsp;·&nbsp; ') : 'No data available';
+        if(m.getPopup && m.getPopup() && m.getPopup().update) m.getPopup().update();
+      }
+      addMarker_updatePropData(m, pid, pin);
+    }).catch(function(){});
+  }
+}
+
+// Build the property snapshot HTML for the pin popup
+function buildPropertySnapHTML(pid, eq){
+  const parts = [];
+  if(eq.yearBuilt){
+    const age = new Date().getFullYear() - eq.yearBuilt;
+    parts.push('🏠 Built ' + eq.yearBuilt + ' &nbsp;·&nbsp; <span style="color:#F25C05;font-weight:700;">Est. ' + age + '-yr roof</span>');
+  }
+  if(eq.roofType) parts.push(eq.roofType);
+  if(eq.bedrooms || eq.bathrooms){
+    const bd = eq.bedrooms ? eq.bedrooms + ' bd' : '';
+    const ba = eq.bathrooms ? eq.bathrooms + ' ba' : '';
+    parts.push([bd,ba].filter(Boolean).join('/'));
+  }
+  const valParts = [];
+  if(eq.estValue) valParts.push('Value: <span style="color:#22C55E;font-weight:700;">' + fmtMoney(eq.estValue) + '</span>');
+  if(eq.equity) valParts.push('Equity: <span style="color:#22C55E;font-weight:700;">' + fmtMoney(eq.equity) + '</span>');
+  if(eq.lastSaleDate) valParts.push('Sold ' + eq.lastSaleDate.substring(0,4) + (eq.lastSalePrice ? ' · ' + fmtMoney(eq.lastSalePrice) : ''));
+  const allParts = parts.concat(valParts);
+  if(!allParts.length) return '';
+  return `<div id="prop-snap-${pid}" style="background:linear-gradient(135deg,#0f2027,#1a3a2a);border:1px solid #22C55E44;border-radius:8px;padding:8px 10px;margin-bottom:7px;">
+    <div style="font-size:9px;font-weight:700;letter-spacing:.6px;color:#22C55E;margin-bottom:4px;">🏠 PROPERTY DATA</div>
+    <div id="prop-snap-val-${pid}" style="font-size:11px;color:#E2E8F0;line-height:1.7;">${allParts.join('&nbsp;&nbsp;·&nbsp;&nbsp;')}</div>
+  </div>`;
 }
 
 // Rebuild a marker's popup HTML with fresh solar data (called after async fetch)
@@ -7458,6 +7515,15 @@ function addMarker_updateSolar(m, pid, pin){
   // Only update if marker still exists
   if(!markers[pid]) return;
   // Remove and re-add marker with updated popup
+  const wasOpen = m.isPopupOpen ? m.isPopupOpen() : false;
+  if(clusterGroup) clusterGroup.removeLayer(m); else if(map) map.removeLayer(m);
+  delete markers[pid];
+  addMarker(pin);
+  if(wasOpen && markers[pid]) setTimeout(function(){ markers[pid].openPopup(); }, 50);
+}
+// Rebuild a marker's popup HTML with fresh property data (called after async RentCast fetch)
+function addMarker_updatePropData(m, pid, pin){
+  if(!markers[pid]) return;
   const wasOpen = m.isPopupOpen ? m.isPopupOpen() : false;
   if(clusterGroup) clusterGroup.removeLayer(m); else if(map) map.removeLayer(m);
   delete markers[pid];
