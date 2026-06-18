@@ -7497,15 +7497,21 @@ function buildPropertySnapHTML(pid, eq){
     const ba = eq.bathrooms ? eq.bathrooms + ' ba' : '';
     parts.push([bd,ba].filter(Boolean).join('/'));
   }
-  const valParts = [];
-  if(eq.estValue) valParts.push('Value: <span style="color:#22C55E;font-weight:700;">' + fmtMoney(eq.estValue) + '</span>');
-  if(eq.equity) valParts.push('Equity: <span style="color:#22C55E;font-weight:700;">' + fmtMoney(eq.equity) + '</span>');
-  if(eq.lastSaleDate) valParts.push('Sold ' + eq.lastSaleDate.substring(0,4) + (eq.lastSalePrice ? ' · ' + fmtMoney(eq.lastSalePrice) : ''));
-  const allParts = parts.concat(valParts);
-  if(!allParts.length) return '';
+  // Build financial row (value / equity / mortgage)
+  const hasFinancial = eq.estValue || eq.equity || eq.mortgageBalance;
+  const financialRow = hasFinancial ? `
+    <div style="display:flex;gap:6px;margin-top:6px;">
+      ${eq.estValue ? `<div style="flex:1;background:#0a1628;border-radius:6px;padding:5px 7px;"><div style="font-size:8px;color:#96B0C8;letter-spacing:.4px;">VALUE</div><div style="font-size:12px;font-weight:700;color:#FFF;">${fmtMoney(eq.estValue)}</div></div>` : ''}
+      ${eq.equity ? `<div style="flex:1;background:#0a1628;border-radius:6px;padding:5px 7px;"><div style="font-size:8px;color:#96B0C8;letter-spacing:.4px;">EQUITY</div><div style="font-size:12px;font-weight:700;color:#22C55E;">${fmtMoney(eq.equity)}</div></div>` : ''}
+      ${eq.mortgageBalance ? `<div style="flex:1;background:#0a1628;border-radius:6px;padding:5px 7px;"><div style="font-size:8px;color:#96B0C8;letter-spacing:.4px;">MORTGAGE</div><div style="font-size:12px;font-weight:700;color:#F25C05;">${fmtMoney(eq.mortgageBalance)}</div></div>` : ''}
+    </div>` : '';
+  const lastSale = eq.lastSaleDate ? '<div style="font-size:10px;color:#96B0C8;margin-top:4px;">Last sold ' + eq.lastSaleDate.substring(0,4) + (eq.lastSalePrice ? ' · ' + fmtMoney(eq.lastSalePrice) : '') + '</div>' : '';
+  if(!parts.length && !hasFinancial) return '';
   return `<div id="prop-snap-${pid}" style="background:linear-gradient(135deg,#0f2027,#1a3a2a);border:1px solid #22C55E44;border-radius:8px;padding:8px 10px;margin-bottom:7px;">
     <div style="font-size:9px;font-weight:700;letter-spacing:.6px;color:#22C55E;margin-bottom:4px;">🏠 PROPERTY DATA</div>
-    <div id="prop-snap-val-${pid}" style="font-size:11px;color:#E2E8F0;line-height:1.7;">${allParts.join('&nbsp;&nbsp;·&nbsp;&nbsp;')}</div>
+    <div id="prop-snap-val-${pid}" style="font-size:11px;color:#E2E8F0;line-height:1.7;">${parts.join('&nbsp;&nbsp;·&nbsp;&nbsp;')}</div>
+    ${financialRow}
+    ${lastSale}
   </div>`;
 }
 
