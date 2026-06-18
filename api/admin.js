@@ -17,7 +17,7 @@ const LOB_KEY        = process.env.LOB_API_KEY;
 const RENTCAST_KEY   = process.env.RENTCAST_API_KEY; // updated key
 const AGENCY_ACCT_ID = process.env.AGENCY_ACCOUNT_ID;
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
-const SUPABASE_PAT   = process.env.SUPABASE_PAT || 'sbp_145c8823fe7d9132f688eb40484dee8670e10393';
+const SUPABASE_PAT   = process.env.SUPABASE_PAT;
 const TRACERFY_KEY   = process.env.TRACERFY_API_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjozMjUwNTk2MTEzLCJpYXQiOjE3ODE3OTYxMTMsImp0aSI6ImFhYmIyYjc1OWE2MzQ3NjViNDVhZWFjMTA3ZmFhYzI3IiwidXNlcl9pZCI6ODI2OH0.ymqyjLor60uQpotAKibSzV5XMYeOG_CsmkGzGMDARLo';
 
 // ── CORS helper ───────────────────────────────────────────────────────────────
