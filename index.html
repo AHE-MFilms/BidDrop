@@ -7389,6 +7389,12 @@ function mkIcon(status){
 
 function addMarker(pin){
   const pid=pin.id;
+  // Remove existing marker for this pin before creating a new one
+  if(markers[pid]){
+    if(clusterGroup) clusterGroup.removeLayer(markers[pid]);
+    else if(map) map.removeLayer(markers[pid]);
+    delete markers[pid];
+  }
   const m=L.marker([pin.lat,pin.lng],{icon:mkIcon(pin.status)});
   // Pre-compute popup photo HTML to avoid IIFE inside template literal
   const _dmgPhotos = pin.damage_photos||[];
