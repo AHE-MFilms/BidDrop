@@ -554,15 +554,26 @@ module.exports = async function handler(req, res) {
         // Homeowner lookups are free — no credit gate
         const { address } = req.query;
         if (!address) { res.status(400).json({ error: 'address required' }); return; }
-        // Call RentCast directly — no credit deduction
-        const rcRes = await fetch(
-          `https://api.rentcast.io/v1/properties?address=${encodeURIComponent(address)}&limit=1`,
-          { headers: { 'X-Api-Key': RENTCAST_KEY } }
-        );
-        const rcData = await rcRes.json();
-        res.status(rcRes.status).json(
-          Array.isArray(rcData) ? { properties: rcData } : rcData
-        );
+        // Call RentCast with a hard 8s timeout to prevent 504 gateway timeouts
+        const rcCtrl = new AbortController();
+        const rcTimeout = setTimeout(() => rcCtrl.abort(), 8000);
+        try {
+          const rcRes = await fetch(
+            `https://api.rentcast.io/v1/properties?address=${encodeURIComponent(address)}&limit=1`,
+            { headers: { 'X-Api-Key': RENTCAST_KEY }, signal: rcCtrl.signal }
+          );
+          clearTimeout(rcTimeout);
+          const rcData = await rcRes.json();
+          res.status(rcRes.status).json(
+            Array.isArray(rcData) ? { properties: rcData } : rcData
+          );
+        } catch (rcErr) {
+          clearTimeout(rcTimeout);
+          if (rcErr.name === 'AbortError') {
+            return res.status(408).json({ error: 'rentcast_timeout', message: 'RentCast lookup timed out' });
+          }
+          throw rcErr;
+        }
         break;
       }
 

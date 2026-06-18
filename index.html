@@ -14185,7 +14185,26 @@ let toastT;
 //  RENTCAST PROPERTY LOOKUP
 // ═══════════════════════════════
 function fmtMoney(v){ if(!v||isNaN(v)) return null; return '$'+Math.round(v).toLocaleString(); }
+const _propDataCache = {}; // address -> data (null means not found)
+const _propDataInFlight = {}; // address -> Promise (deduplicates concurrent requests)
 async function lookupPropertyData(address){
+  if(!address) return null;
+  const cacheKey = address.toLowerCase().trim();
+  // Return cached result immediately (including null = not found)
+  if(cacheKey in _propDataCache) return _propDataCache[cacheKey];
+  // Deduplicate concurrent requests for the same address
+  if(_propDataInFlight[cacheKey]) return _propDataInFlight[cacheKey];
+  _propDataInFlight[cacheKey] = _lookupPropertyDataRaw(address).then(function(result){
+    _propDataCache[cacheKey] = result;
+    delete _propDataInFlight[cacheKey];
+    return result;
+  }).catch(function(e){
+    delete _propDataInFlight[cacheKey];
+    throw e;
+  });
+  return _propDataInFlight[cacheKey];
+}
+async function _lookupPropertyDataRaw(address){
   if(!address) return null;
   try{
     // Proxy through secure server-side API — RentCast key never exposed in browser
