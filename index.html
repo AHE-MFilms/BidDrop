@@ -7557,6 +7557,13 @@ async function lookupContactInfo(pid){
   const pin = (S.pins||[]).find(function(p){ return p.id===pid; });
   if(!pin) return;
   const el = document.getElementById('contact-info-'+pid);
+  // DEDUP GUARD: if we already have saved contact data, show it without hitting the API
+  if(pin.contactData && (pin.contactData.phones||[]).length + (pin.contactData.emails||[]).length > 0){
+    if(el) el.innerHTML = buildContactInfoHTML(pid, pin.contactData);
+    const m = markers[pid];
+    if(m && m.getPopup && m.getPopup() && m.getPopup().update) m.getPopup().update();
+    return;
+  }
   if(el) el.innerHTML = '<div style="font-size:11px;color:#A78BFA;text-align:center;padding:6px;">⏳ Looking up…</div>';
   try{
     const parts = (pin.address||'').split(',').map(function(s){ return s.trim(); });
@@ -7571,7 +7578,8 @@ async function lookupContactInfo(pid){
       address:   streetAddr,
       city:      cityPart,
       state:     stateCode,
-      zip:       zipCode
+      zip:       zipCode,
+      pinId:     pid
     });
     const phones = [];
     const emails = [];

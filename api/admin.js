@@ -855,8 +855,18 @@ module.exports = async function handler(req, res) {
       case 'tracerfy': {
         // Skip-trace a homeowner by name + address using Tracerfy API
         // Returns phones (with DNC flag) and emails for the property owner
-        const { ownerName, address: tfAddress, city: tfCity, state: tfState, zip: tfZip } = req.body;
+        const { ownerName, address: tfAddress, city: tfCity, state: tfState, zip: tfZip, pinId: tfPinId } = req.body;
         if (!tfAddress) { res.status(400).json({ error: 'address required' }); return; }
+        // SERVER-SIDE DEDUP: if this pin already has contact_data saved, return it without hitting Tracerfy
+        if (tfPinId && accountId) {
+          const { data: existingPin } = await sbFetch(`pins?select=contact_data&id=eq.${tfPinId}&account_id=eq.${accountId}&limit=1`);
+          const existing = existingPin && existingPin[0];
+          if (existing && existing.contact_data &&
+              ((existing.contact_data.phones||[]).length + (existing.contact_data.emails||[]).length) > 0) {
+            console.log('[BidDrop] Tracerfy dedup: returning cached contact_data for pin', tfPinId);
+            return res.json({ _cached: true, persons: [{ phones: existing.contact_data.phones||[], emails: existing.contact_data.emails||[], full_name: existing.contact_data.ownerName||'' }] });
+          }
+        }
         // Parse owner name into first/last
         let tfFirst = '';
         let tfLast  = '';
