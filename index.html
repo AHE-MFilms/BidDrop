@@ -411,7 +411,7 @@ tr:hover td{background:var(--card);}
   .map-panel.open{transform:translateY(0);}
   .map-panel-drag{width:36px;height:4px;background:var(--muted);border-radius:2px;margin:10px auto 4px;cursor:pointer;opacity:.6;}
   .map-tip{margin:4px 8px 8px;font-size:10px;}
-  .fab-pins{position:absolute;bottom:14px;right:14px;z-index:1000;background:var(--accent);border:none;border-radius:50%;width:54px;height:54px;font-size:24px;cursor:pointer;box-shadow:0 4px 20px rgba(242,92,5,.55);display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;}
+  .fab-pins{position:absolute;bottom:14px;right:14px;z-index:1000;background:var(--accent);border:none;border-radius:50%;width:54px;height:54px;font-size:24px;cursor:pointer;box-shadow:0 4px 20px rgba(242,92,5,.55);display:flex !important;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;}
   .map-toolbar{flex-direction:row;flex-wrap:wrap;justify-content:center;top:10px;left:4px;right:4px;transform:none;width:auto;gap:5px;}
   .mtool-btn{font-size:10px;padding:6px 10px;flex-shrink:0;}
   .measure-hud{bottom:70px;left:8px;right:8px;transform:none;min-width:0;max-width:100%;padding:8px 10px;gap:3px;border-radius:10px;}
@@ -948,7 +948,7 @@ tr:hover td{background:var(--card);}
         <button class="mhud-btn pr" id="btn-use-measure" onclick="useRoofMeasurement()" style="opacity:.4;pointer-events:none;">📋 Add to Estimate</button>
       </div>
     </div>
-    <button class="fab-pins" onclick="togglePinPanel()" id="fab-pins">📍</button>
+    <button class="fab-pins" onclick="togglePinPanel()" id="fab-pins" style="display:none;">📍</button>
     <div class="map-panel" id="map-panel">
       <div class="map-panel-drag" onclick="togglePinPanel()"></div>
       <div class="mp-hdr">
