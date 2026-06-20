@@ -7534,7 +7534,7 @@ function addMarker(pin){
       };
       // ── PERSIST to Supabase so future page loads skip RentCast for this pin ──
       if(sb) sb.from('pins').update({ equity_data: pin.equityData }).eq('id', pid)
-        .then(function({error}){ if(error) console.warn('equityData persist:', error); });
+        .then(function({error}){ if(error && error.code !== 'PGRST204') console.warn('equityData persist:', error); });
       if(data.name && pin.estimate && !pin.estimate.owner){
         pin.estimate.owner = data.name;
         sb.from('pins').update({ estimate: pin.estimate }).eq('id', pid)
@@ -14672,7 +14672,7 @@ async function manualRentcastLookup(){
         pin.equityData = { estValue: data.estValue, mortgageBalance: data.mortgageBalance, equity: data.equity, yearBuilt: data.yearBuilt, roofType: data.roofType, bedrooms: data.bedrooms, bathrooms: data.bathrooms, lastSaleDate: data.lastSaleDate, lastSalePrice: data.lastSalePrice };
         _rentcastFetched.add(currentEstPinId);
         if(sb) sb.from('pins').update({ equity_data: pin.equityData }).eq('id', currentEstPinId)
-          .then(function({error}){ if(error) console.warn('equityData persist (manual):', error); });
+          .then(function({error}){ if(error && error.code !== 'PGRST204') console.warn('equityData persist (manual):', error); });
       }
     }
     toast('🏠 '+(data.name ? 'Owner: '+data.name : 'Property found — owner name unavailable, enter manually'),'success');
@@ -14709,7 +14709,7 @@ async function autoFillOwnerIfEmpty(address){
       pin.equityData = { estValue: data.estValue, mortgageBalance: data.mortgageBalance, equity: data.equity, yearBuilt: data.yearBuilt, roofType: data.roofType, bedrooms: data.bedrooms, bathrooms: data.bathrooms, lastSaleDate: data.lastSaleDate, lastSalePrice: data.lastSalePrice };
       _rentcastFetched.add(currentEstPinId);
       if(sb) sb.from('pins').update({ equity_data: pin.equityData }).eq('id', currentEstPinId)
-        .then(function({error}){ if(error) console.warn('equityData persist (autofill):', error); });
+        .then(function({error}){ if(error && error.code !== 'PGRST204') console.warn('equityData persist (autofill):', error); });
       // Refresh the map marker popup to show equity
       if(markers[currentEstPinId]) addMarker(pin);
     }
