@@ -343,8 +343,7 @@ tr:hover td{background:var(--card);}
 .msr-item:last-child{border-bottom:none;}
 .mtool-btn{background:var(--panel);border:1px solid var(--border);color:var(--mid);padding:8px 13px;border-radius:8px;cursor:pointer;font-family:var(--font-b);font-size:11px;font-weight:700;letter-spacing:.4px;display:flex;align-items:center;gap:7px;transition:all .15s;box-shadow:0 3px 12px rgba(0,0,0,.4);white-space:nowrap;}
 .mtool-btn:hover{border-color:var(--accent);color:var(--text);}
-.coi-radius-btn{background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;font-family:var(--font-b);transition:all .15s;}
-.coi-radius-btn:hover,.coi-radius-btn.active{background:rgba(242,92,5,.15);border-color:#F25C05;color:#F25C05;}
+
 .coi-pin-highlight{animation:coi-pulse 1.5s ease-in-out infinite;}
 @keyframes coi-pulse{0%,100%{opacity:1;}50%{opacity:.6;}}
 .mtool-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
@@ -844,7 +843,7 @@ tr:hover td{background:var(--card);}
       <button class="mtool-btn" id="btn-measure" onclick="toggleMeasure()">📐 Measure Roof</button>
       <button class="mtool-btn" id="btn-zones-toggle" onclick="toggleZonesOnMap()">🗂 Zones</button>
       <button class="mtool-btn" id="btn-storm-toggle" onclick="toggleStormEvents()">⛈ Storm Events</button>
-      <button class="mtool-btn" id="btn-circle-campaign" onclick="toggleCircleCampaign()" title="Draw a circle to select nearby homes for a campaign">🎯 Circle Campaign</button>
+
     </div>
     <!-- Storm Events Panel -->
     <div id="storm-panel" style="display:none;position:absolute;top:12px;left:12px;z-index:2000;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;width:280px;box-shadow:0 4px 20px rgba(0,0,0,.5);">
@@ -1010,41 +1009,7 @@ tr:hover td{background:var(--card);}
           <button onclick="bulkSendPinsToFollowUp()" style="background:#1a7f4b;border:none;border-radius:6px;padding:5px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">✉️ Follow Up All</button>
         </div>
       </div>
-      <!-- Circle Campaign Panel -->
-      <div id="circle-campaign-panel" style="display:none;flex-direction:column;gap:0;background:linear-gradient(135deg,#1a1f2e,#0f1420);border-bottom:2px solid #F25C05;flex-shrink:0;">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px 6px;">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span style="font-size:18px;">🎯</span>
-            <div>
-              <div style="font-size:13px;font-weight:800;color:#fff;letter-spacing:.3px;">Circle of Influence</div>
-              <div id="circle-campaign-status" style="font-size:11px;color:#F25C05;font-weight:600;">Draw a circle on the map to select nearby homes</div>
-            </div>
-          </div>
-          <button onclick="cancelCircleCampaign()" style="background:none;border:none;color:var(--mid);font-size:18px;cursor:pointer;line-height:1;padding:4px;">✕</button>
-        </div>
-        <!-- Radius selector -->
-        <div style="display:flex;align-items:center;gap:8px;padding:0 14px 8px;flex-wrap:wrap;">
-          <span style="font-size:11px;color:var(--muted);font-weight:600;">RADIUS:</span>
-          <button class="coi-radius-btn active" onclick="setCOIRadius(this,500)" data-m="500">500 ft</button>
-          <button class="coi-radius-btn" onclick="setCOIRadius(this,1000)" data-m="1000">1/4 mi</button>
-          <button class="coi-radius-btn" onclick="setCOIRadius(this,2000)" data-m="2000">1/2 mi</button>
-          <button class="coi-radius-btn" onclick="setCOIRadius(this,5000)" data-m="5000">1 mi</button>
-          <span style="font-size:11px;color:var(--muted);margin-left:4px;">or draw custom</span>
-        </div>
-        <!-- Action buttons (shown after selection) -->
-        <div id="circle-campaign-actions" style="display:none;padding:0 14px 10px;display:flex;flex-direction:column;gap:6px;">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
-            <span id="circle-selected-count" style="font-size:12px;font-weight:700;color:#F25C05;">0 homes selected</span>
-            <button onclick="clearCircleSelection()" style="background:none;border:1px solid var(--border);border-radius:5px;padding:2px 8px;color:var(--muted);font-size:10px;cursor:pointer;">Clear</button>
-          </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            <button onclick="bulkTracerfyCampaign()" id="btn-coi-trace" style="background:rgba(167,139,250,.15);border:1px solid #A78BFA;border-radius:7px;padding:6px 12px;color:#A78BFA;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">📞 Skip-Trace All</button>
-            <button onclick="bulkGhlCampaign()" id="btn-coi-ghl" style="background:rgba(34,197,94,.12);border:1px solid #22C55E;border-radius:7px;padding:6px 12px;color:#4ade80;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">⬆ Push to GHL</button>
-            <button onclick="launchCampaignPostcardModal()" id="btn-coi-postcard" style="background:rgba(242,92,5,.15);border:1px solid #F25C05;border-radius:7px;padding:6px 12px;color:#F25C05;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">📮 Send Postcards</button>
-          </div>
-        </div>
-      </div>
-      <div class="map-tip" id="map-tip">👆 Drop a pin → tap it → Measure This Roof</div>
+            <div class="map-tip" id="map-tip">👆 Drop a pin → tap it → Measure This Roof</div>
       <div class="pin-list" id="pin-list"></div>
     </div>
   </div>
@@ -5740,11 +5705,11 @@ function buildDripPostcardFrontHtml({ photoUrl, headline, subtext, companyName, 
       <div class="phone-line">&#128222; ${escH(ph)}</div>
     </div>
   </div>
-<!-- Circle Campaign Postcard Modal -->
+<!-- Nearby Campaign Postcard Modal -->
 <div id="m-campaign-postcard" class="modal-overlay" style="display:none;z-index:9000;">
   <div class="modal-box" style="max-width:520px;width:95%;background:var(--panel);border-radius:14px;padding:24px;position:relative;">
     <button onclick="closeM('m-campaign-postcard')" style="position:absolute;top:14px;right:14px;background:none;border:none;color:var(--mid);font-size:20px;cursor:pointer;line-height:1;">✕</button>
-    <div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px;">📮 Circle of Influence Campaign</div>
+    <div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px;">📮 Nearby Campaign</div>
     <div id="coi-postcard-subtitle" style="font-size:12px;color:var(--muted);margin-bottom:18px;">Sending to <span id="coi-postcard-count" style="color:#F25C05;font-weight:700;">0</span> homes</div>
 
     <!-- Job photo upload -->
@@ -7527,6 +7492,7 @@ function addMarker(pin){
       <button onclick="measureForPin('${pid}')" style="background:transparent;border:1.5px solid #F25C05;border-radius:7px;padding:6px;color:#F25C05;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">📐 Measure Roof</button>
       <button onclick="openPhotoModal('${pid}')" style="background:transparent;border:1.5px solid #22C55E;border-radius:7px;padding:6px;color:#22C55E;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">📷 Manage Photos</button>
       <div id="contact-info-${pid}" style="margin-bottom:5px;">${pin.contactData ? buildContactInfoHTML(pid, pin.contactData) : (currentAccount && currentAccount.tracerfy_enabled ? `<button onclick="event.stopPropagation();lookupContactInfo('${pid}')" style="background:transparent;border:1.5px solid #A78BFA;border-radius:7px;padding:6px;color:#A78BFA;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;display:block;">📞 Get Contact Info</button>` : `<div style="font-size:10px;color:#6B7280;text-align:center;padding:4px;">Contact lookup not enabled</div>`)}</div>
+      <button onclick="openNearbyCampaign('${pid}')" style="background:rgba(242,92,5,.12);border:1.5px solid #F25C05;border-radius:7px;padding:6px;color:#F25C05;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">📍 Nearby Campaign</button>
       <button onclick="confirmDeletePin('${pid}')" style="background:transparent;border:1.5px solid #EF4444;border-radius:7px;padding:5px;color:#EF4444;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;display:block;">🗑 Delete Pin</button>
     </div>
   `,{maxWidth:260});
@@ -7731,6 +7697,7 @@ function _buildPinPopupHTML(pin){
       <button onclick="measureForPin('${pid}')" style="background:transparent;border:1.5px solid #F25C05;border-radius:7px;padding:6px;color:#F25C05;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">\ud83d\udcd0 Measure Roof</button>
       <button onclick="openPhotoModal('${pid}')" style="background:transparent;border:1.5px solid #22C55E;border-radius:7px;padding:6px;color:#22C55E;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">\ud83d\udcf7 Manage Photos</button>
       <div id="contact-info-${pid}" style="margin-bottom:5px;">${_contactHTML}</div>
+      <button onclick="openNearbyCampaign('${pid}')" style="background:rgba(242,92,5,.12);border:1.5px solid #F25C05;border-radius:7px;padding:6px;color:#F25C05;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">\ud83d\udccd Nearby Campaign</button>
       <button onclick="confirmDeletePin('${pid}')" style="background:transparent;border:1.5px solid #EF4444;border-radius:7px;padding:5px;color:#EF4444;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;display:block;">\ud83d\uddd1 Delete Pin</button>
     </div>`;
 }
@@ -21277,224 +21244,228 @@ async function loadBillingStatus() {
 // ══════════════════════════════════════════════════════════
 // CIRCLE OF INFLUENCE CAMPAIGN
 // ══════════════════════════════════════════════════════════
-let _coiActive = false;
-let _coiCircleLayer = null;
-let _coiDrawHandler = null;
-let _coiRadiusM = 500; // default 500ft ≈ 152m
+// ═══════════════════════════════════════════════════════════════════════════
+// NEARBY CAMPAIGN — Address Blitz approach (like DOPE Marketing)
+// No circle drawing — just pick a pin, choose count, auto-select N nearest
+// ═══════════════════════════════════════════════════════════════════════════
+
 let _coiSelectedPinIds = new Set();
 let _coiPhotoDataUrl = null;
+let _coiSourcePid = null;  // the pin the campaign was launched from
 
+// Haversine distance in meters between two lat/lng points
 function haversineM(lat1,lng1,lat2,lng2){
   const R=6371000,dLat=(lat2-lat1)*Math.PI/180,dLng=(lng2-lng1)*Math.PI/180;
   const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 
-function toggleCircleCampaign(){
-  if(_coiActive){ cancelCircleCampaign(); return; }
-  _coiActive = true;
-  const btn = document.getElementById('btn-circle-campaign');
-  if(btn){ btn.classList.add('active'); btn.textContent='✕ Cancel Campaign'; }
-  // Show campaign panel
-  const panel = document.getElementById('circle-campaign-panel');
-  if(panel) panel.style.display='flex';
-  // Hide regular bulk bar if open
-  if(_pinBulkMode) togglePinBulkMode();
-  // Update status
-  _updateCOIStatus('Click the map to place a circle, or draw a custom radius');
-  // Enable circle-click mode on map
-  map.on('click', _coiMapClick);
-  toast('🎯 Click the map to drop a circle around a job site','info');
-}
-
-function _coiMapClick(e){
-  if(!_coiActive) return;
-  _placeCoiCircle(e.latlng, _coiRadiusM);
-}
-
-function _placeCoiCircle(center, radiusM){
-  // Remove old circle
-  if(_coiCircleLayer){ map.removeLayer(_coiCircleLayer); _coiCircleLayer=null; }
-  // Draw circle
-  _coiCircleLayer = L.circle(center, {
-    radius: radiusM,
-    color: '#F25C05',
-    fillColor: '#F25C05',
-    fillOpacity: 0.08,
-    weight: 2,
-    dashArray: '6 4'
-  }).addTo(map);
-  // Select pins within radius
-  _selectPinsInCircle(center, radiusM);
-}
-
-function _selectPinsInCircle(center, radiusM){
-  _coiSelectedPinIds.clear();
-  const activePins = (S.pins||[]).filter(p=>!p.deleted_at && p.lat && p.lng);
-  activePins.forEach(function(p){
-    const dist = haversineM(center.lat, center.lng, p.lat, p.lng);
-    if(dist <= radiusM) _coiSelectedPinIds.add(p.id);
-  });
-  _updateCOIActions();
-}
-
-function _updateCOIStatus(msg){
-  const el = document.getElementById('circle-campaign-status');
-  if(el) el.textContent = msg;
-}
-
-function _updateCOIActions(){
-  const count = _coiSelectedPinIds.size;
-  const actionsEl = document.getElementById('circle-campaign-actions');
-  const countEl = document.getElementById('circle-selected-count');
-  if(countEl) countEl.textContent = count + ' home' + (count!==1?'s':'') + ' selected';
-  if(actionsEl){
-    actionsEl.style.display = count > 0 ? 'flex' : 'none';
+// Open the "Nearby Campaign" count-picker modal from a pin popup
+function openNearbyCampaign(pid){
+  _coiSourcePid = pid;
+  // Build the picker modal if it doesn't exist yet
+  if(!document.getElementById('m-nearby-campaign')){
+    const el = document.createElement('div');
+    el.id = 'm-nearby-campaign';
+    el.className = 'modal-overlay';
+    el.style.cssText = 'display:none;z-index:9100;';
+    el.innerHTML = `
+      <div class="modal-box" style="max-width:340px;width:95%;background:var(--panel);border-radius:14px;padding:24px;position:relative;">
+        <button onclick="closeM('m-nearby-campaign')" style="position:absolute;top:14px;right:14px;background:none;border:none;color:var(--mid);font-size:20px;cursor:pointer;line-height:1;">✕</button>
+        <div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px;">📍 Nearby Campaign</div>
+        <div id="nearby-source-addr" style="font-size:11px;color:var(--muted);margin-bottom:18px;"></div>
+        <div style="font-size:12px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">How many nearest homes?</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;">
+          <button class="nearby-count-btn" onclick="selectNearbyCount(this,10)">10 homes</button>
+          <button class="nearby-count-btn" onclick="selectNearbyCount(this,25)">25 homes</button>
+          <button class="nearby-count-btn" onclick="selectNearbyCount(this,50)">50 homes</button>
+          <button class="nearby-count-btn" onclick="selectNearbyCount(this,100)">100 homes</button>
+        </div>
+        <div id="nearby-count-info" style="font-size:11px;color:var(--muted);margin-bottom:16px;min-height:16px;"></div>
+        <div style="display:flex;gap:10px;">
+          <button onclick="closeM('m-nearby-campaign')" style="flex:1;background:none;border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">Cancel</button>
+          <button id="btn-launch-nearby" onclick="launchNearbyCampaign()" disabled style="flex:2;background:#F25C05;border:none;border-radius:8px;padding:10px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;opacity:.4;">Select Homes →</button>
+        </div>
+      </div>`;
+    document.body.appendChild(el);
+    // Inject button styles
+    const style = document.createElement('style');
+    style.textContent = \`.nearby-count-btn{background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:12px;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-b);transition:all .15s;}
+.nearby-count-btn:hover{border-color:#F25C05;color:#F25C05;background:rgba(242,92,5,.1);}
+.nearby-count-btn.active{background:rgba(242,92,5,.18);border-color:#F25C05;color:#F25C05;}\`;
+    document.head.appendChild(style);
   }
-  _updateCOIStatus(count > 0
-    ? count + ' homes within radius — ready to campaign'
-    : 'No pins in this area — try a larger radius or move the circle');
+  // Set source address label
+  const srcPin = (S.pins||[]).find(p=>p.id===pid);
+  const addrEl = document.getElementById('nearby-source-addr');
+  if(addrEl) addrEl.textContent = srcPin ? 'Targeting homes near: '+srcPin.address : '';
+  // Reset selection
+  window._nearbySelectedCount = 0;
+  document.querySelectorAll('.nearby-count-btn').forEach(b=>b.classList.remove('active'));
+  const infoEl = document.getElementById('nearby-count-info');
+  if(infoEl) infoEl.textContent = '';
+  const launchBtn = document.getElementById('btn-launch-nearby');
+  if(launchBtn){ launchBtn.disabled=true; launchBtn.style.opacity='.4'; }
+  openM('m-nearby-campaign');
+}
+
+function selectNearbyCount(btn, count){
+  window._nearbySelectedCount = count;
+  document.querySelectorAll('.nearby-count-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  // Preview how many pins are actually available
+  const srcPin = (S.pins||[]).find(p=>p.id===_coiSourcePid);
+  const activePins = (S.pins||[]).filter(p=>!p.deleted_at && p.lat && p.lng && p.id!==_coiSourcePid);
+  const available = Math.min(count, activePins.length);
+  const infoEl = document.getElementById('nearby-count-info');
+  if(infoEl) infoEl.textContent = available + ' home' + (available!==1?'s':'') + ' will be selected' + (activePins.length < count ? ' (only '+activePins.length+' pins available)' : '');
+  const launchBtn = document.getElementById('btn-launch-nearby');
+  if(launchBtn){ launchBtn.disabled=false; launchBtn.style.opacity='1'; }
+}
+
+function launchNearbyCampaign(){
+  const count = window._nearbySelectedCount || 0;
+  if(!count || !_coiSourcePid){ toast('Select a count first','error'); return; }
+  const srcPin = (S.pins||[]).find(p=>p.id===_coiSourcePid);
+  if(!srcPin || !srcPin.lat || !srcPin.lng){ toast('Source pin has no location','error'); return; }
+  // Find N nearest pins by haversine distance
+  const activePins = (S.pins||[]).filter(p=>!p.deleted_at && p.lat && p.lng && p.id!==_coiSourcePid);
+  activePins.sort(function(a,b){
+    return haversineM(srcPin.lat,srcPin.lng,a.lat,a.lng) - haversineM(srcPin.lat,srcPin.lng,b.lat,b.lng);
+  });
+  const nearest = activePins.slice(0, count);
+  _coiSelectedPinIds = new Set(nearest.map(p=>p.id));
   // Highlight selected markers on map
   Object.keys(markers).forEach(function(pid){
     const m = markers[pid];
     if(!m || !m._icon) return;
-    if(_coiSelectedPinIds.has(pid)){
-      m._icon.style.filter='drop-shadow(0 0 6px #F25C05) brightness(1.3)';
-    } else {
-      m._icon.style.filter='';
-    }
+    m._icon.style.filter = _coiSelectedPinIds.has(pid) ? 'drop-shadow(0 0 6px #F25C05) brightness(1.3)' : '';
   });
+  closeM('m-nearby-campaign');
+  // Show the campaign action panel
+  _showNearbyCampaignPanel(srcPin, nearest.length);
+  toast('📍 '+nearest.length+' homes selected near '+srcPin.address,'success');
 }
 
-function setCOIRadius(btn, meters){
-  _coiRadiusM = meters;
-  document.querySelectorAll('.coi-radius-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  // Redraw if circle exists
-  if(_coiCircleLayer){
-    const center = _coiCircleLayer.getLatLng();
-    _placeCoiCircle(center, meters);
+function _showNearbyCampaignPanel(srcPin, count){
+  // Build or reuse the nearby-campaign-panel
+  let panel = document.getElementById('nearby-campaign-panel');
+  if(!panel){
+    panel = document.createElement('div');
+    panel.id = 'nearby-campaign-panel';
+    panel.style.cssText = 'display:flex;flex-direction:column;gap:0;background:linear-gradient(135deg,#1a1f2e,#0f1420);border-bottom:2px solid #F25C05;flex-shrink:0;';
+    // Insert before pin-list
+    const pinList = document.getElementById('pin-list');
+    if(pinList && pinList.parentNode) pinList.parentNode.insertBefore(panel, pinList);
+    else document.getElementById('tab-pins').appendChild(panel);
   }
+  panel.style.display = 'flex';
+  panel.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px 6px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:18px;">📍</span>
+        <div>
+          <div style="font-size:12px;font-weight:800;color:#F25C05;letter-spacing:.4px;">NEARBY CAMPAIGN</div>
+          <div id="nearby-panel-subtitle" style="font-size:10px;color:var(--muted);">${count} homes near ${escHtml(srcPin.address)}</div>
+        </div>
+      </div>
+      <button onclick="cancelNearbyCampaign()" style="background:none;border:none;color:var(--mid);font-size:18px;cursor:pointer;line-height:1;padding:4px;">✕</button>
+    </div>
+    <div style="padding:0 14px 10px;display:flex;flex-direction:column;gap:6px;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
+        <span id="nearby-selected-count" style="font-size:12px;font-weight:700;color:#F25C05;">${count} homes selected</span>
+        <button onclick="cancelNearbyCampaign()" style="background:none;border:1px solid var(--border);border-radius:5px;padding:2px 8px;color:var(--muted);font-size:10px;cursor:pointer;">Clear</button>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        ${(window.currentAccount && window.currentAccount.tracerfy_enabled) ? '<button onclick="bulkTracerfyCampaign()" id="btn-coi-trace" style="background:rgba(167,139,250,.15);border:1px solid #A78BFA;border-radius:7px;padding:6px 12px;color:#A78BFA;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">📞 Skip-Trace All</button>' : ''}
+        <button onclick="bulkGhlCampaign()" id="btn-coi-ghl" style="background:rgba(34,197,94,.12);border:1px solid #22C55E;border-radius:7px;padding:6px 12px;color:#4ade80;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">⬆ Push to GHL</button>
+        <button onclick="launchCampaignPostcardModal()" id="btn-coi-postcard" style="background:rgba(242,92,5,.15);border:1px solid #F25C05;border-radius:7px;padding:6px 12px;color:#F25C05;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">📮 Send Postcards</button>
+      </div>
+    </div>`;
+  // Switch to pins tab so the panel is visible
+  if(typeof switchTab === 'function') switchTab('pins');
 }
 
-function clearCircleSelection(){
+function cancelNearbyCampaign(){
   _coiSelectedPinIds.clear();
-  if(_coiCircleLayer){ map.removeLayer(_coiCircleLayer); _coiCircleLayer=null; }
-  _updateCOIActions();
-  _updateCOIStatus('Click the map to place a new circle');
+  _coiSourcePid = null;
   // Remove highlights
   Object.values(markers).forEach(function(m){
     if(m && m._icon) m._icon.style.filter='';
   });
-}
-
-function cancelCircleCampaign(){
-  _coiActive = false;
-  map.off('click', _coiMapClick);
-  clearCircleSelection();
-  const btn = document.getElementById('btn-circle-campaign');
-  if(btn){ btn.classList.remove('active'); btn.textContent='🎯 Circle Campaign'; }
-  const panel = document.getElementById('circle-campaign-panel');
+  const panel = document.getElementById('nearby-campaign-panel');
   if(panel) panel.style.display='none';
 }
 
-// ── Bulk Skip-Trace ──────────────────────────────────────
+// Alias for backward compat (sendCampaignPostcards calls cancelCircleCampaign at end)
+function cancelCircleCampaign(){ cancelNearbyCampaign(); }
+
 async function bulkTracerfyCampaign(){
+  if(!window.currentAccount || !window.currentAccount.tracerfy_enabled){
+    toast('Tracerfy not enabled for this account','error'); return;
+  }
   const ids = [..._coiSelectedPinIds];
-  if(!ids.length){ toast('No homes selected','info'); return; }
+  if(!ids.length){ toast('No homes selected','error'); return; }
   const btn = document.getElementById('btn-coi-trace');
-  if(btn){ btn.disabled=true; btn.textContent='⏳ Tracing…'; }
-  let done=0, skipped=0, failed=0;
+  if(btn){ btn.disabled=true; btn.textContent='Tracing…'; }
+  let done=0;
   for(const pid of ids){
     const pin = (S.pins||[]).find(p=>p.id===pid);
     if(!pin) continue;
-    // Skip if already has contact data
-    if(pin.contactData && ((pin.contactData.phones||[]).length+(pin.contactData.emails||[]).length)>0){
-      skipped++; done++; continue;
-    }
+    if(pin.contactData){ done++; continue; } // dedup: already traced
     try{
-      const parts=(pin.address||'').split(',').map(s=>s.trim());
-      const result = await adminAPI('tracerfy',{
-        ownerName:(pin.estimate&&pin.estimate.owner)||pin.owner||'',
-        address:parts[0]||'',
-        city:parts[1]||'',
-        state:(parts[2]||'').trim().split(/\s+/)[0]||'',
-        zip:(parts[2]||'').trim().split(/\s+/)[1]||'',
-        pinId:pid
-      });
-      const persons=(result&&result.persons)?result.persons:[];
-      const phones=[],emails=[];
-      let ownerName='';
-      persons.forEach(function(person){
-        if(!ownerName&&person.full_name) ownerName=person.full_name;
-        (person.phones||[]).forEach(function(p){ phones.push({number:p.number||p,dnc:p.dnc||false,type:p.type||''}); });
-        (person.emails||[]).forEach(function(e){ emails.push({address:e.address||e.email||e}); });
-      });
-      const cd={phones,emails,ownerName};
-      pin.contactData=cd;
-      if(sb&&pin.id) sb.from('pins').update({contact_data:cd}).eq('id',pin.id).then(()=>{});
-    } catch(e){
-      failed++;
+      await lookupContactInfo(pid);
+    }catch(e){
       console.warn('COI trace failed for',pid,e);
     }
     done++;
-    _updateCOIStatus('Skip-tracing… '+done+'/'+ids.length);
-    await new Promise(r=>setTimeout(r,300)); // rate limit
+    const subtitle = document.getElementById('nearby-panel-subtitle');
+    if(subtitle) subtitle.textContent = 'Skip-tracing… '+done+'/'+ids.length;
   }
-  if(btn){ btn.disabled=false; btn.textContent='✅ Traced ('+( ids.length-skipped-failed)+' new)'; }
-  toast('Skip-trace complete: '+(ids.length-skipped-failed)+' new lookups, '+skipped+' cached, '+failed+' failed','success');
-  _updateCOIStatus(ids.length+' homes selected — skip-trace complete');
+  if(btn){ btn.disabled=false; btn.textContent='✓ Traced'; }
+  const subtitle = document.getElementById('nearby-panel-subtitle');
+  if(subtitle) subtitle.textContent = ids.length+' homes — skip-trace complete';
+  toast('✅ Skip-trace complete for '+ids.length+' homes','success');
 }
 
-// ── Bulk GHL Push ────────────────────────────────────────
 async function bulkGhlCampaign(){
-  if(!S.cfg.ghlLocationId){ toast('GHL not connected — go to Settings','error'); return; }
   const ids = [..._coiSelectedPinIds];
-  if(!ids.length){ toast('No homes selected','info'); return; }
+  if(!ids.length){ toast('No homes selected','error'); return; }
   const btn = document.getElementById('btn-coi-ghl');
-  if(btn){ btn.disabled=true; btn.textContent='⏳ Pushing…'; }
-  let done=0, failed=0;
-  const campaignTag = 'coi-campaign-'+new Date().toISOString().slice(0,10);
+  if(btn){ btn.disabled=true; btn.textContent='Pushing…'; }
+  const campaignTag = 'nearby-campaign-'+new Date().toISOString().slice(0,10);
+  let done=0;
   for(const pid of ids){
     const pin = (S.pins||[]).find(p=>p.id===pid);
     if(!pin) continue;
     try{
-      const ownerName = (pin.contactData&&pin.contactData.ownerName) || (pin.estimate&&pin.estimate.owner) || pin.owner || 'Homeowner';
-      const email = (pin.contactData&&pin.contactData.emails&&pin.contactData.emails[0]) ? (pin.contactData.emails[0].address||pin.contactData.emails[0]) : null;
-      const phone = (pin.contactData&&pin.contactData.phones&&pin.contactData.phones[0]) ? (pin.contactData.phones[0].number||pin.contactData.phones[0]) : null;
-      const contactId = await ghlUpsertContact(ownerName, pin.address, email, pin.ghlContactId||null, pin.id, phone);
+      const contactId = await ghlUpsertContact(pin);
       if(contactId){
-        pin.ghlContactId = contactId;
-        if(sb&&pin.id) sb.from('pins').update({ghl_contact_id:contactId}).eq('id',pin.id).then(()=>{});
-        // Tag with campaign
-        await ghlAddContactTag(contactId, campaignTag).catch(()=>{});
         await ghlAddContactTag(contactId, 'circle-of-influence').catch(()=>{});
+        await ghlAddContactTag(contactId, campaignTag).catch(()=>{});
       }
-    } catch(e){
-      failed++;
+    }catch(e){
       console.warn('COI GHL push failed for',pid,e);
     }
     done++;
-    _updateCOIStatus('Pushing to GHL… '+done+'/'+ids.length);
-    await new Promise(r=>setTimeout(r,200));
+    const subtitle = document.getElementById('nearby-panel-subtitle');
+    if(subtitle) subtitle.textContent = 'Pushing to GHL… '+done+'/'+ids.length;
   }
-  if(btn){ btn.disabled=false; btn.textContent='✅ GHL Synced'; }
-  toast('GHL sync complete: '+(done-failed)+' contacts pushed with tag "'+campaignTag+'"','success');
+  if(btn){ btn.disabled=false; btn.textContent='✓ Pushed'; }
+  const subtitle = document.getElementById('nearby-panel-subtitle');
+  if(subtitle) subtitle.textContent = ids.length+' homes pushed to GHL';
+  toast('✅ '+ids.length+' homes pushed to GHL','success');
 }
 
-// ── Campaign Postcard Modal ──────────────────────────────
 function launchCampaignPostcardModal(){
   const count = _coiSelectedPinIds.size;
-  if(!count){ toast('No homes selected','info'); return; }
+  if(!count){ toast('No homes selected','error'); return; }
   document.getElementById('coi-postcard-count').textContent = count;
-  document.getElementById('coi-cost-est').textContent = '$'+(count*4).toFixed(2)+' ('+count+' credit'+(count>1?'s':'')+' × $4.00 each)';
-  // Reset form
+  document.getElementById('coi-cost-est').textContent = '$'+(count*1.5).toFixed(2)+' ('+count+' postcard'+(count>1?'s':'')+ ' × $1.50 each)';
   _coiPhotoDataUrl = null;
   document.getElementById('coi-photo-preview').style.display='none';
   document.getElementById('coi-photo-placeholder').style.display='block';
   document.getElementById('coi-send-progress').style.display='none';
-  document.getElementById('btn-send-campaign').disabled=false;
-  document.getElementById('btn-send-campaign').textContent='📮 Send Campaign';
   openM('m-campaign-postcard');
 }
 
@@ -21513,58 +21484,49 @@ function handleCOIPhotoUpload(inp){
 
 async function sendCampaignPostcards(){
   const ids = [..._coiSelectedPinIds];
-  if(!ids.length){ toast('No homes selected','info'); return; }
+  if(!ids.length){ toast('No homes selected','error'); return; }
   if(!_coiPhotoDataUrl){ toast('Please upload a job photo first','error'); return; }
   const headline = document.getElementById('coi-headline').value || 'We just finished a project in your neighborhood!';
   const subtext  = document.getElementById('coi-subtext').value  || 'Your neighbors love the results. Want a free quote?';
-  const btn = document.getElementById('btn-send-campaign');
+  const srcPin = _coiSourcePid ? (S.pins||[]).find(p=>p.id===_coiSourcePid) : null;
   const progressEl = document.getElementById('coi-send-progress');
   const progressBar = document.getElementById('coi-progress-bar');
   const progressText = document.getElementById('coi-progress-text');
-  btn.disabled=true; btn.textContent='⏳ Sending…';
+  const sendBtn = document.getElementById('btn-send-campaign');
+  if(sendBtn){ sendBtn.disabled=true; sendBtn.textContent='Sending…'; }
   progressEl.style.display='block';
   let sent=0, failed=0;
   for(const pid of ids){
     const pin = (S.pins||[]).find(p=>p.id===pid);
-    if(!pin||!pin.address) continue;
+    if(!pin || !pin.address) continue;
     try{
-      // Build a synthetic queue item for the existing Lob postcard function
-      const ownerName = (pin.contactData&&pin.contactData.ownerName)||(pin.estimate&&pin.estimate.owner)||pin.owner||'Neighbor';
-      const syntheticQueueItem = {
-        id: 'coi-'+pid+'-'+Date.now(),
-        addr: pin.address,
-        owner: ownerName,
+      await adminAPI('lob-postcard-campaign',{
+        id: 'nearby-'+pid+'-'+Date.now(),
+        to_address: pin.address,
         photo_url: _coiPhotoDataUrl,
-        total: 0,
-        // Campaign-specific overrides
-        _coiHeadline: headline,
-        _coiSubtext: subtext,
-        _isCampaign: true
-      };
-      // Use existing Lob send infrastructure via adminAPI
-      await adminAPI('lob-postcard-campaign', {
-        toAddr: pin.address,
-        toName: ownerName,
-        photoDataUrl: _coiPhotoDataUrl,
         headline: headline,
         subtext: subtext,
-        pinId: pid
+        source_address: srcPin ? srcPin.address : '',
+        photoDataUrl: _coiPhotoDataUrl,
+        account_id: currentAccount ? currentAccount.id : null
       });
       sent++;
-    } catch(e){
+    }catch(e){
+      console.warn('Nearby postcard failed for',pid,e);
       failed++;
-      console.warn('COI postcard failed for',pid,e);
     }
     const pct = Math.round(((sent+failed)/ids.length)*100);
     progressBar.style.width = pct+'%';
-    progressText.textContent = (sent+failed)+' / '+ids.length+' sent';
-    await new Promise(r=>setTimeout(r,500));
+    progressText.textContent = sent+' / '+ids.length+' sent'+(failed>0?' ('+failed+' failed)':'');
   }
-  btn.disabled=false;
-  btn.textContent = sent > 0 ? '✅ Sent '+sent+' Postcards!' : '❌ Send Failed';
-  if(sent>0){
-    toast('📮 Campaign sent! '+sent+' postcards mailed'+(failed?' ('+failed+' failed)':''),'success');
-    setTimeout(()=>{ closeM('m-campaign-postcard'); cancelCircleCampaign(); }, 2500);
+  if(sendBtn){ sendBtn.disabled=false; sendBtn.textContent='📮 Send Campaign'; }
+  if(failed===0){
+    toast('✅ '+sent+' postcards sent!','success');
+    setTimeout(()=>{ closeM('m-campaign-postcard'); cancelNearbyCampaign(); }, 2500);
+  } else {
+    toast(sent+' sent, '+failed+' failed','warning');
+  }
+} setTimeout(()=>{ closeM('m-campaign-postcard'); cancelCircleCampaign(); }, 2500);
   } else {
     toast('Postcard send failed — check Lob configuration','error');
   }
