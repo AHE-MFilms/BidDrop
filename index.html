@@ -2106,6 +2106,7 @@ tr:hover td{background:var(--card);}
     <div style="display:flex;gap:0;border-bottom:2px solid var(--border);">
       <button id="hist-tab-mailers" onclick="histTab('mailers')" style="padding:10px 20px;background:none;border:none;border-bottom:2px solid var(--accent);margin-bottom:-2px;color:var(--accent);font-weight:600;cursor:pointer;font-size:14px;">📬 Mailers Sent</button>
       <button id="hist-tab-credits" onclick="histTab('credits')" style="padding:10px 20px;background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--muted);font-weight:600;cursor:pointer;font-size:14px;">💳 Credit Purchases</button>
+      <button id="hist-tab-campaigns" onclick="histTab('campaigns')" style="padding:10px 20px;background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--muted);font-weight:600;cursor:pointer;font-size:14px;">📍 Campaigns</button>
     </div>
 
     <!-- Mailers panel -->
@@ -2128,6 +2129,16 @@ tr:hover td{background:var(--card);}
     <div id="hist-panel-credits" style="display:none;">
       <div id="hist-credits-table" style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
         <div style="padding:40px;text-align:center;color:var(--muted);">Loading…</div>
+      </div>
+    </div>
+    <!-- Campaigns panel -->
+    <div id="hist-panel-campaigns" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+        <div style="font-size:13px;color:var(--muted);">All Nearby Campaigns launched from your account.</div>
+        <button onclick="loadCampaignHistory()" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;color:var(--mid);font-size:12px;cursor:pointer;">&#8635; Refresh</button>
+      </div>
+      <div id="hist-campaigns-table" style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+        <div style="padding:40px;text-align:center;color:var(--muted);">Loading campaigns…</div>
       </div>
     </div>
   </div>
@@ -9837,8 +9848,11 @@ async function loadHistory(){
 function histTab(tab){
   document.getElementById('hist-panel-mailers').style.display = tab==='mailers' ? '' : 'none';
   document.getElementById('hist-panel-credits').style.display = tab==='credits' ? '' : 'none';
+  const campPanel = document.getElementById('hist-panel-campaigns');
+  if(campPanel) campPanel.style.display = tab==='campaigns' ? '' : 'none';
   const mBtn = document.getElementById('hist-tab-mailers');
   const cBtn = document.getElementById('hist-tab-credits');
+  const campBtn = document.getElementById('hist-tab-campaigns');
   if(mBtn){
     mBtn.style.borderBottomColor = tab==='mailers' ? 'var(--accent)' : 'transparent';
     mBtn.style.color = tab==='mailers' ? 'var(--accent)' : 'var(--muted)';
@@ -9847,7 +9861,48 @@ function histTab(tab){
     cBtn.style.borderBottomColor = tab==='credits' ? 'var(--accent)' : 'transparent';
     cBtn.style.color = tab==='credits' ? 'var(--accent)' : 'var(--muted)';
   }
+  if(campBtn){
+    campBtn.style.borderBottomColor = tab==='campaigns' ? 'var(--accent)' : 'transparent';
+    campBtn.style.color = tab==='campaigns' ? 'var(--accent)' : 'var(--muted)';
+  }
+  if(tab==='campaigns') loadCampaignHistory();
 }
+async function loadCampaignHistory(){
+  const el = document.getElementById('hist-campaigns-table');
+  if(!el) return;
+  el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);">Loading…</div>';
+  try{
+    const data = await adminAPI('campaign-list', {});
+    const campaigns = (data && data.campaigns) || [];
+    if(!campaigns.length){
+      el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);">No campaigns yet. Launch a Nearby Campaign from any pin popup.</div>';
+      return;
+    }
+    const rows = campaigns.map(function(c){
+      const d = new Date(c.campaign_date);
+      const dateStr = d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      const statusColor = c.status==='active' ? 'var(--accent)' : c.status==='completed' ? 'var(--success)' : 'var(--muted)';
+      const pinList = (c.pin_ids||[]).slice(0,5).join(', ') + ((c.pin_ids||[]).length>5 ? ' …' : '');
+      return '<div style="display:grid;grid-template-columns:1fr auto;align-items:start;padding:14px 18px;border-bottom:1px solid var(--border);gap:12px;">'+
+        '<div>'+
+          '<div style="font-weight:600;color:var(--text);font-size:14px;margin-bottom:3px;">📍 '+escHtml(c.source_address||'Unknown address')+'</div>'+
+          '<div style="font-size:12px;color:var(--muted);margin-bottom:6px;">'+dateStr+' · '+escHtml(c.rep_email||'')+' · <span style="color:var(--text);">'+c.home_count+' homes</span></div>'+
+          '<div style="display:flex;gap:12px;font-size:12px;">'+
+            '<span style="color:var(--info);">&#8679; '+c.ghl_pushed+' to GHL</span>'+
+            '<span style="color:var(--success);">&#128236; '+c.postcards_sent+' postcards</span>'+
+          '</div>'+
+        '</div>'+
+        '<div style="text-align:right;">'+
+          '<span style="background:rgba(242,92,5,.12);border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700;color:'+statusColor+';text-transform:uppercase;">'+c.status+'</span>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+    el.innerHTML = rows;
+  } catch(e){
+    el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--danger);">Failed to load campaigns: '+escHtml(e.message||String(e))+'</div>';
+  }
+}
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 function renderHistMailers(){
   const search = (document.getElementById('hist-search')?.value||'').toLowerCase();
@@ -21405,20 +21460,104 @@ async function launchNearbyCampaign(){
     return;
   }
 
-  // Store selected homes — use a separate Map keyed by id for real homes
+  // ── Auto-create pins for each real home (campaign_target = true) ──
+  const campaignId = 'camp-' + Date.now();
+  const campaignPinIds = [];
+  const now = new Date().toISOString();
+  const repName = (window.currentUser && window.currentUser.email) || 'Campaign';
+  for(const home of nearbyHomes){
+    if(home._fromRentCast){
+      const addrNorm = (home.address||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+      const existingPin = (S.pins||[]).find(function(p){
+        if(p.deleted_at) return false;
+        const pNorm = (p.address||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+        return pNorm === addrNorm;
+      });
+      if(existingPin){
+        if(!existingPin.campaign_id){
+          existingPin.campaign_id = campaignId;
+          existingPin.campaign_target = true;
+          sb.from('pins').update({ campaign_id: campaignId, campaign_target: true }).eq('id', existingPin.id).then(function(){});
+        }
+        home.id = existingPin.id;
+        campaignPinIds.push(existingPin.id);
+      } else {
+        const newPinId = 'camp-' + Date.now() + '-' + Math.random().toString(36).slice(2,8);
+        const newPin = {
+          id: newPinId,
+          lat: home.lat,
+          lng: home.lng,
+          address: home.address,
+          status: 'campaign_target',
+          notes: 'Auto-pinned by Nearby Campaign on ' + now.slice(0,10),
+          rep: repName,
+          at: now,
+          campaign_target: true,
+          campaign_id: campaignId,
+          photo_url: null,
+          damage_photos: null,
+          all_photos: null
+        };
+        S.pins.unshift(newPin);
+        addMarker(newPin);
+        sb.from('pins').upsert({
+          id: newPinId,
+          account_id: currentAccount ? currentAccount.id : null,
+          created_by: currentUser ? currentUser.id : null,
+          rep_name: repName,
+          lat: home.lat,
+          lng: home.lng,
+          address: home.address,
+          status: 'campaign_target',
+          notes: newPin.notes,
+          campaign_target: true,
+          campaign_id: campaignId,
+          updated_at: now
+        }, {onConflict:'id'}).then(function(r){ if(r.error) console.warn('[Campaign] pin save error:', r.error.message); });
+        home.id = newPinId;
+        campaignPinIds.push(newPinId);
+      }
+    } else {
+      campaignPinIds.push(home.id);
+    }
+  }
+  renderPinList();
+  // ── Save campaign record ──
+  window._activeCampaignId = campaignId;
+  window._activeCampaignPinIds = campaignPinIds;
+  const campaignRecord = {
+    id: campaignId,
+    account_id: currentAccount ? currentAccount.id : null,
+    source_pin_id: srcPin.id || null,
+    source_address: srcPin.address || '',
+    campaign_date: now,
+    rep_email: (window.currentUser && window.currentUser.email) || '',
+    pin_ids: campaignPinIds,
+    home_count: campaignPinIds.length,
+    postcards_sent: 0,
+    ghl_pushed: 0,
+    status: 'active'
+  };
+  adminAPI('campaign-save', { campaign: campaignRecord }).catch(function(e){ console.warn('[Campaign] save failed:', e); });
+  // Store selected homes
   window._nearbyRealHomes = nearbyHomes;
-  _coiSelectedPinIds = new Set(nearbyHomes.map(p=>p.id));
-
-  // Highlight existing pins that match (by address proximity)
+  _coiSelectedPinIds = new Set(nearbyHomes.map(function(p){ return p.id; }));
+  // Highlight campaign target pins on the map
   Object.keys(markers).forEach(function(pid){
     const m = markers[pid];
     if(!m || !m._icon) return;
-    m._icon.style.filter = _coiSelectedPinIds.has(pid) ? 'drop-shadow(0 0 6px #F25C05) brightness(1.3)' : '';
+    if(_coiSelectedPinIds.has(pid)){
+      m._icon.style.filter = 'drop-shadow(0 0 8px #F25C05) brightness(1.4) saturate(1.5)';
+      m._icon.style.outline = '2px solid #F25C05';
+      m._icon.style.borderRadius = '50%';
+    } else {
+      m._icon.style.filter = '';
+      m._icon.style.outline = '';
+    }
   });
-
   closeM('m-nearby-campaign');
   _showNearbyCampaignPanel(srcPin, nearbyHomes);
-  toast('📍 '+nearbyHomes.length+' homes found near '+srcPin.address,'success');
+  toast('📍 '+nearbyHomes.length+' homes pinned near '+srcPin.address,'success');
 }
 
 function _showNearbyCampaignPanel(srcPin, nearestPins){
@@ -21469,9 +21608,14 @@ function _showNearbyCampaignPanel(srcPin, nearestPins){
 function cancelNearbyCampaign(){
   _coiSelectedPinIds.clear();
   _coiSourcePid = null;
-  // Remove highlights
+  window._activeCampaignId = null;
+  window._activeCampaignPinIds = null;
+  window._nearbyRealHomes = null;
   Object.values(markers).forEach(function(m){
-    if(m && m._icon) m._icon.style.filter='';
+    if(m && m._icon){
+      m._icon.style.filter='';
+      m._icon.style.outline='';
+    }
   });
   const panel = document.getElementById('nearby-campaign-panel');
   if(panel) panel.style.display='none';
@@ -21545,6 +21689,9 @@ async function bulkGhlCampaign(){
   const subtitle = document.getElementById('nearby-panel-subtitle');
   if(subtitle) subtitle.textContent = ids.length+' homes pushed to GHL';
   toast('✅ '+ids.length+' homes pushed to GHL','success');
+  if(window._activeCampaignId){
+    adminAPI('campaign-update', { campaignId: window._activeCampaignId, updates: { ghl_pushed: done } }).catch(()=>{});
+  }
 }
 
 function launchCampaignPostcardModal(){
@@ -21610,6 +21757,9 @@ async function sendCampaignPostcards(){
     progressText.textContent = sent+' / '+ids.length+' sent'+(failed>0?' ('+failed+' failed)':'');
   }
   if(sendBtn){ sendBtn.disabled=false; sendBtn.textContent='📮 Send Campaign'; }
+  if(window._activeCampaignId && sent > 0){
+    adminAPI('campaign-update', { campaignId: window._activeCampaignId, updates: { postcards_sent: sent } }).catch(()=>{});
+  }
   if(failed===0){
     toast('✅ '+sent+' postcards sent!','success');
     setTimeout(()=>{ closeM('m-campaign-postcard'); cancelNearbyCampaign(); }, 2500);

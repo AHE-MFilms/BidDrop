@@ -88,6 +88,34 @@ export default async function handler(req, res) {
       check: "SELECT column_name FROM information_schema.columns WHERE table_name='pins' AND column_name='equity_data'",
       sql: "ALTER TABLE pins ADD COLUMN IF NOT EXISTS equity_data jsonb"
     },
+    {
+      name: 'pins.campaign_target',
+      check: "SELECT column_name FROM information_schema.columns WHERE table_name='pins' AND column_name='campaign_target'",
+      sql: "ALTER TABLE pins ADD COLUMN IF NOT EXISTS campaign_target boolean DEFAULT false"
+    },
+    {
+      name: 'pins.campaign_id',
+      check: "SELECT column_name FROM information_schema.columns WHERE table_name='pins' AND column_name='campaign_id'",
+      sql: "ALTER TABLE pins ADD COLUMN IF NOT EXISTS campaign_id text"
+    },
+    {
+      name: 'campaign_targets_table',
+      check: "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name='campaign_targets'",
+      sql: `CREATE TABLE IF NOT EXISTS campaign_targets (
+        id text PRIMARY KEY,
+        account_id text NOT NULL,
+        source_pin_id text,
+        source_address text,
+        campaign_date timestamptz DEFAULT now(),
+        rep_email text,
+        pin_ids text[],
+        home_count integer DEFAULT 0,
+        postcards_sent integer DEFAULT 0,
+        ghl_pushed integer DEFAULT 0,
+        status text DEFAULT 'active',
+        created_at timestamptz DEFAULT now()
+      )`
+    },
   ];
 
   // Try to run DDL via rpc/exec_sql
@@ -104,12 +132,16 @@ export default async function handler(req, res) {
     }
   }
 
-  // Step 3: Verify columns exist
+  // Step 3: Verify columns/tables exist
   const checks = [];
   for (const m of migrations) {
-    const [table, col] = m.name.split('.');
+    const parts = m.name.split('.');
+    const table = parts[0];
+    const col = parts[1] || null;
     try {
-      const r = await sbFetch(`${table}?select=${col}&limit=1`);
+      // For table-level migrations (no column), check the table directly
+      const selectField = col || 'id';
+      const r = await sbFetch(`${table}?select=${selectField}&limit=1`);
       checks.push({ name: m.name, exists: r.status === 200, status: r.status });
     } catch (e) {
       checks.push({ name: m.name, exists: false, error: e.message });

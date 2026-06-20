@@ -1039,6 +1039,40 @@ module.exports = async function handler(req, res) {
         const tfData = await tfRes.json();
         return res.status(tfRes.status).json(tfData);
       }
+      case 'campaign-save': {
+        // Save a new campaign record to campaign_targets table
+        const { campaign } = req.body;
+        if (!campaign || !campaign.id) { res.status(400).json({ error: 'campaign object with id required' }); return; }
+        const r = await sbFetch('campaign_targets', {
+          method: 'POST',
+          headers: { 'Prefer': 'resolution=merge-duplicates' },
+          body: JSON.stringify(campaign)
+        });
+        const body = await r.text();
+        return res.status(r.ok ? 200 : r.status).json({ ok: r.ok, status: r.status, body: body.substring(0, 200) });
+      }
+      case 'campaign-update': {
+        // Update an existing campaign record (e.g. postcards_sent, ghl_pushed)
+        const { campaignId, updates } = req.body;
+        if (!campaignId || !updates) { res.status(400).json({ error: 'campaignId and updates required' }); return; }
+        const r = await sbFetch(`campaign_targets?id=eq.${campaignId}`, {
+          method: 'PATCH',
+          body: JSON.stringify(updates)
+        });
+        return res.status(r.ok ? 200 : r.status).json({ ok: r.ok });
+      }
+      case 'campaign-list': {
+        // List campaigns for an account, most recent first
+        const listAcctId = profile.account_id;
+        if (!listAcctId) { res.status(401).json({ error: 'auth required' }); return; }
+        const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+        const r = await sbFetch(`campaign_targets?account_id=eq.${listAcctId}&order=campaign_date.desc&limit=${limit}`, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        });
+        const data = await r.json();
+        return res.status(r.ok ? 200 : r.status).json(Array.isArray(data) ? data : []);
+      }
       default:
         res.status(400).json({ error: `Unknown action: ${action}` });
     }
