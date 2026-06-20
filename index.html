@@ -7521,7 +7521,10 @@ function addMarker(pin){
     }).catch(function(){});
   }
   // Auto-fetch property data if not cached yet
-  if(!pin.equityData && pin.address){
+  if(!pin.equityData && pin.address && !_rentcastFetched.has(pid)){
+    _rentcastFetched.add(pid); // session-level dedup: never re-fetch same pin twice per session
+    const _rcDelay = (_rentcastLoadQueue++) * 200; // stagger: 200ms apart to avoid burst-firing on load
+    setTimeout(function(){
     lookupPropertyData(pin.address).then(function(data){
       if(!data) return;
       pin.equityData = {
@@ -7529,6 +7532,9 @@ function addMarker(pin){
         yearBuilt: data.yearBuilt, roofType: data.roofType, bedrooms: data.bedrooms,
         bathrooms: data.bathrooms, lastSaleDate: data.lastSaleDate, lastSalePrice: data.lastSalePrice
       };
+      // ── PERSIST to Supabase so future page loads skip RentCast for this pin ──
+      if(sb) sb.from('pins').update({ equity_data: pin.equityData }).eq('id', pid)
+        .then(function({error}){ if(error) console.warn('equityData persist:', error); });
       if(data.name && pin.estimate && !pin.estimate.owner){
         pin.estimate.owner = data.name;
         sb.from('pins').update({ estimate: pin.estimate }).eq('id', pid)
@@ -7546,6 +7552,7 @@ function addMarker(pin){
       }
       addMarker_updatePropData(m, pid, pin);
     }).catch(function(){});
+    }, _rcDelay); // end stagger setTimeout
   }
 }
 
@@ -14378,6 +14385,8 @@ let toastT;
 function fmtMoney(v){ if(!v||isNaN(v)) return null; return '$'+Math.round(v).toLocaleString(); }
 const _propDataCache = {}; // address -> data (null means not found)
 const _propDataInFlight = {}; // address -> Promise (deduplicates concurrent requests)
+const _rentcastFetched = new Set(); // pin IDs already fetched this session (prevents re-fetch on addMarker rebuild)
+let _rentcastLoadQueue = 0; // stagger counter: delays auto-fetch by 200ms * position to prevent burst on page load
 async function lookupPropertyData(address){
   if(!address) return null;
   const cacheKey = address.toLowerCase().trim();
@@ -14659,7 +14668,12 @@ async function manualRentcastLookup(){
     showEquityBadge(data);
     if(currentEstPinId){
       const pin = S.pins.find(p=>p.id===currentEstPinId);
-      if(pin){ pin.equityData = { estValue: data.estValue, mortgageBalance: data.mortgageBalance, equity: data.equity, yearBuilt: data.yearBuilt, roofType: data.roofType, bedrooms: data.bedrooms, bathrooms: data.bathrooms, lastSaleDate: data.lastSaleDate, lastSalePrice: data.lastSalePrice }; }
+      if(pin){
+        pin.equityData = { estValue: data.estValue, mortgageBalance: data.mortgageBalance, equity: data.equity, yearBuilt: data.yearBuilt, roofType: data.roofType, bedrooms: data.bedrooms, bathrooms: data.bathrooms, lastSaleDate: data.lastSaleDate, lastSalePrice: data.lastSalePrice };
+        _rentcastFetched.add(currentEstPinId);
+        if(sb) sb.from('pins').update({ equity_data: pin.equityData }).eq('id', currentEstPinId)
+          .then(function({error}){ if(error) console.warn('equityData persist (manual):', error); });
+      }
     }
     toast('🏠 '+(data.name ? 'Owner: '+data.name : 'Property found — owner name unavailable, enter manually'),'success');
   } catch(e){
@@ -14688,11 +14702,14 @@ async function autoFillOwnerIfEmpty(address){
     }
   }
   showEquityBadge(data);
-  // Store equity data on current pin for popup display
+  // Store equity data on current pin for popup display + persist to Supabase
   if(currentEstPinId){
     const pin = S.pins.find(p=>p.id===currentEstPinId);
     if(pin){
       pin.equityData = { estValue: data.estValue, mortgageBalance: data.mortgageBalance, equity: data.equity, yearBuilt: data.yearBuilt, roofType: data.roofType, bedrooms: data.bedrooms, bathrooms: data.bathrooms, lastSaleDate: data.lastSaleDate, lastSalePrice: data.lastSalePrice };
+      _rentcastFetched.add(currentEstPinId);
+      if(sb) sb.from('pins').update({ equity_data: pin.equityData }).eq('id', currentEstPinId)
+        .then(function({error}){ if(error) console.warn('equityData persist (autofill):', error); });
       // Refresh the map marker popup to show equity
       if(markers[currentEstPinId]) addMarker(pin);
     }
