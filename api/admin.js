@@ -678,6 +678,8 @@ module.exports = async function handler(req, res) {
             { headers: { 'X-Api-Key': RENTCAST_KEY }, signal: rcCtrl.signal }
           );
           clearTimeout(rcTimeout);
+          // Return 200 with notFound:true for 404s — address not in RentCast DB is expected, not an error
+          if (rcRes.status === 404) { res.status(200).json({ notFound: true, properties: [] }); return; }
           const rcData = await rcRes.json();
           res.status(rcRes.status).json(
             Array.isArray(rcData) ? { properties: rcData } : rcData

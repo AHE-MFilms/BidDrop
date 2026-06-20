@@ -14430,6 +14430,8 @@ async function _lookupPropertyDataRaw(address){
 
     // New format: { properties: [...], _credits: {...} }
     // Old format: [...] (array directly)
+    // notFound = address not in RentCast DB (highway, service road) — silent, not an error
+    if(data && data.notFound) return null;
     const arr = data && data.properties ? data.properties : (Array.isArray(data) ? data : null);
     const r = arr ? arr[0] : (data && !data.error ? data : null);
     if(!r) return null;
