@@ -83,6 +83,11 @@ export default async function handler(req, res) {
       check: "SELECT column_name FROM information_schema.columns WHERE table_name='accounts' AND column_name='enabled_trades'",
       sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS enabled_trades text[] DEFAULT ARRAY['roofing']"
     },
+    {
+      name: 'pins.equity_data',
+      check: "SELECT column_name FROM information_schema.columns WHERE table_name='pins' AND column_name='equity_data'",
+      sql: "ALTER TABLE pins ADD COLUMN IF NOT EXISTS equity_data jsonb"
+    },
   ];
 
   // Try to run DDL via rpc/exec_sql
