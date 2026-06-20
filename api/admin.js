@@ -1049,6 +1049,10 @@ module.exports = async function handler(req, res) {
           body: JSON.stringify(campaign)
         });
         const body = await r.text();
+        // Gracefully handle missing table (migration not yet run)
+        if (!r.ok && (body.includes('campaign_targets') || body.includes('PGRST205'))) {
+          return res.status(200).json({ ok: false, migrationNeeded: true, message: 'campaign_targets table not yet created — run /api/migrate' });
+        }
         return res.status(r.ok ? 200 : r.status).json({ ok: r.ok, status: r.status, body: body.substring(0, 200) });
       }
       case 'campaign-update': {
@@ -1070,8 +1074,16 @@ module.exports = async function handler(req, res) {
           method: 'GET',
           headers: { 'Accept': 'application/json' }
         });
+        if (!r.ok) {
+          const errText = await r.text();
+          // Gracefully return empty list if table doesn't exist yet
+          if (errText.includes('campaign_targets') || errText.includes('PGRST205')) {
+            return res.status(200).json({ campaigns: [], migrationNeeded: true });
+          }
+          return res.status(200).json({ campaigns: [] });
+        }
         const data = await r.json();
-        return res.status(r.ok ? 200 : r.status).json(Array.isArray(data) ? data : []);
+        return res.status(200).json({ campaigns: Array.isArray(data) ? data : [] });
       }
       default:
         res.status(400).json({ error: `Unknown action: ${action}` });

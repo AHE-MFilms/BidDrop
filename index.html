@@ -21477,7 +21477,10 @@ async function launchNearbyCampaign(){
         if(!existingPin.campaign_id){
           existingPin.campaign_id = campaignId;
           existingPin.campaign_target = true;
-          sb.from('pins').update({ campaign_id: campaignId, campaign_target: true }).eq('id', existingPin.id).then(function(){});
+          // Update campaign fields if columns exist (silently skip if not)
+          sb.from('pins').update({ campaign_id: campaignId, campaign_target: true }).eq('id', existingPin.id).then(function(r){
+            if(r.error && r.error.message && r.error.message.includes('campaign_id')) return; // column not yet migrated
+          });
         }
         home.id = existingPin.id;
         campaignPinIds.push(existingPin.id);
@@ -21500,7 +21503,8 @@ async function launchNearbyCampaign(){
         };
         S.pins.unshift(newPin);
         addMarker(newPin);
-        sb.from('pins').upsert({
+        // Save pin — try with campaign columns first, fall back without them if migration not yet run
+        const pinPayload = {
           id: newPinId,
           account_id: currentAccount ? currentAccount.id : null,
           created_by: currentUser ? currentUser.id : null,
@@ -21508,12 +21512,20 @@ async function launchNearbyCampaign(){
           lat: home.lat,
           lng: home.lng,
           address: home.address,
-          status: 'campaign_target',
+          status: 'needs_roof',
           notes: newPin.notes,
-          campaign_target: true,
-          campaign_id: campaignId,
           updated_at: now
-        }, {onConflict:'id'}).then(function(r){ if(r.error) console.warn('[Campaign] pin save error:', r.error.message); });
+        };
+        sb.from('pins').upsert(Object.assign({}, pinPayload, { campaign_target: true, campaign_id: campaignId }), {onConflict:'id'}).then(function(r){
+          if(r.error && r.error.message && r.error.message.includes('campaign_id')){
+            // Columns not yet migrated — save without campaign fields
+            sb.from('pins').upsert(pinPayload, {onConflict:'id'}).then(function(r2){
+              if(r2.error) console.warn('[Campaign] pin save error (fallback):', r2.error.message);
+            });
+          } else if(r.error){
+            console.warn('[Campaign] pin save error:', r.error.message);
+          }
+        });
         home.id = newPinId;
         campaignPinIds.push(newPinId);
       }
