@@ -21360,11 +21360,11 @@ function launchNearbyCampaign(){
   });
   closeM('m-nearby-campaign');
   // Show the campaign action panel
-  _showNearbyCampaignPanel(srcPin, nearest.length);
+  _showNearbyCampaignPanel(srcPin, nearest);
   toast('📍 '+nearest.length+' homes selected near '+srcPin.address,'success');
 }
 
-function _showNearbyCampaignPanel(srcPin, count){
+function _showNearbyCampaignPanel(srcPin, nearestPins){
   // Build or reuse the nearby-campaign-panel
   let panel = document.getElementById('nearby-campaign-panel');
   if(!panel){
@@ -21383,14 +21383,14 @@ function _showNearbyCampaignPanel(srcPin, count){
         <span style="font-size:18px;">📍</span>
         <div>
           <div style="font-size:12px;font-weight:800;color:#F25C05;letter-spacing:.4px;">NEARBY CAMPAIGN</div>
-          <div id="nearby-panel-subtitle" style="font-size:10px;color:var(--muted);">${count} homes near ${escHtml(srcPin.address)}</div>
+          <div id="nearby-panel-subtitle" style="font-size:10px;color:var(--muted);">${nearestPins.length} homes near ${escHtml(srcPin.address)}</div>
         </div>
       </div>
       <button onclick="cancelNearbyCampaign()" style="background:none;border:none;color:var(--mid);font-size:18px;cursor:pointer;line-height:1;padding:4px;">✕</button>
     </div>
     <div style="padding:0 14px 10px;display:flex;flex-direction:column;gap:6px;">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
-        <span id="nearby-selected-count" style="font-size:12px;font-weight:700;color:#F25C05;">${count} homes selected</span>
+        <span id="nearby-selected-count" style="font-size:12px;font-weight:700;color:#F25C05;">${nearestPins.length} homes selected</span>
         <button onclick="cancelNearbyCampaign()" style="background:none;border:1px solid var(--border);border-radius:5px;padding:2px 8px;color:var(--muted);font-size:10px;cursor:pointer;">Clear</button>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
@@ -21398,6 +21398,12 @@ function _showNearbyCampaignPanel(srcPin, count){
         <button onclick="bulkGhlCampaign()" id="btn-coi-ghl" style="background:rgba(34,197,94,.12);border:1px solid #22C55E;border-radius:7px;padding:6px 12px;color:#4ade80;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">⬆ Push to GHL</button>
         <button onclick="launchCampaignPostcardModal()" id="btn-coi-postcard" style="background:rgba(242,92,5,.15);border:1px solid #F25C05;border-radius:7px;padding:6px 12px;color:#F25C05;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">📮 Send Postcards</button>
       </div>
+      <details id="nearby-homes-list" style="margin-top:4px;">
+        <summary style="font-size:10px;color:var(--muted);cursor:pointer;padding:2px 0;user-select:none;">&#9654; View targeted homes</summary>
+        <div style="margin-top:6px;display:flex;flex-direction:column;gap:3px;max-height:160px;overflow-y:auto;">
+          ${nearestPins.map((p,i)=>`<div style="font-size:10px;color:var(--text);padding:3px 6px;background:rgba(255,255,255,.04);border-radius:4px;display:flex;gap:6px;align-items:center;"><span style="color:var(--muted);min-width:16px;">${i+1}.</span><span>${escHtml(p.address)}</span></div>`).join('')}
+        </div>
+      </details>
     </div>`;
   // Switch to pins tab so the panel is visible
   if(typeof switchTab === 'function') switchTab('pins');
