@@ -21421,11 +21421,20 @@ async function launchNearbyCampaign(){
     const props = resp && (resp.properties || (Array.isArray(resp) ? resp : null));
     if(props && props.length){
       // Sort by distance from source pin, exclude the source address itself
-      const srcAddrNorm = (srcPin.address||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+      // Use street number + first 5 chars of street name for fuzzy match (handles Road vs Rd, Michigan vs MI etc)
+      const _srcParts = (srcPin.address||'').trim().toLowerCase().split(/[\s,]+/);
+      const _srcNum = _srcParts[0] || '';    // e.g. "42691"
+      const _srcStreet = _srcParts[1] || ''; // e.g. "proctor"
       nearbyHomes = props
         .filter(p => {
-          const addr = (p.formattedAddress || p.address || '').toLowerCase().replace(/[^a-z0-9]/g,'');
-          return addr && addr !== srcAddrNorm;
+          const addr = (p.formattedAddress || p.address || '').trim().toLowerCase();
+          if(!addr) return false;
+          const parts = addr.split(/[\s,]+/);
+          const num = parts[0] || '';
+          const street = parts[1] || '';
+          // Exclude if street number AND first 5 chars of street name both match source
+          if(_srcNum && _srcStreet && num === _srcNum && street.startsWith(_srcStreet.substring(0,5))) return false;
+          return true;
         })
         .sort((a,b) => {
           const dA = haversineM(srcPin.lat, srcPin.lng, a.latitude||0, a.longitude||0);
