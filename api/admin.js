@@ -692,6 +692,34 @@ module.exports = async function handler(req, res) {
         break;
       }
 
+      case 'rentcast-nearby': {
+        // Find real neighboring homes by lat/lng radius using RentCast /properties
+        const { lat: rcLat, lng: rcLng, radius: rcRadius, limit: rcLimit } = req.query;
+        if (!rcLat || !rcLng) { res.status(400).json({ error: 'lat and lng required' }); return; }
+        const radiusMiles = parseFloat(rcRadius) || 0.1; // default 0.1 miles (~528 ft)
+        const limitNum = Math.min(parseInt(rcLimit) || 100, 500);
+        const rcCtrl2 = new AbortController();
+        const rcTimeout2 = setTimeout(() => rcCtrl2.abort(), 10000);
+        try {
+          const rcRes2 = await fetch(
+            `https://api.rentcast.io/v1/properties?latitude=${rcLat}&longitude=${rcLng}&radius=${radiusMiles}&propertyType=Single+Family&limit=${limitNum}&status=Active`,
+            { headers: { 'X-Api-Key': RENTCAST_KEY }, signal: rcCtrl2.signal }
+          );
+          clearTimeout(rcTimeout2);
+          const rcData2 = await rcRes2.json();
+          res.status(rcRes2.status).json(
+            Array.isArray(rcData2) ? { properties: rcData2 } : rcData2
+          );
+        } catch (rcErr2) {
+          clearTimeout(rcTimeout2);
+          if (rcErr2.name === 'AbortError') {
+            return res.status(408).json({ error: 'rentcast_timeout', message: 'RentCast nearby search timed out' });
+          }
+          throw rcErr2;
+        }
+        break;
+      }
+
       case 'upload-photo': {
         // Upload a photo to Supabase Storage using service key (bypasses RLS)
         // Accepts: { path: string, dataUrl: string, mimeType: string }

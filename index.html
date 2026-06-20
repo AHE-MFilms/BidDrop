@@ -21330,38 +21330,93 @@ function selectNearbyCount(btn, count){
   window._nearbySelectedCount = count;
   document.querySelectorAll('.nearby-count-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  // Preview how many pins are actually available
-  const srcPin = (S.pins||[]).find(p=>p.id===_coiSourcePid);
-  const activePins = (S.pins||[]).filter(p=>!p.deleted_at && p.lat && p.lng && p.id!==_coiSourcePid);
-  const available = Math.min(count, activePins.length);
   const infoEl = document.getElementById('nearby-count-info');
-  if(infoEl) infoEl.textContent = available + ' home' + (available!==1?'s':'') + ' will be selected' + (activePins.length < count ? ' (only '+activePins.length+' pins available)' : '');
+  if(infoEl) infoEl.textContent = 'Will search for the '+count+' closest real homes nearby';
   const launchBtn = document.getElementById('btn-launch-nearby');
   if(launchBtn){ launchBtn.disabled=false; launchBtn.style.opacity='1'; }
 }
 
-function launchNearbyCampaign(){
+async function launchNearbyCampaign(){
   const count = window._nearbySelectedCount || 0;
   if(!count || !_coiSourcePid){ toast('Select a count first','error'); return; }
   const srcPin = (S.pins||[]).find(p=>p.id===_coiSourcePid);
   if(!srcPin || !srcPin.lat || !srcPin.lng){ toast('Source pin has no location','error'); return; }
-  // Find N nearest pins by haversine distance
-  const activePins = (S.pins||[]).filter(p=>!p.deleted_at && p.lat && p.lng && p.id!==_coiSourcePid);
-  activePins.sort(function(a,b){
-    return haversineM(srcPin.lat,srcPin.lng,a.lat,a.lng) - haversineM(srcPin.lat,srcPin.lng,b.lat,b.lng);
-  });
-  const nearest = activePins.slice(0, count);
-  _coiSelectedPinIds = new Set(nearest.map(p=>p.id));
-  // Highlight selected markers on map
+
+  // Show loading state
+  const launchBtn = document.getElementById('btn-launch-nearby');
+  if(launchBtn){ launchBtn.disabled=true; launchBtn.textContent='Searching…'; }
+  const infoEl = document.getElementById('nearby-count-info');
+  if(infoEl) infoEl.textContent = '🔍 Finding real homes nearby…';
+
+  // ── Fetch real neighboring homes from RentCast by lat/lng radius ──
+  // Use a radius that grows with count: 10→0.1mi, 25→0.15mi, 50→0.2mi, 100→0.3mi
+  const radiusMap = {10:0.1, 25:0.15, 50:0.2, 100:0.3};
+  const radiusMiles = radiusMap[count] || 0.2;
+
+  let nearbyHomes = [];
+  try {
+    const resp = await adminAPI('rentcast-nearby', null, {
+      lat: srcPin.lat,
+      lng: srcPin.lng,
+      radius: radiusMiles,
+      limit: count + 20  // fetch a few extra to allow dedup
+    }, 'GET');
+    const props = resp && (resp.properties || (Array.isArray(resp) ? resp : null));
+    if(props && props.length){
+      // Sort by distance from source pin, exclude the source address itself
+      const srcAddrNorm = (srcPin.address||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+      nearbyHomes = props
+        .filter(p => {
+          const addr = (p.formattedAddress || p.address || '').toLowerCase().replace(/[^a-z0-9]/g,'');
+          return addr && addr !== srcAddrNorm;
+        })
+        .sort((a,b) => {
+          const dA = haversineM(srcPin.lat, srcPin.lng, a.latitude||0, a.longitude||0);
+          const dB = haversineM(srcPin.lat, srcPin.lng, b.latitude||0, b.longitude||0);
+          return dA - dB;
+        })
+        .slice(0, count)
+        .map(p => ({
+          id: 'rc-' + (p.id || Math.random().toString(36).slice(2)),
+          address: p.formattedAddress || p.address || '',
+          lat: p.latitude || 0,
+          lng: p.longitude || 0,
+          _fromRentCast: true,
+          _rentcastData: p
+        }));
+    }
+  } catch(e) {
+    console.warn('[NearbyC] RentCast nearby failed, falling back to existing pins:', e);
+  }
+
+  // ── Fallback: if RentCast returned nothing, fall back to existing pins ──
+  if(!nearbyHomes.length){
+    if(infoEl) infoEl.textContent = '⚠ Using existing pins (RentCast unavailable)';
+    const activePins = (S.pins||[]).filter(p=>!p.deleted_at && p.lat && p.lng && p.id!==_coiSourcePid);
+    activePins.sort((a,b) => haversineM(srcPin.lat,srcPin.lng,a.lat,a.lng) - haversineM(srcPin.lat,srcPin.lng,b.lat,b.lng));
+    nearbyHomes = activePins.slice(0, count);
+  }
+
+  if(!nearbyHomes.length){
+    if(launchBtn){ launchBtn.disabled=false; launchBtn.textContent='Select Homes →'; }
+    toast('No homes found nearby','error');
+    return;
+  }
+
+  // Store selected homes — use a separate Map keyed by id for real homes
+  window._nearbyRealHomes = nearbyHomes;
+  _coiSelectedPinIds = new Set(nearbyHomes.map(p=>p.id));
+
+  // Highlight existing pins that match (by address proximity)
   Object.keys(markers).forEach(function(pid){
     const m = markers[pid];
     if(!m || !m._icon) return;
     m._icon.style.filter = _coiSelectedPinIds.has(pid) ? 'drop-shadow(0 0 6px #F25C05) brightness(1.3)' : '';
   });
+
   closeM('m-nearby-campaign');
-  // Show the campaign action panel
-  _showNearbyCampaignPanel(srcPin, nearest);
-  toast('📍 '+nearest.length+' homes selected near '+srcPin.address,'success');
+  _showNearbyCampaignPanel(srcPin, nearbyHomes);
+  toast('📍 '+nearbyHomes.length+' homes found near '+srcPin.address,'success');
 }
 
 function _showNearbyCampaignPanel(srcPin, nearestPins){
@@ -21451,6 +21506,16 @@ async function bulkTracerfyCampaign(){
   toast('✅ Skip-trace complete for '+ids.length+' homes','success');
 }
 
+// Helper: resolve a home from _nearbyRealHomes or S.pins by id
+function _resolveNearbyHome(pid){
+  // First check real homes from RentCast
+  if(window._nearbyRealHomes){
+    const rh = window._nearbyRealHomes.find(h=>h.id===pid);
+    if(rh) return rh;
+  }
+  // Fall back to existing pins
+  return (S.pins||[]).find(p=>p.id===pid) || null;
+}
 async function bulkGhlCampaign(){
   const ids = [..._coiSelectedPinIds];
   if(!ids.length){ toast('No homes selected','error'); return; }
@@ -21459,12 +21524,12 @@ async function bulkGhlCampaign(){
   const campaignTag = 'nearby-campaign-'+new Date().toISOString().slice(0,10);
   let done=0;
   for(const pid of ids){
-    const pin = (S.pins||[]).find(p=>p.id===pid);
-    if(!pin) continue;
+    const pin = _resolveNearbyHome(pid);
+    if(!pin || !pin.address) continue;
     try{
       const contactId = await ghlUpsertContact(pin);
       if(contactId){
-        await ghlAddContactTag(contactId, 'circle-of-influence').catch(()=>{});
+        await ghlAddContactTag(contactId, 'nearby-campaign').catch(()=>{});
         await ghlAddContactTag(contactId, campaignTag).catch(()=>{});
       }
     }catch(e){
@@ -21520,7 +21585,7 @@ async function sendCampaignPostcards(){
   progressEl.style.display='block';
   let sent=0, failed=0;
   for(const pid of ids){
-    const pin = (S.pins||[]).find(p=>p.id===pid);
+    const pin = _resolveNearbyHome(pid);
     if(!pin || !pin.address) continue;
     try{
       await adminAPI('lob-postcard-campaign',{
