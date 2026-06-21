@@ -20,7 +20,33 @@ const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const SUPABASE_PAT   = process.env.SUPABASE_PAT;
 const TRACERFY_KEY   = process.env.TRACERFY_API_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjozMjUwNTk2MTEzLCJpYXQiOjE3ODE3OTYxMTMsImp0aSI6ImFhYmIyYjc1OWE2MzQ3NjViNDVhZWFjMTA3ZmFhYzI3IiwidXNlcl9pZCI6ODI2OH0.ymqyjLor60uQpotAKibSzV5XMYeOG_CsmkGzGMDARLo';
 
-// ── CORS helper ───────────────────────────────────────────────────────────────
+/// ── In-memory rate limiter (per account_id, resets each serverless instance) ──
+// Limits: max 3 Lob sends per 5 seconds per account, max 2 RentCast calls per 3s
+const _rateBuckets = new Map();
+function _checkRate(key, maxCalls, windowMs) {
+  const now = Date.now();
+  let bucket = _rateBuckets.get(key);
+  if (!bucket || now - bucket.windowStart > windowMs) {
+    bucket = { windowStart: now, count: 0 };
+    _rateBuckets.set(key, bucket);
+  }
+  bucket.count++;
+  return bucket.count <= maxCalls;
+}
+
+// ── Idempotency store — prevents double-sends on rapid retaps ─────────────────
+// Key: `${account_id}:${idempotency_key}`, TTL: 30 seconds
+const _idemStore = new Map();
+function _checkIdem(key) {
+  const now = Date.now();
+  // Purge expired entries
+  for (const [k, ts] of _idemStore) { if (now - ts > 30000) _idemStore.delete(k); }
+  if (_idemStore.has(key)) return false; // duplicate
+  _idemStore.set(key, now);
+  return true; // first time
+}
+
+// ── CORS helper ─────────────────────────────────────────────────────────────
 function cors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
@@ -428,8 +454,16 @@ module.exports = async function handler(req, res) {
       // ── Lob postcard proxy ────────────────────────────────────────────────
       case 'lob-postcard': {
         const POSTCARD_CREDITS = 1; // 1 credit = $4.00 = 1 postcard
-        const { payload } = req.body;
+        const { payload, idempotency_key: pcIdemKey } = req.body;
         if (!payload) { res.status(400).json({ error: 'payload required' }); return; }
+        // Rate limit: max 5 postcards per 10 seconds per account
+        if (!_checkRate(`lob:${profile.account_id}`, 5, 10000)) {
+          res.status(429).json({ error: 'rate_limited', message: 'Too many postcard requests. Please wait a moment and try again.' }); return;
+        }
+        // Idempotency: reject duplicate sends within 30 seconds
+        if (pcIdemKey && !_checkIdem(`${profile.account_id}:${pcIdemKey}`)) {
+          res.status(200).json({ _duplicate: true, message: 'Duplicate request ignored.' }); return;
+        }
         // Enforce credit balance — uses only mailer_credits (no free credits system)
         const pcAcctRes = await sbFetch(
           `accounts?id=eq.${profile.account_id}&select=id,plan,mailer_credits`
@@ -490,8 +524,16 @@ module.exports = async function handler(req, res) {
       // ── Lob campaign postcard (Circle of Influence) ─────────────────────
       case 'lob-postcard-campaign': {
         const CAMPAIGN_CREDITS = 1; // 1 credit = $4.00 = 1 postcard
-        const { toAddr, toName, photoDataUrl, headline, subtext, pinId } = req.body;
+        const { toAddr, toName, photoDataUrl, headline, subtext, pinId, idempotency_key: cpIdemKey } = req.body;
         if (!toAddr || !photoDataUrl) { res.status(400).json({ error: 'toAddr and photoDataUrl required' }); return; }
+        // Rate limit: max 5 campaign postcards per 10 seconds per account
+        if (!_checkRate(`lob:${profile.account_id}`, 5, 10000)) {
+          res.status(429).json({ error: 'rate_limited', message: 'Too many postcard requests. Please wait a moment and try again.' }); return;
+        }
+        // Idempotency: reject duplicate sends within 30 seconds (prevents double-tap)
+        if (cpIdemKey && !_checkIdem(`${profile.account_id}:${cpIdemKey}`)) {
+          res.status(200).json({ _duplicate: true, message: 'Duplicate request ignored.' }); return;
+        }
 
         // Enforce credit balance
         const cpAcctRes = await sbFetch(`accounts?id=eq.${profile.account_id}&select=id,mailer_credits,company_name,company_addr,company_phone,logo_data`);
@@ -698,6 +740,10 @@ module.exports = async function handler(req, res) {
         // Find real neighboring homes by lat/lng radius using RentCast /properties
         const { lat: rcLat, lng: rcLng, radius: rcRadius, limit: rcLimit } = req.query;
         if (!rcLat || !rcLng) { res.status(400).json({ error: 'lat and lng required' }); return; }
+        // Rate limit: max 3 RentCast calls per 10 seconds per account
+        if (!_checkRate(`rentcast:${profile.account_id}`, 3, 10000)) {
+          res.status(429).json({ error: 'rate_limited', message: 'Too many nearby searches. Please wait a moment and try again.' }); return;
+        }
         const radiusMiles = parseFloat(rcRadius) || 0.1; // default 0.1 miles (~528 ft)
         const limitNum = Math.min(parseInt(rcLimit) || 100, 500);
         const rcCtrl2 = new AbortController();

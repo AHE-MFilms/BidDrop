@@ -227,8 +227,11 @@ export default async function handler(req, res) {
 
   // 1. Find all scheduled queue items due to send
   const now = new Date().toISOString();
+  // Process max 50 items per run to stay within the 60s Vercel timeout.
+  // Items not processed will be picked up on the next cron run (daily).
+  const BATCH_SIZE = 50;
   const qRes = await sb(
-    `queue?status=eq.scheduled&scheduled_send_at=lte.${now}&select=*&order=scheduled_send_at.asc&limit=100`
+    `queue?status=eq.scheduled&scheduled_send_at=lte.${now}&select=*&order=scheduled_send_at.asc&limit=${BATCH_SIZE}`
   );
   if (!qRes.ok) {
     const err = await qRes.text();
