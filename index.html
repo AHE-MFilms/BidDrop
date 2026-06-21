@@ -7504,6 +7504,7 @@ function addMarker(pin){
       <button onclick="openPhotoModal('${pid}')" style="background:transparent;border:1.5px solid #22C55E;border-radius:7px;padding:6px;color:#22C55E;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">📷 Manage Photos</button>
       <div id="contact-info-${pid}" style="margin-bottom:5px;">${pin.contactData ? buildContactInfoHTML(pid, pin.contactData) : (currentAccount && currentAccount.tracerfy_enabled ? `<button onclick="event.stopPropagation();lookupContactInfo('${pid}')" style="background:transparent;border:1.5px solid #A78BFA;border-radius:7px;padding:6px;color:#A78BFA;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;display:block;">📞 Get Contact Info</button>` : `<div style="font-size:10px;color:#6B7280;text-align:center;padding:4px;">Contact lookup not enabled</div>`)}</div>
       <button onclick="openNearbyCampaign('${pid}')" style="background:rgba(242,92,5,.12);border:1.5px solid #F25C05;border-radius:7px;padding:6px;color:#F25C05;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">📍 Nearby Campaign</button>
+      <button onclick="openSorryForMess('${pid}')" style="background:rgba(99,102,241,.12);border:1.5px solid #6366F1;border-radius:7px;padding:6px;color:#6366F1;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">🏗 Sorry for the Mess</button>
       <button onclick="confirmDeletePin('${pid}')" style="background:transparent;border:1.5px solid #EF4444;border-radius:7px;padding:5px;color:#EF4444;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;display:block;">🗑 Delete Pin</button>
     </div>
   `,{maxWidth:260});
@@ -7716,6 +7717,7 @@ function _buildPinPopupHTML(pin){
       <button onclick="openPhotoModal('${pid}')" style="background:transparent;border:1.5px solid #22C55E;border-radius:7px;padding:6px;color:#22C55E;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">\ud83d\udcf7 Manage Photos</button>
       <div id="contact-info-${pid}" style="margin-bottom:5px;">${_contactHTML}</div>
       <button onclick="openNearbyCampaign('${pid}')" style="background:rgba(242,92,5,.12);border:1.5px solid #F25C05;border-radius:7px;padding:6px;color:#F25C05;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">\ud83d\udccd Nearby Campaign</button>
+      <button onclick="openSorryForMess('${pid}')" style="background:rgba(99,102,241,.12);border:1.5px solid #6366F1;border-radius:7px;padding:6px;color:#6366F1;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">\ud83c\udfd7 Sorry for the Mess</button>
       <button onclick="confirmDeletePin('${pid}')" style="background:transparent;border:1.5px solid #EF4444;border-radius:7px;padding:5px;color:#EF4444;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;display:block;">\ud83d\uddd1 Delete Pin</button>
     </div>`;
 }
@@ -8149,7 +8151,176 @@ function bulkSetPinStatus(status){
   updatePinSelectionCount();
   renderPinList();
   toast('Updated '+ids.length+' pin(s) to '+status.replace('_',' '),'success');
+  // ── Auto-prompt Nearby Campaign when job(s) marked Signed ──
+  if(status==='signed' && ids.length===1) _promptSignedNearbyCampaign(ids[0]);
+  else if(status==='signed' && ids.length>1) _promptSignedNearbyCampaign(ids[0], ids.length);
 }
+
+function _promptSignedNearbyCampaign(pid, totalSigned){
+  // Small delay so the status toast shows first
+  setTimeout(function(){
+    const pin = (S.pins||[]).find(p=>p.id===pid);
+    if(!pin) return;
+    const addr = pin.address || 'this job';
+    const extra = totalSigned > 1 ? ' (showing prompt for first signed job)' : '';
+    // Build prompt modal
+    let prompt = document.getElementById('m-signed-nearby-prompt');
+    if(!prompt){
+      prompt = document.createElement('div');
+      prompt.id = 'm-signed-nearby-prompt';
+      prompt.className = 'modal-overlay';
+      prompt.style.cssText = 'display:none;z-index:9200;';
+      prompt.innerHTML = `
+        <div class="modal-box" style="max-width:380px;width:95%;background:var(--panel);border-radius:16px;padding:0;overflow:hidden;">
+          <div style="background:linear-gradient(135deg,rgba(34,197,94,.15),rgba(34,197,94,.05));padding:22px 22px 16px;border-bottom:1px solid var(--border);">
+            <div style="font-size:22px;margin-bottom:6px;">🎉</div>
+            <div style="font-size:16px;font-weight:800;color:#4ade80;">Job Signed!</div>
+            <div id="signed-prompt-addr" style="font-size:11px;color:var(--muted);margin-top:3px;"></div>
+          </div>
+          <div style="padding:18px 22px;">
+            <div style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:6px;">Strike while the iron is hot 🔥</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:18px;">Send postcards to the nearest neighbors now. Homes that see your crew are 3× more likely to call. DOPE Marketing calls this their highest-converting campaign.</div>
+            <div style="display:flex;gap:8px;margin-bottom:10px;">
+              <button id="signed-prompt-10" onclick="_launchSignedNearbyCampaign(10)" style="flex:1;background:rgba(242,92,5,.12);border:1.5px solid #F25C05;border-radius:8px;padding:10px;color:#F25C05;font-size:12px;font-weight:700;cursor:pointer;">10 homes</button>
+              <button id="signed-prompt-25" onclick="_launchSignedNearbyCampaign(25)" style="flex:1;background:rgba(242,92,5,.18);border:1.5px solid #F25C05;border-radius:8px;padding:10px;color:#F25C05;font-size:13px;font-weight:800;cursor:pointer;">★ 25 homes</button>
+              <button id="signed-prompt-50" onclick="_launchSignedNearbyCampaign(50)" style="flex:1;background:rgba(242,92,5,.12);border:1.5px solid #F25C05;border-radius:8px;padding:10px;color:#F25C05;font-size:12px;font-weight:700;cursor:pointer;">50 homes</button>
+            </div>
+            <button onclick="closeM('m-signed-nearby-prompt')" style="width:100%;background:none;border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;">Not now</button>
+          </div>
+        </div>`;
+      document.body.appendChild(prompt);
+    }
+    // Set address
+    const addrEl = document.getElementById('signed-prompt-addr');
+    if(addrEl) addrEl.textContent = addr+extra;
+    // Store pid for the launch handler
+    window._signedPromptPid = pid;
+    openM('m-signed-nearby-prompt');
+  }, 800);
+}
+
+function _launchSignedNearbyCampaign(count){
+  closeM('m-signed-nearby-prompt');
+  const pid = window._signedPromptPid;
+  if(!pid) return;
+  // Pre-select count and open the full nearby campaign modal
+  openNearbyCampaign(pid);
+  // Auto-click the matching count button after modal opens
+  setTimeout(function(){
+    const btns = document.querySelectorAll('.nearby-count-btn');
+    btns.forEach(function(b){
+      if(b.textContent.trim().startsWith(String(count))) b.click();
+    });
+  }, 200);
+}
+// ── SORRY FOR THE MESS — Pre-Job Neighbor Campaign ─────────────────────────
+function openSorryForMess(pid){
+  const srcPin = (S.pins||[]).find(p=>p.id===pid);
+  if(!srcPin){ toast('Pin not found','error'); return; }
+
+  let modal = document.getElementById('m-sorry-for-mess');
+  if(!modal){
+    modal = document.createElement('div');
+    modal.id = 'm-sorry-for-mess';
+    modal.className = 'modal-overlay';
+    modal.style.cssText = 'display:none;z-index:9150;';
+    modal.innerHTML = `
+      <div class="modal-box" style="max-width:420px;width:95%;background:var(--panel);border-radius:16px;padding:0;overflow:hidden;">
+        <!-- Header -->
+        <div style="background:linear-gradient(135deg,rgba(99,102,241,.15),rgba(99,102,241,.05));padding:20px 22px 16px;border-bottom:1px solid var(--border);">
+          <div style="font-size:20px;margin-bottom:6px;">🏗️</div>
+          <div style="font-size:16px;font-weight:800;color:var(--text);">Sorry for the Mess</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px;">Send postcards to neighbors <em>before</em> your crew arrives</div>
+        </div>
+        <!-- Body -->
+        <div style="padding:18px 22px;">
+          <!-- Job address -->
+          <div id="sfm-addr" style="font-size:11px;color:var(--muted);margin-bottom:14px;"></div>
+          <!-- Message preview -->
+          <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px;">
+            <div style="font-size:10px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Postcard Message</div>
+            <div style="font-size:13px;color:var(--text);line-height:1.6;font-style:italic;">
+              &ldquo;Hi neighbor! We&rsquo;ll be working on the roof at <span id="sfm-job-addr-inline" style="font-weight:700;color:#6366F1;"></span> starting soon. We apologize in advance for any noise or inconvenience. While we&rsquo;re in the neighborhood, we&rsquo;d love to give you a FREE roof inspection. Call us anytime!&rdquo;
+            </div>
+          </div>
+          <!-- Count picker -->
+          <div style="font-size:11px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">How many nearest neighbors?</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;">
+            <button class="sfm-count-btn" onclick="_sfmSelectCount(this,10)" style="background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;">10</button>
+            <button class="sfm-count-btn sfm-active" onclick="_sfmSelectCount(this,25)" style="background:rgba(99,102,241,.18);border:1.5px solid #6366F1;border-radius:8px;padding:10px;color:#6366F1;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">★ 25</button>
+            <button class="sfm-count-btn" onclick="_sfmSelectCount(this,50)" style="background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;">50</button>
+          </div>
+          <!-- Cost preview -->
+          <div id="sfm-cost" style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:16px;"></div>
+          <!-- Buttons -->
+          <button id="btn-sfm-launch" onclick="_launchSorryForMess()" style="width:100%;background:#6366F1;border:none;border-radius:10px;padding:13px;color:#fff;font-size:14px;font-weight:800;cursor:pointer;margin-bottom:8px;">🏗️ Send Sorry for the Mess</button>
+          <button onclick="closeM('m-sorry-for-mess')" style="width:100%;background:none;border:1px solid var(--border);border-radius:10px;padding:10px;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;">Not now</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+
+  // Set content
+  window._sfmSourcePid = pid;
+  window._sfmCount = 25;
+  const addrEl = document.getElementById('sfm-addr');
+  if(addrEl) addrEl.textContent = 'Job address: ' + (srcPin.address||'Unknown');
+  const inlineAddr = document.getElementById('sfm-job-addr-inline');
+  if(inlineAddr) inlineAddr.textContent = (srcPin.address||'').split(',')[0] || srcPin.address || 'your address';
+  _sfmUpdateCost(25);
+  openM('m-sorry-for-mess');
+}
+
+function _sfmSelectCount(btn, count){
+  window._sfmCount = count;
+  document.querySelectorAll('.sfm-count-btn').forEach(b=>{
+    b.style.background='var(--card2)';
+    b.style.borderColor='var(--border)';
+    b.style.color='var(--text)';
+  });
+  btn.style.background='rgba(99,102,241,.18)';
+  btn.style.borderColor='#6366F1';
+  btn.style.color='#6366F1';
+  _sfmUpdateCost(count);
+}
+
+function _sfmUpdateCost(count){
+  const costEl = document.getElementById('sfm-cost');
+  if(!costEl) return;
+  const balance = (S.cfg.mailerCredits||0);
+  const canAfford = balance >= count;
+  costEl.innerHTML = count+' postcards &bull; '+count+' credits &bull; Balance: <span style="color:'+(canAfford?'#4ade80':'#ef4444')+';">'+balance+' credits</span>';
+}
+
+async function _launchSorryForMess(){
+  const pid = window._sfmSourcePid;
+  const count = window._sfmCount || 25;
+  const srcPin = (S.pins||[]).find(p=>p.id===pid);
+  if(!srcPin){ toast('Source pin not found','error'); return; }
+
+  const btn = document.getElementById('btn-sfm-launch');
+  if(btn){ btn.disabled=true; btn.textContent='Launching…'; }
+
+  // Use the Nearby Campaign flow but with a pre-job template flag
+  closeM('m-sorry-for-mess');
+  // Open the Nearby Campaign modal pre-configured for Sorry for the Mess
+  window._sorryForMessMode = true;
+  window._sorryForMessJobAddr = (srcPin.address||'').split(',')[0] || srcPin.address || '';
+  openNearbyCampaign(pid);
+  // Auto-click the matching count button
+  setTimeout(function(){
+    const btns = document.querySelectorAll('.nearby-count-btn');
+    btns.forEach(function(b){
+      if(b.textContent.trim().startsWith(String(count))) b.click();
+    });
+    // Update modal title to reflect the campaign type
+    const titleEl = document.querySelector('#m-nearby-campaign .modal-box div[style*="font-size:17px"]');
+    if(titleEl) titleEl.textContent = '\ud83c\udfd7 Sorry for the Mess Campaign';
+    const subtitleEl = document.getElementById('nearby-source-addr');
+    if(subtitleEl) subtitleEl.textContent = 'Pre-job neighbor alert for: ' + (srcPin.address||'');
+  }, 200);
+}
+
 function bulkSendPinsToFollowUp(){
   if(!_selectedPinIds.size){ toast('Select at least one pin','info'); return; }
   const ids = [..._selectedPinIds];
@@ -8359,6 +8530,8 @@ function cycleStatus(id){
   // Sync status change to GHL (fire-and-forget)
   ghlSyncPinStatus(p).catch(e=>console.warn('GHL sync:',e));
   save();toast('Status → '+sLabel(p.status),'info');
+  // ── Auto-prompt Nearby Campaign when a job is marked Signed ──
+  if(p.status==='signed') _promptSignedNearbyCampaign(id);
 }
 
 // Render email/phone dropdowns in estimate builder from Tracerfy contactData
@@ -21342,23 +21515,114 @@ function openNearbyCampaign(pid){
     const el = document.createElement('div');
     el.id = 'm-nearby-campaign';
     el.className = 'modal-overlay';
-    el.style.cssText = 'display:none;z-index:9100;';
+    el.style.cssText = 'display:none;z-index:9100;align-items:center;justify-content:center;';
     el.innerHTML = `
-      <div class="modal-box" style="max-width:340px;width:95%;background:var(--panel);border-radius:14px;padding:24px;position:relative;">
-        <button onclick="closeM('m-nearby-campaign')" style="position:absolute;top:14px;right:14px;background:none;border:none;color:var(--mid);font-size:20px;cursor:pointer;line-height:1;">✕</button>
-        <div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px;">📍 Nearby Campaign</div>
-        <div id="nearby-source-addr" style="font-size:11px;color:var(--muted);margin-bottom:18px;"></div>
-        <div style="font-size:12px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">How many nearest homes?</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;">
-          <button class="nearby-count-btn" onclick="selectNearbyCount(this,10)">10 homes</button>
-          <button class="nearby-count-btn" onclick="selectNearbyCount(this,25)">25 homes</button>
-          <button class="nearby-count-btn" onclick="selectNearbyCount(this,50)">50 homes</button>
-          <button class="nearby-count-btn" onclick="selectNearbyCount(this,100)">100 homes</button>
+      <div class="modal-box" style="max-width:720px;width:96%;background:var(--panel);border-radius:16px;padding:0;position:relative;overflow:hidden;display:flex;flex-direction:column;max-height:92vh;">
+        <!-- Header -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px 14px;border-bottom:1px solid var(--border);flex-shrink:0;">
+          <div>
+            <div style="font-size:17px;font-weight:800;color:var(--text);">📍 Nearby Campaign</div>
+            <div id="nearby-source-addr" style="font-size:11px;color:var(--muted);margin-top:2px;"></div>
+          </div>
+          <button onclick="closeM('m-nearby-campaign')" style="background:none;border:none;color:var(--mid);font-size:22px;cursor:pointer;line-height:1;padding:4px;">✕</button>
         </div>
-        <div id="nearby-count-info" style="font-size:11px;color:var(--muted);margin-bottom:16px;min-height:16px;"></div>
-        <div style="display:flex;gap:10px;">
-          <button onclick="closeM('m-nearby-campaign')" style="flex:1;background:none;border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">Cancel</button>
-          <button id="btn-launch-nearby" onclick="launchNearbyCampaign()" disabled style="flex:2;background:#F25C05;border:none;border-radius:8px;padding:10px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;opacity:.4;">Select Homes →</button>
+        <!-- Body: two-column layout -->
+        <div style="display:flex;flex:1;overflow:hidden;min-height:0;">
+          <!-- LEFT: controls -->
+          <div style="flex:1;padding:18px 20px;overflow-y:auto;border-right:1px solid var(--border);min-width:0;">
+            <!-- Count picker -->
+            <div style="font-size:11px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">How many nearest homes?</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;">
+              <button class="nearby-count-btn" onclick="selectNearbyCount(this,10)">10 homes</button>
+              <button class="nearby-count-btn" onclick="selectNearbyCount(this,25)">25 homes</button>
+              <button class="nearby-count-btn" onclick="selectNearbyCount(this,50)">50 homes</button>
+              <button class="nearby-count-btn" onclick="selectNearbyCount(this,100)">100 homes</button>
+            </div>
+            <!-- Filters section (hidden until count selected) -->
+            <div id="nearby-filters-section" style="display:none;">
+              <div style="font-size:11px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">🎯 Refine Targets <span id="nearby-filter-badge" style="font-size:10px;font-weight:600;color:#F25C05;margin-left:6px;"></span></div>
+              <!-- Year Built -->
+              <div style="margin-bottom:14px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                  <label style="font-size:12px;font-weight:600;color:var(--text);">Year Built</label>
+                  <span id="nearby-yr-label" style="font-size:11px;color:#F25C05;font-weight:700;">Any</span>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <input type="number" id="nearby-yr-min" placeholder="e.g. 1950" min="1900" max="2024"
+                    style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;"
+                    oninput="_nearbyFiltersChanged()">
+                  <span style="color:var(--muted);font-size:12px;">–</span>
+                  <input type="number" id="nearby-yr-max" placeholder="e.g. 2010" min="1900" max="2024"
+                    style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;"
+                    oninput="_nearbyFiltersChanged()">
+                </div>
+              </div>
+              <!-- Home Value -->
+              <div style="margin-bottom:14px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                  <label style="font-size:12px;font-weight:600;color:var(--text);">Est. Home Value</label>
+                  <span id="nearby-val-label" style="font-size:11px;color:#F25C05;font-weight:700;">Any</span>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <select id="nearby-val-min"
+                    style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;cursor:pointer;"
+                    onchange="_nearbyFiltersChanged()">
+                    <option value="">No min</option>
+                    <option value="100000">$100k+</option>
+                    <option value="200000">$200k+</option>
+                    <option value="300000">$300k+</option>
+                    <option value="400000">$400k+</option>
+                    <option value="500000">$500k+</option>
+                    <option value="750000">$750k+</option>
+                    <option value="1000000">$1M+</option>
+                  </select>
+                  <select id="nearby-val-max"
+                    style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;cursor:pointer;"
+                    onchange="_nearbyFiltersChanged()">
+                    <option value="">No max</option>
+                    <option value="300000">Under $300k</option>
+                    <option value="500000">Under $500k</option>
+                    <option value="750000">Under $750k</option>
+                    <option value="1000000">Under $1M</option>
+                    <option value="2000000">Under $2M</option>
+                  </select>
+                </div>
+              </div>
+              <!-- Reset filters -->
+              <button onclick="_nearbyResetFilters()" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;padding:0;text-decoration:underline;">Reset filters</button>
+            </div>
+            <!-- Status info -->
+            <div id="nearby-count-info" style="font-size:11px;color:var(--muted);margin-top:12px;min-height:16px;"></div>
+          </div>
+          <!-- RIGHT: Order Summary -->
+          <div style="width:240px;flex-shrink:0;display:flex;flex-direction:column;background:var(--card2);">
+            <div style="padding:14px 16px 10px;border-bottom:1px solid var(--border);flex-shrink:0;">
+              <div style="font-size:11px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.5px;">Order Summary</div>
+            </div>
+            <div id="nearby-order-summary" style="flex:1;overflow-y:auto;padding:12px 14px;">
+              <div style="text-align:center;color:var(--muted);font-size:11px;padding:20px 0;">Select a count to see homes</div>
+            </div>
+            <!-- Cost preview -->
+            <div id="nearby-cost-preview" style="padding:12px 14px;border-top:1px solid var(--border);flex-shrink:0;display:none;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                <span style="font-size:11px;color:var(--muted);">Homes selected</span>
+                <span id="nearby-cost-count" style="font-size:12px;font-weight:700;color:var(--text);">0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                <span style="font-size:11px;color:var(--muted);">Cost if mailed</span>
+                <span id="nearby-cost-credits" style="font-size:12px;font-weight:700;color:#F25C05;">0 credits</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:11px;color:var(--muted);">Your balance</span>
+                <span id="nearby-cost-balance" style="font-size:12px;font-weight:700;color:#4ade80;">— credits</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Footer -->
+        <div style="display:flex;gap:10px;padding:14px 20px;border-top:1px solid var(--border);flex-shrink:0;">
+          <button onclick="closeM('m-nearby-campaign')" style="flex:1;background:none;border:1px solid var(--border);border-radius:8px;padding:11px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">Cancel</button>
+          <button id="btn-launch-nearby" onclick="launchNearbyCampaign()" disabled style="flex:2;background:#F25C05;border:none;border-radius:8px;padding:11px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;opacity:.4;">Launch Campaign →</button>
         </div>
       </div>`;
     document.body.appendChild(el);
@@ -21366,31 +21630,203 @@ function openNearbyCampaign(pid){
     const style = document.createElement('style');
     style.textContent = `.nearby-count-btn{background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:12px;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-b);transition:all .15s;}
 .nearby-count-btn:hover{border-color:#F25C05;color:#F25C05;background:rgba(242,92,5,.1);}
-.nearby-count-btn.active{background:rgba(242,92,5,.18);border-color:#F25C05;color:#F25C05;}`;
+.nearby-count-btn.active{background:rgba(242,92,5,.18);border-color:#F25C05;color:#F25C05;}
+#nearby-yr-min:focus,#nearby-yr-max:focus,#nearby-val-min:focus,#nearby-val-max:focus{border-color:#F25C05;}`;
     document.head.appendChild(style);
   }
   // Set source address label
   const srcPin = (S.pins||[]).find(p=>p.id===pid);
   const addrEl = document.getElementById('nearby-source-addr');
-  if(addrEl) addrEl.textContent = srcPin ? 'Targeting homes near: '+srcPin.address : '';
-  // Reset selection
+  if(addrEl) addrEl.textContent = srcPin ? 'Homes near: '+srcPin.address : '';
+  // Reset state
   window._nearbySelectedCount = 0;
+  window._nearbyFetchedHomes = null;
+  window._nearbyFilteredHomes = null;
   document.querySelectorAll('.nearby-count-btn').forEach(b=>b.classList.remove('active'));
   const infoEl = document.getElementById('nearby-count-info');
   if(infoEl) infoEl.textContent = '';
   const launchBtn = document.getElementById('btn-launch-nearby');
   if(launchBtn){ launchBtn.disabled=true; launchBtn.style.opacity='.4'; }
+  // Hide filters section until count is picked
+  const filtersSection = document.getElementById('nearby-filters-section');
+  if(filtersSection) filtersSection.style.display='none';
+  // Reset filters
+  _nearbyResetFilters();
+  // Reset order summary
+  const summary = document.getElementById('nearby-order-summary');
+  if(summary) summary.innerHTML='<div style="text-align:center;color:var(--muted);font-size:11px;padding:20px 0;">Select a count to see homes</div>';
+  const costPreview = document.getElementById('nearby-cost-preview');
+  if(costPreview) costPreview.style.display='none';
   openM('m-nearby-campaign');
 }
 
-function selectNearbyCount(btn, count){
+async function selectNearbyCount(btn, count){
   window._nearbySelectedCount = count;
   document.querySelectorAll('.nearby-count-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   const infoEl = document.getElementById('nearby-count-info');
-  if(infoEl) infoEl.textContent = 'Will search for the '+count+' closest real homes nearby';
   const launchBtn = document.getElementById('btn-launch-nearby');
-  if(launchBtn){ launchBtn.disabled=false; launchBtn.style.opacity='1'; }
+  const filtersSection = document.getElementById('nearby-filters-section');
+  if(infoEl) infoEl.textContent = '🔍 Fetching nearby homes…';
+  if(launchBtn){ launchBtn.disabled=true; launchBtn.style.opacity='.4'; launchBtn.textContent='Fetching…'; }
+
+  const srcPin = (S.pins||[]).find(p=>p.id===_coiSourcePid);
+  if(!srcPin || !srcPin.lat || !srcPin.lng){
+    if(infoEl) infoEl.textContent = '⚠ Source pin has no location';
+    return;
+  }
+
+  // Fetch from RentCast (fetch extra to allow filter headroom)
+  const radiusMap = {10:0.15, 25:0.2, 50:0.3, 100:0.4};
+  const radiusMiles = radiusMap[count] || 0.3;
+  let fetched = [];
+  try{
+    const resp = await adminAPI('rentcast-nearby', null, {
+      lat: srcPin.lat, lng: srcPin.lng,
+      radius: radiusMiles,
+      limit: Math.min(count * 3, 300)  // fetch 3x to allow filter headroom
+    }, 'GET');
+    const props = resp && (resp.properties || (Array.isArray(resp) ? resp : null));
+    if(props && props.length){
+      const _srcParts = (srcPin.address||'').trim().toLowerCase().split(/[\s,]+/);
+      const _srcNum = _srcParts[0]||''; const _srcStreet = _srcParts[1]||'';
+      fetched = props
+        .filter(p=>{
+          const addr=(p.formattedAddress||p.address||'').trim().toLowerCase();
+          if(!addr) return false;
+          const parts=addr.split(/[\s,]+/);
+          if(_srcNum&&_srcStreet&&parts[0]===_srcNum&&(parts[1]||'').startsWith(_srcStreet.substring(0,5))) return false;
+          return true;
+        })
+        .sort((a,b)=>haversineM(srcPin.lat,srcPin.lng,a.latitude||0,a.longitude||0)-haversineM(srcPin.lat,srcPin.lng,b.latitude||0,b.longitude||0))
+        .map(p=>({
+          id:'rc-'+(p.id||Math.random().toString(36).slice(2)),
+          address:p.formattedAddress||p.address||'',
+          lat:p.latitude||0, lng:p.longitude||0,
+          _fromRentCast:true, _rentcastData:p
+        }));
+    }
+  }catch(e){
+    console.warn('[NearbyC] prefetch failed:',e);
+  }
+
+  // Fallback to existing pins
+  if(!fetched.length){
+    const activePins=(S.pins||[]).filter(p=>!p.deleted_at&&p.lat&&p.lng&&p.id!==_coiSourcePid);
+    activePins.sort((a,b)=>haversineM(srcPin.lat,srcPin.lng,a.lat,a.lng)-haversineM(srcPin.lat,srcPin.lng,b.lat,b.lng));
+    fetched=activePins.slice(0,count*2);
+  }
+
+  window._nearbyFetchedHomes = fetched;
+  // Show filters section
+  if(filtersSection) filtersSection.style.display='';
+  // Apply current filters (or none) to update order summary
+  _nearbyFiltersChanged();
+  if(infoEl) infoEl.textContent = '';
+}
+
+function _nearbyGetFilters(){
+  const yrMin = parseInt(document.getElementById('nearby-yr-min')&&document.getElementById('nearby-yr-min').value)||null;
+  const yrMax = parseInt(document.getElementById('nearby-yr-max')&&document.getElementById('nearby-yr-max').value)||null;
+  const valMin = parseFloat(document.getElementById('nearby-val-min')&&document.getElementById('nearby-val-min').value)||null;
+  const valMax = parseFloat(document.getElementById('nearby-val-max')&&document.getElementById('nearby-val-max').value)||null;
+  return {yrMin,yrMax,valMin,valMax};
+}
+
+function _nearbyResetFilters(){
+  const fields=['nearby-yr-min','nearby-yr-max'];
+  fields.forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  const sels=['nearby-val-min','nearby-val-max'];
+  sels.forEach(id=>{ const el=document.getElementById(id); if(el) el.selectedIndex=0; });
+  _nearbyFiltersChanged();
+}
+
+function _nearbyFiltersChanged(){
+  const fetched = window._nearbyFetchedHomes || [];
+  const count = window._nearbySelectedCount || 0;
+  const {yrMin,yrMax,valMin,valMax} = _nearbyGetFilters();
+  const hasFilters = yrMin||yrMax||valMin||valMax;
+
+  // Update filter labels
+  const yrLabel = document.getElementById('nearby-yr-label');
+  if(yrLabel) yrLabel.textContent = (yrMin||yrMax) ? ((yrMin||'Any')+' – '+(yrMax||'Any')) : 'Any';
+  const valLabel = document.getElementById('nearby-val-label');
+  if(valLabel){
+    if(valMin&&valMax) valLabel.textContent='$'+Math.round(valMin/1000)+'k – $'+Math.round(valMax/1000)+'k';
+    else if(valMin) valLabel.textContent='$'+Math.round(valMin/1000)+'k+';
+    else if(valMax) valLabel.textContent='Under $'+Math.round(valMax/1000)+'k';
+    else valLabel.textContent='Any';
+  }
+
+  // Apply filters
+  let filtered = fetched.filter(h=>{
+    const rd = h._rentcastData||{};
+    const yr = rd.yearBuilt||null;
+    const val = rd.price||rd.lastSalePrice||null;
+    if(yrMin && yr && yr < yrMin) return false;
+    if(yrMax && yr && yr > yrMax) return false;
+    if(valMin && val && val < valMin) return false;
+    if(valMax && val && val > valMax) return false;
+    return true;
+  }).slice(0, count);
+
+  // If filters removed too many, expand without filters up to count
+  if(filtered.length < count && hasFilters){
+    // still show what we have — don't silently ignore filters
+  }
+
+  window._nearbyFilteredHomes = filtered;
+
+  // Update filter badge
+  const badge = document.getElementById('nearby-filter-badge');
+  if(badge) badge.textContent = hasFilters ? '('+filtered.length+' of '+Math.min(fetched.length,count)+' match)' : '';
+
+  // Update order summary
+  const summary = document.getElementById('nearby-order-summary');
+  if(summary){
+    if(!filtered.length){
+      summary.innerHTML='<div style="text-align:center;color:var(--muted);font-size:11px;padding:20px 0;">'+(fetched.length?'No homes match these filters — try relaxing them.':'No homes found nearby.')+'</div>';
+    } else {
+      summary.innerHTML = filtered.map((h,i)=>{
+        const rd=h._rentcastData||{};
+        const yr=rd.yearBuilt?'<span style="color:var(--muted);font-size:9px;"> · '+rd.yearBuilt+'</span>':'';
+        const val=rd.price?'<span style="color:var(--muted);font-size:9px;"> · $'+Math.round(rd.price/1000)+'k</span>':'';
+        return '<div style="font-size:10px;color:var(--text);padding:4px 6px;background:rgba(255,255,255,.04);border-radius:5px;margin-bottom:3px;display:flex;gap:5px;align-items:flex-start;">'+
+          '<span style="color:var(--muted);min-width:18px;flex-shrink:0;">'+(i+1)+'.</span>'+
+          '<span style="flex:1;line-height:1.4;">'+escHtml(h.address)+yr+val+'</span>'+
+          '</div>';
+      }).join('');
+    }
+  }
+
+  // Update cost preview
+  const costPreview = document.getElementById('nearby-cost-preview');
+  const costCount = document.getElementById('nearby-cost-count');
+  const costCredits = document.getElementById('nearby-cost-credits');
+  const costBalance = document.getElementById('nearby-cost-balance');
+  if(costPreview && filtered.length){
+    costPreview.style.display='';
+    if(costCount) costCount.textContent = filtered.length;
+    if(costCredits) costCredits.textContent = filtered.length+' credit'+(filtered.length>1?'s':'');
+    const balance = (S.cfg.mailerCredits||0) + Math.max(0,({
+      starter:0,pro:0,agency:0,enterprise:0
+    }[(S.cfg.plan||'starter').toLowerCase()]||0) - (S.cfg.freeMailerCreditsUsed||0));
+    if(costBalance){
+      costBalance.textContent = balance+' credits';
+      costBalance.style.color = balance >= filtered.length ? '#4ade80' : '#ef4444';
+    }
+  } else if(costPreview){
+    costPreview.style.display='none';
+  }
+
+  // Enable/disable launch button
+  const launchBtn = document.getElementById('btn-launch-nearby');
+  if(launchBtn){
+    const canLaunch = filtered.length > 0;
+    launchBtn.disabled = !canLaunch;
+    launchBtn.style.opacity = canLaunch ? '1' : '.4';
+    launchBtn.textContent = canLaunch ? 'Launch Campaign ('+filtered.length+' homes) →' : 'Launch Campaign →';
+  }
 }
 
 async function launchNearbyCampaign(){
@@ -21401,61 +21837,15 @@ async function launchNearbyCampaign(){
 
   // Show loading state
   const launchBtn = document.getElementById('btn-launch-nearby');
-  if(launchBtn){ launchBtn.disabled=true; launchBtn.textContent='Searching…'; }
+  if(launchBtn){ launchBtn.disabled=true; launchBtn.textContent='Launching…'; }
   const infoEl = document.getElementById('nearby-count-info');
-  if(infoEl) infoEl.textContent = '🔍 Finding real homes nearby…';
+  if(infoEl) infoEl.textContent = '⚡ Launching campaign…';
 
-  // ── Fetch real neighboring homes from RentCast by lat/lng radius ──
-  // Use a radius that grows with count: 10→0.1mi, 25→0.15mi, 50→0.2mi, 100→0.3mi
-  const radiusMap = {10:0.1, 25:0.15, 50:0.2, 100:0.3};
-  const radiusMiles = radiusMap[count] || 0.2;
+  // ── Use pre-fetched + filtered homes from the modal (no extra API call needed) ──
+  let nearbyHomes = window._nearbyFilteredHomes || window._nearbyFetchedHomes || [];
+  if(nearbyHomes.length > count) nearbyHomes = nearbyHomes.slice(0, count);
 
-  let nearbyHomes = [];
-  try {
-    const resp = await adminAPI('rentcast-nearby', null, {
-      lat: srcPin.lat,
-      lng: srcPin.lng,
-      radius: radiusMiles,
-      limit: count + 20  // fetch a few extra to allow dedup
-    }, 'GET');
-    const props = resp && (resp.properties || (Array.isArray(resp) ? resp : null));
-    if(props && props.length){
-      // Sort by distance from source pin, exclude the source address itself
-      // Use street number + first 5 chars of street name for fuzzy match (handles Road vs Rd, Michigan vs MI etc)
-      const _srcParts = (srcPin.address||'').trim().toLowerCase().split(/[\s,]+/);
-      const _srcNum = _srcParts[0] || '';    // e.g. "42691"
-      const _srcStreet = _srcParts[1] || ''; // e.g. "proctor"
-      nearbyHomes = props
-        .filter(p => {
-          const addr = (p.formattedAddress || p.address || '').trim().toLowerCase();
-          if(!addr) return false;
-          const parts = addr.split(/[\s,]+/);
-          const num = parts[0] || '';
-          const street = parts[1] || '';
-          // Exclude if street number AND first 5 chars of street name both match source
-          if(_srcNum && _srcStreet && num === _srcNum && street.startsWith(_srcStreet.substring(0,5))) return false;
-          return true;
-        })
-        .sort((a,b) => {
-          const dA = haversineM(srcPin.lat, srcPin.lng, a.latitude||0, a.longitude||0);
-          const dB = haversineM(srcPin.lat, srcPin.lng, b.latitude||0, b.longitude||0);
-          return dA - dB;
-        })
-        .slice(0, count)
-        .map(p => ({
-          id: 'rc-' + (p.id || Math.random().toString(36).slice(2)),
-          address: p.formattedAddress || p.address || '',
-          lat: p.latitude || 0,
-          lng: p.longitude || 0,
-          _fromRentCast: true,
-          _rentcastData: p
-        }));
-    }
-  } catch(e) {
-    console.warn('[NearbyC] RentCast nearby failed, falling back to existing pins:', e);
-  }
-
-  // ── Fallback: if RentCast returned nothing, fall back to existing pins ──
+  // ── Fallback: if nothing pre-fetched, fall back to existing pins ──
   if(!nearbyHomes.length){
     if(infoEl) infoEl.textContent = '⚠ Using existing pins (RentCast unavailable)';
     const activePins = (S.pins||[]).filter(p=>!p.deleted_at && p.lat && p.lng && p.id!==_coiSourcePid);
@@ -21464,7 +21854,7 @@ async function launchNearbyCampaign(){
   }
 
   if(!nearbyHomes.length){
-    if(launchBtn){ launchBtn.disabled=false; launchBtn.textContent='Select Homes →'; }
+    if(launchBtn){ launchBtn.disabled=false; launchBtn.textContent='Launch Campaign →'; }
     toast('No homes found nearby','error');
     return;
   }

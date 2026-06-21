@@ -82,7 +82,7 @@
       "maxDuration": 30
     },
     "api/admin.js": {
-      "maxDuration": 30
+      "maxDuration": 60
     },
     "api/solar.js": {
       "maxDuration": 10
@@ -95,6 +95,9 @@
     },
     "api/migrate.js": {
       "maxDuration": 30
+    },
+    "api/r.js": {
+      "maxDuration": 15
     }
   },
   "headers": [
