@@ -6387,7 +6387,7 @@ function _processDripScheduleSync(){
     if(item.status==='scheduled' && item.scheduled_send_at){
       if(new Date(item.scheduled_send_at) <= now){
         item.status = 'pending';
-        if(sb) sb.from('mail_queue').update({status:'pending'}).eq('id',item.id).then(()=>{});
+        if(sb) sb.from('queue').update({status:'pending'}).eq('id',item.id).then(()=>{});
         changed = true;
       }
     }
@@ -6518,7 +6518,7 @@ function cancelDrip(estId){
   S.queue = (S.queue||[]).filter(q=>{
     if(stepIds.includes(q.id) && q.status!=='sent'){
       // Remove from Supabase too
-      if(sb) sb.from('mail_queue').delete().eq('id',q.id).then(()=>{});
+      if(sb) sb.from('queue').delete().eq('id',q.id).then(()=>{});
       return false;
     }
     return true;
