@@ -1,0 +1,1070 @@
+// src/trades.js
+// Trade calculators (solar, fencing, siding, gutters, insulation, paint, doors, windows),
+// trade selector UI, settings/pricing tab renderers, estimator tab helpers.
+// Depends on: S.cfg, S.pins, currentAccount, toast(), calcStructPrice() (estimates-calc.js)
+// Extracted from index.html — Tier 4 modularization
+
+// Track which pin the current estimate belongs to
+let currentEstPinId = null;
+
+
+
+function switchSettingsTab(tab){
+  document.querySelectorAll('.stab-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.stab-tab-pane').forEach(p=>p.classList.remove('active'));
+  const btn=document.getElementById('stab-tab-'+tab);
+  const pane=document.getElementById('stab-tabpane-'+tab);
+  if(btn) btn.classList.add('active');
+  if(pane) pane.classList.add('active');
+  try{ localStorage.setItem('bd_settings_tab', tab); }catch(e){}
+}
+function restoreSettingsTab(){
+  try{
+    const t=localStorage.getItem('bd_settings_tab');
+    if(t) switchSettingsTab(t);
+  }catch(e){}
+}
+// ════════════════════════════════════════════════════════════════════════════
+// MULTI-TRADE ESTIMATOR — Trade toggles, selector, calculators, bundle logic
+// ════════════════════════════════════════════════════════════════════════════
+
+// ── Trade toggle (Settings → Pricing) ────────────────────────────────────────
+function toggleTradeEnabled(tradeId){
+  if(!S.cfg) S.cfg = {};
+  if(!S.cfg.enabledTrades) S.cfg.enabledTrades = {roofing:true};
+  const cur = !!S.cfg.enabledTrades[tradeId];
+  S.cfg.enabledTrades[tradeId] = !cur;
+  _updateTradeToggleUI(tradeId, !cur);
+  save();
+  renderTradeSelector();
+  // Persist enabled_trades array to DB
+  const enabledArr = Object.keys(S.cfg.enabledTrades).filter(t => S.cfg.enabledTrades[t]);
+  if(sb && currentAccount && currentAccount.id){
+    sb.from('accounts').update({enabled_trades: enabledArr}).eq('id', currentAccount.id).then(({error}) => {
+      if(error) console.warn('[BidDrop] save enabled_trades:', error.message);
+    });
+  }
+  toast((S.cfg.enabledTrades[tradeId] ? '✅' : '⛔') + ' ' + tradeId.charAt(0).toUpperCase()+tradeId.slice(1) + ' ' + (S.cfg.enabledTrades[tradeId] ? 'enabled' : 'disabled'), 'info');
+}
+function _updateTradeToggleUI(tradeId, enabled){
+  const toggle = document.getElementById('s-trade-'+tradeId+'-toggle');
+  const knob   = document.getElementById('s-trade-'+tradeId+'-knob');
+  const lbl    = document.getElementById('s-trade-'+tradeId+'-lbl');
+  if(toggle) toggle.style.background = enabled ? 'var(--accent)' : 'var(--border)';
+  if(knob)   knob.style.left = enabled ? '21px' : '3px';
+  if(lbl)    lbl.textContent = enabled ? 'Enabled' : 'Disabled';
+}
+function refreshAllTradeToggles(){
+  const et = (S.cfg && S.cfg.enabledTrades) || {roofing:true};
+  const ALL_TRADES = ['roofing','solar','fencing','siding','gutters','insulation','paint','doors','windows'];
+  ALL_TRADES.forEach(t => _updateTradeToggleUI(t, !!(et[t])));
+}
+
+// ── Trade selector (Estimator) ────────────────────────────────────────────────
+const TRADE_META = {
+  roofing:    {label:'🏠 Roofing',       color:'#F25C05'},
+  solar:      {label:'☀️ Solar',          color:'#22C55E'},
+  fencing:    {label:'🪵 Fencing',        color:'#A78BFA'},
+  siding:     {label:'🏗 Siding',         color:'#60A5FA'},
+  gutters:    {label:'🌊 Gutters',        color:'#38BDF8'},
+  insulation: {label:'🏠 Insulation',     color:'#FB923C'},
+  paint:      {label:'🎨 Ext. Paint',     color:'#F472B6'},
+  doors:      {label:'🚪 Doors',          color:'#FBBF24'},
+  windows:    {label:'🪟 Windows',        color:'#67E8F9'},
+};
+window._activeTrade = null;
+window._tradeBundle = []; // [{trade, total, details}]
+
+function renderTradeSelector(){
+  const grid = document.getElementById('trade-selector-grid');
+  const empty = document.getElementById('trade-selector-empty');
+  if(!grid) return;
+  const et = (S.cfg && S.cfg.enabledTrades) || {roofing:true};
+  const enabled = Object.keys(TRADE_META).filter(t => {
+    if(t === 'roofing') return et.roofing !== false;
+    return !!et[t];
+  });
+  if(enabled.length === 0){
+    grid.innerHTML = '';
+    if(empty) empty.style.display = '';
+    return;
+  }
+  if(empty) empty.style.display = 'none';
+  grid.innerHTML = enabled.map(t => {
+    const m = TRADE_META[t];
+    const isActive = window._activeTrade === t;
+    return `<button onclick="selectTrade('${t}')" style="padding:14px 8px;border-radius:10px;border:2px solid ${isActive ? m.color : 'var(--border)'};background:${isActive ? 'rgba('+hexToRgb(m.color)+',.15)' : 'var(--card2)'};color:${isActive ? m.color : 'var(--mid)'};font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s;box-shadow:${isActive ? '0 0 0 1px '+m.color : 'none'};">${m.label}${isActive ? '<br><span style="font-size:9px;font-weight:400;opacity:.8;letter-spacing:.5px;text-transform:uppercase;">Selected</span>' : ''}</button>`;
+  }).join('');
+}
+function hexToRgb(hex){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return r+','+g+','+b;
+}
+function selectTrade(tradeId){
+  window._activeTrade = tradeId;
+  renderTradeSelector();
+  // Hide all trade forms
+  ['roofing','solar','fencing','siding','gutters','insulation','paint','doors'].forEach(t=>{
+    const f = document.getElementById('trade-form-'+t);
+    if(f) f.style.display = 'none';
+  });
+  // Show roofing structures + existing form elements for roofing
+  const roofingEls = ['gbb-selector-wrap','price-box-wrap'];
+  roofingEls.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display = tradeId==='roofing' ? '' : 'none';
+  });
+  // Show the structures add button for roofing
+  const addStructBtn = document.querySelector('[onclick="addStructure(0,\'\')"]');
+  if(addStructBtn) addStructBtn.style.display = tradeId==='roofing' ? '' : 'none';
+  const structWrap = document.getElementById('structures-render-wrap');
+  if(structWrap) structWrap.style.display = tradeId==='roofing' ? '' : 'none';
+  // Show selected trade form
+  const form = document.getElementById('trade-form-'+tradeId);
+  if(form) form.style.display = '';
+  // Auto-populate measurements from satellite data
+  autoPopulateTradeMeasurements(tradeId);
+  toast('🔧 '+TRADE_META[tradeId].label+' selected','info');
+}
+function autoPopulateTradeMeasurements(tradeId){
+  // Use last known satellite data (stored in window._lastSolarData)
+  const sd = window._lastSolarData;
+  if(!sd) return;
+  const roofSqft = sd.roofSqft || 0;
+  const perimeterLf = Math.round(Math.sqrt(roofSqft) * 4); // rough perimeter estimate
+  const wallSqft = Math.round(roofSqft * 0.85); // walls ≈ 85% of roof area as rough estimate
+  switch(tradeId){
+    case 'solar':
+      const kwEl = document.getElementById('te-solar-kw');
+      if(kwEl && !kwEl.value && sd.systemKw) { kwEl.value = sd.systemKw; calcTradeSolar(); }
+      const banner = document.getElementById('solar-autocalc-banner');
+      if(banner && sd.systemKw) banner.style.display = '';
+      break;
+    case 'fencing':
+      const fenEl = document.getElementById('te-fen-lf');
+      if(fenEl && !fenEl.value && perimeterLf) { fenEl.value = perimeterLf; calcTradeFencing(); }
+      break;
+    case 'siding':
+      const sidEl = document.getElementById('te-sid-sqft');
+      if(sidEl && !sidEl.value && wallSqft) { sidEl.value = wallSqft; calcTradeSiding(); }
+      break;
+    case 'gutters':
+      const gutEl = document.getElementById('te-gut-lf');
+      if(gutEl && !gutEl.value && perimeterLf) { gutEl.value = perimeterLf; calcTradeGutters(); }
+      break;
+    case 'insulation':
+      const insEl = document.getElementById('te-ins-sqft');
+      if(insEl && !insEl.value && roofSqft) { insEl.value = Math.round(roofSqft * 0.9); calcTradeInsulation(); }
+      break;
+    case 'paint':
+      const pntEl = document.getElementById('te-pnt-sqft');
+      if(pntEl && !pntEl.value && wallSqft) { pntEl.value = wallSqft; calcTradePaint(); }
+      break;
+  }
+}
+
+// ── Auto-calc buttons (trigger satellite lookup then populate) ────────────────
+function autoCalcSolar(){ if(window._lastSolarData && window._lastSolarData.systemKw){ const el=document.getElementById('te-solar-kw'); if(el) el.value=window._lastSolarData.systemKw; calcTradeSolar(); } else toast('🛰 Run a satellite lookup first (enter address above)','warn'); }
+function autoCalcFencing(){ if(window._lastSolarData && window._lastSolarData.roofSqft){ const lf=Math.round(Math.sqrt(window._lastSolarData.roofSqft)*4); const el=document.getElementById('te-fen-lf'); if(el) el.value=lf; calcTradeFencing(); } else toast('🛰 Run a satellite lookup first','warn'); }
+function autoCalcSiding(){ if(window._lastSolarData && window._lastSolarData.roofSqft){ const el=document.getElementById('te-sid-sqft'); if(el) el.value=Math.round(window._lastSolarData.roofSqft*0.85); calcTradeSiding(); } else toast('🛰 Run a satellite lookup first','warn'); }
+function autoCalcGutters(){ if(window._lastSolarData && window._lastSolarData.roofSqft){ const lf=Math.round(Math.sqrt(window._lastSolarData.roofSqft)*4); const el=document.getElementById('te-gut-lf'); if(el) el.value=lf; calcTradeGutters(); } else toast('🛰 Run a satellite lookup first','warn'); }
+function autoCalcInsulation(){ if(window._lastSolarData && window._lastSolarData.roofSqft){ const el=document.getElementById('te-ins-sqft'); if(el) el.value=Math.round(window._lastSolarData.roofSqft*0.9); calcTradeInsulation(); } else toast('🛰 Run a satellite lookup first','warn'); }
+function autoCalcPaint(){ if(window._lastSolarData && window._lastSolarData.roofSqft){ const el=document.getElementById('te-pnt-sqft'); if(el) el.value=Math.round(window._lastSolarData.roofSqft*0.85); calcTradePaint(); } else toast('🛰 Run a satellite lookup first','warn'); }
+
+// ── Trade calculators ─────────────────────────────────────────────────────────
+function _fmtMoney(n){ return '$'+Math.round(n).toLocaleString(); }
+function _applyMargin(base, ovh, mgn){ return base * (1 + (ovh||15)/100) * (1 + (mgn||20)/100); }
+
+function calcTradeSolar(){
+  const c = S.cfg || {};
+  const kw = parseFloat((document.getElementById('te-solar-kw')||{}).value) || 0;
+  const ppw = parseFloat(c.solarPricePerWatt) || 3.50;
+  let total = kw * 1000 * ppw;
+  if((document.getElementById('te-solar-battery')||{}).checked) total += (c.solarBattery||8000);
+  if((document.getElementById('te-solar-panel-upgrade')||{}).checked) total += (c.solarPanelUpgrade||150)*Math.ceil(kw/0.4);
+  if((document.getElementById('te-solar-elec-upgrade')||{}).checked) total += (c.solarElecUpgrade||2500);
+  if((document.getElementById('te-solar-roof-reinforce')||{}).checked) total += (c.solarRoofReinforce||1500);
+  total = _applyMargin(total, c.solarOverhead||12, c.solarMargin||18);
+  // Apply incentives
+  const fedCredit = total * ((c.solarFedCredit||30)/100);
+  const stateRebate = c.solarStateRebate || 0;
+  const utilityRebate = c.solarUtilityRebate || 0;
+  const net = total - fedCredit - stateRebate - utilityRebate;
+  const el = document.getElementById('te-solar-total');
+  if(el) el.textContent = _fmtMoney(net);
+  const monthly = document.getElementById('te-solar-monthly');
+  if(monthly && c.solarMonthlySavings) monthly.textContent = 'Est. monthly savings: $'+(c.solarMonthlySavings||150)+'/mo';
+  const detail = document.getElementById('te-solar-incentives-detail');
+  if(detail) detail.innerHTML = `Federal Tax Credit (${c.solarFedCredit||30}%): -${_fmtMoney(fedCredit)}<br>State Rebate: -${_fmtMoney(stateRebate)}<br>Utility Rebate: -${_fmtMoney(utilityRebate)}<br><strong>Net after incentives: ${_fmtMoney(net)}</strong>`;
+  window._currentTradeTotal = net;
+  updateBundleBar();
+}
+
+function calcTradeFencing(){
+  const c = S.cfg || {};
+  const type = (document.getElementById('te-fen-type')||{}).value || 'wood';
+  const lf = parseFloat((document.getElementById('te-fen-lf')||{}).value) || 0;
+  const plfMap = {wood:c.fenWoodPlf||28, vinyl:c.fenVinylPlf||35, chain:c.fenChainPlf||18, aluminum:c.fenAlumPlf||45, split:c.fenSplitPlf||22, cedar:c.fenCedarPlf||38};
+  let base = lf * (plfMap[type] || 28);
+  if((document.getElementById('te-fen-gate-single')||{}).checked) base += (c.fenGateSingle||350);
+  if((document.getElementById('te-fen-gate-double')||{}).checked) base += (c.fenGateDouble||650);
+  if((document.getElementById('te-fen-removal')||{}).checked) base += lf * (c.fenRemoval||5);
+  const total = _applyMargin(base, c.fenOverhead||15, c.fenMargin||20);
+  const el = document.getElementById('te-fen-total');
+  if(el) el.textContent = _fmtMoney(total);
+  const bd = document.getElementById('te-fen-breakdown');
+  if(bd) bd.textContent = lf+' lf × $'+(plfMap[type]||28)+'/lf';
+  window._currentTradeTotal = total;
+  updateBundleBar();
+  if(typeof updatePreview==='function') updatePreview();
+}
+
+function calcTradeSiding(){
+  const c = S.cfg || {};
+  const type = (document.getElementById('te-sid-type')||{}).value || 'vinyl';
+  const sqft = parseFloat((document.getElementById('te-sid-sqft')||{}).value) || 0;
+  const psfMap = {vinyl:c.sidVinylPsf||4.50, hardie:c.sidHardiePsf||8.00, wood:c.sidWoodPsf||7.00, engwood:c.sidEngWoodPsf||6.50, metal:c.sidMetalPsf||9.00, stucco:c.sidStuccoPsf||10.00};
+  let base = sqft * (psfMap[type] || 4.50);
+  if((document.getElementById('te-sid-removal')||{}).checked) base += sqft * (c.sidRemoval||1.50);
+  if((document.getElementById('te-sid-housewrap')||{}).checked) base += sqft * (c.sidHousewrap||0.75);
+  if((document.getElementById('te-sid-insulation')||{}).checked) base += sqft * (c.sidInsulation||0.50);
+  const trimLf = parseFloat((document.getElementById('te-sid-trim-lf')||{}).value) || 0;
+  if(trimLf) base += trimLf * (c.sidTrim||6.00);
+  const total = _applyMargin(base, c.sidOverhead||15, c.sidMargin||20);
+  const el = document.getElementById('te-sid-total');
+  if(el) el.textContent = _fmtMoney(total);
+  const bd = document.getElementById('te-sid-breakdown');
+  if(bd) bd.textContent = sqft+' sqft × $'+(psfMap[type]||4.50)+'/sqft';
+  window._currentTradeTotal = total;
+  updateBundleBar();
+  if(typeof updatePreview==='function') updatePreview();
+}
+
+function calcTradeGutters(){
+  const c = S.cfg || {};
+  const type = (document.getElementById('te-gut-type')||{}).value || 'alum5';
+  const lf = parseFloat((document.getElementById('te-gut-lf')||{}).value) || 0;
+  const ds = parseInt((document.getElementById('te-gut-downspouts')||{}).value) || 0;
+  const plfMap = {alum5:c.gutAlum5||6, alum6:c.gutAlum6||8, seamless:c.gutSeamless||9, copper:c.gutCopper||22, halfrnd:c.gutHalfrnd||10, vinyl:c.gutVinyl||4.50};
+  let base = lf * (plfMap[type] || 6);
+  base += ds * (c.gutDownspout||75);
+  if((document.getElementById('te-gut-guard')||{}).checked) base += lf * (c.gutGuard||5);
+  if((document.getElementById('te-gut-removal')||{}).checked) base += lf * (c.gutRemoval||1.50);
+  if((document.getElementById('te-gut-fascia')||{}).checked) base += lf * (c.gutFascia||8);
+  const total = _applyMargin(base, c.gutOverhead||15, c.gutMargin||20);
+  const el = document.getElementById('te-gut-total');
+  if(el) el.textContent = _fmtMoney(total);
+  const bd = document.getElementById('te-gut-breakdown');
+  if(bd) bd.textContent = lf+' lf × $'+(plfMap[type]||6)+'/lf + '+ds+' downspouts';
+  window._currentTradeTotal = total;
+  updateBundleBar();
+  if(typeof updatePreview==='function') updatePreview();
+}
+
+function calcTradeInsulation(){
+  const c = S.cfg || {};
+  const type = (document.getElementById('te-ins-type')||{}).value || 'blowR30';
+  const sqft = parseFloat((document.getElementById('te-ins-sqft')||{}).value) || 0;
+  const psfMap = {blowR30:c.insBlowR30||1.20, blowR38:c.insBlowR38||1.50, cellR30:c.insCellR30||1.10, cellR38:c.insCellR38||1.40, foamOpen:c.insFoamOpen||1.50, foamClosed:c.insFoamClosed||3.00, battR13:c.insBattR13||0.65, battR19:c.insBattR19||0.85};
+  let base = sqft * (psfMap[type] || 1.20);
+  if((document.getElementById('te-ins-removal')||{}).checked) base += sqft * (c.insRemoval||0.75);
+  if((document.getElementById('te-ins-airsealing')||{}).checked) base += (c.insAirsealing||350);
+  if((document.getElementById('te-ins-vapor')||{}).checked) base += sqft * (c.insVapor||0.45);
+  const total = _applyMargin(base, c.insOverhead||15, c.insMargin||20);
+  const el = document.getElementById('te-ins-total');
+  if(el) el.textContent = _fmtMoney(total);
+  const bd = document.getElementById('te-ins-breakdown');
+  if(bd) bd.textContent = sqft+' sqft × $'+(psfMap[type]||1.20)+'/sqft';
+  window._currentTradeTotal = total;
+  updateBundleBar();
+  if(typeof updatePreview==='function') updatePreview();
+}
+
+function calcTradePaint(){
+  const c = S.cfg || {};
+  const surface = (document.getElementById('te-pnt-surface')||{}).value || 'siding1c';
+  const sqft = parseFloat((document.getElementById('te-pnt-sqft')||{}).value) || 0;
+  const trimLf = parseFloat((document.getElementById('te-pnt-trim-lf')||{}).value) || 0;
+  const psfMap = {siding1c:c.pntSiding1c||1.50, siding2c:c.pntSiding2c||2.25, deck1c:c.pntDeck1c||1.75, deck2c:c.pntDeck2c||2.75, masonry:c.pntMasonry||2.50};
+  let base = sqft * (psfMap[surface] || 1.50);
+  if(trimLf) base += trimLf * (c.pntTrim1c||2.00);
+  if((document.getElementById('te-pnt-powerwash')||{}).checked) base += sqft * (c.pntPowerwash||0.35);
+  if((document.getElementById('te-pnt-primer')||{}).checked) base += sqft * (c.pntPrimer||0.50);
+  if((document.getElementById('te-pnt-garage-door')||{}).checked) base += (c.pntGarageDoor||150);
+  const total = _applyMargin(base, c.pntOverhead||15, c.pntMargin||20);
+  const el = document.getElementById('te-pnt-total');
+  if(el) el.textContent = _fmtMoney(total);
+  const bd = document.getElementById('te-pnt-breakdown');
+  if(bd) bd.textContent = sqft+' sqft × $'+(psfMap[surface]||1.50)+'/sqft';
+  window._currentTradeTotal = total;
+  updateBundleBar();
+  if(typeof updatePreview==='function') updatePreview();
+}
+
+function calcTradeDoors(){
+  const c = S.cfg || {};
+  const qty = (id) => parseInt((document.getElementById(id)||{}).value) || 0;
+  let base = 0;
+  base += qty('te-dor-steel-entry') * (c.dorSteelEntry||850);
+  base += qty('te-dor-fiber-entry') * (c.dorFiberEntry||1200);
+  base += qty('te-dor-wood-entry')  * (c.dorWoodEntry||1500);
+  base += qty('te-dor-storm')       * (c.dorStormStd||450);
+  base += qty('te-dor-garage-single') * (c.dorGarageSingle||1100);
+  base += qty('te-dor-garage-double') * (c.dorGarageDouble||1800);
+  const totalDoors = qty('te-dor-steel-entry')+qty('te-dor-fiber-entry')+qty('te-dor-wood-entry')+qty('te-dor-storm')+qty('te-dor-garage-single')+qty('te-dor-garage-double');
+  if((document.getElementById('te-dor-hardware')||{}).checked) base += totalDoors * (c.dorHardware||125);
+  if((document.getElementById('te-dor-weatherstrip')||{}).checked) base += totalDoors * (c.dorWeatherstrip||75);
+  if((document.getElementById('te-dor-opener')||{}).checked) base += (qty('te-dor-garage-single')+qty('te-dor-garage-double')) * (c.dorOpener||350);
+  const total = _applyMargin(base, c.dorOverhead||15, c.dorMargin||20);
+  const el = document.getElementById('te-dor-total');
+  if(el) el.textContent = _fmtMoney(total);
+  const bd = document.getElementById('te-dor-breakdown');
+  if(bd) bd.textContent = totalDoors+' door'+(totalDoors!==1?'s':'')+' total';
+  window._currentTradeTotal = total;
+  updateBundleBar();
+  if(typeof updatePreview==='function') updatePreview();
+}
+
+// ── Bundle bar ────────────────────────────────────────────────────────────────
+function updateBundleBar(){
+  const bar = document.getElementById('trade-bundle-bar');
+  if(!bar) return;
+  if(!window._tradeBundle || window._tradeBundle.length === 0){ bar.style.display='none'; return; }
+  bar.style.display = '';
+  const list = document.getElementById('trade-bundle-list');
+  const totalEl = document.getElementById('trade-bundle-total');
+  let grand = 0;
+  const lines = window._tradeBundle.map(b => {
+    grand += b.total;
+    return `<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>${TRADE_META[b.trade]?TRADE_META[b.trade].label:b.trade}</span><span style="font-weight:700;">${_fmtMoney(b.total)}</span></div>`;
+  });
+  if(list) list.innerHTML = lines.join('');
+  if(totalEl) totalEl.textContent = _fmtMoney(grand);
+}
+function addAnotherTrade(){
+  // Commit current trade to bundle
+  if(window._activeTrade && window._currentTradeTotal > 0){
+    const existing = (window._tradeBundle||[]).findIndex(b=>b.trade===window._activeTrade);
+    const entry = {trade:window._activeTrade, total:window._currentTradeTotal};
+    if(existing >= 0) window._tradeBundle[existing] = entry;
+    else window._tradeBundle.push(entry);
+  }
+  // Reset trade selector so rep can pick another
+  window._activeTrade = null;
+  window._currentTradeTotal = 0;
+  renderTradeSelector();
+  ['roofing','solar','fencing','siding','gutters','insulation','paint','doors'].forEach(t=>{
+    const f=document.getElementById('trade-form-'+t); if(f) f.style.display='none';
+  });
+  updateBundleBar();
+  toast('✅ Trade added to bundle — select another trade','success');
+}
+
+// ── Extend saveEstimateNow to capture trade data ──────────────────────────────
+const _origSaveEstimateNow = typeof saveEstimateNow === 'function' ? saveEstimateNow : null;
+// We patch saveEstimateNow after it's defined — see _patchSaveEstimate() called on load
+
+function _getTradeEstimateData(){
+  const trade = window._activeTrade || 'roofing';
+  const bundle = (window._tradeBundle && window._tradeBundle.length > 0) ? [...window._tradeBundle] : null;
+  // Add current trade to bundle snapshot if not already there
+  if(bundle && window._activeTrade && window._currentTradeTotal > 0){
+    const exists = bundle.findIndex(b=>b.trade===window._activeTrade);
+    if(exists < 0) bundle.push({trade:window._activeTrade, total:window._currentTradeTotal});
+  }
+  const grandTotal = bundle ? bundle.reduce((s,b)=>s+b.total,0) : (window._currentTradeTotal||0);
+  return { trade, bundle, grandTotal };
+}
+
+// ── Store last solar data for auto-calc ──────────────────────────────────────
+// Hook into existing solar data population — store roofSqft and systemKw
+const _origPopulateSolarBanner = typeof populateSolarBanner === 'function' ? populateSolarBanner : null;
+
+// ── Windows trade calculator ──────────────────────────────────────────────────
+window._winMethod = 'A';
+function setWinMethod(m){
+  window._winMethod = m;
+  ['A','B','C'].forEach(x=>{
+    const btn = document.getElementById('win-method-'+x);
+    const form = document.getElementById('win-form-'+x);
+    if(btn){
+      btn.style.border = x===m ? '2px solid var(--accent)' : '1px solid var(--border)';
+      btn.style.background = x===m ? 'rgba(242,92,5,.12)' : 'none';
+      btn.style.color = x===m ? 'var(--accent)' : 'var(--mid)';
+    }
+    if(form) form.style.display = x===m ? '' : 'none';
+  });
+  // Auto-populate Method A count from home size
+  if(m==='A') _autoFillWinCountA();
+  calcTradeWindows();
+}
+function _autoFillWinCountA(){
+  const c = S.cfg || {};
+  const size = (document.getElementById('te-win-size')||{}).value || 'md';
+  const cntMap = {sm:c.winCntSm||9, md:c.winCntMd||13, lg:c.winCntLg||18, xl:c.winCntXl||25};
+  const el = document.getElementById('te-win-count-A');
+  if(el && !el.value) el.value = cntMap[size] || 13;
+}
+function calcTradeWindows(){
+  const c = S.cfg || {};
+  const m = window._winMethod || 'A';
+  const ppwMap = {dbl_hung:c.winDblHung||450, casement:c.winCasement||550, picture:c.winPicture||400, sliding:c.winSliding||480, bay:c.winBay||1800, skylight:c.winSkylight||1200, storm:c.winStorm||200, egress:c.winEgress||2500};
+  let base = 0;
+  let totalCount = 0;
+  let breakdownParts = [];
+
+  if(m==='A'){
+    const size = (document.getElementById('te-win-size')||{}).value || 'md';
+    const cntMap = {sm:c.winCntSm||9, md:c.winCntMd||13, lg:c.winCntLg||18, xl:c.winCntXl||25};
+    const autoCount = cntMap[size] || 13;
+    const manualCount = parseInt((document.getElementById('te-win-count-A')||{}).value) || autoCount;
+    const typeA = (document.getElementById('te-win-type-A')||{}).value || 'dbl_hung';
+    totalCount = manualCount;
+    base = manualCount * (ppwMap[typeA] || 450);
+    breakdownParts.push(manualCount+' windows × $'+(ppwMap[typeA]||450));
+  } else if(m==='B'){
+    const fields = [{id:'te-win-b-dblhung',type:'dbl_hung'},{id:'te-win-b-casement',type:'casement'},{id:'te-win-b-picture',type:'picture'},{id:'te-win-b-sliding',type:'sliding'},{id:'te-win-b-bay',type:'bay'},{id:'te-win-b-storm',type:'storm'}];
+    fields.forEach(f=>{
+      const qty = parseInt((document.getElementById(f.id)||{}).value)||0;
+      if(qty>0){ base+=qty*(ppwMap[f.type]||450); totalCount+=qty; breakdownParts.push(qty+'× '+f.type.replace('_',' ')); }
+    });
+    const disp = document.getElementById('te-win-b-count-display');
+    if(disp) disp.textContent = totalCount+' window'+(totalCount!==1?'s':'')+' total';
+  } else { // C
+    const fields = [{id:'te-win-c-dblhung',type:'dbl_hung'},{id:'te-win-c-casement',type:'casement'},{id:'te-win-c-picture',type:'picture'},{id:'te-win-c-sliding',type:'sliding'},{id:'te-win-c-bay',type:'bay'},{id:'te-win-c-skylight',type:'skylight'},{id:'te-win-c-storm',type:'storm'},{id:'te-win-c-egress',type:'egress'}];
+    fields.forEach(f=>{
+      const qty = parseInt((document.getElementById(f.id)||{}).value)||0;
+      if(qty>0){ base+=qty*(ppwMap[f.type]||450); totalCount+=qty; breakdownParts.push(qty+'× '+f.type.replace('_',' ')); }
+    });
+    const disp = document.getElementById('te-win-c-count-display');
+    if(disp) disp.textContent = totalCount+' window'+(totalCount!==1?'s':'')+' total';
+  }
+
+  // Add-ons (per window)
+  if((document.getElementById('te-win-lowe')||{}).checked && totalCount>0) base += totalCount*(c.winLowe||75);
+  if((document.getElementById('te-win-triple')||{}).checked && totalCount>0) base += totalCount*(c.winTriple||120);
+  if((document.getElementById('te-win-trim')||{}).checked && totalCount>0) base += totalCount*(c.winTrim||85);
+  if((document.getElementById('te-win-removal')||{}).checked && totalCount>0) base += totalCount*(c.winRemoval||50);
+
+  const total = base * (1+(c.winOverhead||15)/100) * (1+(c.winMargin||20)/100) * (1+(c.winTax||0)/100);
+  const el = document.getElementById('te-win-total');
+  if(el) el.textContent = _fmtMoney(total);
+  const bd = document.getElementById('te-win-breakdown');
+  if(bd) bd.textContent = breakdownParts.join(' · ') || 'Enter window details above';
+  window._currentTradeTotal = total;
+  updateBundleBar();
+  if(typeof updatePreview==='function') updatePreview();
+}
+
+function switchPricingTab(tab){
+  document.querySelectorAll('#pricing-subtabs .stab-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.ptab-pane').forEach(p=>{p.classList.remove('active');p.style.display='none';});
+  const btn=document.getElementById('ptab-'+tab);
+  const pane=document.getElementById('ptabpane-'+tab);
+  if(btn) btn.classList.add('active');
+  if(pane){pane.classList.add('active');pane.style.display='';}
+  try{ localStorage.setItem('bd_pricing_tab', tab); }catch(e){}
+}
+function restorePricingTab(){
+  try{
+    const t=localStorage.getItem('bd_pricing_tab');
+    if(t) switchPricingTab(t);
+  }catch(e){}
+}
+function toggleStabCard(name){
+  const body = document.getElementById('stab-body-'+name);
+  const chevron = document.getElementById('stab-chevron-'+name);
+  if(!body) return;
+  const isCollapsed = body.classList.contains('collapsed');
+  body.classList.toggle('collapsed', !isCollapsed);
+  if(chevron) chevron.classList.toggle('collapsed', !isCollapsed);
+}
+function goTab(t){
+  // Auto-save estimate + photos when leaving the estimator tab
+  const prevTab = document.querySelector('.tab-btn.active');
+  const leavingEstimate = prevTab && prevTab.dataset.tab === 'estimate';
+  if(leavingEstimate && currentEstPinId){
+    // Persist home photo to sessionStorage (fast, survives tab switch)
+    if(window._homePhotoData){
+      try{ sessionStorage.setItem('bd_home_photo_'+(currentEstPinId||'_'), window._homePhotoData); }catch(e){}
+    }
+    // Auto-save the current estimate state to Supabase immediately
+    _autoSaveEstimateOnLeave();
+  }
+  document.querySelectorAll('.tab-btn,.bnav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active',p.id==='tab-'+t));
+  if(t==='map'){setTimeout(()=>map&&map.invalidateSize(),80);}
+  if(t==='dashboard')renderDash();
+  if(t==='mailqueue')renderQueue();
+  if(t==='estimates')renderEstimatesTab();
+  if(t==='estimate'){
+    populateEstPinPicker();updatePreview();scheduleDraftSave&&clearTimeout(_draftTimer);
+    if(typeof renderTradeSelector==='function') renderTradeSelector();
+    // Restore home photo if it was cleared during tab switch
+    if(!window._homePhotoData && currentEstPinId){
+      try{
+        const saved = sessionStorage.getItem('bd_home_photo_'+currentEstPinId);
+        if(saved){
+          window._homePhotoData = saved;
+          const prev = document.getElementById('home-photo-preview');
+          if(prev) prev.innerHTML = '<img src="'+saved+'" style="width:100%;height:100%;object-fit:cover;">';
+          const clr = document.getElementById('clear-photo-btn');
+          if(clr) clr.style.display = 'block';
+        }
+      }catch(e){}
+    }
+  }
+  if(t==='zones')initZonesTab();
+  if(t==='agency')renderAgencyView();
+  if(t==='history')loadHistory();
+  if(t==='settings')renderSettingsTab();
+  if(t==='admin')renderAdminPanel();
+  if(t==='hotleads')loadHotLeads();
+  if(t==='analytics')loadAnalytics();
+}
+
+
+function renderSettingsTab(){
+  // Populate all settings fields from S.cfg into the inline tab
+  openSettings();
+  // Load team members into the settings tab
+  const body = document.getElementById('settings-team-body');
+  const roleBadge = document.getElementById('settings-team-role-badge');
+  if(!body) return;
+  body.innerHTML = '<div style="color:var(--mid);font-size:13px;">Loading...</div>';
+
+  // Show the admin panel content inline
+  (async ()=>{
+    try{
+      const isSA = currentUser && currentUser.role === 'super_admin';
+      const isAdm = isAdminOrAbove();
+      if(roleBadge) roleBadge.textContent = isSA ? 'Super Admin' : (isAdm ? 'Admin' : 'Rep');
+
+      if(isSA){
+        // Super admin: show link to full admin panel
+        body.innerHTML = '<div style="color:var(--mid);font-size:13px;margin-bottom:12px;">You are logged in as Super Admin.</div>' +
+          '<button onclick="goTab(\'admin\')" style="background:var(--accent);border:none;border-radius:8px;padding:10px 22px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">Open Admin Panel</button>';
+      } else if(isAdm){
+        const {data:profiles} = await sb.from('user_profiles').select('*').eq('account_id', currentAccount.id);
+        body.innerHTML = renderAccountAdminPanel(profiles||[]);
+      } else {
+        body.innerHTML = '<div style="color:var(--mid);font-size:13px;">Contact your admin to manage team members.</div>';
+      }
+    } catch(e){
+      body.innerHTML = '<div style="color:var(--mid);font-size:13px;">Could not load team data.</div>';
+    }
+  })();
+}
+
+function renderFollowUpTab(){
+  const cfg = S.cfg || {};
+  [2,3,4,5,6].forEach(step=>{
+    const url = cfg['postcardStep'+step];
+    const frontEl = document.getElementById('fu-pc'+step+'-front');
+    const backEl  = document.getElementById('fu-pc'+step+'-back');
+    if(!frontEl || !backEl) return;
+
+    // Front side
+    if(url){
+      // Custom uploaded artwork — show it
+      frontEl.style.display = 'block';
+      frontEl.style.minHeight = 'unset';
+      frontEl.innerHTML = '<img src="'+url+'" style="width:100%;height:auto;display:block;border-radius:5px;cursor:zoom-in;" title="Click to enlarge front" onclick="previewPostcardFront('+step+')">';
+    } else {
+      // No custom upload — render auto-generated BidDrop postcard with step-specific copy
+      const msg = getDripStepMessage(step);
+      const sampleEst2 = (S.estimates||[]).find(e=>!e.isRevision && !e.deletedAt && !e.deleted);
+      const samplePin2 = sampleEst2 ? (S.pins||[]).find(p=>p.id===sampleEst2.pinId) : null;
+      const previewPhotoUrl = (sampleEst2 && (sampleEst2.photo_url||sampleEst2.photo_data)) || (samplePin2 && samplePin2.photo_url) || null;
+      const frontHtml = buildDripPostcardFrontHtml({
+        photoUrl: previewPhotoUrl,
+        headline: msg.headline,
+        subtext:  msg.subtext,
+        companyName:    cfg.companyName    || 'Your Roofing Co',
+        companyAddress: cfg.companyAddress || '',
+        phone:          cfg.phone          || '',
+        logoUrl:        cfg.logoData       || '',
+        address:        sampleEst2 ? (sampleEst2.addr||'') : '',
+        estimateTotal:  sampleEst2 ? (sampleEst2.total||0) : 0,
+      });
+      frontEl.style.cssText = 'position:relative;width:100%;padding-top:66.67%;overflow:hidden;border-radius:5px;border:1px solid var(--border);cursor:zoom-in;';
+      const encodedHtml = frontHtml.replace(/"/g,'&quot;').replace(/`/g,'&#96;');
+      frontEl.innerHTML = `<iframe srcdoc="${encodedHtml}" style="position:absolute;top:0;left:0;width:864px;height:576px;border:none;transform-origin:top left;pointer-events:none;max-width:none;" scrolling="no"></iframe>`;
+      frontEl.title = 'Auto-generated — click to preview';
+      frontEl.onclick = ()=>previewDripFront(step);
+      requestAnimationFrame(()=>{
+        const iframe = frontEl.querySelector('iframe');
+        if(iframe){ const w=frontEl.offsetWidth||300; iframe.style.transform='scale('+(w/864)+')'; }
+      });
+      setTimeout(()=>{
+        const iframe = frontEl.querySelector('iframe');
+        if(iframe){ const w=frontEl.offsetWidth||300; iframe.style.transform='scale('+(w/864)+')'; }
+      }, 150);
+    }
+
+    // Back side — always render the USPS address template
+    const fromName = cfg.companyName  || 'Your Company';
+    const fromAddr = cfg.companyAddress|| '1 Company Dr';
+    const fromCity = cfg.companyCity   || '';
+    const fromPhone= cfg.phone         || '';
+    const logoUrl  = cfg.logoData      || '';
+    // Use first estimate as sample data for the preview, or generic placeholder
+    const sampleEst = (S.estimates||[]).find(e=>!e.isRevision && !e.deleted);
+    const previewToName = sampleEst ? (sampleEst.owner||'Sample Homeowner') : 'Sample Homeowner';
+    const previewToAddr = sampleEst ? (sampleEst.addr||'123 Main Street, Canton, MI 48188') : '123 Main Street, Canton, MI 48188';
+    const backHtml = buildPostcardBackInline({ fromName, fromAddr, fromCity, fromPhone, logoUrl, toName: previewToName, toAddr: previewToAddr });
+    backEl.innerHTML = backHtml;
+    // Make back clickable to open lightbox (matches front card behavior)
+    backEl.style.cursor = 'zoom-in';
+    backEl.title = 'Click to enlarge back';
+    backEl.onclick = () => previewPostcardBackLightbox(step, previewToName, previewToAddr, fromName, fromAddr, fromCity, fromPhone, logoUrl);
+  });
+}
+
+// Inline (iframe-free) version of the postcard back for embedding in the tab
+function buildPostcardBackInline({ fromName, fromAddr, fromCity, fromPhone, logoUrl, toName, toAddr }){
+  return `
+  <div style="position:absolute;inset:0;display:flex;font-family:Arial,sans-serif;background:#fff;padding:16px 20px;gap:16px;box-sizing:border-box;">
+    <!-- Return address left column -->
+    <div style="flex:1.4;display:flex;flex-direction:column;justify-content:space-between;border-right:1px dashed #bbb;padding-right:16px;overflow:hidden;">
+      <div>
+        ${logoUrl ? '<img src="'+logoUrl+'" style="max-width:100px;max-height:36px;object-fit:contain;display:block;margin-bottom:8px;">' : ''}
+        <div style="font-weight:700;font-size:11px;color:#111;line-height:1.3;">${fromName}</div>
+        <div style="color:#666;font-size:10px;line-height:1.5;margin-top:3px;">${fromAddr}${fromCity ? '<br>'+fromCity : ''}${fromPhone ? '<br>'+fromPhone : ''}</div>
+      </div>
+      <div style="font-size:6px;color:#ccc;letter-spacing:3px;text-align:center;padding-top:6px;border-top:1px dashed #ddd;">|||||||||||||||||||||||||||||||||||||</div>
+    </div>
+    <!-- Delivery right column -->
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;">
+      <div style="align-self:flex-end;border:1px solid #444;padding:5px 8px;text-align:center;font-size:7px;color:#333;line-height:1.5;">
+        <strong style="display:block;font-size:9px;letter-spacing:.3px;">PRSRT STD</strong>U.S. POSTAGE<br>PAID<br>PERMIT #000
+      </div>
+      <div style="font-size:11px;line-height:1.7;color:#111;">
+        <div style="font-weight:700;font-size:12px;margin-bottom:2px;">\${toName||'Homeowner Name'}</div>
+        <div style="font-size:10px;color:#555;font-style:italic;margin-bottom:4px;">Or Current Resident</div>
+        <div style="border-top:1px solid #eee;margin-bottom:5px;"></div>
+        \${(toAddr||'123 Main Street, City, State 00000').split(',').map(l=>'<div>'+l.trim()+'</div>').join('')}
+      </div>
+      <div style="font-size:6px;color:#ccc;letter-spacing:2px;text-align:center;">DELIVERY POINT BARCODE</div>
+    </div>
+  </div>`;
+}
+
+function populateEstPinPicker(){
+  const sel = document.getElementById('est-pin-picker');
+  if(!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— Select a pinned address —</option>';
+  (S.pins||[]).forEach(p=>{
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.address || (p.lat.toFixed(4)+', '+p.lng.toFixed(4));
+    if(p.id === currentEstPinId) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  if(cur && !currentEstPinId) sel.value = cur;
+}
+
+function loadEstFromPicker(){
+  const sel = document.getElementById('est-pin-picker');
+  if(!sel || !sel.value) return;
+  const p = S.pins.find(x=>x.id===sel.value);
+  if(!p) return;
+  currentEstPinId = p.id;
+  // Reset form fields
+  document.getElementById('e-owner').value = '';
+  document.getElementById('e-email').value = '';
+  if(document.getElementById('e-phone')) document.getElementById('e-phone').value = '';
+  document.getElementById('e-addr').value = p.address || '';
+  clearHomePhoto();
+  ['a-sky','a-chim','a-gut','a-iws','a-solar'].forEach(function(id){var el=document.getElementById(id);if(el)el.checked=false;});
+  ['a-solar-kw','a-solar-flat'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  const solarInp=document.getElementById('solar-inputs'); if(solarInp) solarInp.style.display='none';
+  const solarDisp=document.getElementById('solar-calc-display'); if(solarDisp) solarDisp.textContent='';
+  // Try to load from S.estimates first (has photo_data), fall back to pin.estimate
+  const savedEst = (S.estimates||[]).find(function(e){return e.pinId === p.id && !e.deletedAt;});
+  // Always reset _allPhotos before loading (prevents stale photos from previous pin)
+  _clearAllPhotos();
+  if(savedEst){
+    if(savedEst.owner) document.getElementById('e-owner').value = savedEst.owner;
+    if(savedEst.email) document.getElementById('e-email').value = savedEst.email;
+    if(savedEst.phone && document.getElementById('e-phone')) document.getElementById('e-phone').value = savedEst.phone||'';
+    if(savedEst.structures && savedEst.structures.length) structures = savedEst.structures.map(function(s){return normStruct(s);});
+    else structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'1.118',mat:'1.3',complexity:'1.12',pts:null}];
+    // Load all photos via unified system (migrates legacy fields automatically)
+    _loadAllPhotosFromEst(savedEst, p);
+    window._editingEstimateId = savedEst.id;
+  } else if(p.estimate){
+    const est = typeof p.estimate === 'string' ? JSON.parse(p.estimate) : p.estimate;
+    if(est.owner) document.getElementById('e-owner').value = est.owner;
+    if(est.email) document.getElementById('e-email').value = est.email;
+    if(est.phone && document.getElementById('e-phone')) document.getElementById('e-phone').value = est.phone||'';
+    if(est.structures && est.structures.length) structures = est.structures.map(function(s){return normStruct(s);})
+    else structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'1.118',mat:'1.3',complexity:'1.12',pts:null}];
+    // Load all photos via unified system
+    _loadAllPhotosFromEst(est, p);
+  } else {
+    structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'1.118',mat:'1.3',complexity:'1.12',pts:null}];
+    // Load photos from pin (no estimate yet)
+    _loadAllPhotosFromPin(p);
+  }
+  renderStructures(); calcP(); updatePreview();
+  // Show cached equity data if already looked up previously
+  if(p.equityData) showEquityBadge(p.equityData); else hideEquityBadge();
+  toast('📋 Loaded: '+p.address.split(',')[0],'info');
+  // Auto-lookup owner name if field is empty
+  if(masterRentcastKey && p.address && !document.getElementById('e-owner').value.trim()){
+    autoFillOwnerIfEmpty(p.address);
+  }
+  // Fetch satellite roof measurement (non-blocking)
+  hideSolarBanner();
+  if(p.lat && p.lng){
+    fetchSolarData(p.lat, p.lng).then(function(solarData){
+      if(solarData && solarData.status==='ok'){
+        showSolarBanner(solarData);
+        // Auto-apply only if sqft is still 0
+        const mainStruct = structures[0];
+        if(mainStruct && (!mainStruct.sqft || mainStruct.sqft===0)){
+          applySolarToEstimate();
+        }
+      }
+    }).catch(function(){});
+  }
+}
+// ── AUTO-SAVE DRAFT ──────────────────────────────────────────────────────
+let _draftTimer = null;
+function scheduleDraftSave(){
+  clearTimeout(_draftTimer);
+  _draftTimer = setTimeout(saveDraft, 2000);
+}
+function saveDraft(){
+  if(!currentEstPinId) return;
+  const draft = {
+    pinId: currentEstPinId,
+    owner: (document.getElementById('e-owner')||{}).value||'',
+    email: (document.getElementById('e-email')||{}).value||'',
+    structures: (structures||[]).map(s=>({...s})),
+    damage_photos: window._damagePhotos||[],
+    skylight: (document.getElementById('a-sky')||{}).checked||false,
+    skylightQty: parseInt((document.getElementById('a-sky-q')||{}).value||1),
+    chimney: (document.getElementById('a-chim')||{}).checked||false,
+    gutters: (document.getElementById('a-gut')||{}).checked||false,
+    iceWaterShield: (document.getElementById('a-iws')||{}).checked||false,
+    gutterLf: parseInt((document.getElementById('a-gut-q')||{}).value||120),
+    solar: (document.getElementById('a-solar')||{}).checked||false,
+    solarKw: parseFloat((document.getElementById('a-solar-kw')||{}).value||0),
+    solarFlat: parseFloat((document.getElementById('a-solar-flat')||{}).value||0),
+  };
+  try{ localStorage.setItem('biddrop_draft_'+currentEstPinId, JSON.stringify(draft)); }catch(e){}
+}
+function restoreDraft(pinId){
+  try{
+    const raw = localStorage.getItem('biddrop_draft_'+pinId);
+    if(!raw) return false;
+    const draft = JSON.parse(raw);
+    if(!draft || !draft.structures) return false;
+    if(draft.owner) document.getElementById('e-owner').value = draft.owner;
+    // Restore email from draft — but only if the field is currently empty (don't overwrite email loaded from Supabase)
+    const emailEl = document.getElementById('e-email');
+    if(emailEl && draft.email && !emailEl.value) emailEl.value = draft.email;
+    // Restore phone from draft — but only if the field is currently empty (don't overwrite a phone loaded from Supabase)
+    const phoneEl = document.getElementById('e-phone');
+    if(phoneEl && draft.phone && !phoneEl.value) phoneEl.value = draft.phone;
+    structures = draft.structures.map(s=>normStruct(s));
+    if(draft.damage_photos && draft.damage_photos.length) window._damagePhotos = [...draft.damage_photos];
+    const sky=document.getElementById('a-sky'); if(sky) sky.checked=!!draft.skylight;
+    const skyQ=document.getElementById('a-sky-q'); if(skyQ) skyQ.value=draft.skylightQty||1;
+    const chim=document.getElementById('a-chim'); if(chim) chim.checked=!!draft.chimney;
+    const gut=document.getElementById('a-gut'); if(gut) gut.checked=!!draft.gutters;
+    const iws=document.getElementById('a-iws'); if(iws) iws.checked=!!draft.iceWaterShield;
+    const gutQ=document.getElementById('a-gut-q'); if(gutQ) gutQ.value=draft.gutterLf||120;
+    const sol=document.getElementById('a-solar'); if(sol){ sol.checked=!!draft.solar; toggleSolarInputs(); }
+    const solKw=document.getElementById('a-solar-kw'); if(solKw) solKw.value=draft.solarKw||'';
+    const solFlat=document.getElementById('a-solar-flat'); if(solFlat) solFlat.value=draft.solarFlat||'';
+    const banner=document.getElementById('draft-banner');
+    const bannerTime=document.getElementById('draft-banner-time');
+    if(banner){ banner.style.display='flex'; if(bannerTime) bannerTime.textContent='· '+timeAgo(draft.savedAt); }
+    return true;
+  }catch(e){ return false; }
+}
+function discardDraft(){
+  if(currentEstPinId) try{ localStorage.removeItem('biddrop_draft_'+currentEstPinId); }catch(e){}
+  const banner=document.getElementById('draft-banner');
+  if(banner) banner.style.display='none';
+  toast('Draft discarded','info');
+}
+function clearDraftBanner(){
+  const banner=document.getElementById('draft-banner');
+  if(banner) banner.style.display='none';
+}
+function _resetPriceOverride(){
+  window._priceOverrideOn = false;
+  const inp = document.getElementById('e-price-override');
+  const wrap = document.getElementById('price-override-input-wrap');
+  const btn = document.getElementById('price-override-toggle');
+  const lbl = document.getElementById('price-override-toggle-label');
+  const icon = document.getElementById('price-override-icon');
+  if(inp) inp.value='';
+  if(wrap) wrap.style.display='none';
+  if(btn){ btn.style.borderColor='rgba(255,255,255,.15)'; btn.style.color='rgba(255,255,255,.45)'; btn.style.background='none'; }
+  if(lbl) lbl.textContent='Override Price';
+  if(icon) icon.textContent='✏️';
+}
+function newEstimate(){
+  currentEstPinId = null;
+  document.getElementById('e-owner').value = '';
+  document.getElementById('e-addr').value = '';
+  document.getElementById('e-email').value = '';
+  window._damagePhotos = [];
+  clearHomePhoto(); // always wipe photo when starting fresh
+  clearDraftBanner();
+  hideEquityBadge();
+  if(typeof hideSolarBanner==='function') hideSolarBanner();
+  _resetPriceOverride();
+  structures = [{id:'s1',name:'Main House',sqft:0,stories:'1',pitch:'1.118',mat:'1.3',complexity:'1.12',pts:null}];
+  renderStructures(); calcP(); updatePreview();
+  const sel = document.getElementById('est-pin-picker');
+  if(sel) sel.value = '';
+  // Pre-fill default rep video from company settings
+  const defaultVid = (S.cfg && S.cfg.repVideoUrl) || '';
+  const vidEl = document.getElementById('e-video');
+  if(vidEl) vidEl.value = defaultVid;
+  if(defaultVid) onEstVideoUrlInput();
+  // Default expiration: 90 days from today
+  const expiresEl = document.getElementById('e-expires');
+  if(expiresEl){
+    const d90 = new Date(); d90.setDate(d90.getDate()+90);
+    expiresEl.value = d90.toISOString().split('T')[0];
+  }
+  toast('🗒 New estimate started','info');
+}
+
+function saveEstimateNow(){
+  if(!currentEstPinId){
+    toast('⚠️ No pin linked — select a pinned home from the dropdown first','warn');
+    return;
+  }
+  const pin = (S.pins||[]).find(p=>p.id===currentEstPinId);
+  if(!pin){ toast('Pin not found','error'); return; }
+  // Block duplicate address: prevent saving a new estimate for an address already saved by a different pin
+  if(!window._editingEstimateId){
+    const thisAddr = (pin.address||'').trim().toLowerCase();
+    const dupEst = (S.estimates||[]).find(e=>!e.isRevision && !e.deletedAt && e.pinId !== currentEstPinId && (e.addr||'').trim().toLowerCase() === thisAddr);
+    if(dupEst){
+      toast('⚠️ An estimate already exists for this address ('+escHtml(dupEst.addr)+'). Delete the existing one first.','error');
+      return;
+    }
+  }
+  const owner = (document.getElementById('e-owner')||{}).value.trim()||'Homeowner';
+  const email = (document.getElementById('e-email')||{}).value.trim()||'';
+  const phone = (document.getElementById('e-phone')||{}).value.trim()||'';
+  const calcTotal = (structures||[]).reduce((sum,s)=>sum+(calcStructPrice?calcStructPrice(s):0),0);
+  const overrideRaw = window._priceOverrideOn ? (parseFloat((document.getElementById('e-price-override')||{}).value)||0) : 0;
+  const total = (window._priceOverrideOn && overrideRaw > 0) ? overrideRaw : calcTotal;
+  const priceOverride = (window._priceOverrideOn && overrideRaw > 0) ? overrideRaw : null;
+  // Photo: prefer the current form state (_homePhotoData, _allPhotos.front) over the stale pin.photo_url
+  const frontFromAllPhotos = (window._allPhotos && (window._allPhotos.front||[])[0]) || null;
+  const photoUrl = (window._homePhotoData && window._homePhotoData.startsWith('http') ? window._homePhotoData : null)
+    || frontFromAllPhotos
+    || pin.photo_url || null;
+  const photoData = (window._homePhotoData && !window._homePhotoData.startsWith('http') ? window._homePhotoData : null) || null;
+  const estRecord = {
+    id: window._editingEstimateId || ('est_' + Date.now()),
+    pinId: currentEstPinId,
+    addr: pin.address || '',
+    owner, email, phone, total, priceOverride,
+    structures: (structures||[]).map(s=>({...s})),
+    photo_url: photoUrl,
+    photo_data: photoData,
+    damage_photos: (window._damagePhotos && window._damagePhotos.length) ? [...window._damagePhotos] : (pin.damage_photos && pin.damage_photos.length ? [...pin.damage_photos] : null),
+    all_photos: window._allPhotos ? JSON.parse(JSON.stringify(window._allPhotos)) : null,
+    skylight: (document.getElementById('a-sky')||{}).checked||false,
+    skylightQty: parseInt((document.getElementById('a-sky-q')||{}).value||1),
+    chimney: (document.getElementById('a-chim')||{}).checked||false,
+    gutters: (document.getElementById('a-gut')||{}).checked||false,
+    iceWaterShield: (document.getElementById('a-iws')||{}).checked||false,
+    gutterLf: parseInt((document.getElementById('a-gut-q')||{}).value||120),
+    savedAt: new Date().toISOString(),
+    sentAt: null, status: 'saved',
+    rep: pin.rep || (currentUser && currentUser.email ? currentUser.email.split('@')[0] : ''),
+    expiresAt: (document.getElementById('e-expires')||{}).value ? new Date((document.getElementById('e-expires')||{}).value).toISOString() : null,
+    repVideoUrl: (document.getElementById('e-video')||{}).value.trim() || null,
+    inspectionNote: (document.getElementById('e-insp-note')||{}).value.trim() || null
+  };
+  const editingId = window._editingEstimateId || null;
+  window._editingEstimateId = null;
+  if(editingId){
+    // Editing an existing estimate: replace it in-place but archive the old one as a revision
+    const idx = (S.estimates||[]).findIndex(e=>e.id===editingId);
+    if(idx>=0){
+      const oldRec = S.estimates[idx];
+      // Bump version and archive old as a revision sibling
+      const prevVersion = oldRec.version||1;
+      const archivedRev = {...oldRec, id:'rev_'+oldRec.id+'_v'+prevVersion, isRevision:true, revisedAt:new Date().toISOString()};
+      estRecord.version = prevVersion + 1;
+      S.estimates.splice(idx, 1, estRecord);
+      S.estimates.push(archivedRev);
+    } else {
+      S.estimates.unshift(estRecord);
+    }
+  } else {
+    // New save: mark existing active estimate for this pin as a revision
+    const existing = (S.estimates||[]).filter(e=>e.pinId===currentEstPinId && !e.isRevision && !e.deletedAt);
+    const revisedAt = new Date().toISOString();
+    existing.forEach(e=>{
+      e.isRevision=true; e.revisedAt=revisedAt;
+      // Persist revision flag to Supabase so old estimates don't reappear as active on reload
+      if(sb) sb.from('estimates').update({is_revision:true}).eq('id',e.id).then(({error})=>{
+        if(error) console.warn('[BidDrop] mark revision:', error.message);
+      });
+    });
+    const prevMax = existing.reduce((m,e)=>Math.max(m,e.version||1),0);
+    estRecord.version = prevMax + 1;
+    S.estimates.unshift(estRecord);
+  }
+  pin.estimate = { id: estRecord.id, owner, email, total, structures: estRecord.structures, rep: estRecord.rep, savedAt: estRecord.savedAt, damage_photos: estRecord.damage_photos||null };
+  pin.at_est = estRecord.savedAt;
+  // Fix F: auto-advance pin status to 'quoted' when an estimate is saved
+  if(pin.status === 'needs_roof' || !pin.status){
+    pin.status = 'quoted';
+    // Save to dedicated estimates table (primary persistence)
+    const estRow = {
+      id: estRecord.id,
+      account_id: currentAccount ? currentAccount.id : null,
+      pin_id: currentEstPinId,
+      addr: estRecord.addr,
+      owner: estRecord.owner,
+      email: estRecord.email,
+      phone: estRecord.phone || null,
+      rep: estRecord.rep,
+      total: estRecord.total,
+      price_override: estRecord.priceOverride || null,
+      structures: estRecord.structures,
+      photo_url: estRecord.photo_url || null,
+      photo_data: estRecord.photo_data || null,
+      all_photos: _allPhotosForSupabase(estRecord.all_photos),
+      damage_photos: (estRecord.damage_photos||[]).filter(s=>s&&s.startsWith('http'))||null,
+      skylight: estRecord.skylight || false,
+      skylight_qty: estRecord.skylightQty || 1,
+      chimney: estRecord.chimney || false,
+      gutters: estRecord.gutters || false,
+      ice_water_shield: estRecord.iceWaterShield || false,
+      gutter_lf: estRecord.gutterLf || 120,
+      version: estRecord.version || 1,
+      is_revision: estRecord.isRevision || false,
+      parent_id: estRecord.parentId || null,
+      saved_at: estRecord.savedAt,
+      deleted_at: null,
+      expires_at: estRecord.expiresAt || null,
+      rep_video_url: estRecord.repVideoUrl || null,
+      inspection_note: estRecord.inspectionNote || null
+    };
+    sb.from('estimates').upsert(estRow, {onConflict:'id'}).then(({error})=>{
+      if(error) console.warn('[BidDrop] Save estimate to estimates table:', error.message);
+    });
+    // Also keep pin.estimate + photos in sync on the pin row (map badge + goEstFromPin fallback)
+    sb.from('pins').update({
+      estimate: pin.estimate, status: 'quoted',
+      photo_url: estRecord.photo_url || pin.photo_url || null,
+      all_photos: _allPhotosForSupabase(estRecord.all_photos || pin.all_photos),
+      damage_photos: (estRecord.damage_photos||pin.damage_photos||[]).filter(s=>s&&s.startsWith('http'))||null,
+      updated_at: new Date().toISOString()
+    }).eq('id', currentEstPinId).then(({error})=>{
+      if(error) console.warn('Save estimate to pin:', error);
+    });
+  } else {
+    // Save to dedicated estimates table
+    const estRow2 = {
+      id: estRecord.id,
+      account_id: currentAccount ? currentAccount.id : null,
+      pin_id: currentEstPinId,
+      addr: estRecord.addr,
+      owner: estRecord.owner,
+      email: estRecord.email,
+      phone: estRecord.phone || null,
+      rep: estRecord.rep,
+      total: estRecord.total,
+      price_override: estRecord.priceOverride || null,
+      structures: estRecord.structures,
+      photo_url: estRecord.photo_url || null,
+      photo_data: estRecord.photo_data || null,
+      all_photos: _allPhotosForSupabase(estRecord.all_photos),
+      damage_photos: (estRecord.damage_photos||[]).filter(s=>s&&s.startsWith('http'))||null,
+      skylight: estRecord.skylight || false,
+      skylight_qty: estRecord.skylightQty || 1,
+      chimney: estRecord.chimney || false,
+      gutters: estRecord.gutters || false,
+      ice_water_shield: estRecord.iceWaterShield || false,
+      gutter_lf: estRecord.gutterLf || 120,
+      version: estRecord.version || 1,
+      is_revision: estRecord.isRevision || false,
+      parent_id: estRecord.parentId || null,
+      saved_at: estRecord.savedAt,
+      deleted_at: null,
+      expires_at: estRecord.expiresAt || null,
+      rep_video_url: estRecord.repVideoUrl || null,
+      inspection_note: estRecord.inspectionNote || null
+    };
+    sb.from('estimates').upsert(estRow2, {onConflict:'id'}).then(({error})=>{
+      if(error) console.warn('[BidDrop] Save estimate to estimates table:', error.message);
+    });
+    sb.from('pins').update({
+      estimate: pin.estimate,
+      photo_url: estRecord.photo_url || pin.photo_url || null,
+      all_photos: _allPhotosForSupabase(estRecord.all_photos || pin.all_photos),
+      damage_photos: (estRecord.damage_photos||pin.damage_photos||[]).filter(s=>s&&s.startsWith('http'))||null,
+      updated_at: new Date().toISOString()
+    }).eq('id', currentEstPinId).then(({error})=>{
+      if(error) console.warn('Save estimate to pin:', error);
+    });
+  }
+  // Refresh the map marker so it shows updated status and estimate badge
+  if(markers[currentEstPinId] && map){
+    if(clusterGroup) clusterGroup.removeLayer(markers[currentEstPinId]);
+    else map.removeLayer(markers[currentEstPinId]);
+    delete markers[currentEstPinId];
+  }
+  addMarker(pin);
+  // Clear draft after official save
+  try{ localStorage.removeItem('biddrop_draft_'+currentEstPinId); }catch(e){}
+  clearDraftBanner();
+  save();
+  addAct('Estimate saved for <strong>'+escHtml(pin.address||'')+'</strong> — <strong>$'+total.toLocaleString()+'</strong>','bid_sent');
+  // Auto-sync estimate total to GHL opportunity (fire-and-forget)
+  ghlUpdateOpportunityValue(pin, total).catch(e=>console.warn('GHL opp update:', e));
+  // Also upsert contact in JobNimbus with updated owner info (fire-and-forget)
+  if(pin.owner || document.getElementById('e-owner')?.value){ pin.owner = document.getElementById('e-owner')?.value||pin.owner; }
+  jnUpsertContact(pin).catch(e=>console.warn('[JN] estimate save push:', e.message));
+  toast('✅ Estimate saved!','success');
+  setTimeout(()=>{ newEstimate(); goTab('estimates'); }, 600);
+}
+function autoSaveEstimateToPin(pinId){
+  try{
+    const pin = (S.pins||[]).find(p=>p.id===pinId);
+    if(!pin) return;
+    const owner = (document.getElementById('e-owner')||{}).value||'';
+    const email = (document.getElementById('e-email')||{}).value||'';
+    const total = (structures||[]).reduce((sum,s)=>sum+(calcStructPrice?calcStructPrice(s):0),0);
+    pin.estimate = { owner, email, total, structures: (structures||[]).map(s=>({...s})) };
+    pin.at_est = new Date().toISOString();
+    sb.from('pins').update({ estimate: pin.estimate }).eq('id', pinId).then(({error})=>{
+      if(error) console.warn('Auto-save estimate:', error);
+    });
+    save();
+  }catch(e){ console.warn('autoSaveEstimateToPin error:', e); }
+}
+
+function togglePinPanel(){
+  const p=document.getElementById('map-panel');
+  p.classList.toggle('open');
+  document.getElementById('fab-pins').textContent=p.classList.contains('open')?'✕':'📍';
+}
+
+function toggleMailPreview(){
+  const p=document.getElementById('est-preview');
+  const showing=p.classList.contains('mobile-show');
+  p.classList.toggle('mobile-show',!showing);
+  document.querySelector('.btn-preview-toggle').textContent=showing?'👁 Preview Mailer':'✕ Hide Preview';
+  if(!showing) setTimeout(()=>p.scrollIntoView({behavior:'smooth',block:'start'}),80);
+}
+
