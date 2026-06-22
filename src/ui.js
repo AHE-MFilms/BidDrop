@@ -1,7 +1,7 @@
 // BidDrop — UI helpers: modals, toast, date formatting, role/plan checks
 // Depends on: state.js (S, currentProfile, currentAccount)
 
-M(id){document.getElementById(id).style.display='flex';}
+function openM(id){document.getElementById(id).style.display='flex';}
 function closeM(id){
   const el=document.getElementById(id);
   if(!el) return;

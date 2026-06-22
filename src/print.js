@@ -149,3 +149,18 @@ function applyRoleUI(){
   // Update user badge
   const badge = document.getElementById('user-badge');
   if(badge && currentProfile){
+    badge.textContent = (currentProfile.name||currentProfile.email||'User').split(' ')[0];
+    badge.title = currentProfile.role.replace('_',' ').toUpperCase();
+  }
+  // Sync hamburger nav menu visibility
+  if(typeof syncNavRoleUI === 'function') syncNavRoleUI();
+  // Plan-based UI gates
+  applyPlanUI();
+}
+function applyPlanUI(){
+  // Estimate Page Settings section — Pro+ only
+  const epBadge = document.getElementById('estimate-page-plan-badge');
+  if(epBadge) epBadge.style.display = isPlanAtLeast('pro') ? 'none' : 'inline-block';
+  const epSection = document.getElementById('estimate-page-settings-section');
+  if(epSection) epSection.style.opacity = isPlanAtLeast('pro') ? '1' : '0.5';
+}

@@ -508,4 +508,3 @@ ${forPrint?'<script>window.onload=function(){setTimeout(function(){window.print(
 </body>
 </html>`;
 }
-<
