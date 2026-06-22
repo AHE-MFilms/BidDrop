@@ -511,8 +511,9 @@ tr:hover td{background:var(--card);}
   .logo{flex-shrink:0;}
   #ahe-logo-wrap{display:none;}
   .bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--panel);border-top:1px solid var(--border);z-index:2000;height:62px;padding-bottom:env(safe-area-inset-bottom);}
-  .bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;color:var(--muted);cursor:pointer;font-family:var(--font-b);font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;transition:color .15s;-webkit-tap-highlight-color:transparent;}
-  .bnav-btn .bicon{font-size:22px;line-height:1;}
+  .bnav-btn{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:none;border:none;color:var(--muted);cursor:pointer;font-family:var(--font-b);font-size:8px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;transition:color .15s;-webkit-tap-highlight-color:transparent;padding:0 2px;}
+  .bnav-btn span:not(.bicon){display:block;width:100%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.2;}
+  .bnav-btn .bicon{font-size:20px;line-height:1;flex-shrink:0;}
   .bnav-btn.active{color:var(--accent);}
   .main{padding-bottom:62px;}
   #tab-map{flex-direction:column;position:relative;}
@@ -960,9 +961,11 @@ tr:hover td{background:var(--card);}
   <!-- CAMPAIGNS -->
   <div class="bd-sb-divider"></div>
   <div class="bd-sb-section">Campaigns</div>
+  <button class="bd-snav-item" onclick="goTab('campaigns')" data-nav="campaigns"><span class="bd-snav-icon">📣</span><span class="bd-snav-label">Campaigns</span></button>
   <button class="bd-snav-item" onclick="goTab('mailqueue')" data-nav="mailqueue"><span class="bd-snav-icon">📬</span><span class="bd-snav-label">Mail Queue</span><span class="bd-snav-badge" id="bd-sb-queue-badge" style="display:none;">0</span></button>
   <button class="bd-snav-item" onclick="goTab('history')" data-nav="history"><span class="bd-snav-icon">📑</span><span class="bd-snav-label">Mail History</span></button>
   <button class="bd-snav-item" onclick="goTab('hotleads')" data-nav="hotleads" id="bd-sb-hotleads-item"><span class="bd-snav-icon">🔥</span><span class="bd-snav-label">Hot Leads</span></button>
+  <button class="bd-snav-item" onclick="goTab('contacts')" data-nav="contacts"><span class="bd-snav-icon">📒</span><span class="bd-snav-label">Lists &amp; Contacts</span></button>
 
   <!-- INTELLIGENCE -->
   <div class="bd-sb-divider"></div>
@@ -2107,6 +2110,105 @@ tr:hover td{background:var(--card);}
     </div>
     <div class="dash-card" style="padding:0;overflow:hidden;"><div id="hl-list" style="min-height:200px;"></div></div>
   </div>
+  <!-- LISTS & CONTACTS TAB -->
+  <div class="tab-pane" id="tab-contacts" style="flex-direction:column;overflow-y:auto;padding:24px 28px;gap:16px;">
+    <!-- Page Header -->
+    <div class="dash-page-hdr">
+      <div>
+        <div class="dash-page-title">📒 Lists &amp; Contacts</div>
+        <div class="dash-page-sub">All pinned homeowners — search, filter, and push to GHL</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button id="contacts-ghl-bulk-btn" onclick="contactsBulkGHL()" style="display:none;background:var(--accent);border:none;border-radius:7px;padding:8px 16px;color:#fff;font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">⬆ Push Selected to GHL</button>
+        <button onclick="renderContacts()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 14px;color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">↻ Refresh</button>
+      </div>
+    </div>
+    <!-- Filters + Search -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+      <input id="contacts-search" type="text" placeholder="🔍 Search name or address..." oninput="renderContacts()" style="flex:1;min-width:200px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:9px 14px;color:var(--text);font-family:var(--font-b);font-size:12px;outline:none;">
+      <select id="contacts-status-filter" onchange="renderContacts()" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:var(--font-b);font-size:11px;cursor:pointer;">
+        <option value="">All Statuses</option>
+        <option value="pipeline">Pipeline</option>
+        <option value="needs_roof">Needs Roof</option>
+        <option value="interested">Interested</option>
+        <option value="quoted">Quoted</option>
+        <option value="signed">Signed</option>
+        <option value="converted">Converted</option>
+        <option value="not_interested">Not Interested</option>
+        <option value="archive">Archive</option>
+      </select>
+      <select id="contacts-ghl-filter" onchange="renderContacts()" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:var(--font-b);font-size:11px;cursor:pointer;">
+        <option value="">All GHL Status</option>
+        <option value="synced">Synced to GHL</option>
+        <option value="unsynced">Not in GHL</option>
+      </select>
+      <select id="contacts-rep-filter" onchange="renderContacts()" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:var(--font-b);font-size:11px;cursor:pointer;">
+        <option value="">All Reps</option>
+      </select>
+    </div>
+    <!-- Stats strip -->
+    <div id="contacts-stats" style="display:flex;gap:12px;flex-wrap:wrap;"></div>
+    <!-- Bulk select bar -->
+    <div id="contacts-bulk-bar" style="display:none;background:var(--card2);border:1px solid var(--accent);border-radius:8px;padding:10px 16px;display:none;align-items:center;gap:12px;">
+      <input type="checkbox" id="contacts-select-all" onchange="contactsToggleAll(this.checked)" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;">
+      <span id="contacts-selected-count" style="font-size:12px;font-weight:700;color:var(--text);">0 selected</span>
+      <button onclick="contactsBulkGHL()" style="background:var(--accent);border:none;border-radius:6px;padding:6px 14px;color:#fff;font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">⬆ Push to GHL</button>
+      <button onclick="contactsBulkAddToQueue()" style="background:#0e7490;border:none;border-radius:6px;padding:6px 14px;color:#fff;font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">📬 Add to Mail Queue</button>
+      <button onclick="contactsDeselectAll()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 12px;color:var(--muted);font-family:var(--font-b);font-size:11px;cursor:pointer;">Clear</button>
+    </div>
+    <!-- Contacts Table -->
+    <div class="dash-card" style="padding:0;overflow:hidden;">
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;" id="contacts-table">
+          <thead>
+            <tr style="border-bottom:2px solid var(--border);">
+              <th style="padding:12px 14px;width:36px;"><input type="checkbox" id="contacts-hdr-cb" onchange="contactsToggleAll(this.checked)" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer;"></th>
+              <th style="padding:12px 14px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);text-align:left;">Homeowner</th>
+              <th style="padding:12px 14px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);text-align:left;">Address</th>
+              <th style="padding:12px 14px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);text-align:left;">Status</th>
+              <th style="padding:12px 14px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);text-align:left;">Rep</th>
+              <th style="padding:12px 14px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);text-align:left;">Trades</th>
+              <th style="padding:12px 14px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);text-align:left;">GHL</th>
+              <th style="padding:12px 14px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);text-align:left;">Pinned</th>
+              <th style="padding:12px 14px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);text-align:left;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="contacts-tbody"></tbody>
+        </table>
+        <div id="contacts-empty" style="display:none;text-align:center;padding:48px;color:var(--muted);font-size:13px;">No contacts found. Drop some pins on the map to get started.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAMPAIGNS TAB -->
+  <div class="tab-pane" id="tab-campaigns" style="flex-direction:column;overflow-y:auto;padding:24px 28px;gap:16px;">
+    <div class="dash-page-hdr">
+      <div>
+        <div class="dash-page-title">📣 Campaigns</div>
+        <div class="dash-page-sub">Manage and track your active canvass campaigns</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="loadCampaignsTab()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 14px;color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">↻ Refresh</button>
+        <button onclick="goTab('map')" style="background:var(--accent);border:none;border-radius:7px;padding:8px 16px;color:#fff;font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">+ New Campaign</button>
+      </div>
+    </div>
+    <!-- Campaign stats strip -->
+    <div id="campaigns-stats" style="display:flex;gap:12px;flex-wrap:wrap;"></div>
+    <!-- Active campaigns list -->
+    <div class="dash-card" style="padding:0;overflow:hidden;">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:12px;font-weight:700;color:var(--text);letter-spacing:.3px;">ACTIVE CAMPAIGNS</div>
+        <select id="campaigns-status-filter" onchange="loadCampaignsTab()" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--text);font-size:11px;cursor:pointer;">
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="completed">Completed</option>
+          <option value="paused">Paused</option>
+        </select>
+      </div>
+      <div id="campaigns-list"><div style="padding:40px;text-align:center;color:var(--muted);font-size:13px;">Loading campaigns…</div></div>
+    </div>
+  </div>
+
   <!-- ANALYTICS TAB -->
   <div class="tab-pane" id="tab-analytics" style="flex-direction:column;overflow-y:auto;padding:22px;gap:16px;">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
@@ -6078,8 +6180,8 @@ async function savePin_withOffline(pin){
     return;
   }
   await sbSavePin(pin);
-  // Auto-push to JobNimbus (fire-and-forget, never blocks)
-  jnUpsertContact(pin).catch(e=>console.warn("[JN] auto-push error:", e.message));
+  // JobNimbus push is now MANUAL — triggered from pin popup or Lists & Contacts
+  // jnUpsertContact(pin) removed from auto-save flow
 }
 
 function renderActFeed(){
@@ -6942,6 +7044,215 @@ function updateSidebarBadge(){
   }
 }
 // ══════════════════════════════════════════════════════════
+
+// -- LISTS & CONTACTS ---------------------------------------------------------
+let _contactsSelected = new Set();
+
+function renderContacts(){
+  const search = (document.getElementById('contacts-search')||{}).value||'';
+  const statusF = (document.getElementById('contacts-status-filter')||{}).value||'';
+  const ghlF = (document.getElementById('contacts-ghl-filter')||{}).value||'';
+  const repF = (document.getElementById('contacts-rep-filter')||{}).value||'';
+  const repSel = document.getElementById('contacts-rep-filter');
+  if(repSel){
+    const reps = [...new Set(S.pins.map(p=>p.rep||'').filter(Boolean))].sort();
+    const cur = repSel.value;
+    repSel.innerHTML = '<option value="">All Reps</option>' + reps.map(r=>`<option value="${r}"${r===cur?' selected':''}>${r}</option>`).join('');
+  }
+  let pins = S.pins.filter(p=>!p.deleted_at);
+  if(search){ const q=search.toLowerCase(); pins=pins.filter(p=>(p.address||'').toLowerCase().includes(q)||(p.owner||(p.estimate&&p.estimate.owner)||'').toLowerCase().includes(q)||(p.rep||'').toLowerCase().includes(q)); }
+  if(statusF) pins=pins.filter(p=>(p.status||'pipeline')===statusF);
+  if(ghlF==='synced') pins=pins.filter(p=>p.ghlContactId);
+  if(ghlF==='unsynced') pins=pins.filter(p=>!p.ghlContactId);
+  if(repF) pins=pins.filter(p=>p.rep===repF);
+  pins=pins.slice().sort((a,b)=>{ const ta=a.createdAt||a.at||0,tb=b.createdAt||b.at||0; return tb>ta?1:tb<ta?-1:0; });
+  const statsEl=document.getElementById('contacts-stats');
+  if(statsEl){
+    const total=S.pins.filter(p=>!p.deleted_at).length;
+    const synced=S.pins.filter(p=>!p.deleted_at&&p.ghlContactId).length;
+    const withEst=S.pins.filter(p=>!p.deleted_at&&p.estimate&&Object.keys(p.estimate).length>0).length;
+    statsEl.innerHTML=[{label:'Total Contacts',val:total,color:'var(--accent)'},{label:'Synced to GHL',val:synced,color:'#22C55E'},{label:'Have Estimates',val:withEst,color:'#3B82F6'},{label:'Showing',val:pins.length,color:'var(--mid)'}].map(s=>`<div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 18px;display:flex;flex-direction:column;gap:2px;"><div style="font-size:20px;font-weight:800;color:${s.color};font-family:var(--font-h);">${s.val}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">${s.label}</div></div>`).join('');
+  }
+  const tbody=document.getElementById('contacts-tbody');
+  const emptyEl=document.getElementById('contacts-empty');
+  if(!tbody) return;
+  if(!pins.length){ tbody.innerHTML=''; if(emptyEl) emptyEl.style.display='block'; return; }
+  if(emptyEl) emptyEl.style.display='none';
+  const TC={roofing:'#F25C05',solar:'#22C55E',fencing:'#A78BFA',siding:'#60A5FA',gutters:'#38BDF8',insulation:'#FB923C',paint:'#F472B6',doors:'#FBBF24',windows:'#67E8F9'};
+  const TL={roofing:'Roof',solar:'Solar',fencing:'Fence',siding:'Siding',gutters:'Gutters',insulation:'Insul',paint:'Paint',doors:'Doors',windows:'Win'};
+  tbody.innerHTML=pins.map(p=>{
+    const pid=p.id;
+    const name=(p.owner||(p.estimate&&p.estimate.owner)||'').replace(/[<>&'"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;',"'":'&#39;','"':'&quot;'}[c]))||'&mdash;';
+    const addr=(p.address||'').replace(/[<>&'"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;',"'":'&#39;','"':'&quot;'}[c]))||'&mdash;';
+    const status=p.status||'pipeline';
+    const sc=sColor(status); const sl=sLabel(status)||status;
+    const rep=(p.rep||'&mdash;');
+    const trades=(p.interested_trades||[]).slice(0,3).map(t=>`<span style="padding:1px 6px;border-radius:8px;border:1px solid ${TC[t]||'#96B0C8'};color:${TC[t]||'#96B0C8'};font-size:9px;font-weight:700;white-space:nowrap;">${TL[t]||t}</span>`).join(' ');
+    const ghlBadge=p.ghlContactId?`<span style="color:#4ade80;font-size:10px;font-weight:700;">&#10003; Synced</span>`:`<span style="color:var(--muted);font-size:10px;">&mdash;</span>`;
+    const pinDate=(p.createdAt||p.at)?new Date(p.createdAt||p.at).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'&mdash;';
+    const chk=_contactsSelected.has(pid)?'checked':'';
+    const ghlBtn=(S.cfg&&S.cfg.ghlLocationId)?`<button onclick="ghlPushPin('${pid}')" style="background:${p.ghlContactId?'rgba(34,197,94,.1)':'var(--card2)'};border:1px solid ${p.ghlContactId?'#22c55e':'var(--border)'};border-radius:5px;padding:4px 8px;color:${p.ghlContactId?'#4ade80':'var(--mid)'};font-size:10px;font-weight:700;cursor:pointer;">${p.ghlContactId?'&#10003; GHL':'&uarr; GHL'}</button>`:'';
+    return `<tr style="border-bottom:1px solid var(--border);" onmouseenter="this.style.background='var(--card2)'" onmouseleave="this.style.background=''"><td style="padding:11px 14px;"><input type="checkbox" data-pid="${pid}" onchange="contactsRowCheck(this,'${pid}')" ${chk} style="width:14px;height:14px;accent-color:var(--accent);cursor:pointer;"></td><td style="padding:11px 14px;font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;">${name}</td><td style="padding:11px 14px;font-size:11px;color:var(--mid);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${addr}</td><td style="padding:11px 14px;"><span style="background:${sc};color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:5px;">${sl}</span></td><td style="padding:11px 14px;font-size:11px;color:var(--mid);">${rep}</td><td style="padding:11px 14px;min-width:80px;">${trades||'<span style="color:var(--muted);font-size:10px;">&mdash;</span>'}</td><td style="padding:11px 14px;">${ghlBadge}</td><td style="padding:11px 14px;font-size:11px;color:var(--muted);">${pinDate}</td><td style="padding:11px 14px;"><div style="display:flex;gap:6px;"><button onclick="goTab('map');setTimeout(()=>selectPinById('${pid}'),300)" style="background:var(--card2);border:1px solid var(--border);border-radius:5px;padding:4px 8px;color:var(--mid);font-size:10px;font-weight:700;cursor:pointer;">Map</button><button onclick="goEstFromPin('${pid}')" style="background:var(--card2);border:1px solid var(--border);border-radius:5px;padding:4px 8px;color:var(--mid);font-size:10px;font-weight:700;cursor:pointer;">Est</button>${ghlBtn}</div></td></tr>`;
+  }).join('');
+  _updateContactsBulkBar();
+}
+function contactsRowCheck(cb,pid){ if(cb.checked) _contactsSelected.add(pid); else _contactsSelected.delete(pid); _updateContactsBulkBar(); }
+function contactsToggleAll(checked){ const cbs=document.querySelectorAll('#contacts-tbody input[type=checkbox]'); cbs.forEach(cb=>{ cb.checked=checked; if(checked) _contactsSelected.add(cb.dataset.pid); else _contactsSelected.delete(cb.dataset.pid); }); const h=document.getElementById('contacts-hdr-cb'); if(h) h.checked=checked; _updateContactsBulkBar(); }
+function contactsDeselectAll(){ _contactsSelected.clear(); contactsToggleAll(false); }
+function _updateContactsBulkBar(){ const bar=document.getElementById('contacts-bulk-bar'),n=_contactsSelected.size; if(bar) bar.style.display=n>0?'flex':'none'; const c=document.getElementById('contacts-selected-count'); if(c) c.textContent=n+' selected'; }
+async function contactsBulkGHL(){ if(!_contactsSelected.size){toast('Select contacts first','info');return;} if(!S.cfg||!S.cfg.ghlLocationId){toast('GHL not configured','info');return;} const ids=[..._contactsSelected]; toast('Pushing '+ids.length+' to GHL...','info'); let ok=0,fail=0; for(const pid of ids){ try{await ghlPushPin(pid);ok++;}catch(e){fail++;} } toast('GHL: '+ok+' synced'+(fail?' \u00b7 '+fail+' failed':''),'success'); renderContacts(); }
+function contactsBulkAddToQueue(){ if(!_contactsSelected.size){toast('Select contacts first','info');return;} const ids=[..._contactsSelected]; let added=0; for(const pid of ids){ const pin=S.pins.find(p=>p.id===pid); if(!pin) continue; const already=S.queue&&S.queue.find(q=>q.pinId===pid||q.pin_id===pid); if(already) continue; if(typeof addToMailQueue==='function') addToMailQueue(pin,{status:'needs_approval',source:'contacts'}); added++; } toast(added>0?added+' added to Mail Queue':'Already in queue','success'); contactsDeselectAll(); }
+(function(){ const _orig=window.goTab; if(typeof _orig==='function'){ window.goTab=function(t){ _orig(t); if(t==='contacts') setTimeout(renderContacts,50); }; } })();
+// -- END LISTS & CONTACTS -----------------------------------------------------
+
+
+// -- CAMPAIGNS TAB ------------------------------------------------------------
+async function loadCampaignsTab(){
+  const listEl = document.getElementById('campaigns-list');
+  const statsEl = document.getElementById('campaigns-stats');
+  const statusF = (document.getElementById('campaigns-status-filter')||{}).value||'';
+  if(listEl) listEl.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px;">Loading\u2026</div>';
+  try{
+    const data = await adminAPI('campaign-list', {});
+    let campaigns = (data && data.campaigns) || [];
+    if(statusF) campaigns = campaigns.filter(c=>c.status===statusF);
+    campaigns.sort((a,b)=> new Date(b.campaign_date) - new Date(a.campaign_date));
+
+    // Stats strip
+    if(statsEl){
+      const total = campaigns.length;
+      const active = campaigns.filter(c=>c.status==='active').length;
+      const totalHomes = campaigns.reduce((s,c)=>s+(c.home_count||0),0);
+      const totalCards = campaigns.reduce((s,c)=>s+(c.postcards_sent||0),0);
+      statsEl.innerHTML = [
+        {label:'Total Campaigns',val:total,color:'var(--accent)'},
+        {label:'Active',val:active,color:'#22C55E'},
+        {label:'Homes Targeted',val:totalHomes,color:'#3B82F6'},
+        {label:'Postcards Sent',val:totalCards,color:'#F59E0B'},
+      ].map(s=>`<div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 18px;display:flex;flex-direction:column;gap:2px;"><div style="font-size:20px;font-weight:800;color:${s.color};font-family:var(--font-h);">${s.val}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">${s.label}</div></div>`).join('');
+    }
+
+    if(!campaigns.length){
+      if(listEl) listEl.innerHTML = '<div style="padding:48px;text-align:center;color:var(--muted);font-size:13px;">No campaigns yet.<br><br><button onclick="goTab(\'map\')" style="background:var(--accent);border:none;border-radius:8px;padding:10px 20px;color:#fff;font-family:var(--font-b);font-size:12px;font-weight:700;cursor:pointer;margin-top:8px;">Go to Map to Launch One</button></div>';
+      return;
+    }
+
+    const rows = campaigns.map(function(c){
+      const d = new Date(c.campaign_date);
+      const dateStr = d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      const statusColor = c.status==='active'?'var(--accent)':c.status==='completed'?'#22C55E':'var(--muted)';
+      const pct = c.home_count ? Math.round((c.postcards_sent||0)/c.home_count*100) : 0;
+      const barW = Math.min(pct,100);
+      return `<div style="padding:16px 20px;border-bottom:1px solid var(--border);">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:200px;">
+            <div style="font-weight:700;color:var(--text);font-size:13px;margin-bottom:3px;">&#128205; ${escHtml(c.source_address||'Unknown address')}</div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">${dateStr} &middot; ${escHtml(c.rep_email||'')} &middot; <strong style="color:var(--text);">${c.home_count||0} homes</strong></div>
+            <div style="display:flex;gap:16px;font-size:11px;flex-wrap:wrap;">
+              <span style="color:#3B82F6;">&#8679; ${c.ghl_pushed||0} to GHL</span>
+              <span style="color:#F59E0B;">&#128236; ${c.postcards_sent||0} postcards</span>
+              <span style="color:var(--muted);">&#128203; ${(c.pin_ids||[]).length} pins</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+            <span style="background:rgba(242,92,5,.1);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;color:${statusColor};text-transform:uppercase;letter-spacing:.5px;">${c.status||'active'}</span>
+            <div style="display:flex;gap:6px;">
+              <button onclick="campaignViewPins('${escHtml(c.id)}')" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--mid);font-size:10px;font-weight:700;cursor:pointer;">View Pins</button>
+              <button onclick="campaignAddToQueue('${escHtml(c.id)}')" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--mid);font-size:10px;font-weight:700;cursor:pointer;">&#128236; Queue Mail</button>
+            </div>
+          </div>
+        </div>
+        ${c.home_count>0?`<div style="margin-top:10px;"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:4px;"><span>Postcard coverage</span><span>${pct}%</span></div><div style="background:var(--card2);border-radius:4px;height:5px;overflow:hidden;"><div style="background:var(--accent);height:100%;width:${barW}%;border-radius:4px;transition:width .3s;"></div></div></div>`:''}
+      </div>`;
+    }).join('');
+    if(listEl) listEl.innerHTML = rows;
+  } catch(e){
+    if(listEl) listEl.innerHTML = '<div style="padding:40px;text-align:center;color:var(--danger);font-size:13px;">Failed to load campaigns: '+escHtml(e.message||String(e))+'</div>';
+  }
+}
+
+function campaignViewPins(campaignId){
+  // Switch to map and highlight campaign pins
+  goTab('map');
+  setTimeout(function(){
+    const campPins = S.pins.filter(p=>p.campaign_id===campaignId && !p.deleted_at);
+    if(!campPins.length){ toast('No pins found for this campaign','info'); return; }
+    // Highlight pins on map
+    campPins.forEach(function(p){
+      const m = markers[p.id];
+      if(m && m._icon){
+        m._icon.style.filter = 'drop-shadow(0 0 8px #F25C05) brightness(1.4)';
+      }
+    });
+    // Fit map to campaign pins
+    if(typeof map !== 'undefined' && campPins.length){
+      const lats = campPins.map(p=>p.lat), lngs = campPins.map(p=>p.lng);
+      const bounds = [[Math.min(...lats),Math.min(...lngs)],[Math.max(...lats),Math.max(...lngs)]];
+      try{ map.fitBounds(bounds, {padding:[40,40]}); }catch(e){}
+    }
+    toast('Showing '+campPins.length+' campaign pins on map','success');
+  }, 300);
+}
+
+function campaignAddToQueue(campaignId){
+  const campPins = S.pins.filter(p=>p.campaign_id===campaignId && !p.deleted_at);
+  if(!campPins.length){ toast('No pins for this campaign','info'); return; }
+  let added = 0;
+  campPins.forEach(function(pin){
+    const already = S.queue && S.queue.find(q=>q.pinId===pin.id||q.pin_id===pin.id);
+    if(already) return;
+    if(typeof addToMailQueue==='function') addToMailQueue(pin,{status:'needs_approval',source:'campaign',campaign_id:campaignId});
+    added++;
+  });
+  toast(added>0?added+' homes added to Mail Queue (pending approval)':'All already in queue','success');
+}
+
+// Patch goTab to load campaigns when tab is opened
+(function(){
+  const _orig = window.goTab;
+  if(typeof _orig==='function'){
+    window.goTab = function(t){
+      _orig(t);
+      if(t==='campaigns') setTimeout(loadCampaignsTab, 50);
+    };
+  }
+})();
+// -- END CAMPAIGNS TAB --------------------------------------------------------
+
+
+// -- QUEUE APPROVAL FLOW ------------------------------------------------------
+function approveQueueItem(id){
+  const item = S.queue.find(x=>x.id===id);
+  if(!item){ toast('Queue item not found','error'); return; }
+  item.status = 'approved';
+  item.approvedAt = new Date().toISOString();
+  item.approvedBy = (window.currentUser && window.currentUser.email) || 'admin';
+  save();
+  sbSaveQueueItem(item).catch(e=>console.warn('Queue save:',e));
+  addAct('Mail queue item approved for <strong>'+escHtml(item.addr||item.owner)+'</strong>','bid_sent');
+  renderQueue();
+  toast('\u2713 Approved \u2014 ready to send postcard','success');
+}
+
+function bulkApproveQueue(){
+  const checked = document.querySelectorAll('.q-row-cb:checked');
+  if(!checked.length){ toast('Select items to approve','info'); return; }
+  let count = 0;
+  checked.forEach(function(cb){
+    const item = S.queue.find(x=>x.id===cb.dataset.id);
+    if(item && item.status==='needs_approval'){
+      item.status='approved';
+      item.approvedAt=new Date().toISOString();
+      item.approvedBy=(window.currentUser&&window.currentUser.email)||'admin';
+      sbSaveQueueItem(item).catch(e=>console.warn('Queue save:',e));
+      count++;
+    }
+  });
+  save(); renderQueue();
+  toast(count>0?count+' item'+(count>1?'s':'')+' approved':'No items needed approval','success');
+}
+// -- END QUEUE APPROVAL FLOW --------------------------------------------------
+
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════════════════

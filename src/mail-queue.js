@@ -800,8 +800,8 @@ function renderQueue(){
         i.mat = mm[ms.material] || ms.material || i.mat;
       }
     }
-    const sc={pending:'#F59E0B',sent:'#22C55E',failed:'#EF4444'}[i.status]||'#3D5269';
-    const sl={pending:'Pending',sent:'Mailed ✓',failed:'Failed'}[i.status]||i.status;
+    const sc={pending:'#F59E0B',sent:'#22C55E',failed:'#EF4444',needs_approval:'#A78BFA',approved:'#38BDF8'}[i.status]||'#3D5269';
+    const sl={pending:'Pending',sent:'Mailed \u2713',failed:'Failed',needs_approval:'Needs Approval',approved:'Approved'}[i.status]||i.status;
     const qid = i.id;
     return '<tr>'+
       '<td style="text-align:center;"><input type="checkbox" class="q-row-cb" data-id="'+escHtml(qid)+'" onchange="updateQueueBulkBar()" style="cursor:pointer;width:16px;height:16px;accent-color:var(--accent);"></td>'+
@@ -813,9 +813,9 @@ function renderQueue(){
       '<td><span class="spill" style="background:'+sc+'22;color:'+sc+';border:1px solid '+sc+'44;">'+sl+'</span></td>'+
       '<td style="display:flex;gap:5px;align-items:center;">'+
 
-      (i.status==='pending' && S.cfg.enablePostcard!==false?'<button class="btn-xs" onclick="openSendPostcardModal(\''+qid+'\')" style="background:#0e7490;border-color:#0e7490;color:#fff;" title="Send postcard — choose single or Follow-Up Blitz">📬 Send Postcard</button>':'')+
+      (i.status==='needs_approval'?'<button class="btn-xs" onclick="approveQueueItem(\''+qid+'\')" style="background:#7C3AED;border-color:#7C3AED;color:#fff;">\u2713 Approve</button>':'')+
+      ((i.status==='pending'||i.status==='approved') && S.cfg.enablePostcard!==false?'<button class="btn-xs" onclick="openSendPostcardModal(\''+qid+'\')" style="background:#0e7490;border-color:#0e7490;color:#fff;" title="Send postcard">\ud83d\udcec Send Postcard</button>':'')+
       (i.status==='sent'?'<span style="font-size:10px;color:var(--muted);">'+fmtDate(i.mailedAt)+'</span>':'')+
-
       (i.status==='failed' && S.cfg.enablePostcard!==false?'<button class="btn-xs" onclick="sendLobPostcard6x9(\''+qid+'\')" style="background:#0e7490;border-color:#0e7490;color:#fff;">Retry Card</button>':'')+
       (i.status==='pending'?'<button class="btn-xs" onclick="editEstimate(\''+qid+'\')">✏️ Edit</button>':'')+
       '<button class="btn-xs" onclick="previewQueueItem(\''+qid+'\')"">Preview Letter</button>'+
