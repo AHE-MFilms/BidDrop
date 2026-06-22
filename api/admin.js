@@ -113,6 +113,59 @@ module.exports = async function handler(req, res) {
   try {
     switch (action) {
 
+      // ── Invite a rep (admin or super_admin) — creates auth user + profile + sends email ──
+      case 'invite-rep': {
+        if (!isAdmin) { res.status(403).json({ error: 'Admins only' }); return; }
+        const { email: invEmail, name: invName, role: invRole } = req.body;
+        if (!invEmail || !invName) { res.status(400).json({ error: 'email and name required' }); return; }
+        const repRole = ['rep', 'admin'].includes(invRole) ? invRole : 'rep';
+        // Check plan rep limit
+        const PLAN_MAX_REPS_INV = { starter: 1, pro: 3, agency: 10, enterprise: 999 };
+        const acctRespInv = await sbFetch(`accounts?id=eq.${profile.account_id}&select=plan,company_name`);
+        const acctsInv = acctRespInv.ok ? await acctRespInv.json() : [];
+        const acctInv = acctsInv[0] || {};
+        const maxRepsInv = PLAN_MAX_REPS_INV[acctInv.plan] ?? 1;
+        if (maxRepsInv !== 999) {
+          const repCountResp = await sbFetch(`user_profiles?account_id=eq.${profile.account_id}&select=id`);
+          const repRows = repCountResp.ok ? await repCountResp.json() : [];
+          if (repRows.length >= maxRepsInv) {
+            res.status(403).json({ error: `Your ${acctInv.plan || 'current'} plan allows up to ${maxRepsInv} team member(s). Upgrade to add more reps.` }); return;
+          }
+        }
+        // Generate temp password
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        let tempPw = '';
+        for (let i = 0; i < 8; i++) tempPw += chars[Math.floor(Math.random() * chars.length)];
+        // Create Supabase auth user
+        const authRespInv = await fetch(`${SUPABASE_URL}/auth/v1/admin/users`, {
+          method: 'POST',
+          headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: invEmail, password: tempPw, email_confirm: true, user_metadata: { name: invName } })
+        });
+        const authDataInv = await authRespInv.json();
+        if (!authRespInv.ok) { res.status(authRespInv.status).json({ error: authDataInv.message || 'Failed to create user' }); return; }
+        const newUserId = authDataInv.id;
+        // Create user_profiles row
+        await fetch(`${SUPABASE_URL}/rest/v1/user_profiles`, {
+          method: 'POST',
+          headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ id: newUserId, account_id: profile.account_id, role: repRole, name: invName, email: invEmail, must_change_password: true })
+        }).catch(e => console.error('[invite-rep] profile insert error:', e));
+        // Send invite email via Resend
+        const invLoginUrl = (process.env.APP_URL || 'https://biddrop.americashomeexperts.com').trim();
+        const invEmailHtml = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;color:#111"><div style="background:#111;padding:28px 32px;border-radius:10px 10px 0 0"><span style="font-size:26px;font-weight:900;color:#fff">Bid<span style="color:#F97316">Drop</span></span></div><div style="padding:36px 32px;border:1px solid #e5e5e5;border-top:none;border-radius:0 0 10px 10px"><h1 style="font-size:24px;font-weight:800;margin:0 0 12px">You've been added to ${acctInv.company_name || 'BidDrop'} &#127881;</h1><p style="font-size:15px;color:#333;line-height:1.6;margin:0 0 24px">You've been invited to join the BidDrop team for <strong>${acctInv.company_name || 'your company'}</strong> as a <strong>${repRole === 'admin' ? 'Team Admin' : 'Field Rep'}</strong>.</p><div style="background:#f8f8f8;border:1px solid #e0e0e0;border-left:4px solid #F97316;border-radius:8px;padding:24px;margin-bottom:24px"><p style="font-size:12px;color:#666;margin:0 0 14px;text-transform:uppercase;letter-spacing:1px;font-weight:700">Your Login Credentials</p><p style="margin:0 0 10px;font-size:15px"><strong>Email:</strong> ${invEmail}</p><p style="margin:0 0 10px;font-size:15px"><strong>Temp Password:</strong> <span style="color:#F97316;font-size:20px;font-weight:800;letter-spacing:1px">${tempPw}</span></p><p style="font-size:13px;color:#666;margin:12px 0 0">You'll be prompted to change your password after logging in.</p></div><a href="${invLoginUrl}" style="display:block;background:#F97316;color:#fff;text-decoration:none;text-align:center;padding:16px 24px;border-radius:8px;font-size:17px;font-weight:800;margin-bottom:24px">Log In to BidDrop &#8594;</a><p style="font-size:12px;color:#999;border-top:1px solid #eee;padding-top:16px;margin:0">For help, contact <a href="mailto:support@biddrop.io" style="color:#F97316">support@biddrop.io</a></p></div></div>`;
+        const resendKeyInv = process.env.RESEND_API_KEY;
+        if (resendKeyInv) {
+          await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${resendKeyInv}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ from: 'BidDrop <noreply@biddrop.io>', to: [invEmail], subject: `You've been added to ${acctInv.company_name || 'BidDrop'} on BidDrop`, html: invEmailHtml })
+          }).catch(e => console.error('[invite-rep] email send error:', e));
+        }
+        res.status(200).json({ success: true, userId: newUserId, tempPassword: tempPw });
+        break;
+      }
+
       // ── Create Supabase auth user (super_admin or admin) ──────────────────
       case 'create-user': {
         if (!isAdmin) { res.status(403).json({ error: 'Admins only' }); return; }

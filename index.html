@@ -2456,6 +2456,7 @@ tr:hover td{background:var(--card);}
       <div style="display:flex;gap:8px;align-items:center;">
         <select id="an-period" onchange="loadAnalytics()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-size:12px;cursor:pointer;"><option value="7">Last 7 Days</option><option value="30" selected>Last 30 Days</option><option value="90">Last 90 Days</option><option value="all">All Time</option></select>
         <button onclick="loadAnalytics()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 12px;color:var(--text);font-size:12px;cursor:pointer;">↻ Refresh</button>
+        <button onclick="exportAnalyticsCSV()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 12px;color:var(--text);font-size:12px;cursor:pointer;">⬇ Export CSV</button>
       </div>
     </div>
     <div class="stats-row">
@@ -2715,9 +2716,44 @@ tr:hover td{background:var(--card);}
           </div>
         </div>
         <div class="stab-card-body" id="stab-body-team">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div id="settings-team-plan-info" style="font-size:12px;color:var(--muted);"></div>
+            <button onclick="openInviteRepModal()" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;">+ Invite Rep</button>
+          </div>
           <div id="settings-team-body" style="padding:4px 0;">
             <div style="color:var(--mid);font-size:13px;">Loading team...</div>
           </div>
+        </div>
+      </div>
+
+      <!-- Invite Rep Modal -->
+      <div id="invite-rep-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;align-items:center;justify-content:center;">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:28px 32px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.5);">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+            <div style="font-size:18px;font-weight:800;">Invite a Team Member</div>
+            <button onclick="closeInviteRepModal()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1;">&times;</button>
+          </div>
+          <div style="margin-bottom:14px;">
+            <label style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px;">Full Name</label>
+            <input id="invite-rep-name" class="fi" placeholder="Jane Smith" style="width:100%;box-sizing:border-box;">
+          </div>
+          <div style="margin-bottom:14px;">
+            <label style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px;">Email Address</label>
+            <input id="invite-rep-email" class="fi" type="email" placeholder="jane@yourcompany.com" style="width:100%;box-sizing:border-box;">
+          </div>
+          <div style="margin-bottom:20px;">
+            <label style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px;">Role</label>
+            <select id="invite-rep-role" class="fi" style="width:100%;box-sizing:border-box;">
+              <option value="rep">Field Rep</option>
+              <option value="admin">Team Admin</option>
+            </select>
+          </div>
+          <div id="invite-rep-error" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:10px 14px;font-size:13px;color:#ef4444;margin-bottom:14px;"></div>
+          <div style="display:flex;gap:10px;">
+            <button onclick="closeInviteRepModal()" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;color:var(--fg);">Cancel</button>
+            <button onclick="submitInviteRep()" id="invite-rep-submit-btn" style="flex:2;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;">Send Invite</button>
+          </div>
+          <div style="margin-top:12px;font-size:12px;color:var(--muted);text-align:center;">They'll receive an email with a temporary password to log in.</div>
         </div>
       </div>
 
@@ -4014,97 +4050,6 @@ tr:hover td{background:var(--card);}
       </div>
 
       <!-- LEFT: Drip Campaigns (admin only) -->
-      <div class="stab-card" id="stab-drip-card" style="display:none;">
-        <div class="stab-card-hdr" onclick="toggleStabCard('drip')">
-          <span>&#128293; Follow-Up Blitz Settings</span>
-          <span class="stab-chevron" id="stab-chevron-drip">&#9662;</span>
-        </div>
-        <div class="stab-card-body" id="stab-body-drip">
-          <!-- Explanation banner -->
-          <div style="background:linear-gradient(135deg,rgba(168,85,247,.12),rgba(242,92,5,.08));border:1px solid rgba(168,85,247,.3);border-radius:10px;padding:14px 16px;margin-bottom:18px;">
-            <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px;">&#128293; How Follow-Up Blitz Works</div>
-            <div style="font-size:14px;color:var(--muted);line-height:1.6;">
-              When you click <strong style="color:var(--accent);">&#128293; Blitz</strong> on any estimate, BidDrop automatically mails <strong>4 postcards</strong> to that homeowner over 28 days — each one uses their actual house photo with your custom message overlaid. The 4th postcard is <strong style="color:#22C55E;">FREE</strong>.
-            </div>
-            <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
-              <div style="background:rgba(168,85,247,.15);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#A855F7;">Step 1 — Day 0 &nbsp;&#183;&nbsp; Sent immediately</div>
-              <div style="background:rgba(168,85,247,.15);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#A855F7;">Step 2 — Day 7</div>
-              <div style="background:rgba(168,85,247,.15);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#A855F7;">Step 3 — Day 14</div>
-              <div style="background:rgba(22,197,94,.15);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#22C55E;">Step 4 — Day 21 &nbsp;&#183;&nbsp; FREE</div>
-            </div>
-          </div>
-          <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:12px;">Customize Your Postcard Messages</div>
-          <!-- Step 2 -->
-          <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;">
-            <div style="display:flex;gap:14px;align-items:flex-start;">
-              <!-- Mini postcard preview -->
-              <div style="flex-shrink:0;">
-                <div style="font-size:10px;font-weight:700;color:#A855F7;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">Preview</div>
-                <div id="s-drip2-preview" onclick="openDripPreviewLightbox(2)" style="width:160px;height:107px;border-radius:6px;overflow:hidden;border:1px solid rgba(168,85,247,.3);background:#111827;position:relative;cursor:pointer;transition:border-color .2s;" onmouseover="this.style.borderColor='rgba(168,85,247,.8)'" onmouseout="this.style.borderColor='rgba(168,85,247,.3)'">
-                  <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.1) 0%,rgba(0,0,0,.65) 100%);"></div>
-                  <div style="position:absolute;bottom:0;left:0;right:0;padding:8px;">
-                    <div id="s-drip2-preview-headline" style="font-size:11px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:2px;">Still thinking it over?</div>
-                    <div id="s-drip2-preview-subtext" style="font-size:8px;color:rgba(255,255,255,.8);line-height:1.3;">Your estimate is still valid. We&#39;d love to help.</div>
-                  </div>
-                  <div style="position:absolute;top:6px;left:6px;background:rgba(242,92,5,.9);border-radius:3px;padding:1px 5px;font-size:8px;font-weight:800;color:#fff;">DAY 7</div>
-                </div>
-                <div style="font-size:9px;color:var(--muted);text-align:center;margin-top:3px;">Click to enlarge</div>
-              </div>
-              <!-- Fields -->
-              <div style="flex:1;min-width:0;">
-                <div style="font-size:11px;font-weight:700;color:#A855F7;letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;">Step 2 &#8212; Follow-Up &nbsp;<span style="font-size:15px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;">Sent on Day 7</span></div>
-                <div style="margin-bottom:8px;"><label class="fl">Headline <span style="color:var(--muted);font-weight:400;">(max 40 chars)</span></label><input class="fi" id="s-drip2-headline" placeholder="Still thinking it over?" maxlength="40" oninput="updateDripStepPreview(2)"></div>
-                <div><label class="fl">Subtext <span style="color:var(--muted);font-weight:400;">(max 80 chars)</span></label><input class="fi" id="s-drip2-subtext" placeholder="Your estimate is still valid. We&#39;d love to help." maxlength="80" oninput="updateDripStepPreview(2)"></div>
-              </div>
-            </div>
-          </div>
-          <!-- Step 3 -->
-          <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;">
-            <div style="display:flex;gap:14px;align-items:flex-start;">
-              <div style="flex-shrink:0;">
-                <div style="font-size:10px;font-weight:700;color:#A855F7;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">Preview</div>
-                <div id="s-drip3-preview" onclick="openDripPreviewLightbox(3)" style="width:160px;height:107px;border-radius:6px;overflow:hidden;border:1px solid rgba(168,85,247,.3);background:#111827;position:relative;cursor:pointer;transition:border-color .2s;" onmouseover="this.style.borderColor='rgba(168,85,247,.8)'" onmouseout="this.style.borderColor='rgba(168,85,247,.3)'">
-                  <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.1) 0%,rgba(0,0,0,.65) 100%);"></div>
-                  <div style="position:absolute;bottom:0;left:0;right:0;padding:8px;">
-                    <div id="s-drip3-preview-headline" style="font-size:11px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:2px;">Storm season is coming.</div>
-                    <div id="s-drip3-preview-subtext" style="font-size:8px;color:rgba(255,255,255,.8);line-height:1.3;">Now&#39;s the time to protect your home. Call us today.</div>
-                  </div>
-                  <div style="position:absolute;top:6px;left:6px;background:rgba(242,92,5,.9);border-radius:3px;padding:1px 5px;font-size:8px;font-weight:800;color:#fff;">DAY 14</div>
-                </div>
-                <div style="font-size:9px;color:var(--muted);text-align:center;margin-top:3px;">Click to enlarge</div>
-              </div>
-              <div style="flex:1;min-width:0;">
-                <div style="font-size:11px;font-weight:700;color:#A855F7;letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;">Step 3 &#8212; Urgency &nbsp;<span style="font-size:15px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;">Sent on Day 14</span></div>
-                <div style="margin-bottom:8px;"><label class="fl">Headline <span style="color:var(--muted);font-weight:400;">(max 40 chars)</span></label><input class="fi" id="s-drip3-headline" placeholder="Storm season is coming." maxlength="40" oninput="updateDripStepPreview(3)"></div>
-                <div><label class="fl">Subtext <span style="color:var(--muted);font-weight:400;">(max 80 chars)</span></label><input class="fi" id="s-drip3-subtext" placeholder="Now&#39;s the time to protect your home. Call us today." maxlength="80" oninput="updateDripStepPreview(3)"></div>
-              </div>
-            </div>
-          </div>
-          <!-- Step 4 -->
-          <div style="background:var(--card2);border:1px solid rgba(34,197,94,.25);border-radius:10px;padding:14px;">
-            <div style="display:flex;gap:14px;align-items:flex-start;">
-              <div style="flex-shrink:0;">
-                <div style="font-size:10px;font-weight:700;color:#22C55E;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">Preview</div>
-                <div id="s-drip4-preview" onclick="openDripPreviewLightbox(4)" style="width:160px;height:107px;border-radius:6px;overflow:hidden;border:1px solid rgba(34,197,94,.3);background:#111827;position:relative;cursor:pointer;transition:border-color .2s;" onmouseover="this.style.borderColor='rgba(34,197,94,.8)'" onmouseout="this.style.borderColor='rgba(34,197,94,.3)'">
-                  <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.1) 0%,rgba(0,0,0,.65) 100%);"></div>
-                  <div style="position:absolute;bottom:0;left:0;right:0;padding:8px;">
-                    <div id="s-drip4-preview-headline" style="font-size:11px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:2px;">Final notice.</div>
-                    <div id="s-drip4-preview-subtext" style="font-size:8px;color:rgba(255,255,255,.8);line-height:1.3;">Your estimate expires soon. Secure your spot before prices rise.</div>
-                  </div>
-                  <div style="position:absolute;top:6px;left:6px;background:rgba(34,197,94,.9);border-radius:3px;padding:1px 5px;font-size:8px;font-weight:800;color:#fff;">DAY 21 &bull; FREE</div>
-                </div>
-                <div style="font-size:9px;color:var(--muted);text-align:center;margin-top:3px;">Click to enlarge</div>
-              </div>
-              <div style="flex:1;min-width:0;">
-                <div style="font-size:11px;font-weight:700;color:#22C55E;letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;">Step 4 &#8212; Final Notice &nbsp;<span style="font-size:15px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;">Sent on Day 21 &bull; FREE</span></div>
-                <div style="margin-bottom:8px;"><label class="fl">Headline <span style="color:var(--muted);font-weight:400;">(max 40 chars)</span></label><input class="fi" id="s-drip4-headline" placeholder="Final notice." maxlength="40" oninput="updateDripStepPreview(4)"></div>
-                <div><label class="fl">Subtext <span style="color:var(--muted);font-weight:400;">(max 80 chars)</span></label><input class="fi" id="s-drip4-subtext" placeholder="Your estimate expires soon. Secure your spot before prices rise." maxlength="80" oninput="updateDripStepPreview(4)"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- RIGHT: Integrations — super_admin only (legacy placeholder) -->
       <div class="stab-card" id="stab-integrations-card" style="display:none;"></div>
     </div><!-- /stab-grid marketing -->
@@ -7933,6 +7878,213 @@ Your access will continue until the end of your current billing period.')){retur
   }).catch(()=>{toast('Could not cancel automatically. Please contact support@biddrop.us','error');});
 }
 // -- END TERRITORY INTEL + SUBSCRIPTION MODULE --------------------------------
+
+
+// ─────────────────────────────────────────────────────────────
+// INVITE REP MODAL
+// ─────────────────────────────────────────────────────────────
+function openInviteRepModal() {
+  const modal = document.getElementById('invite-rep-modal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  document.getElementById('invite-rep-name').value = '';
+  document.getElementById('invite-rep-email').value = '';
+  document.getElementById('invite-rep-role').value = 'rep';
+  const err = document.getElementById('invite-rep-error');
+  if (err) { err.style.display = 'none'; err.textContent = ''; }
+}
+
+function closeInviteRepModal() {
+  const modal = document.getElementById('invite-rep-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function submitInviteRep() {
+  const name = (document.getElementById('invite-rep-name').value || '').trim();
+  const email = (document.getElementById('invite-rep-email').value || '').trim();
+  const role = document.getElementById('invite-rep-role').value;
+  const errEl = document.getElementById('invite-rep-error');
+  const btn = document.getElementById('invite-rep-submit-btn');
+
+  const showErr = (msg) => {
+    errEl.textContent = msg;
+    errEl.style.display = 'block';
+  };
+
+  if (!name) return showErr('Please enter the rep\'s full name.');
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showErr('Please enter a valid email address.');
+
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+  errEl.style.display = 'none';
+
+  try {
+    const tok = (await window._sb.auth.getSession()).data.session?.access_token;
+    const res = await fetch('/api/admin?action=invite-rep', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` },
+      body: JSON.stringify({ name, email, role })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to invite rep');
+
+    closeInviteRepModal();
+    // Refresh team list
+    if (typeof renderSettingsTeam === 'function') renderSettingsTeam();
+    alert(`✅ Invite sent to ${email}! They'll receive an email with login instructions.`);
+  } catch (e) {
+    showErr(e.message || 'Something went wrong. Please try again.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Send Invite';
+  }
+}
+
+// Close modal on backdrop click
+document.addEventListener('click', (e) => {
+  const modal = document.getElementById('invite-rep-modal');
+  if (modal && e.target === modal) closeInviteRepModal();
+});
+
+// ─────────────────────────────────────────────────────────────
+// ANALYTICS CSV EXPORT
+// ─────────────────────────────────────────────────────────────
+function exportAnalyticsCSV() {
+  const period = document.getElementById('an-period')?.value || '30';
+  const periodLabel = period === 'all' ? 'All Time' : `Last ${period} Days`;
+
+  // Build rows from current S data
+  const now = Date.now();
+  const cutoff = period === 'all' ? 0 : now - parseInt(period) * 86400000;
+
+  const pins = (window.S?.pins || []).filter(p => !cutoff || new Date(p.created_at || 0).getTime() >= cutoff);
+  const estimates = (window.S?.estimates || []).filter(e => !cutoff || new Date(e.created_at || 0).getTime() >= cutoff);
+  const queue = (window.S?.queue || []).filter(q => !cutoff || new Date(q.created_at || 0).getTime() >= cutoff);
+
+  // Summary rows
+  const summaryRows = [
+    ['BidDrop Analytics Export'],
+    [`Period: ${periodLabel}`],
+    [`Exported: ${new Date().toLocaleString()}`],
+    [],
+    ['SUMMARY'],
+    ['Metric', 'Value'],
+    ['Homes Pinned', pins.length],
+    ['Estimates Built', estimates.length],
+    ['Postcards Queued', queue.length],
+    ['Postcards Sent', queue.filter(q => q.status === 'sent').length],
+    ['Signed Jobs', pins.filter(p => p.status === 'signed').length],
+    ['Converted', pins.filter(p => p.status === 'converted').length],
+    [],
+    ['PINS / CONTACTS'],
+    ['Address', 'Status', 'Rep', 'Date', 'GHL Synced'],
+    ...pins.map(p => [
+      p.addr || '',
+      p.status || '',
+      p.rep_name || p.rep || '',
+      p.created_at ? new Date(p.created_at).toLocaleDateString() : '',
+      p.ghl_contact_id ? 'Yes' : 'No'
+    ]),
+    [],
+    ['ESTIMATES'],
+    ['Address', 'Total', 'Status', 'Rep', 'Date'],
+    ...estimates.map(e => [
+      e.addr || '',
+      e.total ? `$${Number(e.total).toLocaleString()}` : '',
+      e.status || '',
+      e.rep_name || '',
+      e.created_at ? new Date(e.created_at).toLocaleDateString() : ''
+    ])
+  ];
+
+  const csvContent = summaryRows.map(row =>
+    row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+  ).join('\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `biddrop-analytics-${period === 'all' ? 'all-time' : period + 'd'}-${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ─────────────────────────────────────────────────────────────
+// CAMPAIGN PERFORMANCE STATS
+// ─────────────────────────────────────────────────────────────
+function getCampaignPerformanceStats(campaign) {
+  // Count pins that belong to this campaign
+  const campaignPins = (window.S?.pins || []).filter(p =>
+    p.campaign_id === campaign.id ||
+    (p.source === 'campaign' && p.campaign_name === campaign.name)
+  );
+
+  // Count estimates for those pins
+  const pinAddrs = new Set(campaignPins.map(p => p.addr));
+  const campaignEstimates = (window.S?.estimates || []).filter(e => pinAddrs.has(e.addr));
+
+  // Count QR scans for those pins
+  const campaignScans = (window.S?.scans || []).filter(s =>
+    campaignPins.some(p => p.id === s.pin_id)
+  );
+
+  // Count postcards sent for this campaign
+  const campaignMail = (window.S?.queue || []).filter(q =>
+    q.campaign_id === campaign.id || q.campaign_name === campaign.name
+  );
+  const sent = campaignMail.filter(q => q.status === 'sent').length;
+  const pending = campaignMail.filter(q => ['pending', 'needs_approval'].includes(q.status)).length;
+
+  // Conversion rate: estimates / pins
+  const convRate = campaignPins.length > 0
+    ? Math.round((campaignEstimates.length / campaignPins.length) * 100)
+    : 0;
+
+  return {
+    pins: campaignPins.length,
+    estimates: campaignEstimates.length,
+    scans: campaignScans.length,
+    sent,
+    pending,
+    convRate
+  };
+}
+
+// Patch renderCampaigns to include performance stats if it exists
+const _origRenderCampaigns = window.renderCampaigns;
+if (typeof _origRenderCampaigns === 'function') {
+  window.renderCampaigns = function() {
+    _origRenderCampaigns();
+    // After render, inject performance stats into each campaign card
+    setTimeout(() => {
+      const cards = document.querySelectorAll('.campaign-card[data-campaign-id]');
+      cards.forEach(card => {
+        const cid = card.dataset.campaignId;
+        const campaign = (window.S?.campaigns || []).find(c => c.id === cid);
+        if (!campaign) return;
+        const stats = getCampaignPerformanceStats(campaign);
+        let statsEl = card.querySelector('.campaign-perf-stats');
+        if (!statsEl) {
+          statsEl = document.createElement('div');
+          statsEl.className = 'campaign-perf-stats';
+          statsEl.style.cssText = 'display:flex;gap:12px;flex-wrap:wrap;padding:10px 14px;border-top:1px solid var(--border);background:rgba(0,0,0,.15);';
+          card.appendChild(statsEl);
+        }
+        statsEl.innerHTML = `
+          <span style="font-size:11px;color:var(--muted);">📍 <strong style="color:var(--text)">${stats.pins}</strong> pins</span>
+          <span style="font-size:11px;color:var(--muted);">📋 <strong style="color:var(--text)">${stats.estimates}</strong> estimates</span>
+          <span style="font-size:11px;color:var(--muted);">🔍 <strong style="color:var(--text)">${stats.scans}</strong> scans</span>
+          <span style="font-size:11px;color:var(--muted);">📬 <strong style="color:var(--text)">${stats.sent}</strong> sent</span>
+          ${stats.pending > 0 ? `<span style="font-size:11px;color:var(--warning);">⏳ ${stats.pending} pending</span>` : ''}
+          <span style="font-size:11px;color:var(--muted);">📈 <strong style="color:${stats.convRate > 20 ? 'var(--success)' : 'var(--text)'}">${stats.convRate}%</strong> conv.</span>
+        `;
+      });
+    }, 100);
+  };
+}
 
 </script>
 
