@@ -64,6 +64,7 @@ async function onSignedIn(user){
     await fetchMasterLobKey();
     initMap();
     setTimeout(restoreStormState, 1500);
+    setTimeout(initStormNotifications, 2000);
     renderStructures();
     updatePreview();
     applyRoleUI();

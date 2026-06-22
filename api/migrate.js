@@ -109,6 +109,16 @@ export default async function handler(req, res) {
       sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS postcard_designs_json jsonb"
     },
     {
+      name: 'estimates.signed_at',
+      check: "SELECT column_name FROM information_schema.columns WHERE table_name='estimates' AND column_name='signed_at'",
+      sql: "ALTER TABLE estimates ADD COLUMN IF NOT EXISTS signed_at timestamptz"
+    },
+    {
+      name: 'estimates.sig_name',
+      check: "SELECT column_name FROM information_schema.columns WHERE table_name='estimates' AND column_name='sig_name'",
+      sql: "ALTER TABLE estimates ADD COLUMN IF NOT EXISTS sig_name text"
+    },
+    {
       name: 'campaign_targets_table',
       check: "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name='campaign_targets'",
       sql: `CREATE TABLE IF NOT EXISTS campaign_targets (

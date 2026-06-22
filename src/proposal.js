@@ -46,6 +46,25 @@ function openProposalModal() {
   document.getElementById('prop-esign-consent').checked = false;
   document.getElementById('prop-esign-status').style.display = 'none';
   _propSignedAt = null;
+  // Hide download signed button on open
+  const dlBtn = document.getElementById('prop-download-signed-btn');
+  if (dlBtn) dlBtn.style.display = 'none';
+  // Pre-fill from existing estimate if already signed
+  const estId = window._editingEstimateId || null;
+  if (estId) {
+    const est = (S.estimates||[]).find(e => e.id === estId);
+    if (est && est.signedAt && est.sigName) {
+      _propSignedAt = est.signedAt;
+      document.getElementById('prop-esign-name').value = est.sigName;
+      document.getElementById('prop-esign-consent').checked = true;
+      const status = document.getElementById('prop-esign-status');
+      if (status) {
+        status.style.display = 'block';
+        status.innerHTML = `✅ Previously signed by <strong>${escHtml(est.sigName)}</strong> on ${new Date(est.signedAt).toLocaleString()}`;
+      }
+      if (dlBtn) dlBtn.style.display = 'flex';
+    }
+  }
   openM('m-proposal');
 }
 
@@ -163,10 +182,46 @@ function onPropSignInput() {
     _propSignedAt = new Date().toISOString();
     status.style.display = 'block';
     status.innerHTML = `✅ Signed by <strong>${escHtml(name)}</strong> on ${new Date().toLocaleString()} — legally binding under the ESIGN Act`;
+    // Save signature to DB
+    _saveSignatureToDB(name, _propSignedAt);
+    // Show download signed proposal button
+    const dlBtn = document.getElementById('prop-download-signed-btn');
+    if (dlBtn) { dlBtn.style.display = 'flex'; }
   } else {
     _propSignedAt = null;
     status.style.display = 'none';
+    const dlBtn = document.getElementById('prop-download-signed-btn');
+    if (dlBtn) { dlBtn.style.display = 'none'; }
   }
+}
+async function _saveSignatureToDB(sigName, signedAt) {
+  const estId = window._editingEstimateId || null;
+  if (!estId || !sb || !currentAccount) return;
+  try {
+    const { error } = await sb.from('estimates')
+      .update({ sig_name: sigName, signed_at: signedAt })
+      .eq('id', estId)
+      .eq('account_id', currentAccount.id);
+    if (error) { console.warn('[BidDrop] Save signature error:', error.message); return; }
+    // Update in-memory estimate
+    const est = (S.estimates||[]).find(e => e.id === estId);
+    if (est) { est.sigName = sigName; est.signedAt = signedAt; }
+    console.log('[BidDrop] Signature saved to DB for estimate', estId);
+  } catch(e) { console.warn('[BidDrop] _saveSignatureToDB error:', e.message); }
+}
+function downloadSignedProposal() {
+  const name = (document.getElementById('prop-esign-name')||{}).value||'';
+  if (!_propSignedAt || !name.trim()) {
+    toast('Please have the homeowner sign the proposal first','warning');
+    return;
+  }
+  const html = buildProposalHTML(true);
+  const w = window.open('','_blank','width=900,height=700');
+  if (!w) { toast('Please allow popups to download','warning'); return; }
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  setTimeout(() => { w.print(); }, 600);
 }
 
 function printProposalPDF() {

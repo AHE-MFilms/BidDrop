@@ -214,6 +214,8 @@ async function loadEstimatesFromSupabase(){
     deletedAt: row.deleted_at || null,
     printPaid: row.print_paid || false,
     priceOverride: row.price_override || null,
+    signedAt: row.signed_at || null,
+    sigName: row.sig_name || null,
     status: 'saved'
   }));
   // Merge: keep any in-memory estimates not yet in DB, replace those that are

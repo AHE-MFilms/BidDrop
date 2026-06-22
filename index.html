@@ -4245,6 +4245,40 @@ tr:hover td{background:var(--card);}
         </div>
       </div>
 
+      <!-- ── Storm Notifications ── -->
+      <div class="int-card" id="storm-notif-card">
+        <div class="int-card-header">
+          <div class="int-logo" style="background:#1e3a5f;">&#127783;</div>
+          <div style="flex:1;">
+            <div class="int-card-title">Storm Alerts <span class="int-badge" style="background:#3b82f6;color:#fff;">PUSH</span></div>
+            <div class="int-card-sub">Get notified when a new hail or wind storm hits your territory</div>
+          </div>
+          <div id="storm-notif-status-badge" class="int-status not-connected">&#9679; Off</div>
+        </div>
+        <div class="int-card-body">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Enable browser push notifications to receive an alert whenever a new storm event (hail or 50+ MPH wind) is detected within your canvass territory. BidDrop checks NOAA data every 30 minutes.</div>
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px;">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+              <span style="font-size:13px;color:var(--mid);font-weight:600;">Push Notifications</span>
+              <div id="storm-notif-toggle-track" onclick="toggleStormNotifications()" style="position:relative;width:42px;height:24px;background:#374151;border-radius:12px;cursor:pointer;transition:background .2s;flex-shrink:0;">
+                <div id="storm-notif-toggle-thumb" style="position:absolute;top:3px;left:3px;width:18px;height:18px;background:#9ca3af;border-radius:50%;transition:left .2s,background .2s;"></div>
+              </div>
+              <span id="storm-notif-toggle-lbl" style="font-size:11px;font-weight:700;color:var(--muted);">OFF</span>
+            </label>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--mid);">
+              <input type="checkbox" id="storm-notif-hail" checked style="accent-color:#3b82f6;"> Hail events
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--mid);">
+              <input type="checkbox" id="storm-notif-wind" checked style="accent-color:#3b82f6;"> Wind events (50+ MPH)
+            </label>
+          </div>
+          <div id="storm-notif-permission-warning" style="display:none;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:7px;padding:8px 12px;font-size:11px;color:#f87171;margin-bottom:10px;">&#9888; Browser notifications are blocked. Please allow notifications in your browser settings and try again.</div>
+          <div id="storm-notif-success-msg" style="display:none;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.3);border-radius:7px;padding:8px 12px;font-size:11px;color:#4ade80;margin-bottom:10px;">&#10003; Storm alerts are active. You will be notified when new storms hit your territory.</div>
+          <button onclick="testStormNotification()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 14px;color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">&#127783; Send Test Notification</button>
+        </div>
+      </div>
     </div><!-- /int-grid -->
     </div><!-- /stab-tab-pane integrations -->
 
@@ -4522,6 +4556,7 @@ tr:hover td{background:var(--card);}
   <script src="/src/history.js"></script>
   <script src="/src/hotleads.js"></script>
   <script src="/src/storm.js"></script>
+  <script src="/src/storm-notif.js"></script>
   <script src="/src/analytics.js"></script>
   <script src="/src/subscription.js"></script>
   <script src="/src/settings.js"></script>
@@ -7341,6 +7376,7 @@ async function loadCampaignsTab(){
             <div style="display:flex;gap:6px;">
               <button onclick="campaignViewPins('${escHtml(c.id)}')" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--mid);font-size:10px;font-weight:700;cursor:pointer;">View Pins</button>
               <button onclick="campaignAddToQueue('${escHtml(c.id)}')" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--mid);font-size:10px;font-weight:700;cursor:pointer;">&#128236; Queue Mail</button>
+              <button onclick="openCampaignQRStats('${escHtml(c.id)}')" style="background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.4);border-radius:6px;padding:5px 10px;color:#60a5fa;font-size:10px;font-weight:700;cursor:pointer;">&#128202; QR Stats</button>
             </div>
           </div>
         </div>
@@ -8086,8 +8122,106 @@ if (typeof _origRenderCampaigns === 'function') {
   };
 }
 
+// ── Campaign QR Stats Modal ──────────────────────────────────────────────────
+function openCampaignQRStats(campaignId) {
+  const campaign = (S.campaigns||[]).find(c => c.id === campaignId);
+  const campObj = campaign || { id: campaignId };
+  // Get campaign pins
+  const campaignPins = (S.pins||[]).filter(p =>
+    p.campaign_id === campaignId ||
+    (p.source === 'campaign' && campaign && p.campaign_name === campaign.name)
+  );
+  const pinIds = new Set(campaignPins.map(p => p.id));
+  const pinAddrs = new Set(campaignPins.map(p => (p.address||p.addr||'').trim().toLowerCase()));
+  // Get estimates for those pins
+  const campaignEstimates = (S.estimates||[]).filter(e =>
+    (e.pinId && pinIds.has(e.pinId)) ||
+    pinAddrs.has((e.addr||'').trim().toLowerCase())
+  ).filter(e => !e.deletedAt && !e.isRevision);
+  // Build modal content
+  const modal = document.getElementById('m-campaign-qr-stats');
+  const body = document.getElementById('campaign-qr-stats-body');
+  if (!modal || !body) { toast('QR Stats modal not found','error'); return; }
+  const totalScans = campaignEstimates.reduce((s,e) => s + (e.qr_scan_count||0), 0);
+  const totalViews = campaignEstimates.reduce((s,e) => s + (e.page_views||0), 0);
+  const totalSigned = campaignEstimates.filter(e => e.signedAt).length;
+  // Stats summary strip
+  let html = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;">'
+    + '<div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">'
+    + '<div style="font-size:22px;font-weight:800;color:#60a5fa;">'+campaignPins.length+'</div>'
+    + '<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Pins</div></div>'
+    + '<div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">'
+    + '<div style="font-size:22px;font-weight:800;color:#F59E0B;">'+totalScans+'</div>'
+    + '<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">QR Scans</div></div>'
+    + '<div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">'
+    + '<div style="font-size:22px;font-weight:800;color:#10b981;">'+totalViews+'</div>'
+    + '<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Page Views</div></div>'
+    + '<div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">'
+    + '<div style="font-size:22px;font-weight:800;color:#4ade80;">'+totalSigned+'</div>'
+    + '<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Signed</div></div>'
+    + '</div>';
+  if (!campaignEstimates.length) {
+    html += '<div style="padding:32px;text-align:center;color:var(--muted);font-size:13px;">No estimates found for this campaign yet.</div>';
+  } else {
+    html += '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;">'
+      + '<thead><tr style="border-bottom:2px solid var(--border);">'
+      + '<th style="padding:8px 10px;text-align:left;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;font-size:10px;">Address</th>'
+      + '<th style="padding:8px 10px;text-align:left;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;font-size:10px;">Homeowner</th>'
+      + '<th style="padding:8px 10px;text-align:center;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;font-size:10px;">QR Scans</th>'
+      + '<th style="padding:8px 10px;text-align:center;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;font-size:10px;">Page Views</th>'
+      + '<th style="padding:8px 10px;text-align:center;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;font-size:10px;">Last Viewed</th>'
+      + '<th style="padding:8px 10px;text-align:center;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;font-size:10px;">Status</th>'
+      + '</tr></thead><tbody>';
+    const sorted = campaignEstimates.slice().sort(function(a,b){ return (b.qr_scan_count||0) - (a.qr_scan_count||0); });
+    sorted.forEach(function(est) {
+      const scans = est.qr_scan_count || 0;
+      const views = est.page_views || 0;
+      const lastViewed = est.page_first_viewed_at
+        ? new Date(est.page_first_viewed_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})
+        : '—';
+      const signed = est.signedAt
+        ? '<span style="background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.4);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;">✓ Signed</span>'
+        : (views > 0
+          ? '<span style="background:rgba(59,130,246,.1);color:#60a5fa;border:1px solid rgba(59,130,246,.4);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;">Viewed</span>'
+          : '<span style="font-size:10px;color:var(--muted);">Not viewed</span>');
+      const shortAddr = (est.addr||'—').split(',')[0];
+      html += '<tr style="border-bottom:1px solid var(--border);">'
+        + '<td style="padding:9px 10px;color:var(--text);font-weight:600;">'+escHtml(shortAddr)+'</td>'
+        + '<td style="padding:9px 10px;color:var(--mid);">'+escHtml(est.owner||'—')+'</td>'
+        + '<td style="padding:9px 10px;text-align:center;font-weight:700;color:'+(scans>0?'#F59E0B':'var(--muted)')+';">'+scans+'</td>'
+        + '<td style="padding:9px 10px;text-align:center;font-weight:700;color:'+(views>0?'#10b981':'var(--muted)')+';">'+views+'</td>'
+        + '<td style="padding:9px 10px;text-align:center;color:var(--muted);">'+lastViewed+'</td>'
+        + '<td style="padding:9px 10px;text-align:center;">'+signed+'</td>'
+        + '</tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+  body.innerHTML = html;
+  // Set modal title
+  const titleEl = document.getElementById('campaign-qr-stats-title');
+  if (titleEl) titleEl.textContent = campaign ? (campaign.source_address || 'Campaign') : 'Campaign QR Stats';
+  modal.style.display = 'flex';
+}
+
 </script>
 
+<!-- ═══════════════════════════════════════════════════════════════════════
+     CAMPAIGN QR STATS MODAL
+═══════════════════════════════════════════════════════════════════════ -->
+<div id="m-campaign-qr-stats" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:25000;align-items:flex-start;justify-content:center;padding-top:max(env(safe-area-inset-top,0px),40px);overflow-y:auto;" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;width:min(760px,96vw);margin:auto;box-shadow:0 24px 60px rgba(0,0,0,.6);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+      <div>
+        <div style="font-family:var(--font-h);font-size:18px;font-weight:700;letter-spacing:.5px;">&#128202; QR Performance</div>
+        <div id="campaign-qr-stats-title" style="font-size:12px;color:var(--muted);margin-top:2px;"></div>
+      </div>
+      <button onclick="document.getElementById('m-campaign-qr-stats').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;">&#10005;</button>
+    </div>
+    <div id="campaign-qr-stats-body">
+      <div style="padding:40px;text-align:center;color:var(--muted);">Loading...</div>
+    </div>
+  </div>
+</div>
 <!-- ═══════════════════════════════════════════════════════════════════════
      PROPOSAL MODAL — Good / Better / Best with E-Sign
 ═══════════════════════════════════════════════════════════════════════ -->
@@ -8137,6 +8271,8 @@ if (typeof _origRenderCampaigns === 'function') {
       <button onclick="printProposalPDF()" style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:13px;color:var(--mid);font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">🖨 Print / Save PDF</button>
       <button onclick="emailProposal()" id="prop-email-btn" style="background:linear-gradient(135deg,#1a3a6b,#0f2040);border:1px solid rgba(59,130,246,.5);border-radius:10px;padding:13px;color:#60a5fa;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">📧 Email to Homeowner</button>
     </div>
+    <!-- Download Signed Proposal (shown only after signing) -->
+    <button id="prop-download-signed-btn" onclick="downloadSignedProposal()" style="display:none;margin-top:10px;background:linear-gradient(135deg,#065f46,#047857);border:1px solid rgba(34,197,94,.4);border-radius:10px;padding:13px;color:#4ade80;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;align-items:center;justify-content:center;gap:6px;width:100%;">⬇ Download Signed Proposal PDF</button>
   </div>
 </div>
 

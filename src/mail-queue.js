@@ -229,6 +229,8 @@ function renderEstimatesTab(){
             +`<button onclick="previewEstimatePostcard('${eid}')" style="background:#0e7490;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128247; Preview Postcard</button>`
             +`<button onclick="previewEstimateLetter('${eid}')" style="background:#1f3d68;border:none;border-radius:6px;padding:6px 10px;color:#C8D8E8;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128065; Preview Letter</button>`
             +`<button onclick="printEstimate('${eid}')" style="background:#1f3d68;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128424; Print</button>`
+            +`<button onclick="downloadEstimatePDF('${eid}')" style="background:#1f3d68;border:none;border-radius:6px;padding:6px 10px;color:#93c5fd;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#11015; PDF</button>`
+            +(est.signedAt ? `<button onclick="downloadSignedEstimatePDF('${eid}')" title="Signed by ${escHtml(est.sigName||'homeowner')} on ${new Date(est.signedAt).toLocaleDateString()}" style="background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);border-radius:6px;padding:6px 10px;color:#4ade80;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#11015; Signed</button>` : '')
             +`<button onclick="openEstimatePage('${eid}')" style="background:#065f46;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#127758; View Page</button>`
             +histBtn
             +`<button onclick="deleteEstimate('${eid}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">&#10005;</button>`;
@@ -755,6 +757,51 @@ async function printEstimate(estId){
   if(!est){ toast('Estimate not found','error'); return; }
   loadEstimateIntoEstimator(estId);
   setTimeout(()=>{ printNow(); }, 300);
+}
+function downloadEstimatePDF(estId){
+  // Open the estimate page in a new window and trigger print-to-PDF
+  const est = (S.estimates||[]).find(e=>e.id===estId);
+  if(!est){ toast('Estimate not found','error'); return; }
+  // Build the estimate page URL and open with print flag
+  const baseUrl = window.location.origin;
+  const w = window.open(baseUrl+'/e/'+estId+'?print=1','_blank','width=900,height=700');
+  if(!w){ toast('Please allow popups to download PDF','warning'); return; }
+}
+function downloadSignedEstimatePDF(estId){
+  const est = (S.estimates||[]).find(e=>e.id===estId);
+  if(!est){ toast('Estimate not found','error'); return; }
+  if(!est.signedAt){ toast('This estimate has not been signed yet','warning'); return; }
+  // Load estimate into estimator and use the proposal builder with signature
+  loadEstimateIntoEstimator(estId);
+  // Set the signature state in proposal module
+  window._editingEstimateId = estId;
+  setTimeout(()=>{
+    // Open proposal modal with pre-filled signature, then trigger print
+    if(typeof buildProposalHTML === 'function'){
+      // Temporarily set the sign state
+      const tempName = est.sigName || '';
+      const tempAt = est.signedAt;
+      // Build the HTML with signature block
+      const signEl = document.getElementById('prop-esign-name');
+      const consentEl = document.getElementById('prop-esign-consent');
+      if(signEl) signEl.value = tempName;
+      if(consentEl) consentEl.checked = true;
+      window._propSignedAt = tempAt; // set module-level variable
+      const html = buildProposalHTML(true);
+      const w = window.open('','_blank','width=900,height=700');
+      if(!w){ toast('Please allow popups to download PDF','warning'); return; }
+      w.document.write(html);
+      w.document.close();
+      w.focus();
+      setTimeout(()=>{ w.print(); }, 600);
+      // Reset
+      window._propSignedAt = null;
+      if(signEl) signEl.value = '';
+      if(consentEl) consentEl.checked = false;
+    } else {
+      toast('Proposal builder not available','error');
+    }
+  }, 400);
 }
 function clearEst(){
   document.getElementById('e-owner').value='';
