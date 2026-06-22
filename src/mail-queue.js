@@ -62,6 +62,16 @@ function addToQueue(){
     }
   }
   save();toast('📬 Added to mail queue!','success');renderQueue();
+  // Update approval badge
+  if(typeof _updateApprovalBadge==='function') _updateApprovalBadge();
+}
+function _updateApprovalBadge(){
+  const count = (window.S?.queue||[]).filter(q=>q.status==='needs_approval').length;
+  const badge = document.getElementById('mailqueue-approval-badge');
+  if(badge){
+    badge.textContent = count > 0 ? String(count) : '';
+    badge.style.display = count > 0 ? 'inline-flex' : 'none';
+  }
 }
 
 // ── Estimates view state ──────────────────────────────────────────────────

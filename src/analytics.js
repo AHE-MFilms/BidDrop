@@ -124,16 +124,21 @@ async function loadAnalytics(){
     const repMap={};
     ests.forEach(e=>{
       const rep=e.rep||'Unknown';
-      if(!repMap[rep]) repMap[rep]={name:rep,pins:0,estimates:0,mailers:0,scans:0,signed:0,pipeline:0};
+      if(!repMap[rep]) repMap[rep]={name:rep,pins:0,estimates:0,mailers:0,scans:0,signed:0,pipeline:0,trades:{}};
       repMap[rep].estimates++;
       repMap[rep].scans+=(e.qr_scan_count||0);
       repMap[rep].pipeline+=(Number(e.total)||0);
+      // Track trade from estimate
+      const trade=e.trade||e.tradeType||null;
+      if(trade){ repMap[rep].trades[trade]=(repMap[rep].trades[trade]||0)+1; }
     });
     filteredPins.forEach(p=>{
       const rep=p.rep||'Unknown';
-      if(!repMap[rep]) repMap[rep]={name:rep,pins:0,estimates:0,mailers:0,scans:0,signed:0,pipeline:0};
+      if(!repMap[rep]) repMap[rep]={name:rep,pins:0,estimates:0,mailers:0,scans:0,signed:0,pipeline:0,trades:{}};
       repMap[rep].pins++;
       if((p.status||'').toLowerCase()==='signed') repMap[rep].signed++;
+      // Track interested trades from pin
+      (p.interested_trades||[]).forEach(t=>{ repMap[rep].trades[t]=(repMap[rep].trades[t]||0)+1; });
     });
     q.forEach(m=>{
       // Use rep_name from queue item (set when mailer was sent); only attribute to known reps
@@ -153,7 +158,15 @@ async function loadAnalytics(){
         '<td style="padding:9px 14px;text-align:center;color:#F59E0B;font-weight:700;">'+r.scans+'</td>'+
         '<td style="padding:9px 14px;text-align:center;color:#22C55E;font-weight:700;">'+r.signed+'</td>'+
         '<td style="padding:9px 14px;text-align:center;color:var(--text);font-weight:700;">'+(r.pipeline?'$'+Math.round(r.pipeline).toLocaleString():'—')+'</td>'+
-      '</tr>').join('') : '<tr><td colspan="7" style="padding:18px;text-align:center;color:var(--muted);">No data yet.</td></tr>';
+        '<td style="padding:9px 14px;">'+
+          (Object.entries(r.trades||{}).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([t,cnt])=>{
+            const TC={roofing:'#F25C05',solar:'#22C55E',fencing:'#A78BFA',siding:'#60A5FA',gutters:'#38BDF8',insulation:'#FB923C',paint:'#F472B6',doors:'#FBBF24',windows:'#67E8F9'};
+            const TL={roofing:'Roof',solar:'Solar',fencing:'Fence',siding:'Siding',gutters:'Gutters',insulation:'Insul',paint:'Paint',doors:'Doors',windows:'Win'};
+            const col=TC[t]||'#96B0C8';
+            return '<span style="display:inline-block;padding:1px 6px;border-radius:8px;border:1px solid '+col+';color:'+col+';font-size:9px;font-weight:700;margin-right:3px;white-space:nowrap;">'+(TL[t]||t)+' '+cnt+'</span>';
+          }).join('')||'<span style="color:var(--muted);font-size:10px;">—</span>')+
+        '</td>'+
+      '</tr>').join('') : '<tr><td colspan="8" style="padding:18px;text-align:center;color:var(--muted);">No data yet.</td></tr>';
     }
     // ── Per-estimate engagement table ────────────────────────────────────────
     const estTbody = document.getElementById('an-est-table');

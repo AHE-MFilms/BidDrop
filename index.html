@@ -296,6 +296,22 @@ tr:hover td{background:var(--card);}
 .trade-chip-val{font-family:var(--font-h);font-size:22px;font-weight:700;color:var(--text);line-height:1;}
 /* Responsive dashboard */
 @media(max-width:900px){.trade-grid{grid-template-columns:repeat(2,1fr);}}
+/* ── Mobile: Contacts & Campaigns tabs ── */
+@media(max-width:700px){
+  #tab-contacts{padding:12px 10px!important;}
+  #contacts-table thead th:nth-child(5),
+  #contacts-table thead th:nth-child(6),
+  #contacts-table tbody td:nth-child(5),
+  #contacts-table tbody td:nth-child(6){display:none;}
+  #contacts-table thead th:nth-child(9),
+  #contacts-table tbody td:nth-child(9){min-width:unset;}
+  #tab-campaigns{padding:12px 10px!important;}
+  .dash-page-hdr{flex-direction:column;align-items:flex-start!important;gap:10px;}
+  #campaigns-stats{gap:8px;}
+  #campaigns-stats>div{padding:8px 12px!important;}
+  #campaigns-list [style*="display:flex;align-items:flex-start"]{flex-direction:column;}
+  #campaigns-list [style*="align-items:flex-end"]{align-items:flex-start!important;}
+}
 @media(max-width:600px){.trade-grid{grid-template-columns:1fr 1fr;}}
 .act-feed::-webkit-scrollbar{width:3px;}
 .dmg-photos-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
@@ -2013,6 +2029,7 @@ tr:hover td{background:var(--card);}
       </div>
       <div id="q-bulk-bar" style="display:none;align-items:center;gap:10px;margin-bottom:10px;padding:8px 12px;background:var(--card2);border-radius:8px;border:1px solid var(--border);">
         <span id="q-selected-count" style="font-size:13px;font-weight:600;color:var(--text);">0 selected</span>
+        <button onclick="bulkApproveQueue()" style="background:#7C3AED;border:none;border-radius:6px;padding:6px 14px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">✓ Approve Selected</button>
         <button onclick="bulkDeleteQueue()" style="background:#EF4444;border:none;border-radius:6px;padding:6px 14px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">🗑 Delete Selected</button>
         <button onclick="clearQueueSelection()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 14px;color:var(--muted);font-size:12px;cursor:pointer;">Clear</button>
       </div>
@@ -2278,11 +2295,63 @@ tr:hover td{background:var(--card);}
     <!-- Info banner -->
     <div style="background:linear-gradient(135deg,rgba(242,92,5,.08),rgba(168,85,247,.06));border:1px solid rgba(242,92,5,.2);border-radius:10px;padding:14px 16px;">
       <div style="font-size:12px;color:var(--muted);line-height:1.6;">
-        <strong style="color:var(--text);">💡 How it works:</strong> When a drip sequence is triggered, Step 1 is added to the Mail Queue immediately. Subsequent steps are scheduled automatically based on the delay you set. Each step uses the postcard design you assign — or falls back to the default design if none is set.
+        <strong style="color:var(--text);">&#128161; How it works:</strong> When a drip sequence is triggered, Step 1 is added to the Mail Queue immediately. Subsequent steps are scheduled automatically based on the delay you set. Each step uses the postcard design you assign &mdash; or falls back to the default design if none is set.
+      </div>
+    </div>
+    <!-- Active Drip Contacts -->
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);">&#9889; Active Drip Contacts</div>
+        <button onclick="renderActiveDripContacts()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:5px 12px;font-size:11px;color:var(--mid);cursor:pointer;font-weight:600;">&#8635; Refresh</button>
+      </div>
+      <div id="drip-active-contacts" style="display:flex;flex-direction:column;gap:8px;">
+        <div style="text-align:center;padding:24px;color:var(--muted);font-size:12px;">Loading active drip contacts&hellip;</div>
       </div>
     </div>
   </div>
-
+    <!-- POSTCARD FULL PREVIEW MODAL -->
+  <div id="m-postcard-preview" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center;padding:16px;">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;width:780px;max-width:100%;max-height:90vh;overflow-y:auto;">
+      <div style="padding:18px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-size:15px;font-weight:800;color:var(--text);font-family:var(--font-h);">&#127247; Postcard Full Preview</div>
+        <button onclick="document.getElementById('m-postcard-preview').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1;">&times;</button>
+      </div>
+      <div style="padding:20px 22px;display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <!-- Front side -->
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;">FRONT SIDE</div>
+          <div id="pcp-front" style="background:#111;border-radius:10px;overflow:hidden;aspect-ratio:1.5;position:relative;display:flex;align-items:center;justify-content:center;">
+            <div style="color:var(--muted);font-size:12px;">No design selected</div>
+          </div>
+        </div>
+        <!-- Back side (address block) -->
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;">BACK SIDE (Address Block)</div>
+          <div id="pcp-back" style="background:#fff;border-radius:10px;overflow:hidden;aspect-ratio:1.5;position:relative;padding:20px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;">
+            <div style="display:flex;justify-content:flex-end;">
+              <div style="width:60px;height:60px;background:#f3f4f6;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#9ca3af;">LOGO</div>
+            </div>
+            <div style="text-align:right;">
+              <div id="pcp-homeowner-name" style="font-size:13px;font-weight:700;color:#111;font-family:serif;">John & Jane Smith</div>
+              <div id="pcp-homeowner-addr" style="font-size:11px;color:#374151;margin-top:2px;font-family:serif;">123 Maple Street</div>
+              <div id="pcp-homeowner-city" style="font-size:11px;color:#374151;font-family:serif;">Springfield, IL 62701</div>
+            </div>
+            <div style="font-size:9px;color:#9ca3af;text-align:center;">PRESORTED STANDARD · US POSTAGE PAID</div>
+          </div>
+        </div>
+      </div>
+      <!-- Sample homeowner data controls -->
+      <div style="padding:0 22px 20px;">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;">PREVIEW WITH SAMPLE HOMEOWNER DATA</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <input id="pcp-name-input" type="text" placeholder="Homeowner name" value="John & Jane Smith" oninput="updatePostcardPreviewData()" style="flex:1;min-width:160px;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-size:12px;outline:none;">
+          <input id="pcp-addr-input" type="text" placeholder="Street address" value="123 Maple Street" oninput="updatePostcardPreviewData()" style="flex:1;min-width:160px;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-size:12px;outline:none;">
+          <input id="pcp-city-input" type="text" placeholder="City, State ZIP" value="Springfield, IL 62701" oninput="updatePostcardPreviewData()" style="flex:1;min-width:160px;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-size:12px;outline:none;">
+        </div>
+        <div style="margin-top:12px;font-size:11px;color:var(--muted);">&#128161; The back side automatically includes the homeowner&#39;s mailing address from the estimate. The front is your uploaded design.</div>
+      </div>
+    </div>
+  </div>
   <!-- ADD DESIGN MODAL -->
   <div id="add-design-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;align-items:center;justify-content:center;">
     <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;width:420px;max-width:95vw;max-height:90vh;overflow-y:auto;">
@@ -2498,6 +2567,7 @@ tr:hover td{background:var(--card);}
             <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">QR SCANS</th>
             <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">SIGNED</th>
             <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">PIPELINE $</th>
+            <th style="padding:10px 14px;text-align:left;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">TOP TRADES</th>
           </tr></thead>
           <tbody id="an-rep-table"></tbody>
         </table>
@@ -7369,6 +7439,7 @@ async function loadCampaignsTab(){
               <span style="color:#3B82F6;">&#8679; ${c.ghl_pushed||0} to GHL</span>
               <span style="color:#F59E0B;">&#128236; ${c.postcards_sent||0} postcards</span>
               <span style="color:var(--muted);">&#128203; ${(c.pin_ids||[]).length} pins</span>
+              ${(()=>{ const stats=getCampaignPerformanceStats(c); return stats.pins>0?`<span style="color:#F59E0B;">&#128269; ${stats.scans} QR scans</span><span style="color:#22C55E;">&#10003; ${stats.convRate}% conversion</span><span style="color:#A855F7;">&#128203; ${stats.estimates} estimates</span>`:'' })()}
             </div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
@@ -7490,14 +7561,18 @@ function renderDesignsGrid(){
     <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
       <div style="position:relative;width:100%;padding-top:66.7%;background:#111827;overflow:hidden;">
         ${d.url ? '<img src="'+d.url+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">' : '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;">No preview</div>'}
-        <div style="position:absolute;top:8px;right:8px;">
-          <button onclick="deleteDesign(${i})" style="background:rgba(239,68,68,.85);border:none;border-radius:6px;color:#fff;font-size:11px;font-weight:700;padding:3px 8px;cursor:pointer;">Delete</button>
+        <div style="position:absolute;top:8px;left:8px;">
+          ${d.isDefault?'<span style="background:var(--accent);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;letter-spacing:.5px;">DEFAULT</span>':''}
         </div>
       </div>
       <div style="padding:12px;">
         <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;">${d.name||'Untitled'}</div>
         ${d.desc ? '<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">'+d.desc+'</div>' : ''}
-        <div style="font-size:10px;color:var(--muted);">Uploaded ${d.createdAt ? new Date(d.createdAt).toLocaleDateString() : 'recently'}</div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:8px;">Uploaded ${d.createdAt ? new Date(d.createdAt).toLocaleDateString() : 'recently'}</div>
+        <div style="display:flex;gap:6px;">
+          <button onclick="openPostcardFullPreview(${i})" style="flex:1;background:var(--accent);border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">&#128247; Full Preview</button>
+          <button onclick="deleteDesign(${i})" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:6px;padding:6px 10px;color:#EF4444;font-size:11px;font-weight:700;cursor:pointer;">Delete</button>
+        </div>
       </div>
     </div>
   `).join('');
@@ -7712,7 +7787,103 @@ function campaignQueueWithDrip(campaignId,pinIds){
   if(typeof updateSidebarBadge==='function') updateSidebarBadge();
   toast('Queued '+pins.length+' contacts × '+steps.length+' steps = '+queued+' postcards (Step 1 needs approval)','success');
 }
+function openPostcardFullPreview(designIdx){
+  const designs = getDesigns();
+  const d = designs[designIdx];
+  if(!d){ toast('Design not found','error'); return; }
+  const modal = document.getElementById('m-postcard-preview');
+  if(!modal) return;
+  // Set front side
+  const front = document.getElementById('pcp-front');
+  if(front){
+    front.innerHTML = d.url
+      ? '<img src="'+d.url+'" style="width:100%;height:100%;object-fit:cover;">'
+      : '<div style="color:var(--muted);font-size:12px;padding:20px;text-align:center;">No image for this design</div>';
+  }
+  // Update back side with current input values
+  updatePostcardPreviewData();
+  modal.style.display = 'flex';
+}
+function updatePostcardPreviewData(){
+  const name = document.getElementById('pcp-name-input')?.value || 'Homeowner';
+  const addr = document.getElementById('pcp-addr-input')?.value || '123 Main St';
+  const city = document.getElementById('pcp-city-input')?.value || 'City, ST 00000';
+  const nameEl = document.getElementById('pcp-homeowner-name');
+  const addrEl = document.getElementById('pcp-homeowner-addr');
+  const cityEl = document.getElementById('pcp-homeowner-city');
+  if(nameEl) nameEl.textContent = name;
+  if(addrEl) addrEl.textContent = addr;
+  if(cityEl) cityEl.textContent = city;
+}
 // -- END DESIGNS + DRIP MODULE ------------------------------------------------
+
+// ── DRIP ACTIVE CONTACTS ─────────────────────────────────────────────────────
+function renderActiveDripContacts(){
+  const el = document.getElementById('drip-active-contacts');
+  if(!el) return;
+  // Collect all estimates that have an active drip (steps with no sentAt)
+  const ests = window.S?.estimates || [];
+  const active = ests.filter(e=>
+    e.drip && e.drip.steps && e.drip.steps.some(s=>!s.sentAt && !s.paused)
+  );
+  if(!active.length){
+    el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--muted);font-size:12px;">No contacts currently in an active drip sequence.</div>';
+    return;
+  }
+  el.innerHTML = active.map(est=>{
+    const steps = est.drip.steps || [];
+    const pending = steps.filter(s=>!s.sentAt);
+    const sent = steps.filter(s=>s.sentAt);
+    const nextStep = pending[0];
+    const nextDate = nextStep?.sendAt ? new Date(nextStep.sendAt).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '—';
+    const pin = (window.S?.pins||[]).find(p=>p.id===est.pinId);
+    const status = pin?.status || 'active';
+    const sc = {needs_roof:'#F59E0B',interested:'#A78BFA',contacted:'#60A5FA',quoted:'#3B82F6',signed:'#22C55E',converted:'#22C55E',not_interested:'#6B7280',lost:'#EF4444'}[status]||'#96B0C8';
+    const addr = escHtml(est.addr||est.address||'Unknown address');
+    const owner = escHtml(est.owner||'Homeowner');
+    const estId = escHtml(est.id||'');
+    return `<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:180px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);">${addr}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">${owner} &middot; $${(est.total||0).toLocaleString()}</div>
+        <div style="display:flex;gap:10px;margin-top:6px;font-size:11px;">
+          <span style="color:#22C55E;">&#10003; ${sent.length} sent</span>
+          <span style="color:#F59E0B;">&#9200; ${pending.length} pending</span>
+          <span style="color:var(--muted);">Next: ${nextDate}</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+        <span style="background:${sc};color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:5px;">${status.replace(/_/g,' ')}</span>
+        <div style="display:flex;gap:6px;">
+          <button onclick="pauseDripForContact('${estId}')" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.4);border-radius:5px;padding:4px 10px;color:#F59E0B;font-size:10px;font-weight:700;cursor:pointer;">&#9646;&#9646; Pause</button>
+          <button onclick="cancelDripForContact('${estId}')" style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:5px;padding:4px 10px;color:#EF4444;font-size:10px;font-weight:700;cursor:pointer;">&#10005; Cancel</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function pauseDripForContact(estId){
+  const est = (window.S?.estimates||[]).find(e=>e.id===estId);
+  if(!est||!est.drip) return;
+  const pending = est.drip.steps.filter(s=>!s.sentAt);
+  if(!pending.length){ toast('No pending steps to pause','info'); return; }
+  pending.forEach(s=>{ s.paused = true; });
+  est.drip.paused = true;
+  if(typeof save==='function') save();
+  toast('Drip paused for '+escHtml(est.addr||'contact')+' — '+pending.length+' steps on hold','info');
+  renderActiveDripContacts();
+}
+function cancelDripForContact(estId){
+  if(!confirm('Cancel the drip sequence for this contact? Pending steps will be removed.')) return;
+  const est = (window.S?.estimates||[]).find(e=>e.id===estId);
+  if(!est||!est.drip) return;
+  est.drip.steps = est.drip.steps.filter(s=>s.sentAt);
+  est.drip.cancelled = true;
+  est.drip.cancelledAt = new Date().toISOString();
+  if(typeof save==='function') save();
+  toast('Drip cancelled for '+escHtml(est.addr||'contact'),'success');
+  renderActiveDripContacts();
+}
 
 // ── TERRITORY INTEL MODULE ─────────────────────────────────────────────────
 function refreshTerritoryIntel(){
@@ -7813,14 +7984,73 @@ function tiViewOnMap(lat,lng){
   },300);
 }
 function tiLaunchCampaign(lat,lng,countyName,stormIds){
-  // Pre-fill the nearby campaign modal with this storm location
+  // Show storm campaign suggestion modal
+  openStormCampaignSuggest(lat,lng,countyName,stormIds);
+}
+function openStormCampaignSuggest(lat,lng,countyName,stormIds){
+  const existing = document.getElementById('m-storm-suggest');
+  if(existing) existing.remove();
+  const modal = document.createElement('div');
+  modal.id = 'm-storm-suggest';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;';
+  modal.innerHTML = `
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;width:460px;max-width:100%;max-height:90vh;overflow-y:auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="font-size:16px;font-weight:800;color:var(--text);font-family:var(--font-h);">📣 Launch Storm Campaign</div>
+        <button onclick="document.getElementById('m-storm-suggest').remove()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;">×</button>
+      </div>
+      <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:12px 14px;margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:700;color:#F59E0B;margin-bottom:4px;">🌨 Storm Event Detected</div>
+        <div style="font-size:12px;color:var(--muted);">${escHtml(countyName)} — ${stormIds&&stormIds.length?stormIds.length+' event'+(stormIds.length>1?'s':''):''} in your territory</div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Campaign Name</label>
+        <input id="storm-camp-name" class="fi" value="Storm Response — ${escHtml(countyName).replace(/,.*$/,'')}" style="font-size:13px;">
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Radius (miles)</label>
+        <select id="storm-camp-radius" class="fs" style="font-size:13px;">
+          <option value="0.5">0.5 miles</option>
+          <option value="1" selected>1 mile</option>
+          <option value="2">2 miles</option>
+          <option value="3">3 miles</option>
+          <option value="5">5 miles</option>
+        </select>
+      </div>
+      <div style="margin-bottom:20px;">
+        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Message Focus</label>
+        <select id="storm-camp-msg" class="fs" style="font-size:13px;">
+          <option value="hail">Hail Damage — Free Inspection</option>
+          <option value="wind">Wind Damage — Free Inspection</option>
+          <option value="general">Storm Damage — Free Inspection</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="document.getElementById('m-storm-suggest').remove()" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">Cancel</button>
+        <button onclick="launchStormCampaignFromSuggest(${lat},${lng})" style="flex:2;background:var(--accent);border:none;border-radius:8px;padding:10px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">📣 Go to Map &amp; Launch Campaign</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+function launchStormCampaignFromSuggest(lat,lng){
+  const name = document.getElementById('storm-camp-name')?.value || '';
+  const radius = parseFloat(document.getElementById('storm-camp-radius')?.value||'1');
+  const msg = document.getElementById('storm-camp-msg')?.value || 'general';
+  document.getElementById('m-storm-suggest')?.remove();
+  // Store suggestion for map to pick up
+  window._stormCampaignSuggest = {lat,lng,name,radius,msg};
   goTab('map');
   setTimeout(()=>{
     if(window._map){
       window._map.setView([lat,lng],14);
-      toast('Navigated to '+countyName+' — drop a pin or use Nearby Campaign to target this area','info');
+      toast('📣 '+name+' — drop a pin or use Nearby Campaign to launch ('+radius+'mi radius)','info',6000);
     }
-  },300);
+    // Pre-fill nearby campaign modal if it exists
+    const campName = document.getElementById('nearby-campaign-name');
+    if(campName) campName.value = name;
+    const campRadius = document.getElementById('nearby-campaign-radius');
+    if(campRadius) campRadius.value = String(radius);
+  },400);
 }
 // Hook: when Territory Intel tab opens, render it
 (function(){
