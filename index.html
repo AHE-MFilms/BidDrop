@@ -71,7 +71,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 .main{flex:1;overflow:hidden;display:flex;flex-direction:column;position:relative;}
 .tab-pane{display:none;flex:1;overflow:hidden;min-height:0;}
 .tab-pane.active{display:flex;}
-#tab-agency,#tab-history,#tab-admin,#tab-dashboard,#tab-hotleads,#tab-analytics,#tab-zones,#tab-mailqueue,#tab-estimates,#tab-designs,#tab-drip,#tab-contacts,#tab-campaigns{overflow-y:auto!important;overflow-x:hidden;flex:1;min-height:0;}
+#tab-agency,#tab-history,#tab-admin,#tab-dashboard,#tab-hotleads,#tab-analytics,#tab-zones,#tab-mailqueue,#tab-estimates,#tab-designs,#tab-drip,#tab-contacts,#tab-campaigns,#tab-territory,#tab-subscription{overflow-y:auto!important;overflow-x:hidden;flex:1;min-height:0;}
 #tab-settings{display:none;flex-direction:column;overflow-y:auto;padding:22px;gap:14px;}
   #tab-settings.active{display:flex;}
   .stab-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
@@ -928,10 +928,10 @@ tr:hover td{background:var(--card);}
   <button class="bnav-btn" onclick="goTab('estimate')" data-tab="estimate"><span class="bicon">📋</span>Estimator</button>
   <button class="bnav-btn" onclick="goTab('estimates')" data-tab="estimates"><span class="bicon">🗂</span>Estimates</button>
   <button class="bnav-btn" onclick="goTab('mailqueue')" data-tab="mailqueue"><span class="bicon">📬</span>Mail</button>
-  <button class="bnav-btn" onclick="goTab('history')" data-tab="history"><span class="bicon">📑</span>History</button>
+  <button class="bnav-btn" onclick="goTab('contacts')" data-tab="contacts"><span class="bicon">📒</span>Contacts</button>
+  <button class="bnav-btn" onclick="goTab('campaigns')" data-tab="campaigns"><span class="bicon">📣</span>Campaigns</button>
   <button class="bnav-btn" onclick="goTab('dashboard')" data-tab="dashboard"><span class="bicon">📊</span>Stats</button>
-  <button class="bnav-btn" id="hotleads-bnav-btn" onclick="goTab('hotleads')" data-tab="hotleads"><span class="bicon">🔥</span>Hot Leads</button>
-  <button class="bnav-btn" id="zones-bnav-btn" onclick="goTab('zones')" data-tab="zones"><span class="bicon">🗂</span>Zones</button>
+  <button class="bnav-btn" id="hotleads-bnav-btn" onclick="goTab('hotleads')" data-tab="hotleads"><span class="bicon">🔥</span>Leads</button>
   <button class="bnav-btn" id="settings-bnav-btn" onclick="goTab('settings')" data-tab="settings"><span class="bicon">⚙️</span>Settings</button>
 </nav>
 
@@ -973,12 +973,14 @@ tr:hover td{background:var(--card);}
   <div class="bd-sb-divider"></div>
   <div class="bd-sb-section">Intelligence</div>
   <button class="bd-snav-item" onclick="goTab('dashboard')" data-nav="dashboard"><span class="bd-snav-icon">📊</span><span class="bd-snav-label">Dashboard</span></button>
+  <button class="bd-snav-item" onclick="goTab('territory')" data-nav="territory"><span class="bd-snav-icon">🌩</span><span class="bd-snav-label">Territory Intel</span></button>
   <button class="bd-snav-item" onclick="goTab('analytics')" data-nav="analytics" id="bd-sb-analytics-item"><span class="bd-snav-icon">📈</span><span class="bd-snav-label">Analytics</span></button>
   <button class="bd-snav-item" onclick="goTab('zones')" data-nav="zones"><span class="bd-snav-icon">🗂</span><span class="bd-snav-label">Canvass Areas</span></button>
 
   <!-- PLATFORM -->
   <div class="bd-sb-divider"></div>
   <div class="bd-sb-section">Platform</div>
+  <button class="bd-snav-item" onclick="goTab('subscription')" data-nav="subscription"><span class="bd-snav-icon">💳</span><span class="bd-snav-label">Plan &amp; Billing</span></button>
   <button class="bd-snav-item" id="bd-sb-settings-item" onclick="goTab('settings')" data-nav="settings"><span class="bd-snav-icon">⚙️</span><span class="bd-snav-label">Settings</span></button>
   <button class="bd-snav-item" id="bd-sb-agency-item" onclick="goTab('agency')" data-nav="agency" style="display:none;"><span class="bd-snav-icon">🏢</span><span class="bd-snav-label">Agency</span></button>
   <button class="bd-snav-item" id="bd-sb-admin-item" onclick="navGo('admin')" data-nav="admin" style="display:none;"><span class="bd-snav-icon">🛡</span><span class="bd-snav-label">Admin Panel</span></button>
@@ -2325,6 +2327,122 @@ tr:hover td{background:var(--card);}
         <button onclick="closeDesignPicker()" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">Cancel</button>
         <button onclick="confirmDesignPick()" style="flex:2;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;">Use Selected Design</button>
       </div>
+    </div>
+  </div>
+
+
+  <!-- TERRITORY INTEL TAB -->
+  <div class="tab-pane" id="tab-territory" style="flex-direction:column;overflow-y:auto;padding:22px;gap:16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+      <div>
+        <h2 style="font-family:var(--font-h);font-size:22px;font-weight:800;color:var(--text);margin:0;">Territory Intel</h2>
+        <p style="font-size:13px;color:var(--muted);margin:4px 0 0;">Storm events near your canvass zones — launch campaigns directly from damage reports.</p>
+      </div>
+      <button onclick="refreshTerritoryIntel()" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 16px;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;">⟳ Refresh</button>
+    </div>
+    <!-- Stats strip -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;" id="ti-stats-strip">
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;">Hail Events</div>
+        <div id="ti-stat-hail" style="font-size:26px;font-weight:900;color:#F59E0B;margin-top:4px;">—</div>
+        <div style="font-size:11px;color:var(--muted);">past 30 days</div>
+      </div>
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;">Wind Events</div>
+        <div id="ti-stat-wind" style="font-size:26px;font-weight:900;color:#34d399;margin-top:4px;">—</div>
+        <div style="font-size:11px;color:var(--muted);">50+ MPH</div>
+      </div>
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;">Affected Counties</div>
+        <div id="ti-stat-counties" style="font-size:26px;font-weight:900;color:#60a5fa;margin-top:4px;">—</div>
+        <div style="font-size:11px;color:var(--muted);">unique areas</div>
+      </div>
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;">Campaigns Launched</div>
+        <div id="ti-stat-launched" style="font-size:26px;font-weight:900;color:var(--accent);margin-top:4px;">—</div>
+        <div style="font-size:11px;color:var(--muted);">from storm events</div>
+      </div>
+    </div>
+    <!-- Filter bar -->
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <select id="ti-filter-type" onchange="renderTerritoryIntel()" style="background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;font-size:13px;">
+        <option value="all">All Events</option>
+        <option value="hail">Hail Only</option>
+        <option value="wind">Wind Only</option>
+      </select>
+      <select id="ti-filter-size" onchange="renderTerritoryIntel()" style="background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;font-size:13px;">
+        <option value="0">All Sizes</option>
+        <option value="0.75">0.75"+ (Penny)</option>
+        <option value="1.00">1.00"+ (Quarter)</option>
+        <option value="1.50">1.50"+ (Golf Ball)</option>
+        <option value="2.00">2.00"+ (Baseball)</option>
+      </select>
+      <input id="ti-filter-state" placeholder="Filter by state (e.g. MI)" onkeyup="renderTerritoryIntel()" style="background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;font-size:13px;width:160px;" />
+      <label style="font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;">
+        <input type="checkbox" id="ti-group-county" onchange="renderTerritoryIntel()" checked style="accent-color:var(--accent);" /> Group by county
+      </label>
+    </div>
+    <!-- Event list -->
+    <div id="ti-event-list" style="display:flex;flex-direction:column;gap:10px;">
+      <div style="text-align:center;padding:40px;color:var(--muted);font-size:14px;">
+        Loading storm data… <span style="font-size:11px;">(uses the same data as the map Storm Events layer)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUBSCRIPTION TAB -->
+  <div class="tab-pane" id="tab-subscription" style="flex-direction:column;overflow-y:auto;padding:22px;gap:16px;">
+    <div>
+      <h2 style="font-family:var(--font-h);font-size:22px;font-weight:800;color:var(--text);margin:0;">Plan &amp; Billing</h2>
+      <p style="font-size:13px;color:var(--muted);margin:4px 0 0;">Manage your BidDrop subscription, credits, and billing.</p>
+    </div>
+    <!-- Current plan card -->
+    <div id="sub-current-card" style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:20px 24px;">
+      <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Current Plan</div>
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        <div id="sub-plan-badge" style="font-size:22px;font-weight:900;color:var(--accent);">—</div>
+        <div style="flex:1;">
+          <div id="sub-plan-desc" style="font-size:13px;color:var(--muted);">Loading…</div>
+          <div id="sub-credits-line" style="font-size:13px;color:var(--text);margin-top:4px;"></div>
+        </div>
+        <button onclick="goTab('settings')" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 16px;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;">⚙ Settings</button>
+      </div>
+    </div>
+    <!-- Plan comparison table -->
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border);">
+            <th style="text-align:left;padding:10px 12px;color:var(--muted);font-weight:700;">Feature</th>
+            <th style="text-align:center;padding:10px 12px;color:var(--muted);font-weight:700;">Starter<br><span style="font-size:11px;font-weight:400;">$97/mo</span></th>
+            <th style="text-align:center;padding:10px 12px;color:var(--accent);font-weight:700;">Pro<br><span style="font-size:11px;font-weight:400;">$197/mo</span></th>
+            <th style="text-align:center;padding:10px 12px;color:var(--muted);font-weight:700;">Agency<br><span style="font-size:11px;font-weight:400;">$397/mo</span></th>
+            <th style="text-align:center;padding:10px 12px;color:var(--muted);font-weight:700;">Enterprise<br><span style="font-size:11px;font-weight:400;">Custom</span></th>
+          </tr>
+        </thead>
+        <tbody id="sub-plan-table-body">
+          <tr style="border-bottom:1px solid var(--border);"><td style="padding:9px 12px;color:var(--text);">Monthly Credits</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">15</td><td style="text-align:center;padding:9px 12px;color:var(--accent);font-weight:700;">40</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">100</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">200</td></tr>
+          <tr style="border-bottom:1px solid var(--border);"><td style="padding:9px 12px;color:var(--text);">Field Reps</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">3</td><td style="text-align:center;padding:9px 12px;color:var(--accent);font-weight:700;">10</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">Unlimited</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">Unlimited</td></tr>
+          <tr style="border-bottom:1px solid var(--border);"><td style="padding:9px 12px;color:var(--text);">Trades</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">Roofing only</td><td style="text-align:center;padding:9px 12px;color:var(--accent);font-weight:700;">All 9 trades</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">All 9 trades</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">All 9 trades</td></tr>
+          <tr style="border-bottom:1px solid var(--border);"><td style="padding:9px 12px;color:var(--text);">Nearby Campaigns</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">—</td><td style="text-align:center;padding:9px 12px;color:var(--accent);font-weight:700;">✓</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">✓</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">✓</td></tr>
+          <tr style="border-bottom:1px solid var(--border);"><td style="padding:9px 12px;color:var(--text);">Drip Automations</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">—</td><td style="text-align:center;padding:9px 12px;color:var(--accent);font-weight:700;">✓</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">✓</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">✓</td></tr>
+          <tr style="border-bottom:1px solid var(--border);"><td style="padding:9px 12px;color:var(--text);">GHL Integration</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">—</td><td style="text-align:center;padding:9px 12px;color:var(--accent);font-weight:700;">✓</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">✓</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">✓</td></tr>
+          <tr style="border-bottom:1px solid var(--border);"><td style="padding:9px 12px;color:var(--text);">Print Feature</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">—</td><td style="text-align:center;padding:9px 12px;color:var(--accent);font-weight:700;">✓</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">✓</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">✓</td></tr>
+          <tr style="border-bottom:1px solid var(--border);"><td style="padding:9px 12px;color:var(--text);">Territory Intel</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">—</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">—</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">✓</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">✓</td></tr>
+          <tr><td style="padding:9px 12px;color:var(--text);">White Label</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">—</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">—</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">—</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">✓</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- Action buttons -->
+    <div id="sub-action-btns" style="display:flex;gap:12px;flex-wrap:wrap;">
+      <button onclick="subUpgrade()" id="sub-btn-upgrade" style="background:var(--accent);border:none;border-radius:8px;padding:10px 22px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">⬆ Upgrade Plan</button>
+      <button onclick="subCancel()" id="sub-btn-cancel" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 22px;color:var(--danger);font-size:14px;font-weight:700;cursor:pointer;">Cancel Subscription</button>
+      <button onclick="showBuyCreditsModal()" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 22px;color:var(--text);font-size:14px;font-weight:700;cursor:pointer;">🔍 Buy Credits</button>
+    </div>
+    <!-- Credit history -->
+    <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:16px 20px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">Credit Balance</div>
+      <div id="sub-credit-detail" style="font-size:13px;color:var(--muted);">Loading…</div>
     </div>
   </div>
 
@@ -7614,6 +7732,208 @@ function campaignQueueWithDrip(campaignId,pinIds){
   toast('Queued '+pins.length+' contacts × '+steps.length+' steps = '+queued+' postcards (Step 1 needs approval)','success');
 }
 // -- END DESIGNS + DRIP MODULE ------------------------------------------------
+
+// ── TERRITORY INTEL MODULE ─────────────────────────────────────────────────
+function refreshTerritoryIntel(){
+  renderTerritoryIntel();
+}
+function renderTerritoryIntel(){
+  const listEl=document.getElementById('ti-event-list');
+  if(!listEl)return;
+  const events=window._stormData||[];
+  const typeFilter=document.getElementById('ti-filter-type')?.value||'all';
+  const sizeFilter=parseFloat(document.getElementById('ti-filter-size')?.value||'0');
+  const stateFilter=(document.getElementById('ti-filter-state')?.value||'').trim().toUpperCase();
+  const groupByCounty=document.getElementById('ti-group-county')?.checked!==false;
+
+  let filtered=events.filter(e=>{
+    if(typeFilter==='hail'&&e.type!=='hail')return false;
+    if(typeFilter==='wind'&&e.type!=='wind')return false;
+    if(sizeFilter>0&&(parseFloat(e.size)||0)<sizeFilter)return false;
+    if(stateFilter&&!(e.state||'').toUpperCase().includes(stateFilter))return false;
+    return true;
+  });
+
+  // Update stats
+  const hailCount=events.filter(e=>e.type==='hail').length;
+  const windCount=events.filter(e=>e.type==='wind').length;
+  const counties=new Set(events.map(e=>(e.county||e.location||'').split(',')[0].trim()).filter(Boolean));
+  const launched=(S.campaigns||[]).filter(c=>c.stormId).length;
+  const hailEl=document.getElementById('ti-stat-hail');
+  const windEl=document.getElementById('ti-stat-wind');
+  const countiesEl=document.getElementById('ti-stat-counties');
+  const launchedEl=document.getElementById('ti-stat-launched');
+  if(hailEl)hailEl.textContent=hailCount;
+  if(windEl)windEl.textContent=windCount;
+  if(countiesEl)countiesEl.textContent=counties.size;
+  if(launchedEl)launchedEl.textContent=launched;
+
+  if(!filtered.length){
+    listEl.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);font-size:14px;">No storm events match your filters.<br><span style="font-size:12px;">Try enabling Storm Events on the map first, or adjust filters.</span></div>';
+    return;
+  }
+
+  // Sort by date desc
+  filtered.sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
+
+  if(groupByCounty){
+    const byCounty={};
+    filtered.forEach(e=>{
+      const key=(e.county||e.location||'Unknown County').split(',')[0].trim()+', '+(e.state||'');
+      if(!byCounty[key])byCounty[key]=[];
+      byCounty[key].push(e);
+    });
+    listEl.innerHTML=Object.entries(byCounty).map(([county,evts])=>{
+      const maxSize=Math.max(...evts.map(e=>parseFloat(e.size)||0));
+      const hailEvts=evts.filter(e=>e.type==='hail');
+      const windEvts=evts.filter(e=>e.type==='wind');
+      const lat=evts[0].lat||evts[0].latitude||null;
+      const lng=evts[0].lng||evts[0].longitude||null;
+      const hasCoords=lat&&lng;
+      return `<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:15px;font-weight:800;color:var(--text);font-family:var(--font-h);">${escHtml(county)}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px;">
+              ${hailEvts.length?`<span style="color:#F59E0B;margin-right:10px;">🌨 ${hailEvts.length} hail event${hailEvts.length>1?'s':''} (max ${maxSize}")</span>`:''}
+              ${windEvts.length?`<span style="color:#34d399;">💨 ${windEvts.length} wind event${windEvts.length>1?'s':''}</span>`:''}
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px;">Most recent: ${evts[0].date?new Date(evts[0].date).toLocaleDateString():'Unknown date'}</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;">
+            ${hasCoords?`<button onclick="tiViewOnMap(${lat},${lng})" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:7px 12px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;">🗺 View</button>`:''}
+            ${hasCoords?`<button onclick="tiLaunchCampaign(${lat},${lng},'${escHtml(county).replace(/'/g,"\'")}',${JSON.stringify(evts.map(e=>e.id||''))})" style="background:var(--accent);border:none;border-radius:7px;padding:7px 14px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">📣 Launch Campaign</button>`:''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  } else {
+    listEl.innerHTML=filtered.map(e=>{
+      const lat=e.lat||e.latitude||null;
+      const lng=e.lng||e.longitude||null;
+      const hasCoords=lat&&lng;
+      const sizeLabel=e.type==='hail'?` — ${e.size||'?'}" hail`:(e.speed?` — ${e.speed} MPH`:'');
+      return `<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div style="font-size:22px;">${e.type==='hail'?'🌨':'💨'}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:700;color:var(--text);">${escHtml(e.county||e.location||'Unknown')}, ${escHtml(e.state||'')}</div>
+          <div style="font-size:12px;color:var(--muted);">${e.date?new Date(e.date).toLocaleDateString():''}${sizeLabel}</div>
+        </div>
+        ${hasCoords?`<button onclick="tiViewOnMap(${lat},${lng})" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;">🗺</button>`:''}
+        ${hasCoords?`<button onclick="tiLaunchCampaign(${lat},${lng},'${escHtml((e.county||e.location||'').replace(/'/g,"\'"))}',[])" style="background:var(--accent);border:none;border-radius:7px;padding:6px 12px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">📣 Campaign</button>`:''}
+      </div>`;
+    }).join('');
+  }
+}
+function tiViewOnMap(lat,lng){
+  goTab('map');
+  setTimeout(()=>{
+    if(window._map){window._map.setView([lat,lng],15);}
+  },300);
+}
+function tiLaunchCampaign(lat,lng,countyName,stormIds){
+  // Pre-fill the nearby campaign modal with this storm location
+  goTab('map');
+  setTimeout(()=>{
+    if(window._map){
+      window._map.setView([lat,lng],14);
+      toast('Navigated to '+countyName+' — drop a pin or use Nearby Campaign to target this area','info');
+    }
+  },300);
+}
+// Hook: when Territory Intel tab opens, render it
+(function(){
+  const _origGoTab=typeof goTab==='function'?goTab:null;
+  if(_origGoTab){
+    const _patchedGoTab=function(t){
+      _origGoTab(t);
+      if(t==='territory'){setTimeout(renderTerritoryIntel,100);}
+      if(t==='subscription'){setTimeout(renderSubscriptionUI,100);}
+    };
+    window.goTab=_patchedGoTab;
+  }
+})();
+
+// ── SUBSCRIPTION UI MODULE ─────────────────────────────────────────────────
+const PLAN_INFO={
+  starter:{label:'Starter',price:'$97/mo',credits:15,color:'#96B0C8',desc:'Perfect for solo reps getting started.'},
+  pro:{label:'Pro',price:'$197/mo',credits:40,color:'#F25C05',desc:'Full platform access for growing teams.'},
+  agency:{label:'Agency',price:'$397/mo',credits:100,color:'#A855F7',desc:'Multi-team management with Territory Intel.'},
+  enterprise:{label:'Enterprise',price:'Custom',credits:200,color:'#22C55E',desc:'White-label + custom integrations.'},
+};
+function renderSubscriptionUI(){
+  const plan=(S.cfg&&S.cfg.plan)||'starter';
+  const info=PLAN_INFO[plan]||PLAN_INFO.starter;
+  const badge=document.getElementById('sub-plan-badge');
+  const desc=document.getElementById('sub-plan-desc');
+  const credLine=document.getElementById('sub-credits-line');
+  const creditDetail=document.getElementById('sub-credit-detail');
+  const upgradeBtn=document.getElementById('sub-btn-upgrade');
+  const cancelBtn=document.getElementById('sub-btn-cancel');
+  if(badge){badge.textContent=info.label+' — '+info.price;badge.style.color=info.color;}
+  if(desc)desc.textContent=info.desc;
+  const paid=S.cfg.mailerCredits||0;
+  const free=Math.max(0,(S.cfg.freeMailerCreditsUsed||0));
+  if(credLine)credLine.textContent=`${paid} paid credits remaining · ${info.credits} credits/month included`;
+  if(creditDetail)creditDetail.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:400px;">
+      <div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;">Paid Credits</div><div style="font-size:22px;font-weight:900;color:var(--accent);margin-top:2px;">${paid}</div></div>
+      <div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;">Monthly Allotment</div><div style="font-size:22px;font-weight:900;color:#60a5fa;margin-top:2px;">${info.credits}</div></div>
+    </div>
+    <div style="margin-top:10px;font-size:12px;color:var(--muted);">1 credit = 1 postcard sent ($4.00 value). Credits roll over month to month.</div>
+    <button onclick="showBuyCreditsModal()" style="margin-top:12px;background:var(--accent);border:none;border-radius:8px;padding:8px 18px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">🔍 Buy More Credits</button>
+  `;
+  // Highlight current plan column in the table
+  const planOrder=['starter','pro','agency','enterprise'];
+  const planIdx=planOrder.indexOf(plan);
+  const tbody=document.getElementById('sub-plan-table-body');
+  if(tbody){
+    tbody.querySelectorAll('tr').forEach(row=>{
+      const cells=row.querySelectorAll('td');
+      cells.forEach((cell,i)=>{
+        if(i===planIdx+1){
+          cell.style.background='rgba(242,92,5,0.08)';
+          cell.style.fontWeight='700';
+          cell.style.color='var(--accent)';
+        } else {
+          cell.style.background='';
+          cell.style.fontWeight='';
+          cell.style.color='';
+        }
+      });
+    });
+  }
+  // Show/hide upgrade button
+  if(upgradeBtn){
+    if(plan==='enterprise'){upgradeBtn.style.display='none';}
+    else{upgradeBtn.style.display='';upgradeBtn.textContent='⬆ Upgrade to '+(PLAN_INFO[planOrder[planIdx+1]]?.label||'Next Tier');}
+  }
+}
+function subUpgrade(){
+  const plan=(S.cfg&&S.cfg.plan)||'starter';
+  const planOrder=['starter','pro','agency','enterprise'];
+  const nextPlan=planOrder[planOrder.indexOf(plan)+1];
+  if(!nextPlan){toast('You are already on the highest plan','info');return;}
+  const info=PLAN_INFO[nextPlan];
+  if(confirm(`Upgrade to ${info.label} (${info.price})?
+
+This will open the billing portal to complete your upgrade.`)){
+    // Open Stripe billing portal or upgrade URL
+    const upgradeUrl='https://biddrop.us/upgrade?plan='+nextPlan;
+    window.open(upgradeUrl,'_blank');
+  }
+}
+function subCancel(){
+  if(!confirm('Are you sure you want to cancel your subscription?
+
+Your access will continue until the end of your current billing period.')){return;}
+  adminAPI('cancel-stripe-subscription',{acctId:currentAccount?.id}).then(r=>{
+    if(r&&r.success){toast('Subscription cancelled. Access continues until end of billing period.','success');}
+    else{toast('Could not cancel automatically. Please contact support@biddrop.us','error');}
+  }).catch(()=>{toast('Could not cancel automatically. Please contact support@biddrop.us','error');});
+}
+// -- END TERRITORY INTEL + SUBSCRIPTION MODULE --------------------------------
+
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════════════════
