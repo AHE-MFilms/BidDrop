@@ -71,7 +71,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 .main{flex:1;overflow:hidden;display:flex;flex-direction:column;position:relative;}
 .tab-pane{display:none;flex:1;overflow:hidden;min-height:0;}
 .tab-pane.active{display:flex;}
-#tab-agency,#tab-history,#tab-admin,#tab-dashboard,#tab-hotleads,#tab-analytics,#tab-zones,#tab-mailqueue,#tab-estimates{overflow-y:auto!important;overflow-x:hidden;flex:1;min-height:0;}
+#tab-agency,#tab-history,#tab-admin,#tab-dashboard,#tab-hotleads,#tab-analytics,#tab-zones,#tab-mailqueue,#tab-estimates,#tab-designs,#tab-drip,#tab-contacts,#tab-campaigns{overflow-y:auto!important;overflow-x:hidden;flex:1;min-height:0;}
 #tab-settings{display:none;flex-direction:column;overflow-y:auto;padding:22px;gap:14px;}
   #tab-settings.active{display:flex;}
   .stab-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
@@ -962,6 +962,8 @@ tr:hover td{background:var(--card);}
   <div class="bd-sb-divider"></div>
   <div class="bd-sb-section">Campaigns</div>
   <button class="bd-snav-item" onclick="goTab('campaigns')" data-nav="campaigns"><span class="bd-snav-icon">📣</span><span class="bd-snav-label">Campaigns</span></button>
+  <button class="bd-snav-item" onclick="goTab('designs')" data-nav="designs"><span class="bd-snav-icon">🎨</span><span class="bd-snav-label">Postcard Designs</span></button>
+  <button class="bd-snav-item" onclick="goTab('drip')" data-nav="drip"><span class="bd-snav-icon">🔥</span><span class="bd-snav-label">Drip Automations</span></button>
   <button class="bd-snav-item" onclick="goTab('mailqueue')" data-nav="mailqueue"><span class="bd-snav-icon">📬</span><span class="bd-snav-label">Mail Queue</span><span class="bd-snav-badge" id="bd-sb-queue-badge" style="display:none;">0</span></button>
   <button class="bd-snav-item" onclick="goTab('history')" data-nav="history"><span class="bd-snav-icon">📑</span><span class="bd-snav-label">Mail History</span></button>
   <button class="bd-snav-item" onclick="goTab('hotleads')" data-nav="hotleads" id="bd-sb-hotleads-item"><span class="bd-snav-icon">🔥</span><span class="bd-snav-label">Hot Leads</span></button>
@@ -2206,6 +2208,123 @@ tr:hover td{background:var(--card);}
         </select>
       </div>
       <div id="campaigns-list"><div style="padding:40px;text-align:center;color:var(--muted);font-size:13px;">Loading campaigns…</div></div>
+    </div>
+  </div>
+
+  <!-- POSTCARD DESIGNS TAB -->
+  <div class="tab-pane" id="tab-designs" style="flex-direction:column;overflow-y:auto;padding:24px 28px;gap:20px;">
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-family:var(--font-h);font-size:20px;font-weight:800;color:var(--text);">🎨 Postcard Design Library</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">Upload and manage your postcard designs — assign them to drip steps or pick one when sending</div>
+      </div>
+      <button onclick="openAddDesignModal()" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">
+        <span>+</span> Upload Design
+      </button>
+    </div>
+    <!-- Design grid -->
+    <div id="designs-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;">
+      <div style="padding:40px;text-align:center;color:var(--muted);font-size:13px;grid-column:1/-1;">Loading designs…</div>
+    </div>
+  </div>
+
+  <!-- DRIP AUTOMATIONS TAB -->
+  <div class="tab-pane" id="tab-drip" style="flex-direction:column;overflow-y:auto;padding:24px 28px;gap:20px;">
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-family:var(--font-h);font-size:20px;font-weight:800;color:var(--text);">🔥 Drip Automations</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">Configure your follow-up postcard sequences — choose designs, timing, and triggers</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span style="font-size:12px;color:var(--muted);">Drip enabled</span>
+        <div id="drip-tab-toggle" onclick="toggleDripFromTab()" style="width:40px;height:22px;border-radius:11px;background:var(--border);cursor:pointer;position:relative;transition:background .2s;">
+          <div id="drip-tab-knob" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s;"></div>
+        </div>
+        <button onclick="saveDripSequence()" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;">Save Sequence</button>
+      </div>
+    </div>
+
+    <!-- Trigger section -->
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">⚡ Trigger</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:13px;color:var(--text);">
+          <input type="radio" name="drip-trigger" value="estimate_save" id="drip-trigger-estimate" style="accent-color:var(--accent);" checked> On Estimate Save
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:13px;color:var(--text);">
+          <input type="radio" name="drip-trigger" value="manual" id="drip-trigger-manual" style="accent-color:var(--accent);"> Manual (Blitz button)
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:13px;color:var(--text);">
+          <input type="radio" name="drip-trigger" value="campaign" id="drip-trigger-campaign" style="accent-color:var(--accent);"> Campaign Launch
+        </label>
+      </div>
+    </div>
+
+    <!-- Steps builder -->
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);">📬 Sequence Steps</div>
+        <button onclick="addDripStep()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:6px 14px;font-size:12px;color:var(--text);cursor:pointer;font-weight:600;">+ Add Step</button>
+      </div>
+      <div id="drip-steps-builder" style="display:flex;flex-direction:column;gap:12px;">
+        <!-- Steps rendered by JS -->
+      </div>
+    </div>
+
+    <!-- Info banner -->
+    <div style="background:linear-gradient(135deg,rgba(242,92,5,.08),rgba(168,85,247,.06));border:1px solid rgba(242,92,5,.2);border-radius:10px;padding:14px 16px;">
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;">
+        <strong style="color:var(--text);">💡 How it works:</strong> When a drip sequence is triggered, Step 1 is added to the Mail Queue immediately. Subsequent steps are scheduled automatically based on the delay you set. Each step uses the postcard design you assign — or falls back to the default design if none is set.
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD DESIGN MODAL -->
+  <div id="add-design-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;width:420px;max-width:95vw;max-height:90vh;overflow-y:auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+        <div style="font-size:16px;font-weight:800;color:var(--text);">🎨 Upload Postcard Design</div>
+        <button onclick="closeAddDesignModal()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;">×</button>
+      </div>
+      <div style="margin-bottom:12px;">
+        <label class="fl">Design Name</label>
+        <input class="fi" id="new-design-name" placeholder="e.g. Storm Urgency, Final Notice, Summer Special" maxlength="60">
+      </div>
+      <div style="margin-bottom:12px;">
+        <label class="fl">Front Image <span style="color:var(--muted);font-weight:400;">(6×9 postcard front, JPG/PNG)</span></label>
+        <div id="new-design-preview" style="width:100%;height:140px;border:2px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;cursor:pointer;overflow:hidden;position:relative;" onclick="document.getElementById('new-design-file').click()">
+          <span id="new-design-preview-text">Click to upload front image</span>
+          <img id="new-design-preview-img" style="display:none;width:100%;height:100%;object-fit:cover;" src="">
+        </div>
+        <input type="file" id="new-design-file" accept="image/*" style="display:none;" onchange="previewNewDesign(this)">
+      </div>
+      <div style="margin-bottom:16px;">
+        <label class="fl">Description <span style="color:var(--muted);font-weight:400;">(optional)</span></label>
+        <input class="fi" id="new-design-desc" placeholder="e.g. Use for storm follow-up campaigns" maxlength="120">
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="closeAddDesignModal()" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">Cancel</button>
+        <button onclick="saveNewDesign()" style="flex:2;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;">Upload & Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DESIGN PICKER MODAL (used when sending from Mail Queue) -->
+  <div id="design-picker-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;width:560px;max-width:95vw;max-height:85vh;overflow-y:auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+        <div style="font-size:16px;font-weight:800;color:var(--text);">🎨 Choose Postcard Design</div>
+        <button onclick="closeDesignPicker()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;">×</button>
+      </div>
+      <div id="design-picker-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:16px;">
+        <!-- Populated by JS -->
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="closeDesignPicker()" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">Cancel</button>
+        <button onclick="confirmDesignPick()" style="flex:2;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;">Use Selected Design</button>
+      </div>
     </div>
   </div>
 
@@ -7253,6 +7372,248 @@ function bulkApproveQueue(){
 }
 // -- END QUEUE APPROVAL FLOW --------------------------------------------------
 
+
+// ═══════════════════════════════════════════════════════════════════════════
+// POSTCARD DESIGN LIBRARY
+// ═══════════════════════════════════════════════════════════════════════════
+
+function getDesigns(){ return Array.isArray(S.cfg.postcardDesigns) ? S.cfg.postcardDesigns : []; }
+
+function renderDesignsGrid(){
+  const grid = document.getElementById('designs-grid');
+  if(!grid) return;
+  const designs = getDesigns();
+  if(!designs.length){
+    grid.innerHTML = '<div style="padding:60px;text-align:center;color:var(--muted);font-size:14px;grid-column:1/-1;"><div style="font-size:40px;margin-bottom:12px;">\u{1F3A8}</div><div style="font-weight:700;color:var(--text);margin-bottom:6px;">No designs yet</div><div>Upload your first postcard design to get started</div></div>';
+    return;
+  }
+  grid.innerHTML = designs.map((d,i)=>`
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="position:relative;width:100%;padding-top:66.7%;background:#111827;overflow:hidden;">
+        ${d.url ? '<img src="'+d.url+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">' : '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;">No preview</div>'}
+        <div style="position:absolute;top:8px;right:8px;">
+          <button onclick="deleteDesign(${i})" style="background:rgba(239,68,68,.85);border:none;border-radius:6px;color:#fff;font-size:11px;font-weight:700;padding:3px 8px;cursor:pointer;">Delete</button>
+        </div>
+      </div>
+      <div style="padding:12px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;">${d.name||'Untitled'}</div>
+        ${d.desc ? '<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">'+d.desc+'</div>' : ''}
+        <div style="font-size:10px;color:var(--muted);">Uploaded ${d.createdAt ? new Date(d.createdAt).toLocaleDateString() : 'recently'}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openAddDesignModal(){
+  document.getElementById('new-design-name').value='';
+  document.getElementById('new-design-desc').value='';
+  document.getElementById('new-design-preview-text').style.display='';
+  document.getElementById('new-design-preview-img').style.display='none';
+  document.getElementById('new-design-preview-img').src='';
+  document.getElementById('new-design-file').value='';
+  window._newDesignFile=null;
+  document.getElementById('add-design-modal').style.display='flex';
+}
+function closeAddDesignModal(){ document.getElementById('add-design-modal').style.display='none'; }
+function previewNewDesign(inp){
+  if(!inp.files||!inp.files[0]) return;
+  window._newDesignFile=inp.files[0];
+  const r=new FileReader();
+  r.onload=ev=>{
+    document.getElementById('new-design-preview-text').style.display='none';
+    const img=document.getElementById('new-design-preview-img');
+    img.src=ev.target.result; img.style.display='block';
+  };
+  r.readAsDataURL(inp.files[0]);
+}
+async function saveNewDesign(){
+  const name=(document.getElementById('new-design-name').value||'').trim();
+  if(!name){ toast('Please enter a design name','error'); return; }
+  if(!window._newDesignFile){ toast('Please upload an image','error'); return; }
+  const desc=(document.getElementById('new-design-desc').value||'').trim();
+  const acctId=(currentAccount&&currentAccount.id)||'shared';
+  const safeN=name.toLowerCase().replace(/[^a-z0-9]/g,'-').substring(0,30);
+  const path=acctId+'/designs/'+safeN+'-'+Date.now()+'.jpg';
+  toast('Uploading design…','info');
+  const url=await uploadToStorage(window._newDesignFile,path,1800,0.92,'image/jpeg');
+  if(!S.cfg.postcardDesigns) S.cfg.postcardDesigns=[];
+  S.cfg.postcardDesigns.push({id:'des_'+Date.now(),name,desc,url:url||null,createdAt:new Date().toISOString()});
+  save(); closeAddDesignModal(); renderDesignsGrid(); renderDripStepDesignSelects();
+  toast('Design "'+name+'" saved!','success');
+}
+function deleteDesign(idx){
+  if(!confirm('Delete this design?')) return;
+  if(!S.cfg.postcardDesigns) return;
+  S.cfg.postcardDesigns.splice(idx,1);
+  save(); renderDesignsGrid(); renderDripStepDesignSelects();
+  toast('Design deleted','success');
+}
+
+// Design picker modal
+window._designPickerCallback=null;
+window._selectedDesignId=null;
+function openDesignPicker(cb){
+  window._designPickerCallback=cb;
+  window._selectedDesignId=null;
+  const designs=getDesigns();
+  const grid=document.getElementById('design-picker-grid');
+  if(!designs.length){
+    grid.innerHTML='<div style="padding:30px;text-align:center;color:var(--muted);font-size:13px;grid-column:1/-1;">No designs yet. Go to <strong>Postcard Designs</strong> to upload one.</div>';
+  } else {
+    grid.innerHTML=designs.map(d=>`<div id="dpick-${d.id}" onclick="selectDesignInPicker('${d.id}')" style="background:var(--card2);border:2px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:border-color .15s;"><div style="position:relative;width:100%;padding-top:66.7%;background:#111827;overflow:hidden;">${d.url?'<img src="'+d.url+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">':'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px;">No preview</div>'}</div><div style="padding:8px;font-size:12px;font-weight:700;color:var(--text);">${d.name||'Untitled'}</div></div>`).join('');
+  }
+  document.getElementById('design-picker-modal').style.display='flex';
+}
+function selectDesignInPicker(id){
+  window._selectedDesignId=id;
+  document.querySelectorAll('[id^="dpick-"]').forEach(el=>{el.style.borderColor='var(--border)';});
+  const el=document.getElementById('dpick-'+id);
+  if(el) el.style.borderColor='var(--accent)';
+}
+function closeDesignPicker(){ document.getElementById('design-picker-modal').style.display='none'; }
+function confirmDesignPick(){
+  if(!window._selectedDesignId){ toast('Please select a design','error'); return; }
+  const design=getDesigns().find(d=>d.id===window._selectedDesignId);
+  closeDesignPicker();
+  if(window._designPickerCallback) window._designPickerCallback(design);
+}
+
+// Patch goTab to render designs/drip when tab opens
+(function(){
+  const _orig=window.goTab;
+  if(typeof _orig==='function'){
+    window.goTab=function(t){
+      _orig(t);
+      if(t==='designs') setTimeout(renderDesignsGrid,50);
+      if(t==='drip') setTimeout(renderDripBuilder,50);
+    };
+  }
+})();
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DRIP AUTOMATIONS BUILDER
+// ═══════════════════════════════════════════════════════════════════════════
+
+function getDefaultDripSteps(){
+  return [
+    {id:1,enabled:true,day:0,designId:null,headline:S.cfg.drip2Headline||'We assessed your roof.',subtext:S.cfg.drip2Subtext||'Your estimate is ready. Call us today.'},
+    {id:2,enabled:true,day:7,designId:null,headline:S.cfg.drip3Headline||'Still thinking it over?',subtext:S.cfg.drip3Subtext||"Your estimate is still valid. We'd love to help."},
+    {id:3,enabled:true,day:14,designId:null,headline:S.cfg.drip4Headline||'Storm season is coming.',subtext:S.cfg.drip4Subtext||"Now's the time to protect your home."},
+    {id:4,enabled:true,day:21,designId:null,headline:S.cfg.drip5Headline||'Final notice.',subtext:S.cfg.drip5Subtext||'Your estimate expires soon. Secure your spot.'},
+  ];
+}
+function getDripSteps(){
+  if(S.cfg.dripStepsJson&&Array.isArray(S.cfg.dripStepsJson)&&S.cfg.dripStepsJson.length) return S.cfg.dripStepsJson;
+  return getDefaultDripSteps();
+}
+function renderDripBuilder(){
+  const tog=document.getElementById('drip-tab-toggle');
+  const knob=document.getElementById('drip-tab-knob');
+  if(tog&&knob){
+    const on=!!S.cfg.dripEnabled;
+    tog.style.background=on?'var(--accent)':'var(--border)';
+    knob.style.left=on?'21px':'3px';
+  }
+  const trigger=(S.cfg.dripStepsJson&&S.cfg.dripStepsJson._trigger)||'estimate_save';
+  const trigEl=document.getElementById('drip-trigger-'+trigger);
+  if(trigEl) trigEl.checked=true;
+  renderDripStepCards();
+}
+function renderDripStepCards(){
+  const container=document.getElementById('drip-steps-builder');
+  if(!container) return;
+  const steps=getDripSteps();
+  const designs=getDesigns();
+  const designOpts='<option value="">— Default design —</option>'+designs.map(d=>'<option value="'+d.id+'">'+d.name+'</option>').join('');
+  container.innerHTML=steps.map((step,i)=>`
+    <div style="background:var(--card);border:1px solid ${step.enabled?'rgba(242,92,5,.3)':'var(--border)'};border-radius:12px;padding:16px 20px;display:flex;gap:16px;align-items:flex-start;">
+      <div style="flex-shrink:0;text-align:center;min-width:48px;">
+        <div style="font-family:var(--font-h);font-size:22px;font-weight:800;color:${step.enabled?'var(--accent)':'var(--muted)'};">${i+1}</div>
+        <div onclick="toggleDripStep(${i})" style="width:32px;height:18px;border-radius:9px;background:${step.enabled?'var(--accent)':'var(--border)'};cursor:pointer;position:relative;margin:6px auto 0;transition:background .2s;">
+          <div style="position:absolute;top:2px;left:${step.enabled?'14px':'2px'};width:14px;height:14px;border-radius:50%;background:#fff;transition:left .2s;"></div>
+        </div>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Delay (days from trigger)</label>
+            <input type="number" min="0" max="365" value="${step.day}" onchange="updateDripStepField(${i},'day',parseInt(this.value)||0)" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-size:13px;width:100%;">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Design</label>
+            <select onchange="updateDripStepField(${i},'designId',this.value||null)" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-size:13px;width:100%;cursor:pointer;">
+              ${designOpts.replace('value="'+(step.designId||'')+'"','value="'+(step.designId||'')+'" selected')}
+            </select>
+          </div>
+        </div>
+        <div style="margin-bottom:8px;">
+          <label style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Headline (max 40 chars)</label>
+          <input class="fi" value="${(step.headline||'').replace(/"/g,'&quot;')}" maxlength="40" onchange="updateDripStepField(${i},'headline',this.value)" placeholder="e.g. Still thinking it over?">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Subtext (max 80 chars)</label>
+          <input class="fi" value="${(step.subtext||'').replace(/"/g,'&quot;')}" maxlength="80" onchange="updateDripStepField(${i},'subtext',this.value)" placeholder="e.g. Your estimate is still valid.">
+        </div>
+      </div>
+      <button onclick="removeDripStep(${i})" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;flex-shrink:0;padding:0;line-height:1;" title="Remove step">&#x2715;</button>
+    </div>
+  `).join('');
+}
+function renderDripStepDesignSelects(){
+  const dripTab=document.getElementById('tab-drip');
+  if(dripTab&&dripTab.classList.contains('active')) renderDripStepCards();
+}
+function toggleDripFromTab(){
+  S.cfg.dripEnabled=!S.cfg.dripEnabled; save(); renderDripBuilder();
+  toast('Drip automations '+(S.cfg.dripEnabled?'enabled':'disabled'),'success');
+}
+function addDripStep(){
+  const steps=getDripSteps();
+  const lastDay=steps.length?steps[steps.length-1].day:0;
+  steps.push({id:Date.now(),enabled:true,day:lastDay+7,designId:null,headline:'',subtext:''});
+  S.cfg.dripStepsJson=steps; renderDripStepCards();
+}
+function removeDripStep(idx){
+  const steps=getDripSteps();
+  if(steps.length<=1){ toast('Need at least one step','error'); return; }
+  steps.splice(idx,1); S.cfg.dripStepsJson=steps; renderDripStepCards();
+}
+function toggleDripStep(idx){
+  const steps=getDripSteps(); steps[idx].enabled=!steps[idx].enabled;
+  S.cfg.dripStepsJson=steps; renderDripStepCards();
+}
+function updateDripStepField(idx,field,value){
+  const steps=getDripSteps(); steps[idx][field]=value; S.cfg.dripStepsJson=steps;
+}
+function saveDripSequence(){
+  const triggerEl=document.querySelector('input[name="drip-trigger"]:checked');
+  const trigger=triggerEl?triggerEl.value:'estimate_save';
+  const steps=getDripSteps();
+  steps._trigger=trigger;
+  S.cfg.dripStepsJson=steps; save();
+  toast('Drip sequence saved!','success');
+}
+
+// Campaign drip queue
+function campaignQueueWithDrip(campaignId,pinIds){
+  const steps=getDripSteps().filter(s=>s.enabled);
+  if(!steps.length){ toast('No drip steps configured','error'); return; }
+  const pins=(S.pins||[]).filter(p=>pinIds.includes(p.id));
+  if(!pins.length){ toast('No pins found for this campaign','error'); return; }
+  let queued=0;
+  pins.forEach(pin=>{
+    steps.forEach((step,si)=>{
+      const item={id:'q_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),pinId:pin.id,address:pin.address||pin.addr||'',lat:pin.lat,lng:pin.lng,name:pin.name||pin.ownerName||'',status:si===0?'needs_approval':'drip_scheduled',dripStep:si+1,dripDay:step.day,designId:step.designId||null,headline:step.headline||'',subtext:step.subtext||'',campaignId:campaignId,createdAt:new Date().toISOString()};
+      if(!S.queue) S.queue=[];
+      S.queue.push(item); queued++;
+    });
+  });
+  save();
+  if(typeof renderQueue==='function') renderQueue();
+  if(typeof updateSidebarBadge==='function') updateSidebarBadge();
+  toast('Queued '+pins.length+' contacts × '+steps.length+' steps = '+queued+' postcards (Step 1 needs approval)','success');
+}
+// -- END DESIGNS + DRIP MODULE ------------------------------------------------
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════════════════

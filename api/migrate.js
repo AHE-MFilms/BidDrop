@@ -99,6 +99,16 @@ export default async function handler(req, res) {
       sql: "ALTER TABLE pins ADD COLUMN IF NOT EXISTS campaign_id text"
     },
     {
+      name: 'accounts.drip_steps_json',
+      check: "SELECT column_name FROM information_schema.columns WHERE table_name='accounts' AND column_name='drip_steps_json'",
+      sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS drip_steps_json jsonb"
+    },
+    {
+      name: 'accounts.postcard_designs_json',
+      check: "SELECT column_name FROM information_schema.columns WHERE table_name='accounts' AND column_name='postcard_designs_json'",
+      sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS postcard_designs_json jsonb"
+    },
+    {
       name: 'campaign_targets_table',
       check: "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name='campaign_targets'",
       sql: `CREATE TABLE IF NOT EXISTS campaign_targets (
