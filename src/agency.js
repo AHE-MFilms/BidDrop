@@ -411,6 +411,39 @@ function renderDash(){
   document.getElementById('s-mailed').textContent=mailed;
   document.getElementById('s-conv').textContent=mailed?Math.round(conv/mailed*100)+'%':'—';
   renderActChart();renderTeam();renderActFeed();renderLeaderboard();
+  // ── Trade breakdown ──
+  const tradeCounts={roofing:0,solar:0,siding:0,fence:0,gutters:0,other:0};
+  (S.estimates||[]).forEach(e=>{
+    const structs=(e.structures||[]);
+    if(structs.length===0){tradeCounts.other++;return;}
+    structs.forEach(s=>{
+      const t=(s.type||s.trade||'').toLowerCase();
+      if(t.includes('solar'))tradeCounts.solar++;
+      else if(t.includes('sid')||t.includes('vinyl'))tradeCounts.siding++;
+      else if(t.includes('fence'))tradeCounts.fence++;
+      else if(t.includes('gutter'))tradeCounts.gutters++;
+      else if(t.includes('roof')||t.includes('shingle')||t.includes('metal')||t===''||!t)tradeCounts.roofing++;
+      else tradeCounts.other++;
+    });
+  });
+  ['roofing','solar','siding','fence','gutters','other'].forEach(k=>{
+    const el=document.getElementById('td-'+k);
+    if(el) el.textContent=tradeCounts[k];
+  });
+  // ── Storm banner ──
+  const banner=document.getElementById('dash-storm-banner');
+  if(banner && window._stormEvents && window._stormEvents.length){
+    const ev=window._stormEvents[0];
+    const title=document.getElementById('dash-storm-title');
+    const sub=document.getElementById('dash-storm-sub');
+    if(title) title.textContent='⛈️ Storm Event: '+(ev.event_type||'Hail')+(ev.location?' — '+ev.location:'');
+    if(sub) sub.textContent=(ev.description||'Hail activity detected in your canvass area. Launch a targeted campaign.');
+    banner.style.display='flex';
+  } else if(banner){
+    banner.style.display='none';
+  }
+  // Sync sidebar badge
+  if(typeof updateSidebarBadge==='function') updateSidebarBadge();
 }
 function renderLeaderboard(){
   const el=document.getElementById('leaderboard-list');

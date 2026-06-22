@@ -779,7 +779,7 @@ function renderQueue(){
   const tbody=document.getElementById('q-tbody');
   const tbl=document.getElementById('q-table');
   const empty=document.getElementById('q-empty');
-  if(!S.queue.length){tbl.style.display='none';empty.style.display='block';return;}
+  if(!S.queue.length){tbl.style.display='none';empty.style.display='block';if(typeof updateSidebarBadge==='function')updateSidebarBadge();return;}
   tbl.style.display='table';empty.style.display='none';
   const sortedQueue = _sortList([...S.queue], _qSort.col, _qSort.dir);
   _updateQSortArrows();
@@ -818,11 +818,13 @@ function renderQueue(){
 
       (i.status==='failed' && S.cfg.enablePostcard!==false?'<button class="btn-xs" onclick="sendLobPostcard6x9(\''+qid+'\')" style="background:#0e7490;border-color:#0e7490;color:#fff;">Retry Card</button>':'')+
       (i.status==='pending'?'<button class="btn-xs" onclick="editEstimate(\''+qid+'\')">✏️ Edit</button>':'')+
-      '<button class="btn-xs" onclick="previewQueueItem(\''+qid+'\')">Preview Letter</button>'+
+      '<button class="btn-xs" onclick="previewQueueItem(\''+qid+'\')"">Preview Letter</button>'+
       '<button class="btn-xs" onclick="previewPostcard6x9(\''+qid+'\')" style="background:#0e749022;border-color:#0e7490;color:#0e7490;" title="Preview postcard front & back">Preview Card</button>'+
       '<button class="btn-xs danger" onclick="rmQ(\''+qid+'\')" title="Delete">🗑 Delete</button>'+
       '</td></tr>';
   }).join('');
+  // Sync sidebar queue badge
+  if(typeof updateSidebarBadge === 'function') updateSidebarBadge();
 }
 
 // ── Convert full US state name to 2-letter abbreviation ─────────────────────
