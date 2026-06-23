@@ -1228,6 +1228,86 @@ tr:hover td{background:var(--card);}
         <span>Build Estimate</span>
         <button onclick="newEstimate()" style="background:none;border:1px solid var(--border);border-radius:7px;padding:5px 12px;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.4px;text-transform:uppercase;">✕ New</button>
       </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════════
+           ESTIMATE MODE TOGGLE — Sales Proposal vs Insurance Scope
+      ═══════════════════════════════════════════════════════════════════ -->
+      <div id="est-mode-bar" style="display:flex;gap:6px;margin-bottom:14px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:6px;">
+        <button id="est-mode-sales" onclick="setEstMode('sales')" style="flex:1;padding:8px 0;border-radius:7px;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font-h);letter-spacing:.4px;background:var(--accent);color:#fff;">💼 Sales Proposal</button>
+        <button id="est-mode-ins" onclick="setEstMode('insurance')" style="flex:1;padding:8px 0;border-radius:7px;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font-h);letter-spacing:.4px;background:none;color:var(--muted);">🏛 Insurance Scope</button>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════════
+           INSURANCE CLAIM DETAILS — only visible in insurance mode
+      ═══════════════════════════════════════════════════════════════════ -->
+      <div id="ins-claim-section" style="display:none;background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.2);border-radius:10px;padding:14px;margin-bottom:14px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#60A5FA;margin-bottom:12px;">🏛 Insurance Claim Details</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div class="fg" style="margin-bottom:0;">
+            <label class="fl">Claim Number</label>
+            <input class="fi" id="ins-claim-num" placeholder="e.g. CLM-2026-48821" oninput="scheduleDraftSave()">
+          </div>
+          <div class="fg" style="margin-bottom:0;">
+            <label class="fl">Insurance Company</label>
+            <input class="fi" id="ins-carrier" placeholder="e.g. State Farm" oninput="scheduleDraftSave()">
+          </div>
+          <div class="fg" style="margin-bottom:0;">
+            <label class="fl">Date of Loss</label>
+            <input class="fi" id="ins-dol" type="date" oninput="scheduleDraftSave()">
+          </div>
+          <div class="fg" style="margin-bottom:0;">
+            <label class="fl">Policy Number</label>
+            <input class="fi" id="ins-policy" placeholder="e.g. SF-9921-44B" oninput="scheduleDraftSave()">
+          </div>
+          <div class="fg" style="margin-bottom:0;">
+            <label class="fl">Adjuster Name</label>
+            <input class="fi" id="ins-adjuster" placeholder="Adjuster name" oninput="scheduleDraftSave()">
+          </div>
+          <div class="fg" style="margin-bottom:0;">
+            <label class="fl">Adjuster Phone</label>
+            <input class="fi" id="ins-adj-phone" placeholder="(555) 000-0000" type="tel" oninput="scheduleDraftSave()">
+          </div>
+          <div class="fg" style="margin-bottom:0;">
+            <label class="fl">Price List Code <span title="Xactimate regional price list, e.g. MIDET8X_JUN26" style="cursor:help;color:var(--muted);">ⓘ</span></label>
+            <input class="fi" id="ins-price-list" placeholder="e.g. MIDET8X_JUN26" oninput="scheduleDraftSave()">
+          </div>
+          <div class="fg" style="margin-bottom:0;">
+            <label class="fl">Deductible ($)</label>
+            <input class="fi" id="ins-deductible" type="number" placeholder="1000" min="0" oninput="calcInsuranceTotals();scheduleDraftSave()">
+          </div>
+        </div>
+        <!-- O&P + Depreciation row -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;">
+          <div class="fg" style="margin-bottom:0;">
+            <label class="fl" style="display:flex;align-items:center;gap:6px;">
+              <input type="checkbox" id="ins-op-toggle" checked onchange="calcInsuranceTotals()" style="accent-color:var(--accent);width:14px;height:14px;">
+              O&amp;P %
+            </label>
+            <input class="fi" id="ins-op-pct" type="number" value="20" min="0" max="50" oninput="calcInsuranceTotals()">
+          </div>
+          <div class="fg" style="margin-bottom:0;">
+            <label class="fl">Depreciation %</label>
+            <input class="fi" id="ins-depr-pct" type="number" value="0" min="0" max="80" oninput="calcInsuranceTotals()">
+          </div>
+          <div class="fg" style="margin-bottom:0;">
+            <label class="fl">Roof Age (yrs) <span style="font-size:10px;color:var(--muted);">(auto-calc)</span></label>
+            <input class="fi" id="ins-roof-age" type="number" placeholder="12" min="0" max="50" oninput="autoCalcDepreciation()">
+          </div>
+        </div>
+        <!-- Insurance totals summary -->
+        <div id="ins-totals-box" style="margin-top:12px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:12px;">
+          <div style="display:flex;justify-content:space-between;padding:3px 0;color:var(--mid);"><span>Subtotal (materials + labor)</span><span id="ins-t-subtotal">$0</span></div>
+          <div id="ins-steep-row" style="display:none;justify-content:space-between;padding:3px 0;color:var(--mid);"><span id="ins-steep-lbl">Steep slope surcharge</span><span id="ins-t-steep">$0</span></div>
+          <div id="ins-stories-row" style="display:none;justify-content:space-between;padding:3px 0;color:var(--mid);"><span id="ins-stories-lbl">High roof surcharge</span><span id="ins-t-stories">$0</span></div>
+          <div id="ins-op-row" style="display:flex;justify-content:space-between;padding:3px 0;color:var(--mid);"><span id="ins-op-lbl">O&amp;P (20%)</span><span id="ins-t-op">$0</span></div>
+          <div style="display:flex;justify-content:space-between;padding:3px 0;color:var(--mid);"><span>Sales Tax (<span id="ins-tax-pct-lbl">0</span>%)</span><span id="ins-t-tax">$0</span></div>
+          <div style="display:flex;justify-content:space-between;padding:5px 0;border-top:1px solid var(--border);margin-top:4px;font-weight:700;color:#60A5FA;"><span>RCV (Replacement Cost Value)</span><span id="ins-t-rcv">$0</span></div>
+          <div style="display:flex;justify-content:space-between;padding:3px 0;color:#EF4444;"><span>Depreciation (<span id="ins-depr-pct-lbl">0</span>%)</span><span id="ins-t-depr">−$0</span></div>
+          <div style="display:flex;justify-content:space-between;padding:3px 0;color:var(--mid);"><span>ACV (Actual Cash Value)</span><span id="ins-t-acv">$0</span></div>
+          <div style="display:flex;justify-content:space-between;padding:3px 0;color:#EF4444;"><span>Deductible</span><span id="ins-t-ded">−$0</span></div>
+          <div style="display:flex;justify-content:space-between;padding:5px 0;border-top:1px solid var(--border);margin-top:4px;font-weight:700;color:#22C55E;"><span>Est. Insurance Payout</span><span id="ins-t-payout">$0</span></div>
+        </div>
+      </div>
       <!-- Draft restored banner -->
       <div id="draft-banner" style="display:none;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);border-radius:7px;padding:8px 12px;margin-bottom:14px;font-size:12px;color:#93C5FD;display:none;align-items:center;gap:8px;">
         <span>💾 Draft restored</span><span id="draft-banner-time" style="color:var(--muted);"></span>
@@ -1928,6 +2008,7 @@ tr:hover td{background:var(--card);}
         </div>
         <button class="btn-sec" onclick="if(!isPlanAtLeast('pro')){showPlanUpgradePrompt('Print Preview','pro');}else{printPreview();}" style="background:var(--card2);border-color:var(--info);color:var(--info);">🖨 Print Preview (8.5×11)</button>
         <button onclick="if(!isPlanAtLeast('pro')){showPlanUpgradePrompt('Proposal','pro');}else{openProposalModal();}" style="background:linear-gradient(135deg,#1a3a6b,#0f2040);border:1px solid rgba(59,130,246,.5);border-radius:10px;padding:13px;color:#60a5fa;font-family:var(--font-b);font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.4px;display:flex;align-items:center;justify-content:center;gap:7px;">📋 Create Proposal (Good / Better / Best)</button>
+        <button id="open-proposal-btn" onclick="if(!isPlanAtLeast('pro')){showPlanUpgradePrompt('Insurance Scope PDF','pro');}else{printInsuranceScopePDF();}" style="display:none;background:linear-gradient(135deg,#1e3a8a,#1e40af);border:1px solid rgba(96,165,250,.5);border-radius:10px;padding:13px;color:#93c5fd;font-family:var(--font-b);font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.4px;display:flex;align-items:center;justify-content:center;gap:7px;">🏛 Insurance Scope PDF</button>
       </div>
     </div>
     <div class="est-preview" id="est-preview" style="flex-direction:column;align-items:center;">
@@ -4751,6 +4832,7 @@ tr:hover td{background:var(--card);}
 <script src="/src/map.js"></script>
 <script src="/src/ghl.js"></script>
 <script src="/src/integrations-ext.js"></script>
+<script src="/src/insurance-mode.js"></script>
 <script src="/src/integrations.js"></script>
 <script src="/src/campaign.js"></script>
 <script src="/src/auth.js"></script>

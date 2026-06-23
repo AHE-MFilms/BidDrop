@@ -132,6 +132,8 @@ function calcP(){
     if(el)el.textContent='$'+calcStructPrice(s).toLocaleString();
   });
   if(typeof scheduleDraftSave==='function') scheduleDraftSave();
+  // Refresh insurance scope totals whenever estimate changes
+  if(typeof calcInsuranceTotals==='function') calcInsuranceTotals();
   return grand;
 }
 
