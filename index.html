@@ -7566,11 +7566,13 @@ function updateSidebarBadge(){
       badge.style.display = 'none';
     }
   }
-  // Credit label
+  // Credit label — read directly from S.cfg so sidebar always matches the live balance
   const creditLbl = document.getElementById('bd-sb-credit-label');
-  const creditBadge = document.getElementById('credit-badge-label');
-  if(creditLbl && creditBadge){
-    creditLbl.textContent = creditBadge.textContent || 'Credits';
+  if(creditLbl && window.S && S.cfg !== undefined){
+    const _paid = S.cfg.mailerCredits || 0;
+    const _freeLeft = Math.max(0, 0 - (S.cfg.freeMailerCreditsUsed||0));
+    const _total = _paid + _freeLeft;
+    creditLbl.textContent = _total > 0 ? _total + ' credits' : 'Buy Credits';
   }
 }
 // ══════════════════════════════════════════════════════════
