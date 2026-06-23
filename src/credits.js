@@ -32,6 +32,8 @@ function updateCreditBadge(){
       buyBtn.textContent = '+ Buy Credits';
     }
   }
+  // Keep sidebar credit label in sync with badge
+  if(typeof updateSidebarBadge === 'function') updateSidebarBadge();
 }
 
 async function showBuyCreditsModal(){
