@@ -339,3 +339,60 @@ async function autoFillOwnerIfEmpty(address){
     }
   }
 }
+
+// ═══════════════════════════════
+//  SATELLITE MEASUREMENT BUTTON — Estimate Form
+// ═══════════════════════════════
+// Called by the "🛰 Measure" button next to the Property Address field on the Estimate tab.
+// 1. Forward-geocodes the address via Mapbox
+// 2. Calls the Solar API for roof measurements
+// 3. Auto-applies sqft + pitch to the first structure (same as applySolarToEstimate)
+async function fetchSatelliteMeasurementForEstimate(){
+  const addrEl = document.getElementById('e-addr');
+  const btn = document.getElementById('est-satellite-btn');
+  const address = (addrEl && addrEl.value.trim()) || '';
+  if(!address){ toast('Enter a property address first','error'); return; }
+  if(btn){ btn.textContent='⏳ Fetching...'; btn.disabled=true; }
+  try{
+    // Step 1: Forward geocode the address to get lat/lng
+    const MB = typeof window._MB !== 'undefined' ? window._MB : (window.MB || '');
+    const geoRes = await fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/'+encodeURIComponent(address)+'.json?country=us&types=address&limit=1&access_token='+MB);
+    const geoData = await geoRes.json();
+    const feature = geoData && geoData.features && geoData.features[0];
+    if(!feature){ toast('Address not found — try a more specific address','error'); return; }
+    const [lng, lat] = feature.center;
+    // Step 2: Fetch solar/roof measurement data
+    const data = await fetchSolarData(lat, lng);
+    if(!data || data.status !== 'ok' || !data.sqft){
+      toast('No satellite measurement available for this address','error');
+      return;
+    }
+    // Step 3: Apply to estimate (same as applySolarToEstimate)
+    window._solarData = data;
+    if(typeof structures !== 'undefined'){
+      if(!structures.length && typeof addStructure === 'function') addStructure(0,'Main House',null);
+      if(structures.length){
+        const s = structures[0];
+        s.sqft = data.sqft;
+        s.pitch = String(data.pitchMultiplier);
+        s.solarFilled = true;
+        if(typeof renderStructures === 'function') renderStructures();
+        if(typeof calcP === 'function') calcP();
+        if(typeof updatePreview === 'function') updatePreview();
+      }
+    }
+    // Show the solar banner in the estimator sidebar
+    showSolarBanner(data);
+    // Show solar add-on row if solar potential data available
+    if(data.systemKw){
+      const solarRow = document.getElementById('solar-addon-row');
+      if(solarRow) solarRow.style.display = 'block';
+    }
+    toast('🛰 Satellite measurement applied — ' + data.sqft.toLocaleString() + ' sq ft, ' + data.pitchLabel + ' pitch' + (data.systemKw ? ' · ☀️ ' + data.systemKw + ' kW solar potential' : ''), 'success');
+  } catch(e){
+    console.error('Satellite measurement error:', e);
+    toast('Satellite measurement failed: '+(e.message||e),'error');
+  } finally{
+    if(btn){ btn.textContent='🛰 Measure'; btn.disabled=false; }
+  }
+}

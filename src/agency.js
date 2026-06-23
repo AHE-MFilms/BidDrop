@@ -546,3 +546,139 @@ function renderActChart(){
 }
 
 
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  FULL LEADERBOARD TAB — renderFullLeaderboard()
+//  Renders the dedicated 🏆 Leaderboard tab with podium, full table, and
+//  per-rep progress bars. Called by goTab('leaderboard').
+// ═══════════════════════════════════════════════════════════════════════════
+function renderFullLeaderboard(){
+  const podiumEl = document.getElementById('lbt-podium');
+  const rowsEl   = document.getElementById('lbt-rows');
+  if(!rowsEl) return;
+
+  const period = (document.getElementById('lbt-period')||{}).value || '7';
+  const metric = (document.getElementById('lbt-metric')||{}).value || 'pins';
+
+  // ── Cutoff date ──────────────────────────────────────────────────────────
+  let cutoff = null;
+  if(period === 'today'){
+    const d = new Date(); d.setHours(0,0,0,0); cutoff = d;
+  } else if(period !== 'all'){
+    cutoff = new Date(Date.now() - parseInt(period) * 86400000);
+  }
+
+  // ── Build rep map from pins ───────────────────────────────────────────────
+  const addrToRep = {};
+  const pinIdToRep = {};
+  S.pins.forEach(p=>{
+    const rep = (p.rep||'Unknown').trim()||'Unknown';
+    if(p.address) addrToRep[p.address.trim()] = rep;
+    if(p.id) pinIdToRep[p.id] = rep;
+  });
+
+  const repMap = {};
+  function getOrCreate(rep){
+    if(!repMap[rep]) repMap[rep] = { name:rep, pins:0, estimates:0, mailers:0, signed:0, converted:0 };
+    return repMap[rep];
+  }
+
+  S.pins.forEach(p=>{
+    const at = p.at ? new Date(p.at) : null;
+    if(cutoff && at && at < cutoff) return;
+    const rep = (p.rep||'Unknown').trim()||'Unknown';
+    const r = getOrCreate(rep);
+    r.pins++;
+    if(p.status==='signed')    r.signed++;
+    if(p.status==='converted') r.converted++;
+  });
+  (S.estimates||[]).forEach(e=>{
+    const at = e.savedAt ? new Date(e.savedAt) : null;
+    if(cutoff && at && at < cutoff) return;
+    const rep = pinIdToRep[e.pinId] || addrToRep[(e.addr||'').trim()] || null;
+    if(!rep) return;
+    getOrCreate(rep).estimates++;
+  });
+  (S.queue||[]).filter(q=>q.status==='sent').forEach(q=>{
+    const at = q.mailedAt ? new Date(q.mailedAt) : null;
+    if(cutoff && at && at < cutoff) return;
+    const rep = addrToRep[(q.addr||'').trim()] || null;
+    if(!rep) return;
+    getOrCreate(rep).mailers++;
+  });
+
+  // ── Sort by selected metric ───────────────────────────────────────────────
+  function metricVal(r){
+    switch(metric){
+      case 'estimates': return r.estimates;
+      case 'mailers':   return r.mailers;
+      case 'signed':    return r.signed + r.converted;
+      case 'conv':      return r.pins ? Math.round((r.signed+r.converted)/r.pins*100) : 0;
+      default:          return r.pins;
+    }
+  }
+  const reps = Object.values(repMap).sort((a,b)=>metricVal(b)-metricVal(a));
+
+  if(!reps.length){
+    if(podiumEl) podiumEl.innerHTML = '';
+    rowsEl.innerHTML = '<div style="text-align:center;padding:32px;color:var(--muted);font-size:13px;">No pin data for this period.</div>';
+    return;
+  }
+
+  const maxVal = metricVal(reps[0]) || 1;
+  const metricLabel = { pins:'Pins', estimates:'Estimates', mailers:'Mailers', signed:'Signed', conv:'Conv%' }[metric] || 'Pins';
+
+  // ── Podium (top 3) ────────────────────────────────────────────────────────
+  if(podiumEl){
+    const podiumOrder = [reps[1], reps[0], reps[2]].filter(Boolean); // 2nd, 1st, 3rd
+    const podiumHeights = ['90px','120px','70px'];
+    const podiumColors  = ['#C0C0C0','#F59E0B','#CD7F32'];
+    const podiumRanks   = [2, 1, 3];
+    const medals        = ['🥈','🥇','🥉'];
+    podiumEl.innerHTML = podiumOrder.map((r, i)=>{
+      const val = metricVal(r);
+      const h   = podiumHeights[i];
+      const col = podiumColors[i];
+      const rank = podiumRanks[i];
+      const medal = medals[i];
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:6px;min-width:90px;">
+        <div style="font-size:22px;">${medal}</div>
+        <div style="font-weight:700;font-size:13px;color:var(--text);text-align:center;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(r.name)}</div>
+        <div style="font-family:var(--font-h);font-size:20px;font-weight:800;color:${col};">${val}${metric==='conv'?'%':''}</div>
+        <div style="font-size:10px;color:var(--muted);">${metricLabel}</div>
+        <div style="width:70px;height:${h};background:linear-gradient(180deg,${col}33,${col}22);border:1px solid ${col}55;border-radius:6px 6px 0 0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;">
+          <span style="font-size:10px;font-weight:700;color:${col};">#${rank}</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Full rankings table ───────────────────────────────────────────────────
+  const convColor = (r) => {
+    const c = r.pins ? Math.round((r.signed+r.converted)/r.pins*100) : 0;
+    return c>=20?'#22C55E':c>=10?'#F59E0B':'var(--muted)';
+  };
+  rowsEl.innerHTML = reps.map((r, i)=>{
+    const val = metricVal(r);
+    const pct = Math.round(val / maxVal * 100);
+    const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':
+      `<span style="font-size:11px;color:var(--muted);font-weight:700;">${('0'+(i+1)).slice(-2)}</span>`;
+    const convRate = r.pins ? Math.round((r.signed+r.converted)/r.pins*100) : 0;
+    const isMe = currentProfile && (currentProfile.name||'').trim().toLowerCase() === r.name.toLowerCase();
+    const rowBg = isMe ? 'background:rgba(242,92,5,.06);' : '';
+    return `<div style="display:grid;grid-template-columns:44px 1fr repeat(5,80px);gap:0;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);${rowBg}">
+      <div style="font-size:17px;text-align:center;">${medal}</div>
+      <div>
+        <div style="font-weight:700;font-size:13px;color:${isMe?'var(--accent)':'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(r.name)}${isMe?' <span style="font-size:9px;background:rgba(242,92,5,.2);color:var(--accent);border-radius:4px;padding:1px 5px;font-weight:700;">YOU</span>':''}</div>
+        <div style="margin-top:4px;height:4px;background:var(--border);border-radius:2px;max-width:200px;">
+          <div style="height:4px;width:${pct}%;background:var(--accent);border-radius:2px;transition:width .4s;"></div>
+        </div>
+      </div>
+      <div style="text-align:center;font-family:var(--font-h);font-size:15px;font-weight:700;color:var(--accent);">${r.pins}</div>
+      <div style="text-align:center;font-family:var(--font-h);font-size:15px;font-weight:700;color:#A855F7;">${r.estimates}</div>
+      <div style="text-align:center;font-family:var(--font-h);font-size:15px;font-weight:700;color:#3B82F6;">${r.mailers}</div>
+      <div style="text-align:center;font-family:var(--font-h);font-size:15px;font-weight:700;color:#22C55E;">${r.signed+r.converted}</div>
+      <div style="text-align:center;font-family:var(--font-h);font-size:15px;font-weight:700;color:${convColor(r)};">${convRate}%</div>
+    </div>`;
+  }).join('');
+}

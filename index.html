@@ -71,7 +71,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 .main{flex:1;overflow:hidden;display:flex;flex-direction:column;position:relative;}
 .tab-pane{display:none;flex:1;overflow:hidden;min-height:0;}
 .tab-pane.active{display:flex;}
-#tab-agency,#tab-history,#tab-admin,#tab-dashboard,#tab-hotleads,#tab-analytics,#tab-zones,#tab-mailqueue,#tab-estimates,#tab-designs,#tab-drip,#tab-contacts,#tab-campaigns,#tab-territory,#tab-subscription{overflow-y:auto!important;overflow-x:hidden;flex:1;min-height:0;}
+#tab-agency,#tab-history,#tab-admin,#tab-dashboard,#tab-hotleads,#tab-analytics,#tab-zones,#tab-mailqueue,#tab-estimates,#tab-designs,#tab-drip,#tab-contacts,#tab-campaigns,#tab-territory,#tab-subscription,#tab-leaderboard{overflow-y:auto!important;overflow-x:hidden;flex:1;min-height:0;}
 #tab-settings{display:none;flex-direction:column;overflow-y:auto;padding:22px;gap:14px;}
   #tab-settings.active{display:flex;}
   .stab-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
@@ -1010,6 +1010,7 @@ tr:hover td{background:var(--card);}
   <button class="bd-snav-item" onclick="goTab('dashboard')" data-nav="dashboard"><span class="bd-snav-icon">📊</span><span class="bd-snav-label">Dashboard</span></button>
   <button class="bd-snav-item" onclick="goTab('territory')" data-nav="territory"><span class="bd-snav-icon">🌩</span><span class="bd-snav-label">Territory Intel</span></button>
   <button class="bd-snav-item" onclick="goTab('analytics')" data-nav="analytics" id="bd-sb-analytics-item"><span class="bd-snav-icon">📈</span><span class="bd-snav-label">Analytics</span></button>
+  <button class="bd-snav-item" onclick="goTab('leaderboard')" data-nav="leaderboard"><span class="bd-snav-icon">🏆</span><span class="bd-snav-label">Leaderboard</span></button>
   <button class="bd-snav-item" onclick="goTab('zones')" data-nav="zones"><span class="bd-snav-icon">🗂</span><span class="bd-snav-label">Canvass Areas</span></button>
 
   <!-- PLATFORM -->
@@ -1248,7 +1249,10 @@ tr:hover td{background:var(--card);}
       </div>
       <div class="fg">
         <label class="fl">Property Address</label>
-        <input class="fi" id="e-addr" placeholder="123 Oak St, Detroit MI 48000" oninput="updatePreview();scheduleDraftSave()">
+        <div style="display:flex;gap:6px;align-items:center;">
+          <input class="fi" id="e-addr" placeholder="123 Oak St, Detroit MI 48000" oninput="updatePreview();scheduleDraftSave()" style="flex:1;margin-bottom:0;">
+          <button id="est-satellite-btn" onclick="fetchSatelliteMeasurementForEstimate()" title="Get satellite roof measurements for this address" style="flex-shrink:0;padding:0 11px;height:38px;background:linear-gradient(135deg,#0a1628,#0f2a1a);border:1px solid rgba(242,92,5,.5);border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;color:#F25C05;white-space:nowrap;">🛰 Measure</button>
+        </div>
       </div>
 
       <!-- ═══════════════════════════════════════════════════════════════════
@@ -2126,6 +2130,56 @@ tr:hover td{background:var(--card);}
         </select>
       </div>
       <div id="leaderboard-list"><div style="text-align:center;padding:18px;color:var(--muted);font-size:11px;">No data yet.</div></div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD TAB -->
+  <div class="tab-pane" id="tab-leaderboard" style="flex-direction:column;overflow-y:auto;padding:22px;gap:18px;">
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-family:var(--font-h);font-size:22px;font-weight:800;color:var(--text);">🏆 Rep Leaderboard</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">Live rankings — updated in real time as pins and estimates are saved</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <select id="lbt-period" onchange="renderFullLeaderboard()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-size:12px;cursor:pointer;font-family:var(--font-b);">
+          <option value="today">Today</option>
+          <option value="7" selected>Last 7 Days</option>
+          <option value="30">Last 30 Days</option>
+          <option value="all">All Time</option>
+        </select>
+        <select id="lbt-metric" onchange="renderFullLeaderboard()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-size:12px;cursor:pointer;font-family:var(--font-b);">
+          <option value="pins">Pins Dropped</option>
+          <option value="estimates">Estimates Built</option>
+          <option value="mailers">Mailers Sent</option>
+          <option value="signed">Signed / Converted</option>
+          <option value="conv">Conversion %</option>
+        </select>
+        <button onclick="renderFullLeaderboard()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 12px;color:var(--text);font-size:12px;cursor:pointer;">↻ Refresh</button>
+      </div>
+    </div>
+
+    <!-- Podium (top 3) -->
+    <div id="lbt-podium" style="display:flex;gap:12px;justify-content:center;align-items:flex-end;min-height:140px;flex-wrap:wrap;"></div>
+
+    <!-- Full rankings table -->
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+      <div style="display:grid;grid-template-columns:44px 1fr repeat(5,80px);gap:0;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--card2);">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.6px;color:var(--muted);">#</div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:.6px;color:var(--muted);">REP</div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:.6px;color:var(--accent);text-align:center;">PINS</div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:.6px;color:#A855F7;text-align:center;">ESTS</div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:.6px;color:#3B82F6;text-align:center;">MAILED</div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:.6px;color:#22C55E;text-align:center;">SIGNED</div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:.6px;color:#F59E0B;text-align:center;">CONV%</div>
+      </div>
+      <div id="lbt-rows" style=""></div>
+    </div>
+
+    <!-- Goal progress section (admin-set daily goals) -->
+    <div id="lbt-goals-wrap" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;">
+      <div style="font-family:var(--font-h);font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px;">📈 Daily Goals</div>
+      <div id="lbt-goals-list"></div>
     </div>
   </div>
 
@@ -5623,6 +5677,30 @@ function savePin(){
     if(map && dupPin.lat && dupPin.lng) map.flyTo([dupPin.lat, dupPin.lng], Math.max(map.getZoom(), 17));
     setTimeout(()=>{ const el=document.getElementById('pc-'+dupPin.id); if(el){ el.classList.add('open'); el.scrollIntoView({behavior:'smooth',block:'nearest'}); } }, 600);
     return;
+  }
+  // ── Zone lock-out enforcement ──────────────────────────────────────────────
+  // Check if this point falls inside a zone assigned to a different rep
+  if(typeof S_zones !== 'undefined' && S_zones && S_zones.length && tempLL){
+    const myName = (currentProfile && (currentProfile.name || currentProfile.email || '').trim().toLowerCase()) || '';
+    const isAdmin = currentProfile && (currentProfile.role === 'admin' || currentProfile.role === 'super_admin');
+    if(!isAdmin){
+      const conflictZone = S_zones.find(zone => {
+        if(!zone.rep_id) return false; // unassigned zone — anyone can pin
+        // Check if zone is assigned to someone else
+        const zoneRepProfile = (_zonesProfiles||[]).find(p=>p.id===zone.rep_id);
+        const zoneRepName = zoneRepProfile ? (zoneRepProfile.name||zoneRepProfile.email||'').trim().toLowerCase() : '';
+        if(zoneRepName === myName) return false; // my zone
+        if(zone.rep_id === (currentProfile && currentProfile.id)) return false; // my zone by ID
+        // Check if the click point is inside this zone
+        const fakePin = {lat: tempLL.lat, lng: tempLL.lng};
+        return typeof isPointInPolygon === 'function' && isPointInPolygon(fakePin, zone);
+      });
+      if(conflictZone){
+        const ownerName = getRepName ? (getRepName(conflictZone.rep_id) || 'another rep') : 'another rep';
+        const proceed = confirm('⚠️ Zone Conflict\n\nThis address is inside "' + conflictZone.name + '" — assigned to ' + ownerName + '.\n\nDo you still want to drop a pin here?');
+        if(!proceed){ closeM('m-pin'); return; }
+      }
+    }
   }
   const pin={
     id:'p'+Date.now(),

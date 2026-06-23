@@ -521,6 +521,7 @@ function goTab(t){
   if(t==='admin')renderAdminPanel();
   if(t==='hotleads')loadHotLeads();
   if(t==='analytics')loadAnalytics();
+  if(t==='leaderboard')renderFullLeaderboard();
 }
 
 
