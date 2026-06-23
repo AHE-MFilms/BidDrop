@@ -480,6 +480,8 @@ function toggleStabCard(name){
   if(chevron) chevron.classList.toggle('collapsed', !isCollapsed);
 }
 function goTab(t){
+  // Close tablet overlay sidebar when navigating to a new tab
+  if(typeof closeTabletSidebar==='function') closeTabletSidebar();
   // Auto-save estimate + photos when leaving the estimator tab
   const prevTab = document.querySelector('.tab-btn.active');
   const leavingEstimate = prevTab && prevTab.dataset.tab === 'estimate';

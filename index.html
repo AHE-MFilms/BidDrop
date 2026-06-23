@@ -454,7 +454,8 @@ tr:hover td{background:var(--card);}
    DESKTOP SIDEBAR NAV
 ═══════════════════════════════════════════════════════ */
 #bd-sidebar{display:none;}
-@media(min-width:769px){
+/* ═══ TRUE DESKTOP (≥1181px): persistent sidebar ═══ */
+@media(min-width:1181px){
   .hdr{display:none!important;}
   #bd-sidebar{
     display:flex;flex-direction:column;
@@ -465,6 +466,64 @@ tr:hover td{background:var(--card);}
   .main{margin-left:240px;}
   .map-panel{left:240px;}
   #nav-menu-dropdown{display:none!important;}
+  .bottom-nav{display:none!important;}
+  .fab-pins{display:none!important;}
+  #bd-sidebar-scrim{display:none!important;}
+}
+/* ═══ TABLET (769–1180px): overlay sidebar, full-screen map, bottom sheet ═══ */
+@media(min-width:769px) and (max-width:1180px){
+  .hdr{display:flex!important;height:54px;}
+  #bd-sidebar{display:none;}
+  #bd-sidebar.tablet-open{
+    display:flex!important;flex-direction:column;
+    position:fixed;top:0;left:0;bottom:0;width:280px;
+    background:var(--panel);border-right:1px solid var(--border);
+    z-index:9000;overflow-y:auto;overflow-x:hidden;
+    box-shadow:8px 0 40px rgba(0,0,0,.7);
+    animation:sidebarSlideIn .22s cubic-bezier(.4,0,.2,1);
+  }
+  @keyframes sidebarSlideIn{from{transform:translateX(-100%)}to{transform:translateX(0)}}
+  #bd-sidebar-scrim{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:8999;}
+  #bd-sidebar-scrim.open{display:block;}
+  .main{margin-left:0;padding-bottom:62px;}
+  .map-panel{left:0!important;}
+  #tab-map{flex-direction:column;position:relative;}
+  #the-map{flex:1;width:100%;height:100%;}
+  .map-panel{
+    position:fixed;bottom:62px;left:0;right:0;width:100%;
+    height:72vh;border-left:none;border-top:1px solid var(--border);
+    border-radius:16px 16px 0 0;transform:translateY(100%);
+    transition:transform .3s cubic-bezier(.32,.72,0,1);
+    z-index:1500;box-shadow:0 -12px 40px rgba(0,0,0,.7);
+  }
+  .map-panel.open{transform:translateY(0);}
+  .map-panel-drag{width:36px;height:4px;background:var(--muted);border-radius:2px;margin:10px auto 4px;cursor:pointer;opacity:.6;}
+  .fab-pins{
+    position:absolute;bottom:14px;right:14px;z-index:1000;
+    background:var(--accent);border:none;border-radius:50%;
+    width:54px;height:54px;font-size:24px;cursor:pointer;
+    box-shadow:0 4px 20px rgba(242,92,5,.55);
+    display:flex!important;align-items:center;justify-content:center;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--panel);border-top:1px solid var(--border);z-index:2000;height:62px;padding-bottom:env(safe-area-inset-bottom);}
+  .bnav-btn{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:none;border:none;color:var(--muted);cursor:pointer;font-family:var(--font-b);font-size:9px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;transition:color .15s;-webkit-tap-highlight-color:transparent;padding:0 2px;}
+  .bnav-btn .bicon{font-size:18px;line-height:1;flex-shrink:0;}
+  .bnav-btn span:not(.bicon){display:block;width:100%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.2;}
+  .bnav-btn.active{color:var(--accent);}
+  .map-toolbar{flex-direction:row;flex-wrap:wrap;justify-content:flex-start;top:64px;left:10px;right:auto;gap:6px;}
+  .mtool-btn{font-size:11px;padding:7px 11px;}
+  .map-search-wrap{width:calc(100vw - 32px);max-width:none;left:16px;transform:none;top:58px;}
+  .map-toolbar{top:112px;}
+  #tab-estimate{flex-direction:column;overflow-y:auto;}
+  .est-form{width:100%;border-right:none;padding:16px 16px 0;overflow-y:visible;}
+  .est-preview{display:none;padding:16px;flex-direction:column;align-items:center;}
+  .est-preview.mobile-show{display:flex;min-height:600px;}
+  .modal{width:100%;max-width:100%;border-radius:16px 16px 0 0;position:fixed;bottom:0;left:0;right:0;max-height:92vh;overflow-y:auto;display:flex;flex-direction:column;}
+  .overlay{align-items:flex-end;}
+  .btn-preview-toggle{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:11px;color:var(--mid);font-family:var(--font-b);font-size:12px;font-weight:600;cursor:pointer;margin-top:7px;}
+  #nav-menu-dropdown{display:none;top:54px;}
+  #nav-menu-dropdown.open{display:flex;}
 }
 /* Sidebar brand */
 .bd-sb-brand{
@@ -1033,7 +1092,8 @@ tr:hover td{background:var(--card);}
     </button>
   </div>
 </div>
-
+<!-- Tablet sidebar overlay scrim -->
+<div id="bd-sidebar-scrim" onclick="closeTabletSidebar()"></div>
 <div class="main">
 
   <!-- MAP -->
@@ -6387,6 +6447,7 @@ function bulkSendPinsToFollowUp(){
 }
 
 function renderPinList(){
+  if(typeof updateFabBadge==='function') updateFabBadge();
   const el=document.getElementById('pin-list');
   const list=getPinViewList((S.pins||[]).filter(p=>!p.deleted_at)); updatePinViewBadges();
   // Show server-side total when available, otherwise fall back to loaded count
@@ -7447,6 +7508,51 @@ function toggleNavMenu(e){
 function closeNavMenu(){
   const d = document.getElementById('nav-menu-dropdown');
   if(d) d.classList.remove('open');
+}
+
+// ── Tablet overlay sidebar ──────────────────────────────────────────────────
+function openTabletSidebar(){
+  const sidebar = document.getElementById('bd-sidebar');
+  const scrim   = document.getElementById('bd-sidebar-scrim');
+  if(sidebar) sidebar.classList.add('tablet-open');
+  if(scrim)   scrim.classList.add('open');
+  closeNavMenu();
+}
+function closeTabletSidebar(){
+  const sidebar = document.getElementById('bd-sidebar');
+  const scrim   = document.getElementById('bd-sidebar-scrim');
+  if(sidebar) sidebar.classList.remove('tablet-open');
+  if(scrim)   scrim.classList.remove('open');
+}
+function toggleTabletSidebar(e){
+  if(e) e.stopPropagation();
+  const sidebar = document.getElementById('bd-sidebar');
+  if(sidebar && sidebar.classList.contains('tablet-open')){
+    closeTabletSidebar();
+  } else {
+    openTabletSidebar();
+  }
+}
+// On tablet, the hamburger button should open the sidebar overlay instead of the dropdown
+(function(){
+  const btn = document.getElementById('nav-menu-btn');
+  if(btn){
+    btn.addEventListener('click', function(e){
+      if(window.innerWidth >= 769 && window.innerWidth <= 1180){
+        e.stopPropagation();
+        toggleTabletSidebar(e);
+      }
+    }, true); // capture phase so it runs before the inline onclick
+  }
+})();
+// Update FAB pin count badge
+function updateFabBadge(){
+  const fab = document.getElementById('fab-pins');
+  if(!fab) return;
+  const count = (S.pins || []).filter(p => !p.archived).length;
+  fab.innerHTML = count > 0
+    ? '<span style="position:relative;">📍<span style="position:absolute;top:-6px;right:-8px;background:#EF4444;color:#fff;font-size:9px;font-weight:700;border-radius:9px;padding:1px 4px;font-family:var(--font-m);line-height:1.4;">'+count+'</span></span>'
+    : '📍';
 }
 
 // Navigate from the dropdown menu
