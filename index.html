@@ -1050,7 +1050,7 @@ tr:hover td{background:var(--card);}
       <button class="mtool-btn" id="btn-measure" onclick="toggleMeasure()">📐 Measure Roof</button>
       <button class="mtool-btn" id="btn-zones-toggle" onclick="toggleZonesOnMap()">🗂 Zones</button>
       <button class="mtool-btn" id="btn-storm-toggle" onclick="toggleStormEvents()">⛈ Storm Events</button>
-      <button class="mtool-btn" id="btn-property-layer" onclick="togglePropertyLayer()" title="Color-code pins by estimated roof age">🏠 Roof Age</button>
+      <button class="mtool-btn" id="btn-property-layer" onclick="togglePropertyLayer()" title="Color-code pins by home age (build year from RentCast — not actual roof age)">🏠 Home Age</button>
     </div>
     <!-- Storm Events Panel -->
     <div id="storm-panel" style="display:none;position:absolute;top:12px;left:12px;z-index:2000;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;width:280px;box-shadow:0 4px 20px rgba(0,0,0,.5);">
@@ -5426,7 +5426,7 @@ function addMarker(pin){
         <div style="flex:1;"><div style="font-size:9px;color:#A8BECE;">Equity</div><div style="font-size:13px;font-weight:700;color:#22C55E;">${fmtMoney(_eq.equity)||'—'}</div></div>
         <div style="flex:1;"><div style="font-size:9px;color:#A8BECE;">Mortgage</div><div style="font-size:13px;font-weight:700;color:#F25C05;">${fmtMoney(_eq.mortgageBalance)||'—'}</div></div>
       </div>
-      ${_eq.yearBuilt ? `<div style="font-size:11px;color:#A8BECE;border-top:1px solid rgba(34,197,94,.2);padding-top:6px;">🏠 Built ${_eq.yearBuilt} &nbsp;·&nbsp; <span style="color:#F25C05;font-weight:700;">Est. ${new Date().getFullYear()-_eq.yearBuilt}-yr roof</span>${_eq.roofType ? ' &nbsp;·&nbsp; '+_eq.roofType : ''}</div>` : ''}
+      ${_eq.yearBuilt ? `<div style="font-size:11px;color:#A8BECE;border-top:1px solid rgba(34,197,94,.2);padding-top:6px;">🏠 Built ${_eq.yearBuilt} &nbsp;·&nbsp; <span style="color:#A8BECE;font-weight:600;">Home age: ~${new Date().getFullYear()-_eq.yearBuilt} yrs</span>${_eq.roofType ? ' &nbsp;·&nbsp; '+_eq.roofType : ''}</div>` : ''}
     </div>` : '';
   // Solar measurement row — always shown, content updates after fetch
   const _solar = pin._solarCache;
@@ -5505,7 +5505,7 @@ function addMarker(pin){
       const snapEl = document.getElementById('prop-snap-val-'+pid);
       if(snapEl){
         const parts = [];
-        if(data.yearBuilt){ const age = new Date().getFullYear()-data.yearBuilt; parts.push('Built '+data.yearBuilt+' · <strong style="color:#F25C05;">Est. '+age+'-yr roof</strong>'); }
+        if(data.yearBuilt){ const age = new Date().getFullYear()-data.yearBuilt; parts.push('Built '+data.yearBuilt+' · <strong style="color:#A8BECE;">Home age: ~'+age+' yrs</strong>'); }
         if(data.roofType) parts.push(data.roofType);
         if(data.bedrooms||data.bathrooms) parts.push((data.bedrooms||'')+' bd / '+(data.bathrooms||'')+' ba');
         if(data.estValue) parts.push('Value: <strong style="color:#22C55E;">'+fmtMoney(data.estValue)+'</strong>');
@@ -5523,7 +5523,7 @@ function buildPropertySnapHTML(pid, eq){
   const parts = [];
   if(eq.yearBuilt){
     const age = new Date().getFullYear() - eq.yearBuilt;
-    parts.push('🏠 Built ' + eq.yearBuilt + ' &nbsp;·&nbsp; <span style="color:#F25C05;font-weight:700;">Est. ' + age + '-yr roof</span>');
+    parts.push('🏠 Built ' + eq.yearBuilt + ' &nbsp;·&nbsp; <span style="color:#A8BECE;font-weight:600;">Home age: ~' + age + ' yrs</span>');
   }
   if(eq.roofType) parts.push(eq.roofType);
   if(eq.bedrooms || eq.bathrooms){

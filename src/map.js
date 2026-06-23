@@ -110,34 +110,35 @@ function toggleSatellite(){
   }
 }
 
-// ── Property Layer (Roof Age Color Coding) ────────────────────────────────────
-// Colors pins by estimated roof age using yearBuilt from RentCast data
+// ── Property Layer (Home Age by Build Year) ─────────────────────────────────
+// Colors pins by home age using yearBuilt from RentCast data.
+// NOTE: This reflects when the house was BUILT, not when the roof was installed.
 let _propertyLayerActive = false;
 
-function _roofAgeColor(yearBuilt){
+function _homeAgeColor(yearBuilt){
   if(!yearBuilt) return null; // unknown — don't override
   const age = new Date().getFullYear() - parseInt(yearBuilt);
-  if(age < 10)  return '#22C55E'; // green  — new roof (<10yr)
-  if(age < 20)  return '#EAB308'; // yellow — aging (10-20yr)
-  if(age < 30)  return '#F97316'; // orange — old (20-30yr)
-  return '#EF4444';               // red    — very old (>30yr)
+  if(age < 10)  return '#22C55E'; // green  — new build (<10yr)
+  if(age < 20)  return '#EAB308'; // yellow — 10-20yr
+  if(age < 30)  return '#F97316'; // orange — 20-30yr
+  return '#EF4444';               // red    — old build (>30yr)
 }
 
-function _roofAgeLabel(yearBuilt){
-  if(!yearBuilt) return 'Unknown age';
+function _homeAgeLabel(yearBuilt){
+  if(!yearBuilt) return 'Build year unknown';
   const age = new Date().getFullYear() - parseInt(yearBuilt);
-  return 'Built ' + yearBuilt + ' · ~' + age + '-yr roof';
+  return 'Built ' + yearBuilt + ' · Home age: ~' + age + ' yrs';
 }
 
 function togglePropertyLayer(){
   _propertyLayerActive = !_propertyLayerActive;
   const btn = document.getElementById('btn-property-layer');
   if(_propertyLayerActive){
-    if(btn){ btn.classList.add('active'); btn.textContent = '🏠 Roof Age ON'; }
+    if(btn){ btn.classList.add('active'); btn.textContent = '🏠 Home Age ON'; }
     _applyPropertyLayer();
     _showPropertyLegend();
   } else {
-    if(btn){ btn.classList.remove('active'); btn.textContent = '🏠 Roof Age'; }
+    if(btn){ btn.classList.remove('active'); btn.textContent = '🏠 Home Age'; }
     _removePropertyLayer();
     _hidePropertyLegend();
   }
@@ -152,12 +153,12 @@ function _applyPropertyLayer(){
     const yearBuilt = (pin.equityData && pin.equityData.yearBuilt)
       || (typeof _propDataCache !== 'undefined' && _propDataCache && _propDataCache[(pin.address||'').trim().toLowerCase()] && _propDataCache[(pin.address||'').trim().toLowerCase()].yearBuilt)
       || null;
-    const color = _roofAgeColor(yearBuilt);
+    const color = _homeAgeColor(yearBuilt);
     if(!color) return; // no data — leave as-is
     try {
       marker.setIcon(L.divIcon({
         className: '',
-        html: '<div style="width:14px;height:14px;border-radius:50%;background:'+color+';border:2px solid rgba(255,255,255,.7);box-shadow:0 1px 4px rgba(0,0,0,.5);" title="'+_roofAgeLabel(yearBuilt)+'"></div>',
+        html: '<div style="width:14px;height:14px;border-radius:50%;background:'+color+';border:2px solid rgba(255,255,255,.7);box-shadow:0 1px 4px rgba(0,0,0,.5);" title="'+_homeAgeLabel(yearBuilt)+'"></div>',
         iconSize: [14,14],
         iconAnchor: [7,7]
       }));
@@ -198,13 +199,14 @@ function _showPropertyLegend(){
     legend = document.createElement('div');
     legend.id = 'property-layer-legend';
     legend.style.cssText = 'position:absolute;bottom:28px;left:12px;z-index:1500;background:rgba(15,22,35,.92);border:1px solid rgba(46,64,96,.8);border-radius:10px;padding:10px 14px;font-family:var(--font-b);font-size:11px;color:var(--text);min-width:160px;box-shadow:0 4px 16px rgba(0,0,0,.5);';
-    legend.innerHTML = '<div style="font-weight:700;font-size:12px;margin-bottom:8px;color:var(--accent);">🏠 Roof Age</div>'
+    legend.innerHTML = '<div style="font-weight:700;font-size:12px;margin-bottom:4px;color:var(--accent);">🏠 Home Age</div>'
+      + '<div style="font-size:10px;color:var(--muted);margin-bottom:8px;">By build year · not roof age</div>'
       + '<div style="display:flex;flex-direction:column;gap:5px;">'
-      + '<div style="display:flex;align-items:center;gap:8px;"><div style="width:12px;height:12px;border-radius:50%;background:#22C55E;flex-shrink:0;"></div><span style="color:var(--mid);">&lt;10 yrs — New</span></div>'
-      + '<div style="display:flex;align-items:center;gap:8px;"><div style="width:12px;height:12px;border-radius:50%;background:#EAB308;flex-shrink:0;"></div><span style="color:var(--mid);">10–20 yrs — Aging</span></div>'
-      + '<div style="display:flex;align-items:center;gap:8px;"><div style="width:12px;height:12px;border-radius:50%;background:#F97316;flex-shrink:0;"></div><span style="color:var(--mid);">20–30 yrs — Old</span></div>'
-      + '<div style="display:flex;align-items:center;gap:8px;"><div style="width:12px;height:12px;border-radius:50%;background:#EF4444;flex-shrink:0;"></div><span style="color:var(--mid);">&gt;30 yrs — Replace</span></div>'
-      + '<div style="display:flex;align-items:center;gap:8px;"><div style="width:12px;height:12px;border-radius:50%;background:#F25C05;flex-shrink:0;"></div><span style="color:var(--muted);">No data</span></div>'
+      + '<div style="display:flex;align-items:center;gap:8px;"><div style="width:12px;height:12px;border-radius:50%;background:#22C55E;flex-shrink:0;"></div><span style="color:var(--mid);">&lt;10 yrs</span></div>'
+      + '<div style="display:flex;align-items:center;gap:8px;"><div style="width:12px;height:12px;border-radius:50%;background:#EAB308;flex-shrink:0;"></div><span style="color:var(--mid);">10–20 yrs</span></div>'
+      + '<div style="display:flex;align-items:center;gap:8px;"><div style="width:12px;height:12px;border-radius:50%;background:#F97316;flex-shrink:0;"></div><span style="color:var(--mid);">20–30 yrs</span></div>'
+      + '<div style="display:flex;align-items:center;gap:8px;"><div style="width:12px;height:12px;border-radius:50%;background:#EF4444;flex-shrink:0;"></div><span style="color:var(--mid);">&gt;30 yrs</span></div>'
+      + '<div style="display:flex;align-items:center;gap:8px;"><div style="width:12px;height:12px;border-radius:50%;background:#6B7280;flex-shrink:0;"></div><span style="color:var(--muted);">No data</span></div>'
       + '</div>';
     const mapEl = document.getElementById('the-map');
     if(mapEl) mapEl.appendChild(legend);
