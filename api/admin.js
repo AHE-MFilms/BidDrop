@@ -1074,7 +1074,28 @@ module.exports = async function handler(req, res) {
           `ALTER TABLE queue ADD COLUMN IF NOT EXISTS drip_est_id TEXT`,
           `ALTER TABLE queue ADD COLUMN IF NOT EXISTS scheduled_send_at TIMESTAMPTZ`,
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS cancel_at_period_end BOOLEAN DEFAULT FALSE`,
-          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS payment_failed BOOLEAN DEFAULT FALSE`
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS payment_failed BOOLEAN DEFAULT FALSE`,
+          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS sig_name TEXT`,
+          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS signed_at TIMESTAMPTZ`,
+          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS offer_solar BOOLEAN DEFAULT FALSE`,
+          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS drip_steps JSONB`,
+          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS drip_paused BOOLEAN DEFAULT FALSE`,
+          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS drip_cancelled BOOLEAN DEFAULT FALSE`,
+          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS drip_cancelled_at TIMESTAMPTZ`,
+          `CREATE TABLE IF NOT EXISTS campaign_targets (
+            id TEXT PRIMARY KEY,
+            account_id TEXT NOT NULL,
+            campaign_name TEXT,
+            campaign_date DATE,
+            lat DOUBLE PRECISION,
+            lng DOUBLE PRECISION,
+            radius_miles NUMERIC,
+            pin_count INTEGER DEFAULT 0,
+            mailer_count INTEGER DEFAULT 0,
+            storm_ids JSONB,
+            notes TEXT,
+            created_at TIMESTAMPTZ DEFAULT NOW()
+          )`
         ].join('; ');
         const results = [];
         // Run each DDL statement individually via Supabase pg_meta API (uses SERVICE_KEY)
