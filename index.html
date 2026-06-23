@@ -6629,11 +6629,11 @@ function onPriceOverrideInput(){
 //  OFFLINE PIN QUEUE & PWA
 // ═══════════════════════════════
 let _pwaInstallEvent = null;
+// Suppress browser PWA install prompt — BidDrop is a web app, not a PWA install target
 window.addEventListener('beforeinstallprompt', e=>{
   e.preventDefault();
-  _pwaInstallEvent = e;
-  const bar = document.getElementById('pwa-install-bar');
-  if(bar && document.getElementById('main-app').style.display !== 'none') bar.style.display='flex';
+  _pwaInstallEvent = e; // keep reference in case we ever want to offer it intentionally
+  // Do NOT show the install bar
 });
 function doPwaInstall(){
   if(!_pwaInstallEvent) return;
