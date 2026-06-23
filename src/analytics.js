@@ -26,7 +26,16 @@ async function loadAnalytics(){
   if(!currentAccount) return;
   const periodEl = document.getElementById('an-period');
   const period = periodEl ? periodEl.value : '30';
-  const cutoff = period==='all' ? null : new Date(Date.now()-parseInt(period)*86400000);
+  let cutoff = null;
+  if(period === 'custom'){
+    const fromVal = document.getElementById('an-date-from')?.value;
+    const toVal = document.getElementById('an-date-to')?.value;
+    if(fromVal) cutoff = new Date(fromVal + 'T00:00:00');
+    window._anDateTo = toVal ? new Date(toVal + 'T23:59:59') : null;
+  } else {
+    cutoff = period==='all' ? null : new Date(Date.now()-parseInt(period)*86400000);
+    window._anDateTo = null;
+  }
   // Helper to set stat card value
   function setStat(id, val){ const el=document.getElementById(id); if(el) el.textContent=val; }
   setStat('an-postcards','…'); setStat('an-scans','…'); setStat('an-open-rate','…');

@@ -63,14 +63,25 @@ function addToQueue(){
   }
   save();toast('📬 Added to mail queue!','success');renderQueue();
   // Update approval badge
-  if(typeof _updateApprovalBadge==='function') _updateApprovalBadge();
+  if(typeof _updateApprovalBadge==='function') _updateApprovalBadge(true);
 }
-function _updateApprovalBadge(){
+function _updateApprovalBadge(sendEmail){
   const count = (window.S?.queue||[]).filter(q=>q.status==='needs_approval').length;
   const badge = document.getElementById('mailqueue-approval-badge');
   if(badge){
     badge.textContent = count > 0 ? String(count) : '';
     badge.style.display = count > 0 ? 'inline-flex' : 'none';
+  }
+  // Send email notification to admin when new needs_approval items arrive
+  if(sendEmail && count > 0 && currentAccount){
+    // Debounce: only send once per 5 minutes per session
+    const now = Date.now();
+    const lastSent = window._lastApprovalEmailSent || 0;
+    if(now - lastSent > 5 * 60 * 1000){
+      window._lastApprovalEmailSent = now;
+      adminAPI('notify-approval', { count, accountId: currentAccount.id })
+        .catch(e => console.warn('[approval-notify]', e));
+    }
   }
 }
 

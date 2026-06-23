@@ -1212,6 +1212,30 @@ module.exports = async function handler(req, res) {
         const data = await r.json();
         return res.status(200).json({ campaigns: Array.isArray(data) ? data : [] });
       }
+      case 'notify-approval': {
+        // Send email to account admin when needs_approval items land in mail queue
+        const { count: approvalCount, accountId: notifyAcctId } = req.body;
+        if (!notifyAcctId) { res.status(400).json({ error: 'accountId required' }); return; }
+        // Fetch the account's admin email
+        const acctR = await sbFetch(`accounts?id=eq.${notifyAcctId}&select=company_name,lead_alert_email`, { method: 'GET', headers: { Accept: 'application/json' } });
+        if (!acctR.ok) { res.status(200).json({ sent: false, reason: 'account not found' }); return; }
+        const [acctData] = await acctR.json();
+        const alertEmail = acctData?.lead_alert_email;
+        if (!alertEmail) { res.status(200).json({ sent: false, reason: 'no alert email configured' }); return; }
+        const companyName = acctData?.company_name || 'BidDrop';
+        const appUrl = (process.env.APP_URL || 'https://biddrop.americashomeexperts.com').trim();
+        const approvalEmailHtml = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;color:#111"><div style="background:#111;padding:28px 32px;border-radius:10px 10px 0 0"><span style="font-size:26px;font-weight:900;color:#fff">Bid<span style="color:#F97316">Drop</span></span></div><div style="padding:36px 32px;border:1px solid #e5e5e5;border-top:none;border-radius:0 0 10px 10px"><h1 style="font-size:22px;font-weight:800;margin:0 0 12px">&#128274; ${approvalCount} Postcard${approvalCount!==1?'s':''} Waiting for Approval</h1><p style="font-size:15px;color:#333;line-height:1.6;margin:0 0 24px">${approvalCount} postcard${approvalCount!==1?'s':''} in your <strong>${companyName}</strong> mail queue need${approvalCount===1?'s':''} your approval before they can be sent.</p><a href="${appUrl}" style="display:block;background:#F97316;color:#fff;text-decoration:none;text-align:center;padding:16px 24px;border-radius:8px;font-size:17px;font-weight:800;margin-bottom:24px">Review &amp; Approve &#8594;</a><p style="font-size:12px;color:#999;border-top:1px solid #eee;padding-top:16px;margin:0">Go to Mail Queue tab in BidDrop to approve or reject items. For help, contact <a href="mailto:support@biddrop.io" style="color:#F97316">support@biddrop.io</a></p></div></div>`;
+        const resendKey = process.env.RESEND_API_KEY;
+        if (!resendKey) { res.status(200).json({ sent: false, reason: 'no RESEND_API_KEY' }); return; }
+        const emailRes = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ from: 'BidDrop <noreply@biddrop.io>', to: [alertEmail], subject: `${approvalCount} Postcard${approvalCount!==1?'s':''} Waiting for Approval — ${companyName}`, html: approvalEmailHtml })
+        });
+        const emailData = await emailRes.json().catch(()=>({}));
+        res.status(200).json({ sent: emailRes.ok, id: emailData.id });
+        break;
+      }
       default:
         res.status(400).json({ error: `Unknown action: ${action}` });
     }

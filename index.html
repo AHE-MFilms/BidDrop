@@ -298,19 +298,38 @@ tr:hover td{background:var(--card);}
 @media(max-width:900px){.trade-grid{grid-template-columns:repeat(2,1fr);}}
 /* ── Mobile: Contacts & Campaigns tabs ── */
 @media(max-width:700px){
+  /* ── Contacts tab ── */
   #tab-contacts{padding:12px 10px!important;}
+  /* Hide Rep (5), Trades (6), GHL (7), Pinned (8) columns on mobile */
   #contacts-table thead th:nth-child(5),
   #contacts-table thead th:nth-child(6),
+  #contacts-table thead th:nth-child(7),
+  #contacts-table thead th:nth-child(8),
   #contacts-table tbody td:nth-child(5),
-  #contacts-table tbody td:nth-child(6){display:none;}
-  #contacts-table thead th:nth-child(9),
-  #contacts-table tbody td:nth-child(9){min-width:unset;}
+  #contacts-table tbody td:nth-child(6),
+  #contacts-table tbody td:nth-child(7),
+  #contacts-table tbody td:nth-child(8){display:none;}
+  /* Compact action buttons in last column */
+  #contacts-table tbody td:nth-child(9) div{flex-direction:column;gap:4px;}
+  #contacts-table tbody td:nth-child(9) button{font-size:9px!important;padding:3px 6px!important;}
+  /* Contacts filter row: stack vertically */
+  #contacts-filter-row{flex-direction:column!important;gap:6px!important;}
+  #contacts-filter-row select,#contacts-filter-row input{width:100%!important;box-sizing:border-box;}
+  /* Bulk bar: wrap */
+  #contacts-bulk-bar{flex-wrap:wrap!important;gap:6px!important;}
+  /* ── Campaigns tab ── */
   #tab-campaigns{padding:12px 10px!important;}
   .dash-page-hdr{flex-direction:column;align-items:flex-start!important;gap:10px;}
-  #campaigns-stats{gap:8px;}
-  #campaigns-stats>div{padding:8px 12px!important;}
+  #campaigns-stats{gap:8px;flex-wrap:wrap!important;}
+  #campaigns-stats>div{padding:8px 12px!important;min-width:calc(50% - 4px)!important;}
+  /* Campaign cards: stack action buttons */
   #campaigns-list [style*="display:flex;align-items:flex-start"]{flex-direction:column;}
-  #campaigns-list [style*="align-items:flex-end"]{align-items:flex-start!important;}
+  #campaigns-list [style*="align-items:flex-end"]{align-items:flex-start!important;flex-wrap:wrap!important;gap:6px!important;}
+  /* Campaign card stats strip: wrap on mobile */
+  #campaigns-list [style*="display:flex;gap:12px;flex-wrap"]{gap:8px!important;}
+  /* Analytics controls: stack on mobile */
+  #tab-analytics [style*="display:flex;gap:8px;align-items:center;flex-wrap"]{flex-direction:column!important;align-items:flex-start!important;}
+  #an-custom-range{flex-wrap:wrap!important;}
 }
 @media(max-width:600px){.trade-grid{grid-template-columns:1fr 1fr;}}
 .act-feed::-webkit-scrollbar{width:3px;}
@@ -2522,10 +2541,16 @@ tr:hover td{background:var(--card);}
         <div style="font-family:var(--font-h);font-size:20px;font-weight:800;color:var(--text);">📊 Insights &amp; Analytics</div>
         <div style="font-size:12px;color:var(--muted);margin-top:2px;">Performance overview — postcards, scans, conversions, and rep stats</div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <select id="an-period" onchange="loadAnalytics()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-size:12px;cursor:pointer;"><option value="7">Last 7 Days</option><option value="30" selected>Last 30 Days</option><option value="90">Last 90 Days</option><option value="all">All Time</option></select>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <select id="an-period" onchange="_anPeriodChanged()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-size:12px;cursor:pointer;"><option value="7">Last 7 Days</option><option value="30" selected>Last 30 Days</option><option value="90">Last 90 Days</option><option value="all">All Time</option><option value="custom">Custom Range</option></select>
+        <div id="an-custom-range" style="display:none;align-items:center;gap:6px;">
+          <input type="date" id="an-date-from" onchange="loadAnalytics()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--text);font-size:12px;cursor:pointer;font-family:inherit;">
+          <span style="color:var(--muted);font-size:12px;">→</span>
+          <input type="date" id="an-date-to" onchange="loadAnalytics()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--text);font-size:12px;cursor:pointer;font-family:inherit;">
+        </div>
         <button onclick="loadAnalytics()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 12px;color:var(--text);font-size:12px;cursor:pointer;">↻ Refresh</button>
-        <button onclick="exportAnalyticsCSV()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 12px;color:var(--text);font-size:12px;cursor:pointer;">⬇ Export CSV</button>
+        <button onclick="exportAnalyticsCSV()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 12px;color:var(--text);font-size:12px;cursor:pointer;">⬇ CSV</button>
+        <button onclick="exportAnalyticsPDF()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 12px;color:var(--text);font-size:12px;cursor:pointer;">⬇ PDF</button>
       </div>
     </div>
     <div class="stats-row">
@@ -8219,7 +8244,16 @@ function exportAnalyticsCSV() {
 
   // Build rows from current S data
   const now = Date.now();
-  const cutoff = period === 'all' ? 0 : now - parseInt(period) * 86400000;
+  let cutoff = 0;
+  let cutoffTo = null;
+  if(period === 'custom'){
+    const fromVal = document.getElementById('an-date-from')?.value;
+    const toVal = document.getElementById('an-date-to')?.value;
+    cutoff = fromVal ? new Date(fromVal + 'T00:00:00').getTime() : 0;
+    cutoffTo = toVal ? new Date(toVal + 'T23:59:59').getTime() : null;
+  } else {
+    cutoff = period === 'all' ? 0 : now - parseInt(period) * 86400000;
+  }
 
   const pins = (window.S?.pins || []).filter(p => !cutoff || new Date(p.created_at || 0).getTime() >= cutoff);
   const estimates = (window.S?.estimates || []).filter(e => !cutoff || new Date(e.created_at || 0).getTime() >= cutoff);
@@ -8276,6 +8310,99 @@ function exportAnalyticsCSV() {
   URL.revokeObjectURL(url);
 }
 
+// ─────────────────────────────────────────────────────────────
+// ANALYTICS: Period change handler (show/hide custom date range)
+function _anPeriodChanged(){
+  const period = document.getElementById('an-period')?.value;
+  const rangeDiv = document.getElementById('an-custom-range');
+  if(rangeDiv){
+    rangeDiv.style.display = period === 'custom' ? 'flex' : 'none';
+    if(period === 'custom'){
+      // Default to last 30 days as starting range
+      const to = new Date();
+      const from = new Date(Date.now() - 30*86400000);
+      const fmt = d => d.toISOString().slice(0,10);
+      const fromEl = document.getElementById('an-date-from');
+      const toEl = document.getElementById('an-date-to');
+      if(fromEl && !fromEl.value) fromEl.value = fmt(from);
+      if(toEl && !toEl.value) toEl.value = fmt(to);
+      return; // don't reload yet — wait for date inputs
+    }
+  }
+  loadAnalytics();
+}
+// ─────────────────────────────────────────────────────────────
+// ANALYTICS: PDF Export
+function exportAnalyticsPDF(){
+  const period = document.getElementById('an-period')?.value || '30';
+  let periodLabel = period === 'all' ? 'All Time' : period === 'custom' ? 'Custom Range' : `Last ${period} Days`;
+  if(period === 'custom'){
+    const from = document.getElementById('an-date-from')?.value;
+    const to = document.getElementById('an-date-to')?.value;
+    if(from && to) periodLabel = `${from} → ${to}`;
+  }
+  // Collect stat card values from the DOM
+  function getStat(id){ return document.getElementById(id)?.textContent?.trim() || '—'; }
+  const stats = [
+    ['Postcards Sent', getStat('an-postcards')],
+    ['QR Scans', getStat('an-scans')],
+    ['Engagement Rate', getStat('an-open-rate')],
+    ['Signed Jobs', getStat('an-signed')],
+    ['Estimates Built', getStat('an-estimates')],
+    ['Homes Pinned', getStat('an-pins')],
+    ['Est. Pipeline Value', getStat('an-pipeline')],
+    ['Close Rate', getStat('an-close-rate')],
+    ['Page Views', getStat('an-page-views')],
+    ['Booking Clicks', getStat('an-booking-clicks')],
+    ['Call Clicks', getStat('an-call-clicks')],
+    ['View Rate', getStat('an-view-rate')],
+  ];
+  // Collect rep table rows
+  const repRows = [];
+  document.querySelectorAll('#an-rep-table tr').forEach(tr => {
+    const cells = [...tr.querySelectorAll('td')].map(td => td.textContent.trim());
+    if(cells.length) repRows.push(cells);
+  });
+  // Build HTML for print
+  const companyName = window.S?.cfg?.companyName || 'BidDrop';
+  const printHtml = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>${companyName} Analytics</title>
+<style>
+  body{font-family:Arial,sans-serif;margin:0;padding:32px;color:#111;background:#fff;}
+  h1{font-size:26px;font-weight:900;margin:0 0 4px;}h1 span{color:#F97316;}
+  .sub{font-size:13px;color:#666;margin-bottom:24px;}
+  .section{margin-bottom:28px;}
+  .section-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#888;border-bottom:2px solid #F97316;padding-bottom:4px;margin-bottom:14px;}
+  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  .stat{background:#f8f8f8;border:1px solid #e5e5e5;border-radius:8px;padding:14px 16px;}
+  .stat-lbl{font-size:11px;color:#666;margin-bottom:4px;}
+  .stat-val{font-size:22px;font-weight:800;color:#111;}
+  table{width:100%;border-collapse:collapse;font-size:12px;}
+  th{background:#f0f0f0;padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#666;}
+  td{padding:8px 12px;border-bottom:1px solid #eee;}
+  @media print{body{padding:16px;}}
+</style></head><body>
+<h1>Bid<span>Drop</span> Analytics</h1>
+<div class="sub">${companyName} &bull; ${periodLabel} &bull; Exported ${new Date().toLocaleString()}</div>
+<div class="section">
+  <div class="section-title">Performance Summary</div>
+  <div class="stats-grid">
+    ${stats.map(([lbl,val])=>`<div class="stat"><div class="stat-lbl">${lbl}</div><div class="stat-val">${val}</div></div>`).join('')}
+  </div>
+</div>
+${repRows.length ? `<div class="section">
+  <div class="section-title">Rep Performance</div>
+  <table><thead><tr><th>Rep</th><th>Pins</th><th>Estimates</th><th>Pipeline</th><th>Signed</th><th>Close %</th><th>Top Trades</th></tr></thead>
+  <tbody>${repRows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>
+</div>` : ''}
+</body></html>`;
+  const win = window.open('','_blank','width=900,height=700');
+  if(!win){ toast('Pop-up blocked — allow pop-ups to export PDF','error'); return; }
+  win.document.write(printHtml);
+  win.document.close();
+  win.focus();
+  setTimeout(()=>{ win.print(); }, 400);
+}
 // ─────────────────────────────────────────────────────────────
 // CAMPAIGN PERFORMANCE STATS
 // ─────────────────────────────────────────────────────────────
