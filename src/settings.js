@@ -253,6 +253,10 @@ function openSettings(){
   const _jnSt=document.getElementById('s-jn-status'); if(_jnSt) _jnSt.value=c.jnStatus||'Lead';
   const _jobberEl=document.getElementById('s-jobber-key'); if(_jobberEl) _jobberEl.value=c.jobberApiKey||'';
   const _webhookEl=document.getElementById('s-webhook-url'); if(_webhookEl) _webhookEl.value=c.webhookUrl||'';
+  // CompanyCam settings
+  if(typeof initCompanyCamSettings === 'function') initCompanyCamSettings();
+  // QuickBooks settings
+  if(typeof initQBSettings === 'function') initQBSettings();
   setTimeout(refreshAllIntStatuses, 150);
   // Restore stage dropdown — if stages already fetched, keep selection
   const stgSel=document.getElementById('s-ghl-stage');

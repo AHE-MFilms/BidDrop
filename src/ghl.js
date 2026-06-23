@@ -535,16 +535,26 @@ async function ghlPushPin(pinId){
     }
     pin.ghlContactId = contactId;
     pin.ghlOpportunityId = oppId;
+    pin.ghlSyncedAt = new Date().toISOString();
+    pin.ghlSyncError = null;
     if(currentAccount){
-      await sb.from('pins').update({ ghl_contact_id: contactId, ghl_opportunity_id: oppId }).eq('id', pin.id);
+      await sb.from('pins').update({ ghl_contact_id: contactId, ghl_opportunity_id: oppId, ghl_synced_at: pin.ghlSyncedAt, ghl_sync_error: null }).eq('id', pin.id);
     }
     toast('✅ Synced to GHL: '+ownerName,'success');
     renderPinList();
+    if(typeof renderContacts==='function') renderContacts();
     _resolve(pin.ghlContactId);
   } catch(e){
     console.warn('GHL push failed:', e);
     toast('❌ GHL sync failed: '+e.message,'error');
     if(btn){ btn.textContent='⚠ Retry'; btn.disabled=false; }
+    // Store error state on pin so contacts table can show it
+    const _errPin = (S.pins||[]).find(p=>p.id===pinId);
+    if(_errPin){
+      _errPin.ghlSyncError = e.message || 'Sync failed';
+      if(currentAccount) sb.from('pins').update({ ghl_sync_error: _errPin.ghlSyncError }).eq('id', pinId).then(()=>{});
+      if(typeof renderContacts==='function') renderContacts();
+    }
     _reject(e);
   } finally {
     delete _ghlSyncLocks[pinId];

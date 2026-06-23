@@ -1050,7 +1050,7 @@ tr:hover td{background:var(--card);}
       <button class="mtool-btn" id="btn-measure" onclick="toggleMeasure()">📐 Measure Roof</button>
       <button class="mtool-btn" id="btn-zones-toggle" onclick="toggleZonesOnMap()">🗂 Zones</button>
       <button class="mtool-btn" id="btn-storm-toggle" onclick="toggleStormEvents()">⛈ Storm Events</button>
-
+      <button class="mtool-btn" id="btn-property-layer" onclick="togglePropertyLayer()" title="Color-code pins by estimated roof age">🏠 Roof Age</button>
     </div>
     <!-- Storm Events Panel -->
     <div id="storm-panel" style="display:none;position:absolute;top:12px;left:12px;z-index:2000;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;width:280px;box-shadow:0 4px 20px rgba(0,0,0,.5);">
@@ -4428,6 +4428,63 @@ tr:hover td{background:var(--card);}
           <button onclick="testStormNotification()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 14px;color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">&#127783; Send Test Notification</button>
         </div>
       </div>
+      <!-- ── QuickBooks Integration ── -->
+      <div class="int-card" id="quickbooks-int-card">
+        <div class="int-card-header">
+          <div class="int-logo" style="background:#1c3a1c;">&#128196;</div>
+          <div style="flex:1;">
+            <div class="int-card-title">QuickBooks Online <span class="int-badge" style="background:#2ca01c;color:#fff;">INVOICES</span></div>
+            <div class="int-card-sub">Send estimates to QuickBooks as invoices automatically</div>
+          </div>
+          <div id="qb-int-status" class="int-status not-connected">&#9679; Not Connected</div>
+        </div>
+        <div class="int-card-body">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Connect QuickBooks Online to automatically create invoices from BidDrop estimates. Each estimate gets a &#128196; QuickBooks button that sends the estimate as a QuickBooks invoice.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--mid);display:block;margin-bottom:5px;">Client ID</label>
+              <input id="s-qb-client-id" type="text" placeholder="QuickBooks Client ID" oninput="updateQBStatus()" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-size:12px;font-family:var(--font-m);">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--mid);display:block;margin-bottom:5px;">Client Secret</label>
+              <input id="s-qb-client-secret" type="password" placeholder="QuickBooks Client Secret" oninput="updateQBStatus()" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-size:12px;font-family:var(--font-m);">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--mid);display:block;margin-bottom:5px;">Realm ID (Company ID)</label>
+              <input id="s-qb-realm-id" type="text" placeholder="QuickBooks Realm ID" oninput="updateQBStatus()" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-size:12px;font-family:var(--font-m);">
+            </div>
+            <div style="display:flex;align-items:flex-end;gap:8px;">
+              <button onclick="saveQBSettings()" style="flex:1;background:var(--accent);border:none;border-radius:7px;padding:9px 14px;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;cursor:pointer;">Save</button>
+              <button onclick="connectQuickBooks()" style="flex:1;background:#2ca01c;border:none;border-radius:7px;padding:9px 14px;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;cursor:pointer;">&#128279; Connect QB</button>
+            </div>
+          </div>
+          <div id="qb-connect-status" style="font-size:11px;color:var(--muted);">Get your credentials from <a href="https://developer.intuit.com/app/developer/myapps" target="_blank" style="color:var(--accent);">Intuit Developer Portal</a>. Use sandbox for testing, production for live invoices.</div>
+        </div>
+      </div>
+      <!-- ── CompanyCam Integration ── -->
+      <div class="int-card" id="companycam-int-card">
+        <div class="int-card-header">
+          <div class="int-logo" style="background:#1a2e1a;">&#128247;</div>
+          <div style="flex:1;">
+            <div class="int-card-title">CompanyCam <span class="int-badge" style="background:#22c55e;color:#fff;">PHOTOS</span></div>
+            <div class="int-card-sub">Sync job-site photos from CompanyCam to BidDrop pins</div>
+          </div>
+          <div id="companycam-int-status" class="int-status not-connected">&#9679; Not Connected</div>
+        </div>
+        <div class="int-card-body">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Connect your CompanyCam account to view and sync job-site photos directly from any pin. Photos are pulled by property address using the CompanyCam API.</div>
+          <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;margin-bottom:12px;">
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--mid);display:block;margin-bottom:5px;">CompanyCam API Key</label>
+              <input id="s-companycam-key" type="password" placeholder="Bearer token from CompanyCam dashboard" oninput="updateCompanyCamStatus()" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-size:12px;font-family:var(--font-m);">
+            </div>
+            <button onclick="saveCompanyCamKey()" style="background:var(--accent);border:none;border-radius:7px;padding:9px 18px;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">Save</button>
+          </div>
+          <div style="font-size:11px;color:var(--muted);">Get your API key from <a href="https://app.companycam.com/settings/api" target="_blank" style="color:var(--accent);">CompanyCam Settings → API</a>. Once connected, a 📷 CompanyCam button will appear on each pin.</div>
+        </div>
+      </div>
     </div><!-- /int-grid -->
     </div><!-- /stab-tab-pane integrations -->
 
@@ -4693,6 +4750,7 @@ tr:hover td{background:var(--card);}
 <script src="/src/credits.js"></script>
 <script src="/src/map.js"></script>
 <script src="/src/ghl.js"></script>
+<script src="/src/integrations-ext.js"></script>
 <script src="/src/integrations.js"></script>
 <script src="/src/campaign.js"></script>
 <script src="/src/auth.js"></script>
@@ -6271,7 +6329,7 @@ function renderPinList(){
     const clickHandler = _pinBulkMode
       ? 'onclick="togglePinSelect(\''+pid+'\');this.querySelector(\'.pin-cb\')&&(this.querySelector(\'.pin-cb\').checked=_selectedPinIds.has(\''+pid+'\'))"'
       : 'onclick="togglePinCard(\''+pid+'\')"';
-    return '<div class="pc" id="pc-'+pid+'" '+clickHandler+'>'+'<div class="pc-summary">'+cbHtml+dmgThumb+'<div style="flex:1;min-width:0;"><div class="pc-addr">'+escHtml(p.address)+'</div><div class="pc-meta"><span>'+timeAgo(p.at)+'</span>'+(p.rep?'<span>· '+escHtml(p.rep)+'</span>':'')+'</div></div>'+dmgCount+'<div class="sdot" style="background:'+sColor(p.status)+';margin-top:0;"></div>'+(! _pinBulkMode?'<span class="pc-chevron">›</span>':'')+'</div>'+(!_pinBulkMode?'<div class="pc-body">'+(p.interested_trades&&p.interested_trades.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">'+p.interested_trades.map(t=>{const TRADE_COLORS_PC={roofing:'#F25C05',solar:'#22C55E',fencing:'#A78BFA',siding:'#60A5FA',gutters:'#38BDF8',insulation:'#FB923C',paint:'#F472B6',doors:'#FBBF24',windows:'#67E8F9'};const TRADE_LABELS_PC={roofing:'🏠 Roof',solar:'☀️ Solar',fencing:'🪵 Fence',siding:'🏗 Siding',gutters:'🌊 Gutters',insulation:'🏠 Insulation',paint:'🎨 Paint',doors:'🚪 Doors',windows:'🪟 Windows'};const col=TRADE_COLORS_PC[t]||'#96B0C8';return'<span style="padding:2px 8px;border-radius:10px;border:1px solid '+col+';background:rgba('+col.replace('#','').match(/../g).map(h=>parseInt(h,16)).join(',')+',.12);color:'+col+';font-size:10px;font-weight:700;font-family:var(--font-b);">'+(TRADE_LABELS_PC[t]||t)+'</span>';}).join('')+'</div>':'')+(p.notes?'<div class="pc-note" style="margin-bottom:8px;">"'+escHtml(p.notes)+'"</div>':'')+'<div class="pc-acts">'+'<button class="btn-xs pr" onclick="event.stopPropagation();goEstFromPin(\''+pid+'\')">'+'📋 Estimate</button>'+'<button class="btn-xs" onclick="event.stopPropagation();openFollowUp(\''+pid+'\')">'+'✉️ Follow Up</button>'+'<button class="btn-xs" onclick="event.stopPropagation();cycleStatus(\''+pid+'\')">'+'↻ Status</button>'+(S.cfg.ghlLocationId?'<button class="btn-xs" style="background:'+(p.ghlContactId?'#166534':'#1e3a5f')+';border:1px solid '+(p.ghlContactId?'#22c55e':'#3b82f6')+';color:'+(p.ghlContactId?'#4ade80':'#93c5fd')+';" onclick="event.stopPropagation();ghlPushPin(\''+pid+'\')" title="'+(p.ghlContactId?'✓ Synced to GHL — click to re-sync':'Send to GHL')+'">'+(p.ghlContactId?'✓ GHL':'⬆ GHL')+'</button>':'')+'<button class="btn-xs danger" onclick="event.stopPropagation();rmPin(\''+pid+'\')">'+'✕</button>'+'</div></div>':'')+'</div>';
+    return '<div class="pc" id="pc-'+pid+'" '+clickHandler+'>'+'<div class="pc-summary">'+cbHtml+dmgThumb+'<div style="flex:1;min-width:0;"><div class="pc-addr">'+escHtml(p.address)+'</div><div class="pc-meta"><span>'+timeAgo(p.at)+'</span>'+(p.rep?'<span>· '+escHtml(p.rep)+'</span>':'')+'</div></div>'+dmgCount+'<div class="sdot" style="background:'+sColor(p.status)+';margin-top:0;"></div>'+(! _pinBulkMode?'<span class="pc-chevron">›</span>':'')+'</div>'+(!_pinBulkMode?'<div class="pc-body">'+(p.interested_trades&&p.interested_trades.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">'+p.interested_trades.map(t=>{const TRADE_COLORS_PC={roofing:'#F25C05',solar:'#22C55E',fencing:'#A78BFA',siding:'#60A5FA',gutters:'#38BDF8',insulation:'#FB923C',paint:'#F472B6',doors:'#FBBF24',windows:'#67E8F9'};const TRADE_LABELS_PC={roofing:'🏠 Roof',solar:'☀️ Solar',fencing:'🪵 Fence',siding:'🏗 Siding',gutters:'🌊 Gutters',insulation:'🏠 Insulation',paint:'🎨 Paint',doors:'🚪 Doors',windows:'🪟 Windows'};const col=TRADE_COLORS_PC[t]||'#96B0C8';return'<span style="padding:2px 8px;border-radius:10px;border:1px solid '+col+';background:rgba('+col.replace('#','').match(/../g).map(h=>parseInt(h,16)).join(',')+',.12);color:'+col+';font-size:10px;font-weight:700;font-family:var(--font-b);">'+(TRADE_LABELS_PC[t]||t)+'</span>';}).join('')+'</div>':'')+(p.notes?'<div class="pc-note" style="margin-bottom:8px;">"'+escHtml(p.notes)+'"</div>':'')+'<div class="pc-acts">'+'<button class="btn-xs pr" onclick="event.stopPropagation();goEstFromPin(\''+pid+'\')">'+'📋 Estimate</button>'+'<button class="btn-xs" onclick="event.stopPropagation();openFollowUp(\''+pid+'\')">'+'✉️ Follow Up</button>'+'<button class="btn-xs" onclick="event.stopPropagation();cycleStatus(\''+pid+'\')">'+'↻ Status</button>'+(S.cfg.ghlLocationId?'<button class="btn-xs" style="background:'+(p.ghlContactId?'#166534':'#1e3a5f')+';border:1px solid '+(p.ghlContactId?'#22c55e':'#3b82f6')+';color:'+(p.ghlContactId?'#4ade80':'#93c5fd')+';" onclick="event.stopPropagation();ghlPushPin(\''+pid+'\')" title="'+(p.ghlContactId?'✓ Synced to GHL — click to re-sync':'Send to GHL')+'">'+(p.ghlContactId?'✓ GHL':'⬆ GHL')+'</button>':'')+(S.cfg.companyCamKey?'<button class="btn-xs" style="background:#1a2e1a;border:1px solid #22c55e;color:#4ade80;" onclick="event.stopPropagation();openCompanyCamModal(\''+pid+'\')" title="View CompanyCam photos for this property">📷 Photos</button>':'')+'<button class="btn-xs danger" onclick="event.stopPropagation();rmPin(\''+pid+'\')">'+'✕</button>'+'</div></div>':'')+'</div>';
   }).join('');
   if(hasMore){
     el.insertAdjacentHTML('beforeend',
@@ -7478,7 +7536,8 @@ function renderContacts(){
     const sc=sColor(status); const sl=sLabel(status)||status;
     const rep=(p.rep||'&mdash;');
     const trades=(p.interested_trades||[]).slice(0,3).map(t=>`<span style="padding:1px 6px;border-radius:8px;border:1px solid ${TC[t]||'#96B0C8'};color:${TC[t]||'#96B0C8'};font-size:9px;font-weight:700;white-space:nowrap;">${TL[t]||t}</span>`).join(' ');
-    const ghlBadge=p.ghlContactId?`<span style="color:#4ade80;font-size:10px;font-weight:700;">&#10003; Synced</span>`:`<span style="color:var(--muted);font-size:10px;">&mdash;</span>`;
+    const _ghlDate=p.ghlSyncedAt?new Date(p.ghlSyncedAt).toLocaleDateString('en-US',{month:'short',day:'numeric'}):null;
+    const ghlBadge=p.ghlSyncError?`<span style="color:#f87171;font-size:10px;font-weight:700;" title="${escHtml(p.ghlSyncError)}">&#9888; Error</span>`:(p.ghlContactId?`<span style="color:#4ade80;font-size:10px;font-weight:700;">&#10003; Synced${_ghlDate?' &middot; '+_ghlDate:''}</span>`:`<span style="color:var(--muted);font-size:10px;">&mdash;</span>`);
     const pinDate=(p.createdAt||p.at)?new Date(p.createdAt||p.at).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'&mdash;';
     const chk=_contactsSelected.has(pid)?'checked':'';
     const ghlBtn=(S.cfg&&S.cfg.ghlLocationId)?`<button onclick="ghlPushPin('${pid}')" style="background:${p.ghlContactId?'rgba(34,197,94,.1)':'var(--card2)'};border:1px solid ${p.ghlContactId?'#22c55e':'var(--border)'};border-radius:5px;padding:4px 8px;color:${p.ghlContactId?'#4ade80':'var(--mid)'};font-size:10px;font-weight:700;cursor:pointer;">${p.ghlContactId?'&#10003; GHL':'&uarr; GHL'}</button>`:'';
@@ -7880,7 +7939,8 @@ function campaignQueueWithDrip(campaignId,pinIds){
   let queued=0;
   pins.forEach(pin=>{
     steps.forEach((step,si)=>{
-      const item={id:'q_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),pinId:pin.id,address:pin.address||pin.addr||'',lat:pin.lat,lng:pin.lng,name:pin.name||pin.ownerName||'',status:si===0?'needs_approval':'drip_scheduled',dripStep:si+1,dripDay:step.day,designId:step.designId||null,headline:step.headline||'',subtext:step.subtext||'',campaignId:campaignId,createdAt:new Date().toISOString()};
+      const _dripSendAt = si===0 ? new Date().toISOString() : new Date(Date.now() + (step.day||7)*86400000).toISOString();
+      const item={id:'q_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),pinId:pin.id,address:pin.address||pin.addr||'',lat:pin.lat,lng:pin.lng,name:pin.name||pin.ownerName||'',status:si===0?'needs_approval':'scheduled',dripStep:si+1,dripDay:step.day,designId:step.designId||null,headline:step.headline||'',subtext:step.subtext||'',campaignId:campaignId,createdAt:new Date().toISOString(),at:_dripSendAt,scheduled_send_at:si===0?null:_dripSendAt};
       if(!S.queue) S.queue=[];
       S.queue.push(item); queued++;
     });
@@ -8712,5 +8772,24 @@ function openCampaignQRStats(campaignId) {
 
 
 
+<!-- ── CompanyCam Photos Modal ── -->
+<div id="m-companycam" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:26000;align-items:flex-start;justify-content:center;padding-top:max(env(safe-area-inset-top,0px),40px);overflow-y:auto;" onclick="if(event.target===this)closeM('m-companycam')">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;width:min(700px,96vw);margin:auto;box-shadow:0 24px 60px rgba(0,0,0,.6);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+      <div>
+        <div style="font-family:var(--font-h);font-size:19px;font-weight:700;letter-spacing:.6px;">&#128247; CompanyCam Photos</div>
+        <div id="companycam-modal-addr" style="font-size:12px;color:var(--muted);margin-top:3px;"></div>
+      </div>
+      <button onclick="closeM('m-companycam')" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;">✕</button>
+    </div>
+    <div id="companycam-photos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;min-height:120px;">
+      <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);font-size:13px;">Loading photos…</div>
+    </div>
+    <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end;">
+      <a id="companycam-open-link" href="#" target="_blank" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:9px 18px;color:var(--mid);font-family:var(--font-b);font-size:12px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">&#128279; Open in CompanyCam</a>
+      <button onclick="syncCompanyCamPhotos()" style="background:#22c55e;border:none;border-radius:8px;padding:9px 18px;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;cursor:pointer;">&#8645; Sync to Pin</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
