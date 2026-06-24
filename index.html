@@ -8236,7 +8236,7 @@ async function loadCampaignsTab(){
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
           <div style="flex:1;min-width:200px;">
             <div style="font-weight:700;color:var(--text);font-size:13px;margin-bottom:3px;">&#128205; ${escHtml(campName)}</div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">${dateStr} &middot; ${escHtml(c.rep_email||'')} &middot; <strong style="color:var(--text);">${c.home_count||0} homes</strong></div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">${dateStr} &middot; ${escHtml(c.rep_email||'')} &middot; <strong style="color:var(--text);">${c.home_count||0} homes</strong>${c.design_name ? ' &middot; <span style="color:var(--accent);">\ud83d\udcec '+escHtml(c.design_name)+'</span>' : ''}</div>
             <div style="display:flex;gap:16px;font-size:11px;flex-wrap:wrap;">
               <span style="color:#3B82F6;">&#8679; ${c.ghl_pushed||0} to GHL</span>
               <span style="color:#F59E0B;">&#128236; ${c.postcards_sent||0} postcards</span>
@@ -8387,8 +8387,9 @@ function renderDesignsGrid(){
         <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;">${d.name||'Untitled'}</div>
         ${d.desc ? '<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">'+d.desc+'</div>' : ''}
         <div style="font-size:10px;color:var(--muted);margin-bottom:8px;">Uploaded ${d.createdAt ? new Date(d.createdAt).toLocaleDateString() : 'recently'}</div>
-        <div style="display:flex;gap:6px;">
-          <button onclick="openPostcardFullPreview(${i})" style="flex:1;background:var(--accent);border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">&#128247; Full Preview</button>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button onclick="openPostcardFullPreview(${i})" style="flex:1;background:var(--accent);border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">&#128247; Preview</button>
+          ${d.isDefault ? '<button disabled style="flex:1;background:rgba(242,92,5,.15);border:1px solid var(--accent);border-radius:6px;padding:6px 10px;color:var(--accent);font-size:11px;font-weight:700;cursor:default;">&#9733; Default</button>' : '<button onclick="setDesignAsDefault(\'' + d.id + '\')" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;">Set Default</button>'}
           <button onclick="deleteDesign(${i})" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:6px;padding:6px 10px;color:#EF4444;font-size:11px;font-weight:700;cursor:pointer;">Delete</button>
         </div>
       </div>
@@ -8440,19 +8441,39 @@ function deleteDesign(idx){
   save(); renderDesignsGrid(); renderDripStepDesignSelects();
   toast('Design deleted','success');
 }
+function setDesignAsDefault(id){
+  if(!S.cfg.postcardDesigns) return;
+  S.cfg.postcardDesigns.forEach(d=>{ d.isDefault = (d.id===id); });
+  save(); renderDesignsGrid();
+  toast('Default design updated','success');
+}
+function getDefaultDesign(){
+  const designs = getDesigns();
+  return designs.find(d=>d.isDefault) || designs[0] || null;
+}
 
 // Design picker modal
 window._designPickerCallback=null;
 window._selectedDesignId=null;
-function openDesignPicker(cb){
+function openDesignPicker(cb, preselectedId){
   window._designPickerCallback=cb;
-  window._selectedDesignId=null;
+  // Pre-select: use passed id, or the default design, or null
+  const defaultDesign = getDefaultDesign();
+  window._selectedDesignId = preselectedId || (defaultDesign && defaultDesign.id) || null;
   const designs=getDesigns();
   const grid=document.getElementById('design-picker-grid');
   if(!designs.length){
     grid.innerHTML='<div style="padding:30px;text-align:center;color:var(--muted);font-size:13px;grid-column:1/-1;">No designs yet. Go to <strong>Postcard Designs</strong> to upload one.</div>';
   } else {
     grid.innerHTML=designs.map(d=>`<div id="dpick-${d.id}" onclick="selectDesignInPicker('${d.id}')" style="background:var(--card2);border:2px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:border-color .15s;"><div style="position:relative;width:100%;padding-top:66.7%;background:#111827;overflow:hidden;">${d.url?'<img src="'+d.url+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">':'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px;">No preview</div>'}</div><div style="padding:8px;font-size:12px;font-weight:700;color:var(--text);">${d.name||'Untitled'}</div></div>`).join('');
+  }
+  // Highlight pre-selected design
+  if(window._selectedDesignId){
+    setTimeout(()=>{
+      document.querySelectorAll('[id^="dpick-"]').forEach(el=>{ el.style.borderColor='var(--border)'; });
+      const pre = document.getElementById('dpick-'+window._selectedDesignId);
+      if(pre) pre.style.borderColor='var(--accent)';
+    }, 10);
   }
   document.getElementById('design-picker-modal').style.display='flex';
 }

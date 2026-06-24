@@ -23,6 +23,17 @@ function openNearbyCampaign(pid){
         <div style="display:flex;flex:1;overflow:hidden;min-height:0;">
           <!-- LEFT: controls -->
           <div style="flex:1;padding:18px 20px;overflow-y:auto;border-right:1px solid var(--border);min-width:0;">
+            <!-- Postcard Design Picker -->
+            <div style="margin-bottom:18px;">
+              <div style="font-size:11px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">📬 Postcard Design</div>
+              <div id="nearby-design-preview" onclick="_openCampaignDesignPicker()" style="display:flex;align-items:center;gap:10px;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+                <div id="nearby-design-thumb" style="width:52px;height:35px;background:#111827;border-radius:4px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><span style="font-size:18px;">🖼</span></div>
+                <div style="min-width:0;">
+                  <div id="nearby-design-name" style="font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">No design selected</div>
+                  <div style="font-size:10px;color:var(--muted);">Click to choose →</div>
+                </div>
+              </div>
+            </div>
             <!-- Count picker -->
             <div style="font-size:11px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">How many nearest homes?</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;">
@@ -150,7 +161,32 @@ function openNearbyCampaign(pid){
   if(summary) summary.innerHTML='<div style="text-align:center;color:var(--muted);font-size:11px;padding:20px 0;">Select a count to see homes</div>';
   const costPreview = document.getElementById('nearby-cost-preview');
   if(costPreview) costPreview.style.display='none';
+  // Pre-populate design picker with default design
+  _setCampaignDesign(typeof getDefaultDesign === 'function' ? getDefaultDesign() : null);
   openM('m-nearby-campaign');
+}
+
+function _openCampaignDesignPicker(){
+  if(typeof openDesignPicker === 'function'){
+    openDesignPicker(function(design){ _setCampaignDesign(design); }, window._campaignSelectedDesignId || null);
+  } else {
+    toast('Design library not available','error');
+  }
+}
+
+function _setCampaignDesign(design){
+  window._campaignSelectedDesign = design || null;
+  window._campaignSelectedDesignId = design ? design.id : null;
+  const nameEl = document.getElementById('nearby-design-name');
+  const thumbEl = document.getElementById('nearby-design-thumb');
+  if(!nameEl || !thumbEl) return;
+  if(design){
+    nameEl.textContent = design.name || 'Untitled';
+    thumbEl.innerHTML = design.url ? '<img src="'+design.url+'" style="width:100%;height:100%;object-fit:cover;">' : '<span style="font-size:18px;">\ud83d\uddbc</span>';
+  } else {
+    nameEl.textContent = 'No design selected';
+    thumbEl.innerHTML = '<span style="font-size:18px;">\ud83d\uddbc</span>';
+  }
 }
 
 async function selectNearbyCount(btn, count){
@@ -429,6 +465,7 @@ async function launchNearbyCampaign(){
   // ── Save campaign record ──
   window._activeCampaignId = campaignId;
   window._activeCampaignPinIds = campaignPinIds;
+  const _selDesign = window._campaignSelectedDesign || null;
   const campaignRecord = {
     id: campaignId,
     account_id: currentAccount ? currentAccount.id : null,
@@ -440,7 +477,10 @@ async function launchNearbyCampaign(){
     home_count: campaignPinIds.length,
     postcards_sent: 0,
     ghl_pushed: 0,
-    status: 'active'
+    status: 'active',
+    design_id: _selDesign ? _selDesign.id : null,
+    design_name: _selDesign ? (_selDesign.name || 'Untitled') : null,
+    design_url: _selDesign ? (_selDesign.url || null) : null
   };
   adminAPI('campaign-save', { campaign: campaignRecord }).catch(function(e){ console.warn('[Campaign] save failed:', e); });
   // Store selected homes
