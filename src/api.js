@@ -109,6 +109,16 @@ async function syncAccountToSupabase(){
   if(cfg.qbAccessToken !== undefined)    b10payload.qb_access_token = cfg.qbAccessToken||null;
   if(cfg.qbRefreshToken !== undefined)   b10payload.qb_refresh_token = cfg.qbRefreshToken||null;
   if(cfg.qbRealmId !== undefined)        b10payload.qb_realm_id = cfg.qbRealmId||null;
+  // Template designer fields (Build 11)
+  if(cfg.tplHeadline1 !== undefined)    b10payload.tpl_headline1 = cfg.tplHeadline1||null;
+  if(cfg.tplHeadline2 !== undefined)    b10payload.tpl_headline2 = cfg.tplHeadline2||null;
+  if(cfg.tplSubhead !== undefined)      b10payload.tpl_subhead = cfg.tplSubhead||null;
+  if(cfg.tplBullet1 !== undefined)      b10payload.tpl_bullet1 = cfg.tplBullet1||null;
+  if(cfg.tplBullet2 !== undefined)      b10payload.tpl_bullet2 = cfg.tplBullet2||null;
+  if(cfg.tplBullet3 !== undefined)      b10payload.tpl_bullet3 = cfg.tplBullet3||null;
+  if(cfg.tplCtaLabel !== undefined)     b10payload.tpl_cta_label = cfg.tplCtaLabel||null;
+  if(cfg.tplAccentColor !== undefined)  b10payload.tpl_accent_color = cfg.tplAccentColor||null;
+  if(cfg.tplHeroUrl !== undefined)      b10payload.tpl_hero_url = cfg.tplHeroUrl||null;
   if(Object.keys(b10payload).length){
     const {error: b10Err} = await sb.from('accounts').update(b10payload).eq('id', currentAccount.id);
     if(b10Err) console.warn('[BidDrop] Build 10 columns not yet migrated (run Admin → Run Migration):', b10Err.message);
@@ -248,5 +258,15 @@ function accountRowToCfg(row){
     qbAccessToken: row.qb_access_token||null,
     qbRefreshToken: row.qb_refresh_token||null,
     qbRealmId: row.qb_realm_id||null,
+    // ── Template designer fields (Build 11) ──
+    tplHeadline1:   row.tpl_headline1||null,
+    tplHeadline2:   row.tpl_headline2||null,
+    tplSubhead:     row.tpl_subhead||null,
+    tplBullet1:     row.tpl_bullet1||null,
+    tplBullet2:     row.tpl_bullet2||null,
+    tplBullet3:     row.tpl_bullet3||null,
+    tplCtaLabel:    row.tpl_cta_label||null,
+    tplAccentColor: row.tpl_accent_color||null,
+    tplHeroUrl:     row.tpl_hero_url||null,
   };
 }

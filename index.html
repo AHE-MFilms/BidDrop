@@ -2447,106 +2447,297 @@ tr:hover td{background:var(--card);}
   </div>
 
   <!-- POSTCARD DESIGNS TAB -->
-  <div class="tab-pane" id="tab-designs" style="flex-direction:column;overflow-y:auto;padding:24px 28px;gap:24px;">
-    <!-- Header -->
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
-      <div>
-        <div style="font-family:var(--font-h);font-size:20px;font-weight:800;color:var(--text);">🎨 Postcard Design Library</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:2px;">Choose a built-in template or upload your own — assign designs to drip steps or pick one when sending</div>
-      </div>
-      <button onclick="openAddDesignModal()" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">
-        <span>+</span> Upload Design
-      </button>
-    </div>
+  <div class="tab-pane" id="tab-designs" style="flex-direction:column;overflow:hidden;padding:0;">
+    <!-- ═══════════════════════════════════════════════════════════
+         POSTCARD DESIGNER — 3-column WYSIWYG editor
+         Left: template library | Center: live canvas | Right: properties
+    ═══════════════════════════════════════════════════════════ -->
+    <style>
+      /* ── Designer layout ── */
+      #pd-layout {
+        display: grid;
+        grid-template-columns: 200px 1fr 280px;
+        height: 100%;
+        overflow: hidden;
+      }
+      @media (max-width: 900px) {
+        #pd-layout { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; }
+        #pd-left-panel { display: flex; flex-direction: row; overflow-x: auto; padding: 10px; gap: 8px; border-right: none; border-bottom: 1px solid var(--border); max-height: 130px; }
+        .pd-tpl-thumb { flex-shrink: 0; width: 100px; }
+        #pd-right-panel { max-height: 260px; overflow-y: auto; }
+      }
+      /* ── Left panel ── */
+      #pd-left-panel {
+        background: var(--card);
+        border-right: 1px solid var(--border);
+        overflow-y: auto;
+        padding: 14px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .pd-panel-label {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        color: var(--muted);
+        text-transform: uppercase;
+        margin-bottom: 8px;
+        padding: 0 4px;
+      }
+      .pd-tpl-thumb {
+        border-radius: 7px;
+        border: 2px solid var(--border);
+        overflow: hidden;
+        cursor: pointer;
+        transition: border-color .15s, transform .1s;
+        margin-bottom: 6px;
+      }
+      .pd-tpl-thumb:hover { border-color: var(--accent); transform: translateY(-1px); }
+      .pd-tpl-active { border-color: var(--accent) !important; }
+      .pd-tpl-thumb-inner {
+        width: 100%;
+        aspect-ratio: 6/4;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        padding: 8px;
+      }
+      .pd-tpl-name {
+        font-size: 11px;
+        color: var(--muted);
+        padding: 4px 6px 5px;
+        background: var(--card2);
+      }
+      /* ── Center canvas area ── */
+      #pd-canvas-area {
+        background: var(--bg);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        overflow-y: auto;
+        padding: 18px 16px 24px;
+      }
+      #pd-topbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 14px;
+        width: 100%;
+        max-width: 680px;
+        flex-wrap: wrap;
+      }
+      .pd-side-btn {
+        height: 30px;
+        padding: 0 14px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--muted);
+        font-size: 12px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all .15s;
+      }
+      .pd-side-active {
+        background: var(--accent) !important;
+        border-color: var(--accent) !important;
+        color: #fff !important;
+      }
+      .pd-topbar-sep { flex: 1; }
+      .pd-preview-btn {
+        height: 30px;
+        padding: 0 14px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text);
+        font-size: 12px;
+        cursor: pointer;
+      }
+      #pd-save-btn {
+        height: 30px;
+        padding: 0 16px;
+        border-radius: 6px;
+        border: none;
+        background: #238636;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      /* ── The postcard canvas ── */
+      #pd-canvas-wrap {
+        width: 100%;
+        max-width: 660px;
+      }
+      #pd-canvas {
+        width: 100%;
+        max-width: 660px;
+        aspect-ratio: 3/2;
+        border-radius: 6px;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 6px 32px rgba(0,0,0,.5), 0 0 0 1px var(--border);
+        background: var(--card2);
+      }
+      .pd-ruler {
+        width: 100%;
+        max-width: 660px;
+        display: flex;
+        justify-content: space-between;
+        padding: 4px 0 0;
+        font-size: 9px;
+        color: var(--muted2, #484f58);
+      }
+      /* ── Zone interaction ── */
+      .pd-zone {
+        position: relative;
+        transition: outline .1s;
+      }
+      .pd-zone:hover {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+        border-radius: 3px;
+      }
+      .pd-zone-selected {
+        outline: 2px solid var(--accent) !important;
+        outline-offset: 2px !important;
+        border-radius: 3px !important;
+      }
+      .pd-zone-hint {
+        position: absolute;
+        background: var(--accent);
+        color: #fff;
+        font-size: 9px;
+        font-weight: 700;
+        padding: 2px 6px;
+        border-radius: 3px;
+        top: -20px;
+        left: 0;
+        white-space: nowrap;
+        display: none;
+        pointer-events: none;
+        z-index: 10;
+      }
+      .pd-zone:hover .pd-zone-hint { display: block; }
+      /* ── Right panel ── */
+      #pd-right-panel {
+        background: var(--card);
+        border-left: 1px solid var(--border);
+        overflow-y: auto;
+        padding: 14px;
+      }
+      .pd-prop-section {
+        margin-bottom: 18px;
+        transition: opacity .2s;
+      }
+      .pd-prop-dim { opacity: .45; }
+      .pd-prop-title {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        color: var(--muted);
+        text-transform: uppercase;
+        margin-bottom: 8px;
+        padding-bottom: 5px;
+        border-bottom: 1px solid var(--border);
+      }
+      .pd-prop-row { margin-bottom: 8px; }
+      .pd-prop-label {
+        font-size: 11px;
+        color: var(--muted);
+        margin-bottom: 3px;
+        display: block;
+      }
+      .pd-prop-input {
+        width: 100%;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        color: var(--text);
+        font-size: 12px;
+        padding: 5px 8px;
+        outline: none;
+        font-family: inherit;
+      }
+      .pd-prop-input:focus { border-color: var(--accent); }
+      .pd-prop-textarea {
+        width: 100%;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        color: var(--text);
+        font-size: 12px;
+        padding: 5px 8px;
+        outline: none;
+        resize: vertical;
+        min-height: 52px;
+        font-family: inherit;
+      }
+      .pd-prop-textarea:focus { border-color: var(--accent); }
+      .pd-upload-zone {
+        border: 1.5px dashed var(--border);
+        border-radius: 6px;
+        padding: 10px;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color .15s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+      }
+      .pd-upload-zone:hover { border-color: var(--accent); }
+    </style>
 
-    <!-- BUILT-IN TEMPLATES -->
-    <div>
-      <div style="font-family:var(--font-h);font-size:14px;font-weight:700;letter-spacing:.5px;color:var(--accent);text-transform:uppercase;margin-bottom:12px;">✨ Built-In Templates</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;" id="builtin-templates-grid">
-        <!-- T3: Storm / Wind Damage -->
-        <div style="background:var(--card);border:2px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .15s;" id="tpl-card-t3">
-          <div style="background:linear-gradient(135deg,#1a2a3a,#2a3a4a);padding:20px;min-height:130px;display:flex;flex-direction:column;justify-content:flex-end;position:relative;overflow:hidden;">
-            <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(180deg,rgba(10,15,25,.7) 0%,rgba(10,15,25,.1) 100%);"></div>
-            <div style="position:absolute;top:28px;left:0;width:65%;height:28px;background:var(--accent);clip-path:polygon(0 0,100% 0,calc(100% + 20px) 100%,0 100%);opacity:.9;"></div>
-            <div style="position:relative;z-index:1;">
-              <div style="font-size:10px;color:rgba(255,255,255,.7);font-weight:700;letter-spacing:.5px;">YOU HAVE</div>
-              <div style="font-size:22px;font-weight:900;color:#fff;font-style:italic;line-height:1.1;">WIND DAMAGE</div>
-            </div>
+    <div id="pd-layout">
+      <!-- LEFT: Template library -->
+      <div id="pd-left-panel">
+        <div class="pd-panel-label">Templates</div>
+        <div id="pd-tpl-library">
+          <!-- Populated by openPostcardDesigner() -->
+          <div style="font-size:12px;color:var(--muted);text-align:center;padding:20px 0;">Loading…</div>
+        </div>
+      </div>
+
+      <!-- CENTER: Canvas -->
+      <div id="pd-canvas-area">
+        <div id="pd-topbar">
+          <button class="pd-side-btn pd-side-active" id="pd-btn-front" onclick="pdSetSide('front')">📄 Card Front</button>
+          <button class="pd-side-btn" id="pd-btn-back" onclick="pdSetSide('back')">🔄 Card Back</button>
+          <div class="pd-topbar-sep"></div>
+          <button class="pd-preview-btn" onclick="pdPreviewPng()">👁 Preview PNG</button>
+          <button id="pd-save-btn" onclick="pdSaveDesign()">💾 Save Design</button>
+        </div>
+        <div id="pd-canvas-wrap">
+          <div id="pd-canvas">
+            <!-- Populated by pdRenderPreview() -->
+            <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;">Opening designer…</div>
           </div>
-          <div style="padding:12px 14px;">
-            <div style="font-weight:700;font-size:13px;color:var(--text);">🌪 Storm / Wind Damage</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:3px;">Bold storm-response mailer with diagonal slash accent</div>
-            <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
-              <button onclick="openTemplateCustomizer('t3')" style="background:var(--accent);color:#fff;border:none;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">Customize</button>
-              <button onclick="previewBuiltinTemplate('t3')" style="background:var(--card2);color:var(--mid);border:1px solid var(--border);border-radius:7px;padding:6px 12px;font-size:12px;cursor:pointer;">Preview</button>
-              <button onclick="useBuiltinTemplate('t3')" style="background:none;color:var(--accent);border:1px solid var(--accent);border-radius:7px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;">Use This</button>
-            </div>
+          <div class="pd-ruler">
+            <span>0"</span><span>1"</span><span>2"</span><span>3"</span><span>4"</span><span>5"</span><span>6"</span><span>7"</span><span>8"</span><span>9"</span>
           </div>
         </div>
-        <!-- T4: Solar -->
-        <div style="background:var(--card);border:2px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .15s;" id="tpl-card-t4">
-          <div style="background:linear-gradient(135deg,#081432,#1a3a5c);padding:20px;min-height:130px;display:flex;flex-direction:column;justify-content:flex-end;position:relative;overflow:hidden;">
-            <div style="position:absolute;top:-40px;right:-20px;width:120px;height:120px;background:rgba(255,215,0,.18);border-radius:50%;"></div>
-            <div style="position:relative;z-index:1;">
-              <div style="font-size:12px;color:#FFD700;font-weight:700;font-style:italic;">SAVE UP TO 80%</div>
-              <div style="font-size:18px;font-weight:900;color:#fff;line-height:1.2;">YOUR HOME IS<br>SOLAR READY</div>
-            </div>
+
+        <!-- Uploaded designs section below canvas -->
+        <div style="width:100%;max-width:660px;margin-top:28px;">
+          <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
+            <span>📁 Your Uploaded Designs</span>
+            <button onclick="openAddDesignModal()" style="background:var(--accent);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;">+ Upload</button>
           </div>
-          <div style="padding:12px 14px;">
-            <div style="font-weight:700;font-size:13px;color:var(--text);">&#9728;&#65039; Solar</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:3px;">Navy split-panel with sun accent and savings headline</div>
-            <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
-              <button onclick="openTemplateCustomizer('t4')" style="background:var(--accent);color:#fff;border:none;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">Customize</button>
-              <button onclick="previewBuiltinTemplate('t4')" style="background:var(--card2);color:var(--mid);border:1px solid var(--border);border-radius:7px;padding:6px 12px;font-size:12px;cursor:pointer;">Preview</button>
-              <button onclick="useBuiltinTemplate('t4')" style="background:none;color:var(--accent);border:1px solid var(--accent);border-radius:7px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;">Use This</button>
-            </div>
-          </div>
-        </div>
-        <!-- T5: Gutters -->
-        <div style="background:var(--card);border:2px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .15s;" id="tpl-card-t5">
-          <div style="background:linear-gradient(135deg,#0c1c0c,#1a2a1a);padding:20px;min-height:130px;display:flex;flex-direction:column;justify-content:flex-end;position:relative;overflow:hidden;">
-            <div style="position:absolute;top:16px;left:0;right:0;height:24px;background:var(--accent);opacity:.85;"></div>
-            <div style="position:relative;z-index:1;">
-              <div style="font-size:13px;font-weight:900;color:#fff;line-height:1.2;">DON&#39;T FALL<br><span style="color:var(--accent);font-style:italic;">VICTIM TO</span><br>CLOGGED GUTTERS</div>
-            </div>
-          </div>
-          <div style="padding:12px 14px;">
-            <div style="font-weight:700;font-size:13px;color:var(--text);">&#127810; Gutters / Leaf Guard</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:3px;">Dark green split panel with bold headline and bullets</div>
-            <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
-              <button onclick="openTemplateCustomizer('t5')" style="background:var(--accent);color:#fff;border:none;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">Customize</button>
-              <button onclick="previewBuiltinTemplate('t5')" style="background:var(--card2);color:var(--mid);border:1px solid var(--border);border-radius:7px;padding:6px 12px;font-size:12px;cursor:pointer;">Preview</button>
-              <button onclick="useBuiltinTemplate('t5')" style="background:none;color:var(--accent);border:1px solid var(--accent);border-radius:7px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;">Use This</button>
-            </div>
-          </div>
-        </div>
-        <!-- T6: General Roofing -->
-        <div style="background:var(--card);border:2px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .15s;" id="tpl-card-t6">
-          <div style="background:linear-gradient(135deg,#1a2030,#2a3040);padding:20px;min-height:130px;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden;">
-            <div style="margin:0 auto;width:160px;height:90px;background:rgba(10,15,30,.88);border:2px solid var(--accent);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-              <div style="font-size:18px;font-weight:900;color:var(--accent);line-height:1;">FREE ROOF</div>
-              <div style="font-size:14px;font-weight:900;color:#fff;">INSPECTION</div>
-            </div>
-            <div style="position:absolute;top:8px;right:8px;width:40px;height:40px;background:var(--accent);clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);"></div>
-          </div>
-          <div style="padding:12px 14px;">
-            <div style="font-weight:700;font-size:13px;color:var(--text);">&#127968; General Roofing</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:3px;">Center panel with starburst badge — free inspection offer</div>
-            <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
-              <button onclick="openTemplateCustomizer('t6')" style="background:var(--accent);color:#fff;border:none;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">Customize</button>
-              <button onclick="previewBuiltinTemplate('t6')" style="background:var(--card2);color:var(--mid);border:1px solid var(--border);border-radius:7px;padding:6px 12px;font-size:12px;cursor:pointer;">Preview</button>
-              <button onclick="useBuiltinTemplate('t6')" style="background:none;color:var(--accent);border:1px solid var(--accent);border-radius:7px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;">Use This</button>
-            </div>
+          <div id="designs-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;">
+            <div style="padding:30px;text-align:center;color:var(--muted);font-size:12px;grid-column:1/-1;">Loading designs…</div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- UPLOADED DESIGNS -->
-    <div>
-      <div style="font-family:var(--font-h);font-size:14px;font-weight:700;letter-spacing:.5px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;">&#128193; Your Uploaded Designs</div>
-      <div id="designs-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;">
-        <div style="padding:40px;text-align:center;color:var(--muted);font-size:13px;grid-column:1/-1;">Loading designs&#8230;</div>
+      <!-- RIGHT: Properties panel -->
+      <div id="pd-right-panel">
+        <div id="pd-props-panel">
+          <div style="font-size:12px;color:var(--muted);text-align:center;padding:20px 0;">Click a zone on the postcard to edit it, or use the fields below.</div>
+        </div>
       </div>
     </div>
   </div>
@@ -5042,6 +5233,7 @@ tr:hover td{background:var(--card);}
 <script src="/src/postcard-render.js"></script>
 <script src="/src/postcard-templates.js"></script>
 <script src="/src/postcard-dispatch.js"></script>
+<script src="/src/postcard-designer.js"></script>
 <script src="/src/supabase-sync.js"></script>
 <script src="/src/video.js"></script>
 <script src="/src/print.js"></script>
@@ -8189,7 +8381,7 @@ function confirmDesignPick(){
   if(typeof _orig==='function'){
     window.goTab=function(t){
       _orig(t);
-      if(t==='designs') setTimeout(renderDesignsGrid,50);
+      if(t==='designs') { setTimeout(renderDesignsGrid,50); setTimeout(()=>{ if(typeof openPostcardDesigner==='function') openPostcardDesigner(); },80); }
       if(t==='drip') setTimeout(renderDripBuilder,50);
     };
   }

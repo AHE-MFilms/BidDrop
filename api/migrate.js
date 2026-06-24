@@ -204,6 +204,16 @@ export default async function handler(req, res) {
       check: "SELECT column_name FROM information_schema.columns WHERE table_name='estimates' AND column_name='qb_invoice_id'",
       sql: "ALTER TABLE estimates ADD COLUMN IF NOT EXISTS qb_invoice_id text"
     },
+    // ── Build 11: Postcard template designer fields ──
+    { name: 'accounts.tpl_headline1',   sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS tpl_headline1 text" },
+    { name: 'accounts.tpl_headline2',   sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS tpl_headline2 text" },
+    { name: 'accounts.tpl_subhead',     sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS tpl_subhead text" },
+    { name: 'accounts.tpl_bullet1',     sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS tpl_bullet1 text" },
+    { name: 'accounts.tpl_bullet2',     sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS tpl_bullet2 text" },
+    { name: 'accounts.tpl_bullet3',     sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS tpl_bullet3 text" },
+    { name: 'accounts.tpl_cta_label',   sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS tpl_cta_label text" },
+    { name: 'accounts.tpl_accent_color',sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS tpl_accent_color text" },
+    { name: 'accounts.tpl_hero_url',    sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS tpl_hero_url text" },
     {
       name: 'campaign_targets_table',
       check: "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name='campaign_targets'",
