@@ -1211,7 +1211,9 @@ module.exports = async function handler(req, res) {
       }
       case 'campaign-list': {
         // List campaigns for an account, most recent first
-        const listAcctId = profile.account_id;
+        // Super admins can pass targetAccountId to view any account's campaigns
+        const { targetAccountId } = req.body || {};
+        const listAcctId = (isSuperAdmin && targetAccountId) ? targetAccountId : profile.account_id;
         if (!listAcctId) { res.status(401).json({ error: 'auth required' }); return; }
         const limit = Math.min(parseInt(req.query.limit) || 20, 100);
         const r = await sbFetch(`campaign_targets?account_id=eq.${listAcctId}&order=campaign_date.desc&limit=${limit}`, {

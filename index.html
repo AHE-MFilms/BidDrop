@@ -8185,7 +8185,7 @@ async function loadCampaignsTab(){
   const statusF = (document.getElementById('campaigns-status-filter')||{}).value||'';
   if(listEl) listEl.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px;">Loading\u2026</div>';
   try{
-    const data = await adminAPI('campaign-list', {});
+    const data = await adminAPI('campaign-list', { targetAccountId: currentAccount ? currentAccount.id : null });
     let campaigns = (data && data.campaigns) || [];
     if(statusF) campaigns = campaigns.filter(c=>c.status===statusF);
     campaigns.sort((a,b)=> new Date(b.campaign_date) - new Date(a.campaign_date));
