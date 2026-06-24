@@ -468,30 +468,30 @@ function renderSuperAdminPanel(accounts, allProfiles){
       '<div id="add-account-form" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:16px;margin-bottom:14px;">' +
         '<div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:12px;">NEW CLIENT ACCOUNT</div>' +
         '<div class="frow">' +
-          '<div class="fg"><label class="fl">Company Name *</label><input class="fi" id="new-acct-name" placeholder="Rapid Roof LLC"></div>' +
-          '<div class="fg"><label class="fl">Admin Email *</label><input class="fi" id="new-acct-email" placeholder="owner@rapidroof.com" type="email"></div>' +
+          '<div class="fg"><label class="fl" for="new-acct-name">Company Name *</label><input class="fi" id="new-acct-name" placeholder="Rapid Roof LLC"></div>' +
+          '<div class="fg"><label class="fl" for="new-acct-email">Admin Email *</label><input class="fi" id="new-acct-email" placeholder="owner@rapidroof.com" type="email"></div>' +
         '</div>' +
         '<div class="frow">' +
-          '<div class="fg"><label class="fl">Temp Password *</label><input class="fi" id="new-acct-pass" placeholder="min 6 chars" type="password"></div>' +
-          '<div class="fg"><label class="fl">Company Phone</label><input class="fi" id="new-acct-phone" placeholder="(313) 555-0100" oninput="autoFormatPhone(this)"></div>' +
+          '<div class="fg"><label class="fl" for="new-acct-pass">Temp Password *</label><input class="fi" id="new-acct-pass" placeholder="min 6 chars" type="password"></div>' +
+          '<div class="fg"><label class="fl" for="new-acct-phone">Company Phone</label><input class="fi" id="new-acct-phone" placeholder="(313) 555-0100" oninput="autoFormatPhone(this)"></div>' +
         '</div>' +
         '<div class="frow">' +
-          '<div class="fg"><label class="fl">Company Website</label><input class="fi" id="new-acct-website" placeholder="https://rapidroof.com" type="url"></div>' +
-          '<div class="fg"><label class="fl">Booking / QR URL <span style="font-weight:400;color:var(--muted);font-size:10px;">(Calendly, etc.)</span></label><input class="fi" id="new-acct-booking" placeholder="https://calendly.com/..."></div>' +
+          '<div class="fg"><label class="fl" for="new-acct-website">Company Website</label><input class="fi" id="new-acct-website" placeholder="https://rapidroof.com" type="url"></div>' +
+          '<div class="fg"><label class="fl" for="new-acct-booking">Booking / QR URL <span style="font-weight:400;color:var(--muted);font-size:10px;">(Calendly, etc.)</span></label><input class="fi" id="new-acct-booking" placeholder="https://calendly.com/..."></div>' +
         '</div>' +
-        '<div class="fg"><label class="fl">Street Address</label><input class="fi" id="new-acct-street" placeholder="32640 Dequindre Rd, Suite B"></div>'+
+        '<div class="fg"><label class="fl" for="new-acct-street">Street Address</label><input class="fi" id="new-acct-street" placeholder="32640 Dequindre Rd, Suite B"></div>'+
         '<div class="frow">'+
-          '<div class="fg" style="flex:2;"><label class="fl">City</label><input class="fi" id="new-acct-city" placeholder="Sterling Heights"></div>'+
-          '<div class="fg" style="flex:1;"><label class="fl">State</label>'+
+          '<div class="fg" style="flex:2;"><label class="fl" for="new-acct-city">City</label><input class="fi" id="new-acct-city" placeholder="Sterling Heights"></div>'+
+          '<div class="fg" style="flex:1;"><div class="fl">State</div>'+
             '<select class="fs" id="new-acct-state">'+
               '<option value="">—</option>'+
               (function(){var st='AL,AK,AZ,AR,CA,CO,CT,DE,FL,GA,HI,ID,IL,IN,IA,KS,KY,LA,ME,MD,MA,MI,MN,MS,MO,MT,NE,NV,NH,NJ,NM,NY,NC,ND,OH,OK,OR,PA,RI,SC,SD,TN,TX,UT,VT,VA,WA,WV,WI,WY';return st.split(',').map(function(s){return '<option value="'+s+'"'+(s==='MI'?' selected':'')+'>'+s+'</option>';}).join('');})() +
             '</select>'+
           '</div>'+
-          '<div class="fg" style="flex:1;"><label class="fl">Zip</label><input class="fi" id="new-acct-zip" placeholder="48310" maxlength="5"></div>'+
+          '<div class="fg" style="flex:1;"><label class="fl" for="new-acct-zip">Zip</label><input class="fi" id="new-acct-zip" placeholder="48310" maxlength="5"></div>'+
         '</div>' +
         '<div class="frow">' +
-          '<div class="fg"><label class="fl">Plan</label>' +
+          '<div class="fg"><div class="fl">Plan</div>' +
             '<select class="fs" id="new-acct-plan">' +
               '<option value="starter">Starter</option>' +
               '<option value="pro">Pro</option>' +
@@ -502,15 +502,15 @@ function renderSuperAdminPanel(accounts, allProfiles){
 
         '</div>' +
         '<div style="margin-top:10px;">'+
-          '<div class="fg"><label class="fl">Quote Page Slug <span style="font-weight:400;color:var(--muted);font-size:10px;">(e.g. rapidroof → /q/rapidroof)</span></label>'+
+          '<div class="fg"><div class="fl">Quote Page Slug <span style="font-weight:400;color:var(--muted);font-size:10px;">(e.g. rapidroof → /q/rapidroof)</span></div>'+
           '<input class="fi" id="new-acct-slug" placeholder="rapidroof" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_-]/g,\'\')"></div>'+
         '</div>'+
         '<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px;">'+
           '<div style="font-size:11px;font-weight:700;color:#1a7f4b;letter-spacing:.5px;margin-bottom:10px;">⚡ GHL CONNECTION <span style="font-weight:400;color:var(--muted);font-size:10px;text-transform:none;letter-spacing:0;">(optional)</span></div>'+
-          '<div class="fg"><label class="fl">GHL Location API Key</label><input class="fi" id="new-acct-ghl-key" placeholder="pit-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" type="password"></div>'+
+          '<div class="fg"><label class="fl" for="new-acct-ghl-key">GHL Location API Key</label><input class="fi" id="new-acct-ghl-key" placeholder="pit-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" type="password"></div>'+
           '<div class="frow">'+
-            '<div class="fg"><label class="fl">GHL Location ID</label><input class="fi" id="new-acct-ghl-loc" placeholder="gz85VU6SxGXS7lqHAQGx"></div>'+
-            '<div class="fg"><label class="fl">Pipeline ID</label><input class="fi" id="new-acct-ghl-pipe" placeholder="bxskBIBdbklHry0B63qx"></div>'+
+            '<div class="fg"><label class="fl" for="new-acct-ghl-loc">GHL Location ID</label><input class="fi" id="new-acct-ghl-loc" placeholder="gz85VU6SxGXS7lqHAQGx"></div>'+
+            '<div class="fg"><label class="fl" for="new-acct-ghl-pipe">Pipeline ID</label><input class="fi" id="new-acct-ghl-pipe" placeholder="bxskBIBdbklHry0B63qx"></div>'+
           '</div>'+
           '<div style="font-size:10px;color:var(--muted);margin-bottom:10px;">Find these in the client\'s GHL sub-account \u2192 Settings \u2192 Integrations. Leave blank to skip.</div>'+
         '</div>'+
@@ -539,10 +539,10 @@ function renderSuperAdminPanel(accounts, allProfiles){
       '<div style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:14px;margin-top:8px;">'+
         '<div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:10px;">+ Invite New Super Admin</div>'+
         '<div class="frow">'+
-          '<div class="fg"><label class="fl">Full Name</label><input class="fi" id="new-sa-name" placeholder="Jane Smith"></div>'+
-          '<div class="fg"><label class="fl">Email *</label><input class="fi" id="new-sa-email" type="email" placeholder="jane@agency.com"></div>'+
+          '<div class="fg"><label class="fl" for="new-sa-name">Full Name</label><input class="fi" id="new-sa-name" placeholder="Jane Smith"></div>'+
+          '<div class="fg"><label class="fl" for="new-sa-email">Email *</label><input class="fi" id="new-sa-email" type="email" placeholder="jane@agency.com"></div>'+
         '</div>'+
-        '<div class="fg"><label class="fl">Temporary Password *</label><input class="fi" id="new-sa-pass" type="password" placeholder="min 6 chars"></div>'+
+        '<div class="fg"><label class="fl" for="new-sa-pass">Temporary Password *</label><input class="fi" id="new-sa-pass" type="password" placeholder="min 6 chars"></div>'+
         '<button onclick="createSuperAdmin()" class="btn-primary" style="margin-top:6px;">Create Super Admin Account</button>'+
         '<div id="new-sa-result" style="margin-top:8px;font-size:12px;"></div>'+
       '</div>' +
@@ -574,7 +574,7 @@ function renderAccountAdminPanel(profiles){
 function renderAddUserForm(accounts){
   // Build account selector only for super_admin (accounts array passed in)
   const acctSelector = (accounts && accounts.length)
-    ? '<div class="fg"><label class="fl">Account</label>' +
+    ? '<div class="fg"><div class="fl">Account</div>' +
       '<select class="fs" id="new-user-account">' +
       accounts.map(a=>'<option value="'+a.id+'">'+(a.company_name||a.name)+'</option>').join('') +
       '</select></div>'
@@ -582,10 +582,10 @@ function renderAddUserForm(accounts){
   return '<div style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:16px;">' +
     '<div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:10px;">ADD TEAM MEMBER</div>' +
     acctSelector +
-    '<div class="fg"><label class="fl">Name</label><input class="fi" id="new-user-name" placeholder="Mike Johnson"></div>' +
-    '<div class="fg"><label class="fl">Email</label><input class="fi" id="new-user-email" placeholder="mike@tmroofing.com" type="email"></div>' +
-    '<div class="fg"><label class="fl">Temp Password</label><input class="fi" id="new-user-pass" placeholder="min 6 chars" type="password"></div>' +
-    '<div class="fg"><label class="fl">Role</label>' +
+    '<div class="fg"><label class="fl" for="new-user-name">Name</label><input class="fi" id="new-user-name" placeholder="Mike Johnson"></div>' +
+    '<div class="fg"><label class="fl" for="new-user-email">Email</label><input class="fi" id="new-user-email" placeholder="mike@tmroofing.com" type="email"></div>' +
+    '<div class="fg"><label class="fl" for="new-user-pass">Temp Password</label><input class="fi" id="new-user-pass" placeholder="min 6 chars" type="password"></div>' +
+    '<div class="fg"><div class="fl">Role</div>' +
     '<select class="fs" id="new-user-role"><option value="rep">Rep (Field)</option><option value="admin">Admin</option></select></div>' +
     '<button onclick="createUser()" class="btn-primary">Create Login</button>' +
     '<div id="new-user-result" style="margin-top:8px;font-size:11px;"></div>' +
@@ -690,10 +690,10 @@ function openAddUserModal(accountId, accountName){
         <div style="font-size:13px;font-weight:700;color:var(--accent);">ADD USER TO <span style="color:var(--text);">${escHtml(accountName)}</span></div>
         <button onclick="document.getElementById('add-user-modal').remove()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;">✕</button>
       </div>
-      <div class="fg"><label class="fl">Name</label><input class="fi" id="aum-name" placeholder="Mike Johnson" autofocus></div>
-      <div class="fg"><label class="fl">Email</label><input class="fi" id="aum-email" placeholder="mike@company.com" type="email"></div>
-      <div class="fg"><label class="fl">Temp Password</label><input class="fi" id="aum-pass" placeholder="min 6 chars" type="password"></div>
-      <div class="fg"><label class="fl">Role</label>
+      <div class="fg"><label class="fl" for="aum-name">Name</label><input class="fi" id="aum-name" placeholder="Mike Johnson" autofocus></div>
+      <div class="fg"><label class="fl" for="aum-email">Email</label><input class="fi" id="aum-email" placeholder="mike@company.com" type="email"></div>
+      <div class="fg"><label class="fl" for="aum-pass">Temp Password</label><input class="fi" id="aum-pass" placeholder="min 6 chars" type="password"></div>
+      <div class="fg"><div class="fl">Role</div>
         <select class="fs" id="aum-role"><option value="rep">Rep (Field)</option><option value="admin">Admin</option></select>
       </div>
       <div id="aum-result" style="font-size:12px;min-height:18px;margin-bottom:10px;"></div>

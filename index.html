@@ -698,8 +698,8 @@ tr:hover td{background:var(--card);}
     <!-- Card -->
     <div id="login-card" style="background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px;box-shadow:0 24px 60px rgba(0,0,0,.5);">
       <div style="font-family:var(--font-h);font-size:16px;font-weight:600;letter-spacing:.5px;color:var(--text);margin-bottom:20px;">Sign In to Your Account</div>
-      <div class="fg"><label class="fl">Email</label><input class="fi" id="login-email" type="email" placeholder="you@company.com" onkeydown="if(event.key==='Enter')doLogin()"></div>
-      <div class="fg"><label class="fl">Password</label><input class="fi" id="login-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="fg"><label class="fl" for="login-email">Email</label><input class="fi" id="login-email" type="email" placeholder="you@company.com" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="fg"><label class="fl" for="login-pass">Password</label><input class="fi" id="login-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
       <div id="login-error" style="color:var(--danger);font-size:12px;margin-bottom:10px;min-height:16px;"></div>
       <button id="login-btn" class="btn-primary" onclick="doLogin()">Sign In</button>
       <div style="text-align:center;margin-top:12px;">
@@ -715,7 +715,7 @@ tr:hover td{background:var(--card);}
     <div id="forgot-pw-view" style="display:none;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px;box-shadow:0 24px 60px rgba(0,0,0,.5);">
       <div style="font-family:var(--font-h);font-size:16px;font-weight:600;letter-spacing:.5px;color:var(--text);margin-bottom:8px;">Reset Your Password</div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:18px;">Enter your email and we'll send you a reset link.</div>
-      <div class="fg"><label class="fl">Email</label><input class="fi" id="forgot-email" type="email" placeholder="you@company.com" onkeydown="if(event.key==='Enter')doForgotPassword()"></div>
+      <div class="fg"><label class="fl" for="forgot-email">Email</label><input class="fi" id="forgot-email" type="email" placeholder="you@company.com" onkeydown="if(event.key==='Enter')doForgotPassword()"></div>
       <div id="forgot-msg" style="font-size:12px;margin-bottom:10px;min-height:16px;"></div>
       <button id="forgot-btn" class="btn-primary" onclick="doForgotPassword()">Send Reset Link</button>
       <div style="text-align:center;margin-top:12px;">
@@ -727,8 +727,8 @@ tr:hover td{background:var(--card);}
     <div id="set-pw-view" style="display:none;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px;box-shadow:0 24px 60px rgba(0,0,0,.5);">
       <div style="font-family:var(--font-h);font-size:16px;font-weight:600;letter-spacing:.5px;color:var(--text);margin-bottom:8px;">Set New Password</div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:18px;">Choose a strong new password for your account.</div>
-      <div class="fg"><label class="fl">New Password</label><input class="fi" id="new-pw" type="password" placeholder="Min 8 characters" onkeydown="if(event.key==='Enter')doSetNewPassword()"></div>
-      <div class="fg"><label class="fl">Confirm Password</label><input class="fi" id="new-pw-confirm" type="password" placeholder="Repeat password" onkeydown="if(event.key==='Enter')doSetNewPassword()"></div>
+      <div class="fg"><label class="fl" for="new-pw">New Password</label><input class="fi" id="new-pw" type="password" placeholder="Min 8 characters" onkeydown="if(event.key==='Enter')doSetNewPassword()"></div>
+      <div class="fg"><label class="fl" for="new-pw-confirm">Confirm Password</label><input class="fi" id="new-pw-confirm" type="password" placeholder="Repeat password" onkeydown="if(event.key==='Enter')doSetNewPassword()"></div>
       <div id="set-pw-msg" style="font-size:12px;margin-bottom:10px;min-height:16px;"></div>
       <button id="set-pw-btn" class="btn-primary" onclick="doSetNewPassword()">Update Password</button>
     </div>
@@ -842,17 +842,17 @@ tr:hover td{background:var(--card);}
       <button onclick="closeM('m-edit-client')" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;">×</button>
     </div>
     <div class="frow">
-      <div class="fg"><label class="fl">Company Name</label><input class="fi" id="ec-name" placeholder="Rapid Roof LLC"></div>
-      <div class="fg"><label class="fl">Company Phone</label><input class="fi" id="ec-phone" placeholder="(313) 555-0100" oninput="autoFormatPhone(this)"></div>
+      <div class="fg"><label class="fl" for="ec-name">Company Name</label><input class="fi" id="ec-name" placeholder="Rapid Roof LLC"></div>
+      <div class="fg"><label class="fl" for="ec-phone">Company Phone</label><input class="fi" id="ec-phone" placeholder="(313) 555-0100" oninput="autoFormatPhone(this)"></div>
     </div>
-    <div class="fg"><label class="fl">Street Address</label><input class="fi" id="ec-addr-street" placeholder="43665 Antietam Court"></div>
+    <div class="fg"><label class="fl" for="ec-addr-street">Street Address</label><input class="fi" id="ec-addr-street" placeholder="43665 Antietam Court"></div>
     <div class="frow">
-      <div class="fg" style="flex:2"><label class="fl">City</label><input class="fi" id="ec-addr-city" placeholder="Detroit"></div>
-      <div class="fg" style="flex:1"><label class="fl">State</label><input class="fi" id="ec-addr-state" placeholder="MI" maxlength="2" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div>
-      <div class="fg" style="flex:1"><label class="fl">ZIP</label><input class="fi" id="ec-addr-zip" placeholder="48000" maxlength="10"></div>
+      <div class="fg" style="flex:2"><label class="fl" for="ec-addr-city">City</label><input class="fi" id="ec-addr-city" placeholder="Detroit"></div>
+      <div class="fg" style="flex:1"><label class="fl" for="ec-addr-state">State</label><input class="fi" id="ec-addr-state" placeholder="MI" maxlength="2" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div>
+      <div class="fg" style="flex:1"><label class="fl" for="ec-addr-zip">ZIP</label><input class="fi" id="ec-addr-zip" placeholder="48000" maxlength="10"></div>
     </div>
     <div class="frow">
-      <div class="fg"><label class="fl">Plan</label>
+      <div class="fg"><div class="fl">Plan</div>
         <select class="fs" id="ec-plan">
           <option value="starter">Starter</option>
           <option value="pro">Pro</option>
@@ -862,14 +862,14 @@ tr:hover td{background:var(--card);}
       </div>
 
     </div>
-    <div class="fg"><label class="fl">Notes (internal)</label><input class="fi" id="ec-notes" placeholder="e.g. Net 30 billing, referral from..."></div>
+    <div class="fg"><label class="fl" for="ec-notes">Notes (internal)</label><input class="fi" id="ec-notes" placeholder="e.g. Net 30 billing, referral from..."></div>
     <!-- GHL Integration -->
     <div style="margin-top:12px;padding:12px 14px;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:9px;">
       <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#22C55E;margin-bottom:10px;">🔗 GoHighLevel Integration</div>
-      <div class="fg" style="margin-bottom:8px;"><label class="fl">GHL Location API Key</label><input class="fi" id="ec-ghl-key" placeholder="eyJhbGci..." type="password" autocomplete="off"></div>
+      <div class="fg" style="margin-bottom:8px;"><label class="fl" for="ec-ghl-key">GHL Location API Key</label><input class="fi" id="ec-ghl-key" placeholder="eyJhbGci..." type="password" autocomplete="off"></div>
       <div class="frow">
-        <div class="fg"><label class="fl">GHL Location ID</label><input class="fi" id="ec-ghl-loc" placeholder="gz85VU6SxGXS7lqHAQGx"></div>
-        <div class="fg"><label class="fl">GHL Pipeline ID</label><input class="fi" id="ec-ghl-pipe" placeholder="bxskBIBdbklHry0B63qx"></div>
+        <div class="fg"><label class="fl" for="ec-ghl-loc">GHL Location ID</label><input class="fi" id="ec-ghl-loc" placeholder="gz85VU6SxGXS7lqHAQGx"></div>
+        <div class="fg"><label class="fl" for="ec-ghl-pipe">GHL Pipeline ID</label><input class="fi" id="ec-ghl-pipe" placeholder="bxskBIBdbklHry0B63qx"></div>
       </div>
     </div>
     <!-- Mailer type toggles -->
@@ -909,17 +909,17 @@ tr:hover td{background:var(--card);}
     <input type="hidden" id="eu-id">
     <input type="hidden" id="eu-account-id">
     <div class="frow">
-      <div class="fg"><label class="fl">Full Name</label><input class="fi" id="eu-name" placeholder="Jane Smith"></div>
-      <div class="fg"><label class="fl">Email</label><input class="fi" id="eu-email" type="email" placeholder="jane@company.com"></div>
+      <div class="fg"><label class="fl" for="eu-name">Full Name</label><input class="fi" id="eu-name" placeholder="Jane Smith"></div>
+      <div class="fg"><label class="fl" for="eu-email">Email</label><input class="fi" id="eu-email" type="email" placeholder="jane@company.com"></div>
     </div>
     <div class="frow">
-      <div class="fg"><label class="fl">Role</label>
+      <div class="fg"><div class="fl">Role</div>
         <select class="fs" id="eu-role">
           <option value="rep">Rep</option>
           <option value="admin">Admin</option>
         </select>
       </div>
-      <div class="fg"><label class="fl">New Password <span style="font-weight:400;color:var(--muted);font-size:10px;">(leave blank to keep)</span></label><input class="fi" id="eu-password" type="password" placeholder="min 6 chars"></div>
+      <div class="fg"><label class="fl" for="eu-password">New Password <span style="font-weight:400;color:var(--muted);font-size:10px;">(leave blank to keep)</span></label><input class="fi" id="eu-password" type="password" placeholder="min 6 chars"></div>
     </div>
     <div id="eu-result" style="font-size:12px;margin-top:8px;min-height:18px;"></div>
     <div class="modal-footer">
@@ -1350,35 +1350,35 @@ tr:hover td{background:var(--card);}
         <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#60A5FA;margin-bottom:12px;">🏛 Insurance Claim Details</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <div class="fg" style="margin-bottom:0;">
-            <label class="fl">Claim Number</label>
+            <div class="fl">Claim Number</div>
             <input class="fi" id="ins-claim-num" placeholder="e.g. CLM-2026-48821" oninput="scheduleDraftSave()">
           </div>
           <div class="fg" style="margin-bottom:0;">
-            <label class="fl">Insurance Company</label>
+            <div class="fl">Insurance Company</div>
             <input class="fi" id="ins-carrier" placeholder="e.g. State Farm" oninput="scheduleDraftSave()">
           </div>
           <div class="fg" style="margin-bottom:0;">
-            <label class="fl">Date of Loss</label>
+            <div class="fl">Date of Loss</div>
             <input class="fi" id="ins-dol" type="date" oninput="scheduleDraftSave()">
           </div>
           <div class="fg" style="margin-bottom:0;">
-            <label class="fl">Policy Number</label>
+            <div class="fl">Policy Number</div>
             <input class="fi" id="ins-policy" placeholder="e.g. SF-9921-44B" oninput="scheduleDraftSave()">
           </div>
           <div class="fg" style="margin-bottom:0;">
-            <label class="fl">Adjuster Name</label>
+            <div class="fl">Adjuster Name</div>
             <input class="fi" id="ins-adjuster" placeholder="Adjuster name" oninput="scheduleDraftSave()">
           </div>
           <div class="fg" style="margin-bottom:0;">
-            <label class="fl">Adjuster Phone</label>
+            <div class="fl">Adjuster Phone</div>
             <input class="fi" id="ins-adj-phone" placeholder="(555) 000-0000" type="tel" oninput="scheduleDraftSave()">
           </div>
           <div class="fg" style="margin-bottom:0;">
-            <label class="fl">Price List Code <span title="Xactimate regional price list, e.g. MIDET8X_JUN26" style="cursor:help;color:var(--muted);">ⓘ</span></label>
+            <div class="fl">Price List Code <span title="Xactimate regional price list, e.g. MIDET8X_JUN26" style="cursor:help;color:var(--muted);">ⓘ</span></div>
             <input class="fi" id="ins-price-list" placeholder="e.g. MIDET8X_JUN26" oninput="scheduleDraftSave()">
           </div>
           <div class="fg" style="margin-bottom:0;">
-            <label class="fl">Deductible ($)</label>
+            <div class="fl">Deductible ($)</div>
             <input class="fi" id="ins-deductible" type="number" placeholder="1000" min="0" oninput="calcInsuranceTotals();scheduleDraftSave()">
           </div>
         </div>
@@ -1392,11 +1392,11 @@ tr:hover td{background:var(--card);}
             <input class="fi" id="ins-op-pct" type="number" value="20" min="0" max="50" oninput="calcInsuranceTotals()">
           </div>
           <div class="fg" style="margin-bottom:0;">
-            <label class="fl">Depreciation %</label>
+            <div class="fl">Depreciation %</div>
             <input class="fi" id="ins-depr-pct" type="number" value="0" min="0" max="80" oninput="calcInsuranceTotals()">
           </div>
           <div class="fg" style="margin-bottom:0;">
-            <label class="fl">Roof Age (yrs) <span style="font-size:10px;color:var(--muted);">(auto-calc)</span></label>
+            <div class="fl">Roof Age (yrs) <span style="font-size:10px;color:var(--muted);">(auto-calc)</span></div>
             <input class="fi" id="ins-roof-age" type="number" placeholder="12" min="0" max="50" oninput="autoCalcDepreciation()">
           </div>
         </div>
@@ -1421,20 +1421,20 @@ tr:hover td{background:var(--card);}
       </div>
       <!-- Pin picker: load a saved pin into the estimate -->
       <div class="fg" id="est-pin-picker-wrap">
-        <label class="fl">Load from Pinned Home</label>
+        <div class="fl">Load from Pinned Home</div>
         <select class="fs" id="est-pin-picker" onchange="loadEstFromPicker()">
           <option value="">— Select a pinned address —</option>
         </select>
       </div>
       <div class="fg">
-        <label class="fl">Homeowner Name</label>
+        <div class="fl">Homeowner Name</div>
         <div style="display:flex;gap:6px;align-items:center;">
           <input class="fi" id="e-owner" placeholder="Jane Smith" oninput="updatePreview();scheduleDraftSave()" style="flex:1;margin-bottom:0;">
           <button id="rc-lookup-btn" onclick="manualRentcastLookup()" title="Look up owner name &amp; property data from RentCast" style="flex-shrink:0;padding:0 12px;height:38px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">🏠 Look Up</button>
         </div>
       </div>
       <div class="fg">
-        <label class="fl">Property Address</label>
+        <div class="fl">Property Address</div>
         <div style="display:flex;gap:6px;align-items:center;">
           <input class="fi" id="e-addr" placeholder="123 Oak St, Detroit MI 48000" oninput="updatePreview();scheduleDraftSave()" style="flex:1;margin-bottom:0;">
           <button id="est-satellite-btn" onclick="fetchSatelliteMeasurementForEstimate()" title="Get satellite roof measurements for this address" style="flex-shrink:0;padding:0 11px;height:38px;background:linear-gradient(135deg,#0a1628,#0f2a1a);border:1px solid rgba(242,92,5,.5);border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;color:#F25C05;white-space:nowrap;">🛰 Measure</button>
@@ -1471,14 +1471,14 @@ tr:hover td{background:var(--card);}
             📡 Auto-calculated from satellite data — adjust below if needed
           </div>
           <div class="fg" style="margin-bottom:10px;">
-            <label class="fl">System Size (kW) <span style="font-weight:400;color:var(--muted);font-size:10px;">— auto from satellite</span></label>
+            <div class="fl">System Size (kW) <span style="font-weight:400;color:var(--muted);font-size:10px;">— auto from satellite</span></div>
             <div style="display:flex;gap:6px;align-items:center;">
               <input type="number" class="fi" id="te-solar-kw" placeholder="8.5" step="0.1" min="0" oninput="calcTradeSolar()" style="flex:1;margin-bottom:0;">
               <button onclick="autoCalcSolar()" style="flex-shrink:0;padding:0 10px;height:38px;background:rgba(34,197,94,.15);color:#22C55E;border:1px solid rgba(34,197,94,.3);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🛰 Auto</button>
             </div>
           </div>
           <div class="fg" style="margin-bottom:10px;">
-            <label class="fl">Battery Add-On</label>
+            <div class="fl">Battery Add-On</div>
             <div style="display:flex;align-items:center;gap:8px;">
               <input type="checkbox" id="te-solar-battery" style="accent-color:var(--accent);width:16px;height:16px;" onchange="calcTradeSolar()">
               <label for="te-solar-battery" style="font-size:12px;color:var(--mid);cursor:pointer;">Include battery storage</label>
@@ -1486,21 +1486,21 @@ tr:hover td{background:var(--card);}
             </div>
           </div>
           <div class="fg" style="margin-bottom:10px;">
-            <label class="fl">Panel Upgrade</label>
+            <div class="fl">Panel Upgrade</div>
             <div style="display:flex;align-items:center;gap:8px;">
               <input type="checkbox" id="te-solar-panel-upgrade" style="accent-color:var(--accent);width:16px;height:16px;" onchange="calcTradeSolar()">
               <label for="te-solar-panel-upgrade" style="font-size:12px;color:var(--mid);cursor:pointer;">Premium panel upgrade</label>
             </div>
           </div>
           <div class="fg" style="margin-bottom:10px;">
-            <label class="fl">Electrical Panel Upgrade</label>
+            <div class="fl">Electrical Panel Upgrade</div>
             <div style="display:flex;align-items:center;gap:8px;">
               <input type="checkbox" id="te-solar-elec-upgrade" style="accent-color:var(--accent);width:16px;height:16px;" onchange="calcTradeSolar()">
               <label for="te-solar-elec-upgrade" style="font-size:12px;color:var(--mid);cursor:pointer;">Electrical panel upgrade</label>
             </div>
           </div>
           <div class="fg" style="margin-bottom:10px;">
-            <label class="fl">Roof Reinforcement</label>
+            <div class="fl">Roof Reinforcement</div>
             <div style="display:flex;align-items:center;gap:8px;">
               <input type="checkbox" id="te-solar-roof-reinforce" style="accent-color:var(--accent);width:16px;height:16px;" onchange="calcTradeSolar()">
               <label for="te-solar-roof-reinforce" style="font-size:12px;color:var(--mid);cursor:pointer;">Roof reinforcement needed</label>
@@ -1523,7 +1523,7 @@ tr:hover td{background:var(--card);}
         <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;">
           <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--accent);margin-bottom:12px;">🪵 FENCING ESTIMATE</div>
           <div class="fg" style="margin-bottom:10px;">
-            <label class="fl">Fence Type</label>
+            <div class="fl">Fence Type</div>
             <select class="fs" id="te-fen-type" onchange="calcTradeFencing()">
               <option value="wood">🪵 Wood</option>
               <option value="vinyl">🏠 Vinyl</option>
@@ -1534,21 +1534,21 @@ tr:hover td{background:var(--card);}
             </select>
           </div>
           <div class="fg" style="margin-bottom:10px;">
-            <label class="fl">Linear Footage <span style="font-weight:400;color:var(--muted);font-size:10px;">— auto from property perimeter</span></label>
+            <div class="fl">Linear Footage <span style="font-weight:400;color:var(--muted);font-size:10px;">— auto from property perimeter</span></div>
             <div style="display:flex;gap:6px;align-items:center;">
               <input type="number" class="fi" id="te-fen-lf" placeholder="150" min="1" oninput="calcTradeFencing()" style="flex:1;margin-bottom:0;">
               <button onclick="autoCalcFencing()" style="flex-shrink:0;padding:0 10px;height:38px;background:rgba(242,92,5,.15);color:var(--accent);border:1px solid rgba(242,92,5,.3);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🛰 Auto</button>
             </div>
           </div>
           <div class="fg" style="margin-bottom:10px;">
-            <label class="fl">Gates</label>
+            <div class="fl">Gates</div>
             <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
               <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-fen-gate-single" style="accent-color:var(--accent);" onchange="calcTradeFencing()"> Single Gate</label>
               <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-fen-gate-double" style="accent-color:var(--accent);" onchange="calcTradeFencing()"> Double Gate</label>
             </div>
           </div>
           <div class="fg" style="margin-bottom:10px;">
-            <label class="fl">Old Fence Removal</label>
+            <div class="fl">Old Fence Removal</div>
             <div style="display:flex;align-items:center;gap:8px;">
               <input type="checkbox" id="te-fen-removal" style="accent-color:var(--accent);width:16px;height:16px;" onchange="calcTradeFencing()">
               <label for="te-fen-removal" style="font-size:12px;color:var(--mid);cursor:pointer;">Remove existing fence</label>
@@ -1567,7 +1567,7 @@ tr:hover td{background:var(--card);}
         <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;">
           <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--accent);margin-bottom:12px;">🏗 SIDING ESTIMATE</div>
           <div class="fg" style="margin-bottom:10px;">
-            <label class="fl">Siding Material</label>
+            <div class="fl">Siding Material</div>
             <select class="fs" id="te-sid-type" onchange="calcTradeSiding()">
               <option value="vinyl">🏠 Vinyl</option>
               <option value="hardie">🧱 Fiber Cement (Hardie)</option>
@@ -1578,14 +1578,14 @@ tr:hover td{background:var(--card);}
             </select>
           </div>
           <div class="fg" style="margin-bottom:10px;">
-            <label class="fl">Wall Square Footage <span style="font-weight:400;color:var(--muted);font-size:10px;">— auto from building footprint</span></label>
+            <div class="fl">Wall Square Footage <span style="font-weight:400;color:var(--muted);font-size:10px;">— auto from building footprint</span></div>
             <div style="display:flex;gap:6px;align-items:center;">
               <input type="number" class="fi" id="te-sid-sqft" placeholder="1200" min="1" oninput="calcTradeSiding()" style="flex:1;margin-bottom:0;">
               <button onclick="autoCalcSiding()" style="flex-shrink:0;padding:0 10px;height:38px;background:rgba(242,92,5,.15);color:var(--accent);border:1px solid rgba(242,92,5,.3);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🛰 Auto</button>
             </div>
           </div>
           <div class="fg" style="margin-bottom:10px;">
-            <label class="fl">Add-Ons</label>
+            <div class="fl">Add-Ons</div>
             <div style="display:flex;flex-direction:column;gap:6px;">
               <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-sid-removal" style="accent-color:var(--accent);" onchange="calcTradeSiding()"> Old siding removal</label>
               <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-sid-housewrap" style="accent-color:var(--accent);" onchange="calcTradeSiding()"> House wrap / moisture barrier</label>
@@ -1593,7 +1593,7 @@ tr:hover td{background:var(--card);}
             </div>
           </div>
           <div class="fg" style="margin-bottom:10px;">
-            <label class="fl">Trim / Fascia (linear ft)</label>
+            <div class="fl">Trim / Fascia (linear ft)</div>
             <input type="number" class="fi" id="te-sid-trim-lf" placeholder="0" min="0" oninput="calcTradeSiding()">
           </div>
           <div id="te-sid-total-box" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
@@ -1609,7 +1609,7 @@ tr:hover td{background:var(--card);}
         <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;">
           <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--accent);margin-bottom:12px;">🌊 GUTTERS ESTIMATE</div>
           <div class="fg" style="margin-bottom:10px;">
-            <label class="fl">Gutter Type</label>
+            <div class="fl">Gutter Type</div>
             <select class="fs" id="te-gut-type" onchange="calcTradeGutters()">
               <option value="alum5">Aluminum 5" K-Style</option>
               <option value="alum6">Aluminum 6" K-Style</option>
@@ -1620,18 +1620,18 @@ tr:hover td{background:var(--card);}
             </select>
           </div>
           <div class="fg" style="margin-bottom:10px;">
-            <label class="fl">Linear Footage <span style="font-weight:400;color:var(--muted);font-size:10px;">— auto from roof perimeter</span></label>
+            <div class="fl">Linear Footage <span style="font-weight:400;color:var(--muted);font-size:10px;">— auto from roof perimeter</span></div>
             <div style="display:flex;gap:6px;align-items:center;">
               <input type="number" class="fi" id="te-gut-lf" placeholder="180" min="1" oninput="calcTradeGutters()" style="flex:1;margin-bottom:0;">
               <button onclick="autoCalcGutters()" style="flex-shrink:0;padding:0 10px;height:38px;background:rgba(242,92,5,.15);color:var(--accent);border:1px solid rgba(242,92,5,.3);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🛰 Auto</button>
             </div>
           </div>
           <div class="fg" style="margin-bottom:10px;">
-            <label class="fl">Downspouts (qty)</label>
+            <div class="fl">Downspouts (qty)</div>
             <input type="number" class="fi" id="te-gut-downspouts" placeholder="4" min="0" oninput="calcTradeGutters()">
           </div>
           <div class="fg" style="margin-bottom:10px;">
-            <label class="fl">Add-Ons</label>
+            <div class="fl">Add-Ons</div>
             <div style="display:flex;flex-direction:column;gap:6px;">
               <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-gut-guard" style="accent-color:var(--accent);" onchange="calcTradeGutters()"> Gutter guard / screen</label>
               <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-gut-removal" style="accent-color:var(--accent);" onchange="calcTradeGutters()"> Old gutter removal</label>
@@ -1651,7 +1651,7 @@ tr:hover td{background:var(--card);}
         <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;">
           <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--accent);margin-bottom:12px;">🏠 INSULATION ESTIMATE</div>
           <div class="fg" style="margin-bottom:10px;">
-            <label class="fl">Insulation Type</label>
+            <div class="fl">Insulation Type</div>
             <select class="fs" id="te-ins-type" onchange="calcTradeInsulation()">
               <option value="blowR30">Blown-In Fiberglass R-30</option>
               <option value="blowR38">Blown-In Fiberglass R-38</option>
@@ -1664,14 +1664,14 @@ tr:hover td{background:var(--card);}
             </select>
           </div>
           <div class="fg" style="margin-bottom:10px;">
-            <label class="fl">Attic Square Footage <span style="font-weight:400;color:var(--muted);font-size:10px;">— auto from roof area</span></label>
+            <div class="fl">Attic Square Footage <span style="font-weight:400;color:var(--muted);font-size:10px;">— auto from roof area</span></div>
             <div style="display:flex;gap:6px;align-items:center;">
               <input type="number" class="fi" id="te-ins-sqft" placeholder="1200" min="1" oninput="calcTradeInsulation()" style="flex:1;margin-bottom:0;">
               <button onclick="autoCalcInsulation()" style="flex-shrink:0;padding:0 10px;height:38px;background:rgba(242,92,5,.15);color:var(--accent);border:1px solid rgba(242,92,5,.3);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🛰 Auto</button>
             </div>
           </div>
           <div class="fg" style="margin-bottom:10px;">
-            <label class="fl">Add-Ons</label>
+            <div class="fl">Add-Ons</div>
             <div style="display:flex;flex-direction:column;gap:6px;">
               <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-ins-removal" style="accent-color:var(--accent);" onchange="calcTradeInsulation()"> Old insulation removal</label>
               <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-ins-airsealing" style="accent-color:var(--accent);" onchange="calcTradeInsulation()"> Air sealing</label>
@@ -1691,7 +1691,7 @@ tr:hover td{background:var(--card);}
         <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;">
           <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--accent);margin-bottom:12px;">🎨 EXTERIOR PAINT ESTIMATE</div>
           <div class="fg" style="margin-bottom:10px;">
-            <label class="fl">Primary Surface</label>
+            <div class="fl">Primary Surface</div>
             <select class="fs" id="te-pnt-surface" onchange="calcTradePaint()">
               <option value="siding1c">Siding — 1 Coat</option>
               <option value="siding2c">Siding — 2 Coats</option>
@@ -1701,18 +1701,18 @@ tr:hover td{background:var(--card);}
             </select>
           </div>
           <div class="fg" style="margin-bottom:10px;">
-            <label class="fl">Square Footage <span style="font-weight:400;color:var(--muted);font-size:10px;">— auto from building footprint</span></label>
+            <div class="fl">Square Footage <span style="font-weight:400;color:var(--muted);font-size:10px;">— auto from building footprint</span></div>
             <div style="display:flex;gap:6px;align-items:center;">
               <input type="number" class="fi" id="te-pnt-sqft" placeholder="1200" min="1" oninput="calcTradePaint()" style="flex:1;margin-bottom:0;">
               <button onclick="autoCalcPaint()" style="flex-shrink:0;padding:0 10px;height:38px;background:rgba(242,92,5,.15);color:var(--accent);border:1px solid rgba(242,92,5,.3);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🛰 Auto</button>
             </div>
           </div>
           <div class="fg" style="margin-bottom:10px;">
-            <label class="fl">Trim / Fascia (linear ft)</label>
+            <div class="fl">Trim / Fascia (linear ft)</div>
             <input type="number" class="fi" id="te-pnt-trim-lf" placeholder="0" min="0" oninput="calcTradePaint()">
           </div>
           <div class="fg" style="margin-bottom:10px;">
-            <label class="fl">Add-Ons</label>
+            <div class="fl">Add-Ons</div>
             <div style="display:flex;flex-direction:column;gap:6px;">
               <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-pnt-powerwash" style="accent-color:var(--accent);" onchange="calcTradePaint()"> Power washing</label>
               <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-pnt-primer" style="accent-color:var(--accent);" onchange="calcTradePaint()"> Primer coat</label>
@@ -1758,7 +1758,7 @@ tr:hover td{background:var(--card);}
             </div>
           </div>
           <div class="fg" style="margin-bottom:10px;">
-            <label class="fl">Add-Ons</label>
+            <div class="fl">Add-Ons</div>
             <div style="display:flex;flex-direction:column;gap:6px;">
               <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-dor-hardware" style="accent-color:var(--accent);" onchange="calcTradeDoors()"> Hardware / deadbolt upgrade (per door)</label>
               <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-dor-weatherstrip" style="accent-color:var(--accent);" onchange="calcTradeDoors()"> Weatherstripping (per door)</label>
@@ -1794,7 +1794,7 @@ tr:hover td{background:var(--card);}
           <!-- METHOD A: By home size -->
           <div id="win-form-A">
             <div class="fg" style="margin-bottom:10px;">
-              <label class="fl">Home Size</label>
+              <div class="fl">Home Size</div>
               <select class="fs" id="te-win-size" onchange="calcTradeWindows()">
                 <option value="sm">Small (&lt; 1,200 sqft) — ~9 windows</option>
                 <option value="md" selected>Medium (1,200–2,000 sqft) — ~13 windows</option>
@@ -1803,7 +1803,7 @@ tr:hover td{background:var(--card);}
               </select>
             </div>
             <div class="fg" style="margin-bottom:10px;">
-              <label class="fl">Dominant Window Type</label>
+              <div class="fl">Dominant Window Type</div>
               <select class="fs" id="te-win-type-A" onchange="calcTradeWindows()">
                 <option value="dbl_hung">Double-Hung (most common)</option>
                 <option value="casement">Casement</option>
@@ -1812,7 +1812,7 @@ tr:hover td{background:var(--card);}
               </select>
             </div>
             <div class="fg" style="margin-bottom:10px;">
-              <label class="fl">Estimated Window Count <span style="font-weight:400;color:var(--muted);font-size:10px;">— adjust if you can see the house</span></label>
+              <div class="fl">Estimated Window Count <span style="font-weight:400;color:var(--muted);font-size:10px;">— adjust if you can see the house</span></div>
               <input type="number" class="fi" id="te-win-count-A" placeholder="13" min="1" oninput="calcTradeWindows()">
             </div>
           </div>
@@ -1849,7 +1849,7 @@ tr:hover td{background:var(--card);}
 
           <!-- Shared add-ons (all methods) -->
           <div class="fg" style="margin-bottom:10px;">
-            <label class="fl">Add-Ons</label>
+            <div class="fl">Add-Ons</div>
             <div style="display:flex;flex-direction:column;gap:6px;">
               <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-win-lowe" style="accent-color:var(--accent);" onchange="calcTradeWindows()"> Low-E / Energy glass upgrade</label>
               <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-win-triple" style="accent-color:var(--accent);" onchange="calcTradeWindows()"> Triple pane upgrade</label>
@@ -1973,13 +1973,13 @@ tr:hover td{background:var(--card);}
         </div>
       </div>
       <div class="fg">
-        <label class="fl">Homeowner Email <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— syncs to GHL contact</span></label>
+        <div class="fl">Homeowner Email <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— syncs to GHL contact</span></div>
         <div id="e-email-wrap">
           <input class="fi" id="e-email" placeholder="jane@email.com" type="email">
         </div>
       </div>
       <div class="fg">
-        <label class="fl">Homeowner Phone <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— syncs to GHL contact</span></label>
+        <div class="fl">Homeowner Phone <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— syncs to GHL contact</span></div>
         <div id="e-phone-wrap">
           <input class="fi" id="e-phone" placeholder="(555) 000-0000" type="tel">
         </div>
@@ -2019,7 +2019,7 @@ tr:hover td{background:var(--card);}
         <div style="margin-top:8px;font-size:11px;color:var(--muted);">&#128065; Homeowners see this page when they scan the postcard QR code. <a href="#" onclick="if(!isPlanAtLeast('pro')){showPlanUpgradePrompt('Estimate Pages','pro');return false;}if(currentEstRecord)(function(){const slug=(S.cfg&&S.cfg.companyName?S.cfg.companyName.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''):'roofing');window.open('https://biddrop.us/'+slug+'/'+encodeURIComponent(currentEstRecord.id),'_blank','noopener,noreferrer');})();return false;" style="color:#10b981;">Preview page &#8599;</a></div>
       </div>
       <div class="fg">
-        <label class="fl">Property Photos <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:10px;">— first Front of Home photo appears on mailer</span></label>
+        <div class="fl">Property Photos <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:10px;">— first Front of Home photo appears on mailer</span></div>
         <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;">
           <!-- Mailer preview thumbnail (first front photo) -->
           <div id="home-photo-preview" onclick="openPhotoModal()" title="Click to manage photos" style="width:80px;height:60px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);overflow:hidden;flex-shrink:0;cursor:pointer;">No photo</div>
@@ -2784,6 +2784,9 @@ tr:hover td{background:var(--card);}
         </div>
       </div>
     </div>
+    <!-- Persistent hidden file inputs for postcard designer (outside re-rendered panel) -->
+    <input type="file" id="pd-logo-input" accept="image/png,image/jpeg,image/webp" style="display:none;" onchange="pdHandleLogoUpload(this)">
+    <input type="file" id="pd-hero-input" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="pdHandleHeroUpload(this)">
   </div>
     <!-- DRIP AUTOMATIONS TAB -->
   <div class="tab-pane" id="tab-drip" style="flex-direction:column;overflow-y:auto;padding:24px 28px;gap:20px;">
@@ -2897,11 +2900,11 @@ tr:hover td{background:var(--card);}
         <button onclick="closeAddDesignModal()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;">×</button>
       </div>
       <div style="margin-bottom:12px;">
-        <label class="fl">Design Name</label>
+        <div class="fl">Design Name</div>
         <input class="fi" id="new-design-name" placeholder="e.g. Storm Urgency, Final Notice, Summer Special" maxlength="60">
       </div>
       <div style="margin-bottom:12px;">
-        <label class="fl">Front Image <span style="color:var(--muted);font-weight:400;">(6×9 postcard front, JPG/PNG)</span></label>
+        <div class="fl">Front Image <span style="color:var(--muted);font-weight:400;">(6×9 postcard front, JPG/PNG)</span></div>
         <div id="new-design-preview" style="width:100%;height:140px;border:2px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;cursor:pointer;overflow:hidden;position:relative;" onclick="document.getElementById('new-design-file').click()">
           <span id="new-design-preview-text">Click to upload front image</span>
           <img id="new-design-preview-img" style="display:none;width:100%;height:100%;object-fit:cover;" src="">
@@ -2909,7 +2912,7 @@ tr:hover td{background:var(--card);}
         <input type="file" id="new-design-file" accept="image/*" style="display:none;" onchange="previewNewDesign(this)">
       </div>
       <div style="margin-bottom:16px;">
-        <label class="fl">Description <span style="color:var(--muted);font-weight:400;">(optional)</span></label>
+        <div class="fl">Description <span style="color:var(--muted);font-weight:400;">(optional)</span></div>
         <input class="fi" id="new-design-desc" placeholder="e.g. Use for storm follow-up campaigns" maxlength="120">
       </div>
       <div style="display:flex;gap:10px;">
@@ -3380,35 +3383,35 @@ tr:hover td{background:var(--card);}
         </div>
         <div class="stab-card-body" id="stab-body-company">
           <div class="frow">
-            <div class="fg"><label class="fl">Company Name</label><input class="fi" id="s-co" placeholder="T&amp;M Roofing"></div>
-            <div class="fg"><label class="fl">Phone</label><input class="fi" id="s-ph" placeholder="(313) 555-0100" oninput="autoFormatPhone(this)"></div>
+            <div class="fg"><label class="fl" for="s-co">Company Name</label><input class="fi" id="s-co" placeholder="T&amp;M Roofing"></div>
+            <div class="fg"><label class="fl" for="s-ph">Phone</label><input class="fi" id="s-ph" placeholder="(313) 555-0100" oninput="autoFormatPhone(this)"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Company Address</label><input class="fi" id="s-addr" placeholder="123 Business Dr, Detroit MI 48000"></div>
-            <div class="fg"><label class="fl">Brand Color</label><input type="color" class="fi" id="s-color" value="#F25C05" style="padding:4px;cursor:pointer;height:42px;"></div>
+            <div class="fg"><label class="fl" for="s-addr">Company Address</label><input class="fi" id="s-addr" placeholder="123 Business Dr, Detroit MI 48000"></div>
+            <div class="fg"><label class="fl" for="s-color">Brand Color</label><input type="color" class="fi" id="s-color" value="#F25C05" style="padding:4px;cursor:pointer;height:42px;"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Rep / Owner Name</label><input class="fi" id="s-rep" placeholder="Ted Smith"></div>
-            <div class="fg"><label class="fl">Rep Title</label><input class="fi" id="s-reptitle" placeholder="Owner, Sales Rep, etc."></div>
+            <div class="fg"><label class="fl" for="s-rep">Rep / Owner Name</label><input class="fi" id="s-rep" placeholder="Ted Smith"></div>
+            <div class="fg"><label class="fl" for="s-reptitle">Rep Title</label><input class="fi" id="s-reptitle" placeholder="Owner, Sales Rep, etc."></div>
           </div>
-          <div class="fg"><label class="fl">Booking / QR Code URL <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; QR auto-generates from this link</span></label><input class="fi" id="s-bookingurl" placeholder="https://calendly.com/yourname"></div>
-          <div class="fg stab-full"><label class="fl">Lead Alert Email <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; notified when a homeowner fills out their estimate page. Defaults to your account email. Separate multiple with commas.</span></label><input class="fi" id="s-lead-alert-email" type="text" placeholder="sales@yourcompany.com, manager@yourcompany.com"></div>
+          <div class="fg"><label class="fl" for="s-bookingurl">Booking / QR Code URL <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; QR auto-generates from this link</span></label><input class="fi" id="s-bookingurl" placeholder="https://calendly.com/yourname"></div>
+          <div class="fg stab-full"><label class="fl" for="s-lead-alert-email">Lead Alert Email <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; notified when a homeowner fills out their estimate page. Defaults to your account email. Separate multiple with commas.</span></label><input class="fi" id="s-lead-alert-email" type="text" placeholder="sales@yourcompany.com, manager@yourcompany.com"></div>
           <div class="frow">
-            <div class="fg"><label class="fl">License / CCB #</label><input class="fi" id="s-lic" placeholder="CCB#226995"></div>
+            <div class="fg"><label class="fl" for="s-lic">License / CCB #</label><input class="fi" id="s-lic" placeholder="CCB#226995"></div>
             <div class="fg"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Years in Business</label><input class="fi" id="s-yrs" placeholder="20+"></div>
-            <div class="fg"><label class="fl">Workmanship Warranty (yrs)</label><input class="fi" id="s-warr" placeholder="10"></div>
+            <div class="fg"><label class="fl" for="s-yrs">Years in Business</label><input class="fi" id="s-yrs" placeholder="20+"></div>
+            <div class="fg"><label class="fl" for="s-warr">Workmanship Warranty (yrs)</label><input class="fi" id="s-warr" placeholder="10"></div>
            </div>
-          <div class="fg stab-full" style="margin-top:4px;"><label class="fl">Company Bio <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; shown on homeowner estimate pages</span></label><textarea class="fi" id="s-bio" rows="3" placeholder="We're a family-owned roofing company serving Metro Detroit for 20+ years. We specialize in storm damage restoration and insurance claims, making the process seamless for homeowners." style="resize:vertical;min-height:80px;"></textarea></div>
+          <div class="fg stab-full" style="margin-top:4px;"><div class="fl">Company Bio <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; shown on homeowner estimate pages</span></div><textarea class="fi" id="s-bio" rows="3" placeholder="We're a family-owned roofing company serving Metro Detroit for 20+ years. We specialize in storm damage restoration and insurance claims, making the process seamless for homeowners." style="resize:vertical;min-height:80px;"></textarea></div>
           <!-- Retargeting Pixels -->
           <div style="margin-top:18px;padding:14px;background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.2);border-radius:10px;">
             <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#3B82F6;margin-bottom:10px;">&#127919; Retargeting Pixels <span style="font-size:9px;font-weight:600;padding:2px 7px;border-radius:10px;background:#3B82F6;color:#fff;margin-left:6px;">PRO+</span></div>
             <div style="font-size:15px;color:var(--muted);margin-bottom:12px;">When a homeowner scans your postcard QR code and views their estimate page, BidDrop fires your pixel events automatically — building your retargeting audience in Meta Ads &amp; Google Ads.</div>
             <div class="frow">
-              <div class="fg"><label class="fl">Meta Pixel ID <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; from Meta Events Manager</span></label><input class="fi" id="s-meta-pixel-id" placeholder="1234567890123456" autocomplete="off"></div>
-              <div class="fg"><label class="fl">Google Tag ID <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; e.g. G-XXXXXXXXXX or AW-XXXXXXXXX</span></label><input class="fi" id="s-google-tag-id" placeholder="G-XXXXXXXXXX" autocomplete="off"></div>
+              <div class="fg"><label class="fl" for="s-meta-pixel-id">Meta Pixel ID <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; from Meta Events Manager</span></label><input class="fi" id="s-meta-pixel-id" placeholder="1234567890123456" autocomplete="off"></div>
+              <div class="fg"><label class="fl" for="s-google-tag-id">Google Tag ID <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; e.g. G-XXXXXXXXXX or AW-XXXXXXXXX</span></label><input class="fi" id="s-google-tag-id" placeholder="G-XXXXXXXXXX" autocomplete="off"></div>
             </div>
             <div style="font-size:15px;color:var(--muted);margin-top:6px;">Events fired: <strong>EstimateViewed</strong> (when homeowner opens their page) · <strong>BookingClicked</strong> (when they tap Schedule) · <strong>CallClicked</strong> (when they tap your phone number)</div>
           </div>
@@ -3416,7 +3419,7 @@ tr:hover td{background:var(--card);}
           <div style="margin-top:14px;padding:14px;background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2);border-radius:10px;">
             <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#22C55E;margin-bottom:10px;">&#11088; Google Reviews &#8212; Estimate Page</div>
             <div style="font-size:15px;color:var(--muted);margin-bottom:12px;">Connect your Google My Business listing so real Google reviews appear on your homeowner estimate pages. Without this, placeholder reviews are shown.</div>
-            <div class="fg"><label class="fl">Google Place ID <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; powers real Google reviews on estimate pages</span></label><input class="fi" id="s-google-place-id" placeholder="ChIJN1t_tDeuEmsRUsoyG83frY4" autocomplete="off"></div>
+            <div class="fg"><label class="fl" for="s-google-place-id">Google Place ID <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; powers real Google reviews on estimate pages</span></label><input class="fi" id="s-google-place-id" placeholder="ChIJN1t_tDeuEmsRUsoyG83frY4" autocomplete="off"></div>
             <div style="font-size:13px;color:var(--muted);margin-top:8px;">Find your Place ID at <a href="https://developers.google.com/maps/documentation/javascript/examples/places-placeid-finder" target="_blank" style="color:#22C55E;">developers.google.com/maps &rarr; Place ID Finder</a></div>
           </div>
         </div>
@@ -3470,7 +3473,7 @@ tr:hover td{background:var(--card);}
           <div class="stab-branding-grid">
             <!-- Logo -->
             <div>
-              <label class="fl">Company Logo</label>
+              <div class="fl">Company Logo</div>
               <div style="display:flex;gap:10px;align-items:center;margin-top:6px;">
                 <div id="logo-preview" style="width:80px;height:50px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--muted);overflow:hidden;flex-shrink:0;">No logo</div>
                 <div style="flex:1;">
@@ -3485,7 +3488,7 @@ tr:hover td{background:var(--card);}
             </div>
             <!-- Headshot -->
             <div>
-              <label class="fl">Rep Headshot <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; transparent PNG preferred</span></label>
+              <div class="fl">Rep Headshot <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; transparent PNG preferred</span></div>
               <div style="display:flex;gap:10px;align-items:center;margin-top:6px;">
                 <div id="headshot-preview" style="width:70px;height:90px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--muted);overflow:hidden;flex-shrink:0;text-align:center;line-height:1.4;">No photo</div>
                 <div style="flex:1;">
@@ -3508,7 +3511,7 @@ tr:hover td{background:var(--card);}
             </div>
             <!-- Default Rep Video -->
             <div>
-              <label class="fl">Default Rep Video <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; auto-fills on every new estimate</span></label>
+              <div class="fl">Default Rep Video <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; auto-fills on every new estimate</span></div>
               <div style="margin-top:6px;display:flex;flex-direction:column;gap:6px;">
                 <input class="fi" id="s-rep-video-url" type="url" placeholder="YouTube, Vimeo, or Loom link" style="font-size:12px;" oninput="updateRepVideoPreview(this.value)">
                 <div style="font-size:12px;color:var(--muted);line-height:1.6;">&#127910; Supports <strong style="color:var(--mid);">YouTube, Vimeo, and Loom</strong> &mdash; paste the link and we embed it directly on every homeowner&rsquo;s estimate page. Reps can record a different video per estimate.<br>&#127381; <strong style="color:var(--mid);">Keep it under 45 seconds</strong> &mdash; introduce yourself, mention the address, and tell them their estimate is ready. Short and personal wins every time.</div>
@@ -3517,7 +3520,7 @@ tr:hover td{background:var(--card);}
             </div>
             <!-- Review 1 -->
             <div>
-              <label class="fl">Review Image 1 (Page 4)</label>
+              <div class="fl">Review Image 1 (Page 4)</div>
               <div id="review1-preview" style="width:100%;height:80px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--muted);overflow:hidden;margin:6px 0 5px;">No image</div>
               <label style="display:block;background:var(--card);border:2px solid var(--border);border-radius:7px;padding:8px;text-align:center;cursor:pointer;color:var(--mid);font-size:11px;font-weight:600;">&#11088; Upload Review 1<input type="file" accept="image/*" style="display:none;" onchange="handleReviewUpload(this,1)"></label>
               <div style="font-size:15px;color:var(--muted);margin-top:4px;line-height:1.5;text-align:center;">
@@ -3528,7 +3531,7 @@ tr:hover td{background:var(--card);}
             </div>
             <!-- Review 2 -->
             <div>
-              <label class="fl">Review Image 2 (Page 4)</label>
+              <div class="fl">Review Image 2 (Page 4)</div>
               <div id="review2-preview" style="width:100%;height:80px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--muted);overflow:hidden;margin:6px 0 5px;">No image</div>
               <label style="display:block;background:var(--card);border:2px solid var(--border);border-radius:7px;padding:8px;text-align:center;cursor:pointer;color:var(--mid);font-size:11px;font-weight:600;">&#11088; Upload Review 2<input type="file" accept="image/*" style="display:none;" onchange="handleReviewUpload(this,2)"></label>
               <div style="font-size:15px;color:var(--muted);margin-top:4px;line-height:1.5;text-align:center;">
@@ -3608,61 +3611,61 @@ tr:hover td{background:var(--card);}
           <div id="s-persq-fields" style="display:none;margin-bottom:14px;">
             <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:9px 13px;font-size:12px;color:var(--mid);margin-bottom:12px;">💡 Set your all-in $/sq for each material. Formula: Squares × $/sq = Total.</div>
             <div class="frow">
-              <div class="fg"><label class="fl">Architectural ($/sq)</label><input type="number" class="fi" id="s-pps-arch"   placeholder="450"></div>
-              <div class="fg"><label class="fl">Designer/Premium ($/sq)</label><input type="number" class="fi" id="s-pps-des"  placeholder="580"></div>
+              <div class="fg"><label class="fl" for="s-pps-arch">Architectural ($/sq)</label><input type="number" class="fi" id="s-pps-arch"   placeholder="450"></div>
+              <div class="fg"><label class="fl" for="s-pps-des">Designer/Premium ($/sq)</label><input type="number" class="fi" id="s-pps-des"  placeholder="580"></div>
             </div>
             <div class="frow">
-              <div class="fg"><label class="fl">Impact-Resistant ($/sq)</label><input type="number" class="fi" id="s-pps-impact" placeholder="520"></div>
-              <div class="fg"><label class="fl">Metal Roofing ($/sq)</label><input type="number" class="fi" id="s-pps-metal"  placeholder="950"></div>
+              <div class="fg"><label class="fl" for="s-pps-impact">Impact-Resistant ($/sq)</label><input type="number" class="fi" id="s-pps-impact" placeholder="520"></div>
+              <div class="fg"><label class="fl" for="s-pps-metal">Metal Roofing ($/sq)</label><input type="number" class="fi" id="s-pps-metal"  placeholder="950"></div>
             </div>
             <div class="frow">
-              <div class="fg"><label class="fl">Flat/TPO/EPDM ($/sq)</label><input type="number" class="fi" id="s-pps-flat"  placeholder="400"></div>
-              <div class="fg"><label class="fl">Tile/Clay ($/sq)</label><input type="number" class="fi" id="s-pps-tile"  placeholder="1400"></div>
+              <div class="fg"><label class="fl" for="s-pps-flat">Flat/TPO/EPDM ($/sq)</label><input type="number" class="fi" id="s-pps-flat"  placeholder="400"></div>
+              <div class="fg"><label class="fl" for="s-pps-tile">Tile/Clay ($/sq)</label><input type="number" class="fi" id="s-pps-tile"  placeholder="1400"></div>
             </div>
           </div>
           <!-- Detailed Mode -->
           <div id="s-detailed-fields">
             <div class="stab-section-hdr">Material Cost Per Square (Labor + Material)</div>
             <div class="frow">
-              <div class="fg"><label class="fl">Architectural ($/sq)</label><input type="number" class="fi" id="s-carch"   placeholder="300"></div>
-              <div class="fg"><label class="fl">Designer/Premium ($/sq)</label><input type="number" class="fi" id="s-cdes"  placeholder="420"></div>
+              <div class="fg"><label class="fl" for="s-carch">Architectural ($/sq)</label><input type="number" class="fi" id="s-carch"   placeholder="300"></div>
+              <div class="fg"><label class="fl" for="s-cdes">Designer/Premium ($/sq)</label><input type="number" class="fi" id="s-cdes"  placeholder="420"></div>
             </div>
             <div class="frow">
-              <div class="fg"><label class="fl">Impact-Resistant ($/sq)</label><input type="number" class="fi" id="s-cimpact" placeholder="380"></div>
-              <div class="fg"><label class="fl">Metal Roofing ($/sq)</label><input type="number" class="fi" id="s-cmetal" placeholder="680"></div>
+              <div class="fg"><label class="fl" for="s-cimpact">Impact-Resistant ($/sq)</label><input type="number" class="fi" id="s-cimpact" placeholder="380"></div>
+              <div class="fg"><label class="fl" for="s-cmetal">Metal Roofing ($/sq)</label><input type="number" class="fi" id="s-cmetal" placeholder="680"></div>
             </div>
             <div class="frow">
-              <div class="fg"><label class="fl">Flat/TPO/EPDM ($/sq)</label><input type="number" class="fi" id="s-cflat" placeholder="320"></div>
-              <div class="fg"><label class="fl">Tile/Clay ($/sq)</label><input type="number" class="fi" id="s-ctile" placeholder="950"></div>
+              <div class="fg"><label class="fl" for="s-cflat">Flat/TPO/EPDM ($/sq)</label><input type="number" class="fi" id="s-cflat" placeholder="320"></div>
+              <div class="fg"><label class="fl" for="s-ctile">Tile/Clay ($/sq)</label><input type="number" class="fi" id="s-ctile" placeholder="950"></div>
             </div>
             <div class="stab-section-hdr" style="margin-top:16px;">Per-Square Line Items</div>
             <div class="frow">
-              <div class="fg"><label class="fl">Tear-off ($/sq)</label><input type="number" class="fi" id="s-tear" placeholder="75"></div>
+              <div class="fg"><label class="fl" for="s-tear">Tear-off ($/sq)</label><input type="number" class="fi" id="s-tear" placeholder="75"></div>
               <div class="fg"></div>
             </div>
             <div class="frow">
-              <div class="fg"><label class="fl">Felt/Synthetic ($/sq)</label><input type="number" class="fi" id="s-felt" placeholder="22"></div>
-              <div class="fg"><label class="fl">Dumpster (flat $)</label><input type="number" class="fi" id="s-dump" placeholder="450"></div>
+              <div class="fg"><label class="fl" for="s-felt">Felt/Synthetic ($/sq)</label><input type="number" class="fi" id="s-felt" placeholder="22"></div>
+              <div class="fg"><label class="fl" for="s-dump">Dumpster (flat $)</label><input type="number" class="fi" id="s-dump" placeholder="450"></div>
             </div>
             <div class="stab-section-hdr" style="margin-top:16px;">Add-On Pricing</div>
             <div class="frow">
-              <div class="fg"><label class="fl">Skylight ($/each)</label><input type="number" class="fi" id="s-sky"  placeholder="375"></div>
-              <div class="fg"><label class="fl">Chimney Flashing ($)</label><input type="number" class="fi" id="s-chim" placeholder="295"></div>
+              <div class="fg"><label class="fl" for="s-sky">Skylight ($/each)</label><input type="number" class="fi" id="s-sky"  placeholder="375"></div>
+              <div class="fg"><label class="fl" for="s-chim">Chimney Flashing ($)</label><input type="number" class="fi" id="s-chim" placeholder="295"></div>
             </div>
             <div class="frow">
-              <div class="fg"><label class="fl">Gutters ($/lf)</label><input type="number" class="fi" id="s-gut" placeholder="9"></div>
-              <div class="fg"><label class="fl">Ice &amp; Water Shield ($/sq)</label><input type="number" class="fi" id="s-ice" placeholder="42"></div>
+              <div class="fg"><label class="fl" for="s-gut">Gutters ($/lf)</label><input type="number" class="fi" id="s-gut" placeholder="9"></div>
+              <div class="fg"><label class="fl" for="s-ice">Ice &amp; Water Shield ($/sq)</label><input type="number" class="fi" id="s-ice" placeholder="42"></div>
             </div>
             <div class="stab-section-hdr" style="margin-top:16px;">Overhead &amp; Margin</div>
             <div class="frow">
-              <div class="fg"><label class="fl">Overhead %</label><input type="number" class="fi" id="s-ovh" placeholder="15"></div>
-              <div class="fg"><label class="fl">Profit Margin %</label><input type="number" class="fi" id="s-mgn" placeholder="20"></div>
+              <div class="fg"><label class="fl" for="s-ovh">Overhead %</label><input type="number" class="fi" id="s-ovh" placeholder="15"></div>
+              <div class="fg"><label class="fl" for="s-mgn">Profit Margin %</label><input type="number" class="fi" id="s-mgn" placeholder="20"></div>
             </div>
             <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:13px;color:var(--mid);margin-top:4px;">
               💡 Formula: (Material+Labor+Tearoff+Accessories) × (1 + Overhead%) × (1 + Margin%) + Tax = Estimate
             </div>
             <div class="frow" style="margin-top:10px;">
-              <div class="fg"><label class="fl">Sales Tax % <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— added to proposal total (0 = no tax)</span></label><input type="number" class="fi" id="s-tax" placeholder="0" step="0.01" min="0" max="30"></div>
+              <div class="fg"><label class="fl" for="s-tax">Sales Tax % <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— added to proposal total (0 = no tax)</span></label><input type="number" class="fi" id="s-tax" placeholder="0" step="0.01" min="0" max="30"></div>
               <div class="fg"></div>
             </div>
           </div><!-- /s-detailed-fields -->
@@ -3672,8 +3675,8 @@ tr:hover td{background:var(--card);}
             <label for="s-fin-enabled" style="font-size:13px;font-weight:700;color:var(--mid);cursor:pointer;">Show financing on mailer <span style="font-weight:400;color:var(--muted);font-size:11px;">(auto-calculates)</span></label>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">APR %</label><input type="number" class="fi" id="s-fin-apr" placeholder="9.99" step="0.01" value="9.99"></div>
-            <div class="fg"><label class="fl">Term (months)</label>
+            <div class="fg"><label class="fl" for="s-fin-apr">APR %</label><input type="number" class="fi" id="s-fin-apr" placeholder="9.99" step="0.01" value="9.99"></div>
+            <div class="fg"><div class="fl">Term (months)</div>
               <select class="fs" id="s-fin-term">
                 <option value="36">36 months (3 yr)</option>
                 <option value="48">48 months (4 yr)</option>
@@ -3686,7 +3689,7 @@ tr:hover td{background:var(--card);}
             </div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Down Payment %</label><input type="number" class="fi" id="s-fin-down" placeholder="0" value="0" min="0" max="50"></div>
+            <div class="fg"><label class="fl" for="s-fin-down">Down Payment %</label><input type="number" class="fi" id="s-fin-down" placeholder="0" value="0" min="0" max="50"></div>
             <div class="fg" style="display:flex;align-items:flex-end;padding-bottom:2px;">
               <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:8px 12px;font-size:13px;color:var(--mid);width:100%;">
                 💡 Preview: <strong id="fin-preview-val" style="color:var(--accent);">—</strong>/mo
@@ -3727,38 +3730,38 @@ tr:hover td{background:var(--card);}
           </div>
           <div class="stab-section-hdr">System Pricing</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Price Per Watt ($)</label><input type="number" class="fi" id="s-solar-pw" placeholder="3.50" step="0.05" min="0"></div>
-            <div class="fg"><label class="fl">Min System Size (kW)</label><input type="number" class="fi" id="s-solar-min-kw" placeholder="4" step="0.5" min="0"></div>
+            <div class="fg"><label class="fl" for="s-solar-pw">Price Per Watt ($)</label><input type="number" class="fi" id="s-solar-pw" placeholder="3.50" step="0.05" min="0"></div>
+            <div class="fg"><label class="fl" for="s-solar-min-kw">Min System Size (kW)</label><input type="number" class="fi" id="s-solar-min-kw" placeholder="4" step="0.5" min="0"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Max System Size (kW)</label><input type="number" class="fi" id="s-solar-max-kw" placeholder="20" step="0.5" min="0"></div>
-            <div class="fg"><label class="fl">Avg Install Time (days)</label><input type="number" class="fi" id="s-solar-install-days" placeholder="2" min="1"></div>
+            <div class="fg"><label class="fl" for="s-solar-max-kw">Max System Size (kW)</label><input type="number" class="fi" id="s-solar-max-kw" placeholder="20" step="0.5" min="0"></div>
+            <div class="fg"><label class="fl" for="s-solar-install-days">Avg Install Time (days)</label><input type="number" class="fi" id="s-solar-install-days" placeholder="2" min="1"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Add-On Costs</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Battery Storage (flat $)</label><input type="number" class="fi" id="s-solar-battery" placeholder="8000"></div>
-            <div class="fg"><label class="fl">Panel Upgrade ($/panel)</label><input type="number" class="fi" id="s-solar-panel-upgrade" placeholder="150"></div>
+            <div class="fg"><label class="fl" for="s-solar-battery">Battery Storage (flat $)</label><input type="number" class="fi" id="s-solar-battery" placeholder="8000"></div>
+            <div class="fg"><label class="fl" for="s-solar-panel-upgrade">Panel Upgrade ($/panel)</label><input type="number" class="fi" id="s-solar-panel-upgrade" placeholder="150"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Electrical Upgrade (flat $)</label><input type="number" class="fi" id="s-solar-elec-upgrade" placeholder="2500"></div>
-            <div class="fg"><label class="fl">Roof Reinforcement (flat $)</label><input type="number" class="fi" id="s-solar-roof-reinforce" placeholder="1500"></div>
+            <div class="fg"><label class="fl" for="s-solar-elec-upgrade">Electrical Upgrade (flat $)</label><input type="number" class="fi" id="s-solar-elec-upgrade" placeholder="2500"></div>
+            <div class="fg"><label class="fl" for="s-solar-roof-reinforce">Roof Reinforcement (flat $)</label><input type="number" class="fi" id="s-solar-roof-reinforce" placeholder="1500"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Incentives &amp; Rebates (shown on estimate)</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Federal Tax Credit %</label><input type="number" class="fi" id="s-solar-fed-credit" placeholder="30" min="0" max="100"></div>
-            <div class="fg"><label class="fl">State Rebate (flat $)</label><input type="number" class="fi" id="s-solar-state-rebate" placeholder="0"></div>
+            <div class="fg"><label class="fl" for="s-solar-fed-credit">Federal Tax Credit %</label><input type="number" class="fi" id="s-solar-fed-credit" placeholder="30" min="0" max="100"></div>
+            <div class="fg"><label class="fl" for="s-solar-state-rebate">State Rebate (flat $)</label><input type="number" class="fi" id="s-solar-state-rebate" placeholder="0"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Utility Rebate (flat $)</label><input type="number" class="fi" id="s-solar-utility-rebate" placeholder="0"></div>
-            <div class="fg"><label class="fl">Avg Monthly Savings ($)</label><input type="number" class="fi" id="s-solar-monthly-savings" placeholder="150"></div>
+            <div class="fg"><label class="fl" for="s-solar-utility-rebate">Utility Rebate (flat $)</label><input type="number" class="fi" id="s-solar-utility-rebate" placeholder="0"></div>
+            <div class="fg"><label class="fl" for="s-solar-monthly-savings">Avg Monthly Savings ($)</label><input type="number" class="fi" id="s-solar-monthly-savings" placeholder="150"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Overhead &amp; Margin</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Overhead %</label><input type="number" class="fi" id="s-solar-ovh" placeholder="12"></div>
-            <div class="fg"><label class="fl">Profit Margin %</label><input type="number" class="fi" id="s-solar-mgn" placeholder="18"></div>
+            <div class="fg"><label class="fl" for="s-solar-ovh">Overhead %</label><input type="number" class="fi" id="s-solar-ovh" placeholder="12"></div>
+            <div class="fg"><label class="fl" for="s-solar-mgn">Profit Margin %</label><input type="number" class="fi" id="s-solar-mgn" placeholder="18"></div>
           </div>
           <div class="frow" style="margin-top:10px;">
-            <div class="fg"><label class="fl">Sales Tax % <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— added to proposal total (0 = no tax)</span></label><input type="number" class="fi" id="s-solar-tax" placeholder="0" step="0.01" min="0" max="30"></div>
+            <div class="fg"><label class="fl" for="s-solar-tax">Sales Tax % <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— added to proposal total (0 = no tax)</span></label><input type="number" class="fi" id="s-solar-tax" placeholder="0" step="0.01" min="0" max="30"></div>
             <div class="fg"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Financing Options</div>
@@ -3767,8 +3770,8 @@ tr:hover td{background:var(--card);}
             <label for="s-solar-fin-enabled" style="font-size:13px;font-weight:700;color:var(--mid);cursor:pointer;">Show financing on solar estimate <span style="font-weight:400;color:var(--muted);font-size:11px;">(auto-calculates)</span></label>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">APR %</label><input type="number" class="fi" id="s-solar-fin-apr" placeholder="4.99" step="0.01" value="4.99"></div>
-            <div class="fg"><label class="fl">Term (months)</label>
+            <div class="fg"><label class="fl" for="s-solar-fin-apr">APR %</label><input type="number" class="fi" id="s-solar-fin-apr" placeholder="4.99" step="0.01" value="4.99"></div>
+            <div class="fg"><div class="fl">Term (months)</div>
               <select class="fs" id="s-solar-fin-term">
                 <option value="60">60 months (5 yr)</option>
                 <option value="120">120 months (10 yr)</option>
@@ -3823,36 +3826,36 @@ tr:hover td{background:var(--card);}
           </div>
           <div class="stab-section-hdr">Price Per Linear Foot (Labor + Material)</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Wood ($/lf)</label><input type="number" class="fi" id="s-fen-wood-plf"    placeholder="28"></div>
-            <div class="fg"><label class="fl">Vinyl / PVC ($/lf)</label><input type="number" class="fi" id="s-fen-vinyl-plf"   placeholder="35"></div>
+            <div class="fg"><label class="fl" for="s-fen-wood-plf">Wood ($/lf)</label><input type="number" class="fi" id="s-fen-wood-plf"    placeholder="28"></div>
+            <div class="fg"><label class="fl" for="s-fen-vinyl-plf">Vinyl / PVC ($/lf)</label><input type="number" class="fi" id="s-fen-vinyl-plf"   placeholder="35"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Chain Link ($/lf)</label><input type="number" class="fi" id="s-fen-chain-plf"   placeholder="18"></div>
-            <div class="fg"><label class="fl">Aluminum / Iron ($/lf)</label><input type="number" class="fi" id="s-fen-alum-plf"    placeholder="45"></div>
+            <div class="fg"><label class="fl" for="s-fen-chain-plf">Chain Link ($/lf)</label><input type="number" class="fi" id="s-fen-chain-plf"   placeholder="18"></div>
+            <div class="fg"><label class="fl" for="s-fen-alum-plf">Aluminum / Iron ($/lf)</label><input type="number" class="fi" id="s-fen-alum-plf"    placeholder="45"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Split Rail ($/lf)</label><input type="number" class="fi" id="s-fen-split-plf"   placeholder="22"></div>
-            <div class="fg"><label class="fl">Cedar / Redwood ($/lf)</label><input type="number" class="fi" id="s-fen-cedar-plf"   placeholder="38"></div>
+            <div class="fg"><label class="fl" for="s-fen-split-plf">Split Rail ($/lf)</label><input type="number" class="fi" id="s-fen-split-plf"   placeholder="22"></div>
+            <div class="fg"><label class="fl" for="s-fen-cedar-plf">Cedar / Redwood ($/lf)</label><input type="number" class="fi" id="s-fen-cedar-plf"   placeholder="38"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Add-On Pricing</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Gate — Single ($/each)</label><input type="number" class="fi" id="s-fen-gate-single" placeholder="350"></div>
-            <div class="fg"><label class="fl">Gate — Double ($/each)</label><input type="number" class="fi" id="s-fen-gate-double" placeholder="650"></div>
+            <div class="fg"><label class="fl" for="s-fen-gate-single">Gate — Single ($/each)</label><input type="number" class="fi" id="s-fen-gate-single" placeholder="350"></div>
+            <div class="fg"><label class="fl" for="s-fen-gate-double">Gate — Double ($/each)</label><input type="number" class="fi" id="s-fen-gate-double" placeholder="650"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Old Fence Removal ($/lf)</label><input type="number" class="fi" id="s-fen-removal" placeholder="5"></div>
-            <div class="fg"><label class="fl">Post Setting — Concrete ($/post)</label><input type="number" class="fi" id="s-fen-post-concrete" placeholder="25"></div>
+            <div class="fg"><label class="fl" for="s-fen-removal">Old Fence Removal ($/lf)</label><input type="number" class="fi" id="s-fen-removal" placeholder="5"></div>
+            <div class="fg"><label class="fl" for="s-fen-post-concrete">Post Setting — Concrete ($/post)</label><input type="number" class="fi" id="s-fen-post-concrete" placeholder="25"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Overhead &amp; Margin</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Overhead %</label><input type="number" class="fi" id="s-fen-ovh" placeholder="15"></div>
-            <div class="fg"><label class="fl">Profit Margin %</label><input type="number" class="fi" id="s-fen-mgn" placeholder="20"></div>
+            <div class="fg"><label class="fl" for="s-fen-ovh">Overhead %</label><input type="number" class="fi" id="s-fen-ovh" placeholder="15"></div>
+            <div class="fg"><label class="fl" for="s-fen-mgn">Profit Margin %</label><input type="number" class="fi" id="s-fen-mgn" placeholder="20"></div>
           </div>
           <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:13px;color:var(--mid);margin-top:4px;">
             💡 Formula: (Linear Ft × $/lf + Gates + Removal) × (1 + Overhead%) × (1 + Margin%) + Tax = Estimate
           </div>
           <div class="frow" style="margin-top:10px;">
-            <div class="fg"><label class="fl">Sales Tax % <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— added to proposal total (0 = no tax)</span></label><input type="number" class="fi" id="s-fen-tax" placeholder="0" step="0.01" min="0" max="30"></div>
+            <div class="fg"><label class="fl" for="s-fen-tax">Sales Tax % <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— added to proposal total (0 = no tax)</span></label><input type="number" class="fi" id="s-fen-tax" placeholder="0" step="0.01" min="0" max="30"></div>
             <div class="fg"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Financing Options</div>
@@ -3861,8 +3864,8 @@ tr:hover td{background:var(--card);}
             <label for="s-fen-fin-enabled" style="font-size:13px;font-weight:700;color:var(--mid);cursor:pointer;">Show financing on fencing estimate <span style="font-weight:400;color:var(--muted);font-size:11px;">(auto-calculates)</span></label>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">APR %</label><input type="number" class="fi" id="s-fen-fin-apr" placeholder="9.99" step="0.01" value="9.99"></div>
-            <div class="fg"><label class="fl">Term (months)</label>
+            <div class="fg"><label class="fl" for="s-fen-fin-apr">APR %</label><input type="number" class="fi" id="s-fen-fin-apr" placeholder="9.99" step="0.01" value="9.99"></div>
+            <div class="fg"><div class="fl">Term (months)</div>
               <select class="fs" id="s-fen-fin-term">
                 <option value="24">24 months (2 yr)</option>
                 <option value="36">36 months (3 yr)</option>
@@ -3917,40 +3920,40 @@ tr:hover td{background:var(--card);}
           </div>
           <div class="stab-section-hdr">Price Per Square Foot (Labor + Material)</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Vinyl ($/sqft)</label><input type="number" class="fi" id="s-sid-vinyl-psf"    placeholder="4.50" step="0.25" min="0"></div>
-            <div class="fg"><label class="fl">Fiber Cement / Hardie ($/sqft)</label><input type="number" class="fi" id="s-sid-hardie-psf"   placeholder="8.00" step="0.25" min="0"></div>
+            <div class="fg"><label class="fl" for="s-sid-vinyl-psf">Vinyl ($/sqft)</label><input type="number" class="fi" id="s-sid-vinyl-psf"    placeholder="4.50" step="0.25" min="0"></div>
+            <div class="fg"><label class="fl" for="s-sid-hardie-psf">Fiber Cement / Hardie ($/sqft)</label><input type="number" class="fi" id="s-sid-hardie-psf"   placeholder="8.00" step="0.25" min="0"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Wood / Cedar ($/sqft)</label><input type="number" class="fi" id="s-sid-wood-psf"     placeholder="7.00" step="0.25" min="0"></div>
-            <div class="fg"><label class="fl">Engineered Wood ($/sqft)</label><input type="number" class="fi" id="s-sid-engwood-psf" placeholder="6.50" step="0.25" min="0"></div>
+            <div class="fg"><label class="fl" for="s-sid-wood-psf">Wood / Cedar ($/sqft)</label><input type="number" class="fi" id="s-sid-wood-psf"     placeholder="7.00" step="0.25" min="0"></div>
+            <div class="fg"><label class="fl" for="s-sid-engwood-psf">Engineered Wood ($/sqft)</label><input type="number" class="fi" id="s-sid-engwood-psf" placeholder="6.50" step="0.25" min="0"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Metal / Steel ($/sqft)</label><input type="number" class="fi" id="s-sid-metal-psf"    placeholder="9.00" step="0.25" min="0"></div>
-            <div class="fg"><label class="fl">Stucco ($/sqft)</label><input type="number" class="fi" id="s-sid-stucco-psf"   placeholder="10.00" step="0.25" min="0"></div>
+            <div class="fg"><label class="fl" for="s-sid-metal-psf">Metal / Steel ($/sqft)</label><input type="number" class="fi" id="s-sid-metal-psf"    placeholder="9.00" step="0.25" min="0"></div>
+            <div class="fg"><label class="fl" for="s-sid-stucco-psf">Stucco ($/sqft)</label><input type="number" class="fi" id="s-sid-stucco-psf"   placeholder="10.00" step="0.25" min="0"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Add-On Pricing</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Old Siding Removal ($/sqft)</label><input type="number" class="fi" id="s-sid-removal" placeholder="1.50" step="0.25" min="0"></div>
-            <div class="fg"><label class="fl">House Wrap / Moisture Barrier ($/sqft)</label><input type="number" class="fi" id="s-sid-housewrap" placeholder="0.75" step="0.05" min="0"></div>
+            <div class="fg"><label class="fl" for="s-sid-removal">Old Siding Removal ($/sqft)</label><input type="number" class="fi" id="s-sid-removal" placeholder="1.50" step="0.25" min="0"></div>
+            <div class="fg"><label class="fl" for="s-sid-housewrap">House Wrap / Moisture Barrier ($/sqft)</label><input type="number" class="fi" id="s-sid-housewrap" placeholder="0.75" step="0.05" min="0"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Trim / Fascia ($/lf)</label><input type="number" class="fi" id="s-sid-trim" placeholder="6.00" step="0.25" min="0"></div>
-            <div class="fg"><label class="fl">Corner Posts ($/each)</label><input type="number" class="fi" id="s-sid-corners" placeholder="45" min="0"></div>
+            <div class="fg"><label class="fl" for="s-sid-trim">Trim / Fascia ($/lf)</label><input type="number" class="fi" id="s-sid-trim" placeholder="6.00" step="0.25" min="0"></div>
+            <div class="fg"><label class="fl" for="s-sid-corners">Corner Posts ($/each)</label><input type="number" class="fi" id="s-sid-corners" placeholder="45" min="0"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Window / Door Wrap ($/opening)</label><input type="number" class="fi" id="s-sid-window-wrap" placeholder="85" min="0"></div>
-            <div class="fg"><label class="fl">Insulation Backer ($/sqft)</label><input type="number" class="fi" id="s-sid-insulation" placeholder="0.50" step="0.05" min="0"></div>
+            <div class="fg"><label class="fl" for="s-sid-window-wrap">Window / Door Wrap ($/opening)</label><input type="number" class="fi" id="s-sid-window-wrap" placeholder="85" min="0"></div>
+            <div class="fg"><label class="fl" for="s-sid-insulation">Insulation Backer ($/sqft)</label><input type="number" class="fi" id="s-sid-insulation" placeholder="0.50" step="0.05" min="0"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Overhead &amp; Margin</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Overhead %</label><input type="number" class="fi" id="s-sid-ovh" placeholder="15"></div>
-            <div class="fg"><label class="fl">Profit Margin %</label><input type="number" class="fi" id="s-sid-mgn" placeholder="20"></div>
+            <div class="fg"><label class="fl" for="s-sid-ovh">Overhead %</label><input type="number" class="fi" id="s-sid-ovh" placeholder="15"></div>
+            <div class="fg"><label class="fl" for="s-sid-mgn">Profit Margin %</label><input type="number" class="fi" id="s-sid-mgn" placeholder="20"></div>
           </div>
           <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:13px;color:var(--mid);margin-top:4px;">
             💡 Formula: (Wall Sq Ft × $/sqft + Removal + Wrap + Trim + Corners) × (1 + Overhead%) × (1 + Margin%) + Tax = Estimate
           </div>
           <div class="frow" style="margin-top:10px;">
-            <div class="fg"><label class="fl">Sales Tax % <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— added to proposal total (0 = no tax)</span></label><input type="number" class="fi" id="s-sid-tax" placeholder="0" step="0.01" min="0" max="30"></div>
+            <div class="fg"><label class="fl" for="s-sid-tax">Sales Tax % <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— added to proposal total (0 = no tax)</span></label><input type="number" class="fi" id="s-sid-tax" placeholder="0" step="0.01" min="0" max="30"></div>
             <div class="fg"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Financing Options</div>
@@ -3959,8 +3962,8 @@ tr:hover td{background:var(--card);}
             <label for="s-sid-fin-enabled" style="font-size:13px;font-weight:700;color:var(--mid);cursor:pointer;">Show financing on siding estimate <span style="font-weight:400;color:var(--muted);font-size:11px;">(auto-calculates)</span></label>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">APR %</label><input type="number" class="fi" id="s-sid-fin-apr" placeholder="9.99" step="0.01" value="9.99"></div>
-            <div class="fg"><label class="fl">Term (months)</label>
+            <div class="fg"><label class="fl" for="s-sid-fin-apr">APR %</label><input type="number" class="fi" id="s-sid-fin-apr" placeholder="9.99" step="0.01" value="9.99"></div>
+            <div class="fg"><div class="fl">Term (months)</div>
               <select class="fs" id="s-sid-fin-term">
                 <option value="24">24 months (2 yr)</option>
                 <option value="36">36 months (3 yr)</option>
@@ -4004,40 +4007,40 @@ tr:hover td{background:var(--card);}
           </div>
           <div class="stab-section-hdr">Gutter Types &amp; Pricing ($/lf)</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Aluminum 5" K-Style ($/lf)</label><input type="number" class="fi" id="s-gut-alum5" placeholder="6.00" step="0.25" min="0"></div>
-            <div class="fg"><label class="fl">Aluminum 6" K-Style ($/lf)</label><input type="number" class="fi" id="s-gut-alum6" placeholder="8.00" step="0.25" min="0"></div>
+            <div class="fg"><label class="fl" for="s-gut-alum5">Aluminum 5" K-Style ($/lf)</label><input type="number" class="fi" id="s-gut-alum5" placeholder="6.00" step="0.25" min="0"></div>
+            <div class="fg"><label class="fl" for="s-gut-alum6">Aluminum 6" K-Style ($/lf)</label><input type="number" class="fi" id="s-gut-alum6" placeholder="8.00" step="0.25" min="0"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Seamless Aluminum ($/lf)</label><input type="number" class="fi" id="s-gut-seamless" placeholder="9.00" step="0.25" min="0"></div>
-            <div class="fg"><label class="fl">Copper ($/lf)</label><input type="number" class="fi" id="s-gut-copper" placeholder="22.00" step="0.50" min="0"></div>
+            <div class="fg"><label class="fl" for="s-gut-seamless">Seamless Aluminum ($/lf)</label><input type="number" class="fi" id="s-gut-seamless" placeholder="9.00" step="0.25" min="0"></div>
+            <div class="fg"><label class="fl" for="s-gut-copper">Copper ($/lf)</label><input type="number" class="fi" id="s-gut-copper" placeholder="22.00" step="0.50" min="0"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Half-Round ($/lf)</label><input type="number" class="fi" id="s-gut-halfrnd" placeholder="10.00" step="0.25" min="0"></div>
-            <div class="fg"><label class="fl">Vinyl ($/lf)</label><input type="number" class="fi" id="s-gut-vinyl" placeholder="4.50" step="0.25" min="0"></div>
+            <div class="fg"><label class="fl" for="s-gut-halfrnd">Half-Round ($/lf)</label><input type="number" class="fi" id="s-gut-halfrnd" placeholder="10.00" step="0.25" min="0"></div>
+            <div class="fg"><label class="fl" for="s-gut-vinyl">Vinyl ($/lf)</label><input type="number" class="fi" id="s-gut-vinyl" placeholder="4.50" step="0.25" min="0"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Add-On Pricing</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Gutter Guard / Screen ($/lf)</label><input type="number" class="fi" id="s-gut-guard" placeholder="5.00" step="0.25" min="0"></div>
-            <div class="fg"><label class="fl">Downspout ($/each)</label><input type="number" class="fi" id="s-gut-downspout" placeholder="75" min="0"></div>
+            <div class="fg"><label class="fl" for="s-gut-guard">Gutter Guard / Screen ($/lf)</label><input type="number" class="fi" id="s-gut-guard" placeholder="5.00" step="0.25" min="0"></div>
+            <div class="fg"><label class="fl" for="s-gut-downspout">Downspout ($/each)</label><input type="number" class="fi" id="s-gut-downspout" placeholder="75" min="0"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Downspout Extension ($/each)</label><input type="number" class="fi" id="s-gut-ds-ext" placeholder="25" min="0"></div>
-            <div class="fg"><label class="fl">Old Gutter Removal ($/lf)</label><input type="number" class="fi" id="s-gut-removal" placeholder="1.50" step="0.25" min="0"></div>
+            <div class="fg"><label class="fl" for="s-gut-ds-ext">Downspout Extension ($/each)</label><input type="number" class="fi" id="s-gut-ds-ext" placeholder="25" min="0"></div>
+            <div class="fg"><label class="fl" for="s-gut-removal">Old Gutter Removal ($/lf)</label><input type="number" class="fi" id="s-gut-removal" placeholder="1.50" step="0.25" min="0"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Fascia Board Repair ($/lf)</label><input type="number" class="fi" id="s-gut-fascia" placeholder="8.00" step="0.25" min="0"></div>
-            <div class="fg"><label class="fl">End Caps ($/pair)</label><input type="number" class="fi" id="s-gut-endcaps" placeholder="12" min="0"></div>
+            <div class="fg"><label class="fl" for="s-gut-fascia">Fascia Board Repair ($/lf)</label><input type="number" class="fi" id="s-gut-fascia" placeholder="8.00" step="0.25" min="0"></div>
+            <div class="fg"><label class="fl" for="s-gut-endcaps">End Caps ($/pair)</label><input type="number" class="fi" id="s-gut-endcaps" placeholder="12" min="0"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Overhead &amp; Margin</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Overhead %</label><input type="number" class="fi" id="s-gut-ovh" placeholder="15"></div>
-            <div class="fg"><label class="fl">Profit Margin %</label><input type="number" class="fi" id="s-gut-mgn" placeholder="20"></div>
+            <div class="fg"><label class="fl" for="s-gut-ovh">Overhead %</label><input type="number" class="fi" id="s-gut-ovh" placeholder="15"></div>
+            <div class="fg"><label class="fl" for="s-gut-mgn">Profit Margin %</label><input type="number" class="fi" id="s-gut-mgn" placeholder="20"></div>
           </div>
           <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:13px;color:var(--mid);margin-top:4px;">
             💡 Formula: (Linear Ft × $/lf + Guards + Downspouts + Removal) × (1 + Overhead%) × (1 + Margin%) + Tax = Estimate
           </div>
           <div class="frow" style="margin-top:10px;">
-            <div class="fg"><label class="fl">Sales Tax % <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— added to proposal total (0 = no tax)</span></label><input type="number" class="fi" id="s-gut-tax" placeholder="0" step="0.01" min="0" max="30"></div>
+            <div class="fg"><label class="fl" for="s-gut-tax">Sales Tax % <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— added to proposal total (0 = no tax)</span></label><input type="number" class="fi" id="s-gut-tax" placeholder="0" step="0.01" min="0" max="30"></div>
             <div class="fg"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Financing Options</div>
@@ -4046,8 +4049,8 @@ tr:hover td{background:var(--card);}
             <label for="s-gut-fin-enabled" style="font-size:13px;font-weight:700;color:var(--mid);cursor:pointer;">Show financing on gutter estimate <span style="font-weight:400;color:var(--muted);font-size:11px;">(auto-calculates)</span></label>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">APR %</label><input type="number" class="fi" id="s-gut-fin-apr" placeholder="9.99" step="0.01" value="9.99"></div>
-            <div class="fg"><label class="fl">Term (months)</label>
+            <div class="fg"><label class="fl" for="s-gut-fin-apr">APR %</label><input type="number" class="fi" id="s-gut-fin-apr" placeholder="9.99" step="0.01" value="9.99"></div>
+            <div class="fg"><div class="fl">Term (months)</div>
               <select class="fs" id="s-gut-fin-term">
                 <option value="12">12 months (1 yr)</option>
                 <option value="24">24 months (2 yr)</option>
@@ -4090,42 +4093,42 @@ tr:hover td{background:var(--card);}
           </div>
           <div class="stab-section-hdr">Blown-In / Attic Insulation ($/sqft)</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Blown-In Fiberglass R-30 ($/sqft)</label><input type="number" class="fi" id="s-ins-blow-r30" placeholder="1.20" step="0.05" min="0"></div>
-            <div class="fg"><label class="fl">Blown-In Fiberglass R-38 ($/sqft)</label><input type="number" class="fi" id="s-ins-blow-r38" placeholder="1.50" step="0.05" min="0"></div>
+            <div class="fg"><label class="fl" for="s-ins-blow-r30">Blown-In Fiberglass R-30 ($/sqft)</label><input type="number" class="fi" id="s-ins-blow-r30" placeholder="1.20" step="0.05" min="0"></div>
+            <div class="fg"><label class="fl" for="s-ins-blow-r38">Blown-In Fiberglass R-38 ($/sqft)</label><input type="number" class="fi" id="s-ins-blow-r38" placeholder="1.50" step="0.05" min="0"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Blown-In Cellulose R-30 ($/sqft)</label><input type="number" class="fi" id="s-ins-cell-r30" placeholder="1.10" step="0.05" min="0"></div>
-            <div class="fg"><label class="fl">Blown-In Cellulose R-38 ($/sqft)</label><input type="number" class="fi" id="s-ins-cell-r38" placeholder="1.40" step="0.05" min="0"></div>
+            <div class="fg"><label class="fl" for="s-ins-cell-r30">Blown-In Cellulose R-30 ($/sqft)</label><input type="number" class="fi" id="s-ins-cell-r30" placeholder="1.10" step="0.05" min="0"></div>
+            <div class="fg"><label class="fl" for="s-ins-cell-r38">Blown-In Cellulose R-38 ($/sqft)</label><input type="number" class="fi" id="s-ins-cell-r38" placeholder="1.40" step="0.05" min="0"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Spray Foam Insulation ($/sqft)</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Open-Cell Spray Foam ($/sqft)</label><input type="number" class="fi" id="s-ins-foam-open" placeholder="1.50" step="0.05" min="0"></div>
-            <div class="fg"><label class="fl">Closed-Cell Spray Foam ($/sqft)</label><input type="number" class="fi" id="s-ins-foam-closed" placeholder="3.00" step="0.05" min="0"></div>
+            <div class="fg"><label class="fl" for="s-ins-foam-open">Open-Cell Spray Foam ($/sqft)</label><input type="number" class="fi" id="s-ins-foam-open" placeholder="1.50" step="0.05" min="0"></div>
+            <div class="fg"><label class="fl" for="s-ins-foam-closed">Closed-Cell Spray Foam ($/sqft)</label><input type="number" class="fi" id="s-ins-foam-closed" placeholder="3.00" step="0.05" min="0"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Batt Insulation ($/sqft)</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Fiberglass Batt R-13 ($/sqft)</label><input type="number" class="fi" id="s-ins-batt-r13" placeholder="0.65" step="0.05" min="0"></div>
-            <div class="fg"><label class="fl">Fiberglass Batt R-19 ($/sqft)</label><input type="number" class="fi" id="s-ins-batt-r19" placeholder="0.85" step="0.05" min="0"></div>
+            <div class="fg"><label class="fl" for="s-ins-batt-r13">Fiberglass Batt R-13 ($/sqft)</label><input type="number" class="fi" id="s-ins-batt-r13" placeholder="0.65" step="0.05" min="0"></div>
+            <div class="fg"><label class="fl" for="s-ins-batt-r19">Fiberglass Batt R-19 ($/sqft)</label><input type="number" class="fi" id="s-ins-batt-r19" placeholder="0.85" step="0.05" min="0"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Add-On Pricing</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Old Insulation Removal ($/sqft)</label><input type="number" class="fi" id="s-ins-removal" placeholder="0.75" step="0.05" min="0"></div>
-            <div class="fg"><label class="fl">Air Sealing (flat $)</label><input type="number" class="fi" id="s-ins-airsealing" placeholder="350" min="0"></div>
+            <div class="fg"><label class="fl" for="s-ins-removal">Old Insulation Removal ($/sqft)</label><input type="number" class="fi" id="s-ins-removal" placeholder="0.75" step="0.05" min="0"></div>
+            <div class="fg"><label class="fl" for="s-ins-airsealing">Air Sealing (flat $)</label><input type="number" class="fi" id="s-ins-airsealing" placeholder="350" min="0"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Vapor Barrier ($/sqft)</label><input type="number" class="fi" id="s-ins-vapor" placeholder="0.45" step="0.05" min="0"></div>
-            <div class="fg"><label class="fl">Attic Hatch Insulation (flat $)</label><input type="number" class="fi" id="s-ins-hatch" placeholder="125" min="0"></div>
+            <div class="fg"><label class="fl" for="s-ins-vapor">Vapor Barrier ($/sqft)</label><input type="number" class="fi" id="s-ins-vapor" placeholder="0.45" step="0.05" min="0"></div>
+            <div class="fg"><label class="fl" for="s-ins-hatch">Attic Hatch Insulation (flat $)</label><input type="number" class="fi" id="s-ins-hatch" placeholder="125" min="0"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Overhead &amp; Margin</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Overhead %</label><input type="number" class="fi" id="s-ins-ovh" placeholder="15"></div>
-            <div class="fg"><label class="fl">Profit Margin %</label><input type="number" class="fi" id="s-ins-mgn" placeholder="20"></div>
+            <div class="fg"><label class="fl" for="s-ins-ovh">Overhead %</label><input type="number" class="fi" id="s-ins-ovh" placeholder="15"></div>
+            <div class="fg"><label class="fl" for="s-ins-mgn">Profit Margin %</label><input type="number" class="fi" id="s-ins-mgn" placeholder="20"></div>
           </div>
           <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:13px;color:var(--mid);margin-top:4px;">
             💡 Formula: (Sq Ft × $/sqft + Removal + Air Sealing + Vapor Barrier) × (1 + Overhead%) × (1 + Margin%) + Tax = Estimate
           </div>
           <div class="frow" style="margin-top:10px;">
-            <div class="fg"><label class="fl">Sales Tax % <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— added to proposal total (0 = no tax)</span></label><input type="number" class="fi" id="s-ins-tax" placeholder="0" step="0.01" min="0" max="30"></div>
+            <div class="fg"><label class="fl" for="s-ins-tax">Sales Tax % <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— added to proposal total (0 = no tax)</span></label><input type="number" class="fi" id="s-ins-tax" placeholder="0" step="0.01" min="0" max="30"></div>
             <div class="fg"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Financing Options</div>
@@ -4134,8 +4137,8 @@ tr:hover td{background:var(--card);}
             <label for="s-ins-fin-enabled" style="font-size:13px;font-weight:700;color:var(--mid);cursor:pointer;">Show financing on insulation estimate <span style="font-weight:400;color:var(--muted);font-size:11px;">(auto-calculates)</span></label>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">APR %</label><input type="number" class="fi" id="s-ins-fin-apr" placeholder="9.99" step="0.01" value="9.99"></div>
-            <div class="fg"><label class="fl">Term (months)</label>
+            <div class="fg"><label class="fl" for="s-ins-fin-apr">APR %</label><input type="number" class="fi" id="s-ins-fin-apr" placeholder="9.99" step="0.01" value="9.99"></div>
+            <div class="fg"><div class="fl">Term (months)</div>
               <select class="fs" id="s-ins-fin-term">
                 <option value="12">12 months (1 yr)</option>
                 <option value="24">24 months (2 yr)</option>
@@ -4178,40 +4181,40 @@ tr:hover td{background:var(--card);}
           </div>
           <div class="stab-section-hdr">Price Per Square Foot by Surface (Labor + Paint)</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Siding — 1 Coat ($/sqft)</label><input type="number" class="fi" id="s-pnt-siding-1c" placeholder="1.50" step="0.10" min="0"></div>
-            <div class="fg"><label class="fl">Siding — 2 Coats ($/sqft)</label><input type="number" class="fi" id="s-pnt-siding-2c" placeholder="2.25" step="0.10" min="0"></div>
+            <div class="fg"><label class="fl" for="s-pnt-siding-1c">Siding — 1 Coat ($/sqft)</label><input type="number" class="fi" id="s-pnt-siding-1c" placeholder="1.50" step="0.10" min="0"></div>
+            <div class="fg"><label class="fl" for="s-pnt-siding-2c">Siding — 2 Coats ($/sqft)</label><input type="number" class="fi" id="s-pnt-siding-2c" placeholder="2.25" step="0.10" min="0"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Trim / Fascia — 1 Coat ($/lf)</label><input type="number" class="fi" id="s-pnt-trim-1c" placeholder="2.00" step="0.10" min="0"></div>
-            <div class="fg"><label class="fl">Trim / Fascia — 2 Coats ($/lf)</label><input type="number" class="fi" id="s-pnt-trim-2c" placeholder="3.00" step="0.10" min="0"></div>
+            <div class="fg"><label class="fl" for="s-pnt-trim-1c">Trim / Fascia — 1 Coat ($/lf)</label><input type="number" class="fi" id="s-pnt-trim-1c" placeholder="2.00" step="0.10" min="0"></div>
+            <div class="fg"><label class="fl" for="s-pnt-trim-2c">Trim / Fascia — 2 Coats ($/lf)</label><input type="number" class="fi" id="s-pnt-trim-2c" placeholder="3.00" step="0.10" min="0"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Deck / Porch — 1 Coat ($/sqft)</label><input type="number" class="fi" id="s-pnt-deck-1c" placeholder="1.75" step="0.10" min="0"></div>
-            <div class="fg"><label class="fl">Deck / Porch — 2 Coats ($/sqft)</label><input type="number" class="fi" id="s-pnt-deck-2c" placeholder="2.75" step="0.10" min="0"></div>
+            <div class="fg"><label class="fl" for="s-pnt-deck-1c">Deck / Porch — 1 Coat ($/sqft)</label><input type="number" class="fi" id="s-pnt-deck-1c" placeholder="1.75" step="0.10" min="0"></div>
+            <div class="fg"><label class="fl" for="s-pnt-deck-2c">Deck / Porch — 2 Coats ($/sqft)</label><input type="number" class="fi" id="s-pnt-deck-2c" placeholder="2.75" step="0.10" min="0"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Foundation / Masonry ($/sqft)</label><input type="number" class="fi" id="s-pnt-masonry" placeholder="2.50" step="0.10" min="0"></div>
-            <div class="fg"><label class="fl">Garage Door ($/door)</label><input type="number" class="fi" id="s-pnt-garage-door" placeholder="150" min="0"></div>
+            <div class="fg"><label class="fl" for="s-pnt-masonry">Foundation / Masonry ($/sqft)</label><input type="number" class="fi" id="s-pnt-masonry" placeholder="2.50" step="0.10" min="0"></div>
+            <div class="fg"><label class="fl" for="s-pnt-garage-door">Garage Door ($/door)</label><input type="number" class="fi" id="s-pnt-garage-door" placeholder="150" min="0"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Add-On Pricing</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Power Washing ($/sqft)</label><input type="number" class="fi" id="s-pnt-powerwash" placeholder="0.35" step="0.05" min="0"></div>
-            <div class="fg"><label class="fl">Caulking / Prep ($/lf)</label><input type="number" class="fi" id="s-pnt-caulk" placeholder="1.25" step="0.10" min="0"></div>
+            <div class="fg"><label class="fl" for="s-pnt-powerwash">Power Washing ($/sqft)</label><input type="number" class="fi" id="s-pnt-powerwash" placeholder="0.35" step="0.05" min="0"></div>
+            <div class="fg"><label class="fl" for="s-pnt-caulk">Caulking / Prep ($/lf)</label><input type="number" class="fi" id="s-pnt-caulk" placeholder="1.25" step="0.10" min="0"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Primer Coat ($/sqft)</label><input type="number" class="fi" id="s-pnt-primer" placeholder="0.50" step="0.05" min="0"></div>
-            <div class="fg"><label class="fl">Stain / Solid Stain ($/sqft)</label><input type="number" class="fi" id="s-pnt-stain" placeholder="1.80" step="0.10" min="0"></div>
+            <div class="fg"><label class="fl" for="s-pnt-primer">Primer Coat ($/sqft)</label><input type="number" class="fi" id="s-pnt-primer" placeholder="0.50" step="0.05" min="0"></div>
+            <div class="fg"><label class="fl" for="s-pnt-stain">Stain / Solid Stain ($/sqft)</label><input type="number" class="fi" id="s-pnt-stain" placeholder="1.80" step="0.10" min="0"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Overhead &amp; Margin</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Overhead %</label><input type="number" class="fi" id="s-pnt-ovh" placeholder="15"></div>
-            <div class="fg"><label class="fl">Profit Margin %</label><input type="number" class="fi" id="s-pnt-mgn" placeholder="20"></div>
+            <div class="fg"><label class="fl" for="s-pnt-ovh">Overhead %</label><input type="number" class="fi" id="s-pnt-ovh" placeholder="15"></div>
+            <div class="fg"><label class="fl" for="s-pnt-mgn">Profit Margin %</label><input type="number" class="fi" id="s-pnt-mgn" placeholder="20"></div>
           </div>
           <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:13px;color:var(--mid);margin-top:4px;">
             💡 Formula: (Sq Ft × $/sqft by surface + Power Wash + Caulk + Primer) × (1 + Overhead%) × (1 + Margin%) + Tax = Estimate
           </div>
           <div class="frow" style="margin-top:10px;">
-            <div class="fg"><label class="fl">Sales Tax % <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— added to proposal total (0 = no tax)</span></label><input type="number" class="fi" id="s-pnt-tax" placeholder="0" step="0.01" min="0" max="30"></div>
+            <div class="fg"><label class="fl" for="s-pnt-tax">Sales Tax % <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— added to proposal total (0 = no tax)</span></label><input type="number" class="fi" id="s-pnt-tax" placeholder="0" step="0.01" min="0" max="30"></div>
             <div class="fg"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Financing Options</div>
@@ -4220,8 +4223,8 @@ tr:hover td{background:var(--card);}
             <label for="s-pnt-fin-enabled" style="font-size:13px;font-weight:700;color:var(--mid);cursor:pointer;">Show financing on paint estimate <span style="font-weight:400;color:var(--muted);font-size:11px;">(auto-calculates)</span></label>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">APR %</label><input type="number" class="fi" id="s-pnt-fin-apr" placeholder="9.99" step="0.01" value="9.99"></div>
-            <div class="fg"><label class="fl">Term (months)</label>
+            <div class="fg"><label class="fl" for="s-pnt-fin-apr">APR %</label><input type="number" class="fi" id="s-pnt-fin-apr" placeholder="9.99" step="0.01" value="9.99"></div>
+            <div class="fg"><div class="fl">Term (months)</div>
               <select class="fs" id="s-pnt-fin-term">
                 <option value="12">12 months (1 yr)</option>
                 <option value="24" selected>24 months (2 yr)</option>
@@ -4263,50 +4266,50 @@ tr:hover td{background:var(--card);}
           </div>
           <div class="stab-section-hdr">Entry Doors ($/door installed)</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Steel Entry Door ($/door)</label><input type="number" class="fi" id="s-dor-steel-entry" placeholder="850" min="0"></div>
-            <div class="fg"><label class="fl">Fiberglass Entry Door ($/door)</label><input type="number" class="fi" id="s-dor-fiber-entry" placeholder="1200" min="0"></div>
+            <div class="fg"><label class="fl" for="s-dor-steel-entry">Steel Entry Door ($/door)</label><input type="number" class="fi" id="s-dor-steel-entry" placeholder="850" min="0"></div>
+            <div class="fg"><label class="fl" for="s-dor-fiber-entry">Fiberglass Entry Door ($/door)</label><input type="number" class="fi" id="s-dor-fiber-entry" placeholder="1200" min="0"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Wood Entry Door ($/door)</label><input type="number" class="fi" id="s-dor-wood-entry" placeholder="1500" min="0"></div>
-            <div class="fg"><label class="fl">Double Entry Door ($/pair)</label><input type="number" class="fi" id="s-dor-double-entry" placeholder="2800" min="0"></div>
+            <div class="fg"><label class="fl" for="s-dor-wood-entry">Wood Entry Door ($/door)</label><input type="number" class="fi" id="s-dor-wood-entry" placeholder="1500" min="0"></div>
+            <div class="fg"><label class="fl" for="s-dor-double-entry">Double Entry Door ($/pair)</label><input type="number" class="fi" id="s-dor-double-entry" placeholder="2800" min="0"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Storm &amp; Screen Doors ($/door installed)</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Standard Storm Door ($/door)</label><input type="number" class="fi" id="s-dor-storm-std" placeholder="450" min="0"></div>
-            <div class="fg"><label class="fl">Full-View Storm Door ($/door)</label><input type="number" class="fi" id="s-dor-storm-full" placeholder="650" min="0"></div>
+            <div class="fg"><label class="fl" for="s-dor-storm-std">Standard Storm Door ($/door)</label><input type="number" class="fi" id="s-dor-storm-std" placeholder="450" min="0"></div>
+            <div class="fg"><label class="fl" for="s-dor-storm-full">Full-View Storm Door ($/door)</label><input type="number" class="fi" id="s-dor-storm-full" placeholder="650" min="0"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Screen Door ($/door)</label><input type="number" class="fi" id="s-dor-screen" placeholder="300" min="0"></div>
-            <div class="fg"><label class="fl">Sliding Glass Door ($/door)</label><input type="number" class="fi" id="s-dor-sliding" placeholder="1800" min="0"></div>
+            <div class="fg"><label class="fl" for="s-dor-screen">Screen Door ($/door)</label><input type="number" class="fi" id="s-dor-screen" placeholder="300" min="0"></div>
+            <div class="fg"><label class="fl" for="s-dor-sliding">Sliding Glass Door ($/door)</label><input type="number" class="fi" id="s-dor-sliding" placeholder="1800" min="0"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Garage Doors ($/door installed)</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Single Garage Door ($/door)</label><input type="number" class="fi" id="s-dor-garage-single" placeholder="1100" min="0"></div>
-            <div class="fg"><label class="fl">Double Garage Door ($/door)</label><input type="number" class="fi" id="s-dor-garage-double" placeholder="1800" min="0"></div>
+            <div class="fg"><label class="fl" for="s-dor-garage-single">Single Garage Door ($/door)</label><input type="number" class="fi" id="s-dor-garage-single" placeholder="1100" min="0"></div>
+            <div class="fg"><label class="fl" for="s-dor-garage-double">Double Garage Door ($/door)</label><input type="number" class="fi" id="s-dor-garage-double" placeholder="1800" min="0"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Insulated Garage Door ($/door)</label><input type="number" class="fi" id="s-dor-garage-insul" placeholder="1400" min="0"></div>
-            <div class="fg"><label class="fl">Garage Door Opener ($/unit)</label><input type="number" class="fi" id="s-dor-opener" placeholder="350" min="0"></div>
+            <div class="fg"><label class="fl" for="s-dor-garage-insul">Insulated Garage Door ($/door)</label><input type="number" class="fi" id="s-dor-garage-insul" placeholder="1400" min="0"></div>
+            <div class="fg"><label class="fl" for="s-dor-opener">Garage Door Opener ($/unit)</label><input type="number" class="fi" id="s-dor-opener" placeholder="350" min="0"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Add-On Pricing</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Frame / Jamb Repair ($/door)</label><input type="number" class="fi" id="s-dor-frame-repair" placeholder="200" min="0"></div>
-            <div class="fg"><label class="fl">Deadbolt / Hardware Upgrade ($/door)</label><input type="number" class="fi" id="s-dor-hardware" placeholder="125" min="0"></div>
+            <div class="fg"><label class="fl" for="s-dor-frame-repair">Frame / Jamb Repair ($/door)</label><input type="number" class="fi" id="s-dor-frame-repair" placeholder="200" min="0"></div>
+            <div class="fg"><label class="fl" for="s-dor-hardware">Deadbolt / Hardware Upgrade ($/door)</label><input type="number" class="fi" id="s-dor-hardware" placeholder="125" min="0"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">Weatherstripping ($/door)</label><input type="number" class="fi" id="s-dor-weatherstrip" placeholder="75" min="0"></div>
-            <div class="fg"><label class="fl">Door Painting ($/door)</label><input type="number" class="fi" id="s-dor-paint" placeholder="150" min="0"></div>
+            <div class="fg"><label class="fl" for="s-dor-weatherstrip">Weatherstripping ($/door)</label><input type="number" class="fi" id="s-dor-weatherstrip" placeholder="75" min="0"></div>
+            <div class="fg"><label class="fl" for="s-dor-paint">Door Painting ($/door)</label><input type="number" class="fi" id="s-dor-paint" placeholder="150" min="0"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Overhead &amp; Margin</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Overhead %</label><input type="number" class="fi" id="s-dor-ovh" placeholder="15"></div>
-            <div class="fg"><label class="fl">Profit Margin %</label><input type="number" class="fi" id="s-dor-mgn" placeholder="20"></div>
+            <div class="fg"><label class="fl" for="s-dor-ovh">Overhead %</label><input type="number" class="fi" id="s-dor-ovh" placeholder="15"></div>
+            <div class="fg"><label class="fl" for="s-dor-mgn">Profit Margin %</label><input type="number" class="fi" id="s-dor-mgn" placeholder="20"></div>
           </div>
           <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:13px;color:var(--mid);margin-top:4px;">
             💡 Formula: (Unit Count × $/unit + Add-ons) × (1 + Overhead%) × (1 + Margin%) + Tax = Estimate
           </div>
           <div class="frow" style="margin-top:10px;">
-            <div class="fg"><label class="fl">Sales Tax % <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— added to proposal total (0 = no tax)</span></label><input type="number" class="fi" id="s-dor-tax" placeholder="0" step="0.01" min="0" max="30"></div>
+            <div class="fg"><label class="fl" for="s-dor-tax">Sales Tax % <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— added to proposal total (0 = no tax)</span></label><input type="number" class="fi" id="s-dor-tax" placeholder="0" step="0.01" min="0" max="30"></div>
             <div class="fg"></div>
           </div>
           <div class="stab-section-hdr" style="margin-top:16px;">Financing Options</div>
@@ -4315,8 +4318,8 @@ tr:hover td{background:var(--card);}
             <label for="s-dor-fin-enabled" style="font-size:13px;font-weight:700;color:var(--mid);cursor:pointer;">Show financing on door estimate <span style="font-weight:400;color:var(--muted);font-size:11px;">(auto-calculates)</span></label>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl">APR %</label><input type="number" class="fi" id="s-dor-fin-apr" placeholder="9.99" step="0.01" value="9.99"></div>
-            <div class="fg"><label class="fl">Term (months)</label>
+            <div class="fg"><label class="fl" for="s-dor-fin-apr">APR %</label><input type="number" class="fi" id="s-dor-fin-apr" placeholder="9.99" step="0.01" value="9.99"></div>
+            <div class="fg"><div class="fl">Term (months)</div>
               <select class="fs" id="s-dor-fin-term">
                 <option value="12">12 months (1 yr)</option>
                 <option value="24">24 months (2 yr)</option>
@@ -4353,41 +4356,41 @@ tr:hover td{background:var(--card);}
         <div class="stab-card-body" id="stab-body-windows-pricing">
           <div class="stab-section-hdr">Price Per Window by Type</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
-            <div class="fg"><label class="fl">Double-Hung Standard ($/window)</label><input type="number" class="fi" id="s-win-dbl-hung" placeholder="450"></div>
-            <div class="fg"><label class="fl">Casement ($/window)</label><input type="number" class="fi" id="s-win-casement" placeholder="550"></div>
-            <div class="fg"><label class="fl">Picture / Fixed ($/window)</label><input type="number" class="fi" id="s-win-picture" placeholder="400"></div>
-            <div class="fg"><label class="fl">Sliding ($/window)</label><input type="number" class="fi" id="s-win-sliding" placeholder="480"></div>
-            <div class="fg"><label class="fl">Bay / Bow ($/window)</label><input type="number" class="fi" id="s-win-bay" placeholder="1800"></div>
-            <div class="fg"><label class="fl">Skylight ($/unit)</label><input type="number" class="fi" id="s-win-skylight" placeholder="1200"></div>
-            <div class="fg"><label class="fl">Storm Window ($/window)</label><input type="number" class="fi" id="s-win-storm" placeholder="200"></div>
-            <div class="fg"><label class="fl">Egress Window ($/window)</label><input type="number" class="fi" id="s-win-egress" placeholder="2500"></div>
+            <div class="fg"><label class="fl" for="s-win-dbl-hung">Double-Hung Standard ($/window)</label><input type="number" class="fi" id="s-win-dbl-hung" placeholder="450"></div>
+            <div class="fg"><label class="fl" for="s-win-casement">Casement ($/window)</label><input type="number" class="fi" id="s-win-casement" placeholder="550"></div>
+            <div class="fg"><label class="fl" for="s-win-picture">Picture / Fixed ($/window)</label><input type="number" class="fi" id="s-win-picture" placeholder="400"></div>
+            <div class="fg"><label class="fl" for="s-win-sliding">Sliding ($/window)</label><input type="number" class="fi" id="s-win-sliding" placeholder="480"></div>
+            <div class="fg"><label class="fl" for="s-win-bay">Bay / Bow ($/window)</label><input type="number" class="fi" id="s-win-bay" placeholder="1800"></div>
+            <div class="fg"><label class="fl" for="s-win-skylight">Skylight ($/unit)</label><input type="number" class="fi" id="s-win-skylight" placeholder="1200"></div>
+            <div class="fg"><label class="fl" for="s-win-storm">Storm Window ($/window)</label><input type="number" class="fi" id="s-win-storm" placeholder="200"></div>
+            <div class="fg"><label class="fl" for="s-win-egress">Egress Window ($/window)</label><input type="number" class="fi" id="s-win-egress" placeholder="2500"></div>
           </div>
           <div class="stab-section-hdr">Add-On Pricing</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
-            <div class="fg"><label class="fl">Low-E / Energy Glass upgrade ($/window)</label><input type="number" class="fi" id="s-win-lowe" placeholder="75"></div>
-            <div class="fg"><label class="fl">Triple pane upgrade ($/window)</label><input type="number" class="fi" id="s-win-triple" placeholder="120"></div>
-            <div class="fg"><label class="fl">Trim / casing ($/window)</label><input type="number" class="fi" id="s-win-trim" placeholder="85"></div>
-            <div class="fg"><label class="fl">Old window removal ($/window)</label><input type="number" class="fi" id="s-win-removal" placeholder="50"></div>
+            <div class="fg"><label class="fl" for="s-win-lowe">Low-E / Energy Glass upgrade ($/window)</label><input type="number" class="fi" id="s-win-lowe" placeholder="75"></div>
+            <div class="fg"><label class="fl" for="s-win-triple">Triple pane upgrade ($/window)</label><input type="number" class="fi" id="s-win-triple" placeholder="120"></div>
+            <div class="fg"><label class="fl" for="s-win-trim">Trim / casing ($/window)</label><input type="number" class="fi" id="s-win-trim" placeholder="85"></div>
+            <div class="fg"><label class="fl" for="s-win-removal">Old window removal ($/window)</label><input type="number" class="fi" id="s-win-removal" placeholder="50"></div>
           </div>
           <div class="stab-section-hdr">Home Size → Window Count Estimates</div>
           <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Used for Method A (quick estimate by home size)</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
-            <div class="fg"><label class="fl">Small home (&lt;1,200 sqft) — windows</label><input type="number" class="fi" id="s-win-cnt-sm" placeholder="9"></div>
-            <div class="fg"><label class="fl">Medium (1,200–2,000 sqft) — windows</label><input type="number" class="fi" id="s-win-cnt-md" placeholder="13"></div>
-            <div class="fg"><label class="fl">Large (2,000–3,000 sqft) — windows</label><input type="number" class="fi" id="s-win-cnt-lg" placeholder="18"></div>
-            <div class="fg"><label class="fl">XL (3,000+ sqft) — windows</label><input type="number" class="fi" id="s-win-cnt-xl" placeholder="25"></div>
+            <div class="fg"><label class="fl" for="s-win-cnt-sm">Small home (&lt;1,200 sqft) — windows</label><input type="number" class="fi" id="s-win-cnt-sm" placeholder="9"></div>
+            <div class="fg"><label class="fl" for="s-win-cnt-md">Medium (1,200–2,000 sqft) — windows</label><input type="number" class="fi" id="s-win-cnt-md" placeholder="13"></div>
+            <div class="fg"><label class="fl" for="s-win-cnt-lg">Large (2,000–3,000 sqft) — windows</label><input type="number" class="fi" id="s-win-cnt-lg" placeholder="18"></div>
+            <div class="fg"><label class="fl" for="s-win-cnt-xl">XL (3,000+ sqft) — windows</label><input type="number" class="fi" id="s-win-cnt-xl" placeholder="25"></div>
           </div>
           <div class="stab-section-hdr">Overhead &amp; Margin</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
-            <div class="fg"><label class="fl">Overhead %</label><input type="number" class="fi" id="s-win-ovh" placeholder="15"></div>
-            <div class="fg"><label class="fl">Profit Margin %</label><input type="number" class="fi" id="s-win-mgn" placeholder="20"></div>
-            <div class="fg"><label class="fl">Sales Tax %</label><input type="number" class="fi" id="s-win-tax" placeholder="6"></div>
+            <div class="fg"><label class="fl" for="s-win-ovh">Overhead %</label><input type="number" class="fi" id="s-win-ovh" placeholder="15"></div>
+            <div class="fg"><label class="fl" for="s-win-mgn">Profit Margin %</label><input type="number" class="fi" id="s-win-mgn" placeholder="20"></div>
+            <div class="fg"><label class="fl" for="s-win-tax">Sales Tax %</label><input type="number" class="fi" id="s-win-tax" placeholder="6"></div>
           </div>
           <div class="stab-section-hdr">Financing</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
             <div class="fg"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);"><input type="checkbox" id="s-win-fin" style="accent-color:var(--accent);width:15px;height:15px;"> Offer financing</label></div>
-            <div class="fg"><label class="fl">APR %</label><input type="number" class="fi" id="s-win-apr" placeholder="9.9" step="0.1"></div>
-            <div class="fg"><label class="fl">Term (months)</label><input type="number" class="fi" id="s-win-term" placeholder="60"></div>
+            <div class="fg"><label class="fl" for="s-win-apr">APR %</label><input type="number" class="fi" id="s-win-apr" placeholder="9.9" step="0.1"></div>
+            <div class="fg"><label class="fl" for="s-win-term">Term (months)</label><input type="number" class="fi" id="s-win-term" placeholder="60"></div>
           </div>
         </div>
       </div>
@@ -4408,8 +4411,8 @@ tr:hover td{background:var(--card);}
         </div>
         <div class="stab-card-body" id="stab-body-mailer">
           <div class="stab-section-hdr">Cover Letter (Page 1)</div>
-          <div class="fg"><label class="fl">Hook &#8212; Opening Paragraph</label><textarea class="fi" id="s-hook" rows="3" style="resize:vertical;font-size:13px;" placeholder="Most homeowners are tired of door-knockers..."></textarea></div>
-          <div class="fg"><label class="fl">Why They Received This Bid</label><textarea class="fi" id="s-why" rows="2" style="resize:vertical;font-size:13px;" placeholder="We were in your neighborhood assessing storm damage..."></textarea></div>
+          <div class="fg"><div class="fl">Hook &#8212; Opening Paragraph</div><textarea class="fi" id="s-hook" rows="3" style="resize:vertical;font-size:13px;" placeholder="Most homeowners are tired of door-knockers..."></textarea></div>
+          <div class="fg"><div class="fl">Why They Received This Bid</div><textarea class="fi" id="s-why" rows="2" style="resize:vertical;font-size:13px;" placeholder="We were in your neighborhood assessing storm damage..."></textarea></div>
           <!-- ═══════════════════════════════════════════════════════════
                POSTCARD DESIGNER — Full Customization
           ═══════════════════════════════════════════════════════════ -->
@@ -4439,7 +4442,7 @@ tr:hover td{background:var(--card);}
 
             <!-- Design selector -->
             <div class="fg" style="margin-bottom:10px;">
-              <label class="fl">Layout</label>
+              <div class="fl">Layout</div>
               <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">
                 <label style="flex:1;min-width:120px;cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:7px;padding:8px 10px;">
                   <input type="radio" name="pc-design" id="s-pc-design-1" value="1" style="accent-color:var(--accent);margin-right:5px;">
@@ -4478,7 +4481,7 @@ tr:hover td{background:var(--card);}
             <div id="s-pc-d1-fields">
               <!-- Headline -->
               <div class="fg">
-                <label class="fl">Headline Line 1 <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; large text bottom-left</span></label>
+                <div class="fl">Headline Line 1 <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; large text bottom-left</span></div>
                 <div style="display:flex;gap:8px;align-items:center;">
                   <input class="fi" id="s-pc-headline1" type="text" style="flex:1;font-size:13px;" placeholder="We Assessed">
                   <div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:80px;">
@@ -4488,7 +4491,7 @@ tr:hover td{background:var(--card);}
                 </div>
               </div>
               <div class="fg">
-                <label class="fl">Headline Line 2</label>
+                <div class="fl">Headline Line 2</div>
                 <div style="display:flex;gap:8px;align-items:center;">
                   <input class="fi" id="s-pc-headline2" type="text" style="flex:1;font-size:13px;" placeholder="Your Roof.">
                   <div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:80px;">
@@ -4500,17 +4503,17 @@ tr:hover td{background:var(--card);}
               <!-- Badge -->
               <div class="frow">
                 <div class="fg">
-                  <label class="fl">Badge Text <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; top-right pill</span></label>
+                  <div class="fl">Badge Text <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; top-right pill</span></div>
                   <input class="fi" id="s-pc-badge-text" type="text" style="font-size:13px;" placeholder="YOUR ROOF ESTIMATE IS READY">
                 </div>
                 <div class="fg" style="max-width:100px;">
-                  <label class="fl">Badge Color</label>
+                  <div class="fl">Badge Color</div>
                   <input class="fi" id="s-pc-badge-color" type="color" style="height:36px;padding:2px 4px;" value="#F25C05">
                 </div>
               </div>
               <!-- Photo layout -->
               <div class="fg">
-                <label class="fl">Front Photo Layout</label>
+                <div class="fl">Front Photo Layout</div>
                 <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">
                   <label style="cursor:pointer;display:flex;align-items:center;gap:5px;font-size:15px;color:var(--mid);background:var(--card);border:1px solid var(--border);border-radius:6px;padding:6px 10px;">
                     <input type="radio" name="pc-photo-layout" value="single" id="s-pc-photo-single" style="accent-color:var(--accent);" checked> Single (full bleed)
@@ -4537,7 +4540,7 @@ tr:hover td{background:var(--card);}
               </div>
               <!-- Address font size -->
               <div class="fg" style="margin-top:8px;">
-                <label class="fl">Address Font Size</label>
+                <div class="fl">Address Font Size</div>
                 <div style="display:flex;align-items:center;gap:10px;">
                   <input type="range" id="s-pc-addr-sz" min="36" max="90" value="62" style="flex:1;accent-color:var(--accent);" oninput="document.getElementById('s-pc-addr-sz-val').textContent=this.value">
                   <span id="s-pc-addr-sz-val" style="font-size:15px;color:var(--mid);min-width:30px;">62</span>px
@@ -4545,7 +4548,7 @@ tr:hover td{background:var(--card);}
               </div>
               <!-- Price font size -->
               <div class="fg">
-                <label class="fl">Price Font Size</label>
+                <div class="fl">Price Font Size</div>
                 <div style="display:flex;align-items:center;gap:10px;">
                   <input type="range" id="s-pc-price-sz" min="40" max="120" value="78" style="flex:1;accent-color:var(--accent);" oninput="document.getElementById('s-pc-price-sz-val').textContent=this.value">
                   <span id="s-pc-price-sz-val" style="font-size:15px;color:var(--mid);min-width:30px;">78</span>px
@@ -4556,26 +4559,26 @@ tr:hover td{background:var(--card);}
             <!-- DESIGN 2 FRONT FIELDS -->
             <div id="s-pc-d2-fields" style="display:none;">
               <div class="frow">
-                <div class="fg"><label class="fl">Top Line</label><input class="fi" id="s-pc-d2-topline" type="text" style="font-size:13px;" placeholder="PROTECT YOUR HOME WITH"></div>
-                <div class="fg"><label class="fl">Accent Word</label><input class="fi" id="s-pc-d2-accent" type="text" style="font-size:13px;" placeholder="AFFORDABLE"></div>
+                <div class="fg"><label class="fl" for="s-pc-d2-topline">Top Line</label><input class="fi" id="s-pc-d2-topline" type="text" style="font-size:13px;" placeholder="PROTECT YOUR HOME WITH"></div>
+                <div class="fg"><label class="fl" for="s-pc-d2-accent">Accent Word</label><input class="fi" id="s-pc-d2-accent" type="text" style="font-size:13px;" placeholder="AFFORDABLE"></div>
               </div>
               <div class="frow">
-                <div class="fg"><label class="fl">Headline Line 1</label><input class="fi" id="s-pc-d2-headline" type="text" style="font-size:13px;" placeholder="ROOFING"></div>
-                <div class="fg"><label class="fl">Headline Line 2</label><input class="fi" id="s-pc-d2-headline2" type="text" style="font-size:13px;" placeholder="SOLUTIONS!"></div>
+                <div class="fg"><label class="fl" for="s-pc-d2-headline">Headline Line 1</label><input class="fi" id="s-pc-d2-headline" type="text" style="font-size:13px;" placeholder="ROOFING"></div>
+                <div class="fg"><label class="fl" for="s-pc-d2-headline2">Headline Line 2</label><input class="fi" id="s-pc-d2-headline2" type="text" style="font-size:13px;" placeholder="SOLUTIONS!"></div>
               </div>
               <div class="frow">
-                <div class="fg"><label class="fl">Bullet 1</label><input class="fi" id="s-pc-d2-bullet1" type="text" style="font-size:13px;" placeholder="ROOFING"></div>
-                <div class="fg"><label class="fl">Bullet 2</label><input class="fi" id="s-pc-d2-bullet2" type="text" style="font-size:13px;" placeholder="SIDING"></div>
-                <div class="fg"><label class="fl">Bullet 3</label><input class="fi" id="s-pc-d2-bullet3" type="text" style="font-size:13px;" placeholder="GUTTERS"></div>
+                <div class="fg"><label class="fl" for="s-pc-d2-bullet1">Bullet 1</label><input class="fi" id="s-pc-d2-bullet1" type="text" style="font-size:13px;" placeholder="ROOFING"></div>
+                <div class="fg"><label class="fl" for="s-pc-d2-bullet2">Bullet 2</label><input class="fi" id="s-pc-d2-bullet2" type="text" style="font-size:13px;" placeholder="SIDING"></div>
+                <div class="fg"><label class="fl" for="s-pc-d2-bullet3">Bullet 3</label><input class="fi" id="s-pc-d2-bullet3" type="text" style="font-size:13px;" placeholder="GUTTERS"></div>
               </div>
               <div class="frow">
-                <div class="fg"><label class="fl">Badge Line 1</label><input class="fi" id="s-pc-d2-badge1" type="text" style="font-size:13px;" placeholder="FREE"></div>
-                <div class="fg"><label class="fl">Badge Line 2</label><input class="fi" id="s-pc-d2-badge2" type="text" style="font-size:13px;" placeholder="GUTTERS"></div>
+                <div class="fg"><label class="fl" for="s-pc-d2-badge1">Badge Line 1</label><input class="fi" id="s-pc-d2-badge1" type="text" style="font-size:13px;" placeholder="FREE"></div>
+                <div class="fg"><label class="fl" for="s-pc-d2-badge2">Badge Line 2</label><input class="fi" id="s-pc-d2-badge2" type="text" style="font-size:13px;" placeholder="GUTTERS"></div>
               </div>
-              <div class="fg"><label class="fl">Badge Fine Print</label><input class="fi" id="s-pc-d2-badgesub" type="text" style="font-size:13px;" placeholder="With this card. Offer expires 30 days from mail date."></div>
+              <div class="fg"><label class="fl" for="s-pc-d2-badgesub">Badge Fine Print</label><input class="fi" id="s-pc-d2-badgesub" type="text" style="font-size:13px;" placeholder="With this card. Offer expires 30 days from mail date."></div>
               <div class="frow">
-                <div class="fg"><label class="fl">CTA Text</label><input class="fi" id="s-pc-d2-cta" type="text" style="font-size:13px;" placeholder="SCHEDULE A FREE ESTIMATE TODAY!"></div>
-                <div class="fg" style="max-width:100px;"><label class="fl">Bar Color</label><input class="fi" id="s-pc-d2-barcolor" type="color" style="height:36px;padding:2px 4px;" value="#CC1111"></div>
+                <div class="fg"><label class="fl" for="s-pc-d2-cta">CTA Text</label><input class="fi" id="s-pc-d2-cta" type="text" style="font-size:13px;" placeholder="SCHEDULE A FREE ESTIMATE TODAY!"></div>
+                <div class="fg" style="max-width:100px;"><label class="fl" for="s-pc-d2-barcolor">Bar Color</label><input class="fi" id="s-pc-d2-barcolor" type="color" style="height:36px;padding:2px 4px;" value="#CC1111"></div>
               </div>
             </div>
           </div>
@@ -4586,7 +4589,7 @@ tr:hover td{background:var(--card);}
 
             <!-- Hook -->
             <div class="fg">
-              <label class="fl">Hook Paragraph <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; sales pitch top-right</span></label>
+              <div class="fl">Hook Paragraph <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; sales pitch top-right</span></div>
               <div style="display:flex;gap:8px;">
                 <textarea class="fi" id="s-pc-hook" rows="2" style="flex:1;resize:vertical;font-size:13px;" placeholder="Most homeowners dread the pushy roofing salesman..."></textarea>
                 <div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:80px;">
@@ -4598,7 +4601,7 @@ tr:hover td{background:var(--card);}
 
             <!-- Why paragraph -->
             <div class="fg">
-              <label class="fl">Why Paragraph <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; bottom-left section</span></label>
+              <div class="fl">Why Paragraph <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; bottom-left section</span></div>
               <div style="display:flex;gap:8px;">
                 <textarea class="fi" id="s-pc-why" rows="2" style="flex:1;resize:vertical;font-size:13px;" placeholder="We assessed your roof and found..."></textarea>
                 <div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:80px;">
@@ -4610,7 +4613,7 @@ tr:hover td{background:var(--card);}
 
             <!-- Quote -->
             <div class="fg">
-              <label class="fl">Customer Quote <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; 5-star review</span></label>
+              <div class="fl">Customer Quote <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; 5-star review</span></div>
               <div style="display:flex;gap:8px;align-items:center;">
                 <input class="fi" id="s-pc-quote" type="text" style="flex:1;font-size:13px;" placeholder='"They replaced our roof in one day." &#8212; Mike D.'>
                 <div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:80px;">
@@ -4622,7 +4625,7 @@ tr:hover td{background:var(--card);}
 
             <!-- Guarantee -->
             <div class="fg">
-              <label class="fl">Guarantee Tagline <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; below phone</span></label>
+              <div class="fl">Guarantee Tagline <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; below phone</span></div>
               <div style="display:flex;gap:8px;align-items:center;">
                 <input class="fi" id="s-pc-guarantee" type="text" style="flex:1;font-size:13px;" placeholder="No door-knocking. No pressure. Just your price.">
                 <div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:80px;">
@@ -4635,18 +4638,18 @@ tr:hover td{background:var(--card);}
             <!-- Scan CTA -->
             <div class="frow">
               <div class="fg">
-                <label class="fl">Scan CTA Text <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; above QR code</span></label>
+                <div class="fl">Scan CTA Text <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; above QR code</span></div>
                 <input class="fi" id="s-pc-scan-cta" type="text" style="font-size:13px;" placeholder="SCAN TO BOOK">
               </div>
               <div class="fg">
-                <label class="fl">Scan Sub-text <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; below CTA</span></label>
+                <div class="fl">Scan Sub-text <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; below CTA</span></div>
                 <input class="fi" id="s-pc-scan-sub" type="text" style="font-size:13px;" placeholder="No-pressure booking">
               </div>
             </div>
 
             <!-- Phone size -->
             <div class="fg">
-              <label class="fl">Phone Number Size</label>
+              <div class="fl">Phone Number Size</div>
               <div style="display:flex;align-items:center;gap:10px;">
                 <input type="range" id="s-pc-phone-sz" min="28" max="72" value="42" style="flex:1;accent-color:var(--accent);" oninput="document.getElementById('s-pc-phone-sz-val').textContent=this.value">
                 <span id="s-pc-phone-sz-val" style="font-size:15px;color:var(--mid);min-width:30px;">42</span>px
@@ -4655,7 +4658,7 @@ tr:hover td{background:var(--card);}
 
             <!-- Back badge color -->
             <div class="fg">
-              <label class="fl">Back Badge Color <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; pill on back (defaults to brand color)</span></label>
+              <div class="fl">Back Badge Color <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; pill on back (defaults to brand color)</span></div>
               <div style="display:flex;align-items:center;gap:8px;">
                 <input class="fi" id="s-pc-back-badge-text" type="text" style="flex:1;font-size:13px;" placeholder="YOUR ROOF ESTIMATE IS READY">
                 <input id="s-pc-back-badge-color" type="color" style="height:36px;width:48px;padding:2px 4px;border:1px solid var(--border);border-radius:6px;background:var(--card);" value="#F25C05">
@@ -4674,13 +4677,13 @@ tr:hover td{background:var(--card);}
             <label style="display:flex;align-items:center;gap:6px;font-size:15px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="s-off-gut" style="accent-color:var(--accent);"> Gutters</label>
             <label style="display:flex;align-items:center;gap:6px;font-size:15px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="s-off-solar" style="accent-color:var(--accent);"> &#9728;&#65039; Solar</label>
           </div>
-          <div class="fg"><label class="fl">Custom Service (optional)</label><input class="fi" id="s-off-custom" placeholder="e.g. Solar, Insulation, Painting"></div>
+          <div class="fg"><label class="fl" for="s-off-custom">Custom Service (optional)</label><input class="fi" id="s-off-custom" placeholder="e.g. Solar, Insulation, Painting"></div>
           <div class="stab-section-hdr" style="margin-top:16px;">Referral Program (Page 4)</div>
           <div class="frow">
-            <div class="fg"><label class="fl">Gift Card Amount ($)</label><input class="fi" id="s-refamt" placeholder="250"></div>
+            <div class="fg"><label class="fl" for="s-refamt">Gift Card Amount ($)</label><input class="fi" id="s-refamt" placeholder="250"></div>
             <div class="fg"></div>
           </div>
-          <div class="fg"><label class="fl">Referral Program Description</label><textarea class="fi" id="s-reftext" rows="2" style="resize:vertical;font-size:13px;" placeholder="For every customer you send our way..."></textarea></div>
+          <div class="fg"><div class="fl">Referral Program Description</div><textarea class="fi" id="s-reftext" rows="2" style="resize:vertical;font-size:13px;" placeholder="For every customer you send our way..."></textarea></div>
         </div>
       </div>
 
@@ -4723,12 +4726,12 @@ tr:hover td{background:var(--card);}
         </div>
         <div class="int-card-body">
           <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Automatically create contacts and opportunities in your GHL sub-account when pins are dropped or estimates are created. Get your API key from <strong>Settings → Integrations → API Keys</strong> in GHL.</div>
-          <div class="fg" style="margin-bottom:8px;"><label class="fl">Location API Key</label><input class="fi" id="s-ghl-key" placeholder="pit-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" type="password" autocomplete="off" oninput="updateIntStatus('ghl')"></div>
+          <div class="fg" style="margin-bottom:8px;"><label class="fl" for="s-ghl-key">Location API Key</label><input class="fi" id="s-ghl-key" placeholder="pit-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" type="password" autocomplete="off" oninput="updateIntStatus('ghl')"></div>
           <div class="frow" style="margin-bottom:8px;">
-            <div class="fg"><label class="fl">Location ID</label><input class="fi" id="s-ghl-loc" placeholder="gz85VU6SxGXS7lqHAQGx" oninput="updateIntStatus('ghl')"></div>
-            <div class="fg"><label class="fl">Pipeline ID</label><input class="fi" id="s-ghl-pipe" placeholder="bxskBIBdbklHry0B63qx" value="bxskBIBdbklHry0B63qx"></div>
+            <div class="fg"><label class="fl" for="s-ghl-loc">Location ID</label><input class="fi" id="s-ghl-loc" placeholder="gz85VU6SxGXS7lqHAQGx" oninput="updateIntStatus('ghl')"></div>
+            <div class="fg"><label class="fl" for="s-ghl-pipe">Pipeline ID</label><input class="fi" id="s-ghl-pipe" placeholder="bxskBIBdbklHry0B63qx" value="bxskBIBdbklHry0B63qx"></div>
           </div>
-          <div class="fg" style="margin-bottom:10px;"><label class="fl">Default Stage</label>
+          <div class="fg" style="margin-bottom:10px;"><div class="fl">Default Stage</div>
             <select class="fs" id="s-ghl-stage" style="font-size:12px;padding:10px 10px;">
               <option value="">— select stage —</option>
               <option value="new">New Lead</option>
@@ -4746,8 +4749,8 @@ tr:hover td{background:var(--card);}
               <span id="ghl-bulk-sync-status" style="font-size:11px;color:var(--muted);"></span>
             </div>
           </div>
-          <div style="margin-bottom:8px;"><label class="fl">SMS Template</label><textarea class="fi" id="s-ghl-sms-tpl" rows="2" style="resize:vertical;font-size:12px;" placeholder="Hi {name}! This is {rep} from {company}..."></textarea></div>
-          <div><label class="fl">Email Template</label><textarea class="fi" id="s-ghl-email-tpl" rows="3" style="resize:vertical;font-size:12px;" placeholder="Hi {name}, I hope this message finds you well!..."></textarea></div>
+          <div style="margin-bottom:8px;"><div class="fl">SMS Template</div><textarea class="fi" id="s-ghl-sms-tpl" rows="2" style="resize:vertical;font-size:12px;" placeholder="Hi {name}! This is {rep} from {company}..."></textarea></div>
+          <div><div class="fl">Email Template</div><textarea class="fi" id="s-ghl-email-tpl" rows="3" style="resize:vertical;font-size:12px;" placeholder="Hi {name}, I hope this message finds you well!..."></textarea></div>
           <div style="font-size:10px;color:var(--muted);margin-top:6px;">Tokens: <code style="background:var(--card2);padding:1px 4px;border-radius:3px;color:var(--accent);">{name}</code> <code style="background:var(--card2);padding:1px 4px;border-radius:3px;color:var(--accent);">{rep}</code> <code style="background:var(--card2);padding:1px 4px;border-radius:3px;color:var(--accent);">{company}</code> <code style="background:var(--card2);padding:1px 4px;border-radius:3px;color:var(--accent);">{address}</code></div>
         </div>
       </div>
@@ -4764,10 +4767,10 @@ tr:hover td{background:var(--card);}
         </div>
         <div class="int-card-body">
           <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Automatically create or update contacts in JobNimbus when pins are saved or estimates are created. Get your API key from <strong>Settings → API Keys</strong> in JobNimbus.</div>
-          <div class="fg" style="margin-bottom:8px;"><label class="fl">API Key</label><input class="fi" id="s-jn-key" placeholder="eyJhbGci..." type="password" autocomplete="off" oninput="updateIntStatus('jn')"></div>
+          <div class="fg" style="margin-bottom:8px;"><label class="fl" for="s-jn-key">API Key</label><input class="fi" id="s-jn-key" placeholder="eyJhbGci..." type="password" autocomplete="off" oninput="updateIntStatus('jn')"></div>
           <div class="frow" style="margin-bottom:10px;">
-            <div class="fg"><label class="fl">Contact Record Type</label><input class="fi" id="s-jn-record-type" placeholder="Customer" value="Customer"></div>
-            <div class="fg"><label class="fl">Contact Status</label><input class="fi" id="s-jn-status" placeholder="Lead" value="Lead"></div>
+            <div class="fg"><label class="fl" for="s-jn-record-type">Contact Record Type</label><input class="fi" id="s-jn-record-type" placeholder="Customer" value="Customer"></div>
+            <div class="fg"><label class="fl" for="s-jn-status">Contact Status</label><input class="fi" id="s-jn-status" placeholder="Lead" value="Lead"></div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <button onclick="jnTestConnection()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 14px;color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">🔗 Test Connection</button>
@@ -4788,7 +4791,7 @@ tr:hover td{background:var(--card);}
         </div>
         <div class="int-card-body">
           <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Push leads from BidDrop directly into Jobber as new clients or requests. Get your API key from <strong>Settings → Integrations → API Access</strong> in Jobber.</div>
-          <div class="fg" style="margin-bottom:10px;"><label class="fl">Jobber API Key</label><input class="fi" id="s-jobber-key" placeholder="Bearer eyJhbGci..." type="password" autocomplete="off" oninput="updateIntStatus('jobber')"></div>
+          <div class="fg" style="margin-bottom:10px;"><label class="fl" for="s-jobber-key">Jobber API Key</label><input class="fi" id="s-jobber-key" placeholder="Bearer eyJhbGci..." type="password" autocomplete="off" oninput="updateIntStatus('jobber')"></div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <button onclick="jobberTestConnection()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 14px;color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">🔗 Test Connection</button>
             <span id="jobber-test-status" style="font-size:11px;color:var(--muted);"></span>
@@ -4808,7 +4811,7 @@ tr:hover td{background:var(--card);}
         </div>
         <div class="int-card-body">
           <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">When a homeowner scans your QR code and views their estimate page, BidDrop fires a <strong>ViewContent</strong> event — building your retargeting audience automatically. Get your Pixel ID from <strong>Meta Events Manager</strong>.</div>
-          <div class="fg" style="margin-bottom:10px;"><label class="fl">Meta Pixel ID</label><input class="fi" id="s-meta-pixel-id" placeholder="1234567890123456" autocomplete="off" oninput="updateIntStatus('meta')"></div>
+          <div class="fg" style="margin-bottom:10px;"><label class="fl" for="s-meta-pixel-id">Meta Pixel ID</label><input class="fi" id="s-meta-pixel-id" placeholder="1234567890123456" autocomplete="off" oninput="updateIntStatus('meta')"></div>
         </div>
       </div>
 
@@ -4824,7 +4827,7 @@ tr:hover td{background:var(--card);}
         </div>
         <div class="int-card-body">
           <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Fire Google Ads conversion events when homeowners view their estimate page. Use your <strong>Measurement ID</strong> (G-XXXXXXXXXX) for GA4 or your <strong>Conversion ID</strong> (AW-XXXXXXXXX) for Google Ads.</div>
-          <div class="fg" style="margin-bottom:10px;"><label class="fl">Google Tag ID</label><input class="fi" id="s-google-tag-id" placeholder="G-XXXXXXXXXX or AW-XXXXXXXXX" autocomplete="off" oninput="updateIntStatus('gtag')"></div>
+          <div class="fg" style="margin-bottom:10px;"><label class="fl" for="s-google-tag-id">Google Tag ID</label><input class="fi" id="s-google-tag-id" placeholder="G-XXXXXXXXXX or AW-XXXXXXXXX" autocomplete="off" oninput="updateIntStatus('gtag')"></div>
         </div>
       </div>
 
@@ -4840,7 +4843,7 @@ tr:hover td{background:var(--card);}
         </div>
         <div class="int-card-body">
           <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Send lead data to any app via a webhook URL. Works with Zapier, Make (Integromat), n8n, or any custom endpoint. BidDrop will POST a JSON payload when a pin is saved or an estimate is created.</div>
-          <div class="fg" style="margin-bottom:8px;"><label class="fl">Webhook URL</label><input class="fi" id="s-webhook-url" placeholder="https://hooks.zapier.com/hooks/catch/..." autocomplete="off" oninput="updateIntStatus('webhook')"></div>
+          <div class="fg" style="margin-bottom:8px;"><label class="fl" for="s-webhook-url">Webhook URL</label><input class="fi" id="s-webhook-url" placeholder="https://hooks.zapier.com/hooks/catch/..." autocomplete="off" oninput="updateIntStatus('webhook')"></div>
           <div style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 12px;font-size:11px;color:var(--muted);margin-bottom:10px;">
             <strong style="color:var(--text);">Payload includes:</strong> name, address, phone, email, rep name, estimate total, roof sq ft, timestamp
           </div>
@@ -4862,7 +4865,7 @@ tr:hover td{background:var(--card);}
         </div>
         <div class="int-card-body">
           <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Auto-fills homeowner name when a pin is dropped. Get a free key at <a href="https://app.rentcast.io/app/api-access" target="_blank" style="color:var(--accent);">rentcast.io</a>.</div>
-          <div class="fg"><label class="fl">RentCast API Key</label><input class="fi" id="s-rentcast-key" placeholder="live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" type="password"></div>
+          <div class="fg"><label class="fl" for="s-rentcast-key">RentCast API Key</label><input class="fi" id="s-rentcast-key" placeholder="live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" type="password"></div>
         </div>
       </div>
 
@@ -4876,7 +4879,7 @@ tr:hover td{background:var(--card);}
           </div>
         </div>
         <div class="int-card-body">
-          <div class="fg"><label class="fl">Lob API Key</label><input class="fi" id="s-lob" placeholder="live_c39f..."></div>
+          <div class="fg"><label class="fl" for="s-lob">Lob API Key</label><input class="fi" id="s-lob" placeholder="live_c39f..."></div>
         </div>
       </div>
 
@@ -5098,8 +5101,8 @@ tr:hover td{background:var(--card);}
 <div class="overlay" id="m-save-zone" style="display:none;">
   <div class="modal" style="max-width:420px;">
     <div class="modal-title">🗂 Save Canvass Zone</div>
-    <div class="fg"><label class="fl">Zone Name</label><input class="fi" id="zone-name" placeholder="e.g. North Canton Block A"></div>
-    <div class="fg"><label class="fl">Assign to Rep</label>
+    <div class="fg"><label class="fl" for="zone-name">Zone Name</label><input class="fi" id="zone-name" placeholder="e.g. North Canton Block A"></div>
+    <div class="fg"><div class="fl">Assign to Rep</div>
       <select class="fs" id="zone-rep-select"><option value="">— Select a rep —</option></select>
     </div>
     <div class="fg" style="display:flex;align-items:center;gap:12px;">
@@ -5117,8 +5120,8 @@ tr:hover td{background:var(--card);}
 <div class="overlay" id="m-pin" style="display:none;">
   <div class="modal" style="max-width:480px;">
     <div class="modal-title">📍 Pin This Home</div>
-    <div class="fg"><label class="fl">Address</label><input class="fi" id="p-addr" placeholder="Auto-filled from map click…"></div>
-    <div class="fg"><label class="fl">Status</label>
+    <div class="fg"><label class="fl" for="p-addr">Address</label><input class="fi" id="p-addr" placeholder="Auto-filled from map click…"></div>
+    <div class="fg"><div class="fl">Status</div>
       <select class="fs" id="p-status">
         <option value="needs_roof">🟠 Needs Roof</option>
         <option value="interested">🟡 Interested</option>
@@ -5130,16 +5133,16 @@ tr:hover td{background:var(--card);}
         <option value="lost">🔴 Lost</option>
       </select>
     </div>
-    <div class="fg"><label class="fl">Notes</label><input class="fi" id="p-notes" placeholder="e.g. Interested in roof + solar, storm damage visible…"></div>
+    <div class="fg"><label class="fl" for="p-notes">Notes</label><input class="fi" id="p-notes" placeholder="e.g. Interested in roof + solar, storm damage visible…"></div>
     <!-- Trade Interest Chips -->
     <div class="fg" id="p-trades-wrap" style="margin-bottom:0;">
-      <label class="fl">Interested In <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">(select all that apply)</span></label>
+      <div class="fl">Interested In <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">(select all that apply)</span></div>
       <div id="p-trades-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">
         <!-- Populated by renderPinTradeChips() -->
       </div>
     </div>
-    <div class="fg"><label class="fl">Canvasser Name</label><input class="fi" id="p-rep" placeholder="Your name"></div>
-    <div class="fg"><label class="fl">Homeowner Phone <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);">(optional, for follow-up)</span></label><input class="fi" id="p-phone" type="tel" placeholder="(313) 555-0100" oninput="autoFormatPhone(this)"></div>
+    <div class="fg"><label class="fl" for="p-rep">Canvasser Name</label><input class="fi" id="p-rep" placeholder="Your name"></div>
+    <div class="fg"><label class="fl" for="p-phone">Homeowner Phone <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);">(optional, for follow-up)</span></label><input class="fi" id="p-phone" type="tel" placeholder="(313) 555-0100" oninput="autoFormatPhone(this)"></div>
     <!-- Photos -->
     <div style="margin-bottom:12px;">
       <button onclick="openPhotoModal('pin')" style="width:100%;padding:12px;background:var(--card2);border:2px dashed var(--border);border-radius:10px;color:var(--mid);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-b);display:flex;align-items:center;justify-content:center;gap:8px;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
@@ -5212,10 +5215,10 @@ tr:hover td{background:var(--card);}
   <div class="modal" style="max-width:480px;">
     <div class="modal-title">✉️ Homeowner Follow-Up</div>
     <div style="font-size:13px;color:var(--muted);margin-bottom:14px;">Send a quick follow-up to the homeowner via GHL (SMS or email).</div>
-    <div class="fg"><label class="fl">Homeowner Name</label><input class="fi" id="fu-name" placeholder="e.g. John Smith"></div>
-    <div class="fg"><label class="fl">Phone (SMS)</label><input class="fi" id="fu-phone" type="tel" placeholder="(313) 555-0100" oninput="autoFormatPhone(this)"></div>
-    <div class="fg"><label class="fl">Email</label><input class="fi" id="fu-email" type="email" placeholder="homeowner@email.com"></div>
-    <div class="fg"><label class="fl">Message</label><textarea class="fi" id="fu-message" rows="4" style="resize:vertical;" placeholder="Hi {name}, this is {rep} from {company}. Just following up about your roof..."></textarea></div>
+    <div class="fg"><label class="fl" for="fu-name">Homeowner Name</label><input class="fi" id="fu-name" placeholder="e.g. John Smith"></div>
+    <div class="fg"><label class="fl" for="fu-phone">Phone (SMS)</label><input class="fi" id="fu-phone" type="tel" placeholder="(313) 555-0100" oninput="autoFormatPhone(this)"></div>
+    <div class="fg"><label class="fl" for="fu-email">Email</label><input class="fi" id="fu-email" type="email" placeholder="homeowner@email.com"></div>
+    <div class="fg"><div class="fl">Message</div><textarea class="fi" id="fu-message" rows="4" style="resize:vertical;" placeholder="Hi {name}, this is {rep} from {company}. Just following up about your roof..."></textarea></div>
     <div style="display:flex;gap:8px;margin-bottom:14px;">
       <button onclick="insertFuTemplate('sms')" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font-b);">SMS Template</button>
       <button onclick="insertFuTemplate('email')" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font-b);">Email Template</button>
@@ -6995,15 +6998,15 @@ function renderStructures(){
       '</div>'+
       (s.photos&&s.photos.length ? '<div style="display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;">'+s.photos.map((src,pi)=>'<div style="position:relative;display:inline-block;"><img src="'+src+'" style="width:72px;height:60px;object-fit:cover;border-radius:6px;display:block;"><button onclick="removeStructurePhoto(\"'+s.id+'\",'+pi+')" style="position:absolute;top:-4px;right:-4px;background:#EF4444;border:none;border-radius:50%;width:16px;height:16px;color:white;font-size:10px;cursor:pointer;line-height:16px;padding:0;">×</button></div>').join('')+'</div>' : '')+
       '<div class="frow" style="gap:8px;margin-bottom:8px;">'+
-      '<div class="fg" style="margin-bottom:0;"><label class="fl">Sq Ft'+(s.solarFilled?'<span style="margin-left:5px;background:rgba(242,92,5,.15);border:1px solid rgba(242,92,5,.4);border-radius:4px;padding:1px 5px;font-size:9px;color:#F25C05;font-weight:700;letter-spacing:.3px;">🛰 SATELLITE</span>':'')+' </label>'+
+      '<div class="fg" style="margin-bottom:0;"><div class="fl">Sq Ft'+(s.solarFilled?'<span style="margin-left:5px;background:rgba(242,92,5,.15);border:1px solid rgba(242,92,5,.4);border-radius:4px;padding:1px 5px;font-size:9px;color:#F25C05;font-weight:700;letter-spacing:.3px;">🛰 SATELLITE</span>':'')+' </div>'+
       '<input type="number" class="fi" style="font-size:14px;padding:9px 10px;" data-sid="'+s.id+'" value="'+(s.sqft||'')+'" placeholder="2400" oninput="_structField(this,\'sqft\');s_clearSolarFilled(this.dataset.sid)"></div>'+
-      '<div class="fg" style="margin-bottom:0;"><label class="fl">Stories</label>'+applyDataSid(mkSel(STORIES_OPTS,s.stories,'stories'),s.id)+'</div>'+
+      '<div class="fg" style="margin-bottom:0;"><div class="fl">Stories</div>'+applyDataSid(mkSel(STORIES_OPTS,s.stories,'stories'),s.id)+'</div>'+
       '</div>'+
       '<div class="frow" style="gap:8px;margin-bottom:8px;">'+
-      '<div class="fg" style="margin-bottom:0;"><label class="fl">Pitch</label>'+applyDataSid(mkSel(PITCH_OPTS,s.pitch,'pitch'),s.id)+'</div>'+
-      '<div class="fg" style="margin-bottom:0;"><label class="fl">Material</label>'+applyDataSid(mkSel(MAT_OPTS,s.mat,'mat'),s.id)+'</div>'+
+      '<div class="fg" style="margin-bottom:0;"><div class="fl">Pitch</div>'+applyDataSid(mkSel(PITCH_OPTS,s.pitch,'pitch'),s.id)+'</div>'+
+      '<div class="fg" style="margin-bottom:0;"><div class="fl">Material</div>'+applyDataSid(mkSel(MAT_OPTS,s.mat,'mat'),s.id)+'</div>'+
       '</div>'+
-      '<div class="fg" style="margin-bottom:0;"><label class="fl">Complexity</label>'+applyDataSid(mkSel(COMPLEX_OPTS,s.complexity,'complexity'),s.id)+'</div>'+
+      '<div class="fg" style="margin-bottom:0;"><div class="fl">Complexity</div>'+applyDataSid(mkSel(COMPLEX_OPTS,s.complexity,'complexity'),s.id)+'</div>'+
       '</div>';
   });
   el.innerHTML=html;
@@ -7434,12 +7437,12 @@ function renderManageTeam(accountId){
       '</div>' +
       '<div id="mt-edit-'+uid+'" style="display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">' +
         '<div class="frow">' +
-          '<div class="fg"><label class="fl">Name</label><input class="fi" id="mt-e-name-'+uid+'" value="'+((u.name||'').replace(/"/g,'&quot;'))+'" placeholder="Full name"></div>' +
-          '<div class="fg"><label class="fl">Phone</label><input class="fi" id="mt-e-phone-'+uid+'" value="'+(u.phone||'')+'" placeholder="(313) 555-0100" oninput="autoFormatPhone(this)"></div>' +
+          '<div class="fg"><label class="fl" for="mt-e-name-'+uid+'">Name</label><input class="fi" id="mt-e-name-'+uid+'" value="'+((u.name||'').replace(/"/g,'&quot;'))+'" placeholder="Full name"></div>' +
+          '<div class="fg"><label class="fl" for="mt-e-phone-'+uid+'">Phone</label><input class="fi" id="mt-e-phone-'+uid+'" value="'+(u.phone||'')+'" placeholder="(313) 555-0100" oninput="autoFormatPhone(this)"></div>' +
         '</div>' +
         '<div class="frow">' +
-          '<div class="fg"><label class="fl">Email</label><input class="fi" id="mt-e-email-'+uid+'" value="'+((u.email||'').replace(/"/g,'&quot;'))+'" placeholder="email@company.com" type="email"></div>' +
-          '<div class="fg"><label class="fl">Role</label><select class="fs" id="mt-e-role-'+uid+'"><option value="rep"'+(u.role==='rep'?' selected':'')+'>Rep (Field)</option><option value="admin"'+(u.role==='admin'?' selected':'')+'>Admin</option></select></div>' +
+          '<div class="fg"><label class="fl" for="mt-e-email-'+uid+'">Email</label><input class="fi" id="mt-e-email-'+uid+'" value="'+((u.email||'').replace(/"/g,'&quot;'))+'" placeholder="email@company.com" type="email"></div>' +
+          '<div class="fg"><div class="fl">Role</div><select class="fs" id="mt-e-role-'+uid+'"><option value="rep"'+(u.role==='rep'?' selected':'')+'>Rep (Field)</option><option value="admin"'+(u.role==='admin'?' selected':'')+'>Admin</option></select></div>' +
         '</div>' +
         '<div style="display:flex;gap:6px;margin-top:4px;">' +
           '<button onclick="mtSaveEdit(\''+uid+'\',\''+accountId+'\')" class="btn-primary" style="flex:1;">Save Changes</button>' +
@@ -7454,12 +7457,12 @@ function renderManageTeam(accountId){
     '<div style="border-top:1px solid var(--border);margin-top:14px;padding-top:14px;">' +
       '<div style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.5px;margin-bottom:10px;">+ ADD TEAM MEMBER</div>' +
       '<div class="frow">' +
-        '<div class="fg"><label class="fl">Name</label><input class="fi" id="mt-new-name" placeholder="Mike Johnson"></div>' +
-        '<div class="fg"><label class="fl">Email</label><input class="fi" id="mt-new-email" placeholder="mike@company.com" type="email"></div>' +
+        '<div class="fg"><label class="fl" for="mt-new-name">Name</label><input class="fi" id="mt-new-name" placeholder="Mike Johnson"></div>' +
+        '<div class="fg"><label class="fl" for="mt-new-email">Email</label><input class="fi" id="mt-new-email" placeholder="mike@company.com" type="email"></div>' +
       '</div>' +
       '<div class="frow">' +
-        '<div class="fg"><label class="fl">Temp Password</label><input class="fi" id="mt-new-pass" placeholder="min 6 chars" type="password"></div>' +
-        '<div class="fg"><label class="fl">Role</label><select class="fs" id="mt-new-role"><option value="rep">Rep (Field)</option><option value="admin">Admin</option></select></div>' +
+        '<div class="fg"><label class="fl" for="mt-new-pass">Temp Password</label><input class="fi" id="mt-new-pass" placeholder="min 6 chars" type="password"></div>' +
+        '<div class="fg"><div class="fl">Role</div><select class="fs" id="mt-new-role"><option value="rep">Rep (Field)</option><option value="admin">Admin</option></select></div>' +
       '</div>' +
       '<button onclick="mtAddMember(\'' + accountId + '\')" class="btn-primary" style="margin-top:4px;">Create Login</button>' +
       '<div id="mt-add-result" style="margin-top:8px;font-size:12px;"></div>' +
@@ -9391,7 +9394,7 @@ function openCampaignQRStats(campaignId) {
       <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#60a5fa;margin-bottom:10px;">✍️ Electronic Signature</div>
       <div style="font-size:12px;color:var(--mid);margin-bottom:10px;">Have the homeowner type their full name below to accept this proposal.</div>
       <div class="fg" style="margin-bottom:8px;">
-        <label class="fl">Homeowner Full Name</label>
+        <div class="fl">Homeowner Full Name</div>
         <input class="fi" id="prop-esign-name" placeholder="Jane Smith" style="font-size:15px;font-weight:600;" oninput="onPropSignInput()">
       </div>
       <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:12px;color:var(--mid);line-height:1.5;">

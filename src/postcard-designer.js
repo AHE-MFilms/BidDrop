@@ -561,7 +561,6 @@ function pdRenderPropertiesPanel(zoneKey) {
         <div style="font-size:11px;color:var(--muted);">${PD.logoDataUrl || cfg.logoData ? 'Replace Logo' : 'Upload Logo'}</div>
         <div style="font-size:10px;color:var(--muted2);">PNG with transparency</div>
       </div>
-      <input type="file" id="pd-logo-input" accept="image/*" style="display:none;" onchange="pdHandleLogoUpload(this)">
     </div>
   </div>`;
 
@@ -632,7 +631,6 @@ function pdRenderPropertiesPanel(zoneKey) {
       <div style="font-size:11px;color:var(--muted);">${PD.heroDataUrl || cfg.tplHeroUrl ? 'Replace Photo' : 'Upload Photo'}</div>
       <div style="font-size:10px;color:var(--muted2);">JPG/PNG · right side of card</div>
     </div>
-    <input type="file" id="pd-hero-input" accept="image/*" style="display:none;" onchange="pdHandleHeroUpload(this)">
   </div>`;
 
   // Back copy (shown when on back side)
@@ -655,6 +653,8 @@ function pdRenderPropertiesPanel(zoneKey) {
   }
 
   panel.innerHTML = html;
+  // Wire drag-and-drop on upload zones (must run after innerHTML is set)
+  pdInitUploadZoneDnd();
 }
 
 function pdSetBackVal(key, value) {
@@ -666,10 +666,37 @@ function pdSetBackVal(key, value) {
 
 /* ─── Image upload handlers ──────────────────────────────────── */
 function pdTriggerLogoUpload() {
-  document.getElementById('pd-logo-input')?.click();
+  // Reset value so same file can be re-selected
+  const inp = document.getElementById('pd-logo-input');
+  if(inp){ inp.value=''; inp.click(); }
 }
 function pdTriggerHeroUpload() {
-  document.getElementById('pd-hero-input')?.click();
+  const inp = document.getElementById('pd-hero-input');
+  if(inp){ inp.value=''; inp.click(); }
+}
+
+// Drag-and-drop support for upload zones — wired after panel renders
+function pdInitUploadZoneDnd() {
+  function wireZone(zoneEl, handler) {
+    if(!zoneEl) return;
+    zoneEl.addEventListener('dragover', e=>{ e.preventDefault(); zoneEl.style.borderColor='var(--accent)'; }, {passive:false});
+    zoneEl.addEventListener('dragleave', ()=>{ zoneEl.style.borderColor=''; });
+    zoneEl.addEventListener('drop', e=>{
+      e.preventDefault();
+      zoneEl.style.borderColor='';
+      const file = e.dataTransfer?.files?.[0];
+      if(file && file.type.startsWith('image/')) handler({files:[file]});
+    });
+  }
+  // Wire both zones each time the panel re-renders
+  const panel = document.getElementById('pd-props-panel');
+  if(!panel) return;
+  panel.querySelectorAll('.pd-upload-zone').forEach(z=>{
+    if(z.dataset.dndWired) return;
+    z.dataset.dndWired = '1';
+    const isHero = z.getAttribute('onclick')?.includes('Hero');
+    wireZone(z, isHero ? pdHandleHeroUpload : pdHandleLogoUpload);
+  });
 }
 function pdHandleLogoUpload(input) {
   const file = input.files[0];
