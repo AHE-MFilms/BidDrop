@@ -18,6 +18,7 @@ function save(){
 async function syncAccountToSupabase(){
   if(!currentAccount) return;
   const cfg = S.cfg;
+  // ── Core save (all columns that exist in the original schema) ──
   const {error: syncErr} = await sb.from('accounts').update({
     company_name: cfg.companyName, company_phone: cfg.companyPhone,
     company_addr: cfg.companyAddr, rep_name: cfg.repName,
@@ -93,18 +94,25 @@ async function syncAccountToSupabase(){
     meta_pixel_id: cfg.metaPixelId||null,
     google_tag_id: cfg.googleTagId||null,
     google_place_id: cfg.googlePlaceId||null,
-    tax_rate: cfg.taxRate||0,
-    // ── Trade system (Build 10) ──
-    trade_pricing_json: cfg.tradePricingJson ? JSON.stringify(cfg.tradePricingJson) : null,
-    trade_statuses_json: cfg.tradeStatuses ? JSON.stringify(cfg.tradeStatuses) : null,
-    trade_postcard_copy_json: cfg.tradePostcardCopy ? JSON.stringify(cfg.tradePostcardCopy) : null,
-    companycam_key: cfg.companyCamKey||null,
-    qb_access_token: cfg.qbAccessToken||null,
-    qb_refresh_token: cfg.qbRefreshToken||null,
-    qb_realm_id: cfg.qbRealmId||null
+    tax_rate: cfg.taxRate||0
   }).eq('id', currentAccount.id);
   if(syncErr) console.error('[BidDrop] syncAccountToSupabase error:', syncErr.message, syncErr);
   else console.log('[BidDrop] Account synced to Supabase OK');
+
+  // ── Build 10 columns: trade system + QB/CompanyCam (added via run-migration) ──
+  // Saved separately so a missing column doesn't break the core save above
+  const b10payload = {};
+  if(cfg.tradePricingJson !== undefined) b10payload.trade_pricing_json = cfg.tradePricingJson ? JSON.stringify(cfg.tradePricingJson) : null;
+  if(cfg.tradeStatuses !== undefined)    b10payload.trade_statuses_json = cfg.tradeStatuses ? JSON.stringify(cfg.tradeStatuses) : null;
+  if(cfg.tradePostcardCopy !== undefined) b10payload.trade_postcard_copy_json = cfg.tradePostcardCopy ? JSON.stringify(cfg.tradePostcardCopy) : null;
+  if(cfg.companyCamKey !== undefined)    b10payload.companycam_key = cfg.companyCamKey||null;
+  if(cfg.qbAccessToken !== undefined)    b10payload.qb_access_token = cfg.qbAccessToken||null;
+  if(cfg.qbRefreshToken !== undefined)   b10payload.qb_refresh_token = cfg.qbRefreshToken||null;
+  if(cfg.qbRealmId !== undefined)        b10payload.qb_realm_id = cfg.qbRealmId||null;
+  if(Object.keys(b10payload).length){
+    const {error: b10Err} = await sb.from('accounts').update(b10payload).eq('id', currentAccount.id);
+    if(b10Err) console.warn('[BidDrop] Build 10 columns not yet migrated (run Admin → Run Migration):', b10Err.message);
+  }
 }
 
 function accountRowToCfg(row){

@@ -119,6 +119,92 @@ export default async function handler(req, res) {
       sql: "ALTER TABLE estimates ADD COLUMN IF NOT EXISTS sig_name text"
     },
     {
+      name: 'accounts.drip_enabled',
+      check: "SELECT column_name FROM information_schema.columns WHERE table_name='accounts' AND column_name='drip_enabled'",
+      sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS drip_enabled boolean DEFAULT false"
+    },
+    {
+      name: 'accounts.company_bio',
+      check: "SELECT column_name FROM information_schema.columns WHERE table_name='accounts' AND column_name='company_bio'",
+      sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS company_bio text"
+    },
+    {
+      name: 'accounts.jn_api_key',
+      check: "SELECT column_name FROM information_schema.columns WHERE table_name='accounts' AND column_name='jn_api_key'",
+      sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS jn_api_key text"
+    },
+    {
+      name: 'accounts.jn_record_type',
+      check: "SELECT column_name FROM information_schema.columns WHERE table_name='accounts' AND column_name='jn_record_type'",
+      sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS jn_record_type text"
+    },
+    {
+      name: 'accounts.jn_status',
+      check: "SELECT column_name FROM information_schema.columns WHERE table_name='accounts' AND column_name='jn_status'",
+      sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS jn_status text"
+    },
+    // ── Build 10: Trade system + QB/CompanyCam + solar overlay ──
+    {
+      name: 'accounts.trade_pricing_json',
+      check: "SELECT column_name FROM information_schema.columns WHERE table_name='accounts' AND column_name='trade_pricing_json'",
+      sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS trade_pricing_json jsonb"
+    },
+    {
+      name: 'accounts.trade_statuses_json',
+      check: "SELECT column_name FROM information_schema.columns WHERE table_name='accounts' AND column_name='trade_statuses_json'",
+      sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS trade_statuses_json jsonb"
+    },
+    {
+      name: 'accounts.trade_postcard_copy_json',
+      check: "SELECT column_name FROM information_schema.columns WHERE table_name='accounts' AND column_name='trade_postcard_copy_json'",
+      sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS trade_postcard_copy_json jsonb"
+    },
+    {
+      name: 'accounts.companycam_key',
+      check: "SELECT column_name FROM information_schema.columns WHERE table_name='accounts' AND column_name='companycam_key'",
+      sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS companycam_key text"
+    },
+    {
+      name: 'accounts.qb_access_token',
+      check: "SELECT column_name FROM information_schema.columns WHERE table_name='accounts' AND column_name='qb_access_token'",
+      sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS qb_access_token text"
+    },
+    {
+      name: 'accounts.qb_refresh_token',
+      check: "SELECT column_name FROM information_schema.columns WHERE table_name='accounts' AND column_name='qb_refresh_token'",
+      sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS qb_refresh_token text"
+    },
+    {
+      name: 'accounts.qb_realm_id',
+      check: "SELECT column_name FROM information_schema.columns WHERE table_name='accounts' AND column_name='qb_realm_id'",
+      sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS qb_realm_id text"
+    },
+    {
+      name: 'pins.ghl_synced_at',
+      check: "SELECT column_name FROM information_schema.columns WHERE table_name='pins' AND column_name='ghl_synced_at'",
+      sql: "ALTER TABLE pins ADD COLUMN IF NOT EXISTS ghl_synced_at timestamptz"
+    },
+    {
+      name: 'pins.ghl_sync_error',
+      check: "SELECT column_name FROM information_schema.columns WHERE table_name='pins' AND column_name='ghl_sync_error'",
+      sql: "ALTER TABLE pins ADD COLUMN IF NOT EXISTS ghl_sync_error text"
+    },
+    {
+      name: 'pins.solar_kw',
+      check: "SELECT column_name FROM information_schema.columns WHERE table_name='pins' AND column_name='solar_kw'",
+      sql: "ALTER TABLE pins ADD COLUMN IF NOT EXISTS solar_kw numeric"
+    },
+    {
+      name: 'pins.solar_potential',
+      check: "SELECT column_name FROM information_schema.columns WHERE table_name='pins' AND column_name='solar_potential'",
+      sql: "ALTER TABLE pins ADD COLUMN IF NOT EXISTS solar_potential text"
+    },
+    {
+      name: 'estimates.qb_invoice_id',
+      check: "SELECT column_name FROM information_schema.columns WHERE table_name='estimates' AND column_name='qb_invoice_id'",
+      sql: "ALTER TABLE estimates ADD COLUMN IF NOT EXISTS qb_invoice_id text"
+    },
+    {
       name: 'campaign_targets_table',
       check: "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name='campaign_targets'",
       sql: `CREATE TABLE IF NOT EXISTS campaign_targets (
