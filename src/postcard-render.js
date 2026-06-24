@@ -82,10 +82,7 @@ async function pcPreviewRefresh(){
   const spinner=document.getElementById('pc-preview-spinner');
   if(spinner) spinner.style.display='block';
   try{
-    const design=tmpCfg.postcardDesign||'1';
-    const frontDataUrl=design==='2'
-      ? await renderPostcard6x9FrontCanvasD2(sampleItem)
-      : await renderPostcard6x9FrontCanvas(sampleItem);
+    const frontDataUrl = await renderFrontCanvasForDesign(sampleItem, tmpCfg.postcardDesign||'1');
     const backDataUrl=await renderPostcard6x9BackCanvas(sampleItem);
     // Render into preview canvases
     function renderToCanvas(canvasId,dataUrl){

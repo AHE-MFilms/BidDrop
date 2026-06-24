@@ -53,7 +53,8 @@ function openSettings(){
   const _pcDes=c.postcardDesign||'1';
   const _pcDesEl=document.getElementById('s-pc-design-'+_pcDes);
   if(_pcDesEl)_pcDesEl.checked=true;
-  document.getElementById('s-pc-d1-fields').style.display=_pcDes==='2'?'none':'';
+  const _isBuiltinTpl=['t3','t4','t5','t6'].includes(_pcDes);
+  document.getElementById('s-pc-d1-fields').style.display=(_pcDes==='2'||_isBuiltinTpl)?'none':'';
   document.getElementById('s-pc-d2-fields').style.display=_pcDes==='2'?'':'none';
   document.getElementById('s-pc-d2-topline').value=c.postcardD2TopLine||'';
   document.getElementById('s-pc-d2-accent').value=c.postcardD2Accent||'';
@@ -347,7 +348,8 @@ function openSettings(){
     r.removeEventListener('change',r._pcDesignHandler||null);
     r._pcDesignHandler=()=>{
       const v=document.querySelector('input[name="pc-design"]:checked')?.value||'1';
-      document.getElementById('s-pc-d1-fields').style.display=v==='2'?'none':'';
+      const _isB=['t3','t4','t5','t6'].includes(v);
+      document.getElementById('s-pc-d1-fields').style.display=(v==='2'||_isB)?'none':'';
       document.getElementById('s-pc-d2-fields').style.display=v==='2'?'':'';
     };
     r.addEventListener('change',r._pcDesignHandler);

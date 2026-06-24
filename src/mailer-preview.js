@@ -781,9 +781,8 @@ async function _showPostcardCanvasModal(modalId, ownerLabel, addrLabel, item){
   document.addEventListener('keydown', _esc);
 
   // Render canvases
-  const _useDes2 = (S.cfg&&S.cfg.postcardDesign)==='2';
   const [frontDataUrl, backDataUrl] = await Promise.all([
-    _useDes2 ? renderPostcard6x9FrontCanvasD2(item) : renderPostcard6x9FrontCanvas(item),
+    renderFrontCanvasForDesign(item),
     renderPostcard6x9BackCanvas(item)
   ]);
 
@@ -868,9 +867,8 @@ async function _refreshPostcardPreview(){
   if(frontFrame) frontFrame.style.opacity='0.4';
   if(backFrame)  backFrame.style.opacity='0.4';
 
-  const _estUseDes2 = (S.cfg&&S.cfg.postcardDesign)==='2';
   const [frontDataUrl, backDataUrl] = await Promise.all([
-    _estUseDes2 ? renderPostcard6x9FrontCanvasD2(fakeItem) : renderPostcard6x9FrontCanvas(fakeItem),
+    renderFrontCanvasForDesign(fakeItem),
     renderPostcard6x9BackCanvas(fakeItem)
   ]);
 

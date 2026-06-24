@@ -1043,9 +1043,8 @@ async function sendLobPostcard6x9(id){
   try{
     const ts=Date.now();
     const acctId=(currentAccount&&currentAccount.id)||'shared';
-    const _lobUseDes2 = (S.cfg&&S.cfg.postcardDesign)==='2';
     const [fDataUrl,bDataUrl]=await Promise.all([
-      _lobUseDes2 ? renderPostcard6x9FrontCanvasD2(syntheticItem) : renderPostcard6x9FrontCanvas(syntheticItem),
+      renderFrontCanvasForDesign(syntheticItem),
       renderPostcard6x9BackCanvas(syntheticItem)
     ]);
     if(!fDataUrl||!bDataUrl){toast('Failed to render postcard images','error');return;}
