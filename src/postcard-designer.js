@@ -107,7 +107,7 @@ function pdGetVal(key) {
     website:     () => S.cfg.website        || '',
     accentColor: () => S.cfg.tplAccentColor || '#F25C05',
     heroImage:   () => PD.heroDataUrl       || S.cfg.tplHeroUrl || null,
-    logo:        () => PD.logoDataUrl       || S.cfg.logoUrl    || null,
+    logo:        () => PD.logoDataUrl       || S.cfg.logoData   || null,
   };
   return map[key] ? map[key]() : '';
 }
@@ -251,11 +251,10 @@ function pdFrontHtml(id) {
   const accent = cfg.tplAccentColor || (PD_TEMPLATES[id] && PD_TEMPLATES[id].accentDefault) || '#F25C05';
   const phone = cfg.phone || '(555) 000-0000';
   const website = cfg.website || 'www.yourcompany.com';
-  const logoUrl = PD.logoDataUrl || cfg.logoUrl || null;
+   const logoUrl = PD.logoDataUrl || cfg.logoData || null;
   const heroUrl = PD.heroDataUrl || cfg.tplHeroUrl || null;
   const companyName = cfg.companyName || 'Your Company';
   const companyAddr = cfg.companyAddress || '';
-
   if (id === 't3') return pdFrontStorm(accent, phone, website, logoUrl, heroUrl, companyName, companyAddr, cfg);
   if (id === 't4') return pdFrontSolar(accent, phone, website, logoUrl, heroUrl, companyName, companyAddr, cfg);
   if (id === 't5') return pdFrontGutters(accent, phone, website, logoUrl, heroUrl, companyName, companyAddr, cfg);
@@ -459,7 +458,7 @@ function pdBackHtml() {
   const accent = cfg.tplAccentColor || '#F25C05';
   const phone = cfg.phone || '(555) 000-0000';
   const website = cfg.website || 'www.yourcompany.com';
-  const logoUrl = PD.logoDataUrl || cfg.logoUrl || null;
+  const logoUrl = PD.logoDataUrl || cfg.logoData || null;
   const companyName = cfg.companyName || 'Your Company';
   const hook = cfg.postcardHook || 'Your neighbors are talking about us.';
   const why = cfg.postcardWhy || 'We deliver quality roofing with a lifetime warranty.';
@@ -559,7 +558,7 @@ function pdRenderPropertiesPanel(zoneKey) {
       <label class="pd-prop-label">Logo</label>
       <div class="pd-upload-zone" onclick="pdTriggerLogoUpload()">
         <div style="font-size:18px;">🖼</div>
-        <div style="font-size:11px;color:var(--muted);">${PD.logoDataUrl || cfg.logoUrl ? 'Replace Logo' : 'Upload Logo'}</div>
+        <div style="font-size:11px;color:var(--muted);">${PD.logoDataUrl || cfg.logoData ? 'Replace Logo' : 'Upload Logo'}</div>
         <div style="font-size:10px;color:var(--muted2);">PNG with transparency</div>
       </div>
       <input type="file" id="pd-logo-input" accept="image/*" style="display:none;" onchange="pdHandleLogoUpload(this)">
@@ -700,25 +699,29 @@ function pdHandleHeroUpload(input) {
   reader.readAsDataURL(file);
 }
 async function _pdUploadImage(file, type) {
+  // Use the same Supabase Storage path as the existing logo/headshot upload in photo.js
   try {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('type', type);
-    formData.append('accountId', S.cfg.accountId || '');
-    const res = await fetch('/api/admin?action=upload-postcard-image', {
-      method: 'POST',
-      headers: { 'x-admin-token': S.cfg.adminToken || '' },
-      body: formData,
-    });
-    if (!res.ok) return;
-    const data = await res.json();
-    if (data.url) {
-      if (type === 'logo') S.cfg.logoUrl = data.url;
-      else S.cfg.tplHeroUrl = data.url;
+    if (typeof uploadToStorage !== 'function') return; // not loaded yet
+    const acctId = (typeof currentAccount !== 'undefined' && currentAccount && currentAccount.id)
+                || (S && S.cfg && S.cfg.accountId) || 'shared';
+    const ext  = file.type === 'image/png' ? 'png' : 'jpg';
+    const mime = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+    const path = acctId + '/cfg/postcard-' + type + '.' + ext;
+    const url  = await uploadToStorage(file, path, 1200, 0.92, mime);
+    if (url) {
+      if (type === 'logo') {
+        S.cfg.logoData = url;   // same field used by Settings logo upload
+        PD.logoDataUrl = url;
+      } else {
+        S.cfg.tplHeroUrl = url;
+        PD.heroDataUrl   = url;
+      }
+      pdRenderPreview();
+      pdRenderPropertiesPanel(PD.selectedZone);
     }
   } catch(e) {
     // Non-fatal — local data URL still works for preview
-    console.warn('Image upload failed, using local preview only', e);
+    console.warn('Image upload to storage failed, using local preview only', e);
   }
 }
 
