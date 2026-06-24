@@ -7076,27 +7076,33 @@ function onPriceOverrideInput(){
 // ═══════════════════════════════
 let _pwaInstallEvent = null;
 
-// Detect iOS Safari (no beforeinstallprompt support)
+// Detect iOS Safari and standalone (installed) mode
 const _isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
-const _isInStandaloneMode = ('standalone' in navigator && navigator.standalone) ||
-  window.matchMedia('(display-mode: standalone)').matches;
+// Check standalone at call-time (not parse-time) to avoid iOS timing issues
+function _isStandalone(){
+  return !!navigator.standalone ||
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.matchMedia('(display-mode: fullscreen)').matches;
+}
 
 // Capture the browser's install prompt on Chrome/Edge/Android
 window.addEventListener('beforeinstallprompt', e=>{
   e.preventDefault();
+  // Don't show if already running as installed app
+  if(_isStandalone()) return;
   _pwaInstallEvent = e;
-  // Show the header install button now that we have a prompt ready
   const btn = document.getElementById('pwa-hdr-btn');
   if(btn) btn.style.display = 'flex';
 });
 
-// On iOS Safari: show the button if not already installed
-if(_isIos && !_isInStandaloneMode){
-  document.addEventListener('DOMContentLoaded', ()=>{
+// iOS Safari: show button only if NOT already in standalone mode
+// Use DOMContentLoaded so the DOM is ready, and re-check standalone at that point
+document.addEventListener('DOMContentLoaded', ()=>{
+  if(_isIos && !_isStandalone()){
     const btn = document.getElementById('pwa-hdr-btn');
     if(btn) btn.style.display = 'flex';
-  });
-}
+  }
+});
 
 // Hide the button once the app is installed
 window.addEventListener('appinstalled', ()=>{
@@ -7106,20 +7112,25 @@ window.addEventListener('appinstalled', ()=>{
 });
 
 function doPwaInstall(){
-  if(_isIos && !_isInStandaloneMode){
+  // Safety check: never show install UI if already running as installed app
+  if(_isStandalone()){
+    toast('BidDrop is already installed on your device.', 'info');
+    const btn = document.getElementById('pwa-hdr-btn');
+    if(btn) btn.style.display = 'none';
+    return;
+  }
+  if(_isIos){
     // iOS Safari — show manual instructions
     openM('m-ios-install');
     return;
   }
   if(!_pwaInstallEvent){
-    // Prompt already used or not available — nothing to do
-    toast('App is already installed or install is not available in this browser.', 'info');
+    toast('Install prompt not available. Try adding to home screen from your browser menu.', 'info');
     return;
   }
   _pwaInstallEvent.prompt();
   _pwaInstallEvent.userChoice.then(r=>{
     if(r.outcome==='accepted'){
-      document.getElementById('pwa-install-bar').style.display='none';
       const btn = document.getElementById('pwa-hdr-btn');
       if(btn) btn.style.display = 'none';
     }
