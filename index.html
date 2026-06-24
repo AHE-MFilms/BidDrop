@@ -485,7 +485,7 @@ tr:hover td{background:var(--card);}
   @keyframes sidebarSlideIn{from{transform:translateX(-100%)}to{transform:translateX(0)}}
   #bd-sidebar-scrim{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:8999;}
   #bd-sidebar-scrim.open{display:block;}
-  .main{margin-left:0;padding-bottom:62px;}
+  .main{margin-left:0;padding-bottom:0;height:calc(100dvh - 54px - 62px);max-height:calc(100dvh - 54px - 62px);overflow:hidden;}
   .map-panel{left:0!important;}
   #tab-map{flex-direction:column;position:relative;}
   #the-map{flex:1;width:100%;height:100%;}
@@ -609,7 +609,7 @@ tr:hover td{background:var(--card);}
   .bnav-btn span:not(.bicon){display:block;width:100%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.2;}
   .bnav-btn .bicon{font-size:20px;line-height:1;flex-shrink:0;}
   .bnav-btn.active{color:var(--accent);}
-  .main{padding-bottom:62px;}
+  .main{padding-bottom:0;height:calc(100dvh - 50px - 62px);max-height:calc(100dvh - 50px - 62px);overflow:hidden;}
   #tab-map{flex-direction:column;position:relative;}
   #the-map{flex:1;width:100%;height:100%;}
   .map-panel{position:fixed;bottom:62px;left:0;right:0;width:100%;height:72vh;border-left:none;border-top:1px solid var(--border);border-radius:16px 16px 0 0;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);z-index:1500;box-shadow:0 -12px 40px rgba(0,0,0,.7);}
@@ -1278,6 +1278,7 @@ tr:hover td{background:var(--card);}
         </div>
       </div>
             <div class="map-tip" id="map-tip">👆 Drop a pin → tap it → Measure This Roof</div>
+      <div id="campaign-filter-banner" style="display:none;align-items:center;gap:6px;padding:6px 11px;background:rgba(242,92,5,.1);border-bottom:1px solid rgba(242,92,5,.25);"></div>
       <div class="pin-list" id="pin-list"></div>
     </div>
   </div>
@@ -6471,7 +6472,22 @@ function bulkSendPinsToFollowUp(){
 function renderPinList(){
   if(typeof updateFabBadge==='function') updateFabBadge();
   const el=document.getElementById('pin-list');
-  const list=getPinViewList((S.pins||[]).filter(p=>!p.deleted_at)); updatePinViewBadges();
+  // Campaign filter: when coming from "View Pins" on a campaign card
+  let basePins = (S.pins||[]).filter(p=>!p.deleted_at);
+  if(window._campaignPinFilter){
+    basePins = basePins.filter(p=>p.campaign_id===window._campaignPinFilter);
+    // Show a dismissible banner above the list
+    const bannerEl = document.getElementById('campaign-filter-banner');
+    if(bannerEl){
+      bannerEl.style.display='flex';
+      const addr = (basePins[0]&&basePins[0].address||(basePins[0]&&basePins[0].notes)||'campaign').split(',')[0];
+      bannerEl.innerHTML='<span style="flex:1;font-size:11px;color:var(--accent);font-weight:700;">📍 Showing '+basePins.length+' campaign pins</span><button onclick="window._campaignPinFilter=null;clearTimeout(window._campaignFilterTimer);document.getElementById(\'campaign-filter-banner\').style.display=\'none\';renderPinList()" style="background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:0 4px;">✕</button>';
+    }
+  } else {
+    const bannerEl = document.getElementById('campaign-filter-banner');
+    if(bannerEl) bannerEl.style.display='none';
+  }
+  const list=getPinViewList(basePins); updatePinViewBadges();
   // Show server-side total when available, otherwise fall back to loaded count
   const displayCount = totalPinCount > S.pins.length ? totalPinCount : S.pins.length;
   document.getElementById('pin-count').textContent = displayCount;
@@ -7798,16 +7814,33 @@ async function loadCampaignsTab(){
       return;
     }
 
+    // Build Part N suffix for campaigns sharing the same source address
+    const _addrCount = {};
+    // Process in chronological order (oldest first) to assign Part numbers correctly
+    const _sorted = campaigns.slice().sort((a,b)=>new Date(a.campaign_date)-new Date(b.campaign_date));
+    const _campPart = {};
+    _sorted.forEach(function(c){
+      const key = (c.source_address||'').toLowerCase().trim();
+      if(!key) return;
+      _addrCount[key] = (_addrCount[key]||0) + 1;
+      _campPart[c.id] = _addrCount[key];
+    });
     const rows = campaigns.map(function(c){
       const d = new Date(c.campaign_date);
       const dateStr = d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
       const statusColor = c.status==='active'?'var(--accent)':c.status==='completed'?'#22C55E':'var(--muted)';
       const pct = c.home_count ? Math.round((c.postcards_sent||0)/c.home_count*100) : 0;
       const barW = Math.min(pct,100);
+      // Campaign name: short address + Part N if there are multiple from same address
+      const addrKey = (c.source_address||'').toLowerCase().trim();
+      const totalForAddr = _addrCount[addrKey]||1;
+      const partNum = _campPart[c.id]||1;
+      const shortAddr = (c.source_address||'Unknown address').split(',')[0];
+      const campName = totalForAddr > 1 ? shortAddr + ' — Part ' + partNum : shortAddr;
       return `<div style="padding:16px 20px;border-bottom:1px solid var(--border);">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
           <div style="flex:1;min-width:200px;">
-            <div style="font-weight:700;color:var(--text);font-size:13px;margin-bottom:3px;">&#128205; ${escHtml(c.source_address||'Unknown address')}</div>
+            <div style="font-weight:700;color:var(--text);font-size:13px;margin-bottom:3px;">&#128205; ${escHtml(campName)}</div>
             <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">${dateStr} &middot; ${escHtml(c.rep_email||'')} &middot; <strong style="color:var(--text);">${c.home_count||0} homes</strong></div>
             <div style="display:flex;gap:16px;font-size:11px;flex-wrap:wrap;">
               <span style="color:#3B82F6;">&#8679; ${c.ghl_pushed||0} to GHL</span>
@@ -7835,7 +7868,7 @@ async function loadCampaignsTab(){
 }
 
 function campaignViewPins(campaignId){
-  // Switch to map and highlight campaign pins
+  // Switch to map tab
   goTab('map');
   setTimeout(function(){
     const campPins = S.pins.filter(p=>p.campaign_id===campaignId && !p.deleted_at);
@@ -7853,7 +7886,23 @@ function campaignViewPins(campaignId){
       const bounds = [[Math.min(...lats),Math.min(...lngs)],[Math.max(...lats),Math.max(...lngs)]];
       try{ map.fitBounds(bounds, {padding:[40,40]}); }catch(e){}
     }
-    toast('Showing '+campPins.length+' campaign pins on map','success');
+    // On mobile: open the pin panel and filter it to this campaign only
+    const panel = document.getElementById('map-panel');
+    const fab   = document.getElementById('fab-pins');
+    if(panel && !panel.classList.contains('open')){
+      panel.classList.add('open');
+      if(fab) fab.textContent = '✕';
+    }
+    // Set a campaign filter on the pin list so only these pins show
+    window._campaignPinFilter = campaignId;
+    renderPinList();
+    // Clear the filter after 30s so navigating away resets it
+    clearTimeout(window._campaignFilterTimer);
+    window._campaignFilterTimer = setTimeout(function(){
+      window._campaignPinFilter = null;
+      renderPinList();
+    }, 30000);
+    toast('Showing '+campPins.length+' campaign pins','success');
   }, 300);
 }
 
