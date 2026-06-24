@@ -698,6 +698,91 @@ module.exports = async function handler(req, res) {
         });
         break;
       }
+      // ── Estimate Reveal postcard ─────────────────────────────────────────────
+      case 'send-estimate-reveal': {
+        const ER_CREDITS = 1;
+        const { homeowner_name, address_line1, address_city, address_state, address_zip,
+                estimate_total, front_html, back_html, idem_key: erIdemKey } = req.body;
+        if (!front_html) { res.status(400).json({ error: 'front_html required' }); return; }
+        if (!_checkRate(`lob:${profile.account_id}`, 5, 10000)) {
+          res.status(429).json({ error: 'rate_limited', message: 'Too many postcard requests. Please wait a moment.' }); return;
+        }
+        if (erIdemKey && !_checkIdem(`${profile.account_id}:${erIdemKey}`)) {
+          res.status(200).json({ _duplicate: true, message: 'Duplicate request ignored.' }); return;
+        }
+        const erAcctRes = await sbFetch(`accounts?id=eq.${profile.account_id}&select=id,plan,mailer_credits,company_name,address,city,state,zip`);
+        if (!erAcctRes.ok) { res.status(500).json({ error: 'Failed to fetch account' }); return; }
+        const erAcctRows = await erAcctRes.json();
+        if (!erAcctRows.length) { res.status(404).json({ error: 'Account not found' }); return; }
+        const erAcct = erAcctRows[0];
+        const erPaid = erAcct.mailer_credits || 0;
+        if (erPaid < ER_CREDITS) {
+          res.status(402).json({
+            error: 'no_credits',
+            message: `Sending an Estimate Reveal postcard costs ${ER_CREDITS} credit ($4.00). You have ${erPaid} credits.`,
+            credits_needed: ER_CREDITS, credits_available: erPaid
+          }); return;
+        }
+        // Deduct credit before send
+        await sbFetch(`accounts?id=eq.${profile.account_id}`, {
+          method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ mailer_credits: erPaid - ER_CREDITS })
+        });
+        const fromParts = (erAcct.address || '').split(',');
+        const erLobRes = await fetch('https://api.lob.com/v1/postcards', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Basic ' + Buffer.from(LOB_KEY + ':').toString('base64'),
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            description: 'Estimate Reveal — ' + (homeowner_name || address_line1),
+            to: {
+              name: homeowner_name || 'Homeowner',
+              address_line1, address_city, address_state, address_zip, address_country: 'US'
+            },
+            from: {
+              name: erAcct.company_name || 'BidDrop Company',
+              address_line1: fromParts[0] || '123 Main St',
+              address_city: erAcct.city || 'City',
+              address_state: erAcct.state || 'MI',
+              address_zip: erAcct.zip || '48000',
+              address_country: 'US'
+            },
+            front: '<html>' + front_html,
+            back: '<html>' + (back_html || front_html),
+            size: '6x9',
+            use_type: 'marketing'
+          })
+        });
+        const erLobData = await erLobRes.json();
+        if (!erLobRes.ok) {
+          // Refund credit
+          await sbFetch(`accounts?id=eq.${profile.account_id}`, {
+            method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ mailer_credits: erPaid })
+          });
+          res.status(200).json({ error: erLobData.error || erLobData, _lobStatus: erLobRes.status }); return;
+        }
+        // Log to mailer_log
+        await sbFetch('mailer_log', {
+          method: 'POST', headers: { 'Prefer': 'return=minimal' },
+          body: JSON.stringify({
+            account_id: profile.account_id,
+            sent_by: profile.id || null,
+            address: `${address_line1}, ${address_city}, ${address_state} ${address_zip}`,
+            owner_name: homeowner_name || 'Homeowner',
+            estimate_total: estimate_total || 0,
+            lob_id: erLobData.id,
+            company_name: erAcct.company_name || '',
+            mailer_type: 'estimate-reveal',
+            sent_at: new Date().toISOString()
+          })
+        });
+        res.status(200).json({ ...erLobData, _credits: { paid_credits: erPaid - ER_CREDITS } });
+        break;
+      }
+
       // ── Lob letter proxy ──────────────────────────────────────────────────
       case 'lob-letter': {
         const LETTER_CREDITS = 1; // 1 credit = $4.00 = 1 letter

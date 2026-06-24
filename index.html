@@ -5298,6 +5298,7 @@ tr:hover td{background:var(--card);}
   <script src="/src/trades.js"></script>
   <script src="/src/photo.js"></script>
   <script src="/src/mail-queue.js"></script>
+  <script src="/src/estimate-reveal.js"></script>
   <script src="/src/admin-panel.js"></script>
   <script src="/src/agency.js"></script>
   <script src="/src/mailer-preview.js"></script>
@@ -9448,6 +9449,66 @@ function openCampaignQRStats(campaignId) {
 
 
 
+
+<!-- ── Estimate Reveal Postcard Modal ── -->
+<div id="m-est-reveal" class="overlay" style="display:none;z-index:25500;align-items:flex-start;padding-top:max(env(safe-area-inset-top,0px),20px);overflow-y:auto;" onclick="if(event.target===this)closeM('m-est-reveal')">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;width:min(820px,96vw);margin:auto;box-shadow:0 24px 60px rgba(0,0,0,.6);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <div>
+        <div style="font-family:var(--font-h);font-size:19px;font-weight:700;letter-spacing:.6px;">📋 Send Estimate Reveal Postcard</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">Personalized postcard mailed directly to the homeowner with their price</div>
+      </div>
+      <button onclick="closeM('m-est-reveal')" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;">✕</button>
+    </div>
+    <!-- Homeowner summary strip -->
+    <div id="er-summary" style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+      <div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px;">Homeowner</div><div id="er-owner" style="font-size:14px;font-weight:700;color:var(--text);">—</div></div>
+      <div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px;">Address</div><div id="er-addr" style="font-size:13px;color:var(--mid);">—</div></div>
+      <div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px;">Estimate Total</div><div id="er-total" style="font-size:18px;font-weight:800;color:var(--accent);">—</div></div>
+    </div>
+    <!-- Two-column: preview left, options right -->
+    <div style="display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start;">
+      <!-- Postcard preview -->
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">Postcard Preview</div>
+        <div id="er-card-preview" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;overflow:hidden;aspect-ratio:9/5.5;display:flex;align-items:center;justify-content:center;">
+          <div style="font-size:12px;color:var(--muted);">Loading preview…</div>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:6px;text-align:center;">Front side · 6×4 postcard · Mailed via USPS First Class</div>
+      </div>
+      <!-- Options -->
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <!-- Delivery method -->
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">Delivery</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--card2);border:1px solid var(--border);border-radius:8px;cursor:pointer;">
+              <input type="radio" name="er-delivery" value="mail" checked style="accent-color:var(--accent);">
+              <div><div style="font-size:13px;font-weight:700;color:var(--text);">📬 Mail via USPS</div><div style="font-size:11px;color:var(--muted);">Printed & mailed by Lob · 1 credit</div></div>
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--card2);border:1px solid var(--border);border-radius:8px;cursor:pointer;">
+              <input type="radio" name="er-delivery" value="queue" style="accent-color:var(--accent);">
+              <div><div style="font-size:13px;font-weight:700;color:var(--text);">📋 Add to Mail Queue</div><div style="font-size:11px;color:var(--muted);">Review before sending · 0 credits now</div></div>
+            </label>
+          </div>
+        </div>
+        <!-- Personalization note -->
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">Personal Note <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></div>
+          <textarea id="er-note" rows="3" placeholder="e.g. Great meeting you today! Your estimate is ready." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:12px;resize:vertical;box-sizing:border-box;"></textarea>
+        </div>
+        <!-- Rep name override -->
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">Rep Name on Card</div>
+          <input id="er-rep" type="text" placeholder="Your name" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;box-sizing:border-box;">
+        </div>
+        <!-- Send button -->
+        <button id="er-send-btn" onclick="sendEstimateReveal()" style="background:var(--accent);border:none;border-radius:10px;padding:14px;color:#fff;font-family:var(--font-b);font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.5px;width:100%;">📬 Send Estimate Reveal Postcard</button>
+        <div id="er-status" style="font-size:12px;color:var(--muted);text-align:center;min-height:18px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ── CompanyCam Photos Modal ── -->
 <div id="m-companycam" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:26000;align-items:flex-start;justify-content:center;padding-top:max(env(safe-area-inset-top,0px),40px);overflow-y:auto;" onclick="if(event.target===this)closeM('m-companycam')">
