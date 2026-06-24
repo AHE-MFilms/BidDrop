@@ -614,7 +614,7 @@ tr:hover td{background:var(--card);}
   #the-map{flex:1;width:100%;height:100%;}
   .map-panel{position:fixed;bottom:62px;left:0;right:0;width:100%;height:72vh;border-left:none;border-top:1px solid var(--border);border-radius:16px 16px 0 0;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);z-index:1500;box-shadow:0 -12px 40px rgba(0,0,0,.7);}
   .map-panel.open{transform:translateY(0);}
-  .map-panel-drag{width:36px;height:4px;background:var(--muted);border-radius:2px;margin:10px auto 4px;cursor:pointer;opacity:.6;}
+  .map-panel-drag{width:48px;height:5px;background:var(--muted);border-radius:3px;margin:0 auto;padding:12px 0;box-sizing:content-box;cursor:grab;opacity:.7;touch-action:none;background-clip:content-box;}
   .map-tip{margin:4px 8px 8px;font-size:10px;}
   .fab-pins{position:absolute;bottom:14px;right:14px;z-index:1000;background:var(--accent);border:none;border-radius:50%;width:54px;height:54px;font-size:24px;cursor:pointer;box-shadow:0 4px 20px rgba(242,92,5,.55);display:flex !important;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;}
   .map-toolbar{flex-direction:row;flex-wrap:wrap;justify-content:center;top:10px;left:4px;right:4px;transform:none;width:auto;gap:5px;}
@@ -1222,7 +1222,7 @@ tr:hover td{background:var(--card);}
     </div>
     <button class="fab-pins" onclick="togglePinPanel()" id="fab-pins" style="display:none;">📍</button>
     <div class="map-panel" id="map-panel">
-      <div class="map-panel-drag" onclick="togglePinPanel()"></div>
+      <div class="map-panel-drag" id="map-panel-drag" onclick="togglePinPanel()"></div>
       <div class="mp-hdr">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
           <div class="mp-title" style="margin:0;">
@@ -9003,5 +9003,50 @@ function openCampaignQRStats(campaignId) {
     </div>
   </div>
 </div>
+<script>
+// ── Map panel swipe-to-close gesture ──────────────────────────────────────
+// Lets users drag the pill handle down to close the bottom sheet on mobile
+(function(){
+  var drag, panel, startY, startT, dragging, panelH;
+  function init(){
+    drag  = document.getElementById('map-panel-drag');
+    panel = document.getElementById('map-panel');
+    if(!drag||!panel) return;
+    drag.addEventListener('touchstart', onStart, {passive:true});
+    drag.addEventListener('touchmove',  onMove,  {passive:false});
+    drag.addEventListener('touchend',   onEnd,   {passive:true});
+  }
+  function onStart(e){
+    startY   = e.touches[0].clientY;
+    startT   = Date.now();
+    dragging = false;
+    panelH   = panel.getBoundingClientRect().height;
+    panel.style.transition = 'none';
+  }
+  function onMove(e){
+    var dy = e.touches[0].clientY - startY;
+    if(dy < 0) return; // don't allow dragging up past open position
+    dragging = true;
+    e.preventDefault();
+    panel.style.transform = 'translateY('+dy+'px)';
+  }
+  function onEnd(e){
+    panel.style.transition = '';
+    panel.style.transform  = '';
+    if(!dragging) return; // let onclick handle quick taps
+    var dy = e.changedTouches[0].clientY - startY;
+    var dt = Date.now() - startT;
+    var isFlick = dt < 250 && dy > 30;
+    var isDrag  = dy > panelH * 0.25;
+    if(isFlick || isDrag){
+      panel.classList.remove('open');
+      var fab = document.getElementById('fab-pins');
+      if(fab) fab.textContent = '📍';
+    }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init);
+  else init();
+})();
+</script>
 </body>
 </html>
