@@ -601,6 +601,8 @@ tr:hover td{background:var(--card);}
   .hdr-actions{gap:4px;flex-shrink:0;}
   #credit-badge-btn{padding:3px 6px;gap:2px;flex-shrink:0;}
   #credit-badge-btn .credit-badge-text{display:none;}
+  #pwa-hdr-btn .pwa-btn-text{display:none;}
+  #pwa-hdr-btn{padding:3px 7px;gap:0;}
   #user-badge{min-width:34px;max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;padding:0 6px;}
   .logo{flex-shrink:0;}
   #ahe-logo-wrap{display:none;}
@@ -941,6 +943,29 @@ tr:hover td{background:var(--card);}
   <button id="pwa-install-btn" onclick="doPwaInstall()" style="background:var(--accent);border:none;border-radius:8px;padding:8px 16px;color:#fff;font-family:var(--font-b);font-size:12px;font-weight:700;cursor:pointer;">Install</button>
   <button onclick="document.getElementById('pwa-install-bar').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;">&times;</button>
 </div>
+<!-- iOS PWA Install Instructions Modal -->
+<div class="overlay" id="m-ios-install" style="display:none;" onclick="if(event.target===this)closeM('m-ios-install')">
+  <div class="modal" style="max-width:340px;text-align:center;">
+    <div style="font-size:40px;margin-bottom:10px;">📲</div>
+    <div class="modal-title" style="text-align:center;">Install BidDrop</div>
+    <div style="font-size:14px;color:var(--text);line-height:1.6;margin-bottom:18px;">
+      Add BidDrop to your home screen for the full app experience — works offline, loads instantly.
+    </div>
+    <div style="background:var(--card2);border-radius:10px;padding:14px 16px;text-align:left;margin-bottom:18px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <span style="font-size:22px;">1️⃣</span>
+        <span style="font-size:13px;color:var(--text);">Tap the <strong>Share</strong> button <span style="font-size:16px;">⬆️</span> at the bottom of Safari</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:22px;">2️⃣</span>
+        <span style="font-size:13px;color:var(--text);">Scroll down and tap <strong>"Add to Home Screen"</strong> <span style="font-size:16px;">➕</span></span>
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content:center;">
+      <button class="btn-cancel" onclick="closeM('m-ios-install')" style="min-width:120px;">Got it</button>
+    </div>
+  </div>
+</div>
 <div class="hdr">
   <div class="logo">
     <img src="/biddrop-wordmark.webp" alt="BidDrop" style="height:36px;max-width:160px;object-fit:contain;filter:drop-shadow(0 1px 4px rgba(242,92,5,.3));" id="app-brand-img">
@@ -1008,6 +1033,8 @@ tr:hover td{background:var(--card);}
     <span style="font-family:var(--font-b);font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.4px;white-space:nowrap;">Powered by <a href="https://AmericasHomeExperts.us" target="_blank" rel="noopener" style="color:var(--accent);font-weight:700;text-decoration:none;">America's Home Experts</a></span>
   </div>
   <div class="hdr-actions">
+    <!-- PWA Install App button — shown only when install prompt is available or on iOS -->
+    <button id="pwa-hdr-btn" onclick="doPwaInstall()" title="Install BidDrop as an app" style="display:none;background:rgba(242,92,5,.15);border:1px solid rgba(242,92,5,.4);border-radius:20px;padding:3px 10px;color:var(--accent);font-size:11px;font-weight:700;cursor:pointer;display:none;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;">📲 <span class="pwa-btn-text">Install App</span></button>
     <!-- Lookup credit badge -->
     <button id="credit-badge-btn" onclick="showBuyCreditsModal()" title="Lookup Credits" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:3px 10px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;">
       <span style="font-size:13px;">🔍</span>
@@ -7028,18 +7055,55 @@ function onPriceOverrideInput(){
 //  OFFLINE PIN QUEUE & PWA
 // ═══════════════════════════════
 let _pwaInstallEvent = null;
-// Suppress browser PWA install prompt — BidDrop is a web app, not a PWA install target
+
+// Detect iOS Safari (no beforeinstallprompt support)
+const _isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const _isInStandaloneMode = ('standalone' in navigator && navigator.standalone) ||
+  window.matchMedia('(display-mode: standalone)').matches;
+
+// Capture the browser's install prompt on Chrome/Edge/Android
 window.addEventListener('beforeinstallprompt', e=>{
   e.preventDefault();
-  _pwaInstallEvent = e; // keep reference in case we ever want to offer it intentionally
-  // Do NOT show the install bar
+  _pwaInstallEvent = e;
+  // Show the header install button now that we have a prompt ready
+  const btn = document.getElementById('pwa-hdr-btn');
+  if(btn) btn.style.display = 'flex';
 });
+
+// On iOS Safari: show the button if not already installed
+if(_isIos && !_isInStandaloneMode){
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const btn = document.getElementById('pwa-hdr-btn');
+    if(btn) btn.style.display = 'flex';
+  });
+}
+
+// Hide the button once the app is installed
+window.addEventListener('appinstalled', ()=>{
+  const btn = document.getElementById('pwa-hdr-btn');
+  if(btn) btn.style.display = 'none';
+  _pwaInstallEvent = null;
+});
+
 function doPwaInstall(){
-  if(!_pwaInstallEvent) return;
+  if(_isIos && !_isInStandaloneMode){
+    // iOS Safari — show manual instructions
+    openM('m-ios-install');
+    return;
+  }
+  if(!_pwaInstallEvent){
+    // Prompt already used or not available — nothing to do
+    toast('App is already installed or install is not available in this browser.', 'info');
+    return;
+  }
   _pwaInstallEvent.prompt();
   _pwaInstallEvent.userChoice.then(r=>{
-    if(r.outcome==='accepted') document.getElementById('pwa-install-bar').style.display='none';
-    _pwaInstallEvent=null;
+    if(r.outcome==='accepted'){
+      document.getElementById('pwa-install-bar').style.display='none';
+      const btn = document.getElementById('pwa-hdr-btn');
+      if(btn) btn.style.display = 'none';
+    }
+    _pwaInstallEvent = null;
   });
 }
 // Real connectivity probe — navigator.onLine is unreliable on some devices/networks
