@@ -127,7 +127,30 @@ for (const htmlFile of HTML_FILES) {
   console.log(status);
 }
 
-// ─── 2. Obfuscate sw.js ───────────────────────────────────────────────────────
+// ─── 2. Obfuscate src/*.js ──────────────────────────────────────────────────
+console.log('\n🔐 Processing src/ files...');
+if (fs.existsSync('src')) {
+  if (!fs.existsSync('dist/src')) fs.mkdirSync('dist/src', { recursive: true });
+  const srcFiles = fs.readdirSync('src').filter(f => f.endsWith('.js'));
+  for (const srcFile of srcFiles) {
+    const srcPath = path.join('src', srcFile);
+    const destPath = path.join('dist', 'src', srcFile);
+    process.stdout.write(`  src/${srcFile} ... `);
+    const src = fs.readFileSync(srcPath, 'utf8');
+    const obfuscated = tryObfuscate(src, BASE_OPTIONS);
+    if (obfuscated) {
+      fs.writeFileSync(destPath, obfuscated, 'utf8');
+      obfuscatedCount++;
+      console.log('✓');
+    } else {
+      fs.copyFileSync(srcPath, destPath);
+      fallbackCount++;
+      console.log('⚠️  (fallback — syntax check failed)');
+    }
+  }
+}
+
+// ─── 3. Obfuscate sw.js ───────────────────────────────────────────────────────
 console.log('\n⚙️  Processing sw.js...');
 if (fs.existsSync('sw.js')) {
   const src = fs.readFileSync('sw.js', 'utf8');
@@ -143,7 +166,7 @@ if (fs.existsSync('sw.js')) {
   }
 }
 
-// ─── 3. Obfuscate api/*.js ────────────────────────────────────────────────────
+// ─── 4. Obfuscate api/*.js ────────────────────────────────────────────────────
 console.log('\n🔒 Processing api/ files...');
 const apiFiles = fs.readdirSync('api').filter(f => f.endsWith('.js') && !API_SKIP.has(f));
 for (const apiFile of apiFiles) {
