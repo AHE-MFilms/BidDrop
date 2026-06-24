@@ -132,6 +132,25 @@ function pdSetVal(key, value) {
   pdRenderPreview();
 }
 
+function pdSetLogoScale(val) {
+  PD.logoScale = val;
+  if(S && S.cfg) S.cfg.tplLogoScale = val;
+  PD.dirty = true;
+  // Update the size label live without full re-render
+  const lbl = document.querySelector('#pd-props-panel [data-pd-logo-scale-lbl]');
+  if(lbl) lbl.textContent = 'Size: ' + val + '%';
+  pdRenderPreview();
+}
+
+function pdSetHeroScale(val) {
+  PD.heroScale = val;
+  if(S && S.cfg) S.cfg.tplHeroScale = val;
+  PD.dirty = true;
+  const lbl = document.querySelector('#pd-props-panel [data-pd-hero-scale-lbl]');
+  if(lbl) lbl.textContent = 'Size: ' + val + '%';
+  pdRenderPreview();
+}
+
 /* ─── Open the designer (called when Designs tab is opened) ─── */
 function openPostcardDesigner() {
   PD.tplId = (S && S.cfg && S.cfg.postcardDesign) || '1';
@@ -251,14 +270,17 @@ function pdFrontHtml(id) {
   const accent = cfg.tplAccentColor || (PD_TEMPLATES[id] && PD_TEMPLATES[id].accentDefault) || '#F25C05';
   const phone = cfg.phone || '(555) 000-0000';
   const website = cfg.website || 'www.yourcompany.com';
-   const logoUrl = PD.logoDataUrl || cfg.logoData || null;
+  const logoUrl = PD.logoDataUrl || cfg.logoData || null;
   const heroUrl = PD.heroDataUrl || cfg.tplHeroUrl || null;
   const companyName = cfg.companyName || 'Your Company';
   const companyAddr = cfg.companyAddress || '';
-  if (id === 't3') return pdFrontStorm(accent, phone, website, logoUrl, heroUrl, companyName, companyAddr, cfg);
-  if (id === 't4') return pdFrontSolar(accent, phone, website, logoUrl, heroUrl, companyName, companyAddr, cfg);
-  if (id === 't5') return pdFrontGutters(accent, phone, website, logoUrl, heroUrl, companyName, companyAddr, cfg);
-  if (id === 't6') return pdFrontRoofing(accent, phone, website, logoUrl, heroUrl, companyName, companyAddr, cfg);
+  // Scale factors (100 = default, range 30-200)
+  const logoScale = PD.logoScale != null ? PD.logoScale : (cfg.tplLogoScale != null ? cfg.tplLogoScale : 100);
+  const heroScale = PD.heroScale != null ? PD.heroScale : (cfg.tplHeroScale != null ? cfg.tplHeroScale : 100);
+  if (id === 't3') return pdFrontStorm(accent, phone, website, logoUrl, heroUrl, companyName, companyAddr, cfg, logoScale, heroScale);
+  if (id === 't4') return pdFrontSolar(accent, phone, website, logoUrl, heroUrl, companyName, companyAddr, cfg, logoScale, heroScale);
+  if (id === 't5') return pdFrontGutters(accent, phone, website, logoUrl, heroUrl, companyName, companyAddr, cfg, logoScale, heroScale);
+  if (id === 't6') return pdFrontRoofing(accent, phone, website, logoUrl, heroUrl, companyName, companyAddr, cfg, logoScale, heroScale);
   // Designs 1 & 2 — show a placeholder
   return `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:var(--card2);">
     <div style="font-size:32px;">📋</div>
@@ -267,7 +289,7 @@ function pdFrontHtml(id) {
   </div>`;
 }
 
-function pdFrontStorm(accent, phone, website, logoUrl, heroUrl, companyName, addr, cfg) {
+function pdFrontStorm(accent, phone, website, logoUrl, heroUrl, companyName, addr, cfg, logoScale=100, heroScale=100) {
   const h1 = cfg.tplHeadline1 || 'YOU HAVE';
   const h2 = cfg.tplHeadline2 || 'WIND DAMAGE';
   const sub = cfg.tplSubhead || 'Should you make a claim? Our Advisors are insurance experts.';
@@ -275,7 +297,7 @@ function pdFrontStorm(accent, phone, website, logoUrl, heroUrl, companyName, add
   return `
     <div style="position:absolute;inset:0;background:linear-gradient(135deg,#1a0800 0%,#2d1200 60%,#1a0800 100%);"></div>
     ${heroUrl ? `<div data-zone="heroImage" class="pd-zone" style="position:absolute;top:0;right:0;width:52%;height:100%;cursor:pointer;overflow:hidden;" title="Click to replace hero image">
-      <img src="${heroUrl}" style="width:100%;height:100%;object-fit:cover;">
+      <img src="${heroUrl}" style="width:${heroScale}%;height:${heroScale}%;min-width:100%;min-height:100%;object-fit:cover;">
       <div style="position:absolute;inset:0;background:linear-gradient(to right,#1a0800 0%,rgba(26,8,0,.5) 30%,transparent 60%);"></div>
       <div class="pd-zone-hint">📷 Replace Image</div>
     </div>` : `<div data-zone="heroImage" class="pd-zone" style="position:absolute;top:0;right:0;width:52%;height:100%;background:linear-gradient(135deg,#2d1a0a,#4a2a10);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;" title="Click to upload hero image">
@@ -311,7 +333,7 @@ function pdFrontStorm(accent, phone, website, logoUrl, heroUrl, companyName, add
   `;
 }
 
-function pdFrontSolar(accent, phone, website, logoUrl, heroUrl, companyName, addr, cfg) {
+function pdFrontSolar(accent, phone, website, logoUrl, heroUrl, companyName, addr, cfg, logoScale=100, heroScale=100) {
   const h1 = cfg.tplHeadline1 || 'YOUR HOME IS';
   const h2 = cfg.tplHeadline2 || 'SOLAR READY';
   const sub = cfg.tplSubhead || 'Save up to 80% on your energy bills with a custom solar system.';
@@ -322,7 +344,7 @@ function pdFrontSolar(accent, phone, website, logoUrl, heroUrl, companyName, add
   return `
     <div style="position:absolute;inset:0;background:linear-gradient(160deg,#0a1628 0%,#0d2040 100%);"></div>
     ${heroUrl ? `<div data-zone="heroImage" class="pd-zone" style="position:absolute;top:0;right:0;width:45%;height:100%;cursor:pointer;overflow:hidden;">
-      <img src="${heroUrl}" style="width:100%;height:100%;object-fit:cover;">
+      <img src="${heroUrl}" style="width:${heroScale}%;height:${heroScale}%;min-width:100%;min-height:100%;object-fit:cover;">
       <div style="position:absolute;inset:0;background:linear-gradient(to right,#0a1628 0%,rgba(10,22,40,.4) 30%,transparent 60%);"></div>
       <div class="pd-zone-hint">📷 Replace Image</div>
     </div>` : `<div data-zone="heroImage" class="pd-zone" style="position:absolute;top:0;right:0;width:45%;height:100%;background:linear-gradient(135deg,#0d2040,#1a3060);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;">
@@ -358,7 +380,7 @@ function pdFrontSolar(accent, phone, website, logoUrl, heroUrl, companyName, add
   `;
 }
 
-function pdFrontGutters(accent, phone, website, logoUrl, heroUrl, companyName, addr, cfg) {
+function pdFrontGutters(accent, phone, website, logoUrl, heroUrl, companyName, addr, cfg, logoScale=100, heroScale=100) {
   const h1 = cfg.tplHeadline1 || "DON'T FALL VICTIM TO";
   const h2 = cfg.tplHeadline2 || 'CLOGGED GUTTERS';
   const sub = cfg.tplSubhead || 'Protect your home from water damage with professional gutter cleaning and guards.';
@@ -369,7 +391,7 @@ function pdFrontGutters(accent, phone, website, logoUrl, heroUrl, companyName, a
   return `
     <div style="position:absolute;inset:0;background:#0f1a0f;"></div>
     ${heroUrl ? `<div data-zone="heroImage" class="pd-zone" style="position:absolute;top:0;right:0;width:48%;height:100%;cursor:pointer;overflow:hidden;">
-      <img src="${heroUrl}" style="width:100%;height:100%;object-fit:cover;">
+      <img src="${heroUrl}" style="width:${heroScale}%;height:${heroScale}%;min-width:100%;min-height:100%;object-fit:cover;">
       <div style="position:absolute;inset:0;background:linear-gradient(to right,#0f1a0f 0%,rgba(15,26,15,.3) 25%,transparent 50%);"></div>
       <div class="pd-zone-hint">📷 Replace Image</div>
     </div>` : `<div data-zone="heroImage" class="pd-zone" style="position:absolute;top:0;right:0;width:48%;height:100%;background:linear-gradient(135deg,#1a3a1a,#0f2a0f);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;">
@@ -383,7 +405,7 @@ function pdFrontGutters(accent, phone, website, logoUrl, heroUrl, companyName, a
       <div class="pd-zone-hint">✏️ Edit Headline</div>
     </div>
     <div data-zone="logo" class="pd-zone" style="position:absolute;top:30%;left:18px;cursor:pointer;">
-      ${logoUrl ? `<img src="${logoUrl}" style="max-height:30px;max-width:110px;object-fit:contain;">` : `<div style="background:rgba(255,255,255,.08);border:1.5px dashed rgba(255,255,255,.2);border-radius:5px;padding:3px 10px;font-size:11px;font-weight:900;color:${accent};">${companyName}</div>`}
+      ${logoUrl ? `<img src="${logoUrl}" style="max-height:${Math.round(30*logoScale/100)}px;max-width:${Math.round(110*logoScale/100)}px;object-fit:contain;">` : `<div style="background:rgba(255,255,255,.08);border:1.5px dashed rgba(255,255,255,.2);border-radius:5px;padding:3px 10px;font-size:11px;font-weight:900;color:${accent};">${companyName}</div>`}
       <div class="pd-zone-hint">🖼 Upload Logo</div>
     </div>
     <div data-zone="subhead" class="pd-zone" style="position:absolute;left:18px;top:48%;max-width:48%;cursor:pointer;">
@@ -405,7 +427,7 @@ function pdFrontGutters(accent, phone, website, logoUrl, heroUrl, companyName, a
   `;
 }
 
-function pdFrontRoofing(accent, phone, website, logoUrl, heroUrl, companyName, addr, cfg) {
+function pdFrontRoofing(accent, phone, website, logoUrl, heroUrl, companyName, addr, cfg, logoScale=100, heroScale=100) {
   const h1 = cfg.tplHeadline1 || 'FREE ROOF';
   const h2 = cfg.tplHeadline2 || 'INSPECTION';
   const sub = cfg.tplSubhead || 'We protect your biggest investment. Schedule your free inspection today.';
@@ -416,7 +438,7 @@ function pdFrontRoofing(accent, phone, website, logoUrl, heroUrl, companyName, a
   return `
     <div style="position:absolute;inset:0;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);"></div>
     ${heroUrl ? `<div data-zone="heroImage" class="pd-zone" style="position:absolute;top:0;right:0;width:48%;height:100%;cursor:pointer;overflow:hidden;">
-      <img src="${heroUrl}" style="width:100%;height:100%;object-fit:cover;">
+      <img src="${heroUrl}" style="width:${heroScale}%;height:${heroScale}%;min-width:100%;min-height:100%;object-fit:cover;">
       <div style="position:absolute;inset:0;background:linear-gradient(to right,#1a1a2e 0%,rgba(26,26,46,.3) 25%,transparent 50%);"></div>
       <div class="pd-zone-hint">📷 Replace Image</div>
     </div>` : `<div data-zone="heroImage" class="pd-zone" style="position:absolute;top:0;right:0;width:48%;height:100%;background:linear-gradient(135deg,#16213e,#1a2a4a);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;">
@@ -425,7 +447,7 @@ function pdFrontRoofing(accent, phone, website, logoUrl, heroUrl, companyName, a
     </div>`}
     <div style="position:absolute;right:52%;top:20%;width:50px;height:50px;background:${accent};clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);pointer-events:none;"></div>
     <div data-zone="logo" class="pd-zone" style="position:absolute;top:18px;left:18px;cursor:pointer;">
-      ${logoUrl ? `<img src="${logoUrl}" style="max-height:30px;max-width:110px;object-fit:contain;">` : `<div style="background:rgba(255,255,255,.08);border:1.5px dashed rgba(255,255,255,.2);border-radius:5px;padding:3px 10px;font-size:11px;font-weight:900;color:${accent};">${companyName}</div>`}
+      ${logoUrl ? `<img src="${logoUrl}" style="max-height:${Math.round(30*logoScale/100)}px;max-width:${Math.round(110*logoScale/100)}px;object-fit:contain;">` : `<div style="background:rgba(255,255,255,.08);border:1.5px dashed rgba(255,255,255,.2);border-radius:5px;padding:3px 10px;font-size:11px;font-weight:900;color:${accent};">${companyName}</div>`}
       <div class="pd-zone-hint">🖼 Upload Logo</div>
     </div>
     <div data-zone="headline1" class="pd-zone" style="position:absolute;left:18px;top:50%;transform:translateY(-55%);cursor:pointer;">
@@ -554,13 +576,31 @@ function pdRenderPropertiesPanel(zoneKey) {
         <input class="pd-prop-input" type="text" value="${accent}" oninput="pdSetVal('accentColor',this.value)" style="width:80px;">
       </div>
     </div>
-    <div class="pd-prop-row">
+    <div class="pd-prop-row" style="flex-direction:column;gap:8px;">
       <label class="pd-prop-label">Logo</label>
-      <div class="pd-upload-zone" onclick="pdTriggerLogoUpload()">
-        <div style="font-size:18px;">🖼</div>
-        <div style="font-size:11px;color:var(--muted);">${PD.logoDataUrl || cfg.logoData ? 'Replace Logo' : 'Upload Logo'}</div>
-        <div style="font-size:10px;color:var(--muted2);">PNG with transparency</div>
-      </div>
+      ${(()=>{
+        const logoSrc = PD.logoDataUrl || cfg.logoData || null;
+        const logoScale = PD.logoScale != null ? PD.logoScale : (cfg.tplLogoScale != null ? cfg.tplLogoScale : 100);
+        if(logoSrc){
+          return `<div style="display:flex;align-items:center;gap:10px;">
+            <img src="${logoSrc}" style="max-height:48px;max-width:120px;object-fit:contain;border-radius:4px;background:rgba(255,255,255,.06);padding:4px;border:1px solid var(--border);">
+            <div style="flex:1;">
+              <div data-pd-logo-scale-lbl style="font-size:10px;color:var(--muted);margin-bottom:4px;">Size: ${logoScale}%</div>
+              <input type="range" min="30" max="200" value="${logoScale}" oninput="pdSetLogoScale(+this.value)" style="width:100%;accent-color:var(--accent);cursor:pointer;">
+            </div>
+            <div class="pd-upload-zone" onclick="pdTriggerLogoUpload()" style="min-width:64px;padding:6px 8px;">
+              <div style="font-size:14px;">🔄</div>
+              <div style="font-size:9px;color:var(--muted);">Replace</div>
+            </div>
+          </div>`;
+        } else {
+          return `<div class="pd-upload-zone" onclick="pdTriggerLogoUpload()">
+            <div style="font-size:18px;">🖼</div>
+            <div style="font-size:11px;color:var(--muted);">Upload Logo</div>
+            <div style="font-size:10px;color:var(--muted2);">PNG with transparency · drag or click</div>
+          </div>`;
+        }
+      })()}
     </div>
   </div>`;
 
@@ -626,11 +666,29 @@ function pdRenderPropertiesPanel(zoneKey) {
   // Hero image
   html += `<div class="pd-prop-section ${activeFields.includes('heroImage') || !zoneKey ? '' : 'pd-prop-dim'}">
     <div class="pd-prop-title">Hero Image</div>
-    <div class="pd-upload-zone" onclick="pdTriggerHeroUpload()">
-      <div style="font-size:18px;">📷</div>
-      <div style="font-size:11px;color:var(--muted);">${PD.heroDataUrl || cfg.tplHeroUrl ? 'Replace Photo' : 'Upload Photo'}</div>
-      <div style="font-size:10px;color:var(--muted2);">JPG/PNG · right side of card</div>
-    </div>
+    ${(()=>{
+      const heroSrc = PD.heroDataUrl || cfg.tplHeroUrl || null;
+      const heroScale = PD.heroScale != null ? PD.heroScale : (cfg.tplHeroScale != null ? cfg.tplHeroScale : 100);
+      if(heroSrc){
+        return `<div style="display:flex;align-items:center;gap:10px;">
+          <img src="${heroSrc}" style="width:72px;height:52px;object-fit:cover;border-radius:4px;border:1px solid var(--border);flex-shrink:0;">
+          <div style="flex:1;">
+            <div data-pd-hero-scale-lbl style="font-size:10px;color:var(--muted);margin-bottom:4px;">Size: ${heroScale}%</div>
+            <input type="range" min="30" max="200" value="${heroScale}" oninput="pdSetHeroScale(+this.value)" style="width:100%;accent-color:var(--accent);cursor:pointer;">
+          </div>
+          <div class="pd-upload-zone" onclick="pdTriggerHeroUpload()" style="min-width:64px;padding:6px 8px;">
+            <div style="font-size:14px;">🔄</div>
+            <div style="font-size:9px;color:var(--muted);">Replace</div>
+          </div>
+        </div>`;
+      } else {
+        return `<div class="pd-upload-zone" onclick="pdTriggerHeroUpload()">
+          <div style="font-size:18px;">📷</div>
+          <div style="font-size:11px;color:var(--muted);">Upload Photo</div>
+          <div style="font-size:10px;color:var(--muted2);">JPG/PNG · right side of card · drag or click</div>
+        </div>`;
+      }
+    })()}
   </div>`;
 
   // Back copy (shown when on back side)
