@@ -6,6 +6,77 @@
 
 let _allAccounts = [];
 let _coSwitcherOpen = false;
+let _sbCoMenuOpen = false;
+let _sbCoAccounts = []; // mirrors _allAccounts for sidebar selector
+
+// ── SIDEBAR COMPANY SELECTOR (super_admin only) ───────────────────────────────
+function updateSbCoLabel(){
+  if(!isSuperAdmin()) return;
+  const lbl = document.getElementById('sb-co-label');
+  if(lbl) lbl.textContent = currentAccount ? (currentAccount.company_name||currentAccount.name||'Unknown') : 'Select company…';
+}
+
+function populateSbCoList(accounts){
+  const list = document.getElementById('sb-co-list');
+  if(!list) return;
+  list.innerHTML = accounts.map(a=>{
+    const isCurrent = currentAccount && currentAccount.id===a.id;
+    return '<button onclick="switchAccount(\''+a.id+'\');closeSbCoMenu()" style="display:block;width:100%;text-align:left;background:'+(isCurrent?'var(--accent-dim)':'none')+';border:none;border-bottom:1px solid var(--border);padding:9px 12px;color:var(--text);font-family:var(--font-b);font-size:11px;font-weight:'+(isCurrent?'700':'500')+';cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(isCurrent?'✓ ':'')+escHtml(a.company_name||a.name||a.id)+'</button>';
+  }).join('');
+}
+
+function filterSbCoMenu(){
+  const q = (document.getElementById('sb-co-search')?.value||'').toLowerCase().trim();
+  const filtered = q ? _sbCoAccounts.filter(a=>(a.company_name||a.name||'').toLowerCase().includes(q)) : _sbCoAccounts;
+  populateSbCoList(filtered);
+}
+
+function toggleSbCoMenu(){
+  const menu = document.getElementById('sb-co-menu');
+  if(!menu) return;
+  _sbCoMenuOpen = !_sbCoMenuOpen;
+  menu.style.display = _sbCoMenuOpen ? 'block' : 'none';
+  if(_sbCoMenuOpen){
+    const inp = document.getElementById('sb-co-search');
+    if(inp){ inp.value=''; inp.focus(); }
+    populateSbCoList(_sbCoAccounts);
+  }
+}
+
+function closeSbCoMenu(){
+  _sbCoMenuOpen = false;
+  const menu = document.getElementById('sb-co-menu');
+  if(menu) menu.style.display = 'none';
+}
+
+// Close sidebar menu on outside click
+document.addEventListener('click', function(e){
+  const sel = document.getElementById('sb-co-selector');
+  if(sel && !sel.contains(e.target)) closeSbCoMenu();
+});
+
+// ── MAP TOOLBAR TRADE VISIBILITY ─────────────────────────────────────────────
+function applyMapToolbarTrades(){
+  const et = (S && S.cfg && S.cfg.enabledTrades) || {roofing:true};
+  // Roofing-only buttons
+  const hasRoofing = et.roofing !== false;
+  const hasSolar   = !!et.solar;
+  // Measure Roof: show for roofing, solar, siding, gutters (any trade that involves structures)
+  const hasStructure = hasRoofing || hasSolar || !!et.siding || !!et.gutters || !!et.insulation;
+  const btnMeasure = document.getElementById('btn-measure');
+  if(btnMeasure) btnMeasure.style.display = hasStructure ? '' : 'none';
+  // Storm Events: show for roofing, gutters, siding (storm-damage trades)
+  const hasStormTrade = hasRoofing || !!et.gutters || !!et.siding;
+  const btnStorm = document.getElementById('btn-storm-toggle');
+  if(btnStorm) btnStorm.style.display = hasStormTrade ? '' : 'none';
+  // Home Age: show for roofing, gutters, siding, windows, doors (age-relevant trades)
+  const hasAgeTrade = hasRoofing || !!et.gutters || !!et.siding || !!et.windows || !!et.doors;
+  const btnAge = document.getElementById('btn-property-layer');
+  if(btnAge) btnAge.style.display = hasAgeTrade ? '' : 'none';
+  // Solar kW: show only for solar
+  const btnSolar = document.getElementById('solar-overlay-btn');
+  if(btnSolar) btnSolar.style.display = hasSolar ? '' : 'none';
+}
 
 async function initCoSwitcher(){
   if(!isSuperAdmin()) return;
@@ -14,12 +85,17 @@ async function initCoSwitcher(){
   if(wrap) wrap.style.display = 'flex';
   const coSub = document.getElementById('co-sub');
   if(coSub) coSub.style.display = 'none';
+  // Show sidebar company selector
+  const sbSel = document.getElementById('sb-co-selector');
+  if(sbSel) sbSel.style.display = 'block';
   // Fetch all accounts
-  const {data:accounts} = await sb.from('accounts').select('id,name,company_name').order('name',{ascending:true});
+  const {data:accounts} = await sb.from('accounts').select('id,name,company_name').order('company_name',{ascending:true});
   // Exclude the AHE master agency account from the switcher — it's the super_admin's own internal workspace
   _allAccounts = (accounts||[]).filter(a=>a.id!==AGENCY_ACCOUNT_ID);
+  _sbCoAccounts = _allAccounts;
   // Set current label
   updateCoSwitcherLabel();
+  updateSbCoLabel();
   // Populate list
   const list = document.getElementById('co-switcher-list');
   if(!list) return;
@@ -102,7 +178,11 @@ async function switchAccount(accountId){
       }
     }catch(_){}
   })();
-  toast('✅ Switched to '+escHtml(account.name||account.company_name||''),'success');
+  toast('✅ Switched to '+escHtml(account.company_name||account.name||''),'success');
+  // Update sidebar selector label
+  updateSbCoLabel();
+  // Refresh sidebar selector list checkmarks
+  populateSbCoList(_sbCoAccounts);
   // If the Settings tab is currently active, refresh it with the new account's data
   const settingsPane = document.getElementById('tab-settings');
   if(settingsPane && settingsPane.classList.contains('active')) renderSettingsTab();

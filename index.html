@@ -1073,6 +1073,23 @@ tr:hover td{background:var(--card);}
     </div>
   </div>
 
+  <!-- SUPER ADMIN: Company Selector — hidden for non-super-admins -->
+  <div id="sb-co-selector" style="display:none;padding:8px 12px 10px;border-bottom:1px solid var(--border);flex-shrink:0;">
+    <div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--accent);margin-bottom:5px;padding-left:2px;">🏢 Viewing Company</div>
+    <div style="position:relative;">
+      <button id="sb-co-btn" onclick="toggleSbCoMenu()" style="width:100%;background:var(--card2);border:1px solid var(--accent);border-radius:8px;padding:7px 30px 7px 10px;color:var(--text);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative;">
+        <span id="sb-co-label">Select company…</span>
+        <span style="position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:9px;opacity:.6;">&#9660;</span>
+      </button>
+      <div id="sb-co-menu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--card);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:9999;overflow:hidden;">
+        <div style="padding:6px 10px 4px;position:sticky;top:0;background:var(--card);border-bottom:1px solid var(--border);">
+          <input id="sb-co-search" oninput="filterSbCoMenu()" placeholder="Search companies…" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-family:var(--font-b);font-size:11px;outline:none;box-sizing:border-box;">
+        </div>
+        <div id="sb-co-list" style="max-height:220px;overflow-y:auto;"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- FIELD -->
   <div class="bd-sb-section">Field</div>
   <button class="bd-snav-item active" onclick="goTab('map')" data-nav="map"><span class="bd-snav-icon">🗺</span><span class="bd-snav-label">Canvass Map</span></button>

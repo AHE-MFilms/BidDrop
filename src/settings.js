@@ -692,6 +692,10 @@ function applyBrand(){
   }
   // Update switcher label if visible
   updateCoSwitcherLabel();
+  // Update sidebar company selector label
+  updateSbCoLabel();
+  // Show/hide trade-specific map toolbar buttons based on enabled trades
+  applyMapToolbarTrades();
 }
 
 function hexToRgba(hex,a){
