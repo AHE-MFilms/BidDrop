@@ -288,10 +288,11 @@ function filterAdminAccounts(){
       (a.notes?'<div style="font-size:10px;color:var(--muted);margin-top:4px;font-style:italic;">'+escHtml(a.notes)+'</div>':'')+
       buildAdminTradeChips(a)+
       '<div style="margin-top:4px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;">'+
+        '<button onclick="switchAccount(\''+a.id+'\');goTab(\'map\')" style="background:rgba(242,92,5,.18);border:1px solid rgba(242,92,5,.6);border-radius:5px;padding:3px 10px;color:var(--accent);font-size:10px;cursor:pointer;font-weight:700;" title="Switch to this company and take control">🔀 Switch To</button>'+
         '<button onclick="openAddUserModal(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\')" style="background:rgba(242,92,5,.12);border:1px solid rgba(242,92,5,.4);border-radius:5px;padding:3px 10px;color:var(--accent);font-size:10px;cursor:pointer;font-weight:700;">➕ Add User</button>'+
         '<button onclick="setAccountSlug(\''+a.id+'\',\''+escHtml(a.slug||'')+'\')" style="background:none;border:1px solid var(--border);border-radius:5px;padding:3px 10px;color:var(--muted);font-size:10px;cursor:pointer;font-weight:600;">🔗 Set Slug</button>'+
         (a.slug?'<a href="/q/'+a.slug+'" target="_blank" style="background:rgba(242,92,5,.1);border:1px solid rgba(242,92,5,.3);border-radius:5px;padding:3px 10px;color:var(--accent);font-size:10px;font-weight:600;text-decoration:none;">↗ /q/'+a.slug+'</a>':'') +
-        '<button onclick="toggleAccountActive(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\',' +(a.active!==false)+')" style="background:none;border:1px solid '+(a.active!==false?'#22C55E':'#6B7280')+';border-radius:5px;padding:3px 10px;color:'+(a.active!==false?'#22C55E':'#9CA3AF')+';font-size:10px;cursor:pointer;font-weight:600;">'+(a.active!==false?'⏸ Deactivate':'▶ Reactivate')+'</button>'+
+        '<button onclick="toggleAccountActive(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\','  +(a.active!==false)+')'  +' style="background:none;border:1px solid '+(a.active!==false?'#22C55E':'#6B7280')+';border-radius:5px;padding:3px 10px;color:'+(a.active!==false?'#22C55E':'#9CA3AF')+';font-size:10px;cursor:pointer;font-weight:600;">'+(a.active!==false?'⏸ Deactivate':'▶ Reactivate')+'</button>'+
         '<button onclick="toggleTracerfy(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\',' +(a.tracerfy_enabled?'true':'false')+')" style="background:none;border:1px solid '+(a.tracerfy_enabled?'#A78BFA':'#4B5563')+';border-radius:5px;padding:3px 10px;color:'+(a.tracerfy_enabled?'#A78BFA':'#9CA3AF')+';font-size:10px;cursor:pointer;font-weight:600;" title="Toggle Tracerfy skip-trace">'+(a.tracerfy_enabled?'📞 ON':'📞 OFF')+'</button>'+
         '<button onclick="deleteClientAccount(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\')" style="background:none;border:1px solid var(--danger);border-radius:5px;padding:3px 10px;color:var(--danger);font-size:10px;cursor:pointer;font-weight:600;margin-left:auto;">🗑 Delete</button>'+
       '</div>'+
@@ -368,11 +369,12 @@ function renderSuperAdminPanel(accounts, allProfiles){
         '</div>'+
         buildAdminTradeChips(a)+
         '<div style="margin-top:4px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;">'+
+          '<button onclick="switchAccount(\''+a.id+'\');goTab(\'map\')" style="background:rgba(242,92,5,.18);border:1px solid rgba(242,92,5,.6);border-radius:5px;padding:3px 10px;color:var(--accent);font-size:10px;cursor:pointer;font-weight:700;" title="Switch to this company and take control">🔀 Switch To</button>'+
           '<button onclick="openAddUserModal(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\')" style="background:rgba(242,92,5,.12);border:1px solid rgba(242,92,5,.4);border-radius:5px;padding:3px 10px;color:var(--accent);font-size:10px;cursor:pointer;font-weight:700;" title="Add user to this account">➕ Add User</button>'+
           '<button onclick="setAccountSlug(\''+a.id+'\',\''+escHtml(a.slug||'')+'\')" style="background:none;border:1px solid var(--border);border-radius:5px;padding:3px 10px;color:var(--muted);font-size:10px;cursor:pointer;font-weight:600;" title="Set quote page slug">🔗 Set Slug</button>'+
           (a.slug?'<a href="/q/'+a.slug+'" target="_blank" style="background:rgba(242,92,5,.1);border:1px solid rgba(242,92,5,.3);border-radius:5px;padding:3px 10px;color:var(--accent);font-size:10px;font-weight:600;text-decoration:none;">↗ /q/'+a.slug+'</a>':'') +
-          '<button onclick="toggleAccountActive(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\','+(a.active!==false)+'" style="background:none;border:1px solid '+(a.active!==false?'#22C55E':'#6B7280')+';border-radius:5px;padding:3px 10px;color:'+(a.active!==false?'#22C55E':'#9CA3AF')+';font-size:10px;cursor:pointer;font-weight:600;" title="'+(a.active!==false?'Deactivate account':'Reactivate account')+'">'+(a.active!==false?'⏸ Deactivate':'▶ Reactivate')+'</button>'+
-        '<button onclick="toggleTracerfy(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\',' +(a.tracerfy_enabled?'true':'false')+')" style="background:none;border:1px solid '+(a.tracerfy_enabled?'#A78BFA':'#4B5563')+';border-radius:5px;padding:3px 10px;color:'+(a.tracerfy_enabled?'#A78BFA':'#9CA3AF')+';font-size:10px;cursor:pointer;font-weight:600;" title="Toggle Tracerfy skip-trace">'+(a.tracerfy_enabled?'📞 ON':'📞 OFF')+'</button>'+
+          '<button onclick="toggleAccountActive(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\',' +(a.active!==false)+'" style="background:none;border:1px solid '+(a.active!==false?'#22C55E':'#6B7280')+';border-radius:5px;padding:3px 10px;color:'+(a.active!==false?'#22C55E':'#9CA3AF')+';font-size:10px;cursor:pointer;font-weight:600;" title="'+(a.active!==false?'Deactivate account':'Reactivate account')+'">'+(a.active!==false?'⏸ Deactivate':'▶ Reactivate')+'</button>'+
+        '<button onclick="toggleTracerfy(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\','  +(a.tracerfy_enabled?'true':'false')+')" style="background:none;border:1px solid '+(a.tracerfy_enabled?'#A78BFA':'#4B5563')+';border-radius:5px;padding:3px 10px;color:'+(a.tracerfy_enabled?'#A78BFA':'#9CA3AF')+';font-size:10px;cursor:pointer;font-weight:600;" title="Toggle Tracerfy skip-trace">'+(a.tracerfy_enabled?'📞 ON':'📞 OFF')+'</button>'+
         '<button onclick="deleteClientAccount(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\')" style="background:none;border:1px solid var(--danger);border-radius:5px;padding:3px 10px;color:var(--danger);font-size:10px;cursor:pointer;font-weight:600;margin-left:auto;" title="Delete account">🗑 Delete</button>'+
         '</div>'+
         '</div>';
@@ -915,19 +917,38 @@ async function deleteClientAccount(accountId, accountName){
 async function toggleAccountActive(accountId, accountName, currentlyActive){
   if(!isSuperAdmin()){ toast('Permission denied','error'); return; }
   const newState = !currentlyActive;
-  const action = newState ? 'reactivate' : 'deactivate';
-  if(!confirm((newState ? 'Reactivate' : 'Deactivate')+' "'+accountName+'"?\n\n'+(newState ? 'This will restore their access to BidDrop.' : 'Their data will be preserved but they will not be able to log in.'))){
-    return;
-  }
+  const isDeactivating = !newState;
+  const confirmMsg = isDeactivating
+    ? 'Deactivate "'+accountName+'"?\n\nThis will:\n• Mark the account inactive (they cannot log in)\n• Cancel their Stripe subscription at period end\n\nTheir data is preserved and can be reactivated.'
+    : 'Reactivate "'+accountName+'"?\n\nThis will restore their access to BidDrop.';
+  if(!confirm(confirmMsg)) return;
   try {
+    // 1. Update active flag in DB
     const {error} = await sb.from('accounts').update({active: newState}).eq('id', accountId);
     if(error) throw error;
+    // 2. If deactivating, cancel their Stripe subscription at period end
+    if(isDeactivating){
+      try {
+        const cancelResult = await adminAPI('cancel-stripe-subscription', { accountId });
+        if(cancelResult && cancelResult.subscription_id){
+          toast('⏸ Account deactivated + Stripe subscription cancelled at period end: '+accountName, 'success');
+        } else {
+          // No subscription found — just deactivated
+          toast('⏸ Account deactivated (no Stripe subscription found): '+accountName, 'success');
+        }
+      } catch(stripeErr){
+        // Stripe cancel failed — still deactivated in DB, warn super admin
+        console.warn('[toggleAccountActive] Stripe cancel failed:', stripeErr.message);
+        toast('⏸ Account deactivated, but Stripe cancel failed: '+stripeErr.message, 'error');
+      }
+    } else {
+      toast('✅ Account reactivated: '+accountName, 'success');
+    }
     // Update local cache
     if(_adminPanelData && _adminPanelData.clientAccounts){
       const acct = _adminPanelData.clientAccounts.find(a=>a.id===accountId);
       if(acct) acct.active = newState;
     }
-    toast((newState ? '✅ Account reactivated: ' : '⏸ Account deactivated: ')+accountName, 'success');
     renderAdminPanel();
   } catch(e){
     toast('❌ '+(e.message||'Could not update account status.'),'error');

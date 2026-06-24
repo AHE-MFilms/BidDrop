@@ -102,11 +102,7 @@ async function onSignedIn(user){
       history.replaceState({}, '', window.location.pathname);
       toast('Credit purchase cancelled.','info');
     }
-    // Show PWA install bar if prompt is ready
-    if(_pwaInstallEvent){
-      const bar = document.getElementById('pwa-install-bar');
-      if(bar) bar.style.display='flex';
-    }
+    // PWA install is now handled by the header button (#pwa-hdr-btn) — no banner needed
     // Mark app as fully initialized — prevents duplicate onSignedIn calls on token refresh
     _appInitialized = true;
     // Always open on the canvas map after login

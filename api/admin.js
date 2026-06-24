@@ -215,13 +215,14 @@ module.exports = async function handler(req, res) {
           res.status(200).json({ success: true, message: 'No Stripe subscription found — nothing to cancel.' });
           return;
         }
-        // Cancel the subscription immediately via Stripe API
+        // Cancel the subscription at period end (client keeps access until billing cycle ends)
         const stripeRes = await fetch(`https://api.stripe.com/v1/subscriptions/${subId}`, {
-          method: 'DELETE',
+          method: 'POST',
           headers: {
             'Authorization': `Basic ${Buffer.from(STRIPE_SECRET_KEY + ':').toString('base64')}`,
             'Content-Type': 'application/x-www-form-urlencoded'
-          }
+          },
+          body: 'cancel_at_period_end=true'
         });
         const stripeData = await stripeRes.json();
         if (!stripeRes.ok) {
