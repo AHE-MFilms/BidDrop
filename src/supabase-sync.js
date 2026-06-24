@@ -115,9 +115,13 @@ function _rowToPin(row){
     equityData: row.equity_data||null,
     ghlContactId: row.ghl_contact_id||null,
     ghlOpportunityId: row.ghl_opportunity_id||null,
+    ghlSyncedAt: row.ghl_synced_at||null,
+    ghlSyncError: row.ghl_sync_error||null,
     jnContactId: row.jn_contact_id||null,
     interested_trades: (est && est.interested_trades) || null,
-    contactData: row.contact_data || null
+    contactData: row.contact_data || null,
+    solarKw: row.solar_kw||null,
+    solarPotential: row.solar_potential||null
   };
 }
 

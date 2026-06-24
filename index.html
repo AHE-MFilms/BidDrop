@@ -1111,6 +1111,7 @@ tr:hover td{background:var(--card);}
       <button class="mtool-btn" id="btn-zones-toggle" onclick="toggleZonesOnMap()">🗂 Zones</button>
       <button class="mtool-btn" id="btn-storm-toggle" onclick="toggleStormEvents()">⛈ Storm Events</button>
       <button class="mtool-btn" id="btn-property-layer" onclick="togglePropertyLayer()" title="Color-code pins by home age (build year from RentCast — not actual roof age)">🏠 Home Age</button>
+      <button class="mtool-btn" id="solar-overlay-btn" onclick="toggleSolarOverlay()" title="Show solar kW potential overlay on pins with solar data">☀️ Solar kW</button>
     </div>
     <!-- Storm Events Panel -->
     <div id="storm-panel" style="display:none;position:absolute;top:12px;left:12px;z-index:2000;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;width:280px;box-shadow:0 4px 20px rgba(0,0,0,.5);">
@@ -2989,6 +2990,8 @@ tr:hover td{background:var(--card);}
       <button class="stab-tab" id="stab-tab-marketing" onclick="switchSettingsTab('marketing')">📬 Marketing</button>
       <button class="stab-tab" id="stab-tab-integrations" onclick="switchSettingsTab('integrations')">🔗 Integrations</button>
       <button class="stab-tab" id="stab-tab-billing" onclick="switchSettingsTab('billing')">💳 Billing</button>
+      <button class="stab-tab" id="stab-tab-trade-statuses" onclick="switchSettingsTab('trade-statuses')">🏷 Pipeline Labels</button>
+      <button class="stab-tab" id="stab-tab-trade-postcard" onclick="switchSettingsTab('trade-postcard')">📬 Trade Copy</button>
     </div>
 
     <!-- ══ TAB: PROFILE ══ -->
@@ -4652,6 +4655,39 @@ tr:hover td{background:var(--card);}
     </div>
 
     </div><!-- /stab-tab-pane billing -->
+
+    <!-- ══ TAB: TRADE STATUSES (Pipeline Labels) ══ -->
+    <div class="stab-tab-pane" id="stab-tabpane-trade-statuses">
+      <div class="stab-card stab-full" style="margin-top:14px;">
+        <div class="stab-card-hdr" onclick="toggleStabCard('trade-statuses')">
+          <span>🏷 Trade-Specific Pipeline Labels</span>
+          <span class="stab-chevron" id="stab-chevron-trade-statuses">▾</span>
+        </div>
+        <div class="stab-card-body" id="stab-body-trade-statuses">
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:13px;color:var(--mid);margin-bottom:16px;">
+            🏷 Customize the pin status labels for each trade. These labels appear on pin cards, filters, and the pipeline view. Leave blank to use the default label.
+          </div>
+          <div id="trade-statuses-accordion"></div>
+        </div>
+      </div>
+    </div><!-- /stab-tab-pane trade-statuses -->
+
+    <!-- ══ TAB: TRADE POSTCARD COPY ══ -->
+    <div class="stab-tab-pane" id="stab-tabpane-trade-postcard">
+      <div class="stab-card stab-full" style="margin-top:14px;">
+        <div class="stab-card-hdr" onclick="toggleStabCard('trade-postcard')">
+          <span>📬 Trade-Specific Postcard Copy</span>
+          <span class="stab-chevron" id="stab-chevron-trade-postcard">▾</span>
+        </div>
+        <div class="stab-card-body" id="stab-body-trade-postcard">
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:13px;color:var(--mid);margin-bottom:16px;">
+            📬 Set default postcard headlines and copy for each trade. When a postcard is generated for a trade-specific pin, these defaults will pre-fill the Marketing tab fields.
+          </div>
+          <div id="trade-postcard-accordion"></div>
+        </div>
+      </div>
+    </div><!-- /stab-tab-pane trade-postcard -->
+
     <!-- ── BOTTOM SAVE BUTTON ── -->
     <div style="display:flex;justify-content:center;gap:16px;padding:8px 0 24px;flex-shrink:0;">
       <button onclick="saveSettings()" class="stab-save-btn stab-save-lg">&#128190; Save Settings</button>

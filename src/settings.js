@@ -359,6 +359,9 @@ function openSettings(){
   if(billingCard) billingCard.style.display = (isAdminOrAbove() && !isSuperAdmin()) ? 'block' : 'none';
   // Load billing status (cancel_at_period_end, payment_failed)
   if(isAdminOrAbove() && !isSuperAdmin()) loadBillingStatus();
+  // Load trade-specific settings (Build 10)
+  if(typeof loadTradeStatusSettings === 'function') loadTradeStatusSettings();
+  if(typeof loadTradePostcardCopySettings === 'function') loadTradePostcardCopySettings();
 }
 function populateEmbedCard(){
   const slug = currentAccount && currentAccount.slug;
@@ -630,7 +633,19 @@ function saveSettings(){
     companyBio: (document.getElementById('s-bio')||{}).value || '',
     metaPixelId: (document.getElementById('s-meta-pixel-id')||{}).value || '',
     googleTagId: (document.getElementById('s-google-tag-id')||{}).value || '',
-    googlePlaceId: (document.getElementById('s-google-place-id')||{}).value || ''
+    googlePlaceId: (document.getElementById('s-google-place-id')||{}).value || '',
+    // ── Trade system (Build 10) ──
+    // tradePricingJson: built from all trade pricing fields above — persisted as JSONB blob
+    tradePricingJson: _buildTradePricingJson(),
+    // tradeStatuses: read from trade status settings UI
+    tradeStatuses: _readTradeStatuses(),
+    // tradePostcardCopy: read from trade postcard copy UI
+    tradePostcardCopy: _readTradePostcardCopy(),
+    // Preserve QB/CompanyCam tokens (not editable in Settings UI, set via dedicated flows)
+    companyCamKey: S.cfg.companyCamKey||null,
+    qbAccessToken: S.cfg.qbAccessToken||null,
+    qbRefreshToken: S.cfg.qbRefreshToken||null,
+    qbRealmId: S.cfg.qbRealmId||null
   };
   applyBrand();save();updatePreview();
   // Update solar add-on row visibility immediately after save

@@ -17,6 +17,9 @@ function switchSettingsTab(tab){
   if(btn) btn.classList.add('active');
   if(pane) pane.classList.add('active');
   try{ localStorage.setItem('bd_settings_tab', tab); }catch(e){}
+  // Render dynamic accordions on demand
+  if(tab === 'trade-statuses') renderTradeStatusAccordion();
+  if(tab === 'trade-postcard') renderTradePostcardAccordion();
 }
 function restoreSettingsTab(){
   try{
@@ -1071,3 +1074,373 @@ function toggleMailPreview(){
   if(!showing) setTimeout(()=>p.scrollIntoView({behavior:'smooth',block:'start'}),80);
 }
 
+
+// ════════════════════════════════════════════════════════════════════════════
+// TRADE SYSTEM HELPERS (Build 10)
+// ════════════════════════════════════════════════════════════════════════════
+
+// ── Default trade-specific pin status labels ──────────────────────────────────
+const TRADE_STATUS_DEFAULTS = {
+  roofing:    { needs_roof:'Needs Roof', interested:'Interested', contacted:'Contacted', quoted:'Quoted', signed:'Signed', converted:'Converted', not_interested:'Not Interested', lost:'Lost' },
+  solar:      { needs_roof:'Solar Prospect', interested:'Interested', contacted:'Contacted', quoted:'Proposal Sent', signed:'Contract Signed', converted:'Installed', not_interested:'Not Interested', lost:'Lost' },
+  gutters:    { needs_roof:'Needs Gutters', interested:'Interested', contacted:'Contacted', quoted:'Quoted', signed:'Signed', converted:'Installed', not_interested:'Not Interested', lost:'Lost' },
+  siding:     { needs_roof:'Needs Siding', interested:'Interested', contacted:'Contacted', quoted:'Quoted', signed:'Signed', converted:'Installed', not_interested:'Not Interested', lost:'Lost' },
+  windows:    { needs_roof:'Needs Windows', interested:'Interested', contacted:'Contacted', quoted:'Quoted', signed:'Signed', converted:'Installed', not_interested:'Not Interested', lost:'Lost' },
+  insulation: { needs_roof:'Needs Insulation', interested:'Interested', contacted:'Contacted', quoted:'Quoted', signed:'Signed', converted:'Installed', not_interested:'Not Interested', lost:'Lost' },
+  paint:      { needs_roof:'Needs Paint', interested:'Interested', contacted:'Contacted', quoted:'Quoted', signed:'Signed', converted:'Completed', not_interested:'Not Interested', lost:'Lost' },
+  doors:      { needs_roof:'Needs Doors', interested:'Interested', contacted:'Contacted', quoted:'Quoted', signed:'Signed', converted:'Installed', not_interested:'Not Interested', lost:'Lost' },
+  fencing:    { needs_roof:'Needs Fencing', interested:'Interested', contacted:'Contacted', quoted:'Quoted', signed:'Signed', converted:'Installed', not_interested:'Not Interested', lost:'Lost' },
+};
+
+// ── Default trade-specific postcard copy ──────────────────────────────────────
+const TRADE_POSTCARD_COPY_DEFAULTS = {
+  roofing:    { headline1:'We Assessed', headline2:'Your Roof.', hook:'Most homeowners dread the pushy roofing salesman. I do things differently — I lead with my price, no pressure, no games.', why:'We assessed your neighborhood and identified your home as a candidate for roof replacement.', quote:'"They replaced our roof in one day, no mess, no drama." — Mike D.', guarantee:'No door-knocking. No pressure. Just your price.' },
+  solar:      { headline1:'Go Solar,', headline2:'Save More.', hook:'The average homeowner saves $1,400/year with solar. We make it simple — no pushy sales, just your custom proposal.', why:'We assessed your home\'s roof orientation and sun exposure. Your property is a great candidate for solar panels.', quote:'"Our electric bill dropped to almost zero." — Sarah T.', guarantee:'Free solar assessment. No obligation.' },
+  gutters:    { headline1:'Protect', headline2:'Your Home.', hook:'Clogged or damaged gutters cause foundation damage, basement flooding, and rot. We\'ll give you a straight price — no games.', why:'We assessed your home and noticed your gutters may need attention. Proper gutters protect your foundation and landscaping.', quote:'"Fast install, great price, no mess left behind." — Tom R.', guarantee:'Free gutter assessment. No pressure.' },
+  siding:     { headline1:'New Siding,', headline2:'New Look.', hook:'Worn siding costs you money on energy bills and curb appeal. We lead with our price — no pressure, no games.', why:'We assessed your home and identified your siding as a candidate for replacement or repair.', quote:'"Our home looks brand new. Neighbors keep asking who did it." — Lisa M.', guarantee:'Free siding assessment. No obligation.' },
+  windows:    { headline1:'New Windows,', headline2:'Lower Bills.', hook:'Old windows leak energy and money. We give you a straight price — no pushy sales, no games.', why:'We assessed your home and identified windows that may be costing you on heating and cooling bills.', quote:'"The difference in our energy bill was immediate." — Dave K.', guarantee:'Free window assessment. No pressure.' },
+  insulation: { headline1:'Stay Warm,', headline2:'Spend Less.', hook:'Poor insulation is the #1 cause of high energy bills. We\'ll assess your home and give you a straight price.', why:'We assessed your neighborhood and identified homes that may be losing heat through inadequate attic insulation.', quote:'"Our heating bill dropped 30% after the insulation upgrade." — Carol B.', guarantee:'Free insulation assessment. No obligation.' },
+  paint:      { headline1:'Fresh Paint,', headline2:'Fresh Start.', hook:'Faded or peeling exterior paint hurts your home\'s value. We give you a straight price — no games, no pressure.', why:'We assessed your home and noticed your exterior paint may need attention to protect your siding and boost curb appeal.', quote:'"Our house looks incredible. Best money we\'ve spent." — James P.', guarantee:'Free exterior paint assessment. No pressure.' },
+  doors:      { headline1:'New Doors,', headline2:'Better Security.', hook:'Old doors leak energy and compromise security. We give you a straight price — no pushy sales, no games.', why:'We assessed your home and identified doors that may need replacement for better energy efficiency and security.', quote:'"The new front door completely transformed our home\'s look." — Amy S.', guarantee:'Free door assessment. No obligation.' },
+  fencing:    { headline1:'New Fence,', headline2:'More Privacy.', hook:'A quality fence adds privacy, security, and value to your home. We lead with our price — no games, no pressure.', why:'We assessed your property and identified your fencing as a candidate for replacement or new installation.', quote:'"Beautiful fence, installed in one day, great price." — Bob W.', guarantee:'Free fencing assessment. No pressure.' },
+};
+
+// ── Get status label for a pin, respecting trade-specific labels ──────────────
+function sLabelForTrade(status, trade){
+  if(!trade) return sLabel(status);
+  const tradeStatuses = S.cfg && S.cfg.tradeStatuses;
+  if(tradeStatuses && tradeStatuses[trade] && tradeStatuses[trade][status]){
+    return tradeStatuses[trade][status];
+  }
+  const defaults = TRADE_STATUS_DEFAULTS[trade];
+  if(defaults && defaults[status]) return defaults[status];
+  return sLabel(status);
+}
+
+// ── Get active trade for a pin (from its estimate's interested_trades) ────────
+function _getPinActiveTrade(pin){
+  if(!pin) return null;
+  const est = pin.estimate;
+  if(est && est.interested_trades && est.interested_trades.length) return est.interested_trades[0];
+  return null;
+}
+
+// ── Build trade pricing JSON blob from current S.cfg ─────────────────────────
+function _buildTradePricingJson(){
+  const c = S.cfg || {};
+  return {
+    // Solar
+    solarPricePerWatt: c.solarPricePerWatt, solarMinKw: c.solarMinKw, solarMaxKw: c.solarMaxKw,
+    solarInstallDays: c.solarInstallDays, solarBattery: c.solarBattery, solarPanelUpgrade: c.solarPanelUpgrade,
+    solarElecUpgrade: c.solarElecUpgrade, solarRoofReinforce: c.solarRoofReinforce,
+    solarFedCredit: c.solarFedCredit, solarStateRebate: c.solarStateRebate,
+    solarUtilityRebate: c.solarUtilityRebate, solarMonthlySavings: c.solarMonthlySavings,
+    solarOverhead: c.solarOverhead, solarMargin: c.solarMargin, solarTax: c.solarTax,
+    solarFinEnabled: c.solarFinEnabled, solarFinApr: c.solarFinApr, solarFinTerm: c.solarFinTerm,
+    // Fencing
+    fenWood: c.fenWood, fenVinyl: c.fenVinyl, fenChain: c.fenChain, fenAluminum: c.fenAluminum,
+    fenSplit: c.fenSplit, fenCedar: c.fenCedar,
+    fenWoodPlf: c.fenWoodPlf, fenVinylPlf: c.fenVinylPlf, fenChainPlf: c.fenChainPlf,
+    fenAlumPlf: c.fenAlumPlf, fenSplitPlf: c.fenSplitPlf, fenCedarPlf: c.fenCedarPlf,
+    fenGateSingle: c.fenGateSingle, fenGateDouble: c.fenGateDouble,
+    fenRemoval: c.fenRemoval, fenPostConcrete: c.fenPostConcrete,
+    fenOverhead: c.fenOverhead, fenMargin: c.fenMargin, fenTax: c.fenTax,
+    fenFinEnabled: c.fenFinEnabled, fenFinApr: c.fenFinApr, fenFinTerm: c.fenFinTerm,
+    // Siding
+    sidVinyl: c.sidVinyl, sidHardie: c.sidHardie, sidWood: c.sidWood, sidEngWood: c.sidEngWood,
+    sidMetal: c.sidMetal, sidStucco: c.sidStucco,
+    sidVinylPsf: c.sidVinylPsf, sidHardiePsf: c.sidHardiePsf, sidWoodPsf: c.sidWoodPsf,
+    sidEngWoodPsf: c.sidEngWoodPsf, sidMetalPsf: c.sidMetalPsf, sidStuccoPsf: c.sidStuccoPsf,
+    sidRemoval: c.sidRemoval, sidHousewrap: c.sidHousewrap, sidTrim: c.sidTrim,
+    sidCorners: c.sidCorners, sidWindowWrap: c.sidWindowWrap, sidInsulation: c.sidInsulation,
+    sidOverhead: c.sidOverhead, sidMargin: c.sidMargin, sidTax: c.sidTax,
+    sidFinEnabled: c.sidFinEnabled, sidFinApr: c.sidFinApr, sidFinTerm: c.sidFinTerm,
+    // Gutters
+    gutAlum5: c.gutAlum5, gutAlum6: c.gutAlum6, gutSeamless: c.gutSeamless, gutCopper: c.gutCopper,
+    gutHalfrnd: c.gutHalfrnd, gutVinyl: c.gutVinyl, gutGuard: c.gutGuard, gutDownspout: c.gutDownspout,
+    gutOverhead: c.gutOverhead, gutMargin: c.gutMargin, gutTax: c.gutTax,
+    gutFinEnabled: c.gutFinEnabled, gutFinApr: c.gutFinApr, gutFinTerm: c.gutFinTerm,
+    // Insulation
+    insBlownFg: c.insBlownFg, insBlownCell: c.insBlownCell, insFoamOpen: c.insFoamOpen,
+    insFoamClosed: c.insFoamClosed, insBattR13: c.insBattR13, insBattR19: c.insBattR19,
+    insRemoval: c.insRemoval, insAirsealing: c.insAirsealing, insVapor: c.insVapor, insHatch: c.insHatch,
+    insOverhead: c.insOverhead, insMargin: c.insMargin, insTax: c.insTax,
+    insFinEnabled: c.insFinEnabled, insFinApr: c.insFinApr, insFinTerm: c.insFinTerm,
+    // Paint
+    pntSiding1c: c.pntSiding1c, pntSiding2c: c.pntSiding2c, pntTrim1c: c.pntTrim1c, pntTrim2c: c.pntTrim2c,
+    pntDeck1c: c.pntDeck1c, pntDeck2c: c.pntDeck2c, pntMasonry: c.pntMasonry, pntGarageDoor: c.pntGarageDoor,
+    pntPowerwash: c.pntPowerwash, pntCaulk: c.pntCaulk, pntPrimer: c.pntPrimer, pntStain: c.pntStain,
+    pntOverhead: c.pntOverhead, pntMargin: c.pntMargin, pntTax: c.pntTax,
+    pntFinEnabled: c.pntFinEnabled, pntFinApr: c.pntFinApr, pntFinTerm: c.pntFinTerm,
+    // Doors
+    dorSteelEntry: c.dorSteelEntry, dorFiberEntry: c.dorFiberEntry, dorWoodEntry: c.dorWoodEntry,
+    dorDoubleEntry: c.dorDoubleEntry, dorStormStd: c.dorStormStd, dorStormFull: c.dorStormFull,
+    dorScreen: c.dorScreen, dorSliding: c.dorSliding, dorGarageSingle: c.dorGarageSingle,
+    dorGarageDouble: c.dorGarageDouble, dorGarageInsul: c.dorGarageInsul, dorOpener: c.dorOpener,
+    dorFrameRepair: c.dorFrameRepair, dorHardware: c.dorHardware, dorWeatherstrip: c.dorWeatherstrip,
+    dorPaint: c.dorPaint, dorOverhead: c.dorOverhead, dorMargin: c.dorMargin, dorTax: c.dorTax,
+    dorFinEnabled: c.dorFinEnabled, dorFinApr: c.dorFinApr, dorFinTerm: c.dorFinTerm,
+    // Windows
+    winDblHung: c.winDblHung, winCasement: c.winCasement, winPicture: c.winPicture,
+    winSliding: c.winSliding, winBay: c.winBay, winSkylight: c.winSkylight,
+    winStorm: c.winStorm, winEgress: c.winEgress,
+    winLowe: c.winLowe, winTriple: c.winTriple, winTrim: c.winTrim, winRemoval: c.winRemoval,
+    winCntSm: c.winCntSm, winCntMd: c.winCntMd, winCntLg: c.winCntLg, winCntXl: c.winCntXl,
+    winOverhead: c.winOverhead, winMargin: c.winMargin, winTax: c.winTax,
+  };
+}
+
+// ── Restore trade pricing from tradePricingJson blob (called after account load) ──
+function _restoreTradePricingFromJson(){
+  const blob = S.cfg && S.cfg.tradePricingJson;
+  if(!blob) return;
+  // Merge blob fields into S.cfg (only if the field is not already set from DB columns)
+  Object.assign(S.cfg, blob);
+}
+
+// ── Read trade statuses from Settings UI ─────────────────────────────────────
+function _readTradeStatuses(){
+  const result = {};
+  const ALL_TRADES = ['roofing','solar','fencing','siding','gutters','insulation','paint','doors','windows'];
+  const STATUS_KEYS = ['needs_roof','interested','contacted','quoted','signed','converted','not_interested','lost'];
+  ALL_TRADES.forEach(trade => {
+    const tradeObj = {};
+    STATUS_KEYS.forEach(sk => {
+      const el = document.getElementById('ts-'+trade+'-'+sk.replace('_','-'));
+      if(el && el.value.trim()) tradeObj[sk] = el.value.trim();
+    });
+    if(Object.keys(tradeObj).length) result[trade] = tradeObj;
+  });
+  return Object.keys(result).length ? result : (S.cfg.tradeStatuses || null);
+}
+
+// ── Read trade postcard copy from Settings UI ─────────────────────────────────
+function _readTradePostcardCopy(){
+  const result = {};
+  const ALL_TRADES = ['roofing','solar','fencing','siding','gutters','insulation','paint','doors','windows'];
+  ALL_TRADES.forEach(trade => {
+    const fields = ['headline1','headline2','hook','why','quote','guarantee'];
+    const tradeObj = {};
+    fields.forEach(f => {
+      const el = document.getElementById('tpc-'+trade+'-'+f);
+      if(el && el.value.trim()) tradeObj[f] = el.value.trim();
+    });
+    if(Object.keys(tradeObj).length) result[trade] = tradeObj;
+  });
+  return Object.keys(result).length ? result : (S.cfg.tradePostcardCopy || null);
+}
+
+// ── Load trade statuses into Settings UI ─────────────────────────────────────
+function loadTradeStatusSettings(){
+  const ALL_TRADES = ['roofing','solar','fencing','siding','gutters','insulation','paint','doors','windows'];
+  const STATUS_KEYS = ['needs_roof','interested','contacted','quoted','signed','converted','not_interested','lost'];
+  const saved = (S.cfg && S.cfg.tradeStatuses) || {};
+  ALL_TRADES.forEach(trade => {
+    const tradeStatuses = saved[trade] || TRADE_STATUS_DEFAULTS[trade] || {};
+    STATUS_KEYS.forEach(sk => {
+      const el = document.getElementById('ts-'+trade+'-'+sk.replace('_','-'));
+      if(el) el.value = tradeStatuses[sk] || TRADE_STATUS_DEFAULTS[trade]?.[sk] || sk;
+    });
+  });
+}
+
+// ── Load trade postcard copy into Settings UI ─────────────────────────────────
+function loadTradePostcardCopySettings(){
+  const ALL_TRADES = ['roofing','solar','fencing','siding','gutters','insulation','paint','doors','windows'];
+  const saved = (S.cfg && S.cfg.tradePostcardCopy) || {};
+  ALL_TRADES.forEach(trade => {
+    const tradeCopy = saved[trade] || TRADE_POSTCARD_COPY_DEFAULTS[trade] || {};
+    ['headline1','headline2','hook','why','quote','guarantee'].forEach(f => {
+      const el = document.getElementById('tpc-'+trade+'-'+f);
+      if(el) el.value = tradeCopy[f] || TRADE_POSTCARD_COPY_DEFAULTS[trade]?.[f] || '';
+    });
+  });
+}
+
+// ── Get postcard copy for active trade (used by postcard renderer) ────────────
+function getTradePostcardCopy(trade){
+  if(!trade || trade === 'roofing') return null; // use global defaults for roofing
+  const saved = (S.cfg && S.cfg.tradePostcardCopy && S.cfg.tradePostcardCopy[trade]);
+  if(saved) return saved;
+  return TRADE_POSTCARD_COPY_DEFAULTS[trade] || null;
+}
+
+// ── Solar map overlay ─────────────────────────────────────────────────────────
+let _solarOverlayActive = false;
+let _solarOverlayMarkers = [];
+let _solarOverlayLegend = null;
+
+function toggleSolarOverlay(){
+  _solarOverlayActive = !_solarOverlayActive;
+  const btn = document.getElementById('solar-overlay-btn');
+  if(btn){
+    btn.style.background = _solarOverlayActive ? 'var(--accent)' : 'var(--card2)';
+    btn.style.color = _solarOverlayActive ? '#fff' : 'var(--mid)';
+    btn.title = _solarOverlayActive ? 'Hide Solar Overlay' : 'Show Solar kW Overlay';
+  }
+  if(_solarOverlayActive){
+    _renderSolarOverlay();
+  } else {
+    _removeSolarOverlay();
+  }
+}
+
+function _renderSolarOverlay(){
+  if(!map) return;
+  _removeSolarOverlay();
+  const pins = (S.pins || []).filter(p => p.solarKw && p.lat && p.lng);
+  if(!pins.length){
+    toast('No solar data on pins yet — run Solar lookup on a pin first','warn');
+    _solarOverlayActive = false;
+    const btn = document.getElementById('solar-overlay-btn');
+    if(btn){ btn.style.background='var(--card2)'; btn.style.color='var(--mid)'; }
+    return;
+  }
+  pins.forEach(p => {
+    const kw = parseFloat(p.solarKw) || 0;
+    // Color scale: <5kW = yellow, 5-10kW = orange, >10kW = green
+    const color = kw >= 10 ? '#22C55E' : kw >= 5 ? '#F97316' : '#EAB308';
+    const circle = L.circleMarker([p.lat, p.lng], {
+      radius: Math.max(8, Math.min(20, kw * 1.5)),
+      fillColor: color, color: '#fff', weight: 1.5,
+      fillOpacity: 0.75, opacity: 0.9
+    }).addTo(map);
+    circle.bindTooltip(`<strong>${p.address||'Pin'}</strong><br>☀️ ${kw.toFixed(1)} kW${p.solarPotential ? '<br>'+p.solarPotential : ''}`, { permanent: false, direction: 'top' });
+    _solarOverlayMarkers.push(circle);
+  });
+  // Legend
+  _solarOverlayLegend = L.control({ position: 'bottomright' });
+  _solarOverlayLegend.onAdd = function(){
+    const div = L.DomUtil.create('div', 'solar-overlay-legend');
+    div.style.cssText = 'background:var(--card2,#1a1a1a);border:1px solid var(--border,#333);border-radius:8px;padding:10px 14px;font-family:var(--font-b,sans-serif);font-size:12px;color:var(--text,#fff);min-width:140px;';
+    div.innerHTML = '<div style="font-weight:700;margin-bottom:6px;">☀️ Solar kW</div>'
+      + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span style="width:12px;height:12px;border-radius:50%;background:#22C55E;display:inline-block;"></span> 10+ kW (High)</div>'
+      + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span style="width:12px;height:12px;border-radius:50%;background:#F97316;display:inline-block;"></span> 5–10 kW (Mid)</div>'
+      + '<div style="display:flex;align-items:center;gap:6px;"><span style="width:12px;height:12px;border-radius:50%;background:#EAB308;display:inline-block;"></span> &lt;5 kW (Low)</div>';
+    return div;
+  };
+  _solarOverlayLegend.addTo(map);
+  toast('☀️ Solar overlay: '+pins.length+' pins with solar data','info');
+}
+
+function _removeSolarOverlay(){
+  if(!map) return;
+  _solarOverlayMarkers.forEach(m => { try{ map.removeLayer(m); }catch(e){} });
+  _solarOverlayMarkers = [];
+  if(_solarOverlayLegend){ try{ map.removeControl(_solarOverlayLegend); }catch(e){} _solarOverlayLegend = null; }
+}
+
+// ── Store solar kW on pin after Solar API lookup ──────────────────────────────
+function storeSolarKwOnPin(pinId, systemKw, potential){
+  if(!pinId || !systemKw) return;
+  const pin = (S.pins||[]).find(p=>p.id===pinId);
+  if(!pin) return;
+  pin.solarKw = systemKw;
+  pin.solarPotential = potential || null;
+  if(sb && currentAccount){
+    sb.from('pins').update({ solar_kw: systemKw, solar_potential: potential||null }).eq('id', pinId).then(({error})=>{
+      if(error) console.warn('[BidDrop] storeSolarKwOnPin:', error.message);
+    });
+  }
+  // Refresh overlay if active
+  if(_solarOverlayActive) _renderSolarOverlay();
+}
+
+// ── Render trade status settings accordion ────────────────────────────────────
+function renderTradeStatusAccordion(){
+  const container = document.getElementById('trade-statuses-accordion');
+  if(!container) return;
+  const et = (S.cfg && S.cfg.enabledTrades) || {roofing:true};
+  const ALL_TRADES = ['roofing','solar','fencing','siding','gutters','insulation','paint','doors','windows'];
+  const STATUS_KEYS = ['needs_roof','interested','contacted','quoted','signed','converted','not_interested','lost'];
+  const STATUS_LABELS = { needs_roof:'Initial Status', interested:'Interested', contacted:'Contacted', quoted:'Quoted', signed:'Signed', converted:'Converted / Installed', not_interested:'Not Interested', lost:'Lost' };
+  const saved = (S.cfg && S.cfg.tradeStatuses) || {};
+
+  const enabledTrades = ALL_TRADES.filter(t => t === 'roofing' ? et.roofing !== false : !!et[t]);
+
+  container.innerHTML = enabledTrades.map(trade => {
+    const m = TRADE_META[trade] || { label: trade, color: '#F25C05' };
+    const tradeStatuses = saved[trade] || TRADE_STATUS_DEFAULTS[trade] || {};
+    const fields = STATUS_KEYS.map(sk => {
+      const defVal = (TRADE_STATUS_DEFAULTS[trade] && TRADE_STATUS_DEFAULTS[trade][sk]) || sk;
+      const curVal = tradeStatuses[sk] || defVal;
+      return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <label style="font-size:11px;color:var(--muted);min-width:130px;font-family:var(--font-b);">${STATUS_LABELS[sk]}</label>
+        <input id="ts-${trade}-${sk.replace('_','-')}" type="text" value="${curVal.replace(/"/g,'&quot;')}"
+          placeholder="${defVal}"
+          style="flex:1;background:var(--input);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-size:12px;font-family:var(--font-b);" />
+      </div>`;
+    }).join('');
+    return `<div style="border:1px solid var(--border);border-radius:10px;margin-bottom:12px;overflow:hidden;">
+      <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'"
+        style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;background:var(--card2);">
+        <span style="font-size:18px;">${m.label.split(' ')[0]}</span>
+        <span style="font-size:13px;font-weight:700;color:var(--text);">${m.label.replace(/^[^\s]+\s/,'')}</span>
+        <span style="font-size:10px;color:var(--muted);margin-left:auto;">▾ Expand</span>
+      </div>
+      <div style="display:none;padding:14px 16px;background:var(--panel);">
+        ${fields}
+        <div style="font-size:10px;color:var(--muted);margin-top:6px;">Leave blank to use default labels. Click Save Settings to apply.</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  if(!enabledTrades.length){
+    container.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:13px;padding:20px;">No trades enabled. Enable trades in Settings → Pricing.</div>';
+  }
+}
+
+// ── Render trade postcard copy accordion ──────────────────────────────────────
+function renderTradePostcardAccordion(){
+  const container = document.getElementById('trade-postcard-accordion');
+  if(!container) return;
+  const et = (S.cfg && S.cfg.enabledTrades) || {roofing:true};
+  const ALL_TRADES = ['roofing','solar','fencing','siding','gutters','insulation','paint','doors','windows'];
+  const saved = (S.cfg && S.cfg.tradePostcardCopy) || {};
+
+  const enabledTrades = ALL_TRADES.filter(t => t === 'roofing' ? et.roofing !== false : !!et[t]);
+
+  const COPY_FIELDS = [
+    { key:'headline1', label:'Headline Line 1', placeholder:'e.g. We Assessed', type:'input' },
+    { key:'headline2', label:'Headline Line 2', placeholder:'e.g. Your Roof.', type:'input' },
+    { key:'hook', label:'Hook / Intro Copy', placeholder:'Main hook paragraph', type:'textarea' },
+    { key:'why', label:'Why We\'re Here', placeholder:'Why this homeowner received the card', type:'textarea' },
+    { key:'quote', label:'Customer Quote', placeholder:'"Great work!" — Name, City', type:'input' },
+    { key:'guarantee', label:'Guarantee / CTA', placeholder:'e.g. No pressure. Just your price.', type:'input' },
+  ];
+
+  container.innerHTML = enabledTrades.map(trade => {
+    const m = TRADE_META[trade] || { label: trade, color: '#F25C05' };
+    const tradeCopy = saved[trade] || TRADE_POSTCARD_COPY_DEFAULTS[trade] || {};
+    const fields = COPY_FIELDS.map(f => {
+      const defVal = (TRADE_POSTCARD_COPY_DEFAULTS[trade] && TRADE_POSTCARD_COPY_DEFAULTS[trade][f.key]) || '';
+      const curVal = tradeCopy[f.key] || defVal;
+      const inputEl = f.type === 'textarea'
+        ? `<textarea id="tpc-${trade}-${f.key}" rows="2" placeholder="${defVal.replace(/"/g,'&quot;')}"
+            style="flex:1;background:var(--input);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-size:12px;font-family:var(--font-b);resize:vertical;min-height:48px;">${curVal.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>`
+        : `<input id="tpc-${trade}-${f.key}" type="text" value="${curVal.replace(/"/g,'&quot;')}"
+            placeholder="${defVal.replace(/"/g,'&quot;')}"
+            style="flex:1;background:var(--input);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-size:12px;font-family:var(--font-b);" />`;
+      return `<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;">
+        <label style="font-size:11px;color:var(--muted);min-width:130px;padding-top:7px;font-family:var(--font-b);">${f.label}</label>
+        ${inputEl}
+      </div>`;
+    }).join('');
+    return `<div style="border:1px solid var(--border);border-radius:10px;margin-bottom:12px;overflow:hidden;">
+      <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'"
+        style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;background:var(--card2);">
+        <span style="font-size:18px;">${m.label.split(' ')[0]}</span>
+        <span style="font-size:13px;font-weight:700;color:var(--text);">${m.label.replace(/^[^\s]+\s/,'')}</span>
+        <span style="font-size:10px;color:var(--muted);margin-left:auto;">▾ Expand</span>
+      </div>
+      <div style="display:none;padding:14px 16px;background:var(--panel);">
+        ${fields}
+        <div style="font-size:10px;color:var(--muted);margin-top:6px;">These defaults pre-fill the Marketing tab when generating postcards for this trade. Click Save Settings to apply.</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  if(!enabledTrades.length){
+    container.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:13px;padding:20px;">No trades enabled. Enable trades in Settings → Pricing.</div>';
+  }
+}

@@ -387,6 +387,11 @@ async function fetchSatelliteMeasurementForEstimate(){
     if(data.systemKw){
       const solarRow = document.getElementById('solar-addon-row');
       if(solarRow) solarRow.style.display = 'block';
+      // Store solar kW on the current pin for the map overlay
+      if(currentEstPinId && typeof storeSolarKwOnPin === 'function'){
+        const _potentialLabel = data.systemKw >= 10 ? 'High Potential' : data.systemKw >= 5 ? 'Medium Potential' : 'Low Potential';
+        storeSolarKwOnPin(currentEstPinId, data.systemKw, _potentialLabel);
+      }
     }
     toast('🛰 Satellite measurement applied — ' + data.sqft.toLocaleString() + ' sq ft, ' + data.pitchLabel + ' pitch' + (data.systemKw ? ' · ☀️ ' + data.systemKw + ' kW solar potential' : ''), 'success');
   } catch(e){

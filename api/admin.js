@@ -1095,7 +1095,23 @@ module.exports = async function handler(req, res) {
             storm_ids JSONB,
             notes TEXT,
             created_at TIMESTAMPTZ DEFAULT NOW()
-          )`
+          )`,
+          /* ── Trade system columns (Build 10) ── */
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS trade_pricing_json JSONB`,
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS trade_statuses_json JSONB`,
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS trade_postcard_copy_json JSONB`,
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS companycam_key TEXT`,
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS qb_access_token TEXT`,
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS qb_refresh_token TEXT`,
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS qb_realm_id TEXT`,
+          `ALTER TABLE pins ADD COLUMN IF NOT EXISTS ghl_synced_at TIMESTAMPTZ`,
+          `ALTER TABLE pins ADD COLUMN IF NOT EXISTS ghl_sync_error TEXT`,
+          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS qb_invoice_id TEXT`,
+          `CREATE INDEX IF NOT EXISTS idx_pins_ghl_synced ON pins(account_id, ghl_synced_at DESC)`,
+          `CREATE INDEX IF NOT EXISTS idx_estimates_qb ON estimates(account_id, qb_invoice_id)`,
+          /* ── Solar overlay: store systemKw on pins for map overlay ── */
+          `ALTER TABLE pins ADD COLUMN IF NOT EXISTS solar_kw NUMERIC`,
+          `ALTER TABLE pins ADD COLUMN IF NOT EXISTS solar_potential TEXT`
         ].join('; ');
         const results = [];
         // Run each DDL statement individually via Supabase pg_meta API (uses SERVICE_KEY)
@@ -1235,6 +1251,65 @@ module.exports = async function handler(req, res) {
         const emailData = await emailRes.json().catch(()=>({}));
         res.status(200).json({ sent: emailRes.ok, id: emailData.id });
         break;
+      }
+      case 'companycam-photos': {
+        // Proxy CompanyCam API — fetch photos for a property address
+        const { address: ccAddr, apiKey: ccKey } = req.body;
+        if (!ccKey) { res.status(400).json({ error: 'apiKey required' }); return; }
+        if (!ccAddr) { res.status(400).json({ error: 'address required' }); return; }
+        // Search CompanyCam for projects matching the address
+        const ccRes = await fetch(`https://api.companycam.com/v2/projects?query=${encodeURIComponent(ccAddr)}&per_page=10`, {
+          headers: { 'Authorization': `Bearer ${ccKey}`, 'Content-Type': 'application/json', 'Accept': 'application/json' }
+        });
+        if (!ccRes.ok) {
+          const errBody = await ccRes.text();
+          return res.status(ccRes.status).json({ error: 'CompanyCam API error', details: errBody.substring(0, 200) });
+        }
+        const ccData = await ccRes.json();
+        const projects = Array.isArray(ccData) ? ccData : (ccData.projects || []);
+        // Fetch photos for each project (up to 3 projects)
+        const photos = [];
+        for (const proj of projects.slice(0, 3)) {
+          const phRes = await fetch(`https://api.companycam.com/v2/projects/${proj.id}/photos?per_page=20`, {
+            headers: { 'Authorization': `Bearer ${ccKey}`, 'Accept': 'application/json' }
+          });
+          if (phRes.ok) {
+            const phData = await phRes.json();
+            const phList = Array.isArray(phData) ? phData : (phData.photos || []);
+            phList.forEach(p => {
+              const uri = p.uris && (p.uris.find(u => u.type === 'original') || p.uris[0]);
+              if (uri) photos.push({ id: p.id, url: uri.uri, thumb: (p.uris.find(u => u.type === 'thumb') || uri).uri, takenAt: p.captured_at, projectName: proj.name });
+            });
+          }
+        }
+        return res.status(200).json({ photos, projectCount: projects.length });
+      }
+      case 'qb-create-invoice': {
+        // Create a QuickBooks invoice from an estimate
+        const { accessToken: qbToken, realmId: qbRealm, estimate: qbEst } = req.body;
+        if (!qbToken || !qbRealm || !qbEst) { res.status(400).json({ error: 'accessToken, realmId, and estimate required' }); return; }
+        // Build QB invoice payload
+        const qbPayload = {
+          Line: (qbEst.structures || []).map((s, i) => ({
+            Amount: Math.round((s.total || 0) * 100) / 100,
+            DetailType: 'SalesItemLineDetail',
+            Description: s.name || `Structure ${i + 1}`,
+            SalesItemLineDetail: { Qty: 1, UnitPrice: Math.round((s.total || 0) * 100) / 100 }
+          })).filter(l => l.Amount > 0),
+          CustomerRef: { name: qbEst.owner || 'Homeowner' },
+          BillAddr: { Line1: qbEst.addr || '' },
+          DocNumber: `BD-${qbEst.id ? qbEst.id.slice(-6).toUpperCase() : Date.now().toString().slice(-6)}`
+        };
+        if (!qbPayload.Line.length) { res.status(400).json({ error: 'No line items with value > 0' }); return; }
+        const qbRes = await fetch(`https://quickbooks.api.intuit.com/v3/company/${qbRealm}/invoice?minorversion=65`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${qbToken}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ Invoice: qbPayload })
+        });
+        const qbData = await qbRes.json();
+        if (!qbRes.ok) { return res.status(qbRes.status).json({ error: 'QuickBooks API error', details: qbData }); }
+        const invoiceId = qbData.Invoice && qbData.Invoice.Id;
+        return res.status(200).json({ ok: true, invoiceId, invoice: qbData.Invoice });
       }
       default:
         res.status(400).json({ error: `Unknown action: ${action}` });

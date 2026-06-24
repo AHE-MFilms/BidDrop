@@ -93,7 +93,15 @@ async function syncAccountToSupabase(){
     meta_pixel_id: cfg.metaPixelId||null,
     google_tag_id: cfg.googleTagId||null,
     google_place_id: cfg.googlePlaceId||null,
-    tax_rate: cfg.taxRate||0
+    tax_rate: cfg.taxRate||0,
+    // ── Trade system (Build 10) ──
+    trade_pricing_json: cfg.tradePricingJson ? JSON.stringify(cfg.tradePricingJson) : null,
+    trade_statuses_json: cfg.tradeStatuses ? JSON.stringify(cfg.tradeStatuses) : null,
+    trade_postcard_copy_json: cfg.tradePostcardCopy ? JSON.stringify(cfg.tradePostcardCopy) : null,
+    companycam_key: cfg.companyCamKey||null,
+    qb_access_token: cfg.qbAccessToken||null,
+    qb_refresh_token: cfg.qbRefreshToken||null,
+    qb_realm_id: cfg.qbRealmId||null
   }).eq('id', currentAccount.id);
   if(syncErr) console.error('[BidDrop] syncAccountToSupabase error:', syncErr.message, syncErr);
   else console.log('[BidDrop] Account synced to Supabase OK');
@@ -224,5 +232,13 @@ function accountRowToCfg(row){
       arr.forEach(t => { obj[t] = true; });
       return obj;
     })(),
+    // ── Trade system (Build 10) ──
+    tradePricingJson: row.trade_pricing_json ? (typeof row.trade_pricing_json==='string' ? JSON.parse(row.trade_pricing_json) : row.trade_pricing_json) : null,
+    tradeStatuses: row.trade_statuses_json ? (typeof row.trade_statuses_json==='string' ? JSON.parse(row.trade_statuses_json) : row.trade_statuses_json) : null,
+    tradePostcardCopy: row.trade_postcard_copy_json ? (typeof row.trade_postcard_copy_json==='string' ? JSON.parse(row.trade_postcard_copy_json) : row.trade_postcard_copy_json) : null,
+    companyCamKey: row.companycam_key||null,
+    qbAccessToken: row.qb_access_token||null,
+    qbRefreshToken: row.qb_refresh_token||null,
+    qbRealmId: row.qb_realm_id||null,
   };
 }
