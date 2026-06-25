@@ -29,6 +29,58 @@ async function cdInit() {
   cdRenderDesignerShell();
 }
 
+// ── Snapshot / restore field values across side switches ─────────────────────
+// Saves the current canvas text/image state into CD.fieldValues keyed by side
+function cdSnapshotFieldValues(side) {
+  const fc = side === 'front' ? CD.fabricFront : CD.fabricBack;
+  if (!fc) return;
+  fc.getObjects().forEach(obj => {
+    if (obj.__uid == null) return;
+    if (obj.type === 'textbox' || obj.type === 'i-text' || obj.type === 'text') {
+      CD.fieldValues[obj.__uid] = obj.text;
+    } else if (obj.bdLock === 'free' && obj.type === 'image') {
+      // Uploaded image — store as data URL so it can be re-placed on restore
+      try { CD.fieldValues[obj.__uid] = obj.toDataURL(); } catch(e) {}
+    }
+  });
+}
+
+// Re-applies saved CD.fieldValues onto the freshly-loaded canvas side
+function cdRestoreFieldValues(side) {
+  const fc = side === 'front' ? CD.fabricFront : CD.fabricBack;
+  if (!fc) return;
+  fc.getObjects().forEach(obj => {
+    if (obj.__uid == null || CD.fieldValues[obj.__uid] == null) return;
+    const val = CD.fieldValues[obj.__uid];
+    if (obj.type === 'textbox' || obj.type === 'i-text' || obj.type === 'text') {
+      obj.set('text', val);
+    } else if (obj.bdLock === 'editable' && typeof val === 'string' && val.startsWith('data:image')) {
+      // Re-place uploaded image over the placeholder zone
+      const zoneLeft = obj.left, zoneTop = obj.top;
+      const zoneW = (obj.width||100)*(obj.scaleX||1), zoneH = (obj.height||100)*(obj.scaleY||1);
+      const uid = obj.__uid, zoneLabel = obj.bdZoneLabel;
+      fabric.Image.fromURL(val, img => {
+        const s = Math.min(zoneW/img.width, zoneH/img.height);
+        img.set({
+          left: zoneLeft+(zoneW-img.width*s)/2, top: zoneTop+(zoneH-img.height*s)/2,
+          scaleX: s, scaleY: s,
+          selectable:true, evented:true,
+          lockMovementX:false, lockMovementY:false,
+          lockScalingX:false, lockScalingY:false, lockRotation:false,
+          hasControls:true, hasBorders:true,
+          borderColor:'#3b82f6', cornerColor:'#3b82f6', hoverCursor:'move',
+          bdLock:'free', bdZoneLabel:zoneLabel, __uid:uid,
+          _zoneLeft:zoneLeft, _zoneTop:zoneTop, _zoneW:zoneW, _zoneH:zoneH,
+        });
+        fc.remove(obj);
+        fc.add(img);
+        fc.renderAll();
+      });
+    }
+  });
+  fc.renderAll();
+}
+
 async function cdLoadTemplates() {
   try {
     const r = await fetch('/api/canvas?action=list&published_only=1');
@@ -147,9 +199,15 @@ function cdRenderDesignerShell() {
   CD.fabricBack.on('selection:updated', showLayerControls);
   CD.fabricBack.on('selection:cleared', showLayerControls);
 
-  // Load first template if available
+  // FIX #5: Restore last-used template from saved config, or fall back to first template
   if (CD.templates.length > 0) {
-    cdSelectTemplate(0);
+    const savedTemplateId = typeof S !== 'undefined' && S.cfg?.canvasTemplateId;
+    let startIdx = 0;
+    if (savedTemplateId) {
+      const found = CD.templates.findIndex(t => t.id === savedTemplateId);
+      if (found >= 0) startIdx = found;
+    }
+    cdSelectTemplate(startIdx);
   }
 }
 
@@ -172,7 +230,14 @@ function cdBuildTplListHtml() {
 
 // ── Template selection ────────────────────────────────────────────────────────
 async function cdSelectTemplate(idx) {
+  // FIX #6: Warn before wiping unsaved changes when switching templates
+  if (CD.dirty && CD.activeIdx >= 0 && idx !== CD.activeIdx) {
+    if (!confirm('You have unsaved changes. Switch templates and lose your edits?')) return;
+  }
+
   CD.activeIdx = idx;
+  // Reset field values when switching to a new template
+  CD.fieldValues = {};
   const tpl = CD.templates[idx];
 
   // Show loading state
@@ -288,6 +353,10 @@ async function cdLoadSideIntoFabric(side) {
 // ── Side switching ────────────────────────────────────────────────────────────
 async function cdSwitchSide(side) {
   if (side === CD.side || !CD.activeTemplate) return;
+
+  // FIX #3: Snapshot current side's field values before switching
+  cdSnapshotFieldValues(CD.side);
+
   CD.side = side;
 
   const frontWrap = document.getElementById('cd-front-wrap');
@@ -301,12 +370,14 @@ async function cdSwitchSide(side) {
     btnFront?.classList.add('cd-side-active');
     btnBack?.classList.remove('cd-side-active');
     await cdLoadSideIntoFabric('front');
+    cdRestoreFieldValues('front');
   } else {
     if (frontWrap) frontWrap.style.display = 'none';
     if (backWrap) backWrap.style.display = '';
     btnFront?.classList.remove('cd-side-active');
     btnBack?.classList.add('cd-side-active');
     await cdLoadSideIntoFabric('back');
+    cdRestoreFieldValues('back');
   }
 
   // Re-apply free edit mode if active
@@ -377,7 +448,12 @@ function cdRenderFieldsPanel() {
     const uid = obj.__uid;
     const currentVal = CD.fieldValues[uid] ?? (obj.type === 'textbox' || obj.type === 'i-text' || obj.type === 'text' ? obj.text : '');
 
-    if (obj.type === 'textbox' || obj.type === 'i-text' || obj.type === 'text') {
+    // FIX #4: Skip image objects that are misidentified — only render text inputs for actual text types
+    // An image object whose value is a base64 data URL should never appear as a text input
+    const isImageObj = obj.type === 'image' || (typeof currentVal === 'string' && currentVal.startsWith('data:image'));
+    if (isImageObj && obj.type !== 'textbox' && obj.type !== 'i-text' && obj.type !== 'text') {
+      // Render as image upload zone instead (fall through to image zone logic below)
+    } e    if (obj.type === 'textbox' || obj.type === 'i-text' || obj.type === 'text') {
       const isMultiline = (obj.text || '').includes('\n') || (obj.height || 0) > 60;
       return `
         <div style="margin-bottom:14px;">
@@ -394,6 +470,7 @@ function cdRenderFieldsPanel() {
     }
 
     // Image zones — show upload button + delete button if image is uploaded
+    // FIX #4: Also catches image objects and base64 values that slipped through text detection
     const hasImage = !!CD.fieldValues[uid];
     const isLogo = obj.bdZoneLabel === 'logo' || obj.bdZoneLabel === 'logoImage';
     const isHero = (obj.bdZoneLabel && obj.bdZoneLabel.includes('hero')) || obj.bdZoneLabel === 'housePhoto';
