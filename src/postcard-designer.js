@@ -316,7 +316,7 @@ function pdFrontStorm(accent, phone, website, logoUrl, heroUrl, companyName, add
     <div style="position:absolute;inset:0;background:linear-gradient(to right,#1a0800 0%,rgba(26,8,0,.7) 35%,transparent 55%);pointer-events:none;"></div>
     <div style="position:absolute;left:0;top:0;width:7px;height:100%;background:${accent};"></div>
     <div data-zone="logo" class="pd-zone" style="position:absolute;top:22px;left:20px;min-width:100px;height:36px;display:flex;align-items:center;cursor:pointer;" title="Click to upload logo">
-      ${logoUrl ? `<img src="${logoUrl}" style="max-height:34px;max-width:130px;object-fit:contain;">` : `<div style="background:rgba(255,255,255,.08);border:1.5px dashed rgba(255,255,255,.25);border-radius:5px;padding:4px 12px;font-size:12px;font-weight:900;color:${accent};">${companyName}</div>`}
+      ${logoUrl ? `<img src="${logoUrl}" style="max-height:${Math.round(34*logoScale/100)}px;max-width:${Math.round(130*logoScale/100)}px;object-fit:contain;">` : `<div style="background:rgba(255,255,255,.08);border:1.5px dashed rgba(255,255,255,.25);border-radius:5px;padding:4px 12px;font-size:12px;font-weight:900;color:${accent};">${companyName}</div>`}
       <div class="pd-zone-hint">🖼 Upload Logo</div>
     </div>
     ${addr ? `<div data-zone="companyAddr" class="pd-zone" style="position:absolute;top:66px;left:20px;cursor:pointer;" title="Edit company address">
@@ -362,7 +362,7 @@ function pdFrontSolar(accent, phone, website, logoUrl, heroUrl, companyName, add
     </div>`}
     <div style="position:absolute;right:10px;top:10px;width:50px;height:50px;background:radial-gradient(circle,${accent} 30%,transparent 70%);border-radius:50%;box-shadow:0 0 20px ${accent};pointer-events:none;"></div>
     <div data-zone="logo" class="pd-zone" style="position:absolute;top:18px;left:18px;cursor:pointer;" title="Upload logo">
-      ${logoUrl ? `<img src="${logoUrl}" style="max-height:32px;max-width:120px;object-fit:contain;">` : `<div style="background:rgba(255,255,255,.08);border:1.5px dashed rgba(255,255,255,.25);border-radius:5px;padding:4px 12px;font-size:12px;font-weight:900;color:${accent};">${companyName}</div>`}
+      ${logoUrl ? `<img src="${logoUrl}" style="max-height:${Math.round(32*logoScale/100)}px;max-width:${Math.round(120*logoScale/100)}px;object-fit:contain;">` : `<div style="background:rgba(255,255,255,.08);border:1.5px dashed rgba(255,255,255,.25);border-radius:5px;padding:4px 12px;font-size:12px;font-weight:900;color:${accent};">${companyName}</div>`}
       <div class="pd-zone-hint">🖼 Upload Logo</div>
     </div>
     <div data-zone="headline1" class="pd-zone" style="position:absolute;left:18px;top:50%;transform:translateY(-60%);cursor:pointer;">
@@ -491,6 +491,7 @@ function pdBackHtml() {
   const website = cfg.website || 'www.yourcompany.com';
   const logoUrl = PD.logoDataUrl || cfg.logoData || null;
   const logoWhiten = PD.logoWhiten != null ? PD.logoWhiten : (cfg.tplLogoWhiten != null ? cfg.tplLogoWhiten : true);
+  const logoScale = PD.logoScale != null ? PD.logoScale : (cfg.tplLogoScale != null ? cfg.tplLogoScale : 100);
   const companyName = cfg.companyName || 'Your Company';
   const hook = cfg.postcardHook || 'Your neighbors are talking about us.';
   const why = cfg.postcardWhy || 'We deliver quality roofing with a lifetime warranty.';
@@ -498,7 +499,7 @@ function pdBackHtml() {
   return `
     <div style="position:absolute;inset:0;background:#fff;"></div>
     <div style="position:absolute;top:0;left:0;right:0;height:28%;background:linear-gradient(90deg,${accent},${accent}cc);display:flex;align-items:center;padding:0 22px;gap:14px;">
-      ${logoUrl ? `<img src="${logoUrl}" style="max-height:36px;max-width:120px;object-fit:contain;${logoWhiten ? 'filter:brightness(10);' : ''}">` : `<div style="font-size:16px;font-weight:900;color:#fff;">${companyName}</div>`}
+      ${logoUrl ? `<img src="${logoUrl}" style="max-height:${Math.round(36*logoScale/100)}px;max-width:${Math.round(120*logoScale/100)}px;object-fit:contain;${logoWhiten ? 'filter:brightness(10);' : ''}">` : `<div style="font-size:16px;font-weight:900;color:#fff;">${companyName}</div>`}
       <div style="flex:1;"></div>
       <div style="text-align:right;">
         <div style="font-size:13px;font-weight:900;color:#fff;">${phone}</div>
@@ -592,20 +593,19 @@ function pdRenderPropertiesPanel(zoneKey) {
         const logoSrc = PD.logoDataUrl || cfg.logoData || null;
         const logoScale = PD.logoScale != null ? PD.logoScale : (cfg.tplLogoScale != null ? cfg.tplLogoScale : 100);
         if(logoSrc){
-          return `<div style="display:flex;align-items:center;gap:10px;">
-            <img src="${logoSrc}" style="max-height:48px;max-width:120px;object-fit:contain;border-radius:4px;background:rgba(255,255,255,.06);padding:4px;border:1px solid var(--border);">
-            <div style="display:flex;align-items:center;gap:6px;margin-top:6px;">
-              <input type="checkbox" id="pd-logo-whiten" ${(PD.logoWhiten != null ? PD.logoWhiten : (cfg.tplLogoWhiten != null ? cfg.tplLogoWhiten : true)) ? 'checked' : ''} onchange="pdSetLogoWhiten(this.checked)" style="cursor:pointer;accent-color:var(--accent);">
-              <label for="pd-logo-whiten" style="font-size:10px;color:var(--muted);cursor:pointer;">Make white on card back</label>
+          return `<div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <img src="${logoSrc}" style="max-height:48px;max-width:110px;object-fit:contain;border-radius:4px;background:rgba(255,255,255,.06);padding:4px;border:1px solid var(--border);flex-shrink:0;">
+              <div style="flex:1;min-width:0;">
+                <div data-pd-logo-scale-lbl style="font-size:10px;color:var(--muted);margin-bottom:4px;">Size: ${logoScale}%</div>
+                <input type="range" aria-label="Logo size" min="30" max="200" value="${logoScale}" oninput="pdSetLogoScale(+this.value)" style="width:100%;accent-color:var(--accent);cursor:pointer;display:block;">
+              </div>
+              <button onclick="pdTriggerLogoUpload()" style="flex-shrink:0;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--muted);font-size:11px;cursor:pointer;">Replace</button>
             </div>
-            <div style="flex:1;">
-              <div data-pd-logo-scale-lbl style="font-size:10px;color:var(--muted);margin-bottom:4px;">Size: ${logoScale}%</div>
-              <input type="range" aria-label="Logo size" min="30" max="200" value="${logoScale}" oninput="pdSetLogoScale(+this.value)" style="width:100%;accent-color:var(--accent);cursor:pointer;">
-            </div>
-            <div class="pd-upload-zone" onclick="pdTriggerLogoUpload()" style="min-width:64px;padding:6px 8px;">
-              <div style="font-size:14px;">🔄</div>
-              <div style="font-size:9px;color:var(--muted);">Replace</div>
-            </div>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" id="pd-logo-whiten" ${(PD.logoWhiten != null ? PD.logoWhiten : (cfg.tplLogoWhiten != null ? cfg.tplLogoWhiten : true)) ? 'checked' : ''} onchange="pdSetLogoWhiten(this.checked)" style="cursor:pointer;accent-color:var(--accent);width:14px;height:14px;flex-shrink:0;">
+              <span style="font-size:10px;color:var(--muted);">Make white on card back</span>
+            </label>
           </div>`;
         } else {
           return `<div class="pd-upload-zone" onclick="pdTriggerLogoUpload()">
