@@ -65,9 +65,10 @@ function cdRenderDesignerShell() {
         <button onclick="cdSaveDesign()" style="padding:6px 16px;border:none;border-radius:6px;background:var(--accent);color:#fff;font-size:12px;font-weight:700;cursor:pointer;">💾 Save Design</button>
       </div>
       <!-- Canvas wrapper: single canvas shown at a time via display toggle -->
+      <!-- No CSS transform scaling — Fabric setZoom/setDimensions handles sizing -->
       <div id="cd-canvas-area" style="flex:1;overflow:hidden;padding:24px;display:flex;align-items:flex-start;justify-content:center;">
-        <div id="cd-canvas-sizer" style="flex-shrink:0;overflow:hidden;">
-          <div id="cd-canvas-wrap" style="transform-origin:top left;box-shadow:0 8px 40px rgba(0,0,0,.5);position:relative;">
+        <div id="cd-canvas-sizer" style="flex-shrink:0;">
+          <div id="cd-canvas-wrap" style="box-shadow:0 8px 40px rgba(0,0,0,.5);position:relative;">
             <div id="cd-front-wrap"><canvas id="cd-canvas-front"></canvas></div>
             <div id="cd-back-wrap" style="display:none;"><canvas id="cd-canvas-back"></canvas></div>
             <div id="cd-no-template" style="
@@ -104,7 +105,8 @@ function cdRenderDesignerShell() {
     </div>
   `;
 
-  // Init fabric canvases
+  // Init fabric canvases at native resolution — zoom is applied via setZoom/setDimensions
+  // so touch/click coordinates always match object positions (no CSS transform mismatch)
   CD.fabricFront = new fabric.Canvas('cd-canvas-front', {
     width: CD_POSTCARD_W, height: CD_POSTCARD_H,
     selection: false, hoverCursor: 'default',
@@ -592,24 +594,31 @@ function cdApplyAllFields() {
 }
 
 // ── Fit canvas to container ───────────────────────────────────────────────────
+// Uses Fabric setZoom + setDimensions instead of CSS transform so that
+// touch/click coordinates always match object positions on screen.
 function cdFitCanvas() {
   const area = document.getElementById('cd-canvas-area');
   if (!area) return;
   const aw = area.clientWidth - 48;
   const ah = area.clientHeight - 48;
-  if (aw <= 0 || ah <= 0) return; // not laid out yet
+  if (aw <= 0 || ah <= 0) return;
   const scale = Math.min(aw / CD_POSTCARD_W, ah / CD_POSTCARD_H);
-  const wrap = document.getElementById('cd-canvas-wrap');
-  const sizer = document.getElementById('cd-canvas-sizer');
-  if (!wrap || !sizer) return;
-  // Scale the inner wrap from top-left
-  wrap.style.transform = `scale(${scale})`;
-  wrap.style.transformOrigin = 'top left';
-  // Set the sizer to the scaled dimensions so the layout collapses correctly
   const scaledW = Math.round(CD_POSTCARD_W * scale);
   const scaledH = Math.round(CD_POSTCARD_H * scale);
-  sizer.style.width = `${scaledW}px`;
-  sizer.style.height = `${scaledH}px`;
+
+  // Apply zoom to both canvases so Fabric's internal coordinate system matches screen
+  [CD.fabricFront, CD.fabricBack].forEach(fc => {
+    if (!fc) return;
+    fc.setZoom(scale);
+    fc.setDimensions({ width: scaledW, height: scaledH });
+  });
+
+  // Size the sizer wrapper to the scaled dimensions
+  const sizer = document.getElementById('cd-canvas-sizer');
+  if (sizer) {
+    sizer.style.width = `${scaledW}px`;
+    sizer.style.height = `${scaledH}px`;
+  }
 }
 
 // ── Free Edit Mode ───────────────────────────────────────────────────────────
