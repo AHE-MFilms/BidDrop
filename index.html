@@ -37,6 +37,22 @@
   --text:#F0F6FF;--mid:#C8D8E8;--muted:#96B0C8;
   --font-h:'Oswald',sans-serif;--font-b:'Barlow',sans-serif;--font-m:'DM Mono',monospace;
 }
+body.light{
+  --bg:#F0F4FA;--panel:#FFFFFF;--card:#E8EDF6;--card2:#DDE4F0;
+  --border:#C5D0E4;--accent:#F25C05;--accent-dim:rgba(242,92,5,0.10);
+  --success:#16A34A;--warning:#D97706;--info:#2563EB;--danger:#DC2626;
+  --text:#0F1623;--mid:#374151;--muted:#6B7280;
+}
+body.light input,body.light textarea,body.light select{color:var(--text)!important;background:var(--card2)!important;border-color:var(--border)!important;}
+body.light input::placeholder,body.light textarea::placeholder{color:var(--muted)!important;}
+body.light .fi{color:var(--text)!important;background:var(--card2)!important;}
+body.light .struct-name-inp{color:var(--text)!important;}
+body.light #cd-canvas-area{background:var(--card)!important;}
+body.light .map-search-results{background:var(--panel);border-color:var(--border);}
+body.light .msr-item{color:var(--text);border-color:var(--border);}
+body.light .msr-item:hover{background:var(--card2);}
+#theme-toggle-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:3px 10px;color:var(--text);font-size:13px;cursor:pointer;display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;transition:all .2s;}
+#theme-toggle-btn:hover{border-color:var(--accent);}
 html,body{height:100%;overflow:hidden;}
 body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:flex;flex-direction:column;font-size:15px;}
 .hdr{background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 12px;height:54px;flex-shrink:0;gap:4px;min-width:0;overflow:visible;position:relative;z-index:10001;}
@@ -1043,6 +1059,7 @@ tr:hover td{background:var(--card);}
       <span style="font-size:13px;">🔍</span>
       <span id="credit-badge-label" class="credit-badge-text">10 credits</span>
     </button>
+    <button id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle light/dark mode">☀️</button>
     <button class="icon-btn" id="user-badge" onclick="goTab('settings')" title="Settings" style="font-size:11px;font-weight:700;width:auto;padding:0 10px;color:var(--accent);">...</button>
   </div>
 </div>
@@ -7284,6 +7301,21 @@ window.addEventListener('beforeinstallprompt', e=>{
 });
 
 // iOS Safari: show button only if NOT already in standalone mode
+// ── THEME TOGGLE ──────────────────────────────────────────────────────────
+function toggleTheme(){
+  const isLight = document.body.classList.toggle('light');
+  localStorage.setItem('bd-theme', isLight ? 'light' : 'dark');
+  const btn = document.getElementById('theme-toggle-btn');
+  if(btn) btn.textContent = isLight ? '🌙' : '☀️';
+  btn && (btn.title = isLight ? 'Switch to dark mode' : 'Switch to light mode');
+}
+(function restoreTheme(){
+  if(localStorage.getItem('bd-theme') === 'light'){
+    document.body.classList.add('light');
+    const btn = document.getElementById('theme-toggle-btn');
+    if(btn){ btn.textContent = '🌙'; btn.title = 'Switch to dark mode'; }
+  }
+})();
 // Use DOMContentLoaded so the DOM is ready, and re-check standalone at that point
 document.addEventListener('DOMContentLoaded', ()=>{
   if(_isIos && !_isStandalone()){
