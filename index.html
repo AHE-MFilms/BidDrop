@@ -71,7 +71,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 .main{flex:1;overflow:hidden;display:flex;flex-direction:column;position:relative;}
 .tab-pane{display:none;flex:1;overflow:hidden;min-height:0;}
 .tab-pane.active{display:flex;}
-#tab-agency,#tab-history,#tab-admin,#tab-dashboard,#tab-hotleads,#tab-analytics,#tab-zones,#tab-mailqueue,#tab-estimates,#tab-designs,#tab-drip,#tab-contacts,#tab-campaigns,#tab-territory,#tab-subscription,#tab-leaderboard{overflow-y:auto!important;overflow-x:hidden;flex:1;min-height:0;}
+#tab-agency,#tab-history,#tab-admin,#tab-dashboard,#tab-hotleads,#tab-pixel,#tab-analytics,#tab-zones,#tab-mailqueue,#tab-estimates,#tab-designs,#tab-drip,#tab-contacts,#tab-campaigns,#tab-territory,#tab-subscription,#tab-leaderboard{overflow-y:auto!important;overflow-x:hidden;flex:1;min-height:0;}
 #tab-settings{display:none;flex-direction:column;overflow-y:auto;padding:22px;gap:14px;}
   #tab-settings.active{display:flex;}
   .stab-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
@@ -997,6 +997,7 @@ tr:hover td{background:var(--card);}
     <button class="tab-btn" onclick="goTab('history')" data-tab="history" style="display:none;">📑 History</button>
     <button class="tab-btn" onclick="goTab('dashboard')" data-tab="dashboard" style="display:none;">📊 Dashboard</button>
     <button class="tab-btn" id="hotleads-tab-btn" onclick="goTab('hotleads')" data-tab="hotleads" style="display:none;">🔥 Hot Leads</button>
+    <button class="tab-btn" id="pixel-tab-btn" onclick="goTab('pixel')" data-tab="pixel" style="display:none;">📡 Pixel Leads</button>
     <button class="tab-btn" id="analytics-tab-btn" onclick="goTab('analytics')" data-tab="analytics" style="display:none;">📊 Analytics</button>
     <button class="tab-btn" id="agency-tab-btn" onclick="goTab('agency')" data-tab="agency" style="display:none;">🏢 Agency</button>
     <button class="tab-btn" id="zones-tab-btn" onclick="goTab('zones')" data-tab="zones" style="display:none;">🗂 Canvass Areas</button>
@@ -1023,6 +1024,7 @@ tr:hover td{background:var(--card);}
     <button class="nav-menu-item" onclick="navGo('history')" data-nav="history">📑 History</button>
     <button class="nav-menu-item" onclick="navGo('dashboard')" data-nav="dashboard">📊 Dashboard</button>
     <button class="nav-menu-item" id="hotleads-nav-item" onclick="navGo('hotleads')" data-nav="hotleads">🔥 Hot Leads</button>
+    <button class="nav-menu-item" id="pixel-nav-item" onclick="navGo('pixel')" data-nav="pixel">📡 Pixel Leads</button>
     <button class="nav-menu-item" id="analytics-nav-item" onclick="navGo('analytics')" data-nav="analytics">📊 Analytics</button>
     <button class="nav-menu-item" id="agency-nav-item" onclick="navGo('agency')" data-nav="agency" style="display:none;">🏢 Agency</button>
     <button class="nav-menu-item" id="zones-nav-item" onclick="navGo('zones')" data-nav="zones">🗂 Canvass Areas</button>
@@ -2393,6 +2395,45 @@ tr:hover td{background:var(--card);}
     </div>
     <div class="dash-card" style="padding:0;overflow:hidden;"><div id="hl-list" style="min-height:200px;"></div></div>
   </div>
+  <!-- PIXEL LEADS TAB -->
+  <div class="tab-pane" id="tab-pixel" style="flex-direction:column;overflow-y:auto;padding:22px;gap:16px;">
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-family:var(--font-h);font-size:20px;font-weight:800;color:var(--text);">📡 Pixel Leads</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">Website visitors who spent 20+ seconds on your site</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <button onclick="goTab('settings');setTimeout(()=>document.getElementById('px-settings-section')?.scrollIntoView({behavior:'smooth'}),200)" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 12px;color:var(--mid);font-size:12px;cursor:pointer;">⚙️ Pixel Settings</button>
+        <button onclick="loadPixelLeads()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 12px;color:var(--text);font-size:12px;cursor:pointer;">↻ Refresh</button>
+      </div>
+    </div>
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-icon">📡</div><div class="stat-lbl">Total Hits</div><div class="stat-val" id="px-stat-total">—</div><div class="stat-sub">All captured visitors</div></div>
+      <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-lbl">Pending</div><div class="stat-val" id="px-stat-pending">—</div><div class="stat-sub">Awaiting resolution</div></div>
+      <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-lbl">Resolved</div><div class="stat-val" id="px-stat-resolved">—</div><div class="stat-sub">Address matched</div></div>
+      <div class="stat-card"><div class="stat-icon">📬</div><div class="stat-lbl">Postcards Queued</div><div class="stat-val" id="px-stat-queued">—</div><div class="stat-sub">Ready to mail</div></div>
+    </div>
+    <!-- Filter chips -->
+    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+      <button class="fchip px-filter-chip active" data-f="pending" onclick="setPixelFilter('pending')">⏳ Pending</button>
+      <button class="fchip px-filter-chip" data-f="resolved" onclick="setPixelFilter('resolved')">✅ Resolved</button>
+      <button class="fchip px-filter-chip" data-f="queued" onclick="setPixelFilter('queued')">📬 Queued</button>
+      <button class="fchip px-filter-chip" data-f="dismissed" onclick="setPixelFilter('dismissed')">✕ Dismissed</button>
+      <button class="fchip px-filter-chip" data-f="all" onclick="setPixelFilter('all')">All</button>
+    </div>
+    <!-- Leads list -->
+    <div class="dash-card" style="padding:0;overflow:hidden;">
+      <div id="pixel-leads-list" style="min-height:200px;"></div>
+    </div>
+    <!-- No pixel ID warning -->
+    <div id="px-no-pixel-warn" style="display:none;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:16px 20px;">
+      <div style="font-weight:700;color:#F59E0B;margin-bottom:4px;">⚠️ Pixel not set up yet</div>
+      <div style="font-size:13px;color:var(--mid);">Go to <strong>Settings → Pixel</strong> to generate your embed code and install it on your website.</div>
+    </div>
+  </div>
+
   <!-- LISTS & CONTACTS TAB -->
   <div class="tab-pane" id="tab-contacts" style="flex-direction:column;overflow-y:auto;padding:24px 28px;gap:16px;">
     <!-- Page Header -->
@@ -3466,6 +3507,56 @@ tr:hover td{background:var(--card);}
           </div>
         </div>
       </div>
+      <!-- FULL WIDTH: BidDrop Pixel -->
+      <div class="stab-card stab-full" id="px-settings-section">
+        <div class="stab-card-hdr" onclick="toggleStabCard('pixel')">
+          <span>&#128225; BidDrop Pixel &#8212; Retarget Website Visitors with Direct Mail</span>
+          <span class="stab-chevron" id="stab-chevron-pixel">&#9662;</span>
+        </div>
+        <div class="stab-card-body" id="stab-body-pixel">
+          <!-- Explainer -->
+          <div style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:14px 16px;margin-bottom:18px;">
+            <div style="font-weight:700;color:#3B82F6;margin-bottom:4px;">&#128161; How it works</div>
+            <div style="font-size:13px;color:var(--mid);line-height:1.6;">Install the BidDrop Pixel on your website. When a homeowner spends <strong>20+ seconds</strong> on your site, BidDrop captures the visit. Once you connect an identity resolution provider, we match the visitor to their home address and you can send them a postcard automatically.</div>
+          </div>
+          <!-- Pixel ID -->
+          <div style="margin-bottom:18px;">
+            <div class="stab-section-hdr">Your Pixel ID</div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <code id="px-id-display" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;font-size:13px;color:var(--accent);font-family:var(--font-m);word-break:break-all;min-width:120px;">Not generated yet</code>
+              <button onclick="generatePixelId()" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:7px 14px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">&#9881; Generate ID</button>
+            </div>
+          </div>
+          <!-- Embed Code -->
+          <div style="margin-bottom:18px;">
+            <div class="stab-section-hdr">Embed Code</div>
+            <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">Paste this snippet into the <code style="background:var(--card2);padding:1px 5px;border-radius:3px;">&lt;head&gt;</code> of every page on your website.</div>
+            <div style="position:relative;">
+              <textarea id="px-embed-code" readonly rows="3" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-size:12px;color:var(--mid);font-family:var(--font-m);resize:none;outline:none;line-height:1.5;"></textarea>
+              <button onclick="copyPixelCode()" style="position:absolute;top:8px;right:8px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 10px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;">&#128203; Copy</button>
+            </div>
+          </div>
+          <!-- Resolution API Key -->
+          <div style="margin-bottom:18px;">
+            <div class="stab-section-hdr">Identity Resolution API Key <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; Optional (DirectMail.io, Customers.ai, etc.)</span></div>
+            <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">Once you sign up with an identity resolution provider, paste your API key here. BidDrop will automatically resolve visitor IPs to mailing addresses.</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <input id="px-resolution-key" type="password" class="fi" placeholder="sk-live-xxxxxxxxxxxx" autocomplete="off" style="flex:1;min-width:200px;" />
+              <button onclick="saveResolutionKey()" style="background:var(--accent);border:none;border-radius:7px;padding:8px 18px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Save Key</button>
+            </div>
+            <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;">
+              <a href="https://directmail.io/features/identity-resolution-pixel/" target="_blank" style="font-size:12px;color:var(--info);text-decoration:none;">&#8599; DirectMail.io</a>
+              <a href="https://customers.ai" target="_blank" style="font-size:12px;color:var(--info);text-decoration:none;">&#8599; Customers.ai</a>
+              <a href="https://www.postpilot.com/sitematch" target="_blank" style="font-size:12px;color:var(--info);text-decoration:none;">&#8599; PostPilot SiteMatch</a>
+            </div>
+          </div>
+          <!-- View Leads CTA -->
+          <div style="display:flex;gap:10px;">
+            <button onclick="goTab('pixel')" style="background:var(--accent);border:none;border-radius:8px;padding:10px 22px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">&#128225; View Pixel Leads</button>
+          </div>
+        </div>
+      </div>
+
       <!-- FULL WIDTH: Branding -->
       <div class="stab-card stab-full">
         <div class="stab-card-hdr" onclick="toggleStabCard('branding')">
@@ -5291,6 +5382,7 @@ tr:hover td{background:var(--card);}
   <script src="/src/estimates-calc.js"></script>
   <script src="/src/history.js"></script>
   <script src="/src/hotleads.js"></script>
+  <script src="/src/pixel-leads.js"></script>
   <script src="/src/storm.js"></script>
   <script src="/src/storm-notif.js"></script>
   <script src="/src/analytics.js"></script>

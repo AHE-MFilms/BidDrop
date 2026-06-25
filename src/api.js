@@ -122,6 +122,9 @@ async function syncAccountToSupabase(){
   if(cfg.tplLogoScale !== undefined)    b10payload.tpl_logo_scale = cfg.tplLogoScale != null ? cfg.tplLogoScale : null;
   if(cfg.tplHeroScale !== undefined)    b10payload.tpl_hero_scale = cfg.tplHeroScale != null ? cfg.tplHeroScale : null;
   if(cfg.tplLogoWhiten !== undefined)   b10payload.tpl_logo_whiten = cfg.tplLogoWhiten != null ? cfg.tplLogoWhiten : null;
+  // Pixel fields (Build 12)
+  if(cfg.pixelId !== undefined)              b10payload.pixel_id = cfg.pixelId||null;
+  if(cfg.pixelResolutionKey !== undefined)   b10payload.pixel_resolution_key = cfg.pixelResolutionKey||null;
   if(Object.keys(b10payload).length){
     const {error: b10Err} = await sb.from('accounts').update(b10payload).eq('id', currentAccount.id);
     if(b10Err) console.warn('[BidDrop] Build 10 columns not yet migrated (run Admin → Run Migration):', b10Err.message);
@@ -274,5 +277,8 @@ function accountRowToCfg(row){
     tplLogoScale:   row.tpl_logo_scale != null ? row.tpl_logo_scale : null,
     tplHeroScale:   row.tpl_hero_scale != null ? row.tpl_hero_scale : null,
     tplLogoWhiten:  row.tpl_logo_whiten != null ? row.tpl_logo_whiten : null,
+    // ── Pixel fields (Build 12) ──
+    pixelId:             row.pixel_id||null,
+    pixelResolutionKey:  row.pixel_resolution_key||null,
   };
 }

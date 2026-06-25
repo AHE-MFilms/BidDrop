@@ -235,6 +235,37 @@ export default async function handler(req, res) {
         created_at timestamptz DEFAULT now()
       )`
     },
+    {
+      name: 'accounts.pixel_id',
+      sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS pixel_id text"
+    },
+    {
+      name: 'accounts.pixel_resolution_key',
+      sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS pixel_resolution_key text"
+    },
+    {
+      name: 'pixel_hits_table',
+      check: "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name='pixel_hits'",
+      sql: `CREATE TABLE IF NOT EXISTS pixel_hits (
+        id text PRIMARY KEY,
+        account_id text NOT NULL,
+        pixel_id text NOT NULL,
+        ip text,
+        user_agent text,
+        referrer text,
+        page_url text,
+        session_seconds integer DEFAULT 0,
+        resolved_name text,
+        resolved_address text,
+        resolved_city text,
+        resolved_state text,
+        resolved_zip text,
+        resolution_status text DEFAULT 'pending',
+        pin_id text,
+        postcard_queued boolean DEFAULT false,
+        created_at timestamptz DEFAULT now()
+      )`
+    },
   ];
 
   // Try to run DDL via rpc/exec_sql

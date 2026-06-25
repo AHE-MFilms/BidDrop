@@ -356,6 +356,12 @@ function openSettings(){
   });
   // Populate Share & Embed card
   populateEmbedCard();
+  // Populate Pixel settings panel
+  const _pxIdEl = document.getElementById('px-id-display');
+  if(_pxIdEl) _pxIdEl.textContent = c.pixelId || 'Not generated yet';
+  if(typeof renderPixelEmbedCode === 'function') renderPixelEmbedCode();
+  const _pxResKeyEl = document.getElementById('px-resolution-key');
+  if(_pxResKeyEl) _pxResKeyEl.value = c.pixelResolutionKey || '';
   // Billing card — only show to account admins (not super_admin, not reps)
   const billingCard = document.getElementById('stab-billing-card');
   if(billingCard) billingCard.style.display = (isAdminOrAbove() && !isSuperAdmin()) ? 'block' : 'none';
@@ -647,7 +653,10 @@ function saveSettings(){
     companyCamKey: S.cfg.companyCamKey||null,
     qbAccessToken: S.cfg.qbAccessToken||null,
     qbRefreshToken: S.cfg.qbRefreshToken||null,
-    qbRealmId: S.cfg.qbRealmId||null
+    qbRealmId: S.cfg.qbRealmId||null,
+    // Preserve pixel fields (set via dedicated pixel panel)
+    pixelId: S.cfg.pixelId||null,
+    pixelResolutionKey: S.cfg.pixelResolutionKey||null
   };
   applyBrand();save();updatePreview();
   // Update solar add-on row visibility immediately after save
