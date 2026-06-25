@@ -73,7 +73,6 @@ export default async function handler(req, res) {
       is_locked: template.is_locked ?? true,
       editable_fields: template.editable_fields || [],
       sort_order: template.sort_order ?? 0,
-      created_by: template.created_by || null,
       updated_at: now,
       ...(isNew ? { created_at: now } : {})
     };
