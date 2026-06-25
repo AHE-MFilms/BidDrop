@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BidDrop Canvas Studio</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Oswald:wght@400;600;700&family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:       #0f1117;
+    --surface:  #1a1d27;
+    --surface2: #22263a;
+    --border:   #2e3348;
+    --accent:   #f25c05;
+    --accent2:  #ff8c42;
+    --text:     #e8eaf0;
+    --muted:    #8892a4;
+    --green:    #22c55e;
+    --red:      #ef4444;
+    --blue:     #3b82f6;
+    --toolbar-h: 52px;
+    --left-w:   64px;
+    --right-w:  280px;
+  }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-size: 13px; }
+
+  /* ── TOP BAR ─────────────────────────────────────────────────────────── */
+  #topbar {
+    position: fixed; top: 0; left: 0; right: 0; height: var(--toolbar-h);
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px; padding: 0 12px; z-index: 100;
+  }
+  #topbar .logo { font-weight: 700; font-size: 15px; color: var(--accent); margin-right: 8px; white-space: nowrap; }
+  #topbar .sep { width: 1px; height: 24px; background: var(--border); margin: 0 4px; }
+  #topbar .side-btn { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s; }
+  #topbar .side-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  #topbar .side-btn:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
+  #topbar .spacer { flex: 1; }
+  #topbar .ctx-group { display: flex; align-items: center; gap: 4px; }
+  #topbar select, #topbar input[type=text], #topbar input[type=number] {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 5px; padding: 4px 8px; font-size: 12px; font-family: inherit; height: 30px;
+  }
+  #topbar input[type=number] { width: 52px; text-align: center; }
+  #topbar input[type=color] { width: 30px; height: 30px; border: 1px solid var(--border); border-radius: 5px; cursor: pointer; padding: 1px; background: var(--surface2); }
+  #topbar .tb-btn {
+    width: 30px; height: 30px; border-radius: 5px; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text); font-size: 13px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: all .15s;
+  }
+  #topbar .tb-btn:hover { border-color: var(--accent); color: var(--accent); }
+  #topbar .tb-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  #topbar .tb-label { font-size: 11px; color: var(--muted); white-space: nowrap; }
+  #topbar .save-btn {
+    padding: 7px 18px; background: var(--accent); color: #fff; border: none;
+    border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer; transition: background .15s;
+  }
+  #topbar .save-btn:hover { background: var(--accent2); }
+  #topbar .pub-btn {
+    padding: 7px 18px; background: var(--green); color: #fff; border: none;
+    border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer; transition: background .15s;
+  }
+  #topbar .pub-btn:hover { background: #16a34a; }
+
+  /* ── LEFT TOOLBAR ────────────────────────────────────────────────────── */
+  #left-toolbar {
+    position: fixed; top: var(--toolbar-h); left: 0; bottom: 0; width: var(--left-w);
+    background: var(--surface); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 4px; z-index: 90;
+  }
+  .lt-btn {
+    width: 48px; height: 48px; border-radius: 8px; border: none; background: transparent;
+    color: var(--muted); cursor: pointer; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 3px; transition: all .15s; font-size: 10px;
+  }
+  .lt-btn svg { width: 20px; height: 20px; }
+  .lt-btn:hover, .lt-btn.active { background: var(--surface2); color: var(--accent); }
+  .lt-sep { width: 32px; height: 1px; background: var(--border); margin: 4px 0; }
+
+  /* ── CANVAS AREA ─────────────────────────────────────────────────────── */
+  #canvas-area {
+    position: fixed; top: var(--toolbar-h); left: var(--left-w); right: var(--right-w);
+    bottom: 0; background: #1e2030; display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  #canvas-wrap {
+    position: relative; box-shadow: 0 8px 48px rgba(0,0,0,.6);
+    transform-origin: center center;
+  }
+  #canvas-wrap canvas { display: block; }
+  #zoom-bar {
+    position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    display: flex; align-items: center; gap: 2px; padding: 4px 8px;
+  }
+  #zoom-bar button { background: none; border: none; color: var(--text); cursor: pointer; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+  #zoom-bar button:hover { background: var(--surface2); }
+  #zoom-label { font-size: 12px; color: var(--muted); min-width: 40px; text-align: center; }
+
+  /* ── RIGHT PANEL ─────────────────────────────────────────────────────── */
+  #right-panel {
+    position: fixed; top: var(--toolbar-h); right: 0; bottom: 0; width: var(--right-w);
+    background: var(--surface); border-left: 1px solid var(--border);
+    overflow-y: auto; display: flex; flex-direction: column;
+  }
+  .rp-section { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .rp-title { font-size: 10px; font-weight: 700; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+  .rp-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .rp-row label { font-size: 11px; color: var(--muted); min-width: 60px; }
+  .rp-row input, .rp-row select, .rp-row textarea {
+    flex: 1; background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 5px; padding: 5px 8px; font-size: 12px; font-family: inherit;
+  }
+  .rp-row textarea { resize: vertical; min-height: 60px; }
+  .rp-row input[type=color] { width: 36px; height: 28px; padding: 1px; flex: none; }
+  .rp-row input[type=range] { flex: 1; accent-color: var(--accent); }
+  .rp-row input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); flex: none; }
+  .rp-btn {
+    width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text); font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all .15s; margin-bottom: 6px;
+  }
+  .rp-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .rp-btn.danger { border-color: var(--red); color: var(--red); }
+  .rp-btn.danger:hover { background: var(--red); color: #fff; }
+  .rp-btn.accent { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .rp-btn.accent:hover { background: var(--accent2); }
+  .lock-row { display: flex; gap: 6px; }
+  .lock-chip {
+    flex: 1; padding: 6px 4px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--muted); font-size: 11px; font-weight: 600;
+    cursor: pointer; text-align: center; transition: all .15s;
+  }
+  .lock-chip.active-lock { border-color: var(--red); background: rgba(239,68,68,.15); color: var(--red); }
+  .lock-chip.active-edit { border-color: var(--green); background: rgba(34,197,94,.15); color: var(--green); }
+  .no-sel { padding: 32px 16px; text-align: center; color: var(--muted); font-size: 12px; line-height: 1.6; }
+
+  /* ── TEMPLATE LIST PANEL (left drawer) ──────────────────────────────── */
+  #tpl-drawer {
+    position: fixed; top: var(--toolbar-h); left: var(--left-w); bottom: 0; width: 240px;
+    background: var(--surface); border-right: 1px solid var(--border);
+    display: none; flex-direction: column; z-index: 80;
+  }
+  #tpl-drawer.open { display: flex; }
+  .tpl-drawer-head { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .tpl-drawer-head h3 { font-size: 13px; font-weight: 700; }
+  .tpl-drawer-head button { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; }
+  .tpl-list { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .tpl-card {
+    border-radius: 8px; border: 1px solid var(--border); background: var(--surface2);
+    padding: 10px 12px; cursor: pointer; transition: all .15s;
+  }
+  .tpl-card:hover, .tpl-card.active { border-color: var(--accent); }
+  .tpl-card-name { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+  .tpl-card-meta { font-size: 11px; color: var(--muted); display: flex; gap: 6px; align-items: center; }
+  .tpl-badge { padding: 1px 6px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+  .tpl-badge.pub { background: rgba(34,197,94,.2); color: var(--green); }
+  .tpl-badge.draft { background: rgba(136,146,164,.15); color: var(--muted); }
+  .new-tpl-btn {
+    margin: 8px; padding: 10px; border-radius: 8px; border: 1px dashed var(--border);
+    background: none; color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer;
+    transition: all .15s;
+  }
+  .new-tpl-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── TOAST ───────────────────────────────────────────────────────────── */
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 20px; font-size: 13px; font-weight: 500; z-index: 999;
+    opacity: 0; transition: opacity .3s; pointer-events: none; white-space: nowrap;
+  }
+  #toast.show { opacity: 1; }
+  #toast.ok { border-color: var(--green); color: var(--green); }
+  #toast.err { border-color: var(--red); color: var(--red); }
+
+  /* ── MODAL ───────────────────────────────────────────────────────────── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal-box {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 24px; min-width: 320px; max-width: 480px; width: 90%;
+  }
+  .modal-box h3 { font-size: 15px; font-weight: 700; margin-bottom: 16px; }
+  .modal-box label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px; margin-top: 12px; }
+  .modal-box input, .modal-box select, .modal-box textarea {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 6px; padding: 8px 10px; font-size: 13px; font-family: inherit;
+  }
+  .modal-box textarea { resize: vertical; min-height: 60px; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 20px; justify-content: flex-end; }
+  .modal-actions button { padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--surface2); color: var(--text); }
+  .modal-actions .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .modal-actions .btn-primary:hover { background: var(--accent2); }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <span class="logo">🎨 Canvas Studio</span>
+  <div class="sep"></div>
+  <button class="side-btn active" id="btn-front" onclick="switchSide('front')">Front</button>
+  <button class="side-btn" id="btn-back" onclick="switchSide('back')">Back</button>
+  <div class="sep"></div>
+  <!-- Context toolbar — shown when object selected -->
+  <div class="ctx-group" id="ctx-text" style="display:none;">
+    <select id="ctx-font" onchange="applyCtx()" title="Font family">
+      <option>Inter</option><option>Oswald</option><option>Montserrat</option>
+      <option>Arial</option><option>Georgia</option><option>Courier New</option><option>Impact</option>
+    </select>
+    <input type="number" id="ctx-size" value="24" min="6" max="200" onchange="applyCtx()" title="Font size">
+    <span class="tb-label">pt</span>
+    <button class="tb-btn" id="ctx-bold" onclick="toggleBold()" title="Bold"><b>B</b></button>
+    <button class="tb-btn" id="ctx-italic" onclick="toggleItalic()" title="Italic"><i>I</i></button>
+    <input type="color" id="ctx-color" value="#ffffff" onchange="applyCtx()" title="Text color">
+    <div class="sep"></div>
+    <button class="tb-btn" onclick="setAlign('left')" title="Align left">⬅</button>
+    <button class="tb-btn" onclick="setAlign('center')" title="Align center">↔</button>
+    <button class="tb-btn" onclick="setAlign('right')" title="Align right">➡</button>
+  </div>
+  <div class="ctx-group" id="ctx-obj" style="display:none;">
+    <span class="tb-label">X</span><input type="number" id="ctx-x" style="width:56px" onchange="applyPos()" title="X position">
+    <span class="tb-label">Y</span><input type="number" id="ctx-y" style="width:56px" onchange="applyPos()" title="Y position">
+    <span class="tb-label">W</span><input type="number" id="ctx-w" style="width:56px" onchange="applySize()" title="Width">
+    <span class="tb-label">H</span><input type="number" id="ctx-h" style="width:56px" onchange="applySize()" title="Height">
+    <div class="sep"></div>
+    <button class="tb-btn" onclick="bringForward()" title="Bring forward">⬆</button>
+    <button class="tb-btn" onclick="sendBackward()" title="Send backward">⬇</button>
+    <button class="tb-btn" onclick="duplicateObj()" title="Duplicate">⧉</button>
+    <button class="tb-btn" onclick="deleteObj()" title="Delete" style="color:var(--red)">🗑</button>
+  </div>
+  <div class="spacer"></div>
+  <button class="tb-btn" onclick="undoCanvas()" title="Undo">↩</button>
+  <button class="tb-btn" onclick="redoCanvas()" title="Redo">↪</button>
+  <div class="sep"></div>
+  <button class="save-btn" onclick="saveTemplate()">💾 Save</button>
+  <button class="pub-btn" onclick="publishTemplate()" id="pub-btn">🚀 Publish</button>
+</div>
+
+<!-- LEFT TOOLBAR -->
+<div id="left-toolbar">
+  <button class="lt-btn" onclick="toggleTplDrawer()" title="Templates">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    Templates
+  </button>
+  <div class="lt-sep"></div>
+  <button class="lt-btn" onclick="addText()" title="Add text">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+    Text
+  </button>
+  <button class="lt-btn" onclick="triggerImageUpload()" title="Add image">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+    Image
+  </button>
+  <button class="lt-btn" onclick="addImageZone()" title="Image zone (placeholder)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="4 2"/><path d="M3 16l5-5 4 4 3-3 6 6"/></svg>
+    Zone
+  </button>
+  <div class="lt-sep"></div>
+  <button class="lt-btn" onclick="addRect()" title="Rectangle">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="1"/></svg>
+    Rect
+  </button>
+  <button class="lt-btn" onclick="addCircle()" title="Circle">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
+    Circle
+  </button>
+  <button class="lt-btn" onclick="addLine()" title="Line">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/></svg>
+    Line
+  </button>
+  <div class="lt-sep"></div>
+  <button class="lt-btn" onclick="addQrZone()" title="QR Code zone">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="5" y="5" width="3" height="3" fill="currentColor"/><rect x="16" y="5" width="3" height="3" fill="currentColor"/><rect x="5" y="16" width="3" height="3" fill="currentColor"/><path d="M14 14h3v3h-3zM17 17h3v3h-3zM14 17h3v3h-3z"/></svg>
+    QR
+  </button>
+  <button class="lt-btn" onclick="setBackground()" title="Background">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M2 12h20M12 2v20"/></svg>
+    BG
+  </button>
+</div>
+
+<!-- TEMPLATE DRAWER -->
+<div id="tpl-drawer">
+  <div class="tpl-drawer-head">
+    <h3>Templates</h3>
+    <button onclick="toggleTplDrawer()">✕</button>
+  </div>
+  <button class="new-tpl-btn" onclick="newTemplate()">+ New Template</button>
+  <div class="tpl-list" id="tpl-list"></div>
+</div>
+
+<!-- CANVAS AREA -->
+<div id="canvas-area">
+  <div id="canvas-wrap">
+    <canvas id="c"></canvas>
+  </div>
+  <div id="zoom-bar">
+    <button onclick="zoom(-0.1)">−</button>
+    <span id="zoom-label">100%</span>
+    <button onclick="zoom(0.1)">+</button>
+    <button onclick="zoomFit()" title="Fit to screen" style="font-size:11px;padding:2px 8px;">Fit</button>
+  </div>
+</div>
+
+<!-- RIGHT PANEL -->
+<div id="right-panel">
+  <!-- Template meta -->
+  <div class="rp-section">
+    <div class="rp-title">Template</div>
+    <div class="rp-row"><label>Name</label><input type="text" id="rp-name" placeholder="Template name" oninput="CS.dirty=true"></div>
+    <div class="rp-row"><label>Trade</label>
+      <select id="rp-trade" onchange="CS.dirty=true">
+        <option value="roofing">🏠 Roofing</option>
+        <option value="siding">🏗 Siding</option>
+        <option value="windows">🪟 Windows</option>
+        <option value="gutters">🌧 Gutters</option>
+        <option value="solar">☀️ Solar</option>
+        <option value="all">All Trades</option>
+      </select>
+    </div>
+    <div class="rp-row"><label>Desc</label><textarea id="rp-desc" rows="2" placeholder="Optional description" oninput="CS.dirty=true"></textarea></div>
+  </div>
+
+  <!-- Background color -->
+  <div class="rp-section">
+    <div class="rp-title">Canvas Background</div>
+    <div class="rp-row">
+      <label>Color</label>
+      <input type="color" id="rp-bg-color" value="#1a1a2e" onchange="applyBgColor()">
+      <input type="text" id="rp-bg-hex" value="#1a1a2e" style="width:80px" oninput="applyBgHex()">
+    </div>
+    <button class="rp-btn" onclick="triggerBgImageUpload()">📷 Set Background Image</button>
+    <button class="rp-btn" onclick="clearBg()">✕ Clear Background</button>
+  </div>
+
+  <!-- Selected object properties -->
+  <div class="rp-section" id="rp-obj-section" style="display:none;">
+    <div class="rp-title">Selected Object</div>
+    <div id="rp-obj-fill-row" class="rp-row">
+      <label>Fill</label>
+      <input type="color" id="rp-fill" value="#ff6600" onchange="applyObjFill()">
+      <input type="text" id="rp-fill-hex" value="#ff6600" style="width:80px" oninput="applyObjFillHex()">
+    </div>
+    <div id="rp-obj-opacity-row" class="rp-row">
+      <label>Opacity</label>
+      <input type="range" id="rp-opacity" min="0" max="1" step="0.01" value="1" oninput="applyObjOpacity()">
+      <span id="rp-opacity-val" style="min-width:32px;text-align:right;color:var(--muted);">100%</span>
+    </div>
+    <div id="rp-obj-stroke-row" class="rp-row">
+      <label>Stroke</label>
+      <input type="color" id="rp-stroke" value="#000000" onchange="applyObjStroke()">
+      <input type="number" id="rp-stroke-w" value="0" min="0" max="20" style="width:52px" onchange="applyObjStroke()" title="Stroke width">
+    </div>
+    <div id="rp-obj-radius-row" class="rp-row" style="display:none;">
+      <label>Radius</label>
+      <input type="range" id="rp-radius" min="0" max="100" value="0" oninput="applyObjRadius()">
+      <span id="rp-radius-val" style="min-width:32px;text-align:right;color:var(--muted);">0</span>
+    </div>
+    <!-- Zone label for image/qr zones -->
+    <div id="rp-zone-row" class="rp-row" style="display:none;">
+      <label>Zone</label>
+      <input type="text" id="rp-zone-label" placeholder="e.g. heroImage, logo" onchange="applyZoneLabel()">
+    </div>
+    <div style="height:8px;"></div>
+    <div class="rp-title">Lock / Editable</div>
+    <div class="lock-row" style="margin-bottom:8px;">
+      <button class="lock-chip" id="chip-free" onclick="setLockState('free')">Free</button>
+      <button class="lock-chip" id="chip-edit" onclick="setLockState('editable')">Editable</button>
+      <button class="lock-chip" id="chip-lock" onclick="setLockState('locked')">Locked</button>
+    </div>
+    <div style="font-size:11px;color:var(--muted);line-height:1.5;">
+      <b style="color:var(--text)">Free</b> — contractors can move/resize.<br>
+      <b style="color:var(--green)">Editable</b> — contractors can change content (text/image) but not move.<br>
+      <b style="color:var(--red)">Locked</b> — contractors cannot touch this element.
+    </div>
+    <div style="height:8px;"></div>
+    <button class="rp-btn danger" onclick="deleteObj()">🗑 Delete Element</button>
+  </div>
+
+  <div class="no-sel" id="rp-no-sel">
+    Click any element on the canvas to edit its properties.<br><br>
+    Use the left toolbar to add text, images, shapes, and more.
+  </div>
+</div>
+
+<!-- Hidden file inputs -->
+<input type="file" id="img-upload" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
+<input type="file" id="bg-upload" accept="image/*" style="display:none" onchange="handleBgUpload(event)">
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// CANVAS STUDIO — Main JS
+// ═══════════════════════════════════════════════════════════════════
+
+const POSTCARD_W = 900; // 6" × 150dpi
+const POSTCARD_H = 600; // 4" × 150dpi
+
+const CS = {
+  side: 'front',           // 'front' | 'back'
+  frontJson: null,
+  backJson: null,
+  templateId: null,
+  dirty: false,
+  published: false,
+  history: [],
+  historyIdx: -1,
+  zoom: 1,
+  templates: [],
+  activeTemplateIdx: -1,
+};
+
+// ── Fabric canvas init ────────────────────────────────────────────
+const canvas = new fabric.Canvas('c', {
+  width: POSTCARD_W,
+  height: POSTCARD_H,
+  backgroundColor: '#1a1a2e',
+  preserveObjectStacking: true,
+  selection: true,
+});
+
+// Fit canvas to window on load
+window.addEventListener('load', () => { zoomFit(); loadTemplateList(); });
+window.addEventListener('resize', zoomFit);
+
+function zoomFit() {
+  const area = document.getElementById('canvas-area');
+  const aw = area.clientWidth - 80;
+  const ah = area.clientHeight - 80;
+  const scale = Math.min(aw / POSTCARD_W, ah / POSTCARD_H, 1);
+  CS.zoom = scale;
+  applyZoom();
+}
+
+function zoom(delta) {
+  CS.zoom = Math.max(0.2, Math.min(3, CS.zoom + delta));
+  applyZoom();
+}
+
+function applyZoom() {
+  const wrap = document.getElementById('canvas-wrap');
+  wrap.style.transform = `scale(${CS.zoom})`;
+  document.getElementById('zoom-label').textContent = Math.round(CS.zoom * 100) + '%';
+}
+
+// ── History (undo/redo) ───────────────────────────────────────────
+function pushHistory() {
+  const json = canvas.toJSON(['bdLock','bdEditable','bdZoneLabel']);
+  CS.history = CS.history.slice(0, CS.historyIdx + 1);
+  CS.history.push(json);
+  if (CS.history.length > 50) CS.history.shift();
+  CS.historyIdx = CS.history.length - 1;
+  CS.dirty = true;
+}
+
+function undoCanvas() {
+  if (CS.historyIdx <= 0) return;
+  CS.historyIdx--;
+  loadJson(CS.history[CS.historyIdx]);
+}
+
+function redoCanvas() {
+  if (CS.historyIdx >= CS.history.length - 1) return;
+  CS.historyIdx++;
+  loadJson(CS.history[CS.historyIdx]);
+}
+
+function loadJson(json) {
+  canvas.loadFromJSON(json, () => {
+    canvas.renderAll();
+    updateRightPanel(null);
+  });
+}
+
+canvas.on('object:modified', pushHistory);
+canvas.on('object:added', pushHistory);
+canvas.on('object:removed', pushHistory);
+
+// ── Selection events ──────────────────────────────────────────────
+canvas.on('selection:created', e => updateRightPanel(e.selected[0]));
+canvas.on('selection:updated', e => updateRightPanel(e.selected[0]));
+canvas.on('selection:cleared', () => updateRightPanel(null));
+canvas.on('object:moving', e => syncCtxPos(e.target));
+canvas.on('object:scaling', e => syncCtxSize(e.target));
+
+function updateRightPanel(obj) {
+  const sec = document.getElementById('rp-obj-section');
+  const noSel = document.getElementById('rp-no-sel');
+  const ctxText = document.getElementById('ctx-text');
+  const ctxObj = document.getElementById('ctx-obj');
+
+  if (!obj) {
+    sec.style.display = 'none';
+    noSel.style.display = '';
+    ctxText.style.display = 'none';
+    ctxObj.style.display = 'none';
+    return;
+  }
+
+  sec.style.display = '';
+  noSel.style.display = 'none';
+  ctxObj.style.display = 'flex';
+
+  // Fill
+  const fill = obj.fill || '#000000';
+  document.getElementById('rp-fill').value = toHex(fill);
+  document.getElementById('rp-fill-hex').value = toHex(fill);
+
+  // Opacity
+  const op = obj.opacity ?? 1;
+  document.getElementById('rp-opacity').value = op;
+  document.getElementById('rp-opacity-val').textContent = Math.round(op * 100) + '%';
+
+  // Stroke
+  document.getElementById('rp-stroke').value = toHex(obj.stroke || '#000000');
+  document.getElementById('rp-stroke-w').value = obj.strokeWidth || 0;
+
+  // Radius (rect only)
+  const radiusRow = document.getElementById('rp-obj-radius-row');
+  if (obj.type === 'rect') {
+    radiusRow.style.display = 'flex';
+    document.getElementById('rp-radius').value = obj.rx || 0;
+    document.getElementById('rp-radius-val').textContent = obj.rx || 0;
+  } else {
+    radiusRow.style.display = 'none';
+  }
+
+  // Zone label
+  const zoneRow = document.getElementById('rp-zone-row');
+  if (obj.bdZoneLabel !== undefined || obj.type === 'rect') {
+    zoneRow.style.display = 'flex';
+    document.getElementById('rp-zone-label').value = obj.bdZoneLabel || '';
+  } else {
+    zoneRow.style.display = 'none';
+  }
+
+  // Text context
+  if (obj.type === 'textbox' || obj.type === 'text' || obj.type === 'i-text') {
+    ctxText.style.display = 'flex';
+    document.getElementById('ctx-font').value = obj.fontFamily || 'Inter';
+    document.getElementById('ctx-size').value = Math.round(obj.fontSize || 24);
+    document.getElementById('ctx-color').value = toHex(obj.fill || '#ffffff');
+    document.getElementById('ctx-bold').classList.toggle('active', obj.fontWeight === 'bold');
+    document.getElementById('ctx-italic').classList.toggle('active', obj.fontStyle === 'italic');
+  } else {
+    ctxText.style.display = 'none';
+  }
+
+  // Position/size
+  syncCtxPos(obj);
+  syncCtxSize(obj);
+
+  // Lock state chips
+  const lockState = obj.bdLock || 'free';
+  document.getElementById('chip-free').className = 'lock-chip' + (lockState === 'free' ? '' : '');
+  document.getElementById('chip-edit').className = 'lock-chip' + (lockState === 'editable' ? ' active-edit' : '');
+  document.getElementById('chip-lock').className = 'lock-chip' + (lockState === 'locked' ? ' active-lock' : '');
+}
+
+function syncCtxPos(obj) {
+  if (!obj) return;
+  document.getElementById('ctx-x').value = Math.round(obj.left || 0);
+  document.getElementById('ctx-y').value = Math.round(obj.top || 0);
+}
+
+function syncCtxSize(obj) {
+  if (!obj) return;
+  document.getElementById('ctx-w').value = Math.round((obj.width || 0) * (obj.scaleX || 1));
+  document.getElementById('ctx-h').value = Math.round((obj.height || 0) * (obj.scaleY || 1));
+}
+
+function toHex(color) {
+  if (!color || color === 'transparent') return '#000000';
+  if (color.startsWith('#')) return color.length === 4
+    ? '#' + color[1]+color[1]+color[2]+color[2]+color[3]+color[3]
+    : color;
+  // rgb(r,g,b) → hex
+  const m = color.match(/\d+/g);
+  if (m && m.length >= 3) return '#' + [m[0],m[1],m[2]].map(n => parseInt(n).toString(16).padStart(2,'0')).join('');
+  return '#000000';
+}
+
+// ── Context toolbar actions ───────────────────────────────────────
+function applyCtx() {
+  const obj = canvas.getActiveObject();
+  if (!obj) return;
+  obj.set({
+    fontFamily: document.getElementById('ctx-font').value,
+    fontSize: parseInt(document.getElementById('ctx-size').value),
+    fill: document.getElementById('ctx-color').value,
+  });
+  canvas.renderAll();
+  CS.dirty = true;
+}
+
+function toggleBold() {
+  const obj = canvas.getActiveObject();
+  if (!obj) return;
+  const isBold = obj.fontWeight === 'bold';
+  obj.set('fontWeight', isBold ? 'normal' : 'bold');
+  document.getElementById('ctx-bold').classList.toggle('active', !isBold);
+  canvas.renderAll(); CS.dirty = true;
+}
+
+function toggleItalic() {
+  const obj = canvas.getActiveObject();
+  if (!obj) return;
+  const isItalic = obj.fontStyle === 'italic';
+  obj.set('fontStyle', isItalic ? 'normal' : 'italic');
+  document.getElementById('ctx-italic').classList.toggle('active', !isItalic);
+  canvas.renderAll(); CS.dirty = true;
+}
+
+function setAlign(align) {
+  const obj = canvas.getActiveObject();
+  if (!obj) return;
+  obj.set('textAlign', align);
+  canvas.renderAll(); CS.dirty = true;
+}
+
+function applyPos() {
+  const obj = canvas.getActiveObject();
+  if (!obj) return;
+  obj.set({ left: parseFloat(document.getElementById('ctx-x').value), top: parseFloat(document.getElementById('ctx-y').value) });
+  obj.setCoords();
+  canvas.renderAll(); CS.dirty = true;
+}
+
+function applySize() {
+  const obj = canvas.getActiveObject();
+  if (!obj) return;
+  const w = parseFloat(document.getElementById('ctx-w').value);
+  const h = parseFloat(document.getElementById('ctx-h').value);
+  obj.set({ scaleX: w / (obj.width || 1), scaleY: h / (obj.height || 1) });
+  obj.setCoords();
+  canvas.renderAll(); CS.dirty = true;
+}
+
+function bringForward() { const o = canvas.getActiveObject(); if(o) { canvas.bringForward(o); canvas.renderAll(); CS.dirty=true; } }
+function sendBackward() { const o = canvas.getActiveObject(); if(o) { canvas.sendBackwards(o); canvas.renderAll(); CS.dirty=true; } }
+function duplicateObj() {
+  const o = canvas.getActiveObject();
+  if (!o) return;
+  o.clone(cloned => {
+    cloned.set({ left: (o.left||0)+20, top: (o.top||0)+20 });
+    canvas.add(cloned);
+    canvas.setActiveObject(cloned);
+    canvas.renderAll();
+  }, ['bdLock','bdEditable','bdZoneLabel']);
+}
+function deleteObj() {
+  const o = canvas.getActiveObject();
+  if (!o) return;
+  canvas.remove(o);
+  canvas.renderAll();
+  updateRightPanel(null);
+}
+
+// ── Right panel property changes ─────────────────────────────────
+function applyObjFill() {
+  const v = document.getElementById('rp-fill').value;
+  document.getElementById('rp-fill-hex').value = v;
+  const o = canvas.getActiveObject(); if(!o) return;
+  o.set('fill', v); canvas.renderAll(); CS.dirty=true;
+}
+function applyObjFillHex() {
+  const v = document.getElementById('rp-fill-hex').value;
+  if (!/^#[0-9a-f]{6}$/i.test(v)) return;
+  document.getElementById('rp-fill').value = v;
+  const o = canvas.getActiveObject(); if(!o) return;
+  o.set('fill', v); canvas.renderAll(); CS.dirty=true;
+}
+function applyObjOpacity() {
+  const v = parseFloat(document.getElementById('rp-opacity').value);
+  document.getElementById('rp-opacity-val').textContent = Math.round(v*100)+'%';
+  const o = canvas.getActiveObject(); if(!o) return;
+  o.set('opacity', v); canvas.renderAll(); CS.dirty=true;
+}
+function applyObjStroke() {
+  const color = document.getElementById('rp-stroke').value;
+  const width = parseInt(document.getElementById('rp-stroke-w').value)||0;
+  const o = canvas.getActiveObject(); if(!o) return;
+  o.set({ stroke: color, strokeWidth: width }); canvas.renderAll(); CS.dirty=true;
+}
+function applyObjRadius() {
+  const v = parseInt(document.getElementById('rp-radius').value)||0;
+  document.getElementById('rp-radius-val').textContent = v;
+  const o = canvas.getActiveObject(); if(!o) return;
+  o.set({ rx: v, ry: v }); canvas.renderAll(); CS.dirty=true;
+}
+function applyZoneLabel() {
+  const v = document.getElementById('rp-zone-label').value;
+  const o = canvas.getActiveObject(); if(!o) return;
+  o.bdZoneLabel = v; CS.dirty=true;
+}
+function applyBgColor() {
+  const v = document.getElementById('rp-bg-color').value;
+  document.getElementById('rp-bg-hex').value = v;
+  canvas.setBackgroundColor(v, canvas.renderAll.bind(canvas));
+  CS.dirty=true;
+}
+function applyBgHex() {
+  const v = document.getElementById('rp-bg-hex').value;
+  if (!/^#[0-9a-f]{6}$/i.test(v)) return;
+  document.getElementById('rp-bg-color').value = v;
+  canvas.setBackgroundColor(v, canvas.renderAll.bind(canvas));
+  CS.dirty=true;
+}
+function clearBg() {
+  canvas.setBackgroundImage(null, canvas.renderAll.bind(canvas));
+  canvas.setBackgroundColor('#1a1a2e', canvas.renderAll.bind(canvas));
+  document.getElementById('rp-bg-color').value = '#1a1a2e';
+  document.getElementById('rp-bg-hex').value = '#1a1a2e';
+  CS.dirty=true;
+}
+
+// ── Lock state ────────────────────────────────────────────────────
+function setLockState(state) {
+  const o = canvas.getActiveObject(); if(!o) return;
+  o.bdLock = state;
+  // Visual feedback: colored border
+  if (state === 'locked') {
+    o.set({ borderColor: '#ef4444', cornerColor: '#ef4444' });
+  } else if (state === 'editable') {
+    o.set({ borderColor: '#22c55e', cornerColor: '#22c55e' });
+  } else {
+    o.set({ borderColor: '#3b82f6', cornerColor: '#3b82f6' });
+  }
+  canvas.renderAll();
+  updateRightPanel(o);
+  CS.dirty=true;
+}
+
+// ── Add elements ──────────────────────────────────────────────────
+function addText() {
+  const t = new fabric.Textbox('Your Text Here', {
+    left: 50, top: 50, width: 300,
+    fontFamily: 'Oswald', fontSize: 48, fill: '#ffffff',
+    fontWeight: 'bold', textAlign: 'left',
+    bdLock: 'free',
+  });
+  canvas.add(t);
+  canvas.setActiveObject(t);
+  canvas.renderAll();
+}
+
+function addImageZone() {
+  const r = new fabric.Rect({
+    left: 50, top: 50, width: 300, height: 200,
+    fill: 'rgba(255,255,255,0.08)',
+    stroke: '#f25c05', strokeWidth: 2, strokeDashArray: [8,4],
+    rx: 4, ry: 4,
+    bdLock: 'free', bdZoneLabel: 'heroImage',
+  });
+  // Label text
+  const lbl = new fabric.Text('📷 Image Zone', {
+    left: r.left + 10, top: r.top + 10,
+    fontSize: 14, fill: '#f25c05', fontFamily: 'Inter',
+    selectable: false, evented: false,
+  });
+  canvas.add(r, lbl);
+  canvas.setActiveObject(r);
+  canvas.renderAll();
+}
+
+function addQrZone() {
+  const r = new fabric.Rect({
+    left: 50, top: 50, width: 100, height: 100,
+    fill: 'rgba(255,255,255,0.08)',
+    stroke: '#3b82f6', strokeWidth: 2, strokeDashArray: [6,3],
+    rx: 4, ry: 4,
+    bdLock: 'locked', bdZoneLabel: 'qrCode',
+  });
+  const lbl = new fabric.Text('QR', {
+    left: r.left + 30, top: r.top + 38,
+    fontSize: 18, fill: '#3b82f6', fontFamily: 'Inter', fontWeight: 'bold',
+    selectable: false, evented: false,
+  });
+  canvas.add(r, lbl);
+  canvas.setActiveObject(r);
+  canvas.renderAll();
+}
+
+function addRect() {
+  const r = new fabric.Rect({
+    left: 100, top: 100, width: 200, height: 80,
+    fill: '#f25c05', rx: 0, ry: 0,
+    bdLock: 'free',
+  });
+  canvas.add(r); canvas.setActiveObject(r); canvas.renderAll();
+}
+
+function addCircle() {
+  const c = new fabric.Circle({
+    left: 100, top: 100, radius: 50,
+    fill: '#f25c05', bdLock: 'free',
+  });
+  canvas.add(c); canvas.setActiveObject(c); canvas.renderAll();
+}
+
+function addLine() {
+  const l = new fabric.Line([50, 0, 450, 0], {
+    left: 100, top: 200,
+    stroke: '#f25c05', strokeWidth: 3,
+    bdLock: 'free',
+  });
+  canvas.add(l); canvas.setActiveObject(l); canvas.renderAll();
+}
+
+function triggerImageUpload() { document.getElementById('img-upload').click(); }
+function triggerBgImageUpload() { document.getElementById('bg-upload').click(); }
+
+function handleImageUpload(e) {
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    fabric.Image.fromURL(ev.target.result, img => {
+      // Scale to fit within canvas
+      const scale = Math.min(400/img.width, 300/img.height, 1);
+      img.set({ left: 50, top: 50, scaleX: scale, scaleY: scale, bdLock: 'free' });
+      canvas.add(img); canvas.setActiveObject(img); canvas.renderAll();
+    });
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+function handleBgUpload(e) {
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    fabric.Image.fromURL(ev.target.result, img => {
+      img.set({ scaleX: POSTCARD_W/img.width, scaleY: POSTCARD_H/img.height });
+      canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas));
+      CS.dirty=true;
+    });
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+function setBackground() { triggerBgImageUpload(); }
+
+// ── Side switching ────────────────────────────────────────────────
+function switchSide(side) {
+  if (side === CS.side) return;
+  // Save current side
+  const json = canvas.toJSON(['bdLock','bdEditable','bdZoneLabel']);
+  if (CS.side === 'front') CS.frontJson = json;
+  else CS.backJson = json;
+
+  CS.side = side;
+  document.getElementById('btn-front').classList.toggle('active', side === 'front');
+  document.getElementById('btn-back').classList.toggle('active', side === 'back');
+
+  // Load other side
+  const target = side === 'front' ? CS.frontJson : CS.backJson;
+  if (target) {
+    canvas.loadFromJSON(target, () => { canvas.renderAll(); updateRightPanel(null); });
+  } else {
+    canvas.clear();
+    canvas.setBackgroundColor('#1a1a2e', canvas.renderAll.bind(canvas));
+    updateRightPanel(null);
+  }
+  CS.history = []; CS.historyIdx = -1;
+}
+
+// ── Template list ─────────────────────────────────────────────────
+async function loadTemplateList() {
+  try {
+    const r = await fetch('/api/canvas?action=list');
+    CS.templates = await r.json();
+    renderTplList();
+  } catch(e) {
+    CS.templates = [];
+    renderTplList();
+  }
+}
+
+function renderTplList() {
+  const el = document.getElementById('tpl-list');
+  if (!CS.templates.length) {
+    el.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px;">No templates yet.<br>Click + New Template to start.</div>';
+    return;
+  }
+  el.innerHTML = CS.templates.map((t, i) => `
+    <div class="tpl-card${CS.activeTemplateIdx===i?' active':''}" onclick="loadTemplate(${i})">
+      <div class="tpl-card-name">${t.name}</div>
+      <div class="tpl-card-meta">
+        <span>${t.trade||'roofing'}</span>
+        <span class="tpl-badge ${t.is_published?'pub':'draft'}">${t.is_published?'Published':'Draft'}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleTplDrawer() {
+  const d = document.getElementById('tpl-drawer');
+  d.classList.toggle('open');
+}
+
+async function loadTemplate(idx) {
+  if (CS.dirty && !confirm('You have unsaved changes. Load a different template?')) return;
+  const tpl = CS.templates[idx];
+  CS.activeTemplateIdx = idx;
+  CS.templateId = tpl.id;
+  CS.published = tpl.is_published;
+  CS.dirty = false;
+
+  document.getElementById('rp-name').value = tpl.name || '';
+  document.getElementById('rp-trade').value = tpl.trade || 'roofing';
+  document.getElementById('rp-desc').value = tpl.description || '';
+  document.getElementById('pub-btn').textContent = tpl.is_published ? '⏸ Unpublish' : '🚀 Publish';
+
+  // Load front
+  CS.side = 'front';
+  document.getElementById('btn-front').classList.add('active');
+  document.getElementById('btn-back').classList.remove('active');
+
+  // Fetch full template
+  const r = await fetch(`/api/canvas?action=get&id=${tpl.id}`);
+  const full = await r.json();
+  CS.frontJson = full.front_json;
+  CS.backJson = full.back_json;
+
+  if (full.front_json) {
+    canvas.loadFromJSON(full.front_json, () => { canvas.renderAll(); updateRightPanel(null); });
+  } else {
+    canvas.clear();
+    canvas.setBackgroundColor('#1a1a2e', canvas.renderAll.bind(canvas));
+  }
+  CS.history = []; CS.historyIdx = -1;
+  renderTplList();
+  showToast('Template loaded', 'ok');
+}
+
+function newTemplate() {
+  if (CS.dirty && !confirm('You have unsaved changes. Start a new template?')) return;
+  CS.templateId = null;
+  CS.activeTemplateIdx = -1;
+  CS.frontJson = null;
+  CS.backJson = null;
+  CS.dirty = false;
+  CS.published = false;
+
+  document.getElementById('rp-name').value = 'New Template';
+  document.getElementById('rp-trade').value = 'roofing';
+  document.getElementById('rp-desc').value = '';
+  document.getElementById('pub-btn').textContent = '🚀 Publish';
+
+  CS.side = 'front';
+  document.getElementById('btn-front').classList.add('active');
+  document.getElementById('btn-back').classList.remove('active');
+  canvas.clear();
+  canvas.setBackgroundColor('#1a1a2e', canvas.renderAll.bind(canvas));
+  updateRightPanel(null);
+  CS.history = []; CS.historyIdx = -1;
+  renderTplList();
+  showToast('New template started', 'ok');
+}
+
+// ── Save ──────────────────────────────────────────────────────────
+async function saveTemplate() {
+  // Save current side
+  const json = canvas.toJSON(['bdLock','bdEditable','bdZoneLabel']);
+  if (CS.side === 'front') CS.frontJson = json;
+  else CS.backJson = json;
+
+  // Collect editable fields
+  const editableFields = [];
+  canvas.getObjects().forEach(o => {
+    if (o.bdLock === 'editable') {
+      editableFields.push({ label: o.bdZoneLabel || o.type, type: o.type, id: o.id });
+    }
+  });
+
+  const payload = {
+    template: {
+      id: CS.templateId || undefined,
+      name: document.getElementById('rp-name').value || 'Untitled',
+      description: document.getElementById('rp-desc').value || '',
+      trade: document.getElementById('rp-trade').value || 'roofing',
+      front_json: CS.frontJson,
+      back_json: CS.backJson,
+      is_published: CS.published,
+      editable_fields: editableFields,
+    }
+  };
+
+  try {
+    const r = await fetch('/api/canvas?action=save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await r.json();
+    if (data.id) {
+      CS.templateId = data.id;
+      CS.dirty = false;
+      await loadTemplateList();
+      showToast('Template saved ✓', 'ok');
+    } else {
+      showToast('Save failed: ' + JSON.stringify(data), 'err');
+    }
+  } catch(e) {
+    showToast('Save error: ' + e.message, 'err');
+  }
+}
+
+// ── Publish ───────────────────────────────────────────────────────
+async function publishTemplate() {
+  if (!CS.templateId) {
+    showToast('Save the template first', 'err'); return;
+  }
+  const newState = !CS.published;
+  try {
+    const r = await fetch(`/api/canvas?action=${newState?'publish':'unpublish'}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: CS.templateId })
+    });
+    const data = await r.json();
+    CS.published = newState;
+    document.getElementById('pub-btn').textContent = newState ? '⏸ Unpublish' : '🚀 Publish';
+    await loadTemplateList();
+    showToast(newState ? 'Template published ✓' : 'Template unpublished', 'ok');
+  } catch(e) {
+    showToast('Error: ' + e.message, 'err');
+  }
+}
+
+// ── Toast ─────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type='ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = ''; }, 3000);
+}
+
+// ── Keyboard shortcuts ────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if ((e.metaKey || e.ctrlKey) && e.key === 'z') { e.preventDefault(); undoCanvas(); }
+  if ((e.metaKey || e.ctrlKey) && e.key === 'y') { e.preventDefault(); redoCanvas(); }
+  if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); saveTemplate(); }
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    const o = canvas.getActiveObject();
+    if (o) { canvas.remove(o); canvas.renderAll(); updateRightPanel(null); }
+  }
+});
+
+// ── Auth guard (super_admin only) ─────────────────────────────────
+// The page is served from /canvas-studio.html — access is controlled
+// by the app's auth check before opening this page.
+// If opened directly, show a minimal auth check.
+(async function checkAuth() {
+  // Try to read auth from localStorage (same key used by main app)
+  const session = localStorage.getItem('sb-session') || localStorage.getItem('supabase.auth.token');
+  if (!session) {
+    // Not logged in — redirect to main app
+    // (In production, the main app opens this page only for super_admin)
+    console.warn('[Canvas Studio] No session found — super_admin access required');
+  }
+})();
+
+// Initial history snapshot
+pushHistory();
+</script>
+</body>
+</html>

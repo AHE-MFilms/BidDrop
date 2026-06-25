@@ -5374,7 +5374,9 @@ tr:hover td{background:var(--card);}
 <script src="/src/postcard-render.js"></script>
 <script src="/src/postcard-templates.js"></script>
 <script src="/src/postcard-dispatch.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 <script src="/src/postcard-designer.js"></script>
+<script src="/src/canvas-designer.js"></script>
 <script src="/src/supabase-sync.js"></script>
 <script src="/src/video.js"></script>
 <script src="/src/print.js"></script>
@@ -8664,7 +8666,7 @@ function confirmDesignPick(){
   if(typeof _orig==='function'){
     window.goTab=function(t){
       _orig(t);
-      if(t==='designs') { setTimeout(renderDesignsGrid,50); setTimeout(()=>{ if(typeof openPostcardDesigner==='function') openPostcardDesigner(); },80); }
+      if(t==='designs') { setTimeout(renderDesignsGrid,50); setTimeout(()=>{ if(typeof cdInit==='function' && !window._cdInited){ window._cdInited=true; cdInit(); } },80); }
       if(t==='drip') setTimeout(renderDripBuilder,50);
     };
   }

@@ -266,6 +266,26 @@ export default async function handler(req, res) {
         created_at timestamptz DEFAULT now()
       )`
     },
+    {
+      name: 'canvas_templates_table',
+      check: "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name='canvas_templates'",
+      sql: `CREATE TABLE IF NOT EXISTS canvas_templates (
+        id text PRIMARY KEY,
+        name text NOT NULL,
+        description text,
+        trade text DEFAULT 'roofing',
+        front_json jsonb,
+        back_json jsonb,
+        thumbnail_url text,
+        is_published boolean DEFAULT false,
+        is_locked boolean DEFAULT true,
+        editable_fields jsonb DEFAULT '[]',
+        sort_order integer DEFAULT 0,
+        created_by text,
+        created_at timestamptz DEFAULT now(),
+        updated_at timestamptz DEFAULT now()
+      )`
+    },
   ];
 
   // Try to run DDL via rpc/exec_sql
