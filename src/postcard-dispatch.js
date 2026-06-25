@@ -3,12 +3,61 @@
 // (mail-queue.js, mailer-preview.js, postcard-render.js preview) stay in sync.
 
 /**
+ * Render a saved Fabric.js canvas JSON to a JPEG dataURL at full 300-DPI resolution.
+ * Used by both front and back when the new canvas designer has a saved design.
+ * @param {object|string} json  - Fabric canvas JSON (object or string)
+ * @param {number} [w=1800]    - native canvas width in px
+ * @param {number} [h=1200]    - native canvas height in px
+ * @returns {Promise<string>} dataURL (image/jpeg)
+ */
+function _renderFabricJsonToDataUrl(json, w=1800, h=1200) {
+  return new Promise((resolve, reject) => {
+    // Create a temporary off-screen canvas element
+    const el = document.createElement('canvas');
+    el.width = w; el.height = h;
+    // Fabric needs the canvas to be in the DOM briefly for some renderers
+    el.style.cssText = 'position:fixed;left:-9999px;top:-9999px;pointer-events:none;';
+    document.body.appendChild(el);
+    const fc = new fabric.Canvas(el, { width: w, height: h });
+    const cleanJson = typeof json === 'string' ? JSON.parse(json) : JSON.parse(JSON.stringify(json));
+    // Sanitize invalid textBaseline values
+    if (cleanJson.objects) {
+      const VALID = ['alphabetic','top','hanging','middle','ideographic','bottom'];
+      cleanJson.objects.forEach(o => {
+        if (o.textBaseline && !VALID.includes(o.textBaseline)) delete o.textBaseline;
+        if (o.objects) o.objects.forEach(c => { if (c.textBaseline && !VALID.includes(c.textBaseline)) delete c.textBaseline; });
+      });
+    }
+    fc.loadFromJSON(cleanJson, () => {
+      fc.renderAll();
+      const dataUrl = fc.toDataURL({ format: 'jpeg', quality: 0.92, multiplier: 1 });
+      fc.dispose();
+      document.body.removeChild(el);
+      resolve(dataUrl);
+    });
+    // Safety timeout
+    setTimeout(() => { try { fc.dispose(); document.body.removeChild(el); } catch(e){} reject(new Error('Fabric render timeout')); }, 15000);
+  });
+}
+
+/**
  * Render the front canvas for the currently-selected postcard template.
+ * If the account has a saved canvas-designer design, that takes priority.
  * @param {object} item  - pin/estimate item passed to canvas renderers
  * @param {string} [override] - optional design id override (skips S.cfg lookup)
  * @returns {Promise<string>} dataURL (image/jpeg)
  */
 async function renderFrontCanvasForDesign(item, override){
+  // ── New canvas designer path (Build 13) ──
+  // If no override is requested AND the account has a saved Fabric canvas design, use it
+  if (!override && S.cfg && S.cfg.canvasDesignFrontJson) {
+    try {
+      return await _renderFabricJsonToDataUrl(S.cfg.canvasDesignFrontJson);
+    } catch(e) {
+      console.warn('[BidDrop] Canvas designer front render failed, falling back to legacy:', e.message);
+    }
+  }
+  // ── Legacy path ──
   const design = override || (S.cfg && S.cfg.postcardDesign) || '1';
   switch(design){
     case 't3': return renderPostcard6x9FrontCanvasT3(item);

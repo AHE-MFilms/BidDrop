@@ -125,6 +125,11 @@ async function syncAccountToSupabase(){
   // Pixel fields (Build 12)
   if(cfg.pixelId !== undefined)              b10payload.pixel_id = cfg.pixelId||null;
   if(cfg.pixelResolutionKey !== undefined)   b10payload.pixel_resolution_key = cfg.pixelResolutionKey||null;
+  // Canvas designer fields (Build 13) — new Fabric-based postcard designer
+  if(cfg.canvasDesignFrontJson !== undefined) b10payload.canvas_design_front_json = cfg.canvasDesignFrontJson ? JSON.stringify(cfg.canvasDesignFrontJson) : null;
+  if(cfg.canvasDesignBackJson !== undefined)  b10payload.canvas_design_back_json  = cfg.canvasDesignBackJson  ? JSON.stringify(cfg.canvasDesignBackJson)  : null;
+  if(cfg.canvasTemplateId !== undefined)      b10payload.canvas_template_id       = cfg.canvasTemplateId||null;
+  if(cfg.canvasTemplateName !== undefined)    b10payload.canvas_template_name     = cfg.canvasTemplateName||null;
   if(Object.keys(b10payload).length){
     const {error: b10Err} = await sb.from('accounts').update(b10payload).eq('id', currentAccount.id);
     if(b10Err) console.warn('[BidDrop] Build 10 columns not yet migrated (run Admin → Run Migration):', b10Err.message);
@@ -280,5 +285,10 @@ function accountRowToCfg(row){
     // ── Pixel fields (Build 12) ──
     pixelId:             row.pixel_id||null,
     pixelResolutionKey:  row.pixel_resolution_key||null,
+    // ── Canvas designer fields (Build 13) ──
+    canvasDesignFrontJson: row.canvas_design_front_json ? (typeof row.canvas_design_front_json==='string' ? JSON.parse(row.canvas_design_front_json) : row.canvas_design_front_json) : null,
+    canvasDesignBackJson:  row.canvas_design_back_json  ? (typeof row.canvas_design_back_json==='string'  ? JSON.parse(row.canvas_design_back_json)  : row.canvas_design_back_json)  : null,
+    canvasTemplateId:   row.canvas_template_id||null,
+    canvasTemplateName: row.canvas_template_name||null,
   };
 }

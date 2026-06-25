@@ -400,6 +400,16 @@ async function renderPostcard6x9FrontCanvasD2(item){
 }
 
 async function renderPostcard6x9BackCanvas(item){
+  // ── New canvas designer path (Build 13) ──
+  // If the account has a saved Fabric canvas back design, render it instead
+  if (typeof S !== 'undefined' && S.cfg && S.cfg.canvasDesignBackJson) {
+    try {
+      return await _renderFabricJsonToDataUrl(S.cfg.canvasDesignBackJson, 2775, 1875);
+    } catch(e) {
+      console.warn('[BidDrop] Canvas designer back render failed, falling back to legacy:', e.message);
+    }
+  }
+  // ── Legacy path ──
   // Lob 6x9 back: 2775x1875px landscape (9.25"x6.25" bleed at 300dpi)
   // Lob ink-free zone: bottom-right 1200x712px — MUST stay blank/white
   const W=2775, H=1875;
