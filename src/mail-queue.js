@@ -401,7 +401,7 @@ function openEstHistory(estId){
   modal.style.display='flex';
 }
 function restoreRevision(revId, activeEstId){
-  if(!confirm('Restore this version? The current estimate will be archived as a revision.')) return;
+  bdConfirm('Restore this version? The current estimate will be archived as a revision.', ()=>{
   const rev = (S.estimates||[]).find(e=>e.id===revId);
   const active = (S.estimates||[]).find(e=>e.id===activeEstId);
   if(!rev || !active) return;
@@ -425,6 +425,7 @@ function restoreRevision(revId, activeEstId){
   }
   save(); closeM('m-est-history'); renderEstimatesTab();
   toast('&#10003; Revision restored as v'+(curVersion+1),'success');
+  }); // end bdConfirm
 }
 
 // ── Soft delete (move to trash) ───────────────────────────────────────────
@@ -457,7 +458,7 @@ function deleteEstimate(estId){
 async function bulkDeleteEstimates(){
   const ids = Array.from(document.querySelectorAll('.est-row-cb:checked')).map(cb=>cb.dataset.id);
   if(!ids.length) return;
-  if(!confirm('Move '+ids.length+' estimate(s) to Trash?')) return;
+  bdConfirm('Move '+ids.length+' estimate(s) to Trash?', ()=>{
   const now = new Date().toISOString();
   ids.forEach(id=>{
     const e=(S.estimates||[]).find(x=>x.id===id);
@@ -479,6 +480,7 @@ async function bulkDeleteEstimates(){
   });
   save(); clearEstimateSelection(); renderEstimatesTab();
   toast('Moved '+ids.length+' estimate(s) to Trash','info');
+  }); // end bdConfirm
 }
 
 // ── Restore from trash ────────────────────────────────────────────────────
@@ -488,16 +490,17 @@ async function hardDeletePin(pinId){
     toast('Only admins can permanently delete pins. Reps can only move pins to Trash.','error');
     return;
   }
-  if(!confirm('Permanently delete this pin? This cannot be undone.')) return;
+  bdConfirm('Permanently delete this pin? This cannot be undone.', async ()=>{
   if(!currentAccount) return;
   try{
     await sb.from('pins').delete().eq('id', pinId);
-    S.pins = S.pins.filter(p=>p.id!==pinId);
-    if(typeof renderEstimatesTab==='function') renderEstimatesTab();
-    toast('Pin permanently deleted','info');
+  S.pins = S.pins.filter(p=>p.id!==pinId);
+  if(typeof renderEstimatesTab==='function') renderEstimatesTab();
+  toast('Pin permanently deleted','info');
   }catch(e){
     toast('Purge failed: '+e.message,'error');
   }
+  }); // end bdConfirm
 }
 async function restorePin(pinId){
   const pin = (S.pins||[]).find(p=>p.id===pinId);
@@ -595,7 +598,7 @@ function bulkAddToMailQueue(){
 function bulkSendViaGHL(){
   const ids = Array.from(document.querySelectorAll('.est-row-cb:checked')).map(cb=>cb.dataset.id);
   if(!ids.length) return;
-  if(!confirm('Send '+ids.length+' estimate(s) via GHL? This will trigger a GHL contact/opportunity for each.')) return;
+  bdConfirm('Send '+ids.length+' estimate(s) via GHL? This will trigger a GHL contact/opportunity for each.', ()=>{
   let sent = 0;
   const sendNext = (i)=>{
     if(i >= ids.length){ toast('Sent '+sent+' estimate(s) via GHL','success'); clearEstimateSelection(); renderEstimatesTab(); return; }
@@ -609,6 +612,7 @@ function bulkSendViaGHL(){
     }, 400);
   };
   sendNext(0);
+  }); // end bdConfirm
 }
 
 // ── Hard delete (purge from trash) ────────────────────────────────────────
@@ -618,7 +622,7 @@ function hardDeleteEstimate(estId){
     toast('Only admins can permanently delete estimates. Reps can only move them to Trash.','error');
     return;
   }
-  if(!confirm('Permanently delete this estimate? This cannot be undone.')) return;
+  bdConfirm('Permanently delete this estimate? This cannot be undone.', ()=>{
   S.estimates = (S.estimates||[]).filter(e=>e.id!==estId);
   // Hard delete from Supabase so it never comes back on reload
   if(sb) sb.from('estimates').delete().eq('id', estId).then(({error})=>{
@@ -626,6 +630,7 @@ function hardDeleteEstimate(estId){
   });
   save(); renderEstimatesTab();
   toast('Estimate permanently deleted','info');
+  }); // end bdConfirm
 }
 
 // ── CSV Export ────────────────────────────────────────────────────────────
@@ -1140,7 +1145,7 @@ async function sendAllPending(){
 }
 
 async function rmQ(id){
-  if(!confirm('Delete this estimate?'))return;
+  bdConfirm('Delete this estimate?', async ()=>{
   // Delete from Supabase first
   if(currentAccount && sb){
     const {error} = await sb.from('queue').delete().eq('id', id);
@@ -1148,6 +1153,7 @@ async function rmQ(id){
   }
   S.queue=S.queue.filter(x=>x.id!==id);
   save();renderQueue();toast('🗑 Estimate deleted','info');
+  }); // end bdConfirm
 }
 function toggleAllQueueSelect(checked){
   document.querySelectorAll('.q-row-cb').forEach(function(cb){cb.checked=checked;});
@@ -1173,7 +1179,7 @@ function clearQueueSelection(){
 async function bulkDeleteQueue(){
   const ids = Array.from(document.querySelectorAll('.q-row-cb:checked')).map(function(cb){return cb.dataset.id;});
   if(!ids.length) return;
-  if(!confirm('Delete ' + ids.length + ' selected item' + (ids.length>1?'s':'') + '?')) return;
+  bdConfirm('Delete ' + ids.length + ' selected item' + (ids.length>1?'s':'') + '?', async ()=>{
   // Delete from Supabase first
   if(currentAccount && sb){
     const {error} = await sb.from('queue').delete().in('id', ids);
@@ -1181,6 +1187,7 @@ async function bulkDeleteQueue(){
   }
   S.queue = S.queue.filter(function(x){return !ids.includes(x.id);});
   save(); renderQueue(); toast('🗑 Deleted ' + ids.length + ' item' + (ids.length>1?'s':''), 'info');
+  }); // end bdConfirm
 }
 
 function previewQueueItem(id){
