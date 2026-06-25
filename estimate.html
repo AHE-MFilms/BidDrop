@@ -842,14 +842,45 @@ function submitGate(){
 }
 
 // ── Build Page ─────────────────────────────────────────────────────────────
+// ── Brand color auto-contrast helper ──────────────────────────────────────
+// Converts any brand color to a version readable on dark (#0D1117) backgrounds.
+// If the color is too dark (luminance < 0.18), it's lightened to a safe gold.
+function hexToRgb(h){
+  h=h.replace('#','');
+  if(h.length===3)h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  return{r:parseInt(h.slice(0,2),16),g:parseInt(h.slice(2,4),16),b:parseInt(h.slice(4,6),16)};
+}
+function relativeLuminance(h){
+  const{r,g,b}=hexToRgb(h);
+  const c=[r,g,b].map(v=>{v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);});
+  return 0.2126*c[0]+0.7152*c[1]+0.0722*c[2];
+}
+function brandForDark(hex){
+  // Ensure minimum contrast ratio ~4.5:1 against #0D1117 (lum≈0.003)
+  // Threshold: if lum < 0.18, lighten to a warm gold that always reads well
+  if(!hex||!/^#[0-9a-fA-F]{3,6}$/.test(hex))return'#E89A48';
+  const lum=relativeLuminance(hex);
+  if(lum>=0.18)return hex; // already light enough
+  // Blend toward #FFD08A until readable
+  const{r,g,b}=hexToRgb(hex);
+  const t=Math.min(1,(0.18-lum)/0.18);
+  const tr=0xFF,tg=0xD0,tb=0x8A;
+  const nr=Math.round(r+(tr-r)*t);
+  const ng=Math.round(g+(tg-g)*t);
+  const nb=Math.round(b+(tb-b)*t);
+  return'#'+[nr,ng,nb].map(v=>v.toString(16).padStart(2,'0')).join('');
+}
+
 function buildPage(firstName,lastName,email,phone){
   const est=_est,acct=_acct;
   const brand=acct.brandColor||'#C97D2E';
+  // Auto-lighten brand color for dark-background pages so any client color stays readable
+  const brandDark=brandForDark(brand);
   // Inject brand color as CSS var
-  document.documentElement.style.setProperty('--brand',brand);
-  document.documentElement.style.setProperty('--amber',brand);
+  document.documentElement.style.setProperty('--brand',brandDark);
+  document.documentElement.style.setProperty('--amber',brandDark);
   // Derived amber-lt (lighter)
-  document.documentElement.style.setProperty('--amber-lt',brand);
+  document.documentElement.style.setProperty('--amber-lt',brandDark);
 
   // ── Topbar ──
   $('ep-co-name').textContent=acct.companyName||'Your Roofing Company';

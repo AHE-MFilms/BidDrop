@@ -367,9 +367,15 @@ async function initQuotePage(slug) {
   const MB = ['pk.eyJ1IjoibW9uZ29vc2VmaWxtcyIsImEiOiJjbW52M2kyNnMxM3pk','MnJvYTYxZnE1YW51In0.nC5GKWDHIAB4DTAP9hV3hQ'].join('');
   const brandColor = cfg.brandColor || '#F25C05';
 
+  // Auto-lighten brand color so dark client colors stay readable on dark backgrounds
+  function _hexRgb(h){h=h.replace('#','');if(h.length===3)h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];return{r:parseInt(h.slice(0,2),16),g:parseInt(h.slice(2,4),16),b:parseInt(h.slice(4,6),16)};}
+  function _lum(h){const{r,g,b}=_hexRgb(h);const c=[r,g,b].map(v=>{v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);});return 0.2126*c[0]+0.7152*c[1]+0.0722*c[2];}
+  function _brandDark(hex){if(!hex||!/^#[0-9a-fA-F]{3,6}$/.test(hex))return'#E89A48';const lum=_lum(hex);if(lum>=0.18)return hex;const{r,g,b}=_hexRgb(hex);const t=Math.min(1,(0.18-lum)/0.18);return'#'+[Math.round(r+(0xFF-r)*t),Math.round(g+(0xD0-g)*t),Math.round(b+(0x8A-b)*t)].map(v=>v.toString(16).padStart(2,'0')).join('');}
+  const brandDark = _brandDark(brandColor);
+
   // Inject brand color override
   const brandStyle = document.createElement('style');
-  brandStyle.textContent = `:root { --qaccent: ${brandColor}; }`;
+  brandStyle.textContent = `:root { --qaccent: ${brandDark}; }`;
   document.head.appendChild(brandStyle);
 
   // Build trust badges
