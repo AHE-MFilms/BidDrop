@@ -19,8 +19,8 @@ const CD = {
   dirty: false,
 };
 
-const CD_POSTCARD_W = 900;
-const CD_POSTCARD_H = 600;
+const CD_POSTCARD_W = 2775; // 6×9 + 0.125" bleed @ 300 DPI
+const CD_POSTCARD_H = 1875;
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function cdInit() {
@@ -539,7 +539,7 @@ function cdFitCanvas() {
 function cdPreviewPng() {
   const fc = CD.side === 'front' ? CD.fabricFront : CD.fabricBack;
   if (!fc) return;
-  const dataUrl = fc.toDataURL({ format: 'png', multiplier: 2 });
+  const dataUrl = fc.toDataURL({ format: 'png', multiplier: 1 }); // canvas is already at 300 DPI
   const win = window.open();
   if (win) {
     win.document.write(`<html><body style="margin:0;background:#000;"><img src="${dataUrl}" style="max-width:100%;"></body></html>`);
