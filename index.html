@@ -5378,20 +5378,23 @@ tr:hover td{background:var(--card);}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 <script>
 // Monkey-patch Fabric.js 5.x: fix 'alphabetical' -> 'alphabetic' (invalid CanvasTextBaseline)
+// The warning comes from _setTextStyles which calls ctx.textBaseline = this.textBaseline
 (function(){
   if(typeof fabric==='undefined') return;
-  var _orig = fabric.Text.prototype._renderTextLine;
-  if(!_orig) return;
-  fabric.Text.prototype._renderTextLine = function(method, ctx, line, left, top, lineIndex) {
-    var prev = ctx.textBaseline;
-    if(ctx.textBaseline === 'alphabetical') ctx.textBaseline = 'alphabetic';
-    _orig.call(this, method, ctx, line, left, top, lineIndex);
-    ctx.textBaseline = prev;
-  };
-  // Also patch the default value on the prototype
-  if(fabric.Text.prototype.textBaseline === 'alphabetical') {
-    fabric.Text.prototype.textBaseline = 'alphabetic';
-  }
+  // Patch _setTextStyles on both Text and IText (covers Textbox too)
+  ['Text','IText','Textbox'].forEach(function(klass){
+    var proto = fabric[klass] && fabric[klass].prototype;
+    if(!proto) return;
+    // Fix default value
+    if(proto.textBaseline === 'alphabetical') proto.textBaseline = 'alphabetic';
+    // Patch _setTextStyles to intercept the ctx.textBaseline assignment
+    var _orig = proto._setTextStyles;
+    if(!_orig) return;
+    proto._setTextStyles = function(ctx, lineIndex, onlyLine) {
+      _orig.call(this, ctx, lineIndex, onlyLine);
+      if(ctx.textBaseline === 'alphabetical') ctx.textBaseline = 'alphabetic';
+    };
+  });
 })();
 </script>
 <script src="/src/postcard-designer.js"></script>
