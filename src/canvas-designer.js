@@ -68,7 +68,7 @@ function cdRenderDesignerShell() {
         <div id="cd-canvas-sizer" style="flex-shrink:0;overflow:hidden;">
           <div id="cd-canvas-wrap" style="transform-origin:top left;box-shadow:0 8px 40px rgba(0,0,0,.5);">
           <canvas id="cd-canvas-front"></canvas>
-          <canvas id="cd-canvas-back" style="display:none;"></canvas>
+          <canvas id="cd-canvas-back" style="position:absolute;top:0;left:0;visibility:hidden;pointer-events:none;"></canvas>
           <div id="cd-no-template" style="
             position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
             justify-content:center;color:var(--muted);font-size:13px;gap:8px;
@@ -171,8 +171,8 @@ async function cdSelectTemplate(idx) {
   // Show front canvas, hide back
   const frontEl = document.getElementById('cd-canvas-front');
   const backEl = document.getElementById('cd-canvas-back');
-  if (frontEl) frontEl.style.display = '';
-  if (backEl) backEl.style.display = 'none';
+  if (frontEl) { frontEl.style.visibility = ''; frontEl.style.pointerEvents = ''; frontEl.style.position = 'relative'; }
+  if (backEl) { backEl.style.visibility = 'hidden'; backEl.style.pointerEvents = 'none'; backEl.style.position = 'absolute'; }
 
   // Load front JSON into fabric
   await cdLoadSideIntoFabric('front');
@@ -261,18 +261,19 @@ async function cdSwitchSide(side) {
   const btnBack = document.getElementById('cd-btn-back');
 
   if (side === 'front') {
-    if (frontEl) frontEl.style.display = '';
-    if (backEl) backEl.style.display = 'none';
+    if (frontEl) { frontEl.style.visibility = ''; frontEl.style.pointerEvents = ''; frontEl.style.position = 'relative'; }
+    if (backEl) { backEl.style.visibility = 'hidden'; backEl.style.pointerEvents = 'none'; backEl.style.position = 'absolute'; }
     btnFront?.classList.add('cd-side-active');
     btnBack?.classList.remove('cd-side-active');
     await cdLoadSideIntoFabric('front');
   } else {
-    if (frontEl) frontEl.style.display = 'none';
-    if (backEl) backEl.style.display = '';
+    if (frontEl) { frontEl.style.visibility = 'hidden'; frontEl.style.pointerEvents = 'none'; frontEl.style.position = 'absolute'; }
+    if (backEl) { backEl.style.visibility = ''; backEl.style.pointerEvents = ''; backEl.style.position = 'relative'; }
     btnFront?.classList.remove('cd-side-active');
     btnBack?.classList.add('cd-side-active');
     await cdLoadSideIntoFabric('back');
   }
+  cdFitCanvas();
   cdRenderFieldsPanel();
 }
 
@@ -601,7 +602,7 @@ function cdShowToast(msg, type='ok') {
     .cd-toast.show { opacity: 1; }
     .cd-toast.ok { border-color: #22c55e; color: #22c55e; }
     .cd-toast.err { border-color: #ef4444; color: #ef4444; }
-    #cd-canvas-wrap { transform-origin: center center; }
+    #cd-canvas-wrap { transform-origin: top left; }
   `;
   document.head.appendChild(s);
 })();
