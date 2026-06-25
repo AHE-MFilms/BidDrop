@@ -15,6 +15,7 @@ const PD = {
   selectedZone: null,   // currently selected zone key
   heroDataUrl: null,    // uploaded hero image data URL
   logoDataUrl: null,    // uploaded logo image data URL
+  logoWhiten: null,     // null = use cfg.tplLogoWhiten, true = force white filter, false = show full color
   dirty: false,
 };
 
@@ -142,6 +143,13 @@ function pdSetLogoScale(val) {
   pdRenderPreview();
 }
 
+function pdSetLogoWhiten(val) {
+  PD.logoWhiten = val;
+  if(S && S.cfg) S.cfg.tplLogoWhiten = val;
+  PD.dirty = true;
+  pdRenderPreview();
+}
+
 function pdSetHeroScale(val) {
   PD.heroScale = val;
   if(S && S.cfg) S.cfg.tplHeroScale = val;
@@ -158,6 +166,7 @@ function openPostcardDesigner() {
   PD.selectedZone = null;
   PD.heroDataUrl = null;
   PD.logoDataUrl = null;
+  PD.logoWhiten = null;
   PD.dirty = false;
   pdRenderTemplateLibrary();
   pdRenderPreview();
@@ -481,6 +490,7 @@ function pdBackHtml() {
   const phone = cfg.phone || '(555) 000-0000';
   const website = cfg.website || 'www.yourcompany.com';
   const logoUrl = PD.logoDataUrl || cfg.logoData || null;
+  const logoWhiten = PD.logoWhiten != null ? PD.logoWhiten : (cfg.tplLogoWhiten != null ? cfg.tplLogoWhiten : true);
   const companyName = cfg.companyName || 'Your Company';
   const hook = cfg.postcardHook || 'Your neighbors are talking about us.';
   const why = cfg.postcardWhy || 'We deliver quality roofing with a lifetime warranty.';
@@ -488,7 +498,7 @@ function pdBackHtml() {
   return `
     <div style="position:absolute;inset:0;background:#fff;"></div>
     <div style="position:absolute;top:0;left:0;right:0;height:28%;background:linear-gradient(90deg,${accent},${accent}cc);display:flex;align-items:center;padding:0 22px;gap:14px;">
-      ${logoUrl ? `<img src="${logoUrl}" style="max-height:36px;max-width:120px;object-fit:contain;filter:brightness(10);">` : `<div style="font-size:16px;font-weight:900;color:#fff;">${companyName}</div>`}
+      ${logoUrl ? `<img src="${logoUrl}" style="max-height:36px;max-width:120px;object-fit:contain;${logoWhiten ? 'filter:brightness(10);' : ''}">` : `<div style="font-size:16px;font-weight:900;color:#fff;">${companyName}</div>`}
       <div style="flex:1;"></div>
       <div style="text-align:right;">
         <div style="font-size:13px;font-weight:900;color:#fff;">${phone}</div>
@@ -584,6 +594,10 @@ function pdRenderPropertiesPanel(zoneKey) {
         if(logoSrc){
           return `<div style="display:flex;align-items:center;gap:10px;">
             <img src="${logoSrc}" style="max-height:48px;max-width:120px;object-fit:contain;border-radius:4px;background:rgba(255,255,255,.06);padding:4px;border:1px solid var(--border);">
+            <div style="display:flex;align-items:center;gap:6px;margin-top:6px;">
+              <input type="checkbox" id="pd-logo-whiten" ${(PD.logoWhiten != null ? PD.logoWhiten : (cfg.tplLogoWhiten != null ? cfg.tplLogoWhiten : true)) ? 'checked' : ''} onchange="pdSetLogoWhiten(this.checked)" style="cursor:pointer;accent-color:var(--accent);">
+              <label for="pd-logo-whiten" style="font-size:10px;color:var(--muted);cursor:pointer;">Make white on card back</label>
+            </div>
             <div style="flex:1;">
               <div data-pd-logo-scale-lbl style="font-size:10px;color:var(--muted);margin-bottom:4px;">Size: ${logoScale}%</div>
               <input type="range" min="30" max="200" value="${logoScale}" oninput="pdSetLogoScale(+this.value)" style="width:100%;accent-color:var(--accent);cursor:pointer;">

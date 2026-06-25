@@ -119,6 +119,9 @@ async function syncAccountToSupabase(){
   if(cfg.tplCtaLabel !== undefined)     b10payload.tpl_cta_label = cfg.tplCtaLabel||null;
   if(cfg.tplAccentColor !== undefined)  b10payload.tpl_accent_color = cfg.tplAccentColor||null;
   if(cfg.tplHeroUrl !== undefined)      b10payload.tpl_hero_url = cfg.tplHeroUrl||null;
+  if(cfg.tplLogoScale !== undefined)    b10payload.tpl_logo_scale = cfg.tplLogoScale != null ? cfg.tplLogoScale : null;
+  if(cfg.tplHeroScale !== undefined)    b10payload.tpl_hero_scale = cfg.tplHeroScale != null ? cfg.tplHeroScale : null;
+  if(cfg.tplLogoWhiten !== undefined)   b10payload.tpl_logo_whiten = cfg.tplLogoWhiten != null ? cfg.tplLogoWhiten : null;
   if(Object.keys(b10payload).length){
     const {error: b10Err} = await sb.from('accounts').update(b10payload).eq('id', currentAccount.id);
     if(b10Err) console.warn('[BidDrop] Build 10 columns not yet migrated (run Admin → Run Migration):', b10Err.message);
@@ -268,5 +271,8 @@ function accountRowToCfg(row){
     tplCtaLabel:    row.tpl_cta_label||null,
     tplAccentColor: row.tpl_accent_color||null,
     tplHeroUrl:     row.tpl_hero_url||null,
+    tplLogoScale:   row.tpl_logo_scale != null ? row.tpl_logo_scale : null,
+    tplHeroScale:   row.tpl_hero_scale != null ? row.tpl_hero_scale : null,
+    tplLogoWhiten:  row.tpl_logo_whiten != null ? row.tpl_logo_whiten : null,
   };
 }

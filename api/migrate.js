@@ -214,6 +214,9 @@ export default async function handler(req, res) {
     { name: 'accounts.tpl_cta_label',   sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS tpl_cta_label text" },
     { name: 'accounts.tpl_accent_color',sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS tpl_accent_color text" },
     { name: 'accounts.tpl_hero_url',    sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS tpl_hero_url text" },
+    { name: 'accounts.tpl_logo_scale',  sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS tpl_logo_scale integer" },
+    { name: 'accounts.tpl_hero_scale',  sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS tpl_hero_scale integer" },
+    { name: 'accounts.tpl_logo_whiten', sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS tpl_logo_whiten boolean" },
     {
       name: 'campaign_targets_table',
       check: "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name='campaign_targets'",
