@@ -53,7 +53,7 @@ async function syncAccountToSupabase(){
     financing_term: cfg.financingTerm, financing_down: cfg.financingDown,
     diff1: cfg.diff1, diff2: cfg.diff2, diff3: cfg.diff3,
     diff4: cfg.diff4, diff5: cfg.diff5, diff6: cfg.diff6,
-    // rep_video_url_default omitted — column not in DB schema
+    rep_video_url_default: cfg.repVideoUrl||null,
     offer_siding: cfg.offerSiding, offer_windows: cfg.offerWindows,
     offer_gutters: cfg.offerGutters, offer_custom: cfg.offerCustom,
     offer_solar: cfg.offerSolar,

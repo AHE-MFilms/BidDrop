@@ -22,6 +22,54 @@ function toast(msg,type='info',duration=3200){
   clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),duration);
 }
 
+/**
+ * bdConfirm(msg, onOk, onCancel) — non-blocking confirm dialog (replaces native confirm())
+ * bdPrompt(msg, defaultVal, onOk, onCancel) — non-blocking prompt dialog (replaces native prompt())
+ */
+function bdConfirm(msg, onOk, onCancel){
+  const id = 'bd-confirm-' + Date.now();
+  const el = document.createElement('div');
+  el.id = id;
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;';
+  el.innerHTML = `
+    <div style="background:#1c2128;border:1px solid #30363d;border-radius:14px;padding:28px 24px;max-width:420px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.7);">
+      <div style="font-size:14px;color:#e6edf3;line-height:1.6;margin-bottom:22px;white-space:pre-wrap;">${msg.replace(/</g,'&lt;')}</div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button id="${id}-cancel" style="background:none;border:1px solid #30363d;border-radius:8px;padding:9px 18px;color:#8b949e;font-size:13px;font-weight:600;cursor:pointer;">Cancel</button>
+        <button id="${id}-ok" style="background:#F25C05;border:none;border-radius:8px;padding:9px 18px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Confirm</button>
+      </div>
+    </div>`;
+  document.body.appendChild(el);
+  const cleanup = () => el.remove();
+  document.getElementById(id+'-ok').onclick = () => { cleanup(); if(onOk) onOk(); };
+  document.getElementById(id+'-cancel').onclick = () => { cleanup(); if(onCancel) onCancel(); };
+  el.addEventListener('click', e => { if(e.target===el){ cleanup(); if(onCancel) onCancel(); } });
+}
+
+function bdPrompt(msg, defaultVal, onOk, onCancel){
+  const id = 'bd-prompt-' + Date.now();
+  const el = document.createElement('div');
+  el.id = id;
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;';
+  el.innerHTML = `
+    <div style="background:#1c2128;border:1px solid #30363d;border-radius:14px;padding:28px 24px;max-width:420px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.7);">
+      <div style="font-size:14px;color:#e6edf3;line-height:1.6;margin-bottom:14px;white-space:pre-wrap;">${msg.replace(/</g,'&lt;')}</div>
+      <input id="${id}-input" type="text" value="${String(defaultVal||'').replace(/"/g,'&quot;')}" style="width:100%;background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:9px 12px;color:#e6edf3;font-size:13px;outline:none;box-sizing:border-box;margin-bottom:18px;">
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button id="${id}-cancel" style="background:none;border:1px solid #30363d;border-radius:8px;padding:9px 18px;color:#8b949e;font-size:13px;font-weight:600;cursor:pointer;">Cancel</button>
+        <button id="${id}-ok" style="background:#F25C05;border:none;border-radius:8px;padding:9px 18px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">OK</button>
+      </div>
+    </div>`;
+  document.body.appendChild(el);
+  const input = document.getElementById(id+'-input');
+  setTimeout(()=>input.focus(),50);
+  const cleanup = () => el.remove();
+  document.getElementById(id+'-ok').onclick = () => { const v=input.value; cleanup(); if(onOk) onOk(v); };
+  document.getElementById(id+'-cancel').onclick = () => { cleanup(); if(onCancel) onCancel(null); };
+  input.addEventListener('keydown', e => { if(e.key==='Enter'){ const v=input.value; cleanup(); if(onOk) onOk(v); } if(e.key==='Escape'){ cleanup(); if(onCancel) onCancel(null); } });
+  el.addEventListener('click', e => { if(e.target===el){ cleanup(); if(onCancel) onCancel(null); } });
+}
+
 function timeAgo(iso){
   if(!iso)return'';
   const d=Date.now()-new Date(iso).getTime();

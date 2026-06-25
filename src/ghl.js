@@ -242,12 +242,13 @@ async function ghlOAuthConnect() {
 }
 
 async function ghlOAuthDisconnect() {
-  if (!confirm('Disconnect GoHighLevel? BidDrop will stop syncing to GHL until you reconnect.')) return;
-  try {
-    await adminAPI('ghl-oauth-disconnect');
-    toast('GoHighLevel disconnected', 'info');
-    ghlCheckOAuthStatus();
-  } catch(e) { toast('Disconnect failed: ' + e.message, 'error'); }
+  bdConfirm('Disconnect GoHighLevel? BidDrop will stop syncing to GHL until you reconnect.', async ()=>{
+    try {
+      await adminAPI('ghl-oauth-disconnect');
+      toast('GoHighLevel disconnected', 'info');
+      ghlCheckOAuthStatus();
+    } catch(e) { toast('Disconnect failed: ' + e.message, 'error'); }
+  });
 }
 
 // ── Handle OAuth callback redirect ───────────────────────────────────────────

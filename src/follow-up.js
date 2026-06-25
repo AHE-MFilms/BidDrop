@@ -75,32 +75,30 @@ async function sendFollowUp(){
 }
 
 async function rmPin(id){
-  if(!confirm('Move this pin to Trash?'))return;
-  try{
-    await sbDeletePin(id);
-  }catch(e){
-    toast('Delete failed: '+e.message,'error');
-    return;
-  }
-  // Soft-delete in memory: mark deleted_at so trash tab can show it
-  const pin = S.pins.find(p=>p.id===id);
-  if(pin) pin.deleted_at = new Date().toISOString();
-  // Cascade soft-delete: also soft-delete all linked estimates
-  const _now = new Date().toISOString();
-  (S.estimates||[]).filter(e=>e.pinId===id && !e.deletedAt).forEach(e=>{
-    e.deletedAt = _now;
-    if(sb) sb.from('estimates').update({deleted_at:_now}).eq('id',e.id).then(()=>{});
+  bdConfirm('Move this pin to Trash?', async ()=>{
+    try{
+      await sbDeletePin(id);
+    }catch(e){
+      toast('Delete failed: '+e.message,'error');
+      return;
+    }
+    const pin = S.pins.find(p=>p.id===id);
+    if(pin) pin.deleted_at = new Date().toISOString();
+    const _now = new Date().toISOString();
+    (S.estimates||[]).filter(e=>e.pinId===id && !e.deletedAt).forEach(e=>{
+      e.deletedAt = _now;
+      if(sb) sb.from('estimates').update({deleted_at:_now}).eq('id',e.id).then(()=>{});
+    });
+    if(markers[id]){
+      if(clusterGroup) clusterGroup.removeLayer(markers[id]);
+      else map.removeLayer(markers[id]);
+      delete markers[id];
+    }
+    renderPinList();
+    if(typeof renderEstimatesTab==='function') renderEstimatesTab();
+    save();
+    toast('Pin moved to Trash — recoverable for 30 days','info');
   });
-  // Remove from map
-  if(markers[id]){
-    if(clusterGroup) clusterGroup.removeLayer(markers[id]);
-    else map.removeLayer(markers[id]);
-    delete markers[id];
-  }
-  renderPinList();
-  if(typeof renderEstimatesTab==='function') renderEstimatesTab();
-  save();
-  toast('Pin moved to Trash — recoverable for 30 days','info');
 }
 
 function confirmDeletePin(id){

@@ -148,18 +148,19 @@ function setPixelFilter(f) {
 async function generatePixelId() {
   const accountId = S.cfg?.accountId || S.cfg?.id;
   if (!accountId) return;
-  if (!confirm('Generate a new Pixel ID? Your existing embed code will stop working.')) return;
-  const r = await fetch('/api/pixel', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'generate_pixel_id', accountId })
+  bdConfirm('Generate a new Pixel ID? Your existing embed code will stop working.', async ()=>{
+    const r = await fetch('/api/pixel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'generate_pixel_id', accountId })
+    });
+    const data = await r.json();
+    if (data.pixelId) {
+      S.cfg.pixelId = data.pixelId;
+      renderPixelEmbedCode();
+      showToast('New Pixel ID generated ✓');
+    }
   });
-  const data = await r.json();
-  if (data.pixelId) {
-    S.cfg.pixelId = data.pixelId;
-    renderPixelEmbedCode();
-    showToast('New Pixel ID generated ✓');
-  }
 }
 
 async function saveResolutionKey() {

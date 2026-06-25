@@ -258,14 +258,15 @@ function showZoneStats(zone){
 }
 
 async function deleteZone(id){
-  if(!confirm('Delete this zone? This cannot be undone.')) return;
-  const {error} = await sb.from('canvass_zones').delete().eq('id', id);
-  if(error){ toast('Delete failed: '+error.message,'error'); return; }
-  S_zones = S_zones.filter(z=>z.id!==id);
-  if(zoneOverlays[id]){ zonesMap.removeLayer(zoneOverlays[id]); delete zoneOverlays[id]; }
-  renderZoneOverlays();
-  renderZonesList();
-  toast('Zone deleted','info');
+  bdConfirm('Delete this zone? This cannot be undone.', async ()=>{
+    const {error} = await sb.from('canvass_zones').delete().eq('id', id);
+    if(error){ toast('Delete failed: '+error.message,'error'); return; }
+    S_zones = S_zones.filter(z=>z.id!==id);
+    if(zoneOverlays[id]){ zonesMap.removeLayer(zoneOverlays[id]); delete zoneOverlays[id]; }
+    renderZoneOverlays();
+    renderZonesList();
+    toast('Zone deleted','info');
+  });
 }
 
 function getZoneOutcomes(zone){

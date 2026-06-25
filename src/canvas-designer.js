@@ -286,8 +286,10 @@ function cdBuildTplListHtml() {
 async function cdSelectTemplate(idx) {
   // FIX #6: Warn before wiping unsaved changes when switching templates
   if (CD.dirty && CD.activeIdx >= 0 && idx !== CD.activeIdx) {
-    if (!confirm('You have unsaved changes. Switch templates and lose your edits?')) return;
+    bdConfirm('You have unsaved changes. Switch templates and lose your edits?', () => { cdSelectTemplate._doSwitch(idx); });
+    return;
   }
+  cdSelectTemplate._doSwitch = cdSelectTemplate._doSwitch || ((i) => { CD.dirty = false; cdSelectTemplate(i); });
 
   CD.activeIdx = idx;
   // Reset field values when switching to a new template
@@ -513,9 +515,7 @@ function cdRenderFieldsPanel() {
     // FIX #4: Skip image objects that are misidentified — only render text inputs for actual text types
     // An image object whose value is a base64 data URL should never appear as a text input
     const isImageObj = obj.type === 'image' || (typeof currentVal === 'string' && currentVal.startsWith('data:image'));
-    if (isImageObj && obj.type !== 'textbox' && obj.type !== 'i-text' && obj.type !== 'text') {
-      // Render as image upload zone instead (fall through to image zone logic below)
-    } e    if (obj.type === 'textbox' || obj.type === 'i-text' || obj.type === 'text') {
+    if (!isImageObj && (obj.type === 'textbox' || obj.type === 'i-text' || obj.type === 'text')) {
       const isMultiline = (obj.text || '').includes('\n') || (obj.height || 0) > 60;
       return `
         <div style="margin-bottom:14px;">
@@ -937,6 +937,57 @@ function cdShowToast(msg, type='ok') {
     .cd-toast.ok { border-color: #22c55e; color: #22c55e; }
     .cd-toast.err { border-color: #ef4444; color: #ef4444; }
     #cd-canvas-wrap { transform-origin: top left; }
+
+    /* ── Mobile layout: stack template list above canvas, fields below ── */
+    #pd-layout {
+      display: grid;
+      grid-template-columns: 180px 1fr 260px;
+      grid-template-rows: 1fr;
+      height: 100%;
+    }
+    @media (max-width: 900px) {
+      #pd-layout {
+        grid-template-columns: 1fr !important;
+        grid-template-rows: auto 1fr auto !important;
+        height: auto !important;
+      }
+      #cd-left {
+        flex-direction: row !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        padding: 10px 8px !important;
+        border-right: none !important;
+        border-bottom: 1px solid var(--border) !important;
+        max-height: 120px !important;
+        gap: 8px !important;
+      }
+      #cd-left > div:first-child { display: none !important; } /* hide 'Templates' label */
+      .cd-tpl-card {
+        flex-shrink: 0 !important;
+        width: 100px !important;
+        margin-bottom: 0 !important;
+      }
+      #cd-center {
+        min-height: 300px;
+      }
+      #cd-right {
+        border-left: none !important;
+        border-top: 1px solid var(--border) !important;
+        max-height: 50vh;
+        overflow-y: auto;
+      }
+      /* Toolbar: wrap buttons on small screens */
+      #cd-center > div:first-child {
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+        padding: 8px !important;
+      }
+    }
+    @media (max-width: 600px) {
+      #cd-left { max-height: 100px !important; }
+      .cd-tpl-card { width: 80px !important; }
+      #cd-right { max-height: 45vh; }
+    }
   `;
   document.head.appendChild(s);
 })();

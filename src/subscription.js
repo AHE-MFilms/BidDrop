@@ -26,8 +26,7 @@ async function openBillingPortal() {
   }
 }
 async function confirmCancelSubscription() {
-  const confirmed = confirm('Cancel your BidDrop subscription?\n\nYour plan will remain active until the end of the current billing period. After that, your account will be deactivated.\n\nAre you sure you want to cancel?');
-  if (!confirmed) return;
+  bdConfirm('Cancel your BidDrop subscription?\n\nYour plan will remain active until the end of the current billing period. After that, your account will be deactivated.\n\nAre you sure you want to cancel?', async ()=>{
   const btn = document.getElementById('btn-cancel-subscription');
   if (btn) { btn.disabled = true; btn.textContent = 'Cancelling...'; }
   try {
@@ -52,6 +51,7 @@ async function confirmCancelSubscription() {
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = 'Cancel Plan'; }
   }
+  }); // end bdConfirm
 }
 async function reactivateSubscription() {
   const btn = document.getElementById('btn-reactivate-subscription');

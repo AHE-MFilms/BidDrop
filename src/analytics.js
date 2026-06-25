@@ -5,21 +5,21 @@
 
 let _anChartPostcards=null, _anChartScans=null, _anChartStatus=null;
 async function deleteAnalyticsRow(estId, btn){
-  if(!confirm('Delete this estimate record from analytics? This cannot be undone.')) return;
-  btn.disabled = true;
-  btn.textContent = '…';
-  try{
-    const { error } = await sb.from('estimates').delete().eq('id', estId);
-    if(error) throw error;
-    // Remove the row from the DOM
-    const tr = btn.closest('tr');
-    if(tr) tr.remove();
-    toast('Estimate deleted from analytics','success');
-  } catch(e){
-    btn.disabled = false;
-    btn.textContent = '🗑';
-    toast('Failed to delete: '+(e.message||e),'error');
-  }
+  bdConfirm('Delete this estimate record from analytics? This cannot be undone.', async ()=>{
+    btn.disabled = true;
+    btn.textContent = '…';
+    try{
+      const { error } = await sb.from('estimates').delete().eq('id', estId);
+      if(error) throw error;
+      const tr = btn.closest('tr');
+      if(tr) tr.remove();
+      toast('Estimate deleted from analytics','success');
+    } catch(e){
+      btn.disabled = false;
+      btn.textContent = '🗑';
+      toast('Failed to delete: '+(e.message||e),'error');
+    }
+  });
 }
 
 async function loadAnalytics(){
@@ -323,11 +323,12 @@ async function saveTeamMember(profileId){
   renderTeam();
 }
 async function removeTeamMember(profileId, name){
-  if(!confirm('Remove '+name+' from the team?\n\nThis removes their profile but does NOT delete their login. You can re-add them via Admin Panel.')) return;
-  const {error} = await sb.from('user_profiles').delete().eq('id', profileId);
-  if(error){ toast('Error removing member: '+error.message,'error'); return; }
-  toast(name+' removed from team','success');
-  renderTeam();
+  bdConfirm('Remove '+name+' from the team?\n\nThis removes their profile but does NOT delete their login. You can re-add them via Admin Panel.', async ()=>{
+    const {error} = await sb.from('user_profiles').delete().eq('id', profileId);
+    if(error){ toast('Error removing member: '+error.message,'error'); return; }
+    toast(name+' removed from team','success');
+    renderTeam();
+  });
 }
 
 function addTeamMember(){
