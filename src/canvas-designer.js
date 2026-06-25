@@ -481,18 +481,35 @@ function cdTriggerImageUpload(uid, zoneType) {
       const obj = fc.getObjects().find(o => o.__uid === uid);
       if (obj) {
         fabric.Image.fromURL(ev.target.result, img => {
-          // Replace the zone rect/image with the uploaded image, preserving position/size
+          // Replace the zone rect/image with the uploaded image
+          // Use cover-fit: scale uniformly so image fills the zone without squishing
           const left = obj.left, top = obj.top;
           const w = (obj.width || 100) * (obj.scaleX || 1);
           const h = (obj.height || 100) * (obj.scaleY || 1);
+          // Cover scale: fill the zone while preserving aspect ratio
+          const coverScale = Math.max(w / img.width, h / img.height);
+          // Center the image within the zone
+          const offsetX = (img.width * coverScale - w) / 2;
+          const offsetY = (img.height * coverScale - h) / 2;
           img.set({
-            left, top, scaleX: w / img.width, scaleY: h / img.height,
+            left: left - offsetX,
+            top: top - offsetY,
+            scaleX: coverScale,
+            scaleY: coverScale,
             selectable: true, evented: true,
             lockMovementX: true, lockMovementY: true,
             lockScalingX: true, lockScalingY: true, lockRotation: true,
             hasControls: false, hasBorders: true,
             borderColor: '#22c55e', cornerColor: '#22c55e',
             bdLock: 'editable', bdZoneLabel: obj.bdZoneLabel, __uid: uid,
+            // Clip to the original zone bounds so overflow is hidden
+            clipPath: new fabric.Rect({
+              left: offsetX / coverScale,
+              top: offsetY / coverScale,
+              width: w / coverScale,
+              height: h / coverScale,
+              absolutePositioned: false,
+            }),
           });
           fc.remove(obj);
           fc.add(img);
