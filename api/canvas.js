@@ -31,7 +31,7 @@ export default async function handler(req, res) {
 
   // ── LIST: GET /api/canvas?action=list[&published_only=1] ──────────────────
   if (action === 'list') {
-    let url = 'canvas_templates?select=id,name,description,trade,thumbnail_url,is_published,is_locked,editable_fields,sort_order,created_at,updated_at&order=sort_order.asc,created_at.asc';
+    let url = 'canvas_templates?select=id,name,description,trade,thumbnail_url,is_published,is_locked,editable_fields,sort_order,created_at,updated_at,front_json,back_json&order=sort_order.asc,created_at.asc';
     if (req.query.published_only === '1') url += '&is_published=eq.true';
     const r = await sbFetch(url);
     const data = await r.json();

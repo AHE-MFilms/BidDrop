@@ -150,10 +150,12 @@ async function cdSelectTemplate(idx) {
   const noTpl = document.getElementById('cd-no-template');
   if (noTpl) noTpl.style.display = 'none';
 
-  // Fetch full template JSON
+  // Fetch full template JSON (includes front_json/back_json)
   try {
     const r = await fetch(`/api/canvas?action=get&id=${tpl.id}`);
-    CD.activeTemplate = await r.json();
+    const data = await r.json();
+    // Fall back to tpl if response is an error or missing JSON fields
+    CD.activeTemplate = (data && !data.error && (data.front_json || data.back_json)) ? data : tpl;
   } catch(e) {
     CD.activeTemplate = tpl;
   }
@@ -187,8 +189,27 @@ async function cdLoadSideIntoFabric(side) {
     return;
   }
 
+  // Sanitize: remove invalid textBaseline values that cause browser warnings
+  function sanitizeJson(j) {
+    if (!j || !j.objects) return j;
+    const VALID_BASELINES = ['alphabetic','top','hanging','middle','ideographic','bottom'];
+    j.objects.forEach(o => {
+      if (o.textBaseline && !VALID_BASELINES.includes(o.textBaseline)) {
+        delete o.textBaseline;
+      }
+      // Recurse into group objects
+      if (o.objects) o.objects.forEach(child => {
+        if (child.textBaseline && !VALID_BASELINES.includes(child.textBaseline)) {
+          delete child.textBaseline;
+        }
+      });
+    });
+    return j;
+  }
+  const cleanJson = sanitizeJson(typeof json === 'string' ? JSON.parse(json) : JSON.parse(JSON.stringify(json)));
+
   return new Promise(resolve => {
-    fc.loadFromJSON(json, () => {
+    fc.loadFromJSON(cleanJson, () => {
       // Apply lock states to all objects
       fc.getObjects().forEach(obj => {
         const lockState = obj.bdLock || 'locked';
