@@ -56,8 +56,8 @@ async function syncAccountToSupabase(){
     // rep_video_url_default omitted — column not in DB schema
     offer_siding: cfg.offerSiding, offer_windows: cfg.offerWindows,
     offer_gutters: cfg.offerGutters, offer_custom: cfg.offerCustom,
-    // offer_solar omitted — column not yet in DB schema
-    // cost_solar_per_watt removed — not in DB schema yet
+    offer_solar: cfg.offerSolar,
+    cost_solar_per_watt: cfg.costSolarPerWatt||3.50,
     referral_amt: cfg.referralAmt, referral_text: cfg.referralText,
     cost_architectural: cfg.costArchitectural, cost_3tab: cfg.cost3Tab,
     cost_designer: cfg.costDesigner, cost_metal: cfg.costMetal,

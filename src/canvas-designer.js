@@ -89,6 +89,56 @@ async function cdLoadTemplates() {
   } catch(e) {
     CD.templates = [];
   }
+  // FIX #7: Generate thumbnails for templates that don't have one
+  // We do this lazily in the background after the shell renders
+  setTimeout(cdGenerateMissingThumbnails, 500);
+}
+
+// FIX #7: Auto-generate thumbnail previews from template front_json
+// Renders each template's front JSON onto a tiny off-screen canvas and
+// caches the result as a data URL so the template list shows real previews
+async function cdGenerateMissingThumbnails() {
+  const THUMB_W = 360, THUMB_H = 240;
+  for (let i = 0; i < CD.templates.length; i++) {
+    const t = CD.templates[i];
+    if (t._thumbDataUrl) continue; // already generated this session
+    // Fetch full template JSON if not already loaded
+    let frontJson = t.front_json;
+    if (!frontJson) {
+      try {
+        const r = await fetch(`/api/canvas?action=get&id=${t.id}`);
+        const data = await r.json();
+        if (data && data.front_json) {
+          frontJson = data.front_json;
+          t.front_json = frontJson; // cache for later
+          t.back_json = data.back_json;
+        }
+      } catch(e) { continue; }
+    }
+    if (!frontJson) continue;
+    // Render to off-screen canvas
+    try {
+      const thumbDataUrl = await new Promise(resolve => {
+        const el = document.createElement('canvas');
+        el.width = THUMB_W; el.height = THUMB_H;
+        const fc = new fabric.StaticCanvas(el, { width: THUMB_W, height: THUMB_H });
+        const scale = THUMB_W / CD_POSTCARD_W;
+        fc.setZoom(scale);
+        const cleanJson = typeof frontJson === 'string' ? JSON.parse(frontJson) : JSON.parse(JSON.stringify(frontJson));
+        fc.loadFromJSON(cleanJson, () => {
+          fc.renderAll();
+          resolve(fc.toDataURL({ format: 'jpeg', quality: 0.7 }));
+          fc.dispose();
+        });
+      });
+      t._thumbDataUrl = thumbDataUrl;
+      // Update the thumbnail in the list DOM without re-rendering the whole list
+      const thumbEl = document.querySelector(`#cd-tpl-list .cd-tpl-card:nth-child(${i+1}) div:first-child`);
+      if (thumbEl) {
+        thumbEl.innerHTML = `<img src="${thumbDataUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+      }
+    } catch(e) { /* skip if render fails */ }
+  }
 }
 
 // ── Shell HTML ────────────────────────────────────────────────────────────────
@@ -113,13 +163,13 @@ function cdRenderDesignerShell() {
         <button id="cd-btn-back" class="cd-side-btn" onclick="cdSwitchSide('back')">🔄 Card Back</button>
         <div style="flex:1;"></div>
         <button id="cd-btn-free-edit" onclick="cdToggleFreeEdit()" title="Unlock all elements to freely move and resize them" style="padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:var(--card2);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;">🔓 Free Edit</button>
-        <!-- Layer controls — shown only when an object is selected -->
-        <div id="cd-layer-controls" style="display:none;align-items:center;gap:4px;">
-          <span style="font-size:11px;color:var(--muted);font-weight:600;margin-right:2px;">LAYER:</span>
-          <button onclick="cdLayerAction('front')" title="Bring to Front" style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card2);color:var(--text);font-size:12px;cursor:pointer;">⬆ Front</button>
-          <button onclick="cdLayerAction('forward')" title="Bring Forward one step" style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card2);color:var(--text);font-size:12px;cursor:pointer;">↑ Fwd</button>
-          <button onclick="cdLayerAction('backward')" title="Send Backward one step" style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card2);color:var(--text);font-size:12px;cursor:pointer;">↓ Back</button>
-          <button onclick="cdLayerAction('back')" title="Send to Back (background)" style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card2);color:var(--text);font-size:12px;cursor:pointer;">⬇ BG</button>
+        <!-- Layer controls — shown only when an object is selected (#8 fix: compact for mobile) -->
+        <div id="cd-layer-controls" style="display:none;align-items:center;gap:2px;">
+          <span style="font-size:10px;color:var(--muted);font-weight:600;margin-right:2px;white-space:nowrap;">LAYER:</span>
+          <button onclick="cdLayerAction('front')" title="Bring to Front" style="padding:4px 7px;border:1px solid var(--border);border-radius:5px;background:var(--card2);color:var(--text);font-size:11px;cursor:pointer;">⬆</button>
+          <button onclick="cdLayerAction('forward')" title="Bring Forward" style="padding:4px 7px;border:1px solid var(--border);border-radius:5px;background:var(--card2);color:var(--text);font-size:11px;cursor:pointer;">↑</button>
+          <button onclick="cdLayerAction('backward')" title="Send Backward" style="padding:4px 7px;border:1px solid var(--border);border-radius:5px;background:var(--card2);color:var(--text);font-size:11px;cursor:pointer;">↓</button>
+          <button onclick="cdLayerAction('back')" title="Send to Background" style="padding:4px 7px;border:1px solid var(--border);border-radius:5px;background:var(--card2);color:var(--text);font-size:11px;cursor:pointer;">⬇</button>
         </div>
         <button onclick="cdPreviewPng()" style="padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:var(--card2);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;">👁 Preview</button>
         <button onclick="cdSaveDesign()" style="padding:6px 16px;border:none;border-radius:6px;background:var(--accent);color:#fff;font-size:12px;font-weight:700;cursor:pointer;">💾 Save Design</button>
@@ -219,8 +269,12 @@ function cdBuildTplListHtml() {
     <div class="cd-tpl-card${CD.activeIdx===i?' cd-tpl-active':''}" onclick="cdSelectTemplate(${i})" style="
       border-radius:8px;border:2px solid ${CD.activeIdx===i?'var(--accent)':'var(--border)'};
       overflow:hidden;cursor:pointer;margin-bottom:8px;transition:border-color .15s;background:var(--card2);">
-      <div style="width:100%;aspect-ratio:6/4;background:#1a1d27;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);">
-        ${t.thumbnail_url ? `<img src="${t.thumbnail_url}" style="width:100%;height:100%;object-fit:cover;">` : '🎨'}
+      <div style="width:100%;aspect-ratio:6/4;background:#1a1d27;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);overflow:hidden;">
+        ${t._thumbDataUrl
+          ? `<img src="${t._thumbDataUrl}" style="width:100%;height:100%;object-fit:cover;">`
+          : t.thumbnail_url
+            ? `<img src="${t.thumbnail_url}" style="width:100%;height:100%;object-fit:cover;">`
+            : '<span style="font-size:24px;">🎨</span>'}
       </div>
       <div style="padding:6px 8px;font-size:11px;font-weight:600;color:var(--text);">${t.name}</div>
       <div style="padding:0 8px 6px;font-size:10px;color:var(--muted);">${t.trade||'roofing'}</div>
@@ -380,7 +434,7 @@ async function cdSwitchSide(side) {
     cdRestoreFieldValues('back');
   }
 
-  // Re-apply free edit mode if active
+  // FIX #9: Re-apply free edit mode to the newly loaded side if active
   if (CD.freeEditMode) {
     const fc = side === 'front' ? CD.fabricFront : CD.fabricBack;
     fc.getObjects().forEach(obj => {
@@ -395,6 +449,14 @@ async function cdSwitchSide(side) {
     });
     fc.selection = true;
     fc.renderAll();
+    // Keep the button in its active state
+    const btn = document.getElementById('cd-btn-free-edit');
+    if (btn) {
+      btn.style.background = '#3b82f6';
+      btn.style.color = '#fff';
+      btn.style.borderColor = '#3b82f6';
+      btn.textContent = '🔒 Lock Layout';
+    }
   }
 
   cdFitCanvas();
