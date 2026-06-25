@@ -496,45 +496,40 @@ function cdTriggerImageUpload(uid, zoneType) {
       const obj = fc.getObjects().find(o => o.__uid === uid);
       if (obj) {
         fabric.Image.fromURL(ev.target.result, img => {
-          // Store original zone bounds on the image for cover-fit clipping
-          const left = obj.left, top = obj.top;
-          const w = (obj.width || 100) * (obj.scaleX || 1);
-          const h = (obj.height || 100) * (obj.scaleY || 1);
-          // Cover scale: fill the zone while preserving aspect ratio
-          const coverScale = Math.max(w / img.width, h / img.height);
-          // Center the image within the zone
-          const offsetX = (img.width * coverScale - w) / 2;
-          const offsetY = (img.height * coverScale - h) / 2;
+          // Get the zone bounds
+          const zoneLeft = obj.left;
+          const zoneTop = obj.top;
+          const zoneW = (obj.width || 100) * (obj.scaleX || 1);
+          const zoneH = (obj.height || 100) * (obj.scaleY || 1);
 
-          // Set image as freely moveable/resizable so free-edit works
-          // Clip to the original zone bounds so overflow is hidden
+          // Contain-fit: scale image to fit inside the zone, preserving aspect ratio
+          const containScale = Math.min(zoneW / img.width, zoneH / img.height);
+          const scaledW = img.width * containScale;
+          const scaledH = img.height * containScale;
+
+          // Center within the zone
+          const centeredLeft = zoneLeft + (zoneW - scaledW) / 2;
+          const centeredTop = zoneTop + (zoneH - scaledH) / 2;
+
           img.set({
-            left: left - offsetX,
-            top: top - offsetY,
-            scaleX: coverScale,
-            scaleY: coverScale,
+            left: centeredLeft,
+            top: centeredTop,
+            scaleX: containScale,
+            scaleY: containScale,
+            // Fully free — moveable and resizable immediately, no clipPath
             selectable: true, evented: true,
-            // Allow free movement/resize — user can adjust in free-edit mode
             lockMovementX: false, lockMovementY: false,
             lockScalingX: false, lockScalingY: false, lockRotation: false,
             hasControls: true, hasBorders: true,
             borderColor: '#3b82f6', cornerColor: '#3b82f6',
             hoverCursor: 'move',
-            // Mark as 'free' so free-edit toggle knows it's already free
             bdLock: 'free', bdZoneLabel: obj.bdZoneLabel, __uid: uid,
-            // Clip to the original zone bounds so overflow is hidden
-            clipPath: new fabric.Rect({
-              left: offsetX / coverScale,
-              top: offsetY / coverScale,
-              width: w / coverScale,
-              height: h / coverScale,
-              absolutePositioned: false,
-            }),
             // Store zone bounds for delete/restore
-            _zoneLeft: left, _zoneTop: top, _zoneW: w, _zoneH: h,
+            _zoneLeft: zoneLeft, _zoneTop: zoneTop, _zoneW: zoneW, _zoneH: zoneH,
           });
           fc.remove(obj);
           fc.add(img);
+          fc.setActiveObject(img); // select it so handles are visible immediately
           fc.renderAll();
         });
       }
