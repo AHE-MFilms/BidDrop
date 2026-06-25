@@ -551,9 +551,44 @@ function renderSuperAdminPanel(accounts, allProfiles){
       '<div style="font-size:11px;color:var(--muted);margin-bottom:12px;">Run once to add performance indexes for 30,000+ pin accounts. Safe to run multiple times.</div>'+
       '<button onclick="runMigration()" style="background:linear-gradient(135deg,#22C55E,#16A34A);border:none;border-radius:8px;padding:10px 22px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">⚡ Run Migration</button>'+
       '<div id="migration-result" style="margin-top:10px;font-size:12px;"></div>'+
+      '<hr style="border:none;border-top:1px solid var(--border);margin:20px 0 14px;">'+
+      '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#F25C05;margin-bottom:8px;">🎨 Canvas Templates</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:12px;">Load the 6 built-in postcard templates (Storm, Solar, Gutters, Roofing, Alert, Estimate Ready) into the canvas editor. Safe to run once — skips if templates already exist.</div>'+
+      '<button onclick="seedCanvasTemplates()" style="background:linear-gradient(135deg,#F25C05,#c44a00);border:none;border-radius:8px;padding:10px 22px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">🎨 Load Default Templates</button>'+
+      '<div id="seed-templates-result" style="margin-top:10px;font-size:12px;"></div>'+
     '</div>' +
     '</div>'
   );
+}
+
+async function seedCanvasTemplates(){
+  const btn = document.querySelector('[onclick="seedCanvasTemplates()"]');
+  const res = document.getElementById('seed-templates-result');
+  if(btn){ btn.disabled=true; btn.textContent='Loading…'; }
+  if(res) res.innerHTML='<span style="color:var(--muted)">Fetching template data…</span>';
+  try{
+    // Load seed data from the seed_templates.json file bundled with the app
+    const seedResp = await fetch('/seed_templates.json');
+    if(!seedResp.ok) throw new Error('Could not load seed_templates.json ('+seedResp.status+')');
+    const templates = await seedResp.json();
+    // Get the service key from Supabase client for auth
+    const sess = (await sb.auth.getSession()).data.session;
+    if(!sess) throw new Error('Not authenticated');
+    const r = await fetch('/api/canvas?action=seed', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+sess.access_token },
+      body: JSON.stringify({ templates, admin_key: sess.access_token })
+    });
+    const data = await r.json();
+    if(!r.ok) throw new Error(data.error || 'Seed failed ('+r.status+')');
+    if(res) res.innerHTML='<span style="color:#22c55e">✅ '+data.inserted+' templates loaded successfully!</span>';
+    toast('✅ '+data.inserted+' canvas templates loaded','success');
+  } catch(e){
+    if(res) res.innerHTML='<span style="color:#ef4444">❌ '+escHtml(e.message)+'</span>';
+    toast('Seed failed: '+e.message,'error');
+  } finally {
+    if(btn){ btn.disabled=false; btn.textContent='🎨 Load Default Templates'; }
+  }
 }
 
 function renderAccountAdminPanel(profiles){

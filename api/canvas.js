@@ -131,10 +131,19 @@ export default async function handler(req, res) {
 
   // ── SEED: POST /api/canvas?action=seed (super admin only — inserts default templates) ──
   if (action === 'seed') {
-    const { templates, admin_key } = body;
-    if (admin_key !== process.env.ADMIN_SEED_KEY && admin_key !== process.env.SUPABASE_SERVICE_KEY) {
-      return res.status(403).json({ error: 'forbidden' });
-    }
+    const { templates } = body;
+    // Verify caller is super_admin via JWT
+    const authHeader = req.headers['authorization'] || '';
+    const token = authHeader.replace(/^Bearer /i, '');
+    if (!token) return res.status(403).json({ error: 'forbidden: no token' });
+    // Verify token with Supabase
+    const verifyResp = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${token}` }
+    });
+    if (!verifyResp.ok) return res.status(403).json({ error: 'forbidden: invalid token' });
+    const verifyData = await verifyResp.json();
+    const role = verifyData?.user_metadata?.role || verifyData?.app_metadata?.role || '';
+    if (role !== 'super_admin') return res.status(403).json({ error: 'forbidden: super_admin only' });
     if (!Array.isArray(templates)) return res.status(400).json({ error: 'templates array required' });
     const inserted = [];
     for (let i = 0; i < templates.length; i++) {
