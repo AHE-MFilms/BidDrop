@@ -110,8 +110,9 @@ function cdRenderDesignerShell() {
     selection: false, hoverCursor: 'default',
   });
 
-  // Scale canvas to fit
-  cdFitCanvas();
+  // Scale canvas to fit — defer so DOM has time to lay out
+  requestAnimationFrame(() => { cdFitCanvas(); });
+  setTimeout(cdFitCanvas, 100); // second pass for safety
   window.addEventListener('resize', cdFitCanvas);
 
   // Click on editable objects
@@ -515,7 +516,9 @@ function cdFitCanvas() {
   if (!area) return;
   const aw = area.clientWidth - 48;
   const ah = area.clientHeight - 48;
-  const scale = Math.min(aw / CD_POSTCARD_W, ah / CD_POSTCARD_H, 1);
+  if (aw <= 0 || ah <= 0) return; // not laid out yet
+  // Scale to fill available space (both up and down)
+  const scale = Math.min(aw / CD_POSTCARD_W, ah / CD_POSTCARD_H);
   const wrap = document.getElementById('cd-canvas-wrap');
   if (wrap) wrap.style.transform = `scale(${scale})`;
 }

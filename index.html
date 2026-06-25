@@ -71,7 +71,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 .main{flex:1;overflow:hidden;display:flex;flex-direction:column;position:relative;}
 .tab-pane{display:none;flex:1;overflow:hidden;min-height:0;}
 .tab-pane.active{display:flex;}
-#tab-agency,#tab-history,#tab-admin,#tab-dashboard,#tab-hotleads,#tab-pixel,#tab-analytics,#tab-zones,#tab-mailqueue,#tab-estimates,#tab-designs,#tab-drip,#tab-contacts,#tab-campaigns,#tab-territory,#tab-subscription,#tab-leaderboard{overflow-y:auto!important;overflow-x:hidden;flex:1;min-height:0;}
+#tab-agency,#tab-history,#tab-admin,#tab-dashboard,#tab-hotleads,#tab-pixel,#tab-analytics,#tab-zones,#tab-mailqueue,#tab-estimates,#tab-drip,#tab-contacts,#tab-campaigns,#tab-territory,#tab-subscription,#tab-leaderboard{overflow-y:auto!important;overflow-x:hidden;flex:1;min-height:0;}
+#tab-designs{overflow:hidden!important;flex:1;min-height:0;}
 #tab-settings{display:none;flex-direction:column;overflow-y:auto;padding:22px;gap:14px;}
   #tab-settings.active{display:flex;}
   .stab-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
@@ -5375,6 +5376,24 @@ tr:hover td{background:var(--card);}
 <script src="/src/postcard-templates.js"></script>
 <script src="/src/postcard-dispatch.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+<script>
+// Monkey-patch Fabric.js 5.x: fix 'alphabetical' -> 'alphabetic' (invalid CanvasTextBaseline)
+(function(){
+  if(typeof fabric==='undefined') return;
+  var _orig = fabric.Text.prototype._renderTextLine;
+  if(!_orig) return;
+  fabric.Text.prototype._renderTextLine = function(method, ctx, line, left, top, lineIndex) {
+    var prev = ctx.textBaseline;
+    if(ctx.textBaseline === 'alphabetical') ctx.textBaseline = 'alphabetic';
+    _orig.call(this, method, ctx, line, left, top, lineIndex);
+    ctx.textBaseline = prev;
+  };
+  // Also patch the default value on the prototype
+  if(fabric.Text.prototype.textBaseline === 'alphabetical') {
+    fabric.Text.prototype.textBaseline = 'alphabetic';
+  }
+})();
+</script>
 <script src="/src/postcard-designer.js"></script>
 <script src="/src/canvas-designer.js"></script>
 <script src="/src/supabase-sync.js"></script>
