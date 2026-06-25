@@ -64,22 +64,21 @@ function cdRenderDesignerShell() {
         <button onclick="cdPreviewPng()" style="padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:var(--card2);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;">👁 Preview</button>
         <button onclick="cdSaveDesign()" style="padding:6px 16px;border:none;border-radius:6px;background:var(--accent);color:#fff;font-size:12px;font-weight:700;cursor:pointer;">💾 Save Design</button>
       </div>
-      <!-- Canvas wrapper -->
+      <!-- Canvas wrapper: single canvas shown at a time via display toggle -->
       <div id="cd-canvas-area" style="flex:1;overflow:hidden;padding:24px;display:flex;align-items:flex-start;justify-content:center;">
-        <!-- cd-canvas-sizer: sized to scaled dimensions so layout doesn't overflow -->
         <div id="cd-canvas-sizer" style="flex-shrink:0;overflow:hidden;">
-          <div id="cd-canvas-wrap" style="transform-origin:top left;box-shadow:0 8px 40px rgba(0,0,0,.5);">
-          <canvas id="cd-canvas-front"></canvas>
-          <canvas id="cd-canvas-back" style="position:absolute;top:0;left:0;visibility:hidden;pointer-events:none;"></canvas>
-          <div id="cd-no-template" style="
-            position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
-            justify-content:center;color:var(--muted);font-size:13px;gap:8px;
-            background:var(--card);border-radius:4px;">
-            <span style="font-size:32px;">🎨</span>
-            <span>Select a template from the left panel</span>
+          <div id="cd-canvas-wrap" style="transform-origin:top left;box-shadow:0 8px 40px rgba(0,0,0,.5);position:relative;">
+            <div id="cd-front-wrap"><canvas id="cd-canvas-front"></canvas></div>
+            <div id="cd-back-wrap" style="display:none;"><canvas id="cd-canvas-back"></canvas></div>
+            <div id="cd-no-template" style="
+              position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+              justify-content:center;color:var(--muted);font-size:13px;gap:8px;
+              background:var(--card);border-radius:4px;">
+              <span style="font-size:32px;">🎨</span>
+              <span>Select a template from the left panel</span>
+            </div>
           </div>
         </div>
-        </div><!-- /cd-canvas-sizer -->
       </div>
       <!-- Uploaded designs section -->
       <div style="padding:0 24px 20px;flex-shrink:0;">
@@ -167,14 +166,24 @@ async function cdSelectTemplate(idx) {
   }
 
   CD.side = 'front';
+  CD.freeEditMode = false; // reset free edit on template change
   document.getElementById('cd-btn-front')?.classList.add('cd-side-active');
   document.getElementById('cd-btn-back')?.classList.remove('cd-side-active');
 
-  // Show front canvas, hide back
-  const frontEl = document.getElementById('cd-canvas-front');
-  const backEl = document.getElementById('cd-canvas-back');
-  if (frontEl) { frontEl.style.visibility = ''; frontEl.style.pointerEvents = ''; frontEl.style.position = 'relative'; }
-  if (backEl) { backEl.style.visibility = 'hidden'; backEl.style.pointerEvents = 'none'; backEl.style.position = 'absolute'; }
+  // Show front wrap, hide back wrap
+  const frontWrap = document.getElementById('cd-front-wrap');
+  const backWrap = document.getElementById('cd-back-wrap');
+  if (frontWrap) frontWrap.style.display = '';
+  if (backWrap) backWrap.style.display = 'none';
+
+  // Reset free edit button appearance
+  const freeBtn = document.getElementById('cd-btn-free-edit');
+  if (freeBtn) {
+    freeBtn.style.background = 'var(--card2)';
+    freeBtn.style.color = 'var(--muted)';
+    freeBtn.style.borderColor = 'var(--border)';
+    freeBtn.textContent = '🔓 Free Edit';
+  }
 
   // Load front JSON into fabric
   await cdLoadSideIntoFabric('front');
@@ -257,24 +266,42 @@ async function cdSwitchSide(side) {
   if (side === CD.side || !CD.activeTemplate) return;
   CD.side = side;
 
-  const frontEl = document.getElementById('cd-canvas-front');
-  const backEl = document.getElementById('cd-canvas-back');
+  const frontWrap = document.getElementById('cd-front-wrap');
+  const backWrap = document.getElementById('cd-back-wrap');
   const btnFront = document.getElementById('cd-btn-front');
   const btnBack = document.getElementById('cd-btn-back');
 
   if (side === 'front') {
-    if (frontEl) { frontEl.style.visibility = ''; frontEl.style.pointerEvents = ''; frontEl.style.position = 'relative'; }
-    if (backEl) { backEl.style.visibility = 'hidden'; backEl.style.pointerEvents = 'none'; backEl.style.position = 'absolute'; }
+    if (frontWrap) frontWrap.style.display = '';
+    if (backWrap) backWrap.style.display = 'none';
     btnFront?.classList.add('cd-side-active');
     btnBack?.classList.remove('cd-side-active');
     await cdLoadSideIntoFabric('front');
   } else {
-    if (frontEl) { frontEl.style.visibility = 'hidden'; frontEl.style.pointerEvents = 'none'; frontEl.style.position = 'absolute'; }
-    if (backEl) { backEl.style.visibility = ''; backEl.style.pointerEvents = ''; backEl.style.position = 'relative'; }
+    if (frontWrap) frontWrap.style.display = 'none';
+    if (backWrap) backWrap.style.display = '';
     btnFront?.classList.remove('cd-side-active');
     btnBack?.classList.add('cd-side-active');
     await cdLoadSideIntoFabric('back');
   }
+
+  // Re-apply free edit mode if active
+  if (CD.freeEditMode) {
+    const fc = side === 'front' ? CD.fabricFront : CD.fabricBack;
+    fc.getObjects().forEach(obj => {
+      obj.set({
+        selectable: true, evented: true,
+        lockMovementX: false, lockMovementY: false,
+        lockScalingX: false, lockScalingY: false, lockRotation: false,
+        hasControls: true, hasBorders: true,
+        borderColor: '#3b82f6', cornerColor: '#3b82f6',
+        hoverCursor: 'move',
+      });
+    });
+    fc.selection = true;
+    fc.renderAll();
+  }
+
   cdFitCanvas();
   cdRenderFieldsPanel();
 }
@@ -342,44 +369,30 @@ function cdRenderFieldsPanel() {
       `;
     }
 
-    if (obj.bdZoneLabel === 'logo' || obj.bdZoneLabel === 'logoImage') {
-      return `
-        <div style="margin-bottom:14px;">
-          <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:4px;">${label}</label>
-          <div onclick="cdTriggerImageUpload(${uid}, 'logo')" style="
-            border:1.5px dashed var(--border);border-radius:6px;padding:12px;text-align:center;
-            cursor:pointer;transition:border-color .15s;font-size:12px;color:var(--muted);"
-            onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
-            ${CD.fieldValues[uid] ? '<img src="'+CD.fieldValues[uid]+'" style="max-height:50px;max-width:100%;object-fit:contain;">' : '📷 Upload Logo'}
-          </div>
-        </div>
-      `;
-    }
+    // Image zones — show upload button + delete button if image is uploaded
+    const hasImage = !!CD.fieldValues[uid];
+    const isLogo = obj.bdZoneLabel === 'logo' || obj.bdZoneLabel === 'logoImage';
+    const isHero = (obj.bdZoneLabel && obj.bdZoneLabel.includes('hero')) || obj.bdZoneLabel === 'housePhoto';
+    const uploadLabel = isLogo ? '📷 Upload Logo' : isHero ? '🏠 Upload House Photo' : '📷 Upload Image';
+    const zoneType = isLogo ? 'logo' : isHero ? 'hero' : 'generic';
 
-    if (obj.bdZoneLabel && obj.bdZoneLabel.includes('hero') || obj.bdZoneLabel === 'housePhoto') {
-      return `
-        <div style="margin-bottom:14px;">
-          <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:4px;">${label}</label>
-          <div onclick="cdTriggerImageUpload(${uid}, 'hero')" style="
-            border:1.5px dashed var(--border);border-radius:6px;padding:12px;text-align:center;
-            cursor:pointer;transition:border-color .15s;font-size:12px;color:var(--muted);"
-            onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
-            ${CD.fieldValues[uid] ? '<img src="'+CD.fieldValues[uid]+'" style="max-height:80px;max-width:100%;object-fit:cover;border-radius:4px;">' : '🏠 Upload House Photo'}
-          </div>
-        </div>
-      `;
-    }
-
-    // Generic image zone
     if (obj.type === 'image' || obj.bdZoneLabel) {
       return `
         <div style="margin-bottom:14px;">
           <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:4px;">${label}</label>
-          <div onclick="cdTriggerImageUpload(${uid}, 'generic')" style="
-            border:1.5px dashed var(--border);border-radius:6px;padding:12px;text-align:center;
-            cursor:pointer;transition:border-color .15s;font-size:12px;color:var(--muted);"
-            onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
-            ${CD.fieldValues[uid] ? '<img src="'+CD.fieldValues[uid]+'" style="max-height:80px;max-width:100%;object-fit:cover;border-radius:4px;">' : '📷 Upload Image'}
+          <div style="display:flex;gap:6px;align-items:flex-start;">
+            <div onclick="cdTriggerImageUpload(${uid}, '${zoneType}')" style="
+              flex:1;border:1.5px dashed var(--border);border-radius:6px;padding:10px;text-align:center;
+              cursor:pointer;transition:border-color .15s;font-size:12px;color:var(--muted);"
+              onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+              ${hasImage
+                ? `<img src="${CD.fieldValues[uid]}" style="max-height:60px;max-width:100%;object-fit:contain;">`
+                : uploadLabel}
+            </div>
+            ${hasImage ? `<button onclick="cdClearImage(${uid})" title="Remove image" style="
+              flex-shrink:0;padding:6px 8px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);
+              border-radius:6px;color:#ef4444;font-size:13px;cursor:pointer;line-height:1;" 
+              onmouseover="this.style.background='rgba(239,68,68,.3)'" onmouseout="this.style.background='rgba(239,68,68,.15)'">🗑</button>` : ''}
           </div>
         </div>
       `;
@@ -483,8 +496,7 @@ function cdTriggerImageUpload(uid, zoneType) {
       const obj = fc.getObjects().find(o => o.__uid === uid);
       if (obj) {
         fabric.Image.fromURL(ev.target.result, img => {
-          // Replace the zone rect/image with the uploaded image
-          // Use cover-fit: scale uniformly so image fills the zone without squishing
+          // Store original zone bounds on the image for cover-fit clipping
           const left = obj.left, top = obj.top;
           const w = (obj.width || 100) * (obj.scaleX || 1);
           const h = (obj.height || 100) * (obj.scaleY || 1);
@@ -493,17 +505,23 @@ function cdTriggerImageUpload(uid, zoneType) {
           // Center the image within the zone
           const offsetX = (img.width * coverScale - w) / 2;
           const offsetY = (img.height * coverScale - h) / 2;
+
+          // Set image as freely moveable/resizable so free-edit works
+          // Clip to the original zone bounds so overflow is hidden
           img.set({
             left: left - offsetX,
             top: top - offsetY,
             scaleX: coverScale,
             scaleY: coverScale,
             selectable: true, evented: true,
-            lockMovementX: true, lockMovementY: true,
-            lockScalingX: true, lockScalingY: true, lockRotation: true,
-            hasControls: false, hasBorders: true,
-            borderColor: '#22c55e', cornerColor: '#22c55e',
-            bdLock: 'editable', bdZoneLabel: obj.bdZoneLabel, __uid: uid,
+            // Allow free movement/resize — user can adjust in free-edit mode
+            lockMovementX: false, lockMovementY: false,
+            lockScalingX: false, lockScalingY: false, lockRotation: false,
+            hasControls: true, hasBorders: true,
+            borderColor: '#3b82f6', cornerColor: '#3b82f6',
+            hoverCursor: 'move',
+            // Mark as 'free' so free-edit toggle knows it's already free
+            bdLock: 'free', bdZoneLabel: obj.bdZoneLabel, __uid: uid,
             // Clip to the original zone bounds so overflow is hidden
             clipPath: new fabric.Rect({
               left: offsetX / coverScale,
@@ -512,18 +530,63 @@ function cdTriggerImageUpload(uid, zoneType) {
               height: h / coverScale,
               absolutePositioned: false,
             }),
+            // Store zone bounds for delete/restore
+            _zoneLeft: left, _zoneTop: top, _zoneW: w, _zoneH: h,
           });
           fc.remove(obj);
           fc.add(img);
           fc.renderAll();
         });
       }
-      // Re-render fields panel to show thumbnail
+      // Re-render fields panel to show thumbnail + delete button
       cdRenderFieldsPanel();
     };
     reader.readAsDataURL(file);
   };
   input.click();
+}
+
+// ── Clear (delete) an uploaded image, restoring the original zone placeholder ─
+function cdClearImage(uid) {
+  const fc = CD.side === 'front' ? CD.fabricFront : CD.fabricBack;
+  const img = fc.getObjects().find(o => o.__uid === uid);
+  if (!img) {
+    // Image not on canvas — just clear field value and re-render panel
+    delete CD.fieldValues[uid];
+    cdRenderFieldsPanel();
+    return;
+  }
+
+  // Restore a placeholder rect in the original zone position
+  const zoneLeft = img._zoneLeft ?? img.left;
+  const zoneTop = img._zoneTop ?? img.top;
+  const zoneW = img._zoneW ?? (img.width * img.scaleX);
+  const zoneH = img._zoneH ?? (img.height * img.scaleY);
+  const zoneLabel = img.bdZoneLabel;
+
+  const placeholder = new fabric.Rect({
+    left: zoneLeft, top: zoneTop,
+    width: zoneW, height: zoneH,
+    scaleX: 1, scaleY: 1,
+    fill: 'rgba(255,255,255,0.05)',
+    stroke: '#3b82f6', strokeWidth: 4, strokeDashArray: [20, 10],
+    rx: 8, ry: 8,
+    selectable: true, evented: true,
+    lockMovementX: true, lockMovementY: true,
+    lockScalingX: true, lockScalingY: true, lockRotation: true,
+    hasControls: false, hasBorders: true,
+    borderColor: '#22c55e', cornerColor: '#22c55e',
+    hoverCursor: 'pointer',
+    bdLock: 'editable', bdZoneLabel: zoneLabel, __uid: uid,
+  });
+
+  fc.remove(img);
+  fc.add(placeholder);
+  fc.renderAll();
+
+  delete CD.fieldValues[uid];
+  CD.dirty = true;
+  cdRenderFieldsPanel();
 }
 
 function cdApplyAllFields() {
@@ -601,7 +664,7 @@ function cdToggleFreeEdit() {
             hoverCursor: 'pointer',
           });
         } else {
-          // 'free' — stays moveable
+          // 'free' — stays moveable (uploaded images, etc.)
           obj.set({
             selectable: true, evented: true,
             lockMovementX: false, lockMovementY: false,
@@ -641,8 +704,8 @@ function cdSaveDesign() {
     cdShowToast('Select a template first', 'err'); return;
   }
   // Collect current canvas state as the "contractor customization"
-  const frontJson = CD.fabricFront.toJSON(['bdLock','bdEditable','bdZoneLabel','__uid']);
-  const backJson = CD.fabricBack.toJSON(['bdLock','bdEditable','bdZoneLabel','__uid']);
+  const frontJson = CD.fabricFront.toJSON(['bdLock','bdEditable','bdZoneLabel','__uid','_zoneLeft','_zoneTop','_zoneW','_zoneH']);
+  const backJson = CD.fabricBack.toJSON(['bdLock','bdEditable','bdZoneLabel','__uid','_zoneLeft','_zoneTop','_zoneW','_zoneH']);
 
   // Save to S.cfg for use in dispatch/print
   if (typeof S !== 'undefined') {
@@ -702,6 +765,7 @@ window.cdSelectTemplate = cdSelectTemplate;
 window.cdSwitchSide = cdSwitchSide;
 window.cdUpdateTextField = cdUpdateTextField;
 window.cdTriggerImageUpload = cdTriggerImageUpload;
+window.cdClearImage = cdClearImage;
 window.cdApplyAllFields = cdApplyAllFields;
 window.cdSaveDesign = cdSaveDesign;
 window.cdPreviewPng = cdPreviewPng;
