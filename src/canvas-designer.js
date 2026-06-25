@@ -17,6 +17,7 @@ const CD = {
   editableObjs: [],       // objects with bdLock='editable' on current side
   fieldValues: {},        // { objectId: value } — contractor's edits
   dirty: false,
+  freeEditMode: false,    // when true, all objects can be moved/resized
 };
 
 const CD_POSTCARD_W = 2775; // 6×9 + 0.125" bleed @ 300 DPI
@@ -59,6 +60,7 @@ function cdRenderDesignerShell() {
         <button id="cd-btn-front" class="cd-side-btn cd-side-active" onclick="cdSwitchSide('front')">📄 Card Front</button>
         <button id="cd-btn-back" class="cd-side-btn" onclick="cdSwitchSide('back')">🔄 Card Back</button>
         <div style="flex:1;"></div>
+        <button id="cd-btn-free-edit" onclick="cdToggleFreeEdit()" title="Unlock all elements to freely move and resize them" style="padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:var(--card2);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;">🔓 Free Edit</button>
         <button onclick="cdPreviewPng()" style="padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:var(--card2);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;">👁 Preview</button>
         <button onclick="cdSaveDesign()" style="padding:6px 16px;border:none;border-radius:6px;background:var(--accent);color:#fff;font-size:12px;font-weight:700;cursor:pointer;">💾 Save Design</button>
       </div>
@@ -552,6 +554,76 @@ function cdFitCanvas() {
   sizer.style.height = `${scaledH}px`;
 }
 
+// ── Free Edit Mode ───────────────────────────────────────────────────────────
+function cdToggleFreeEdit() {
+  CD.freeEditMode = !CD.freeEditMode;
+  const btn = document.getElementById('cd-btn-free-edit');
+  const fc = CD.side === 'front' ? CD.fabricFront : CD.fabricBack;
+  const fcOther = CD.side === 'front' ? CD.fabricBack : CD.fabricFront;
+
+  if (CD.freeEditMode) {
+    // Unlock all objects on both canvases for free movement/resize
+    [fc, fcOther].forEach(canvas => {
+      canvas.getObjects().forEach(obj => {
+        obj.set({
+          selectable: true, evented: true,
+          lockMovementX: false, lockMovementY: false,
+          lockScalingX: false, lockScalingY: false, lockRotation: false,
+          hasControls: true, hasBorders: true,
+          borderColor: '#3b82f6', cornerColor: '#3b82f6',
+          hoverCursor: 'move',
+        });
+      });
+      canvas.selection = true;
+      canvas.renderAll();
+    });
+    if (btn) {
+      btn.style.background = '#3b82f6';
+      btn.style.color = '#fff';
+      btn.style.borderColor = '#3b82f6';
+      btn.textContent = '🔒 Lock Layout';
+    }
+    cdShowToast('Free Edit ON — move & resize anything', 'ok');
+  } else {
+    // Re-apply original lock states from bdLock property
+    [fc, fcOther].forEach(canvas => {
+      canvas.getObjects().forEach(obj => {
+        const lockState = obj.bdLock || 'locked';
+        if (lockState === 'locked') {
+          obj.set({ selectable: false, evented: false, hoverCursor: 'default' });
+        } else if (lockState === 'editable') {
+          obj.set({
+            selectable: true, evented: true,
+            lockMovementX: true, lockMovementY: true,
+            lockScalingX: true, lockScalingY: true, lockRotation: true,
+            hasControls: false, hasBorders: true,
+            borderColor: '#22c55e', cornerColor: '#22c55e',
+            hoverCursor: 'pointer',
+          });
+        } else {
+          // 'free' — stays moveable
+          obj.set({
+            selectable: true, evented: true,
+            lockMovementX: false, lockMovementY: false,
+            lockScalingX: false, lockScalingY: false,
+            borderColor: '#3b82f6', cornerColor: '#3b82f6',
+          });
+        }
+        canvas.discardActiveObject();
+        canvas.renderAll();
+      });
+      canvas.selection = false;
+    });
+    if (btn) {
+      btn.style.background = 'var(--card2)';
+      btn.style.color = 'var(--muted)';
+      btn.style.borderColor = 'var(--border)';
+      btn.textContent = '🔓 Free Edit';
+    }
+    cdShowToast('Layout locked — back to fill-in mode', 'ok');
+  }
+}
+
 // ── Preview PNG ───────────────────────────────────────────────────────────────
 function cdPreviewPng() {
   const fc = CD.side === 'front' ? CD.fabricFront : CD.fabricBack;
@@ -633,3 +705,4 @@ window.cdTriggerImageUpload = cdTriggerImageUpload;
 window.cdApplyAllFields = cdApplyAllFields;
 window.cdSaveDesign = cdSaveDesign;
 window.cdPreviewPng = cdPreviewPng;
+window.cdToggleFreeEdit = cdToggleFreeEdit;
