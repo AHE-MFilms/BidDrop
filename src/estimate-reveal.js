@@ -48,34 +48,51 @@ function _renderErPreview(est) {
   if (!container) return;
 
   const cfg = (S && S.cfg) || {};
-  const accent  = cfg.tplAccentColor || '#F25C05';
-  const phone   = cfg.phone   || '(555) 000-0000';
-  const website = cfg.website || 'www.yourcompany.com';
-  const logoUrl = cfg.logoData || null;
+  const accent      = cfg.tplAccentColor || '#F25C05';
+  const phone       = cfg.phone   || '(555) 000-0000';
+  const website     = cfg.website || 'www.yourcompany.com';
+  const logoUrl     = cfg.logoData || null;
+  const logoWhiten  = cfg.tplLogoWhiten != null ? cfg.tplLogoWhiten : true;
   const companyName = cfg.companyName || 'Your Company';
-  const owner   = est.owner  || 'Homeowner';
-  const addr    = est.addr   || '';
-  const total   = est.total  ? '$' + Number(est.total).toLocaleString() : 'Your Price';
-  const logoScale = cfg.tplLogoScale != null ? cfg.tplLogoScale : 100;
+  const owner       = est.owner  || 'Homeowner';
+  const addr        = est.addr   || '';
+  const total       = est.total  ? '$' + Number(est.total).toLocaleString() : 'Your Price';
+  const logoScale   = cfg.tplLogoScale != null ? cfg.tplLogoScale : 100;
+
+  // Resolve house photo: estimate first, then its linked pin
+  const pin = est.pinId ? (S.pins || []).find(p => p.id === est.pinId) : null;
+  const housePhoto = est.photo_url || est.photo_data ||
+    (pin && (pin.photo_url || pin.photo_data)) || null;
+  const hasPhoto = !!housePhoto;
+
+  // Content right edge: pull in when photo occupies right 48%
+  const contentRight = hasPhoto ? '52%' : '18px';
 
   // Estimate Reveal card front — dark branded card with price reveal
   container.innerHTML = `
     <div style="position:relative;width:100%;height:100%;background:linear-gradient(135deg,#0d0d0d 0%,#1a1a1a 100%);overflow:hidden;font-family:sans-serif;">
+      ${hasPhoto ? `
+      <!-- House photo right panel -->
+      <div style="position:absolute;top:0;right:0;width:48%;height:100%;overflow:hidden;">
+        <img src="${housePhoto}" style="width:100%;height:100%;object-fit:cover;opacity:.85;" onerror="this.parentElement.style.display='none'">
+        <div style="position:absolute;inset:0;background:linear-gradient(to right,#0d0d0d 0%,transparent 40%);"></div>
+      </div>` : ''}
       <!-- Accent bar left -->
       <div style="position:absolute;left:0;top:0;width:6px;height:100%;background:${accent};"></div>
       <!-- Logo top-left -->
       <div style="position:absolute;top:16px;left:18px;">
         ${logoUrl
-          ? `<img src="${logoUrl}" style="max-height:${Math.round(28 * logoScale / 100)}px;max-width:110px;object-fit:contain;">`
+          ? `<img src="${logoUrl}" style="max-height:${Math.round(28 * logoScale / 100)}px;max-width:110px;object-fit:contain;${logoWhiten ? 'filter:brightness(10);' : ''}">`
           : `<div style="font-size:11px;font-weight:900;color:${accent};letter-spacing:.5px;">${escHtml(companyName)}</div>`}
       </div>
-      <!-- Phone top-right -->
+      ${!hasPhoto ? `
+      <!-- Phone top-right (only when no photo) -->
       <div style="position:absolute;top:14px;right:14px;text-align:right;">
         <div style="font-size:11px;font-weight:700;color:#fff;letter-spacing:-.3px;">${escHtml(phone)}</div>
         <div style="font-size:9px;color:rgba(255,255,255,.5);">${escHtml(website)}</div>
-      </div>
-      <!-- Main content center -->
-      <div style="position:absolute;left:18px;right:18px;top:50%;transform:translateY(-52%);">
+      </div>` : ''}
+      <!-- Main content center-left -->
+      <div style="position:absolute;left:18px;right:${contentRight};top:50%;transform:translateY(-52%);">
         <div style="font-size:9px;color:${accent};font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">WE ASSESSED YOUR ROOF</div>
         <div style="font-size:clamp(11px,3vw,15px);font-weight:900;color:#fff;line-height:1.1;text-transform:uppercase;letter-spacing:-.3px;margin-bottom:6px;">
           ${escHtml(owner)},<br>Your Estimate Is Ready.

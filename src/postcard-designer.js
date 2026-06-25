@@ -582,8 +582,8 @@ function pdRenderPropertiesPanel(zoneKey) {
     <div class="pd-prop-row">
       <label class="pd-prop-label">Accent Color</label>
       <div style="display:flex;gap:8px;align-items:center;">
-        <input type="color" value="${accent}" oninput="pdSetVal('accentColor',this.value)" style="width:36px;height:30px;border:none;border-radius:4px;cursor:pointer;background:none;padding:0;">
-        <input class="pd-prop-input" type="text" value="${accent}" oninput="pdSetVal('accentColor',this.value)" style="width:80px;">
+        <input type="color" aria-label="Accent color picker" value="${accent}" oninput="pdSetVal('accentColor',this.value)" style="width:36px;height:30px;border:none;border-radius:4px;cursor:pointer;background:none;padding:0;">
+        <input class="pd-prop-input" type="text" aria-label="Accent color hex" value="${accent}" oninput="pdSetVal('accentColor',this.value)" style="width:80px;">
       </div>
     </div>
     <div class="pd-prop-row" style="flex-direction:column;gap:8px;">
@@ -600,7 +600,7 @@ function pdRenderPropertiesPanel(zoneKey) {
             </div>
             <div style="flex:1;">
               <div data-pd-logo-scale-lbl style="font-size:10px;color:var(--muted);margin-bottom:4px;">Size: ${logoScale}%</div>
-              <input type="range" min="30" max="200" value="${logoScale}" oninput="pdSetLogoScale(+this.value)" style="width:100%;accent-color:var(--accent);cursor:pointer;">
+              <input type="range" aria-label="Logo size" min="30" max="200" value="${logoScale}" oninput="pdSetLogoScale(+this.value)" style="width:100%;accent-color:var(--accent);cursor:pointer;">
             </div>
             <div class="pd-upload-zone" onclick="pdTriggerLogoUpload()" style="min-width:64px;padding:6px 8px;">
               <div style="font-size:14px;">🔄</div>
@@ -625,11 +625,11 @@ function pdRenderPropertiesPanel(zoneKey) {
       <div class="pd-prop-title">Headline</div>
       <div class="pd-prop-row">
         <label class="pd-prop-label">Line 1</label>
-        <input class="pd-prop-input" type="text" value="${escHtml(cfg.tplHeadline1 || zones.find(z=>z.key==='headline1')?.default || '')}" oninput="pdSetVal('headline1',this.value)">
+        <input class="pd-prop-input" type="text" aria-label="Headline line 1" value="${escHtml(cfg.tplHeadline1 || zones.find(z=>z.key==='headline1')?.default || '')}" oninput="pdSetVal('headline1',this.value)">
       </div>
       <div class="pd-prop-row">
         <label class="pd-prop-label">Line 2 (accent color)</label>
-        <input class="pd-prop-input" type="text" value="${escHtml(cfg.tplHeadline2 || zones.find(z=>z.key==='headline2')?.default || '')}" oninput="pdSetVal('headline2',this.value)">
+        <input class="pd-prop-input" type="text" aria-label="Headline line 2" value="${escHtml(cfg.tplHeadline2 || zones.find(z=>z.key==='headline2')?.default || '')}" oninput="pdSetVal('headline2',this.value)">
       </div>
     </div>`;
   }
@@ -654,7 +654,7 @@ function pdRenderPropertiesPanel(zoneKey) {
         const def = zones.find(z=>z.key===bk)?.default || '';
         return `<div class="pd-prop-row">
           <label class="pd-prop-label">Bullet ${i+1}</label>
-          <input class="pd-prop-input" type="text" value="${escHtml(cfg['tpl'+bk.charAt(0).toUpperCase()+bk.slice(1)] || def)}" oninput="pdSetVal('${bk}',this.value)">
+          <input class="pd-prop-input" type="text" aria-label="Bullet point ${i+1}" value="${escHtml(cfg['tpl'+bk.charAt(0).toUpperCase()+bk.slice(1)] || def)}" oninput="pdSetVal('${bk}',this.value)">
         </div>`;
       }).join('')}
     </div>`;
@@ -665,15 +665,15 @@ function pdRenderPropertiesPanel(zoneKey) {
     <div class="pd-prop-title">Call to Action</div>
     ${zones.find(z=>z.key==='ctaLabel') ? `<div class="pd-prop-row">
       <label class="pd-prop-label">CTA Label</label>
-      <input class="pd-prop-input" type="text" value="${escHtml(cfg.tplCtaLabel || zones.find(z=>z.key==='ctaLabel')?.default || '')}" oninput="pdSetVal('ctaLabel',this.value)">
+      <input class="pd-prop-input" type="text" aria-label="CTA label" value="${escHtml(cfg.tplCtaLabel || zones.find(z=>z.key==='ctaLabel')?.default || '')}" oninput="pdSetVal('ctaLabel',this.value)">
     </div>` : ''}
     <div class="pd-prop-row">
       <label class="pd-prop-label">Phone</label>
-      <input class="pd-prop-input" type="text" value="${escHtml(cfg.phone || '')}" oninput="pdSetVal('phone',this.value)">
+      <input class="pd-prop-input" type="text" aria-label="Phone number" value="${escHtml(cfg.phone || '')}" oninput="pdSetVal('phone',this.value)">
     </div>
     <div class="pd-prop-row">
       <label class="pd-prop-label">Website</label>
-      <input class="pd-prop-input" type="text" value="${escHtml(cfg.website || '')}" oninput="pdSetVal('website',this.value)">
+      <input class="pd-prop-input" type="text" aria-label="Website URL" value="${escHtml(cfg.website || '')}" oninput="pdSetVal('website',this.value)">
     </div>
   </div>`;
 
@@ -688,7 +688,7 @@ function pdRenderPropertiesPanel(zoneKey) {
           <img src="${heroSrc}" style="width:72px;height:52px;object-fit:cover;border-radius:4px;border:1px solid var(--border);flex-shrink:0;">
           <div style="flex:1;">
             <div data-pd-hero-scale-lbl style="font-size:10px;color:var(--muted);margin-bottom:4px;">Size: ${heroScale}%</div>
-            <input type="range" min="30" max="200" value="${heroScale}" oninput="pdSetHeroScale(+this.value)" style="width:100%;accent-color:var(--accent);cursor:pointer;">
+            <input type="range" aria-label="Hero image size" min="30" max="200" value="${heroScale}" oninput="pdSetHeroScale(+this.value)" style="width:100%;accent-color:var(--accent);cursor:pointer;">
           </div>
           <div class="pd-upload-zone" onclick="pdTriggerHeroUpload()" style="min-width:64px;padding:6px 8px;">
             <div style="font-size:14px;">🔄</div>
@@ -719,7 +719,7 @@ function pdRenderPropertiesPanel(zoneKey) {
       </div>
       <div class="pd-prop-row">
         <label class="pd-prop-label">Guarantee</label>
-        <input class="pd-prop-input" type="text" value="${escHtml(cfg.postcardGuarantee || '')}" oninput="pdSetBackVal('postcardGuarantee',this.value)">
+        <input class="pd-prop-input" type="text" aria-label="Guarantee text" value="${escHtml(cfg.postcardGuarantee || '')}" oninput="pdSetBackVal('postcardGuarantee',this.value)">
       </div>
     </div>`;
   }

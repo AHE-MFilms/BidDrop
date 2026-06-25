@@ -121,7 +121,7 @@ async function hlSendToGHL(btn){
     prompt.style.cssText='display:flex;gap:6px;align-items:center;padding:8px 0 2px;flex-wrap:wrap;';
     prompt.innerHTML=
       '<span style="font-size:11px;color:var(--muted);">Enter email to send to GHL:</span>'+
-      '<input type="email" placeholder="homeowner@email.com" style="flex:1;min-width:140px;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:11px;">'+
+      '<input type="email" aria-label="Homeowner email" placeholder="homeowner@email.com" style="flex:1;min-width:140px;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:11px;">'+
       '<button style="background:#0f172a;border:1px solid #334155;border-radius:6px;padding:5px 10px;color:#7dd3fc;font-size:11px;cursor:pointer;font-weight:700;">Send</button>'+
       '<button style="background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;">Cancel</button>';
     if(row){

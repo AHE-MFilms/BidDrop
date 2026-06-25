@@ -93,6 +93,14 @@ async function sbUpdatePinStatus(pinId, status){
   if(!currentAccount) return;
   await sb.from('pins').update({status, updated_at: new Date().toISOString()}).eq('id', pinId);
 }
+async function sbUpdatePinTrades(pin){
+  if(!currentAccount) return;
+  // interested_trades lives inside the estimate JSONB — merge it in without overwriting other fields
+  const est = pin.estimate ? (typeof pin.estimate==='string'?JSON.parse(pin.estimate):JSON.parse(JSON.stringify(pin.estimate))) : {};
+  if(pin.interested_trades && pin.interested_trades.length) est.interested_trades = pin.interested_trades;
+  else delete est.interested_trades;
+  await sb.from('pins').update({estimate: Object.keys(est).length ? est : null, updated_at: new Date().toISOString()}).eq('id', pin.id);
+}
 
 // ── Helper: map a DB row to a JS pin object ──────────────────────────────────
 function _rowToPin(row){
