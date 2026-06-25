@@ -101,6 +101,9 @@
     },
     "api/pixel.js": {
       "maxDuration": 10
+    },
+    "api/canvas.js": {
+      "maxDuration": 15
     }
   },
   "headers": [

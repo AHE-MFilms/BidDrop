@@ -286,6 +286,23 @@ export default async function handler(req, res) {
         updated_at timestamptz DEFAULT now()
       )`
     },
+    // ── Build 13: Canvas designer persistence ──
+    {
+      name: 'accounts.canvas_design_front_json',
+      sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS canvas_design_front_json text"
+    },
+    {
+      name: 'accounts.canvas_design_back_json',
+      sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS canvas_design_back_json text"
+    },
+    {
+      name: 'accounts.canvas_template_id',
+      sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS canvas_template_id text"
+    },
+    {
+      name: 'accounts.canvas_template_name',
+      sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS canvas_template_name text"
+    },
   ];
 
   // Try to run DDL via rpc/exec_sql
