@@ -61,6 +61,14 @@ function cdRenderDesignerShell() {
         <button id="cd-btn-back" class="cd-side-btn" onclick="cdSwitchSide('back')">🔄 Card Back</button>
         <div style="flex:1;"></div>
         <button id="cd-btn-free-edit" onclick="cdToggleFreeEdit()" title="Unlock all elements to freely move and resize them" style="padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:var(--card2);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;">🔓 Free Edit</button>
+        <!-- Layer controls — shown only when an object is selected -->
+        <div id="cd-layer-controls" style="display:none;align-items:center;gap:4px;">
+          <span style="font-size:11px;color:var(--muted);font-weight:600;margin-right:2px;">LAYER:</span>
+          <button onclick="cdLayerAction('front')" title="Bring to Front" style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card2);color:var(--text);font-size:12px;cursor:pointer;">⬆ Front</button>
+          <button onclick="cdLayerAction('forward')" title="Bring Forward one step" style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card2);color:var(--text);font-size:12px;cursor:pointer;">↑ Fwd</button>
+          <button onclick="cdLayerAction('backward')" title="Send Backward one step" style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card2);color:var(--text);font-size:12px;cursor:pointer;">↓ Back</button>
+          <button onclick="cdLayerAction('back')" title="Send to Back (background)" style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card2);color:var(--text);font-size:12px;cursor:pointer;">⬇ BG</button>
+        </div>
         <button onclick="cdPreviewPng()" style="padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:var(--card2);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;">👁 Preview</button>
         <button onclick="cdSaveDesign()" style="padding:6px 16px;border:none;border-radius:6px;background:var(--accent);color:#fff;font-size:12px;font-weight:700;cursor:pointer;">💾 Save Design</button>
       </div>
@@ -124,6 +132,20 @@ function cdRenderDesignerShell() {
   // Click on editable objects
   CD.fabricFront.on('mouse:down', e => cdHandleCanvasClick(e, 'front'));
   CD.fabricBack.on('mouse:down', e => cdHandleCanvasClick(e, 'back'));
+
+  // Show/hide layer controls when selection changes
+  const showLayerControls = () => {
+    const fc = CD.side === 'front' ? CD.fabricFront : CD.fabricBack;
+    const active = fc.getActiveObject();
+    const lc = document.getElementById('cd-layer-controls');
+    if (lc) lc.style.display = active ? 'flex' : 'none';
+  };
+  CD.fabricFront.on('selection:created', showLayerControls);
+  CD.fabricFront.on('selection:updated', showLayerControls);
+  CD.fabricFront.on('selection:cleared', showLayerControls);
+  CD.fabricBack.on('selection:created', showLayerControls);
+  CD.fabricBack.on('selection:updated', showLayerControls);
+  CD.fabricBack.on('selection:cleared', showLayerControls);
 
   // Load first template if available
   if (CD.templates.length > 0) {
@@ -689,6 +711,23 @@ function cdToggleFreeEdit() {
     }
     cdShowToast('Layout locked — back to fill-in mode', 'ok');
   }
+}
+
+// ── Layer Controls ───────────────────────────────────────────────────────────
+function cdLayerAction(action) {
+  const fc = CD.side === 'front' ? CD.fabricFront : CD.fabricBack;
+  if (!fc) return;
+  const obj = fc.getActiveObject();
+  if (!obj) return;
+  switch (action) {
+    case 'front':    fc.bringToFront(obj); break;
+    case 'forward':  fc.bringForward(obj, true); break;
+    case 'backward': fc.sendBackwards(obj, true); break;
+    case 'back':     fc.sendToBack(obj); break;
+  }
+  fc.renderAll();
+  const labels = { front: 'Brought to front', forward: 'Moved forward', backward: 'Moved backward', back: 'Sent to background' };
+  cdShowToast(labels[action] + ' ✓', 'ok');
 }
 
 // ── Preview PNG ───────────────────────────────────────────────────────────────
