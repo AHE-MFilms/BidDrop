@@ -105,7 +105,7 @@ function cdRestoreFieldValues(side) {
             bdLock:'free', bdZoneLabel:zoneLabel, __uid:uid,
             _zoneLeft:zoneLeft, _zoneTop:zoneTop, _zoneW:zoneW, _zoneH:zoneH,
           });
-          img.setControlsVisibility({ mtr: false });
+          img._controlsVisibility = Object.assign({}, img._controlsVisibility || {}, { mtr: false });
           fc.remove(obj);
           if (zoneLabel === 'photo4') {
             fc.add(img); fc.sendToBack(img);
@@ -819,16 +819,14 @@ function cdTriggerImageUpload(uid, zoneType) {
               lockMovementX: false, lockMovementY: false,
               lockScalingX: false, lockScalingY: false, lockRotation: true,
               hasControls: true, hasBorders: false,
-              // Show only scale corners (no rotation handle)
-              setControlsVisibility: null,
               borderColor: 'rgba(59,130,246,0.6)', cornerColor: '#3b82f6',
               cornerSize: 10, transparentCorners: false,
               hoverCursor: 'move',
               bdLock: 'free', bdZoneLabel: zoneLabel, __uid: uid,
               _zoneLeft: zoneLeft, _zoneTop: zoneTop, _zoneW: zoneW, _zoneH: zoneH,
             });
-            // Hide rotation handle
-            img.setControlsVisibility({ mtr: false });
+            // Hide rotation handle (Fabric 5 safe: set _controlsVisibility directly)
+            img._controlsVisibility = Object.assign({}, img._controlsVisibility || {}, { mtr: false });
             fc.remove(obj);
             // For photo4 (branding panel bg), insert BELOW all other objects
             if (zoneLabel === 'photo4') {
@@ -1056,7 +1054,13 @@ function cdToggleFreeEdit() {
               hasControls: true, hasBorders: false,
               borderColor: 'rgba(59,130,246,0.6)', cornerColor: '#3b82f6',
             });
-            obj.setControlsVisibility && obj.setControlsVisibility({ mtr: false });
+            if (obj._controlsVisibility !== undefined || typeof obj.setControlsVisibility === 'function') {
+              if (typeof obj.setControlsVisibility === 'function') {
+                obj.setControlsVisibility({ mtr: false });
+              } else {
+                obj._controlsVisibility = Object.assign({}, obj._controlsVisibility || {}, { mtr: false });
+              }
+            }
           } else {
             obj.set({
               selectable: true, evented: true,
