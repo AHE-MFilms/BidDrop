@@ -218,3 +218,24 @@ function _hidePropertyLegend(){
   const legend = document.getElementById('property-layer-legend');
   if(legend) legend.style.display = 'none';
 }
+
+// ── selectPinById — navigate map to a pin and open its popup ─────────────────
+// Called from Contacts tab "Map" button: goTab('map'); setTimeout(()=>selectPinById(id), 300)
+function selectPinById(id){
+  const pin = (S.pins||[]).find(function(p){ return p.id===id; });
+  if(!pin || !map) return;
+  // Use flyTo so the map animates to the pin
+  map.flyTo([pin.lat, pin.lng], 17, {duration: 0.7});
+  // Open popup — if the marker is inside a cluster it needs to be spiderfied first
+  const marker = markers[id];
+  if(!marker) return;
+  if(clusterGroup){
+    // zoomToShowLayer expands the cluster, then fires a callback to open the popup
+    clusterGroup.zoomToShowLayer(marker, function(){
+      marker.openPopup();
+    });
+  } else {
+    marker.openPopup();
+  }
+}
+window.selectPinById = selectPinById;

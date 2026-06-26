@@ -503,3 +503,144 @@ async function launchNearbyCampaign(){
   _showNearbyCampaignPanel(srcPin, nearbyHomes);
   toast('📍 '+nearbyHomes.length+' homes pinned near '+srcPin.address,'success');
 }
+
+// ── _showNearbyCampaignPanel — opens the postcard-send modal after campaign launch ──
+// Called by launchNearbyCampaign() after pins are created and highlighted.
+function _showNearbyCampaignPanel(srcPin, homes){
+  // Update count badge in the modal
+  const countEl = document.getElementById('coi-postcard-count');
+  if(countEl) countEl.textContent = homes.length;
+  // Update cost estimate
+  const costEl = document.getElementById('coi-cost-est');
+  if(costEl) costEl.textContent = homes.length + ' credit' + (homes.length!==1?'s':'') + ' ($' + (homes.length*4).toFixed(2) + ')';
+  // Reset photo upload area
+  const preview = document.getElementById('coi-photo-preview');
+  const placeholder = document.getElementById('coi-photo-placeholder');
+  if(preview) preview.style.display = 'none';
+  if(placeholder) placeholder.style.display = '';
+  window._coiPhotoDataUrl = null;
+  // Reset progress bar
+  const progress = document.getElementById('coi-send-progress');
+  if(progress) progress.style.display = 'none';
+  const bar = document.getElementById('coi-progress-bar');
+  if(bar) bar.style.width = '0%';
+  const txt = document.getElementById('coi-progress-text');
+  if(txt) txt.textContent = '0 / 0 sent';
+  // Re-enable send button
+  const btn = document.getElementById('btn-send-campaign');
+  if(btn){ btn.disabled = false; btn.textContent = '📮 Send Campaign'; }
+  openM('m-campaign-postcard');
+}
+
+// ── handleCOIPhotoUpload — reads the selected job photo into memory ───────────
+function handleCOIPhotoUpload(input){
+  const file = input && input.files && input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    window._coiPhotoDataUrl = e.target.result;
+    const img = document.getElementById('coi-photo-img');
+    if(img) img.src = e.target.result;
+    const preview = document.getElementById('coi-photo-preview');
+    const placeholder = document.getElementById('coi-photo-placeholder');
+    if(preview) preview.style.display = '';
+    if(placeholder) placeholder.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── sendCampaignPostcards — sends one postcard per nearby home via Lob ────────
+// Called by the "📮 Send Campaign" button inside the m-campaign-postcard modal.
+async function sendCampaignPostcards(){
+  const homes = window._nearbyRealHomes || [];
+  if(!homes.length){ toast('No campaign homes — launch a Nearby Campaign first','error'); return; }
+
+  const photoDataUrl = window._coiPhotoDataUrl || null;
+  if(!photoDataUrl){ toast('Please upload a job photo first','error'); return; }
+
+  const headline = (document.getElementById('coi-headline')||{}).value || 'We just finished a project in your neighborhood!';
+  const subtext  = (document.getElementById('coi-subtext')||{}).value  || 'Your neighbors love the results. Want a free quote?';
+
+  // Check credit balance
+  const balance = S.cfg.mailerCredits || 0;
+  if(balance < homes.length){
+    toast('Not enough credits (' + balance + ' available, ' + homes.length + ' needed). Please purchase more.','error');
+    setTimeout(function(){ if(typeof showBuyCreditsModal==='function') showBuyCreditsModal(); }, 800);
+    return;
+  }
+
+  // Disable button, show progress
+  const btn = document.getElementById('btn-send-campaign');
+  if(btn){ btn.disabled = true; btn.textContent = 'Sending…'; }
+  const progressEl = document.getElementById('coi-send-progress');
+  const barEl = document.getElementById('coi-progress-bar');
+  const txtEl = document.getElementById('coi-progress-text');
+  if(progressEl) progressEl.style.display = '';
+
+  let sent = 0, failed = 0;
+  const total = homes.length;
+  const idemBase = 'camp-' + Date.now();
+
+  for(let i = 0; i < homes.length; i++){
+    const home = homes[i];
+    const toAddr = home.address || '';
+    const toName = 'Neighbor';
+    if(!toAddr){ failed++; continue; }
+    try{
+      const d = await adminAPI('lob-postcard-campaign', {
+        toAddr: toAddr,
+        toName: toName,
+        photoDataUrl: photoDataUrl,
+        headline: headline,
+        subtext: subtext,
+        pinId: home.id || null,
+        idempotency_key: idemBase + '-' + i
+      });
+      if(d && d.error === 'no_credits'){
+        toast('Ran out of credits after ' + sent + ' postcards','error');
+        if(d._credits){ S.cfg.mailerCredits = d._credits.paid_credits ?? S.cfg.mailerCredits; updateCreditBadge(); }
+        break;
+      }
+      if(d && d.error === 'rate_limited'){
+        // Back off 2 seconds and retry once
+        await new Promise(function(r){ setTimeout(r, 2000); });
+        i--; continue;
+      }
+      if(d && d.id){
+        sent++;
+        if(d._credits){ S.cfg.mailerCredits = d._credits.paid_credits ?? S.cfg.mailerCredits; updateCreditBadge(); }
+      } else {
+        failed++;
+        console.warn('[Campaign] postcard failed for', toAddr, d);
+      }
+    } catch(e){
+      failed++;
+      console.warn('[Campaign] postcard error for', toAddr, e);
+    }
+    // Update progress bar
+    const pct = Math.round(((sent + failed) / total) * 100);
+    if(barEl) barEl.style.width = pct + '%';
+    if(txtEl) txtEl.textContent = (sent + failed) + ' / ' + total + ' sent';
+    // Small yield between sends to avoid rate limiting
+    if(i < homes.length - 1) await new Promise(function(r){ setTimeout(r, 300); });
+  }
+
+  // Update campaign record with postcards_sent count
+  const campaignId = window._activeCampaignId;
+  if(campaignId && sent > 0){
+    adminAPI('campaign-update', { campaignId: campaignId, updates: { postcards_sent: sent } })
+      .catch(function(e){ console.warn('[Campaign] update failed:', e); });
+  }
+
+  // Final state
+  if(btn){ btn.disabled = false; btn.textContent = '📮 Send Campaign'; }
+  if(sent > 0){
+    toast('📮 ' + sent + ' postcard' + (sent!==1?'s':'') + ' sent!' + (failed?' (' + failed + ' failed)':''), 'success');
+    addAct('Campaign: <strong>' + sent + '</strong> postcards mailed near ' + ((S.pins||[]).find(function(p){ return p.id===_coiSourcePid; })||{}).address, 'converted');
+    closeM('m-campaign-postcard');
+  } else {
+    toast('No postcards sent' + (failed?' — ' + failed + ' failed':''), 'error');
+  }
+}
+window.sendCampaignPostcards = sendCampaignPostcards;
+window.handleCOIPhotoUpload = handleCOIPhotoUpload;

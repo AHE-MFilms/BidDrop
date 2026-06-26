@@ -584,7 +584,7 @@ function bulkAddToMailQueue(){
     };
     if(!S.queue) S.queue=[];
     S.queue.unshift(qItem);
-    sbSaveQueueItem(qItem);
+    sbSaveQueueItem(qItem).catch(function(e){ console.error('Queue save:', e); });
     added++;
   });
   save();
@@ -747,7 +747,7 @@ function addEstimateToMailQueue(estId){
   };
   if(!S.queue) S.queue = [];
   S.queue.unshift(qItem);
-  sbSaveQueueItem(qItem);
+  sbSaveQueueItem(qItem).catch(function(e){ console.error('Queue save:', e); });
   save();
   renderEstimatesTab();
   toast('Added to Mail Queue!', 'success');
