@@ -799,17 +799,43 @@ function cdToggleFreeEdit() {
   const fcOther = CD.side === 'front' ? CD.fabricBack : CD.fabricFront;
 
   if (CD.freeEditMode) {
-    // Unlock all objects on both canvases for free movement/resize
+    // Unlock ONLY text objects — photo zones and structural elements stay locked
     [fc, fcOther].forEach(canvas => {
       canvas.getObjects().forEach(obj => {
-        obj.set({
-          selectable: true, evented: true,
-          lockMovementX: false, lockMovementY: false,
-          lockScalingX: false, lockScalingY: false, lockRotation: false,
-          hasControls: true, hasBorders: true,
-          borderColor: '#3b82f6', cornerColor: '#3b82f6',
-          hoverCursor: 'move',
-        });
+        const isText = obj.type === 'textbox' || obj.type === 'i-text' || obj.type === 'text';
+        const isPhoto = obj.bdZoneLabel && obj.bdZoneLabel.startsWith('photo');
+        const isStructural = obj.bdZoneLabel === 'bg' || obj.bdZoneLabel === 'border' ||
+                             (obj.type === 'rect' && !obj.bdZoneLabel);
+        if (isText) {
+          // Text can be moved and edited
+          obj.set({
+            selectable: true, evented: true,
+            lockMovementX: false, lockMovementY: false,
+            lockScalingX: false, lockScalingY: false, lockRotation: false,
+            hasControls: true, hasBorders: true,
+            borderColor: '#3b82f6', cornerColor: '#3b82f6',
+            hoverCursor: 'move',
+          });
+        } else if (isPhoto || isStructural) {
+          // Photos and structural rects always stay locked
+          obj.set({
+            selectable: false, evented: false,
+            lockMovementX: true, lockMovementY: true,
+            lockScalingX: true, lockScalingY: true, lockRotation: true,
+            hasControls: false, hasBorders: false,
+            hoverCursor: 'default',
+          });
+        } else {
+          // Other editable elements (logo, QR) — allow free edit
+          obj.set({
+            selectable: true, evented: true,
+            lockMovementX: false, lockMovementY: false,
+            lockScalingX: false, lockScalingY: false, lockRotation: false,
+            hasControls: true, hasBorders: true,
+            borderColor: '#3b82f6', cornerColor: '#3b82f6',
+            hoverCursor: 'move',
+          });
+        }
       });
       canvas.selection = true;
       canvas.renderAll();
