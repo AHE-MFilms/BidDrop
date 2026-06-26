@@ -591,7 +591,18 @@ function cdRenderFieldsPanel() {
   if (!panel) return;
 
   const fc = CD.side === 'front' ? CD.fabricFront : CD.fabricBack;
-  const editables = fc.getObjects().filter(o => o.bdLock === 'editable');
+  // Include both 'editable' placeholder zones AND 'free' uploaded images (photos/logo)
+  // so uploaded photos don't disappear from the panel after upload
+  const allObjs = fc.getObjects();
+  // Build a set of zone labels already covered by 'free' images
+  const freeLabels = new Set(allObjs.filter(o => o.bdLock === 'free' && o.bdZoneLabel).map(o => o.bdZoneLabel));
+  // editables = editable placeholders whose zone is NOT yet filled + all free uploaded images with a zone label
+  const editables = allObjs.filter(o => {
+    if (o.bdLock === 'editable' && o.bdZoneLabel) return !freeLabels.has(o.bdZoneLabel);
+    if (o.bdLock === 'editable' && !o.bdZoneLabel) return true; // text fields
+    if (o.bdLock === 'free' && o.bdZoneLabel) return true; // uploaded images
+    return false;
+  });
 
   if (!editables.length) {
     panel.innerHTML = `
@@ -634,8 +645,9 @@ function cdRenderFieldsPanel() {
     }
 
     // Image zones — show upload button + delete button if image is uploaded
-    // FIX #4: Also catches image objects and base64 values that slipped through text detection
-    const hasImage = !!CD.fieldValues[uid];
+    // For 'free' uploaded images, always show the thumbnail (the image IS the value)
+    const isUploadedFreeImg = obj.bdLock === 'free' && obj.type === 'image';
+    const hasImage = isUploadedFreeImg || !!CD.fieldValues[uid];
     const isLogo = obj.bdZoneLabel === 'logo' || obj.bdZoneLabel === 'logoImage';
     const isHero = (obj.bdZoneLabel && obj.bdZoneLabel.includes('hero')) || obj.bdZoneLabel === 'housePhoto';
     const uploadLabel = isLogo ? '📷 Upload Logo' : isHero ? '🏠 Upload House Photo' : '📷 Upload Image';
@@ -651,7 +663,7 @@ function cdRenderFieldsPanel() {
               cursor:pointer;transition:border-color .15s;font-size:12px;color:var(--muted);"
               onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
               ${hasImage
-                ? `<img src="${CD.fieldValues[uid]}" style="max-height:60px;max-width:100%;object-fit:contain;">`
+                ? `<img src="${isUploadedFreeImg ? (CD.fieldValues[uid] || obj.getSrc?.() || '') : CD.fieldValues[uid]}" style="max-height:60px;max-width:100%;object-fit:contain;">`
                 : uploadLabel}
             </div>
             ${hasImage ? `<button onclick="cdClearImage(${uid})" title="Remove image" style="
@@ -715,10 +727,14 @@ function cdBrandFieldsHtml() {
 function cdFieldLabel(obj) {
   if (obj.bdZoneLabel) {
     const labels = {
+      photo1: 'Photo 1 (Top Left)', photo2: 'Photo 2 (Top Center)',
+      photo3: 'Photo 3 (Top Right)', photo4: 'Photo 4 (Brand Panel BG)',
+      photo5: 'Photo 5 (Hero Right)',
       heroImage: 'House Photo', housePhoto: 'House Photo', logo: 'Logo',
       logoImage: 'Logo', headline1: 'Headline', headline2: 'Sub-Headline',
-      subtext: 'Body Text', cta: 'Call to Action', phone: 'Phone',
-      website: 'Website', guarantee: 'Guarantee Text', qrCode: 'QR Code',
+      subheadline: 'Sub-Headline', subtext: 'Body Text', cta: 'Call to Action',
+      phone: 'Phone', website: 'Website', guarantee: 'Guarantee Text',
+      qrCode: 'QR Code', qr_code: 'QR Code',
     };
     return labels[obj.bdZoneLabel] || obj.bdZoneLabel;
   }
