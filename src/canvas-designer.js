@@ -689,20 +689,19 @@ function cdTriggerImageUpload(uid, zoneType) {
             scaleX: coverScale,
             scaleY: coverScale,
             clipPath: clip,
-            // Locked to zone — can scale but not move outside
-            selectable: true, evented: true,
+            // Fully locked — photos cannot be moved, resized, or selected
+            selectable: false, evented: false,
             lockMovementX: true, lockMovementY: true,
-            lockScalingX: false, lockScalingY: false, lockRotation: true,
-            hasControls: true, hasBorders: true,
-            borderColor: '#3b82f6', cornerColor: '#3b82f6',
+            lockScalingX: true, lockScalingY: true, lockRotation: true,
+            hasControls: false, hasBorders: false,
             hoverCursor: 'default',
-            bdLock: 'free', bdZoneLabel: obj.bdZoneLabel, __uid: uid,
+            bdLock: 'locked', bdZoneLabel: obj.bdZoneLabel, __uid: uid,
             // Store zone bounds for delete/restore
             _zoneLeft: zoneLeft, _zoneTop: zoneTop, _zoneW: zoneW, _zoneH: zoneH,
           });
           fc.remove(obj);
           fc.add(img);
-          fc.setActiveObject(img);
+          fc.discardActiveObject();
           fc.renderAll();
         });
       }
