@@ -667,34 +667,42 @@ function cdTriggerImageUpload(uid, zoneType) {
           const zoneW = (obj.width || 100) * (obj.scaleX || 1);
           const zoneH = (obj.height || 100) * (obj.scaleY || 1);
 
-          // Contain-fit: scale image to fit inside the zone, preserving aspect ratio
-          const containScale = Math.min(zoneW / img.width, zoneH / img.height);
-          const scaledW = img.width * containScale;
-          const scaledH = img.height * containScale;
+          // Cover-fill: scale image to fill the zone completely (crop edges), preserving aspect ratio
+          const coverScale = Math.max(zoneW / img.width, zoneH / img.height);
+          const scaledW = img.width * coverScale;
+          const scaledH = img.height * coverScale;
 
-          // Center within the zone
+          // Center within the zone (edges may be cropped by clipPath)
           const centeredLeft = zoneLeft + (zoneW - scaledW) / 2;
           const centeredTop = zoneTop + (zoneH - scaledH) / 2;
+
+          // ClipPath rect — clips image to exact zone bounds
+          const clip = new fabric.Rect({
+            left: zoneLeft, top: zoneTop,
+            width: zoneW, height: zoneH,
+            absolutePositioned: true,
+          });
 
           img.set({
             left: centeredLeft,
             top: centeredTop,
-            scaleX: containScale,
-            scaleY: containScale,
-            // Fully free — moveable and resizable immediately, no clipPath
+            scaleX: coverScale,
+            scaleY: coverScale,
+            clipPath: clip,
+            // Locked to zone — can scale but not move outside
             selectable: true, evented: true,
-            lockMovementX: false, lockMovementY: false,
-            lockScalingX: false, lockScalingY: false, lockRotation: false,
+            lockMovementX: true, lockMovementY: true,
+            lockScalingX: false, lockScalingY: false, lockRotation: true,
             hasControls: true, hasBorders: true,
             borderColor: '#3b82f6', cornerColor: '#3b82f6',
-            hoverCursor: 'move',
+            hoverCursor: 'default',
             bdLock: 'free', bdZoneLabel: obj.bdZoneLabel, __uid: uid,
             // Store zone bounds for delete/restore
             _zoneLeft: zoneLeft, _zoneTop: zoneTop, _zoneW: zoneW, _zoneH: zoneH,
           });
           fc.remove(obj);
           fc.add(img);
-          fc.setActiveObject(img); // select it so handles are visible immediately
+          fc.setActiveObject(img);
           fc.renderAll();
         });
       }
