@@ -70,21 +70,65 @@ function cdRestoreFieldValues(side) {
       const zoneLeft = obj.left, zoneTop = obj.top;
       const zoneW = (obj.width||100)*(obj.scaleX||1), zoneH = (obj.height||100)*(obj.scaleY||1);
       const uid = obj.__uid, zoneLabel = obj.bdZoneLabel;
-      fabric.Image.fromURL(val, img => {
-        const s = Math.min(zoneW/img.width, zoneH/img.height);
-        img.set({
-          left: zoneLeft+(zoneW-img.width*s)/2, top: zoneTop+(zoneH-img.height*s)/2,
-          scaleX: s, scaleY: s,
-          selectable:true, evented:true,
-          lockMovementX:false, lockMovementY:false,
-          lockScalingX:false, lockScalingY:false, lockRotation:false,
-          hasControls:true, hasBorders:true,
-          borderColor:'#3b82f6', cornerColor:'#3b82f6', hoverCursor:'move',
-          bdLock:'free', bdZoneLabel:zoneLabel, __uid:uid,
-          _zoneLeft:zoneLeft, _zoneTop:zoneTop, _zoneW:zoneW, _zoneH:zoneH,
+        fabric.Image.fromURL(val, img => {
+        const coverS = Math.max(zoneW/img.width, zoneH/img.height);
+        const isLogoRestore = zoneLabel === 'logo' || zoneLabel === 'logoImage';
+        const isPhotoRestore = zoneLabel && zoneLabel.startsWith('photo');
+        const clip2 = new fabric.Rect({
+          left: zoneLeft, top: zoneTop, width: zoneW, height: zoneH,
+          absolutePositioned: true,
         });
-        fc.remove(obj);
-        fc.add(img);
+        if (isLogoRestore) {
+          img.set({
+            left: zoneLeft+(zoneW-img.width*coverS)/2, top: zoneTop+(zoneH-img.height*coverS)/2,
+            scaleX: coverS, scaleY: coverS, clipPath: clip2,
+            selectable:true, evented:true,
+            lockMovementX:false, lockMovementY:false,
+            lockScalingX:false, lockScalingY:false, lockRotation:false,
+            hasControls:true, hasBorders:true,
+            borderColor:'#f59e0b', cornerColor:'#f59e0b', cornerSize:12,
+            hoverCursor:'move',
+            bdLock:'free', bdZoneLabel:zoneLabel, __uid:uid,
+            _zoneLeft:zoneLeft, _zoneTop:zoneTop, _zoneW:zoneW, _zoneH:zoneH,
+          });
+          fc.remove(obj); fc.add(img); fc.setActiveObject(img);
+        } else if (isPhotoRestore) {
+          img.set({
+            left: zoneLeft+(zoneW-img.width*coverS)/2, top: zoneTop+(zoneH-img.height*coverS)/2,
+            scaleX: coverS, scaleY: coverS, clipPath: clip2,
+            selectable:true, evented:true,
+            lockMovementX:false, lockMovementY:false,
+            lockScalingX:false, lockScalingY:false, lockRotation:true,
+            hasControls:true, hasBorders:false,
+            borderColor:'rgba(59,130,246,0.6)', cornerColor:'#3b82f6', cornerSize:10,
+            hoverCursor:'move',
+            bdLock:'free', bdZoneLabel:zoneLabel, __uid:uid,
+            _zoneLeft:zoneLeft, _zoneTop:zoneTop, _zoneW:zoneW, _zoneH:zoneH,
+          });
+          img.setControlsVisibility({ mtr: false });
+          fc.remove(obj);
+          if (zoneLabel === 'photo4') {
+            fc.add(img); fc.sendToBack(img);
+            const bgR = fc.getObjects().find(o => o.bdZoneLabel === 'bg');
+            if (bgR) fc.sendToBack(bgR);
+          } else {
+            fc.add(img);
+          }
+          fc.discardActiveObject();
+        } else {
+          img.set({
+            left: zoneLeft+(zoneW-img.width*coverS)/2, top: zoneTop+(zoneH-img.height*coverS)/2,
+            scaleX: coverS, scaleY: coverS, clipPath: clip2,
+            selectable:true, evented:true,
+            lockMovementX:false, lockMovementY:false,
+            lockScalingX:false, lockScalingY:false, lockRotation:false,
+            hasControls:true, hasBorders:true,
+            borderColor:'#3b82f6', cornerColor:'#3b82f6', hoverCursor:'move',
+            bdLock:'free', bdZoneLabel:zoneLabel, __uid:uid,
+            _zoneLeft:zoneLeft, _zoneTop:zoneTop, _zoneW:zoneW, _zoneH:zoneH,
+          });
+          fc.remove(obj); fc.add(img); fc.setActiveObject(img);
+        }
         fc.renderAll();
       });
     }
@@ -231,10 +275,14 @@ function cdRenderDesignerShell() {
   CD.fabricFront = new fabric.Canvas('cd-canvas-front', {
     width: CD_POSTCARD_W, height: CD_POSTCARD_H,
     selection: false, hoverCursor: 'default',
+    preserveObjectStacking: true,
+    backgroundColor: '#ffffff',
   });
   CD.fabricBack = new fabric.Canvas('cd-canvas-back', {
     width: CD_POSTCARD_W, height: CD_POSTCARD_H,
     selection: false, hoverCursor: 'default',
+    preserveObjectStacking: true,
+    backgroundColor: '#ffffff',
   });
 
   // Scale canvas to fit — defer so DOM has time to lay out
@@ -245,6 +293,45 @@ function cdRenderDesignerShell() {
   // Click on editable objects
   CD.fabricFront.on('mouse:down', e => cdHandleCanvasClick(e, 'front'));
   CD.fabricBack.on('mouse:down', e => cdHandleCanvasClick(e, 'back'));
+
+  // Constrain photo movement: keep image inside its zone bounds while panning
+  function constrainPhotoMove(e) {
+    const obj = e.target;
+    if (!obj || obj.bdLock !== 'free') return;
+    const zoneLabel = obj.bdZoneLabel || '';
+    if (!zoneLabel.startsWith('photo')) return;
+    const zL = obj._zoneLeft, zT = obj._zoneTop, zW = obj._zoneW, zH = obj._zoneH;
+    if (zL == null) return;
+    const imgW = obj.width * obj.scaleX;
+    const imgH = obj.height * obj.scaleY;
+    // Clamp: image must cover the zone (can't pull edge inside zone)
+    const minLeft = zL + zW - imgW;  // leftmost allowed (right edge at zone right)
+    const maxLeft = zL;              // rightmost allowed (left edge at zone left)
+    const minTop  = zT + zH - imgH;
+    const maxTop  = zT;
+    obj.left = Math.min(maxLeft, Math.max(minLeft, obj.left));
+    obj.top  = Math.min(maxTop,  Math.max(minTop,  obj.top));
+    obj.setCoords();
+  }
+  function constrainPhotoScale(e) {
+    const obj = e.target;
+    if (!obj || obj.bdLock !== 'free') return;
+    const zoneLabel = obj.bdZoneLabel || '';
+    if (!zoneLabel.startsWith('photo')) return;
+    const zL = obj._zoneLeft, zT = obj._zoneTop, zW = obj._zoneW, zH = obj._zoneH;
+    if (zL == null) return;
+    // Minimum scale: image must be at least as large as the zone
+    const minScaleX = zW / obj.width;
+    const minScaleY = zH / obj.height;
+    const minScale = Math.max(minScaleX, minScaleY);
+    if (obj.scaleX < minScale) { obj.scaleX = minScale; obj.scaleY = minScale; }
+    if (obj.scaleY < minScale) { obj.scaleX = minScale; obj.scaleY = minScale; }
+    obj.setCoords();
+  }
+  CD.fabricFront.on('object:moving', constrainPhotoMove);
+  CD.fabricFront.on('object:scaling', constrainPhotoScale);
+  CD.fabricBack.on('object:moving', constrainPhotoMove);
+  CD.fabricBack.on('object:scaling', constrainPhotoScale);
 
   // Show/hide layer controls when selection changes
   const showLayerControls = () => {
@@ -356,7 +443,7 @@ async function cdLoadSideIntoFabric(side) {
 
   if (!json) {
     fc.clear();
-    fc.setBackgroundColor('#1a1a2e', fc.renderAll.bind(fc));
+    fc.setBackgroundColor('#ffffff', fc.renderAll.bind(fc));
     return;
   }
 
@@ -381,6 +468,8 @@ async function cdLoadSideIntoFabric(side) {
 
   return new Promise(resolve => {
     fc.loadFromJSON(cleanJson, () => {
+      // Always ensure white canvas background so gaps between photo zones show as white
+      fc.setBackgroundColor('#ffffff', () => {});
       // Apply lock states to all objects
       fc.getObjects().forEach(obj => {
         const lockState = obj.bdLock || 'locked';
@@ -694,25 +783,96 @@ function cdTriggerImageUpload(uid, zoneType) {
             absolutePositioned: true,
           });
 
-          img.set({
-            left: centeredLeft,
-            top: centeredTop,
-            scaleX: coverScale,
-            scaleY: coverScale,
-            clipPath: clip,
-            // Fully locked — photos cannot be moved, resized, or selected
-            selectable: false, evented: false,
-            lockMovementX: true, lockMovementY: true,
-            lockScalingX: true, lockScalingY: true, lockRotation: true,
-            hasControls: false, hasBorders: false,
-            hoverCursor: 'default',
-            bdLock: 'locked', bdZoneLabel: obj.bdZoneLabel, __uid: uid,
-            // Store zone bounds for delete/restore
-            _zoneLeft: zoneLeft, _zoneTop: zoneTop, _zoneW: zoneW, _zoneH: zoneH,
-          });
-          fc.remove(obj);
-          fc.add(img);
-          fc.discardActiveObject();
+          const zoneLabel = obj.bdZoneLabel || '';
+          const isLogoZone = zoneLabel === 'logo' || zoneLabel === 'logoImage';
+          const isPhotoZone = zoneLabel.startsWith('photo');
+
+          if (isLogoZone) {
+            // Logo: fully adjustable — move, resize, rotate freely
+            img.set({
+              left: zoneLeft + (zoneW - img.width * coverScale) / 2,
+              top: zoneTop + (zoneH - img.height * coverScale) / 2,
+              scaleX: coverScale, scaleY: coverScale,
+              clipPath: clip,
+              selectable: true, evented: true,
+              lockMovementX: false, lockMovementY: false,
+              lockScalingX: false, lockScalingY: false, lockRotation: false,
+              hasControls: true, hasBorders: true,
+              borderColor: '#f59e0b', cornerColor: '#f59e0b',
+              cornerSize: 12, transparentCorners: false,
+              hoverCursor: 'move',
+              bdLock: 'free', bdZoneLabel: zoneLabel, __uid: uid,
+              _zoneLeft: zoneLeft, _zoneTop: zoneTop, _zoneW: zoneW, _zoneH: zoneH,
+            });
+            fc.remove(obj);
+            fc.add(img);
+            fc.setActiveObject(img);
+          } else if (isPhotoZone) {
+            // Photo: can pan/scale WITHIN the clipped zone, but zone position is fixed
+            img.set({
+              left: centeredLeft,
+              top: centeredTop,
+              scaleX: coverScale,
+              scaleY: coverScale,
+              clipPath: clip,
+              selectable: true, evented: true,
+              lockMovementX: false, lockMovementY: false,
+              lockScalingX: false, lockScalingY: false, lockRotation: true,
+              hasControls: true, hasBorders: false,
+              // Show only scale corners (no rotation handle)
+              setControlsVisibility: null,
+              borderColor: 'rgba(59,130,246,0.6)', cornerColor: '#3b82f6',
+              cornerSize: 10, transparentCorners: false,
+              hoverCursor: 'move',
+              bdLock: 'free', bdZoneLabel: zoneLabel, __uid: uid,
+              _zoneLeft: zoneLeft, _zoneTop: zoneTop, _zoneW: zoneW, _zoneH: zoneH,
+            });
+            // Hide rotation handle
+            img.setControlsVisibility({ mtr: false });
+            fc.remove(obj);
+            // For photo4 (branding panel bg), insert BELOW all other objects
+            if (zoneLabel === 'photo4') {
+              fc.add(img);
+              fc.sendToBack(img);
+              // Also push the canvas background (bg rect) behind it if present
+              const bgRect = fc.getObjects().find(o => o.bdZoneLabel === 'bg');
+              if (bgRect) fc.sendToBack(bgRect);
+            } else {
+              // For other photos, insert just above the background/border rects
+              // Find the topmost border/bg object index and insert just above it
+              const objs = fc.getObjects();
+              const lastStructural = objs.reduce((idx, o, i) => {
+                if (o.bdZoneLabel === 'bg' || o.bdZoneLabel === 'border' ||
+                    (o.type === 'rect' && !o.bdZoneLabel && o.bdLock === 'locked')) return i;
+                return idx;
+              }, -1);
+              fc.add(img);
+              if (lastStructural >= 0) {
+                // Move img to just after the last structural element
+                const insertAt = lastStructural + 1;
+                fc.moveTo(img, insertAt);
+              }
+            }
+            fc.discardActiveObject();
+          } else {
+            // Generic uploaded image — fully free
+            img.set({
+              left: centeredLeft, top: centeredTop,
+              scaleX: coverScale, scaleY: coverScale,
+              clipPath: clip,
+              selectable: true, evented: true,
+              lockMovementX: false, lockMovementY: false,
+              lockScalingX: false, lockScalingY: false, lockRotation: false,
+              hasControls: true, hasBorders: true,
+              borderColor: '#3b82f6', cornerColor: '#3b82f6',
+              hoverCursor: 'move',
+              bdLock: 'free', bdZoneLabel: zoneLabel, __uid: uid,
+              _zoneLeft: zoneLeft, _zoneTop: zoneTop, _zoneW: zoneW, _zoneH: zoneH,
+            });
+            fc.remove(obj);
+            fc.add(img);
+            fc.setActiveObject(img);
+          }
           fc.renderAll();
         });
       }
@@ -876,13 +1036,35 @@ function cdToggleFreeEdit() {
             hoverCursor: 'pointer',
           });
         } else {
-          // 'free' — stays moveable (uploaded images, etc.)
-          obj.set({
-            selectable: true, evented: true,
-            lockMovementX: false, lockMovementY: false,
-            lockScalingX: false, lockScalingY: false,
-            borderColor: '#3b82f6', cornerColor: '#3b82f6',
-          });
+          // 'free' — uploaded image; restore appropriate handles
+          const zl = obj.bdZoneLabel || '';
+          const isLogoFree = zl === 'logo' || zl === 'logoImage';
+          const isPhotoFree = zl.startsWith('photo');
+          if (isLogoFree) {
+            obj.set({
+              selectable: true, evented: true,
+              lockMovementX: false, lockMovementY: false,
+              lockScalingX: false, lockScalingY: false, lockRotation: false,
+              hasControls: true, hasBorders: true,
+              borderColor: '#f59e0b', cornerColor: '#f59e0b',
+            });
+          } else if (isPhotoFree) {
+            obj.set({
+              selectable: true, evented: true,
+              lockMovementX: false, lockMovementY: false,
+              lockScalingX: false, lockScalingY: false, lockRotation: true,
+              hasControls: true, hasBorders: false,
+              borderColor: 'rgba(59,130,246,0.6)', cornerColor: '#3b82f6',
+            });
+            obj.setControlsVisibility && obj.setControlsVisibility({ mtr: false });
+          } else {
+            obj.set({
+              selectable: true, evented: true,
+              lockMovementX: false, lockMovementY: false,
+              lockScalingX: false, lockScalingY: false,
+              borderColor: '#3b82f6', cornerColor: '#3b82f6',
+            });
+          }
         }
         canvas.discardActiveObject();
         canvas.renderAll();
