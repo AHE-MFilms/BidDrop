@@ -23,6 +23,17 @@ const CD = {
 const CD_POSTCARD_W = 2775; // 6×9 + 0.125" bleed @ 300 DPI
 const CD_POSTCARD_H = 1875;
 
+// Register custom BidDrop properties so Fabric.js preserves them through loadFromJSON
+// Without this, custom props are silently dropped on deserialization
+(function() {
+  const BD_PROPS = ['bdLock', 'bdEditable', 'bdZoneLabel', 'bdNoSelect', '__uid',
+                    '_zoneLeft', '_zoneTop', '_zoneW', '_zoneH'];
+  const orig = fabric.Object.prototype.toObject;
+  fabric.Object.prototype.toObject = function(additionalProps) {
+    return orig.call(this, (additionalProps || []).concat(BD_PROPS));
+  };
+})();
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function cdInit() {
   await cdLoadTemplates();
