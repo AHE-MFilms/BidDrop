@@ -381,12 +381,14 @@ async function cdLoadSideIntoFabric(side) {
           });
         } else if (lockState === 'editable') {
           // Editable — can click to edit content, but not move/resize
+          // bdNoSelect:true suppresses selection handles (used for photo upload zones)
+          const noSel = obj.bdNoSelect === true;
           obj.set({
-            selectable: true, evented: true,
+            selectable: !noSel, evented: true,
             lockMovementX: true, lockMovementY: true,
             lockScalingX: true, lockScalingY: true,
             lockRotation: true,
-            hasControls: false, hasBorders: true,
+            hasControls: false, hasBorders: !noSel,
             borderColor: '#22c55e', cornerColor: '#22c55e',
             hoverCursor: 'pointer',
           });
@@ -820,11 +822,12 @@ function cdToggleFreeEdit() {
         if (lockState === 'locked') {
           obj.set({ selectable: false, evented: false, hoverCursor: 'default' });
         } else if (lockState === 'editable') {
+          const noSel2 = obj.bdNoSelect === true;
           obj.set({
-            selectable: true, evented: true,
+            selectable: !noSel2, evented: true,
             lockMovementX: true, lockMovementY: true,
             lockScalingX: true, lockScalingY: true, lockRotation: true,
-            hasControls: false, hasBorders: true,
+            hasControls: false, hasBorders: !noSel2,
             borderColor: '#22c55e', cornerColor: '#22c55e',
             hoverCursor: 'pointer',
           });
@@ -886,8 +889,8 @@ function cdSaveDesign() {
     cdShowToast('Select a template first', 'err'); return;
   }
   // Collect current canvas state as the "contractor customization"
-  const frontJson = CD.fabricFront.toJSON(['bdLock','bdEditable','bdZoneLabel','__uid','_zoneLeft','_zoneTop','_zoneW','_zoneH']);
-  const backJson = CD.fabricBack.toJSON(['bdLock','bdEditable','bdZoneLabel','__uid','_zoneLeft','_zoneTop','_zoneW','_zoneH']);
+  const frontJson = CD.fabricFront.toJSON(['bdLock','bdEditable','bdZoneLabel','bdNoSelect','__uid','_zoneLeft','_zoneTop','_zoneW','_zoneH']);
+  const backJson = CD.fabricBack.toJSON(['bdLock','bdEditable','bdZoneLabel','bdNoSelect','__uid','_zoneLeft','_zoneTop','_zoneW','_zoneH']);
 
   // Save to S.cfg for use in dispatch/print
   if (typeof S !== 'undefined') {
