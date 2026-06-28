@@ -6146,8 +6146,28 @@ function addMarker(pin){
   // Add to cluster group (falls back to direct map add if cluster not ready)
   if(clusterGroup) clusterGroup.addLayer(m);
   else m.addTo(map);
-  // Solar data is fetched on-demand only (via estimator satellite button or solar overlay toggle)
-  // NOT auto-fetched on pin load to avoid 20+ API calls on startup
+  // Solar data: fetch on popup open (hits DB cache first — free after first lookup per address)
+  if(!pin._solarCache && pin.lat && pin.lng){
+    const _sPid = pid, _sPin = pin, _sLat = pin.lat, _sLng = pin.lng;
+    setTimeout(function(){
+      if(typeof fetchSolarData === 'function'){
+        fetchSolarData(_sLat, _sLng).then(function(data){
+          if(!data || data.status !== 'ok') return;
+          _sPin._solarCache = data;
+          // If popup is open, inject solar row directly
+          const valEl = document.getElementById('solar-val-'+_sPid);
+          if(valEl){
+            valEl.innerHTML = data.sqft.toLocaleString()+' sq ft &nbsp;&middot;&nbsp; <span style="color:#F25C05;font-weight:700;">'+data.squares+' sq</span> &nbsp;&middot;&nbsp; <span style="color:#22C55E;font-weight:700;">'+data.pitchLabel+' pitch</span>';
+            const rowEl = document.getElementById('solar-row-'+_sPid);
+            if(rowEl) rowEl.style.display = 'block';
+          } else {
+            // Popup not yet open — rebind so next open shows solar
+            addMarker_updateSolar(m, _sPid, _sPin);
+          }
+        }).catch(function(){});
+      }
+    }, 300);
+  }
   // Auto-fetch property data if not cached yet
   if(!pin.equityData && pin.address && !_rentcastFetched.has(pid)){
     _rentcastFetched.add(pid); // session-level dedup: never re-fetch same pin twice per session
