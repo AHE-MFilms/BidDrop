@@ -440,7 +440,7 @@ async function launchNearbyCampaign(){
           lat: home.lat,
           lng: home.lng,
           address: home.address,
-          status: 'needs_roof',
+          status: 'pinned',
           notes: newPin.notes,
           updated_at: now
         };
@@ -609,6 +609,13 @@ async function sendCampaignPostcards(){
       if(d && d.id){
         sent++;
         if(d._credits){ S.cfg.mailerCredits = d._credits.paid_credits ?? S.cfg.mailerCredits; updateCreditBadge(); }
+        // Auto-advance matching pin to 'mailed'
+        if(typeof autoAdvancePinByAddress === 'function') autoAdvancePinByAddress(toAddr, 'mailed');
+        // Also advance the home's own pin if it has an id
+        if(home.id && typeof autoAdvancePinStatus === 'function'){
+          const homePin = (S.pins||[]).find(function(p){ return p.id===home.id; });
+          if(homePin) autoAdvancePinStatus(homePin, 'mailed');
+        }
       } else {
         failed++;
         console.warn('[Campaign] postcard failed for', toAddr, d);

@@ -26,7 +26,7 @@ function addToQueue(){
       existing.pitch=pitchLabel;existing.mat=matLabel;
       existing.total=grand;existing.updatedAt=new Date().toISOString();
       window._editingQueueId=null;
-      addAct('Estimate updated for <strong>'+escHtml(addr)+'</strong> — <strong>$'+grand.toLocaleString()+'</strong>','bid_sent');
+      addAct('Estimate updated for <strong>'+escHtml(addr)+'</strong> — <strong>$'+grand.toLocaleString()+'</strong>','mailed');
       save();renderQueue();toast('✅ Estimate updated!','success');
       document.getElementById('add-queue-btn').textContent='📬 Add to Mail Queue';
       return;
@@ -47,9 +47,9 @@ function addToQueue(){
   };
   S.queue.unshift(item);
   S.estimates.push(item);
-  addAct('Estimate for <strong>'+escHtml(addr)+'</strong> queued','bid_sent');
+  addAct('Estimate for <strong>'+escHtml(addr)+'</strong> queued','mailed');
   sbSaveQueueItem(item).catch(e=>console.error('Queue:',e));
-  sbAddActivity('Estimate queued for <strong>'+escHtml(addr)+'</strong> — $'+grand.toLocaleString(),'bid_sent');
+  sbAddActivity('Estimate queued for <strong>'+escHtml(addr)+'</strong> — $'+grand.toLocaleString(),'mailed');
   // Auto-tag GHL contact with biddrop-postcard and advance to Stage 2 (fire-and-forget)
   if(S.cfg.ghlLocationId){
     const qPin = S.pins.find(p=>p.address&&p.address.trim()===addr.trim());
@@ -965,9 +965,15 @@ async function sendLob(id){
       _unlockPrintForEstimate(item.estId);
       // Update credit badge with new balance
       if(d._credits){ S.cfg.mailerCredits = d._credits.paid_credits ?? S.cfg.mailerCredits; if(d._credits.free_used !== undefined) S.cfg.freeMailerCreditsUsed = d._credits.free_used; updateCreditBadge(); }
-      addAct('Bid letter mailed to <strong>'+escHtml(item.addr)+'</strong>','converted');
+      addAct('Bid letter mailed to <strong>'+escHtml(item.addr)+'</strong>','mailed');
       // If this is a drip step, log it to GHL contact timeline
       if(item.drip_step) ghlAddDripNote(item.owner, item.addr, item.drip_step, item.mailedAt).catch(e=>console.warn('[GHL drip note]',e));
+      // Auto-advance the linked pin to 'mailed'
+      if(typeof autoAdvancePinByAddress === 'function') autoAdvancePinByAddress(item.addr, 'mailed');
+      if((item.pinId||item.pin_id) && typeof autoAdvancePinStatus === 'function'){
+        const qPin = (S.pins||[]).find(p=>p.id===(item.pinId||item.pin_id));
+        if(qPin) autoAdvancePinStatus(qPin, 'mailed');
+      }
       // Log to mailer_log for agency billing
       if(currentAccount && sb){
         sb.from('mailer_log').insert({
@@ -1100,7 +1106,7 @@ async function sendLobPostcard6x9(id){
       // Auto-unlock print for the linked estimate
       _unlockPrintForEstimate(item.estId);
       if(d._credits){ S.cfg.mailerCredits = d._credits.paid_credits ?? S.cfg.mailerCredits; if(d._credits.free_used !== undefined) S.cfg.freeMailerCreditsUsed = d._credits.free_used; updateCreditBadge(); }
-      addAct('6×9 postcard mailed to <strong>'+escHtml(item.addr)+'</strong>','converted');
+      addAct('6×9 postcard mailed to <strong>'+escHtml(item.addr)+'</strong>','mailed');
       if(currentAccount&&sb){
         sb.from('mailer_log').insert({
           account_id:currentAccount.id,

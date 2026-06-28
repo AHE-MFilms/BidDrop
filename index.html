@@ -127,15 +127,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 .fchip.active[data-s="all"]{background:var(--card2);border-color:var(--mid);color:var(--text);}
 .fchip.active[data-s="pipeline"]{background:rgba(242,92,5,.15);border-color:var(--accent);color:var(--accent);}
 .fchip.active[data-s="archive"]{background:rgba(150,176,200,.12);border-color:var(--muted);color:var(--mid);}
-.fchip.active[data-s="needs_roof"]{background:rgba(242,92,5,.15);border-color:var(--accent);color:var(--accent);}
-.fchip.active[data-s="interested"]{background:rgba(234,179,8,.15);border-color:#EAB308;color:#EAB308;}
-.fchip.active[data-s="bid_sent"]{background:rgba(59,130,246,.15);border-color:var(--info);color:var(--info);}
-.fchip.active[data-s="converted"]{background:rgba(34,197,94,.15);border-color:var(--success);color:var(--success);}
-.fchip.active[data-s="not_interested"]{background:rgba(61,82,105,.2);border-color:var(--muted);color:var(--mid);}
-.fchip.active[data-s="contacted"]{background:rgba(168,85,247,.15);border-color:#A855F7;color:#A855F7;}
-.fchip.active[data-s="quoted"]{background:rgba(59,130,246,.15);border-color:var(--info);color:var(--info);}
+.fchip.active[data-s="pinned"]{background:rgba(107,114,128,.2);border-color:#6B7280;color:#9CA3AF;}
+.fchip.active[data-s="mailed"]{background:rgba(59,130,246,.15);border-color:var(--info);color:var(--info);}
+.fchip.active[data-s="emailed"]{background:rgba(168,85,247,.15);border-color:#A855F7;color:#A855F7;}
+.fchip.active[data-s="called"]{background:rgba(234,179,8,.15);border-color:#EAB308;color:#EAB308;}
+.fchip.active[data-s="responded"]{background:rgba(245,158,11,.15);border-color:#F59E0B;color:#F59E0B;}
+.fchip.active[data-s="quoted"]{background:rgba(14,165,233,.15);border-color:#0EA5E9;color:#0EA5E9;}
 .fchip.active[data-s="signed"]{background:rgba(34,197,94,.15);border-color:var(--success);color:var(--success);}
-.fchip.active[data-s="lost"]{background:rgba(239,68,68,.15);border-color:#EF4444;color:#EF4444;}
+.fchip.active[data-s="not_interested"]{background:rgba(61,82,105,.2);border-color:var(--muted);color:var(--mid);}
 .map-tip{background:var(--accent-dim);border:1px solid rgba(242,92,5,.2);border-radius:7px;padding:10px 14px;margin:8px;font-size:13px;color:var(--accent);font-weight:600;text-align:center;}
 .pin-list{flex:1;overflow-y:auto;padding:6px;}
 .pin-list::-webkit-scrollbar{width:3px;}
@@ -1313,17 +1312,17 @@ tr:hover td{background:var(--card);}
         <!-- Status chips — shown contextually based on active view -->
         <div class="filters" id="pipeline-chips">
           <button class="fchip active" data-s="pipeline" onclick="filterPins('pipeline')">All Active</button>
-          <button class="fchip" data-s="needs_roof" onclick="filterPins('needs_roof')">🟠 Needs Roof</button>
-          <button class="fchip" data-s="interested" onclick="filterPins('interested')">🟡 Interested</button>
-          <button class="fchip" data-s="quoted" onclick="filterPins('quoted')">🔵 Quoted</button>
-          <button class="fchip" data-s="signed" onclick="filterPins('signed')">🟢 Signed</button>
+          <button class="fchip" data-s="pinned" onclick="filterPins('pinned')">📍 Pinned</button>
+          <button class="fchip" data-s="mailed" onclick="filterPins('mailed')">📬 Mailed</button>
+          <button class="fchip" data-s="emailed" onclick="filterPins('emailed')">📧 Emailed</button>
+          <button class="fchip" data-s="called" onclick="filterPins('called')">📞 Called</button>
+          <button class="fchip" data-s="responded" onclick="filterPins('responded')">💬 Responded</button>
+          <button class="fchip" data-s="quoted" onclick="filterPins('quoted')">📋 Quoted</button>
         </div>
         <div class="filters" id="archive-chips" style="display:none;">
-          <button class="fchip active" data-s="archive" onclick="filterPins('archive')">All Archived</button>
-          <button class="fchip" data-s="contacted" onclick="filterPins('contacted')">🟣 Contacted</button>
-          <button class="fchip" data-s="converted" onclick="filterPins('converted')">✅ Converted</button>
-          <button class="fchip" data-s="not_interested" onclick="filterPins('not_interested')">⚫ Pass</button>
-          <button class="fchip" data-s="lost" onclick="filterPins('lost')">🔴 Lost</button>
+          <button class="fchip active" data-s="archive" onclick="filterPins('archive')">All Closed</button>
+          <button class="fchip" data-s="signed" onclick="filterPins('signed')">✅ Signed</button>
+          <button class="fchip" data-s="not_interested" onclick="filterPins('not_interested')">❌ Not Interested</button>
         </div>
         <!-- Trade filter chips — only shown when account has 2+ enabled trades -->
         <div class="filters" id="pin-trade-chips" style="display:none;"></div>
@@ -1338,14 +1337,14 @@ tr:hover td{background:var(--card);}
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
           <button onclick="bulkDeletePins()" style="background:#EF4444;border:none;border-radius:6px;padding:5px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">🗑 Delete</button>
-          <button onclick="bulkSetPinStatus('needs_roof')" style="background:rgba(242,92,5,.2);border:1px solid var(--accent);border-radius:6px;padding:5px 10px;color:var(--accent);font-size:11px;font-weight:700;cursor:pointer;">🟠 Needs Roof</button>
-            <button onclick="bulkSetPinStatus('interested')" style="background:rgba(234,179,8,.2);border:1px solid #EAB308;border-radius:6px;padding:5px 10px;color:#EAB308;font-size:11px;font-weight:700;cursor:pointer;">🟡 Interested</button>
-          <button onclick="bulkSetPinStatus('contacted')" style="background:rgba(168,85,247,.15);border:1px solid #A855F7;border-radius:6px;padding:5px 10px;color:#A855F7;font-size:11px;font-weight:700;cursor:pointer;">🟣 Contacted</button>
-          <button onclick="bulkSetPinStatus('quoted')" style="background:rgba(59,130,246,.15);border:1px solid var(--info);border-radius:6px;padding:5px 10px;color:var(--info);font-size:11px;font-weight:700;cursor:pointer;">🔵 Quoted</button>
-          <button onclick="bulkSetPinStatus('signed')" style="background:rgba(34,197,94,.15);border:1px solid var(--success);border-radius:6px;padding:5px 10px;color:var(--success);font-size:11px;font-weight:700;cursor:pointer;">🟢 Signed</button>
-          <button onclick="bulkSetPinStatus('converted')" style="background:rgba(34,197,94,.2);border:1px solid var(--success);border-radius:6px;padding:5px 10px;color:var(--success);font-size:11px;font-weight:700;cursor:pointer;">✅ Converted</button>
-          <button onclick="bulkSetPinStatus('not_interested')" style="background:rgba(61,82,105,.2);border:1px solid var(--muted);border-radius:6px;padding:5px 10px;color:var(--mid);font-size:11px;font-weight:700;cursor:pointer;">⚫ Pass</button>
-          <button onclick="bulkSetPinStatus('lost')" style="background:rgba(239,68,68,.15);border:1px solid #EF4444;border-radius:6px;padding:5px 10px;color:#EF4444;font-size:11px;font-weight:700;cursor:pointer;">🔴 Lost</button>
+          <button onclick="bulkSetPinStatus('pinned')" style="background:rgba(107,114,128,.2);border:1px solid #6B7280;border-radius:6px;padding:5px 10px;color:#9CA3AF;font-size:11px;font-weight:700;cursor:pointer;">📍 Pinned</button>
+          <button onclick="bulkSetPinStatus('mailed')" style="background:rgba(59,130,246,.15);border:1px solid var(--info);border-radius:6px;padding:5px 10px;color:var(--info);font-size:11px;font-weight:700;cursor:pointer;">📬 Mailed</button>
+          <button onclick="bulkSetPinStatus('emailed')" style="background:rgba(168,85,247,.15);border:1px solid #A855F7;border-radius:6px;padding:5px 10px;color:#A855F7;font-size:11px;font-weight:700;cursor:pointer;">📧 Emailed</button>
+          <button onclick="bulkSetPinStatus('called')" style="background:rgba(234,179,8,.2);border:1px solid #EAB308;border-radius:6px;padding:5px 10px;color:#EAB308;font-size:11px;font-weight:700;cursor:pointer;">📞 Called</button>
+          <button onclick="bulkSetPinStatus('responded')" style="background:rgba(245,158,11,.2);border:1px solid #F59E0B;border-radius:6px;padding:5px 10px;color:#F59E0B;font-size:11px;font-weight:700;cursor:pointer;">💬 Responded</button>
+          <button onclick="bulkSetPinStatus('quoted')" style="background:rgba(14,165,233,.15);border:1px solid #0EA5E9;border-radius:6px;padding:5px 10px;color:#0EA5E9;font-size:11px;font-weight:700;cursor:pointer;">📋 Quoted</button>
+          <button onclick="bulkSetPinStatus('signed')" style="background:rgba(34,197,94,.15);border:1px solid var(--success);border-radius:6px;padding:5px 10px;color:var(--success);font-size:11px;font-weight:700;cursor:pointer;">✅ Signed</button>
+          <button onclick="bulkSetPinStatus('not_interested')" style="background:rgba(61,82,105,.2);border:1px solid var(--muted);border-radius:6px;padding:5px 10px;color:var(--mid);font-size:11px;font-weight:700;cursor:pointer;">❌ Not Interested</button>
           <button onclick="bulkSendPinsToFollowUp()" style="background:#1a7f4b;border:none;border-radius:6px;padding:5px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">✉️ Follow Up All</button>
         </div>
       </div>
@@ -2477,13 +2476,14 @@ tr:hover td{background:var(--card);}
       <select id="contacts-status-filter" onchange="renderContacts()" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:var(--font-b);font-size:11px;cursor:pointer;">
         <option value="">All Statuses</option>
         <option value="pipeline">Pipeline</option>
-        <option value="needs_roof">Needs Roof</option>
-        <option value="interested">Interested</option>
-        <option value="quoted">Quoted</option>
-        <option value="signed">Signed</option>
-        <option value="converted">Converted</option>
-        <option value="not_interested">Not Interested</option>
-        <option value="archive">Archive</option>
+        <option value="pinned">📍 Pinned</option>
+        <option value="mailed">📬 Mailed</option>
+        <option value="emailed">📧 Emailed</option>
+        <option value="called">📞 Called</option>
+        <option value="responded">💬 Responded</option>
+        <option value="quoted">📋 Quoted</option>
+        <option value="signed">✅ Signed</option>
+        <option value="not_interested">❌ Not Interested</option>
       </select>
       <select id="contacts-ghl-filter" onchange="renderContacts()" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:var(--font-b);font-size:11px;cursor:pointer;">
         <option value="">All GHL Status</option>
@@ -5246,14 +5246,14 @@ tr:hover td{background:var(--card);}
     <div class="fg"><label class="fl" for="p-addr">Address</label><input class="fi" id="p-addr" placeholder="Auto-filled from map click…"></div>
     <div class="fg"><div class="fl">Status</div>
       <select class="fs" id="p-status">
-        <option value="needs_roof">🟠 Needs Roof</option>
-        <option value="interested">🟡 Interested</option>
-        <option value="contacted">🟣 Contacted</option>
-        <option value="quoted">🔵 Quoted</option>
-        <option value="signed">🟢 Signed</option>
-        <option value="converted">🟢 Converted</option>
-        <option value="not_interested">⚫ Not Interested</option>
-        <option value="lost">🔴 Lost</option>
+        <option value="pinned" selected>📍 Pinned</option>
+        <option value="mailed">📬 Mailed</option>
+        <option value="emailed">📧 Emailed</option>
+        <option value="called">📞 Called</option>
+        <option value="responded">💬 Responded</option>
+        <option value="quoted">📋 Quoted</option>
+        <option value="signed">✅ Signed</option>
+        <option value="not_interested">❌ Not Interested</option>
       </select>
     </div>
     <div class="fg"><label class="fl" for="p-notes">Notes</label><input class="fi" id="p-notes" placeholder="e.g. Interested in roof + solar, storm damage visible…"></div>
@@ -5796,7 +5796,7 @@ function onMapClick(e){
   tempLL=e.latlng;
   document.getElementById('p-addr').value='';
   document.getElementById('p-notes').value='';
-  document.getElementById('p-status').value='needs_roof';
+  document.getElementById('p-status').value='pinned';
   document.getElementById('p-phone').value='';
   // Auto-fill rep name from logged in user
   const repInp = document.getElementById('p-rep');
@@ -6649,9 +6649,10 @@ function handlePopupPhotoInput(e){
 }
 
 // Pipeline statuses (active working leads)
-const PIPELINE_STATUSES = new Set(['needs_roof','interested','quoted','signed']);
+// Action-based pipeline sets (replaces old trade-specific statuses)
 // Archive statuses (closed / parked leads)
-const ARCHIVE_STATUSES  = new Set(['contacted','converted','not_interested','lost']);
+const PIPELINE_STATUSES = new Set(['pinned','mailed','emailed','called','responded','quoted']);
+const ARCHIVE_STATUSES  = new Set(['signed','not_interested']);
 
 function switchPinView(view){
   curView = view;

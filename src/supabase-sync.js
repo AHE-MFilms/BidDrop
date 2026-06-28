@@ -110,7 +110,7 @@ function _rowToPin(row){
   const resolvedPhotoData = (est && est.photo_data) || null;
   return {
     id: row.id, lat: parseFloat(row.lat), lng: parseFloat(row.lng),
-    address: row.address||'', status: row.status||'needs_roof',
+    address: row.address||'', status: row.status||'pinned',
     notes: row.notes||'', rep: row.rep_name||'Unknown',
     phone: row.phone||null,
     pts: row.pts||null, at: row.created_at,

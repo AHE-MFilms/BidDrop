@@ -206,6 +206,12 @@ async function _saveSignatureToDB(sigName, signedAt) {
     // Update in-memory estimate
     const est = (S.estimates||[]).find(e => e.id === estId);
     if (est) { est.sigName = sigName; est.signedAt = signedAt; }
+    // Auto-advance the linked pin to 'signed'
+    if(typeof autoAdvancePinByAddress === 'function' && est && est.addr) autoAdvancePinByAddress(est.addr, 'signed');
+    if(typeof autoAdvancePinStatus === 'function'){
+      const sigPin = (S.pins||[]).find(p=>p.id===(window._editingEstPinId||currentEstPinId));
+      if(sigPin) autoAdvancePinStatus(sigPin, 'signed');
+    }
     console.log('[BidDrop] Signature saved to DB for estimate', estId);
   } catch(e) { console.warn('[BidDrop] _saveSignatureToDB error:', e.message); }
 }

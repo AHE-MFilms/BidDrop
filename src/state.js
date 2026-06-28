@@ -113,5 +113,76 @@ const PITCHLBL = {'1.054':'4/12 Low','1.083':'5/12','1.118':'6/12 Std','1.158':'
   '1.0':'4/12 Low','1.07':'5/12','1.15':'6/12 Std','1.23':'7/12','1.31':'8/12 Mod','1.40':'9/12','1.50':'10/12 Steep','1.65':'11/12','1.80':'12/12 Steep'};
 const MATLBL  = {'1.0':'3-Tab Shingle','1.3':'Architectural Shingle','1.8':'Designer/Premium','1.5':'Impact-Resistant','2.5':'Metal Roofing','0.9':'Flat Roof (TPO/EPDM)','3.2':'Tile (Clay/Concrete)'}; // 1.0 kept for legacy display only
 
-function sColor(s){return{needs_roof:'#F25C05',interested:'#EAB308',contacted:'#A855F7',quoted:'#3B82F6',signed:'#22C55E',converted:'#22C55E',bid_sent:'#3B82F6',not_interested:'#3D5269',lost:'#EF4444'}[s]||'#3D5269';}
-function sLabel(s){return{needs_roof:'Needs Roof',interested:'Interested',contacted:'Contacted',quoted:'Quoted',signed:'Signed',converted:'Converted',bid_sent:'Bid Sent',not_interested:'Not Interested',lost:'Lost'}[s]||s;}
+// ── Action-based pin pipeline ─────────────────────────────────────────────────
+// Order: pinned → mailed → emailed → called → responded → quoted → signed
+// Auto-advances: campaign send → mailed, estimate saved → quoted, job won → signed
+const PIN_STATUSES = [
+  { v:'pinned',        label:'Pinned',        color:'#6B7280', emoji:'📍' },
+  { v:'mailed',        label:'Mailed',        color:'#3B82F6', emoji:'📬' },
+  { v:'emailed',       label:'Emailed',       color:'#A855F7', emoji:'📧' },
+  { v:'called',        label:'Called',        color:'#EAB308', emoji:'📞' },
+  { v:'responded',     label:'Responded',     color:'#F59E0B', emoji:'💬' },
+  { v:'quoted',        label:'Quoted',        color:'#0EA5E9', emoji:'📋' },
+  { v:'signed',        label:'Signed',        color:'#22C55E', emoji:'✅' },
+  { v:'not_interested',label:'Not Interested',color:'#3D5269', emoji:'❌' },
+];
+const PIPELINE_ACTIVE   = new Set(['pinned','mailed','emailed','called','responded','quoted']);
+const PIPELINE_WON      = new Set(['signed']);
+const PIPELINE_ARCHIVED = new Set(['not_interested']);
+
+function sColor(s){
+  const found = PIN_STATUSES.find(p=>p.v===s);
+  if(found) return found.color;
+  // Legacy fallbacks
+  return{needs_roof:'#F25C05',interested:'#6B7280',contacted:'#EAB308',
+    converted:'#22C55E',bid_sent:'#3B82F6',lost:'#3D5269'}[s]||'#6B7280';
+}
+function sLabel(s){
+  const found = PIN_STATUSES.find(p=>p.v===s);
+  if(found) return found.label;
+  // Legacy fallbacks
+  return{needs_roof:'Pinned',interested:'Pinned',contacted:'Called',
+    converted:'Signed',bid_sent:'Mailed',lost:'Not Interested'}[s]||s;
+}
+function sEmoji(s){
+  const found = PIN_STATUSES.find(p=>p.v===s);
+  return found ? found.emoji : '📍';
+}
+
+// ── Address normalization for auto-matching campaign addresses to pins ───────────
+function normalizeAddr(addr){
+  if(!addr) return '';
+  return addr.toLowerCase()
+    .replace(/\bstreet\b/g,'st').replace(/\bavenue\b/g,'ave').replace(/\bdrive\b/g,'dr')
+    .replace(/\broad\b/g,'rd').replace(/\bboulevard\b/g,'blvd').replace(/\bcourt\b/g,'ct')
+    .replace(/\blane\b/g,'ln').replace(/\bplace\b/g,'pl').replace(/\bcircle\b/g,'cir')
+    .replace(/[.,#]/g,' ').replace(/\s+/g,' ').trim();
+}
+
+// Find a pin by address (normalized match) and auto-advance its status
+function autoAdvancePinByAddress(addr, targetStatus){
+  if(!addr || !(S.pins||[]).length) return;
+  const norm = normalizeAddr(addr);
+  const pin = S.pins.find(p => normalizeAddr(p.address||p.addr||'') === norm);
+  if(pin) autoAdvancePinStatus(pin, targetStatus);
+}
+
+// ── autoAdvancePinStatus — only move forward, never backward ──────────────────
+// Pipeline order index: pinned(0) < mailed(1) < emailed(2) < called(3) < responded(4) < quoted(5) < signed(6)
+// not_interested stays put regardless.
+const _PIN_ORDER = ['pinned','mailed','emailed','called','responded','quoted','signed'];
+function autoAdvancePinStatus(pin, targetStatus){
+  if(!pin) return;
+  const cur = pin.status || 'pinned';
+  if(cur === 'not_interested') return; // never override a closed lead
+  const curIdx = _PIN_ORDER.indexOf(cur);
+  const tgtIdx = _PIN_ORDER.indexOf(targetStatus);
+  if(tgtIdx < 0) return; // unknown target
+  if(tgtIdx <= curIdx) return; // already at or past this stage
+  pin.status = targetStatus;
+  // Persist to Supabase
+  if(sb && pin.id){
+    sb.from('pins').update({status: targetStatus}).eq('id', pin.id)
+      .then(({error}) => { if(error) console.warn('[BidDrop] autoAdvancePinStatus:', error.message); });
+  }
+}

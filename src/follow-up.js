@@ -136,7 +136,7 @@ async function doDeletePin(){
 
 function cycleStatus(id){
   const p=S.pins.find(x=>x.id===id);if(!p)return;
-  const opts=['needs_roof','interested','contacted','quoted','signed','converted','not_interested','lost'];
+  const opts=['pinned','mailed','emailed','called','responded','quoted','signed','not_interested'];
   p.status=opts[(opts.indexOf(p.status)+1)%opts.length];
   if(markers[id]){
     if(clusterGroup) clusterGroup.removeLayer(markers[id]);

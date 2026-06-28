@@ -761,13 +761,13 @@ async function sendViaGHL(){
 
     // BidDrop only syncs contact + opportunity to GHL.
     // GHL workflows handle all email/SMS follow-up automatically.
-    addAct('Synced to GHL: <strong>'+escHtml(owner||'Homeowner')+'</strong>'+(email?' ('+escHtml(email)+')':''),'bid_sent');
+    addAct('Synced to GHL: <strong>'+escHtml(owner||'Homeowner')+'</strong>'+(email?' ('+escHtml(email)+')':''),'emailed');
     save();
     toast('✅ Synced to GHL — workflows will handle follow-up','success');
     // Mark on pin if address matches
     const pin = S.pins.find(p=>p.address===addr);
-    if(pin && pin.status==='needs_roof'){
-      pin.status='bid_sent';
+    if(pin && pin.status==='pinned'){
+      pin.status='emailed';
       if(markers[pin.id]){
         if(clusterGroup) clusterGroup.removeLayer(markers[pin.id]);
         else map.removeLayer(markers[pin.id]);
