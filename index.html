@@ -1461,6 +1461,18 @@ tr:hover td{background:var(--card);}
         </div>
       </div>
       <div class="fg">
+        <div class="fl">Homeowner Phone <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— syncs to GHL contact</span></div>
+        <div id="e-phone-wrap">
+          <input class="fi" id="e-phone" placeholder="(555) 000-0000" type="tel">
+        </div>
+      </div>
+      <div class="fg">
+        <div class="fl">Homeowner Email <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— syncs to GHL contact</span></div>
+        <div id="e-email-wrap">
+          <input class="fi" id="e-email" placeholder="jane@email.com" type="email">
+        </div>
+      </div>
+      <div class="fg">
         <div class="fl">Property Address</div>
         <div style="display:flex;gap:6px;align-items:center;">
           <input class="fi" id="e-addr" placeholder="123 Oak St, Detroit MI 48000" oninput="updatePreview();scheduleDraftSave()" style="flex:1;margin-bottom:0;">
@@ -2007,18 +2019,6 @@ tr:hover td{background:var(--card);}
         </div>
         <div id="eq-property-row" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid rgba(34,197,94,.2);font-size:12px;color:#A8BECE;line-height:1.6;">
           <span id="eq-year-built"></span>
-        </div>
-      </div>
-      <div class="fg">
-        <div class="fl">Homeowner Phone <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— syncs to GHL contact</span></div>
-        <div id="e-phone-wrap">
-          <input class="fi" id="e-phone" placeholder="(555) 000-0000" type="tel">
-        </div>
-      </div>
-      <div class="fg">
-        <div class="fl">Homeowner Email <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— syncs to GHL contact</span></div>
-        <div id="e-email-wrap">
-          <input class="fi" id="e-email" placeholder="jane@email.com" type="email">
         </div>
       </div>
       <div class="fg" id="estimate-page-settings-section" style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:12px;">
@@ -6344,11 +6344,11 @@ function _buildPinPopupHTML(pin){
   // Owner name from estimate or equity data (shown even before contact lookup)
   const _ownerName = (pin.estimate && (typeof pin.estimate==='object' ? pin.estimate.owner : (() => { try { return JSON.parse(pin.estimate).owner; } catch(e) { return ''; } })()))
     || (pin.equityData && pin.equityData.ownerName) || '';
-  const _ownerBadge = _ownerName ? `<div style="font-size:12px;font-weight:700;color:#FFF;margin-bottom:5px;padding:4px 8px;background:rgba(255,255,255,.06);border-radius:6px;">👤 ${escHtml(_ownerName)}</div>` : '';
-  const _contactHTML = pin.contactData ? buildContactInfoHTML(pid, pin.contactData) : (currentAccount && currentAccount.tracerfy_enabled ? `${_ownerBadge}<button onclick="event.stopPropagation();lookupContactInfo('${pid}')" style="background:transparent;border:1.5px solid #A78BFA;border-radius:7px;padding:6px;color:#A78BFA;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;display:block;">\ud83d\udcde Get Contact Info</button>` : `${_ownerBadge}<div style="font-size:10px;color:#6B7280;text-align:center;padding:4px;">Contact lookup not enabled</div>`);
+  const _contactHTML = pin.contactData ? buildContactInfoHTML(pid, pin.contactData) : (currentAccount && currentAccount.tracerfy_enabled ? `<button onclick="event.stopPropagation();lookupContactInfo('${pid}')" style="background:transparent;border:1.5px solid #A78BFA;border-radius:7px;padding:6px;color:#A78BFA;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;display:block;">\ud83d\udcde Get Contact Info</button>` : `<div style="font-size:10px;color:#6B7280;text-align:center;padding:4px;">Contact lookup not enabled</div>`);
   return `<div style="min-width:200px;max-width:240px;">
       <div style="font-weight:700;font-size:13px;margin-bottom:5px;color:#FFFFFF;line-height:1.3;">${escHtml(pin.address||'Unknown')}</div>
-      <div style="display:inline-block;background:${sColor(pin.status)};color:white;font-size:11px;padding:2px 8px;border-radius:5px;font-weight:700;margin-bottom:8px;">${sLabel(pin.status)}</div>
+      <div style="display:inline-block;background:${sColor(pin.status)};color:white;font-size:11px;padding:2px 8px;border-radius:5px;font-weight:700;margin-bottom:${_ownerName ? '4px' : '8px'};">${sLabel(pin.status)}</div>
+      ${_ownerName ? `<div style="font-size:12px;font-weight:700;color:#FFF;margin-bottom:8px;padding:3px 8px;background:rgba(255,255,255,.06);border-radius:6px;display:inline-block;">👤 ${escHtml(_ownerName)}</div>` : ''}
       ${_popupPhotos}
       ${_propSnap}
       ${_popupSolar}
