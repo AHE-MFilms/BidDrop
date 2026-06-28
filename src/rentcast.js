@@ -267,16 +267,54 @@ function s_clearSolarFilled(sid){
   if(s){ s.solarFilled = false; renderStructures(); }
 }
 
+// In-memory dedup: prevent concurrent fetches for the same lat/lng
+const _solarFetchInFlight = {};
+
 async function fetchSolarData(lat, lng){
+  // Round to 5 decimal places (~1m precision) to maximise cache hits
+  const key = parseFloat(lat).toFixed(5) + ',' + parseFloat(lng).toFixed(5);
+
+  // 1. Check Supabase persistent cache first (free, no API call)
   try{
-    const res = await fetch('/api/solar?lat='+lat+'&lng='+lng);
-    if(!res.ok) return null;
-    const data = await res.json();
-    return data;
-  } catch(e){
-    console.warn('Solar API fetch failed:', e);
-    return null;
+    if(sb){
+      const { data: rows } = await sb.from('solar_cache').select('data').eq('lat_lng', key).limit(1);
+      if(rows && rows.length > 0){
+        console.log('[Solar] cache hit:', key);
+        return rows[0].data;
+      }
+    }
+  } catch(cacheErr){
+    console.warn('[Solar] cache read error:', cacheErr);
   }
+
+  // 2. Deduplicate concurrent requests for the same location
+  if(_solarFetchInFlight[key]) return _solarFetchInFlight[key];
+
+  // 3. Call Google Solar API (costs $0.005)
+  _solarFetchInFlight[key] = (async () => {
+    try{
+      const res = await fetch('/api/solar?lat='+lat+'&lng='+lng);
+      if(!res.ok) return null;
+      const data = await res.json();
+      // 4. Persist result to Supabase so future calls are free
+      if(data && data.status === 'ok' && sb){
+        try{
+          await sb.from('solar_cache').upsert({ lat_lng: key, data }, { onConflict: 'lat_lng' });
+          console.log('[Solar] cached to DB:', key);
+        } catch(writeErr){
+          console.warn('[Solar] cache write error:', writeErr);
+        }
+      }
+      return data;
+    } catch(e){
+      console.warn('Solar API fetch failed:', e);
+      return null;
+    } finally{
+      delete _solarFetchInFlight[key];
+    }
+  })();
+
+  return _solarFetchInFlight[key];
 }
 
 async function manualRentcastLookup(){
@@ -396,6 +434,11 @@ async function fetchSatelliteMeasurementForEstimate(){
     }
     // Show the solar banner in the estimator sidebar
     showSolarBanner(data);
+    // Store on current pin's in-memory cache so popup shows it immediately
+    if(currentEstPinId){
+      const _cpin = (S.pins||[]).find(p=>p.id===currentEstPinId);
+      if(_cpin) _cpin._solarCache = data;
+    }
     // Show solar add-on row if solar potential data available
     if(data.systemKw){
       const solarRow = document.getElementById('solar-addon-row');
