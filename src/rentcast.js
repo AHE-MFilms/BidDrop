@@ -365,13 +365,14 @@ async function autoFillOwnerIfEmpty(address){
     ownerEl.value = data.name;
     updatePreview();
     toast('🏠 Owner: '+data.name,'info');
-    // Fix D: persist the auto-filled name to the pin so it survives page reload
+    // Persist the auto-filled name to the pin so it survives page reload
     if(currentEstPinId){
       const _pin = (S.pins||[]).find(p=>p.id===currentEstPinId);
-      if(_pin && _pin.estimate){
+      if(_pin){
+        if(!_pin.estimate) _pin.estimate = {};
         _pin.estimate.owner = data.name;
-        sb.from('pins').update({ estimate: _pin.estimate }).eq('id', currentEstPinId)
-          .then(({error})=>{ if(error) console.warn('Owner persist:', error); });
+        if(sb) sb.from('pins').update({ estimate: _pin.estimate }).eq('id', currentEstPinId)
+          .then(({error})=>{ if(error && error.code !== 'PGRST204') console.warn('Owner persist:', error); });
       }
     }
   }

@@ -6476,6 +6476,23 @@ function savePin(){
   save();closeM('m-pin');toast('📍 Pin saved'+(_totalPhotos?' with '+_totalPhotos+' photo'+(_totalPhotos>1?'s':''):''),'success');
   // Open popup on new pin so satellite measurement loads immediately
   setTimeout(function(){ if(markers[pin.id]) markers[pin.id].openPopup(); }, 300);
+  // Auto-pull homeowner name in background (non-blocking)
+  if(masterRentcastKey && pin.address){
+    const _newPin = pin;
+    lookupPropertyData(_newPin.address).then(function(data){
+      if(!data || !data.name) return;
+      // Store on pin object
+      if(!_newPin.estimate) _newPin.estimate = {};
+      if(!_newPin.estimate.owner) _newPin.estimate.owner = data.name;
+      // Persist to Supabase
+      if(sb) sb.from('pins').update({ estimate: _newPin.estimate }).eq('id', _newPin.id)
+        .then(function({error}){ if(error && error.code !== 'PGRST204') console.warn('Owner auto-pull persist:', error); });
+      // Also store equity data
+      _newPin.equityData = { estValue: data.estValue, mortgageBalance: data.mortgageBalance, equity: data.equity, yearBuilt: data.yearBuilt, roofType: data.roofType, bedrooms: data.bedrooms, bathrooms: data.bathrooms, lastSaleDate: data.lastSaleDate, lastSalePrice: data.lastSalePrice };
+      if(sb) sb.from('pins').update({ equity_data: _newPin.equityData }).eq('id', _newPin.id)
+        .then(function({error}){ if(error && error.code !== 'PGRST204') console.warn('Equity auto-pull persist:', error); });
+    }).catch(function(){});
+  }
 }
 
 // ── PIN DAMAGE PHOTOS ──────────────────────────────────────────────────────
