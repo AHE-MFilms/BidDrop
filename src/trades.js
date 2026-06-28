@@ -734,8 +734,12 @@ function loadEstFromPicker(){
         if(mainStruct && (!mainStruct.sqft || mainStruct.sqft===0)){
           applySolarToEstimate();
         }
+      } else {
+        if(typeof showSolarUnavailableBanner === 'function') showSolarUnavailableBanner();
       }
-    }).catch(function(){});
+    }).catch(function(){
+      if(typeof showSolarUnavailableBanner === 'function') showSolarUnavailableBanner();
+    });
   }
 }
 // ── AUTO-SAVE DRAFT ──────────────────────────────────────────────────────

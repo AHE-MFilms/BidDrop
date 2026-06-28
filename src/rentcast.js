@@ -125,10 +125,21 @@ function hideEquityBadge(){
 // ═══════════════════════════════
 window._solarData = null; // last fetched solar data for current pin
 
+function showSolarUnavailableBanner(){
+  const ub = document.getElementById('solar-unavailable-banner');
+  if(ub) ub.style.display='block';
+  const rb = document.getElementById('solar-roof-banner');
+  if(rb) rb.style.display='none';
+}
+function hideSolarUnavailableBanner(){
+  const ub = document.getElementById('solar-unavailable-banner');
+  if(ub) ub.style.display='none';
+}
 function showSolarBanner(data){
   const banner = document.getElementById('solar-roof-banner');
   if(!banner) return;
   if(!data || data.status !== 'ok' || !data.sqft){ banner.style.display='none'; return; }
+  hideSolarUnavailableBanner();
   window._solarData = data;
 
   // ── Roof measurements ──
@@ -227,6 +238,7 @@ function applySolarKwToAddon(){
 function hideSolarBanner(){
   const banner = document.getElementById('solar-roof-banner');
   if(banner) banner.style.display='none';
+  hideSolarUnavailableBanner();
   window._solarData = null;
 }
 
@@ -364,7 +376,8 @@ async function fetchSatelliteMeasurementForEstimate(){
     // Step 2: Fetch solar/roof measurement data
     const data = await fetchSolarData(lat, lng);
     if(!data || data.status !== 'ok' || !data.sqft){
-      toast('No satellite measurement available for this address','error');
+      if(typeof showSolarUnavailableBanner === 'function') showSolarUnavailableBanner();
+      toast('Satellite measurement unavailable — enter sq ft manually','warn');
       return;
     }
     // Step 3: Apply to estimate (same as applySolarToEstimate)
