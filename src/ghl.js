@@ -698,6 +698,8 @@ async function ghlAddDripNote(ownerName, address, stepNum, mailedAt){
 
 async function sendViaGHL(){
   if(!isPlanAtLeast('pro')){ showPlanUpgradePrompt('GHL Integration','pro'); return; }
+  const _unlocked = await requirePinUnlocked(currentEstPinId);
+  if(!_unlocked) return;
   const owner  = document.getElementById('e-owner').value.trim();
   const addr   = document.getElementById('e-addr').value.trim();
   const email  = document.getElementById('e-email').value.trim();

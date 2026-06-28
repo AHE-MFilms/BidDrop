@@ -1226,6 +1226,159 @@ module.exports = async function handler(req, res) {
         return res.json({ results });
       }
 
+      case 'unlock-pin': {
+        // Unified pin unlock: 1 credit deducted, fires RentCast + Tracerfy in parallel,
+        // saves all data to pin, marks pin unlocked, optionally queues a postcard.
+        const { pinId: upPinId, address: upAddress, queuePostcard: upQueuePostcard } = req.body;
+        if (!upPinId || !upAddress) { res.status(400).json({ error: 'pinId and address required' }); return; }
+        const accountId = profile.account_id;
+        if (!accountId) { res.status(401).json({ error: 'not authenticated' }); return; }
+
+        // 1. Check if already unlocked (idempotent)
+        const upPinRes = await sbFetch(`pins?id=eq.${upPinId}&account_id=eq.${accountId}&select=id,unlocked_at,contact_data,estimate,status&limit=1`);
+        const upPinRows = upPinRes.ok ? await upPinRes.json() : [];
+        const upPin = upPinRows[0];
+        if (!upPin) { res.status(404).json({ error: 'pin not found' }); return; }
+        if (upPin.unlocked_at) {
+          return res.json({ ok: true, already_unlocked: true, unlocked_at: upPin.unlocked_at });
+        }
+
+        // 2. Check credit balance
+        const upAcctRes = await sbFetch(`accounts?id=eq.${accountId}&select=id,mailer_credits&limit=1`);
+        const upAcctRows = upAcctRes.ok ? await upAcctRes.json() : [];
+        const upAcct = upAcctRows[0];
+        if (!upAcct) { res.status(404).json({ error: 'account not found' }); return; }
+        const upBalance = upAcct.mailer_credits || 0;
+        if (upBalance < 1) {
+          return res.status(402).json({ error: 'no_credits', message: 'Not enough credits to unlock this lead. Purchase more credits to continue.' });
+        }
+
+        // 3. Deduct 1 credit immediately
+        await sbFetch(`accounts?id=eq.${accountId}`, {
+          method: 'PATCH',
+          headers: { 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ mailer_credits: upBalance - 1 })
+        });
+
+        // 4. Fire RentCast + Tracerfy in parallel
+        const upUpdates = { unlocked_at: new Date().toISOString() };
+        try {
+          const [rcResult, tfResult] = await Promise.allSettled([
+            // RentCast: owner name + equity
+            (async () => {
+              if (!RENTCAST_KEY) return null;
+              const rcCtrl = new AbortController();
+              const rcTimeout = setTimeout(() => rcCtrl.abort(), 8000);
+              try {
+                const r = await fetch(
+                  `https://api.rentcast.io/v1/properties?address=${encodeURIComponent(upAddress)}&limit=1`,
+                  { headers: { 'X-Api-Key': RENTCAST_KEY }, signal: rcCtrl.signal }
+                );
+                clearTimeout(rcTimeout);
+                if (r.ok) {
+                  const d = await r.json();
+                  return Array.isArray(d) ? d[0] : (d.properties && d.properties[0]) || d;
+                }
+              } catch(e) { clearTimeout(rcTimeout); }
+              return null;
+            })(),
+            // Tracerfy: phone + email
+            (async () => {
+              if (!TRACERFY_KEY) return null;
+              const tfAcctRes = await sbFetch(`accounts?id=eq.${accountId}&select=tracerfy_enabled&limit=1`);
+              const tfAcctRows = tfAcctRes.ok ? await tfAcctRes.json() : [];
+              if (!tfAcctRows[0] || !tfAcctRows[0].tracerfy_enabled) return null;
+              const existingOwner = (upPin.estimate && upPin.estimate.owner) || '';
+              const tfParts = existingOwner.trim().split(/\s+/);
+              const tfPayload = {
+                address: upAddress,
+                ...(tfParts[0] && { first_name: tfParts[0] }),
+                ...(tfParts.slice(1).join(' ') && { last_name: tfParts.slice(1).join(' ') }),
+              };
+              const tfRes = await fetch('https://www.tracerfy.com/v1/api/trace/lookup/', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${TRACERFY_KEY}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(tfPayload)
+              });
+              if (tfRes.ok) return await tfRes.json();
+              return null;
+            })()
+          ]);
+
+          if (rcResult.status === 'fulfilled' && rcResult.value) {
+            const rcData = rcResult.value;
+            const ownerName = [rcData.ownerFirstName, rcData.ownerLastName].filter(Boolean).join(' ') || rcData.owner || '';
+            upUpdates.equity_data = {
+              estValue: rcData.estimatedValue || null,
+              mortgageBalance: rcData.mortgageBalance || null,
+              equity: rcData.equity || null,
+              yearBuilt: rcData.yearBuilt || null,
+              bedrooms: rcData.bedrooms || null,
+              bathrooms: rcData.bathrooms || null,
+              lastSaleDate: rcData.lastSaleDate || null,
+              lastSalePrice: rcData.lastSalePrice || null
+            };
+            const existingEst = upPin.estimate || {};
+            if (ownerName && !existingEst.owner) {
+              upUpdates.estimate = { ...existingEst, owner: ownerName };
+            }
+          }
+
+          if (tfResult.status === 'fulfilled' && tfResult.value) {
+            const tfData = tfResult.value;
+            const persons = tfData.persons || tfData.results || [];
+            if (persons.length > 0) {
+              const best = persons[0];
+              const phones = (best.phones || []).map(p => ({ number: p.number || p, type: p.type || 'mobile', dnc: p.dnc || false }));
+              const emails = (best.emails || []).map(e => typeof e === 'string' ? e : (e.email || e.address || ''));
+              upUpdates.contact_data = { phones, emails, ownerName: best.full_name || best.name || '' };
+            }
+          }
+        } catch(parallelErr) {
+          console.warn('[unlock-pin] parallel lookup error:', parallelErr.message);
+        }
+
+        // 5. Save all data + mark unlocked
+        await sbFetch(`pins?id=eq.${upPinId}`, {
+          method: 'PATCH',
+          headers: { 'Prefer': 'return=minimal' },
+          body: JSON.stringify(upUpdates)
+        });
+
+        // 6. Optionally queue a postcard
+        if (upQueuePostcard) {
+          const queueItem = {
+            id: 'mq_unlock_' + upPinId + '_' + Date.now(),
+            account_id: accountId,
+            pin_id: upPinId,
+            addr: upAddress,
+            status: 'needs_approval',
+            source: 'unlock',
+            created_at: new Date().toISOString()
+          };
+          await sbFetch('mail_queue', {
+            method: 'POST',
+            headers: { 'Prefer': 'resolution=ignore-duplicates,return=minimal' },
+            body: JSON.stringify(queueItem)
+          }).catch(() => {});
+          await sbFetch(`pins?id=eq.${upPinId}`, {
+            method: 'PATCH',
+            headers: { 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ unlock_queued_postcard: true })
+          }).catch(() => {});
+        }
+
+        return res.json({
+          ok: true,
+          unlocked_at: upUpdates.unlocked_at,
+          owner: upUpdates.estimate && upUpdates.estimate.owner || null,
+          equity_data: upUpdates.equity_data || null,
+          contact_data: upUpdates.contact_data || null,
+          postcard_queued: !!upQueuePostcard,
+          _credits: { paid_credits: upBalance - 1 }
+        });
+      }
+
       case 'tracerfy': {
         // Skip-trace a homeowner by name + address using Tracerfy API
         // Returns phones (with DNC flag) and emails for the property owner

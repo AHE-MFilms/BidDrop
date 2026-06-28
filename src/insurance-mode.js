@@ -383,7 +383,9 @@ ${forPrint ? '<script>window.onload=function(){setTimeout(function(){window.prin
 }
 
 // ─── Print / open insurance scope PDF ────────────────────────────────────────
-function printInsuranceScopePDF() {
+async function printInsuranceScopePDF() {
+  const _unlocked = await requirePinUnlocked(currentEstPinId);
+  if(!_unlocked) return;
   const html = buildInsuranceScopeHTML(true);
   const w = window.open('', '_blank', 'width=900,height=700');
   if (!w) { toast('Please allow popups to print', 'warning'); return; }

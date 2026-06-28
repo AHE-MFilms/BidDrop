@@ -1,8 +1,10 @@
 // ── PRINT & PREVIEW HELPERS ──────────────────────────────────────────────────
 // Extracted from index.html — pure print window builders and financing preview
 // Dependencies: S [state.js], escHtml [index.html], getMailerStyles [this file]
-function printNow(){
+async function printNow(){
   if(!isPlanAtLeast('pro')){ showPlanUpgradePrompt('Print Now','pro'); return; }
+  const _unlocked = await requirePinUnlocked(currentEstPinId);
+  if(!_unlocked) return;
   // Build full print window and immediately trigger print
   const content = document.getElementById('mailer-preview').innerHTML;
   const win = window.open('','_blank','width=900,height=1100');

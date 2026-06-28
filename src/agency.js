@@ -207,19 +207,20 @@ async function adjustCredits(accountId){
   const a = _agencyData.accounts.find(x=>x.id===accountId);
   if(!a) return;
   const current = a.mailer_credits||0;
-  const input = prompt(`Adjust paid mailer credits for ${a.company_name||a.name}\nCurrent balance: ${current}\n\nEnter new balance:`, current);
-  if(input===null) return;
-  const newVal = parseInt(input,10);
-  if(isNaN(newVal)||newVal<0){ toast('Invalid value','error'); return; }
-  try{
-    const {error} = await sb.from('accounts').update({mailer_credits:newVal}).eq('id',accountId);
-    if(error) throw error;
-    a.mailer_credits = newVal;
-    toast(`Credits updated to ${newVal} for ${a.company_name||a.name}`,'success');
-    await renderAdminPanel();
-  }catch(e){
-    toast('Error: '+e.message,'error');
-  }
+  bdPrompt(`Adjust paid mailer credits for ${a.company_name||a.name}\nCurrent balance: ${current}\n\nEnter new balance:`, current, async (input)=>{
+    if(input===null) return;
+    const newVal = parseInt(input,10);
+    if(isNaN(newVal)||newVal<0){ toast('Invalid value','error'); return; }
+    try{
+      const {error} = await sb.from('accounts').update({mailer_credits:newVal}).eq('id',accountId);
+      if(error) throw error;
+      a.mailer_credits = newVal;
+      toast(`Credits updated to ${newVal} for ${a.company_name||a.name}`,'success');
+      await renderAdminPanel();
+    }catch(e){
+      toast('Error: '+e.message,'error');
+    }
+  });
 }
 
 async function setFreeLimit(accountId){
@@ -230,26 +231,25 @@ async function setFreeLimit(accountId){
   const currentLimit = planFreeMapSL[(a.plan||'starter').toLowerCase()] || 0;
   const freeUsed     = a.free_mailer_credits_used || 0;
   const freeLeft     = Math.max(0, currentLimit - freeUsed);
-  const input = prompt(
-    `Adjust free mailer credits for ${a.company_name||a.name}\n` +
-    `Plan: ${a.plan||'starter'} (${currentLimit}/month)\n` +
-    `Current: ${freeLeft} remaining (${freeUsed} used)\n\n` +
-    `Enter new free_mailer_credits_used value (to reset, enter 0):`,
-    String(freeUsed)
+  bdPrompt(
+    `Adjust free mailer credits for ${a.company_name||a.name}\nPlan: ${a.plan||'starter'} (${currentLimit}/month)\nCurrent: ${freeLeft} remaining (${freeUsed} used)\n\nEnter new free_mailer_credits_used value (to reset, enter 0):`,
+    String(freeUsed),
+    async (input)=>{
+      if(input===null) return;
+      const newLimit = parseInt(input,10);
+      if(isNaN(newLimit)||newLimit<0){ toast('Invalid value','error'); return; }
+      try{
+        const {error} = await sb.from('accounts').update({ free_mailer_credits_used: newLimit }).eq('id',accountId);
+        if(error) throw error;
+        a.free_mailer_credits_used = newLimit;
+        const newFreeLeft = Math.max(0, currentLimit - newLimit);
+        toast(`✅ ${a.company_name||a.name}: ${newFreeLeft} free credits remaining this month`,'success');
+        await renderAdminPanel();
+      }catch(e){
+        toast('Error: '+e.message,'error');
+      }
+    }
   );
-  if(input===null) return;
-  const newLimit = parseInt(input,10);
-  if(isNaN(newLimit)||newLimit<0){ toast('Invalid value','error'); return; }
-  try{
-    const {error} = await sb.from('accounts').update({ free_mailer_credits_used: newLimit }).eq('id',accountId);
-    if(error) throw error;
-    a.free_mailer_credits_used = newLimit;
-    const newFreeLeft = Math.max(0, currentLimit - newLimit);
-    toast(`✅ ${a.company_name||a.name}: ${newFreeLeft} free credits remaining this month`,'success');
-    await renderAdminPanel();
-  }catch(e){
-    toast('Error: '+e.message,'error');
-  }
 }
 
 function editClientAccount(accountId){

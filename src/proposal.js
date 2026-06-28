@@ -39,7 +39,9 @@ function setGBBTier(tier) {
 // ═══════════════════════════════════════════════════════════════════════
 let _propSignedAt = null;
 
-function openProposalModal() {
+async function openProposalModal() {
+  const _unlocked = await requirePinUnlocked(currentEstPinId);
+  if(!_unlocked) return;
   renderProposalTierCards();
   renderProposalLineItems();
   document.getElementById('prop-esign-name').value = '';

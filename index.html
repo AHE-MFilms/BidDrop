@@ -6271,6 +6271,9 @@ async function lookupContactInfo(pid){
     if(m && m.getPopup && m.getPopup() && m.getPopup().update) m.getPopup().update();
     return;
   }
+  // CREDIT GATE: require pin to be unlocked before hitting Tracerfy
+  const _unlocked = await requirePinUnlocked(pid);
+  if(!_unlocked) return;
   if(el) el.innerHTML = '<div style="font-size:11px;color:#A78BFA;text-align:center;padding:6px;">⏳ Looking up…</div>';
   try{
     const parts = (pin.address||'').split(',').map(function(s){ return s.trim(); });

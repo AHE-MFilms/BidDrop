@@ -634,16 +634,17 @@ function showAddAccountForm(){
 
 async function setAccountSlug(accountId, currentSlug){
   if(!isSuperAdmin()){ toast('Permission denied','error'); return; }
-  const newSlug = prompt('Set quote page slug (e.g. rapidroof -> /q/rapidroof). Leave blank to remove.', currentSlug||'');
-  if(newSlug === null) return;
-  const slug = newSlug.trim().toLowerCase().replace(/[^a-z0-9_-]/g,'');
-  try {
-    await adminAPI('patch-account', { accountId, updates: { slug: slug || null } });
-    toast('Slug '+(slug?'set to /q/'+slug:'removed'),'success');
-    renderAdminPanel();
-  } catch(e) {
-    toast(e.message||'Could not update slug','error');
-  }
+  bdPrompt('Set quote page slug (e.g. rapidroof → /q/rapidroof). Leave blank to remove.', currentSlug||'', async (newSlug)=>{
+    if(newSlug === null) return;
+    const slug = newSlug.trim().toLowerCase().replace(/[^a-z0-9_-]/g,'');
+    try {
+      await adminAPI('patch-account', { accountId, updates: { slug: slug || null } });
+      toast('Slug '+(slug?'set to /q/'+slug:'removed'),'success');
+      renderAdminPanel();
+    } catch(e) {
+      toast(e.message||'Could not update slug','error');
+    }
+  });
 }
 async function createAccount(){
   const name   = document.getElementById('new-acct-name').value.trim();
@@ -912,15 +913,16 @@ async function removeSuperAdmin(userId, emailOrId){
     toast('Only the primary owner can remove super admins','error');
     return;
   }
-  if(!confirm('Remove super_admin access for '+emailOrId+'? This will demote them to a regular user (no account).')){ return; }
-  try {
-    const {error} = await sb.from('user_profiles').update({role:'rep',account_id:null}).eq('id',userId);
-    if(error) throw error;
-    toast('✅ Super admin removed: '+escHtml(emailOrId),'success');
-    renderAdminPanel();
-  } catch(e){
-    toast('❌ '+e.message,'error');
-  }
+  bdConfirm('Remove super_admin access for '+emailOrId+'?\n\nThis will demote them to a regular user (no account).', async ()=>{
+    try {
+      const {error} = await sb.from('user_profiles').update({role:'rep',account_id:null}).eq('id',userId);
+      if(error) throw error;
+      toast('✅ Super admin removed: '+escHtml(emailOrId),'success');
+      renderAdminPanel();
+    } catch(e){
+      toast('❌ '+e.message,'error');
+    }
+  });
 }
 
 // ── USER MANAGEMENT (Super Admin) ────────────────────────────────────────────
@@ -967,23 +969,25 @@ async function saveUserEdits(){
 
 async function deleteUser(userId, displayName){
   if(!isSuperAdmin()){ toast('Permission denied','error'); return; }
-  if(!confirm(
+  bdConfirm(
     'Remove "'+displayName+'" from the team?\n\n'+
     '✓ Their login will be disabled immediately.\n'+
     '✓ All their pins, estimates, and mailers will be reassigned to the account owner.\n'+
     '✓ Their name stays attached to each record for tracking purposes.\n\n'+
-    'This cannot be undone.'
-  )){ return; }
-  try {
-    const delResult = await adminAPI('delete-user', {userId});
-    const error = delResult?.error || null;
-    if(error) throw new Error(error);
-    const msg = delResult?.message || ('Removed '+escHtml(displayName)+' from the team.');
-    toast('✅ '+msg, 'success');
-    renderAdminPanel();
-  } catch(e){
-    toast('❌ '+(e.message||'Could not remove user.'),'error');
-  }
+    'This cannot be undone.',
+    async ()=>{
+      try {
+        const delResult = await adminAPI('delete-user', {userId});
+        const error = delResult?.error || null;
+        if(error) throw new Error(error);
+        const msg = delResult?.message || ('Removed '+escHtml(displayName)+' from the team.');
+        toast('✅ '+msg, 'success');
+        renderAdminPanel();
+      } catch(e){
+        toast('❌ '+(e.message||'Could not remove user.'),'error');
+      }
+    }
+  );
 }
 
 // ═══════════════════════════════
@@ -991,16 +995,14 @@ async function deleteUser(userId, displayName){
 // ═══════════════════════════════
 async function deleteClientAccount(accountId, accountName){
   if(!isSuperAdmin()){ toast('Permission denied','error'); return; }
-  if(!confirm(
-    'Delete "'+accountName+'"?\n\n'+
-    '⚠️ This will permanently delete the account, all users, pins, estimates, and data.\n\n'+
-    'This CANNOT be undone. Are you absolutely sure?'
-  )){ return; }
-  const confirmName = prompt('Type the account name to confirm deletion:\n"'+accountName+'"');
-  if(!confirmName || confirmName.trim() !== accountName.trim()){
-    toast('Account name did not match. Deletion cancelled.','error');
-    return;
-  }
+  bdConfirm(
+    'Delete "'+accountName+'"?\n\n⚠️ This will permanently delete the account, all users, pins, estimates, and data.\n\nThis CANNOT be undone. Are you absolutely sure?',
+    ()=>{
+      bdPrompt('Type the account name to confirm deletion:\n"'+accountName+'"', '', async (confirmName)=>{
+        if(!confirmName || confirmName.trim() !== accountName.trim()){
+          toast('Account name did not match. Deletion cancelled.','error');
+          return;
+        }
   try {
     // 1. Cancel Stripe subscription first (if any) — prevents continued billing
     try {
@@ -1022,11 +1024,14 @@ async function deleteClientAccount(accountId, accountName){
     // 3. Delete the account record
     const {error} = await sb.from('accounts').delete().eq('id', accountId);
     if(error) throw error;
-    toast('✅ Account "'+accountName+'" deleted.','success');
-    renderAdminPanel();
-  } catch(e){
-    toast('❌ '+(e.message||'Could not delete account.'),'error');
-  }
+        toast('✅ Account "'+accountName+'" deleted.','success');
+        renderAdminPanel();
+      } catch(e){
+        toast('❌ '+(e.message||'Could not delete account.'),'error');
+      }
+      }); // end bdPrompt
+    }
+  ); // end bdConfirm
 }
 
 async function toggleAccountActive(accountId, accountName, currentlyActive){
@@ -1036,7 +1041,7 @@ async function toggleAccountActive(accountId, accountName, currentlyActive){
   const confirmMsg = isDeactivating
     ? 'Deactivate "'+accountName+'"?\n\nThis will:\n• Mark the account inactive (they cannot log in)\n• Cancel their Stripe subscription at period end\n\nTheir data is preserved and can be reactivated.'
     : 'Reactivate "'+accountName+'"?\n\nThis will restore their access to BidDrop.';
-  if(!confirm(confirmMsg)) return;
+  bdConfirm(confirmMsg, async ()=>{
   try {
     // 1. Update active flag in DB
     const {error} = await sb.from('accounts').update({active: newState}).eq('id', accountId);
@@ -1068,6 +1073,7 @@ async function toggleAccountActive(accountId, accountName, currentlyActive){
   } catch(e){
     toast('❌ '+(e.message||'Could not update account status.'),'error');
   }
+  }); // end bdConfirm
 }
 async function toggleTracerfy(accountId, accountName, currentlyEnabled){
   if(!isSuperAdmin()){ toast('Permission denied','error'); return; }
