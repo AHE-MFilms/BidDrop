@@ -293,7 +293,6 @@ function stormDropPin(lat, lon, locationHint){
   document.getElementById('p-addr').value = locationHint || '';
   document.getElementById('p-notes').value = 'Hail damage reported in this area.';
   document.getElementById('p-status').value = 'pinned';
-  document.getElementById('p-phone').value = '';
   const repInp = document.getElementById('p-rep');
   if(repInp && currentProfile) repInp.value = currentProfile.name || '';
   resetPinModal();

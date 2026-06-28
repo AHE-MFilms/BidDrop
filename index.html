@@ -5275,7 +5275,6 @@ tr:hover td{background:var(--card);}
       </div>
     </div>
     <div class="fg"><label class="fl" for="p-rep">Canvasser Name</label><input class="fi" id="p-rep" placeholder="Your name"></div>
-    <div class="fg"><label class="fl" for="p-phone">Homeowner Phone <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);">(optional, for follow-up)</span></label><input class="fi" id="p-phone" type="tel" placeholder="(313) 555-0100" oninput="autoFormatPhone(this)"></div>
     <!-- Photos -->
     <div style="margin-bottom:12px;">
       <button onclick="openPhotoModal('pin')" style="width:100%;padding:12px;background:var(--card2);border:2px dashed var(--border);border-radius:10px;color:var(--mid);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-b);display:flex;align-items:center;justify-content:center;gap:8px;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
@@ -5807,7 +5806,6 @@ function onMapClick(e){
   document.getElementById('p-addr').value='';
   document.getElementById('p-notes').value='';
   document.getElementById('p-status').value='pinned';
-  document.getElementById('p-phone').value='';
   // Auto-fill rep name from logged in user
   const repInp = document.getElementById('p-rep');
   if(repInp && currentProfile) repInp.value = currentProfile.name || '';
@@ -6457,7 +6455,7 @@ function savePin(){
     notes:document.getElementById('p-notes').value.trim(),
     interested_trades: (window._pinSelectedTrades && window._pinSelectedTrades.length) ? [...window._pinSelectedTrades] : null,
     rep:document.getElementById('p-rep').value.trim()||'Unknown',
-    phone:document.getElementById('p-phone').value.trim()||null,
+    phone:null, // phone field removed from pin modal — will be populated via contact lookup
     at:new Date().toISOString(),
     // Store first photo as primary; prefer all_photos.front[0] (from unified photo modal), fall back to _pinDamagePhotos
     photo_url: ((window._allPhotos&&window._allPhotos.front&&window._allPhotos.front[0]&&window._allPhotos.front[0].startsWith('http'))?window._allPhotos.front[0]:null) || ((dmgPhotos[0]&&dmgPhotos[0].startsWith('http'))?dmgPhotos[0]:null),
