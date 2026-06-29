@@ -10219,9 +10219,27 @@ function _estRefreshUnlockUI() {
   if (unlocked) {
     btn.style.display    = 'none';
     status.style.display = 'block';
-    // Auto-fill contact fields from in-memory contactData (already loaded from Supabase on page load)
-    if (_pin && _pin.contactData) {
+    if (_pin && _pin.contactData &&
+        ((_pin.contactData.phones||[]).length + (_pin.contactData.emails||[]).length) > 0) {
+      // contactData already in memory — fill immediately
       _fillEstimatorContactFields(_pin.contactData);
+    } else if (_pin) {
+      // contactData missing from memory (pin was unlocked in a previous session).
+      // Fetch contact_data directly from Supabase and fill fields.
+      (async function(){
+        try {
+          const { data, error } = await sb.from('pins')
+            .select('contact_data')
+            .eq('id', _pin.id)
+            .single();
+          if (!error && data && data.contact_data) {
+            _pin.contactData = data.contact_data; // cache in memory
+            _fillEstimatorContactFields(data.contact_data);
+          }
+        } catch(e) {
+          console.warn('[BidDrop] Failed to fetch contact_data from Supabase:', e);
+        }
+      })();
     }
   } else {
     btn.style.display    = 'flex';

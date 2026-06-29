@@ -1240,7 +1240,8 @@ module.exports = async function handler(req, res) {
         const upPin = upPinRows[0];
         if (!upPin) { res.status(404).json({ error: 'pin not found' }); return; }
         if (upPin.unlocked_at) {
-          return res.json({ ok: true, already_unlocked: true, unlocked_at: upPin.unlocked_at });
+          // Return existing contact_data so the client can fill fields without a separate fetch
+          return res.json({ ok: true, already_unlocked: true, unlocked_at: upPin.unlocked_at, contact_data: upPin.contact_data || null });
         }
 
         // 2. Check credit balance

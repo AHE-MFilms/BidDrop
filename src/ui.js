@@ -222,6 +222,7 @@ async function _confirmUnlockPin(pinId) {
         pin.estimate = est;
       }
       if (result.equity_data) pin.equityData = result.equity_data;
+      // Always update contactData if server returned it (covers already_unlocked case too)
       if (result.contact_data) pin.contactData = result.contact_data;
       if (result.postcard_queued) pin.unlockQueuedPostcard = true;
     }
