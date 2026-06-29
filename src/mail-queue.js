@@ -438,54 +438,69 @@ function restoreRevision(revId, activeEstId){
 function deleteEstimate(estId){
   const est = (S.estimates||[]).find(e=>e.id===estId);
   if(!est) return;
-  const now = new Date().toISOString();
-  est.deletedAt = now;
-  // Soft-delete in the estimates table (30-day recovery)
-  if(sb) sb.from('estimates').update({deleted_at: now}).eq('id', estId).then(({error})=>{
-    if(error) console.warn('[BidDrop] deleteEstimate:', error.message);
-  });
-  // Clear estimate data from the linked pin (keep pin, clear estimate)
-  if(est.pinId){
-    const pin = (S.pins||[]).find(p=>p.id===est.pinId);
-    if(pin){ pin.estimate = null; pin.at_est = null;
-      if(sb) sb.from('pins').update({estimate:null}).eq('id',est.pinId).then(()=>{});
-      // Refresh map marker so popup no longer shows stale estimate badge
-      if(map && markers[est.pinId]){
-        if(clusterGroup) clusterGroup.removeLayer(markers[est.pinId]);
-        else map.removeLayer(markers[est.pinId]);
-        delete markers[est.pinId];
+  // Warn if this pin has been mailed
+  const hasMailed = (S.queue||[]).some(q=>q.pinId===est.pinId && q.status==='sent');
+  const doDelete = ()=>{
+    const now = new Date().toISOString();
+    est.deletedAt = now;
+    // Soft-delete in the estimates table (30-day recovery)
+    if(sb) sb.from('estimates').update({deleted_at: now}).eq('id', estId).then(({error})=>{
+      if(error) console.warn('[BidDrop] deleteEstimate:', error.message);
+    });
+    // Cascade: also soft-delete the linked pin (estimates and pins are one record)
+    if(est.pinId){
+      const pin = (S.pins||[]).find(p=>p.id===est.pinId);
+      if(pin && !pin.deleted_at){
+        pin.deleted_at = now;
+        pin.estimate = null; pin.at_est = null;
+        if(sb) sbDeletePin(est.pinId).catch(()=>{});
+        // Remove map marker
+        if(map && markers[est.pinId]){
+          if(clusterGroup) clusterGroup.removeLayer(markers[est.pinId]);
+          else map.removeLayer(markers[est.pinId]);
+          delete markers[est.pinId];
+        }
       }
-      addMarker(pin);
     }
+    renderPinList();
+    renderEstimatesTab();
+    toast('Moved to Trash — recoverable for 30 days','info');
+  };
+  if(hasMailed){
+    bdConfirm('⚠️ This address has already been mailed a postcard. Move estimate AND pin to Trash anyway?', doDelete);
+  } else {
+    doDelete();
   }
-  renderEstimatesTab();
-  toast('Moved to Trash — recoverable for 30 days','info');
 }
 async function bulkDeleteEstimates(){
   const ids = Array.from(document.querySelectorAll('.est-row-cb:checked')).map(cb=>cb.dataset.id);
   if(!ids.length) return;
-  bdConfirm('Move '+ids.length+' estimate(s) to Trash?', ()=>{
+  bdConfirm('Move '+ids.length+' estimate(s) and their pins to Trash?', ()=>{
   const now = new Date().toISOString();
   ids.forEach(id=>{
     const e=(S.estimates||[]).find(x=>x.id===id);
     if(e){
       e.deletedAt = now;
-      // Soft-delete in Supabase estimates table so it survives reload
       if(sb) sb.from('estimates').update({deleted_at: now}).eq('id', id).then(({error})=>{
         if(error) console.warn('[BidDrop] bulkDeleteEstimates:', error.message);
       });
-      if(e.pinId){ const pin=(S.pins||[]).find(p=>p.id===e.pinId); if(pin){ pin.estimate=null; pin.at_est=null; if(sb) sb.from('pins').update({estimate:null}).eq('id',e.pinId).then(()=>{});
-        // Refresh map marker so popup no longer shows stale estimate badge
-        if(map && markers[e.pinId]){
-          if(clusterGroup) clusterGroup.removeLayer(markers[e.pinId]);
-          else map.removeLayer(markers[e.pinId]);
-          delete markers[e.pinId];
-        } addMarker(pin);
-      } }
+      // Cascade: also soft-delete the linked pin
+      if(e.pinId){
+        const pin=(S.pins||[]).find(p=>p.id===e.pinId);
+        if(pin && !pin.deleted_at){
+          pin.deleted_at = now; pin.estimate=null; pin.at_est=null;
+          if(sb) sbDeletePin(e.pinId).catch(()=>{});
+          if(map && markers[e.pinId]){
+            if(clusterGroup) clusterGroup.removeLayer(markers[e.pinId]);
+            else map.removeLayer(markers[e.pinId]);
+            delete markers[e.pinId];
+          }
+        }
+      }
     }
   });
-  save(); clearEstimateSelection(); renderEstimatesTab();
-  toast('Moved '+ids.length+' estimate(s) to Trash','info');
+  save(); clearEstimateSelection(); renderPinList(); renderEstimatesTab();
+  toast('Moved '+ids.length+' estimate(s) and pins to Trash','info');
   }); // end bdConfirm
 }
 
@@ -531,18 +546,24 @@ function restoreEstimate(estId){
   const est = (S.estimates||[]).find(e=>e.id===estId);
   if(!est) return;
   delete est.deletedAt;
-  // Restore in estimates table (clear deleted_at)
   if(sb) sb.from('estimates').update({deleted_at: null}).eq('id', estId).then(({error})=>{
     if(error) console.warn('[BidDrop] restoreEstimate:', error.message);
   });
+  // Cascade: also restore the linked pin
   if(est.pinId){
     const pin = (S.pins||[]).find(p=>p.id===est.pinId);
-    if(pin){ pin.estimate = {owner:est.owner,email:est.email,total:est.total,structures:est.structures}; pin.at_est = est.savedAt;
-      if(sb) sb.from('pins').update({estimate:pin.estimate}).eq('id',est.pinId).then(()=>{});
+    if(pin){
+      delete pin.deleted_at;
+      pin.estimate = {owner:est.owner,email:est.email,total:est.total,structures:est.structures};
+      pin.at_est = est.savedAt;
+      if(sb) sb.from('pins').update({estimate:pin.estimate, deleted_at:null}).eq('id',est.pinId).then(()=>{});
+      // Re-add marker to map
+      if(map) addMarker(pin);
     }
   }
+  renderPinList();
   renderEstimatesTab();
-  toast('Estimate restored','success');
+  toast('Estimate and pin restored','success');
 }
 function bulkRestoreEstimates(){
   const ids = Array.from(document.querySelectorAll('.est-row-cb:checked')).map(cb=>cb.dataset.id);
@@ -550,14 +571,22 @@ function bulkRestoreEstimates(){
   ids.forEach(id=>{
     const e=(S.estimates||[]).find(x=>x.id===id);
     if(e){ delete e.deletedAt;
-      // Restore in Supabase estimates table so it survives reload
       if(sb) sb.from('estimates').update({deleted_at: null}).eq('id', id).then(({error})=>{
         if(error) console.warn('[BidDrop] bulkRestoreEstimates:', error.message);
       });
-      if(e.pinId){ const pin=(S.pins||[]).find(p=>p.id===e.pinId); if(pin){ pin.estimate={owner:e.owner,email:e.email,total:e.total,structures:e.structures}; pin.at_est=e.savedAt; if(sb) sb.from('pins').update({estimate:pin.estimate}).eq('id',e.pinId).then(()=>{}); } }
+      // Cascade: also restore the linked pin and re-add map marker
+      if(e.pinId){
+        const pin=(S.pins||[]).find(p=>p.id===e.pinId);
+        if(pin){
+          delete pin.deleted_at;
+          pin.estimate={owner:e.owner,email:e.email,total:e.total,structures:e.structures}; pin.at_est=e.savedAt;
+          if(sb) sb.from('pins').update({estimate:pin.estimate, deleted_at:null}).eq('id',e.pinId).then(()=>{});
+          if(map) addMarker(pin);
+        }
+      }
     }
   });
-  save(); clearEstimateSelection(); renderEstimatesTab();
+  save(); clearEstimateSelection(); renderPinList(); renderEstimatesTab();
   toast('Restored '+ids.length+' estimate(s)','success');
 }
 
@@ -621,21 +650,31 @@ function bulkSendViaGHL(){
   }); // end bdConfirm
 }
 
-// ── Hard delete (purge from trash) ────────────────────────────────────────
+// ── Hard delete (purge from trash) ────────────────────────────────────────────
 function hardDeleteEstimate(estId){
   // Only admins and above can permanently delete estimates
   if(!isAdminOrAbove()){
     toast('Only admins can permanently delete estimates. Reps can only move them to Trash.','error');
     return;
   }
-  bdConfirm('Permanently delete this estimate? This cannot be undone.', ()=>{
+  const est = (S.estimates||[]).find(e=>e.id===estId);
+  bdConfirm('Permanently delete this estimate and its pin? This cannot be undone.', ()=>{
   S.estimates = (S.estimates||[]).filter(e=>e.id!==estId);
-  // Hard delete from Supabase so it never comes back on reload
   if(sb) sb.from('estimates').delete().eq('id', estId).then(({error})=>{
     if(error) console.warn('[BidDrop] hardDeleteEstimate:', error.message);
   });
-  save(); renderEstimatesTab();
-  toast('Estimate permanently deleted','info');
+  // Cascade: also hard-delete the linked pin
+  if(est && est.pinId){
+    S.pins = (S.pins||[]).filter(p=>p.id!==est.pinId);
+    if(sb) sb.from('pins').delete().eq('id', est.pinId).then(()=>{});
+    if(map && markers[est.pinId]){
+      if(clusterGroup) clusterGroup.removeLayer(markers[est.pinId]);
+      else map.removeLayer(markers[est.pinId]);
+      delete markers[est.pinId];
+    }
+  }
+  save(); renderPinList(); renderEstimatesTab();
+  toast('Estimate and pin permanently deleted','info');
   }); // end bdConfirm
 }
 

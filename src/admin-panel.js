@@ -154,6 +154,7 @@ async function switchAccount(accountId){
   updatePreview();
   await loadPinsFromSupabase();
   await loadQueueFromSupabase();
+  if(typeof loadEstimatesFromSupabase === 'function') await loadEstimatesFromSupabase();
   subscribeRealtime();
   renderPinList();
   renderDash();
