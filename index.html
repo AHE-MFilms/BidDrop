@@ -1152,7 +1152,7 @@ tr:hover td{background:var(--card);}
   <div class="bd-sb-divider"></div>
   <div class="bd-sb-section">Campaigns</div>
   <button class="bd-snav-item" onclick="goTab('campaigns')" data-nav="campaigns"><span class="bd-snav-icon">📣</span><span class="bd-snav-label">Campaigns</span></button>
-  <button class="bd-snav-item" onclick="openUploadDesignModal()" data-nav="designs"><span class="bd-snav-icon">📤</span><span class="bd-snav-label">Upload Design</span></button>
+  <button class="bd-snav-item" onclick="openUploadDesignModal()" data-nav="designs"><span class="bd-snav-icon">📤</span><span class="bd-snav-label">Upload Postcard Design</span></button>
   <button class="bd-snav-item" onclick="goTab('drip')" data-nav="drip"><span class="bd-snav-icon">🔥</span><span class="bd-snav-label">Drip Automations</span></button>
   <button class="bd-snav-item" onclick="goTab('mailqueue')" data-nav="mailqueue"><span class="bd-snav-icon">📬</span><span class="bd-snav-label">Mail Queue</span><span class="bd-snav-badge" id="bd-sb-queue-badge" style="display:none;">0</span></button>
   <button class="bd-snav-item" onclick="goTab('history')" data-nav="history"><span class="bd-snav-icon">📑</span><span class="bd-snav-label">Mail History</span></button>
@@ -3122,21 +3122,34 @@ tr:hover td{background:var(--card);}
   <!-- ADD DESIGN MODAL -->
   <div id="add-design-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;align-items:center;justify-content:center;">
     <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;width:420px;max-width:95vw;max-height:90vh;overflow-y:auto;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
-        <div style="font-size:16px;font-weight:800;color:var(--text);">🎨 Upload Postcard Design</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div style="font-size:16px;font-weight:800;color:var(--text);">📤 Upload Postcard Design</div>
         <button onclick="closeAddDesignModal()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;">×</button>
+      </div>
+      <!-- Spec callout -->
+      <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:11px;line-height:1.6;color:var(--text);">
+        <div style="font-weight:800;color:#F59E0B;margin-bottom:6px;">📐 6×9 Postcard Requirements</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;">
+          <div><b>Format:</b> JPEG or PNG</div>
+          <div><b>Resolution:</b> 300 DPI</div>
+          <div><b>Bleed (canvas):</b> 1875 × 2775 px</div>
+          <div><b>Trim line:</b> 1800 × 2700 px</div>
+          <div style="grid-column:1/-1;"><b>Safe zone (keep text inside):</b> 1725 × 2625 px</div>
+        </div>
+        <div style="margin-top:6px;color:var(--muted);">Extend background to bleed edge. Keep all text &amp; logos inside the safe zone.</div>
       </div>
       <div style="margin-bottom:12px;">
         <div class="fl">Design Name</div>
         <input class="fi" id="new-design-name" placeholder="e.g. Storm Urgency, Final Notice, Summer Special" maxlength="60">
       </div>
       <div style="margin-bottom:12px;">
-        <div class="fl">Front Image <span style="color:var(--muted);font-weight:400;">(6×9 postcard front, JPG/PNG)</span></div>
+        <div class="fl">Front Image <span style="color:var(--muted);font-weight:400;">(JPEG or PNG · 1875×2775 px · 300 DPI)</span></div>
         <div id="new-design-preview" style="width:100%;height:140px;border:2px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;cursor:pointer;overflow:hidden;position:relative;" onclick="document.getElementById('new-design-file').click()">
-          <span id="new-design-preview-text">Click to upload front image</span>
+          <span id="new-design-preview-text">Click to upload · JPEG or PNG · 1875×2775 px</span>
           <img id="new-design-preview-img" style="display:none;width:100%;height:100%;object-fit:cover;" src="">
         </div>
-        <input type="file" id="new-design-file" accept="image/*" style="display:none;" onchange="previewNewDesign(this)">
+        <div id="new-design-size-warn" style="display:none;margin-top:6px;padding:6px 10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:6px;font-size:11px;color:#ef4444;"></div>
+        <input type="file" id="new-design-file" accept="image/jpeg,image/jpg,image/png" style="display:none;" onchange="previewNewDesign(this)">
       </div>
       <div style="margin-bottom:16px;">
         <div class="fl">Description <span style="color:var(--muted);font-weight:400;">(optional)</span></div>
@@ -8946,19 +8959,54 @@ function openAddDesignModal(){
 function closeAddDesignModal(){ document.getElementById('add-design-modal').style.display='none'; }
 function previewNewDesign(inp){
   if(!inp.files||!inp.files[0]) return;
-  window._newDesignFile=inp.files[0];
+  const file=inp.files[0];
+  // Validate format
+  const warnEl=document.getElementById('new-design-size-warn');
+  if(!['image/jpeg','image/jpg','image/png'].includes(file.type)){
+    warnEl.textContent='❌ Invalid format. Please upload a JPEG or PNG file.';
+    warnEl.style.display='block';
+    window._newDesignFile=null; inp.value=''; return;
+  }
+  window._newDesignFile=file;
+  window._newDesignDimsOk=false;
   const r=new FileReader();
   r.onload=ev=>{
     document.getElementById('new-design-preview-text').style.display='none';
     const img=document.getElementById('new-design-preview-img');
     img.src=ev.target.result; img.style.display='block';
+    // Check dimensions after image loads
+    const tmpImg=new Image();
+    tmpImg.onload=function(){
+      const w=tmpImg.naturalWidth, h=tmpImg.naturalHeight;
+      // Accept portrait (1875×2775) or landscape (2775×1875)
+      const validPortrait=(w===1875&&h===2775);
+      const validLandscape=(w===2775&&h===1875);
+      if(validPortrait||validLandscape){
+        warnEl.style.display='none';
+        window._newDesignDimsOk=true;
+      } else {
+        // Warn but allow — some printers accept slightly different sizes
+        const minOk=(w>=1800&&h>=2700)||(w>=2700&&h>=1800);
+        if(minOk){
+          warnEl.innerHTML='⚠️ Recommended size is <b>1875×2775 px</b> (bleed). Your image is '+w+'×'+h+' px — it may work but could have border issues.';
+          warnEl.style.display='block';
+          window._newDesignDimsOk=true; // allow with warning
+        } else {
+          warnEl.innerHTML='❌ Image is too small ('+w+'×'+h+' px). Required: <b>1875×2775 px</b> (6.25"×9.25" at 300 DPI). Please resize and re-upload.';
+          warnEl.style.display='block';
+          window._newDesignDimsOk=false;
+        }
+      }
+    };
+    tmpImg.src=ev.target.result;
   };
-  r.readAsDataURL(inp.files[0]);
+  r.readAsDataURL(file);
 }
 async function saveNewDesign(){
   const name=(document.getElementById('new-design-name').value||'').trim();
   if(!name){ toast('Please enter a design name','error'); return; }
   if(!window._newDesignFile){ toast('Please upload an image','error'); return; }
+  if(window._newDesignDimsOk===false){ toast('Image is too small. Please upload a 1875×2775 px JPEG or PNG.','error'); return; }
   const desc=(document.getElementById('new-design-desc').value||'').trim();
   const acctId=(currentAccount&&currentAccount.id)||'shared';
   const safeN=name.toLowerCase().replace(/[^a-z0-9]/g,'-').substring(0,30);
