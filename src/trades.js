@@ -664,7 +664,8 @@ function populateEstPinPicker(){
   if(!sel) return;
   const cur = sel.value;
   sel.innerHTML = '<option value="">— Select a pinned address —</option>';
-  (S.pins||[]).forEach(p=>{
+  // Only show active (non-deleted) pins
+  (S.pins||[]).filter(p=>!p.deleted_at).forEach(p=>{
     const opt = document.createElement('option');
     opt.value = p.id;
     opt.textContent = p.address || (p.lat.toFixed(4)+', '+p.lng.toFixed(4));
