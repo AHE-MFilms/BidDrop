@@ -243,10 +243,7 @@ function accountRowToCfg(row){
     plan:             (row.plan||'starter').toLowerCase(),
     enablePostcard:   row.enable_postcard!==false,
     enableLetter:     row.enable_letter!==false,
-    lookupCredits:    row.lookup_credits    || 0,
-    freeLookupsUsed:  row.free_lookups_used || 0,
-    freeLookupsReset: row.free_lookups_reset|| null,
-    freeLookupsLimit: row.free_lookups_limit || 20,
+
     mailerCredits:          row.mailer_credits           || 0,
     freeMailerCreditsUsed:  row.free_mailer_credits_used || 0,
     freeMailerCreditsReset: row.free_mailer_credits_reset|| null,

@@ -415,7 +415,7 @@ export default async function handler(req, res) {
 
     // ---- 3. Create account record using the REAL schema ----
     // accounts table columns: name, company_name, company_phone, plan, active,
-    // mailer_credits, mailer_rate, lookup_credits, slug, notes
+    // mailer_credits, mailer_rate, slug, notes
     const slug = generateSlug(companyName || `${firstName}-${lastName}`);
 
     // mailer_rate by plan (cost per mailer to the account)
@@ -432,8 +432,6 @@ export default async function handler(req, res) {
       active: true,
       mailer_credits: planConfig.mailer_credits || 10,
       mailer_rate: mailerRateByPlan[plan] || 2.50,
-      lookup_credits: 0,
-      free_lookups_used: 0,
       slug: slug,
       stripe_customer_id: stripeCustomerId,
       stripe_subscription_id: stripeSubscriptionId,
