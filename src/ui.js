@@ -162,9 +162,15 @@ function _showUnlockModal(pin, resolve) {
       <div style="font-size:32px;margin-bottom:8px;">🔓</div>
       <div style="font-family:var(--font-h,sans-serif);font-size:18px;font-weight:800;color:#fff;margin-bottom:6px;">Unlock This Lead</div>
       <div style="font-size:13px;color:#9ca3af;margin-bottom:16px;line-height:1.5;">
-        Spend <strong style="color:#f97316;">1 credit</strong> to unlock full access:<br>
-        owner name, phone, email, print, PDF, GHL sync,<br>
-        + a <strong style="color:#f97316;">postcard queued</strong> to this address.
+        Spend <strong style="color:#f97316;">1 credit</strong> to unlock this lead forever:
+      </div>
+      <div style="text-align:left;background:rgba(255,255,255,.04);border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:12px;color:#d1d5db;line-height:1.9;">
+        📞 Homeowner phone &amp; email (auto-filled)<br>
+        🖨 Print letter / Print Now<br>
+        📬 Add to Mail Queue (postcard)<br>
+        ⬆️ Sync to GoHighLevel CRM<br>
+        📋 Sales Proposal PDF<br>
+        🏛 Insurance Scope PDF
       </div>
       <div style="background:rgba(255,255,255,.06);border-radius:10px;padding:10px 14px;margin-bottom:18px;font-size:12px;color:#d1d5db;">
         📍 <strong style="color:#fff;">${safeAddr}</strong>
