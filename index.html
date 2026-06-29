@@ -1447,6 +1447,12 @@ tr:hover td{background:var(--card);}
               </div>
             </div>
           </div>
+          <!-- Contact Lookup Button (shown when pin is unlocked but no contact data yet) -->
+          <div id="est-contact-lookup-btn" style="display:none;margin-bottom:8px;">
+            <button onclick="estLookupContact()" style="width:100%;padding:9px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+              📞 Look Up Phone &amp; Email (Tracerfy)
+            </button>
+          </div>
           <!-- Unlock Pin CTA -->
           <div id="est-unlock-wrap" style="margin-top:4px;">
             <button id="est-unlock-btn" onclick="estUnlockPin()" style="width:100%;padding:11px;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
@@ -10223,16 +10229,34 @@ function _estRefreshUnlockUI() {
         ((_pin.contactData.phones||[]).length + (_pin.contactData.emails||[]).length) > 0) {
       // contactData already in memory — fill immediately
       _fillEstimatorContactFields(_pin.contactData);
-    } else if (_pin) {
-      // contactData missing — run Tracerfy lookup via the proven lookupContactInfo path
-      // (same function used on the canvass map, handles dedup + saves to DB + fills fields)
-      if (typeof lookupContactInfo === 'function') {
-        lookupContactInfo(_pin.id, { suppressUnlockCheck: true });
-      }
+    }
+    // Show/hide the "Look Up Contact" button based on whether we have data
+    var lookupBtn = document.getElementById('est-contact-lookup-btn');
+    if (lookupBtn) {
+      var hasData = _pin && _pin.contactData &&
+        ((_pin.contactData.phones||[]).length + (_pin.contactData.emails||[]).length) > 0;
+      lookupBtn.style.display = hasData ? 'none' : 'block';
     }
   } else {
     btn.style.display    = 'flex';
     status.style.display = 'none';
+  }
+}
+
+// Called when rep clicks "📞 Look Up Phone & Email"
+async function estLookupContact() {
+  if (!currentEstPinId) { toast('Load a pinned home first', 'warn'); return; }
+  var btn = document.querySelector('#est-contact-lookup-btn button');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Looking up…'; }
+  try {
+    await lookupContactInfo(currentEstPinId, { suppressUnlockCheck: true });
+    // Hide the button once we have data
+    var wrap = document.getElementById('est-contact-lookup-btn');
+    if (wrap) wrap.style.display = 'none';
+  } catch(e) {
+    toast('Lookup failed: ' + (e && e.message ? e.message.substring(0,80) : 'unknown'), 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '📞 Look Up Phone &amp; Email (Tracerfy)'; }
   }
 }
 
