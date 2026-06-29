@@ -66,10 +66,11 @@ async function buyCredits(packId, btn){
     const origText = btn.innerHTML;
     btn.innerHTML = '<span style="opacity:.5;">Loading...</span>';
     btn.disabled = true;
+    const _vaIdCo = window.currentAccount?.id || null;
     const r = await fetch('/api/credits?action=checkout',{
       method:'POST',
       headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+sess.access_token },
-      body: JSON.stringify({ pack_id: packId })
+      body: JSON.stringify({ pack_id: packId, viewingAccountId: _vaIdCo })
     });
     const data = await r.json();
     btn.innerHTML = origText;
