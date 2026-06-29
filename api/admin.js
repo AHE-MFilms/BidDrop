@@ -1035,57 +1035,38 @@ module.exports = async function handler(req, res) {
           res.status(200).json({ already_paid: true });
           return;
         }
-        // Deduct 1 credit — use free first, then paid
+        // Deduct 1 credit from the unified mailer_credits pool
         const PRINT_CREDITS = 1;
         const puAcctRes = await sbFetch(
-          `accounts?id=eq.${effectiveAccountId}&select=id,lookup_credits,free_lookups_used,free_lookups_reset,free_lookups_limit`
+          `accounts?id=eq.${effectiveAccountId}&select=id,mailer_credits&limit=1`
         );
         if (!puAcctRes.ok) { res.status(500).json({ error: 'Failed to fetch account' }); return; }
         const puAcctRows = await puAcctRes.json();
         if (!puAcctRows.length) { res.status(404).json({ error: 'Account not found' }); return; }
         const puAcct = puAcctRows[0];
-        // Monthly reset
-        const puToday = new Date().toISOString().slice(0, 10);
-        if ((puAcct.free_lookups_reset || '').slice(0, 7) !== puToday.slice(0, 7)) {
-          await sbFetch(`accounts?id=eq.${effectiveAccountId}`, {
-            method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
-            body: JSON.stringify({ free_lookups_used: 0, free_lookups_reset: puToday })
-          });
-          puAcct.free_lookups_used = 0;
-        }
-        const puFreeLimit = puAcct.free_lookups_limit ?? 20;
-        const puFreeLeft  = Math.max(0, puFreeLimit - (puAcct.free_lookups_used || 0));
-        const puPaid      = puAcct.lookup_credits || 0;
-        const puTotal     = puFreeLeft + puPaid;
-        if (puTotal < PRINT_CREDITS) {
+        const puPaid = puAcct.mailer_credits || 0;
+        if (puPaid < PRINT_CREDITS) {
           res.status(402).json({
             error: 'no_credits',
             message: 'Printing a quote costs 1 credit. You have no credits remaining.',
             credits_needed: PRINT_CREDITS,
-            credits_available: puTotal
+            credits_available: puPaid
           });
           return;
         }
-        // Deduct
-        const puFreeToUse = Math.min(puFreeLeft, PRINT_CREDITS);
-        const puPaidToUse = PRINT_CREDITS - puFreeToUse;
-        const puUpdates = {};
-        if (puFreeToUse > 0) puUpdates.free_lookups_used = (puAcct.free_lookups_used || 0) + puFreeToUse;
-        if (puPaidToUse > 0) puUpdates.lookup_credits = puPaid - puPaidToUse;
+        // Deduct from mailer_credits
         await sbFetch(`accounts?id=eq.${effectiveAccountId}`, {
           method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
-          body: JSON.stringify(puUpdates)
+          body: JSON.stringify({ mailer_credits: puPaid - PRINT_CREDITS })
         });
         // Mark estimate as print_paid
         await sbFetch(`estimates?id=eq.${puEstId}`, {
           method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
           body: JSON.stringify({ print_paid: true })
         });
-        const puNewPaid     = puPaid - puPaidToUse;
-        const puNewFreeUsed = (puAcct.free_lookups_used || 0) + puFreeToUse;
         res.status(200).json({
           success: true,
-          _credits: { paid_credits: puNewPaid, free_used: puNewFreeUsed, free_limit: puFreeLimit }
+          _credits: { paid_credits: puPaid - PRINT_CREDITS }
         });
         break;
       }
