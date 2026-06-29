@@ -113,25 +113,12 @@ function showPlanUpgradePrompt(featureName, requiredPlan){
 
 // ── PIN UNLOCK SYSTEM ─────────────────────────────────────────────────────────
 // 1 credit unlocks a pin forever: fires RentCast + Tracerfy, queues a postcard.
-// Grandfather rule: pins with existing contactData, estimate, or active status
-// are treated as already unlocked (no credit required).
-
 function isPinUnlocked(pin) {
   if (!pin) return false;
   // Super admins are never gated
   if (isSuperAdmin()) return true;
-  // Already explicitly unlocked
+  // Explicitly unlocked via credit
   if (pin.unlockedAt) return true;
-  // Grandfather: has contact data
-  if (pin.contactData && ((pin.contactData.phones||[]).length + (pin.contactData.emails||[]).length) > 0) return true;
-  // Grandfather: has a saved estimate with owner
-  if (pin.estimate && (typeof pin.estimate === 'object' ? pin.estimate.owner : false)) return true;
-  if (pin.estimate && typeof pin.estimate === 'string') {
-    try { const e = JSON.parse(pin.estimate); if (e.owner) return true; } catch(e2){}
-  }
-  // Grandfather: has been worked (mailed, quoted, signed, etc.)
-  const activeStatuses = ['mailed','emailed','called','responded','quoted','signed'];
-  if (activeStatuses.includes(pin.status)) return true;
   return false;
 }
 

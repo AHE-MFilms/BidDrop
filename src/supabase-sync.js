@@ -315,9 +315,6 @@ async function loadPinsFromSupabase(){
     .order('created_at', {ascending:false}).limit(500);
   if(error){console.error('Load pins error:', error); return;}
   S.pins = (data||[]).map(_rowToPin);
-  // ── GRANDFATHER LOGIC: auto-unlock pins that already have prior activity ──────
-  // Runs silently on load; pins that qualify are marked unlocked in DB (no credit deducted).
-  _applyGrandfatherUnlocks().catch(e => console.warn('[grandfather] batch unlock error:', e.message));
   // One-time migration: copy any estimates still only in pins.estimate into the estimates table
   await migrateEstimatesFromPins();
   // Load estimates from dedicated table (primary source of truth)
@@ -515,49 +512,4 @@ function subscribeRealtime(){
     .subscribe();
 }
 
-// ── GRANDFATHER UNLOCK LOGIC ──────────────────────────────────────────────────
-// On first load, batch-mark any existing pins that already have prior activity
-// as unlocked (no credit deducted). This is a one-time silent migration.
-let _grandfatherDone = false;
-async function _applyGrandfatherUnlocks() {
-  if (_grandfatherDone) return;
-  if (!currentAccount || !sb) return;
-  _grandfatherDone = true;
 
-  const activeStatuses = ['mailed','emailed','called','responded','quoted','signed'];
-
-  // Find pins in memory that qualify but don't have unlocked_at set yet
-  const toUnlock = (S.pins||[]).filter(pin => {
-    if (pin.unlockedAt) return false; // already unlocked
-    // Has contact data (phones or emails)
-    if (pin.contactData && ((pin.contactData.phones||[]).length + (pin.contactData.emails||[]).length) > 0) return true;
-    // Has a saved estimate with owner
-    if (pin.estimate) {
-      const est = typeof pin.estimate === 'string' ? (() => { try { return JSON.parse(pin.estimate); } catch(e) { return {}; } })() : pin.estimate;
-      if (est && est.owner) return true;
-    }
-    // Has been worked
-    if (activeStatuses.includes(pin.status)) return true;
-    return false;
-  });
-
-  if (!toUnlock.length) return;
-
-  const ids = toUnlock.map(p => p.id);
-  const now = new Date().toISOString();
-
-  // Batch update in Supabase (no credit deducted — grandfather rule)
-  const { error } = await sb.from('pins')
-    .update({ unlocked_at: now })
-    .in('id', ids)
-    .eq('account_id', currentAccount.id);
-
-  if (error) {
-    console.warn('[grandfather] Supabase batch update error:', error.message);
-    return;
-  }
-
-  // Update in-memory pins
-  toUnlock.forEach(pin => { pin.unlockedAt = now; });
-  console.log(`[grandfather] Auto-unlocked ${ids.length} existing pin(s) at no cost.`);
-}
