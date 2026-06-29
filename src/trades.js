@@ -735,7 +735,8 @@ function loadEstFromPicker(){
   const solarInp=document.getElementById('solar-inputs'); if(solarInp) solarInp.style.display='none';
   const solarDisp=document.getElementById('solar-calc-display'); if(solarDisp) solarDisp.textContent='';
   // Try to load from S.estimates first (has photo_data), fall back to pin.estimate
-  const savedEst = (S.estimates||[]).find(function(e){return e.pinId === p.id && !e.deletedAt;});
+  // Only load the active (non-revision) estimate — revisions are history only
+  const savedEst = (S.estimates||[]).find(function(e){return e.pinId === p.id && !e.deletedAt && !e.isRevision;});
   // Always reset _allPhotos before loading (prevents stale photos from previous pin)
   _clearAllPhotos();
   if(savedEst){
@@ -874,6 +875,7 @@ function _resetPriceOverride(){
 }
 function newEstimate(){
   currentEstPinId = null;
+  window._editingEstimateId = null; // always clear so next save is a fresh record
   document.getElementById('e-owner').value = '';
   document.getElementById('e-addr').value = '';
   document.getElementById('e-email').value = '';
