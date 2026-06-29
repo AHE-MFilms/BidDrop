@@ -160,9 +160,10 @@ function showSolarBanner(data){
     dateEl.textContent = 'Imagery: ' + (d.month||'') + '/' + (d.year||'');
   } else if(dateEl) dateEl.textContent = '';
 
-  // ── Solar potential row ──
+  // ── Solar potential row — only show when Solar trade is active ──
+  const _isRoofingTrade = (window._activeTrade || 'roofing') === 'roofing';
   const potRow = document.getElementById('solar-potential-row');
-  if(potRow && data.systemKw){
+  if(potRow && data.systemKw && !_isRoofingTrade){
     potRow.style.display = 'block';
     const kwEl     = document.getElementById('solar-system-kw');
     const panelsEl = document.getElementById('solar-max-panels');
@@ -185,10 +186,10 @@ function showSolarBanner(data){
       if(treesEl) treesEl.textContent = data.treesEquivalent ? data.treesEquivalent.toLocaleString() : '—';
     }
 
-    // Auto-fill kW button
+    // Auto-fill kW button — only for solar trade
     const autoBtn   = document.getElementById('solar-autofill-kw-btn');
     const autoLabel = document.getElementById('solar-autofill-kw-label');
-    if(autoBtn && data.systemKw){
+    if(autoBtn && data.systemKw && !_isRoofingTrade){
       autoBtn.style.display = 'inline-flex';
       if(autoLabel) autoLabel.textContent = data.systemKw;
     }
