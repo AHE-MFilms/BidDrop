@@ -9,10 +9,11 @@ let masterRentcastKey = ''; // Fetched at login from AHE agency account — neve
 
 // ── Secure API helper — all privileged operations go through /api/admin ──────
 async function adminAPI(action, body={}, queryParams={}, _retried=false) {
-  // Always get the freshest session — Supabase auto-refreshes if the token is close to expiry
+  // Get session — if TOKEN_REFRESHED recently fired, getSession() may briefly return
+  // a stale token. Force a refresh if the token expires within 30 seconds.
   let { data: { session } } = await sb.auth.getSession();
-  // If session looks expired or missing, force a refresh
-  if (!session || (session.expires_at && session.expires_at * 1000 < Date.now() + 5000)) {
+  if (!session || !session.access_token ||
+      (session.expires_at && session.expires_at * 1000 < Date.now() + 30000)) {
     const refreshed = await sb.auth.refreshSession();
     session = refreshed.data.session;
   }
@@ -26,10 +27,28 @@ async function adminAPI(action, body={}, queryParams={}, _retried=false) {
     },
     body: JSON.stringify(body)
   });
-  // If 401, try once more with a forced token refresh
+  // If 401, wait for token refresh to settle then retry (up to 2 times)
   if (res.status === 401 && !_retried) {
+    await new Promise(r => setTimeout(r, 600)); // wait for TOKEN_REFRESHED to settle
     const refreshed = await sb.auth.refreshSession();
     if (refreshed.data.session) return adminAPI(action, body, queryParams, true);
+  }
+  if (res.status === 401 && _retried) {
+    // Second retry: wait longer and force a fresh session
+    await new Promise(r => setTimeout(r, 1200));
+    let { data: { session: s2 } } = await sb.auth.getSession();
+    if (!s2) { const r2 = await sb.auth.refreshSession(); s2 = r2.data.session; }
+    if (s2) {
+      const qs2 = new URLSearchParams({ action, ...queryParams }).toString();
+      const res2 = await fetch('/api/admin?' + qs2, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + s2.access_token },
+        body: JSON.stringify(body)
+      });
+      const data2 = await res2.json();
+      if (!res2.ok) throw new Error(data2.error || data2.message || 'API error ' + res2.status);
+      return data2;
+    }
   }
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || data.message || data.msg || (Array.isArray(data.errors) ? data.errors.map(e=>e.message||e).join(', ') : null) || JSON.stringify(data) || 'API error ' + res.status);
