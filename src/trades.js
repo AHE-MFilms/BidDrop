@@ -680,10 +680,14 @@ function loadEstFromPicker(){
   const p = S.pins.find(x=>x.id===sel.value);
   if(!p) return;
   currentEstPinId = p.id;
-  // Reset form fields
+  // Reset form fields and clear any contact picker lists from previous pin
   document.getElementById('e-owner').value = '';
   document.getElementById('e-email').value = '';
   if(document.getElementById('e-phone')) document.getElementById('e-phone').value = '';
+  var _oldPhonePicker = document.getElementById('e-phone-picker-list');
+  if(_oldPhonePicker) _oldPhonePicker.remove();
+  var _oldEmailPicker = document.getElementById('e-email-picker-list');
+  if(_oldEmailPicker) _oldEmailPicker.remove();
   document.getElementById('e-addr').value = p.address || '';
   clearHomePhoto();
   ['a-sky','a-chim','a-gut','a-iws','a-solar'].forEach(function(id){var el=document.getElementById(id);if(el)el.checked=false;});

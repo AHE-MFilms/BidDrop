@@ -6466,16 +6466,91 @@ async function lookupContactInfo(pid, opts){
 }
 
 // Fill estimator phone + email fields from contactData (called after Tracerfy lookup)
+// Handles multiple phones (with DNC badges) and multiple emails as a picker UI.
 function _fillEstimatorContactFields(cd){
   if(!cd) return;
-  const phoneEl = document.getElementById('e-phone');
-  const emailEl = document.getElementById('e-email');
-  if(phoneEl && !phoneEl.value && cd.phones && cd.phones.length){
-    phoneEl.value = cd.phones[0].number || '';
+  var phones = cd.phones || [];
+  var emails = cd.emails || [];
+
+  // ── Phone picker ──────────────────────────────────────────────────────────
+  var phoneWrap = document.getElementById('e-phone-wrap');
+  var phoneEl   = document.getElementById('e-phone');
+  if(phoneWrap && phones.length > 0){
+    // Pick best default: first non-DNC number, else first number
+    var bestPhone = phones.find(function(p){ return !p.dnc; }) || phones[0];
+    if(phoneEl && !phoneEl.value) phoneEl.value = bestPhone.number || '';
+
+    // Build picker list below the input (only if >1 phone or any DNC flag)
+    var existingList = document.getElementById('e-phone-picker-list');
+    if(existingList) existingList.remove();
+    if(phones.length > 1 || phones.some(function(p){ return p.dnc; })){
+      var list = document.createElement('div');
+      list.id = 'e-phone-picker-list';
+      list.style.cssText = 'margin-top:4px;display:flex;flex-direction:column;gap:3px;';
+      phones.forEach(function(ph){
+        var row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:6px;cursor:pointer;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);font-size:11px;';
+        row.innerHTML =
+          '<span style="flex:1;color:#e5e7eb;font-weight:600;">' + (ph.number||'') + '</span>' +
+          '<span style="font-size:9px;color:#9ca3af;text-transform:uppercase;">' + (ph.type||'') + '</span>' +
+          (ph.dnc ? '<span style="background:#ef4444;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;">DNC</span>' : '<span style="background:#22c55e;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;">OK</span>') +
+          '<span style="font-size:10px;color:#f97316;">Use</span>';
+        row.addEventListener('click', function(){
+          if(phoneEl) phoneEl.value = ph.number || '';
+          if(typeof _accUpdateHomeownerSummary==='function') _accUpdateHomeownerSummary();
+          if(typeof scheduleDraftSave==='function') scheduleDraftSave();
+          // Highlight selected
+          list.querySelectorAll('div').forEach(function(r){ r.style.borderColor='rgba(255,255,255,.08)'; r.style.background='rgba(255,255,255,.04)'; });
+          row.style.borderColor='#f97316'; row.style.background='rgba(249,115,22,.12)';
+        });
+        // Pre-highlight the default
+        if(ph.number === (phoneEl && phoneEl.value)){
+          row.style.borderColor='#f97316'; row.style.background='rgba(249,115,22,.12)';
+        }
+        list.appendChild(row);
+      });
+      phoneWrap.appendChild(list);
+    }
     if(typeof _accUpdateHomeownerSummary==='function') _accUpdateHomeownerSummary();
   }
-  if(emailEl && !emailEl.value && cd.emails && cd.emails.length){
-    emailEl.value = cd.emails[0].address || '';
+
+  // ── Email picker ─────────────────────────────────────────────────────────
+  var emailWrap = document.getElementById('e-email-wrap');
+  var emailEl   = document.getElementById('e-email');
+  if(emailWrap && emails.length > 0){
+    // emails[] are plain strings from Tracerfy
+    var bestEmail = emails[0];
+    if(typeof bestEmail === 'object') bestEmail = bestEmail.email || bestEmail.address || '';
+    if(emailEl && !emailEl.value) emailEl.value = bestEmail;
+
+    // Build picker list below the input (only if >1 email)
+    var existingEmailList = document.getElementById('e-email-picker-list');
+    if(existingEmailList) existingEmailList.remove();
+    if(emails.length > 1){
+      var eList = document.createElement('div');
+      eList.id = 'e-email-picker-list';
+      eList.style.cssText = 'margin-top:4px;display:flex;flex-direction:column;gap:3px;';
+      emails.forEach(function(em){
+        var addr = typeof em === 'string' ? em : (em.email || em.address || '');
+        var eRow = document.createElement('div');
+        eRow.style.cssText = 'display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:6px;cursor:pointer;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);font-size:11px;';
+        eRow.innerHTML =
+          '<span style="flex:1;color:#e5e7eb;font-weight:600;word-break:break-all;">' + addr + '</span>' +
+          '<span style="font-size:10px;color:#f97316;">Use</span>';
+        eRow.addEventListener('click', function(){
+          if(emailEl) emailEl.value = addr;
+          if(typeof _accUpdateHomeownerSummary==='function') _accUpdateHomeownerSummary();
+          if(typeof scheduleDraftSave==='function') scheduleDraftSave();
+          eList.querySelectorAll('div').forEach(function(r){ r.style.borderColor='rgba(255,255,255,.08)'; r.style.background='rgba(255,255,255,.04)'; });
+          eRow.style.borderColor='#f97316'; eRow.style.background='rgba(249,115,22,.12)';
+        });
+        if(addr === (emailEl && emailEl.value)){
+          eRow.style.borderColor='#f97316'; eRow.style.background='rgba(249,115,22,.12)';
+        }
+        eList.appendChild(eRow);
+      });
+      emailWrap.appendChild(eList);
+    }
     if(typeof _accUpdateHomeownerSummary==='function') _accUpdateHomeownerSummary();
   }
 }
@@ -10138,10 +10213,16 @@ function _estRefreshUnlockUI() {
   if (!wrap) return;
   if (!currentEstPinId) { wrap.style.display = 'none'; return; }
   wrap.style.display = 'block';
-  const unlocked = typeof isPinUnlocked === 'function' && isPinUnlocked(currentEstPinId);
+  // isPinUnlocked requires a pin OBJECT, not an ID string
+  const _pin = (S.pins||[]).find(function(p){ return p.id === currentEstPinId; });
+  const unlocked = typeof isPinUnlocked === 'function' && isPinUnlocked(_pin);
   if (unlocked) {
     btn.style.display    = 'none';
     status.style.display = 'block';
+    // Auto-fill contact fields from in-memory contactData (already loaded from Supabase on page load)
+    if (_pin && _pin.contactData) {
+      _fillEstimatorContactFields(_pin.contactData);
+    }
   } else {
     btn.style.display    = 'flex';
     status.style.display = 'none';
