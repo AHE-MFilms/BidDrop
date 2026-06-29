@@ -406,11 +406,8 @@ function updatePreview(){
   const taxRate = parseFloat(S.cfg.taxRate)||0;
   const taxAmt  = Math.round(grandTotal * taxRate / 100);
   const totalWithTax = grandTotal + taxAmt;
-  // GBB tier multipliers — read from S.cfg (set in Settings → Pricing → Proposal Tiers)
+  // GBB tier pricing — driven by material $/sq keys from S.cfg (Settings → Pricing → Proposal Tiers)
   const _gbbCfg = S.cfg || {};
-  const matCostGood   = parseFloat(_gbbCfg.gbbGoodMult)   || 1.3;
-  const matCostBetter = parseFloat(_gbbCfg.gbbBetterMult) || 1.5;
-  const matCostBest   = parseFloat(_gbbCfg.gbbBestMult)   || 1.8;
   const gbbLabelGood   = _gbbCfg.gbbGoodLabel   || 'Good';
   const gbbLabelBetter = _gbbCfg.gbbBetterLabel || 'Better';
   const gbbLabelBest   = _gbbCfg.gbbBestLabel   || 'Best';
@@ -423,16 +420,28 @@ function updatePreview(){
   const gbbColorGood   = _gbbCfg.gbbGoodColor   || '#22C55E';
   const gbbColorBetter = _gbbCfg.gbbBetterColor || color; // uses brand color
   const gbbColorBest   = _gbbCfg.gbbBestColor   || '#A855F7';
-  // Approximate: adjust total by mat ratio (mat is ~40% of total cost)
-  const matFraction = 0.40;
-  function gbbTotal(mult){
-    const base = grandTotal;
-    const adj  = base * (1 - matFraction) + base * matFraction * (mult / matCostBetter);
-    return Math.round(adj);
+  // Calculate tier totals by re-running calcStructPrice with each tier's material key
+  // This gives exact $/sq prices, not an approximation
+  const gbbMatGood   = String(_gbbCfg.gbbGoodMatKey   || '1.3');
+  const gbbMatBetter = String(_gbbCfg.gbbBetterMatKey || '1.5');
+  const gbbMatBest   = String(_gbbCfg.gbbBestMatKey   || '1.8');
+  function gbbTotalForMat(matKey) {
+    if (!window.structures || !window.calcStructPrice) return grandTotal;
+    let t = 0;
+    structures.forEach(s => {
+      const orig = s.mat;
+      s.mat = matKey;
+      t += calcStructPrice(s);
+      s.mat = orig;
+    });
+    // Add non-material add-ons (solar, skylights, etc.) from grandTotal minus current structure total
+    const structOnly = structures.reduce((a,s)=>{ const o=s.mat; s.mat=gbbMatBetter; const v=calcStructPrice(s); s.mat=o; return a+v; }, 0);
+    const addons = Math.max(0, grandTotal - structOnly);
+    return Math.round(t + addons);
   }
-  const totGood   = gbbTotal(matCostGood);
-  const totBetter = grandTotal;
-  const totBest   = gbbTotal(matCostBest);
+  const totGood   = gbbTotalForMat(gbbMatGood);
+  const totBetter = grandTotal; // Better = current estimate (already uses Better mat)
+  const totBest   = gbbTotalForMat(gbbMatBest);
   const taxGood   = Math.round(totGood   * taxRate / 100);
   const taxBetter = Math.round(totBetter * taxRate / 100);
   const taxBest   = Math.round(totBest   * taxRate / 100);

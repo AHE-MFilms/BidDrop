@@ -7,10 +7,12 @@
 // GBB_TIERS is now driven by S.cfg — use getGBBTiers() everywhere instead of the constant
 function getGBBTiers() {
   const c = (window.S && S.cfg) || {};
+  // mat key is now the material selector value (e.g. '1.3', '1.5', '1.8', 'metal', 'flat', 'tile')
+  // This maps directly to the material key used in getMatCost() / estimates-calc.js
   return {
-    good:   { mat: String(c.gbbGoodMult   || 1.3), label: c.gbbGoodLabel   || 'Good',   color: c.gbbGoodColor   || '#22C55E', desc: c.gbbGoodDesc   || 'Architectural Shingle — standard performance, 25-yr warranty',  sub: c.gbbGoodMat   || 'Architectural Shingle' },
-    better: { mat: String(c.gbbBetterMult || 1.5), label: c.gbbBetterLabel || 'Better', color: c.gbbBetterColor || '#F25C05', desc: c.gbbBetterDesc || 'Impact-Resistant (Class 4) — hail protection, insurance discount', sub: c.gbbBetterMat || 'Impact-Resistant (Class 4)' },
-    best:   { mat: String(c.gbbBestMult   || 1.8), label: c.gbbBestLabel   || 'Best',   color: c.gbbBestColor   || '#A855F7', desc: c.gbbBestDesc   || 'Designer / Premium — premium curb appeal, lifetime warranty',      sub: c.gbbBestMat   || 'Designer / Premium' }
+    good:   { mat: String(c.gbbGoodMatKey   || '1.3'), label: c.gbbGoodLabel   || 'Good',   color: c.gbbGoodColor   || '#22C55E', desc: c.gbbGoodDesc   || 'Architectural Shingle — standard performance, 25-yr warranty',  sub: c.gbbGoodMat   || 'Architectural Shingle' },
+    better: { mat: String(c.gbbBetterMatKey || '1.5'), label: c.gbbBetterLabel || 'Better', color: c.gbbBetterColor || '#F25C05', desc: c.gbbBetterDesc || 'Impact-Resistant (Class 4) — hail protection, insurance discount', sub: c.gbbBetterMat || 'Impact-Resistant (Class 4)' },
+    best:   { mat: String(c.gbbBestMatKey   || '1.8'), label: c.gbbBestLabel   || 'Best',   color: c.gbbBestColor   || '#A855F7', desc: c.gbbBestDesc   || 'Designer / Premium — premium curb appeal, lifetime warranty',      sub: c.gbbBestMat   || 'Designer / Premium' }
   };
 }
 // Keep a legacy alias so any remaining GBB_TIERS references still work (returns live config)

@@ -87,21 +87,23 @@ function openSettings(){
   // ── GBB Tier settings ──
   const _gbbSet=(id,val)=>{const e=document.getElementById(id);if(e)e.value=val;};
   const _gbbCk=(id,val)=>{const e=document.getElementById(id);if(e)e.checked=!!val;};
-  _gbbSet('s-gbb-good-label',  c.gbbGoodLabel  || 'Good');
-  _gbbSet('s-gbb-good-mult',   c.gbbGoodMult   || 1.3);
-  _gbbSet('s-gbb-good-mat',    c.gbbGoodMat    || 'Architectural Shingle');
-  _gbbSet('s-gbb-good-color',  c.gbbGoodColor  || '#22C55E');
-  _gbbSet('s-gbb-good-desc',   c.gbbGoodDesc   || 'Standard performance, 25-yr warranty');
-  _gbbSet('s-gbb-better-label',c.gbbBetterLabel|| 'Better');
-  _gbbSet('s-gbb-better-mult', c.gbbBetterMult || 1.5);
-  _gbbSet('s-gbb-better-mat',  c.gbbBetterMat  || 'Impact-Resistant (Class 4)');
-  _gbbSet('s-gbb-better-color',c.gbbBetterColor|| '#F25C05');
-  _gbbSet('s-gbb-better-desc', c.gbbBetterDesc || 'Hail protection, insurance discount');
-  _gbbSet('s-gbb-best-label',  c.gbbBestLabel  || 'Best');
-  _gbbSet('s-gbb-best-mult',   c.gbbBestMult   || 1.8);
-  _gbbSet('s-gbb-best-mat',    c.gbbBestMat    || 'Designer / Premium');
-  _gbbSet('s-gbb-best-color',  c.gbbBestColor  || '#A855F7');
-  _gbbSet('s-gbb-best-desc',   c.gbbBestDesc   || 'Lifetime warranty, premium curb appeal');
+  _gbbSet('s-gbb-good-label',   c.gbbGoodLabel   || 'Good');
+  _gbbSet('s-gbb-good-mat',     c.gbbGoodMat     || 'Architectural Shingle');
+  _gbbSet('s-gbb-good-color',   c.gbbGoodColor   || '#22C55E');
+  _gbbSet('s-gbb-good-desc',    c.gbbGoodDesc    || 'Standard performance, 25-yr warranty');
+  _gbbSet('s-gbb-better-label', c.gbbBetterLabel || 'Better');
+  _gbbSet('s-gbb-better-mat',   c.gbbBetterMat   || 'Impact-Resistant (Class 4)');
+  _gbbSet('s-gbb-better-color', c.gbbBetterColor || '#F25C05');
+  _gbbSet('s-gbb-better-desc',  c.gbbBetterDesc  || 'Hail protection, insurance discount');
+  _gbbSet('s-gbb-best-label',   c.gbbBestLabel   || 'Best');
+  _gbbSet('s-gbb-best-mat',     c.gbbBestMat     || 'Designer / Premium');
+  _gbbSet('s-gbb-best-color',   c.gbbBestColor   || '#A855F7');
+  _gbbSet('s-gbb-best-desc',    c.gbbBestDesc    || 'Lifetime warranty, premium curb appeal');
+  // Material key selectors
+  const _gbbSelSet=(id,val)=>{const e=document.getElementById(id);if(e)e.value=val;};
+  _gbbSelSet('s-gbb-good-matkey',   c.gbbGoodMatKey   || '1.3');
+  _gbbSelSet('s-gbb-better-matkey', c.gbbBetterMatKey || '1.5');
+  _gbbSelSet('s-gbb-best-matkey',   c.gbbBestMatKey   || '1.8');
   const _gbbDefEl=document.getElementById('s-gbb-default'); if(_gbbDefEl) _gbbDefEl.value=c.gbbDefault||'better';
   // Material visibility toggles
   const el=id=>document.getElementById(id);
@@ -508,22 +510,22 @@ function saveSettings(){
     repVideoUrl:v('s-rep-video-url')||'',
     offerSolar:ck('s-off-solar'),
     // ── GBB Tier settings ──
-    gbbGoodLabel:  v('s-gbb-good-label')  || 'Good',
-    gbbGoodMult:   parseFloat(v('s-gbb-good-mult'))   || 1.3,
-    gbbGoodMat:    v('s-gbb-good-mat')    || 'Architectural Shingle',
-    gbbGoodColor:  v('s-gbb-good-color')  || '#22C55E',
-    gbbGoodDesc:   v('s-gbb-good-desc')   || 'Standard performance, 25-yr warranty',
-    gbbBetterLabel:v('s-gbb-better-label')|| 'Better',
-    gbbBetterMult: parseFloat(v('s-gbb-better-mult')) || 1.5,
-    gbbBetterMat:  v('s-gbb-better-mat')  || 'Impact-Resistant (Class 4)',
-    gbbBetterColor:v('s-gbb-better-color')|| '#F25C05',
-    gbbBetterDesc: v('s-gbb-better-desc') || 'Hail protection, insurance discount',
-    gbbBestLabel:  v('s-gbb-best-label')  || 'Best',
-    gbbBestMult:   parseFloat(v('s-gbb-best-mult'))   || 1.8,
-    gbbBestMat:    v('s-gbb-best-mat')    || 'Designer / Premium',
-    gbbBestColor:  v('s-gbb-best-color')  || '#A855F7',
-    gbbBestDesc:   v('s-gbb-best-desc')   || 'Lifetime warranty, premium curb appeal',
-    gbbDefault:    v('s-gbb-default')     || 'better',
+    gbbGoodLabel:   v('s-gbb-good-label')   || 'Good',
+    gbbGoodMatKey:  v('s-gbb-good-matkey')  || '1.3',
+    gbbGoodMat:     v('s-gbb-good-mat')     || 'Architectural Shingle',
+    gbbGoodColor:   v('s-gbb-good-color')   || '#22C55E',
+    gbbGoodDesc:    v('s-gbb-good-desc')    || 'Standard performance, 25-yr warranty',
+    gbbBetterLabel: v('s-gbb-better-label') || 'Better',
+    gbbBetterMatKey:v('s-gbb-better-matkey')|| '1.5',
+    gbbBetterMat:   v('s-gbb-better-mat')   || 'Impact-Resistant (Class 4)',
+    gbbBetterColor: v('s-gbb-better-color') || '#F25C05',
+    gbbBetterDesc:  v('s-gbb-better-desc')  || 'Hail protection, insurance discount',
+    gbbBestLabel:   v('s-gbb-best-label')   || 'Best',
+    gbbBestMatKey:  v('s-gbb-best-matkey')  || '1.8',
+    gbbBestMat:     v('s-gbb-best-mat')     || 'Designer / Premium',
+    gbbBestColor:   v('s-gbb-best-color')   || '#A855F7',
+    gbbBestDesc:    v('s-gbb-best-desc')    || 'Lifetime warranty, premium curb appeal',
+    gbbDefault:     v('s-gbb-default')      || 'better',
     costSolarPerWatt:parseFloat(v('s-solar-pw'))||3.50,
     offerCustom:v('s-off-custom'),
     referralAmt:v('s-refamt')||'250',
