@@ -174,7 +174,8 @@ async function switchAccount(accountId){
     try{
       const sess = (await sb.auth.getSession()).data.session;
       if(sess){
-        const r = await fetch('/api/credits?action=balance',{ headers:{ 'Authorization':'Bearer '+sess.access_token } });
+        const _vaIdSw = currentAccount?.id ? '&viewingAccountId='+encodeURIComponent(currentAccount.id) : '';
+        const r = await fetch('/api/credits?action=balance'+_vaIdSw,{ headers:{ 'Authorization':'Bearer '+sess.access_token } });
         if(r.ok){ const b=await r.json(); S.cfg.mailerCredits=b.paid_credits; S.cfg.freeMailerCreditsUsed=b.free_used; updateCreditBadge(); }
       }
     }catch(_){}
