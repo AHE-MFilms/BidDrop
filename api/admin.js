@@ -1384,9 +1384,11 @@ module.exports = async function handler(req, res) {
         // Returns phones (with DNC flag) and emails for the property owner
         const { ownerName, address: tfAddress, city: tfCity, state: tfState, zip: tfZip, pinId: tfPinId } = req.body;
         if (!tfAddress) { res.status(400).json({ error: 'address required' }); return; }
+        const tfAccountId = profile.account_id;
+        if (!tfAccountId) { res.status(401).json({ error: 'not authenticated' }); return; }
         // SERVER-SIDE DEDUP: if this pin already has contact_data saved, return it without hitting Tracerfy
-        if (tfPinId && accountId) {
-          const { data: existingPin } = await sbFetch(`pins?select=contact_data&id=eq.${tfPinId}&account_id=eq.${accountId}&limit=1`);
+        if (tfPinId && tfAccountId) {
+          const { data: existingPin } = await sbFetch(`pins?select=contact_data&id=eq.${tfPinId}&account_id=eq.${tfAccountId}&limit=1`);
           const existing = existingPin && existingPin[0];
           if (existing && existing.contact_data &&
               ((existing.contact_data.phones||[]).length + (existing.contact_data.emails||[]).length) > 0) {
