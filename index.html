@@ -1152,7 +1152,7 @@ tr:hover td{background:var(--card);}
   <div class="bd-sb-divider"></div>
   <div class="bd-sb-section">Campaigns</div>
   <button class="bd-snav-item" onclick="goTab('campaigns')" data-nav="campaigns"><span class="bd-snav-icon">📣</span><span class="bd-snav-label">Campaigns</span></button>
-  <button class="bd-snav-item" onclick="goTab('designs')" data-nav="designs"><span class="bd-snav-icon">🎨</span><span class="bd-snav-label">Postcard Designs</span></button>
+  <button class="bd-snav-item" onclick="openUploadDesignModal()" data-nav="designs"><span class="bd-snav-icon">📤</span><span class="bd-snav-label">Upload Design</span></button>
   <button class="bd-snav-item" onclick="goTab('drip')" data-nav="drip"><span class="bd-snav-icon">🔥</span><span class="bd-snav-label">Drip Automations</span></button>
   <button class="bd-snav-item" onclick="goTab('mailqueue')" data-nav="mailqueue"><span class="bd-snav-icon">📬</span><span class="bd-snav-label">Mail Queue</span><span class="bd-snav-badge" id="bd-sb-queue-badge" style="display:none;">0</span></button>
   <button class="bd-snav-item" onclick="goTab('history')" data-nav="history"><span class="bd-snav-icon">📑</span><span class="bd-snav-label">Mail History</span></button>
@@ -8932,6 +8932,7 @@ function renderDesignsGrid(){
   `).join('');
 }
 
+function openUploadDesignModal(){ openAddDesignModal(); }
 function openAddDesignModal(){
   document.getElementById('new-design-name').value='';
   document.getElementById('new-design-desc').value='';
