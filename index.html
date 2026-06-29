@@ -6897,9 +6897,19 @@ function resetPinModal(){
   window._pinDamagePhotos = [];
   window._homePhotoData = null; // clear stale front photo from previous pin
   window._pinSelectedTrades = []; // clear trade interest selections
+  window._photoModalPinId = null; // reset so photo modal doesn't attach to previous pin
   _clearAllPhotos(); // prevent stale photos from previous pin bleeding into new pin drop
   renderPinPhotosRow();
   renderPinTradeChips();
+  // Clear the photo strip UI and reset the Add Photos button label
+  const _strip = document.getElementById('pin-modal-photo-strip');
+  if (_strip) { _strip.style.display = 'none'; _strip.innerHTML = ''; }
+  const _addBtn = _strip ? _strip.previousElementSibling : null;
+  if (_addBtn && _addBtn.tagName === 'BUTTON') {
+    _addBtn.innerHTML = '📷 Add Photos';
+    _addBtn.style.borderColor = '';
+    _addBtn.style.color = '';
+  }
 }
 
 // ── ADD PHOTOS TO EXISTING PIN (from map popup) ──────────────────────────────
