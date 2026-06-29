@@ -1152,7 +1152,7 @@ tr:hover td{background:var(--card);}
   <div class="bd-sb-divider"></div>
   <div class="bd-sb-section">Campaigns</div>
   <button class="bd-snav-item" onclick="goTab('campaigns')" data-nav="campaigns"><span class="bd-snav-icon">📣</span><span class="bd-snav-label">Campaigns</span></button>
-  <button class="bd-snav-item" onclick="openUploadDesignModal()" data-nav="designs"><span class="bd-snav-icon">📤</span><span class="bd-snav-label">Upload Postcard Design</span></button>
+  <button class="bd-snav-item" onclick="goTab('designs')" data-nav="designs"><span class="bd-snav-icon">📤</span><span class="bd-snav-label">Postcard Designs</span></button>
   <button class="bd-snav-item" onclick="goTab('drip')" data-nav="drip"><span class="bd-snav-icon">🔥</span><span class="bd-snav-label">Drip Automations</span></button>
   <button class="bd-snav-item" onclick="goTab('mailqueue')" data-nav="mailqueue"><span class="bd-snav-icon">📬</span><span class="bd-snav-label">Mail Queue</span><span class="bd-snav-badge" id="bd-sb-queue-badge" style="display:none;">0</span></button>
   <button class="bd-snav-item" onclick="goTab('history')" data-nav="history"><span class="bd-snav-icon">📑</span><span class="bd-snav-label">Mail History</span></button>
@@ -2712,12 +2712,28 @@ tr:hover td{background:var(--card);}
   </div>
 
   <!-- POSTCARD DESIGNS TAB -->
-  <div class="tab-pane" id="tab-designs" style="flex-direction:column;overflow:hidden;padding:0;">
-    <!-- Canvas Studio admin bar -->
-    <div id="cd-studio-bar" style="display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:6px 14px;background:var(--card);border-bottom:1px solid var(--border);flex-shrink:0;">
-      <span style="font-size:11px;color:var(--muted);margin-right:auto;">🎨 <b style="color:var(--text);">Postcard Designer</b> — fill in a template, or open Canvas Studio to build your own</span>
-      <a href="/canvas-studio.html" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:5px 14px;background:var(--card2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;font-weight:600;text-decoration:none;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">🖌 Canvas Studio</a>
+  <div class="tab-pane" id="tab-designs" style="flex-direction:column;overflow-y:auto;padding:24px 28px;gap:20px;">
+    <!-- DESIGNS PAGE HEADER -->
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <div>
+        <div style="font-family:var(--font-h);font-size:22px;font-weight:800;color:var(--text);">&#128228; Postcard Designs</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:3px;">Upload your custom 6×9 postcard artwork. Designs are used in campaigns and drip sequences.</div>
+      </div>
+      <button onclick="openAddDesignModal()" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;">&#43; Upload New Design</button>
     </div>
+    <!-- SPEC REMINDER STRIP -->
+    <div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.25);border-radius:10px;padding:12px 16px;font-size:11px;color:var(--text);display:flex;flex-wrap:wrap;gap:8px 24px;align-items:center;">
+      <span style="font-weight:800;color:#F59E0B;">&#128208; 6×9 Specs:</span>
+      <span><b>Format:</b> JPEG or PNG</span>
+      <span><b>Resolution:</b> 300 DPI</span>
+      <span><b>Bleed canvas:</b> 1875×2775 px</span>
+      <span><b>Trim line:</b> 1800×2700 px</span>
+      <span><b>Safe zone:</b> 1725×2625 px</span>
+    </div>
+    <!-- DESIGNS GRID -->
+    <div id="designs-grid-page" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px;"></div>
+    <!-- hidden legacy designer (kept for drip step compatibility) -->
+    <div id="cd-studio-bar" style="display:none;">
     <!-- ═══════════════════════════════════════════════════════════
          POSTCARD DESIGNER — 3-column WYSIWYG editor
          Left: template library | Center: live canvas | Right: properties
@@ -8916,11 +8932,11 @@ function bulkApproveQueue(){
 function getDesigns(){ return Array.isArray(S.cfg.postcardDesigns) ? S.cfg.postcardDesigns : []; }
 
 function renderDesignsGrid(){
-  const grid = document.getElementById('designs-grid');
+  const grid = document.getElementById('designs-grid-page') || document.getElementById('designs-grid');
   if(!grid) return;
   const designs = getDesigns();
   if(!designs.length){
-    grid.innerHTML = '<div style="padding:60px;text-align:center;color:var(--muted);font-size:14px;grid-column:1/-1;"><div style="font-size:40px;margin-bottom:12px;">\u{1F3A8}</div><div style="font-weight:700;color:var(--text);margin-bottom:6px;">No designs yet</div><div>Upload your first postcard design to get started</div></div>';
+    grid.innerHTML = '<div style="padding:80px 40px;text-align:center;color:var(--muted);font-size:14px;grid-column:1/-1;"><div style="font-size:48px;margin-bottom:14px;">u{1F3A8}</div><div style="font-weight:700;color:var(--text);margin-bottom:6px;">No designs yet</div><div>Upload your first postcard design to get started</div></div>';
     return;
   }
   grid.innerHTML = designs.map((d,i)=>`
@@ -9081,7 +9097,7 @@ function confirmDesignPick(){
   if(typeof _orig==='function'){
     window.goTab=function(t){
       _orig(t);
-      if(t==='designs') { setTimeout(renderDesignsGrid,50); setTimeout(()=>{ if(typeof cdInit==='function' && !window._cdInited){ window._cdInited=true; cdInit(); } },80); }
+      if(t==='designs') { setTimeout(renderDesignsGrid,50); }
       if(t==='drip') setTimeout(renderDripBuilder,50);
     };
   }
