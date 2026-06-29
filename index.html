@@ -6444,7 +6444,11 @@ async function lookupContactInfo(pid, opts){
     // Tracerfy returns data nested under persons[]
     const persons = (result && result.persons) ? result.persons : [];
     persons.forEach(function(person){
-      if(!ownerFullName && person.full_name) ownerFullName = person.full_name;
+      // full_name, name, or first_name + last_name
+      if(!ownerFullName){
+        ownerFullName = person.full_name || person.name ||
+          ([person.first_name, person.last_name].filter(Boolean).join(' ')) || '';
+      }
       (person.phones||[]).forEach(function(p){ phones.push({ number: p.number||p, dnc: p.dnc||false, type: p.type||'' }); });
       (person.emails||[]).forEach(function(e){ emails.push({ address: e.address||e.email||e }); });
     });
@@ -6464,6 +6468,14 @@ async function lookupContactInfo(pid, opts){
     else if(el) el.innerHTML = buildContactInfoHTML(pid, cd);
     const m = markers[pid];
     if(m && m.getPopup && m.getPopup() && m.getPopup().update) m.getPopup().update();
+    // Auto-fill estimator owner name if empty and Tracerfy returned a name
+    if(ownerFullName){
+      var ownerEl = document.getElementById('e-owner');
+      if(ownerEl && !ownerEl.value.trim()) ownerEl.value = ownerFullName;
+      // Also update in-memory pin estimate so it persists
+      if(pin.estimate) pin.estimate.owner = pin.estimate.owner || ownerFullName;
+      if(typeof _accUpdateHomeownerSummary === 'function') _accUpdateHomeownerSummary();
+    }
     // Auto-fill estimator phone + email fields if this pin is loaded in the estimator
     _fillEstimatorContactFields(cd);
   } catch(err){
