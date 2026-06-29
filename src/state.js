@@ -18,6 +18,8 @@ async function adminAPI(action, body={}, queryParams={}, _retried=false) {
     session = refreshed.data.session;
   }
   const token = session ? session.access_token : '';
+  // Automatically include viewingAccountId so super admin can act on behalf of viewed account
+  const enrichedBody = { ...body, viewingAccountId: (typeof window !== 'undefined' && window.currentAccount?.id) || null };
   const qs = new URLSearchParams({ action, ...queryParams }).toString();
   const res = await fetch('/api/admin?' + qs, {
     method: 'POST',
@@ -25,7 +27,7 @@ async function adminAPI(action, body={}, queryParams={}, _retried=false) {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer ' + token
     },
-    body: JSON.stringify(body)
+    body: JSON.stringify(enrichedBody)
   });
   // If 401, wait for token refresh to settle then retry (up to 2 times)
   if (res.status === 401 && !_retried) {
@@ -43,7 +45,7 @@ async function adminAPI(action, body={}, queryParams={}, _retried=false) {
       const res2 = await fetch('/api/admin?' + qs2, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + s2.access_token },
-        body: JSON.stringify(body)
+        body: JSON.stringify(enrichedBody)
       });
       const data2 = await res2.json();
       if (!res2.ok) throw new Error(data2.error || data2.message || 'API error ' + res2.status);

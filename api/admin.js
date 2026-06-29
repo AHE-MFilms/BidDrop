@@ -109,6 +109,10 @@ module.exports = async function handler(req, res) {
 
   const isSuperAdmin = profile.role === 'super_admin';
   const isAdmin      = profile.role === 'admin' || isSuperAdmin;
+  // effectiveAccountId: for super admin viewing another account, use viewingAccountId;
+  // for regular users, use their own profile.account_id
+  const viewingAccountId = req.body?.viewingAccountId || null;
+  const effectiveAccountId = (isSuperAdmin && viewingAccountId) ? viewingAccountId : profile.account_id;
 
   try {
     switch (action) {
@@ -121,12 +125,12 @@ module.exports = async function handler(req, res) {
         const repRole = ['rep', 'admin'].includes(invRole) ? invRole : 'rep';
         // Check plan rep limit
         const PLAN_MAX_REPS_INV = { starter: 1, pro: 3, agency: 10, enterprise: 999 };
-        const acctRespInv = await sbFetch(`accounts?id=eq.${profile.account_id}&select=plan,company_name`);
+        const acctRespInv = await sbFetch(`accounts?id=eq.${effectiveAccountId}&select=plan,company_name`);
         const acctsInv = acctRespInv.ok ? await acctRespInv.json() : [];
         const acctInv = acctsInv[0] || {};
         const maxRepsInv = PLAN_MAX_REPS_INV[acctInv.plan] ?? 1;
         if (maxRepsInv !== 999) {
-          const repCountResp = await sbFetch(`user_profiles?account_id=eq.${profile.account_id}&select=id`);
+          const repCountResp = await sbFetch(`user_profiles?account_id=eq.${effectiveAccountId}&select=id`);
           const repRows = repCountResp.ok ? await repCountResp.json() : [];
           if (repRows.length >= maxRepsInv) {
             res.status(403).json({ error: `Your ${acctInv.plan || 'current'} plan allows up to ${maxRepsInv} team member(s). Upgrade to add more reps.` }); return;
@@ -149,7 +153,7 @@ module.exports = async function handler(req, res) {
         await fetch(`${SUPABASE_URL}/rest/v1/user_profiles`, {
           method: 'POST',
           headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ id: newUserId, account_id: profile.account_id, role: repRole, name: invName, email: invEmail, must_change_password: true })
+          body: JSON.stringify({ id: newUserId, account_id: effectiveAccountId, role: repRole, name: invName, email: invEmail, must_change_password: true })
         }).catch(e => console.error('[invite-rep] profile insert error:', e));
         // Send invite email via Resend
         const invLoginUrl = (process.env.APP_URL || 'https://biddrop.americashomeexperts.com').trim();
@@ -336,7 +340,7 @@ module.exports = async function handler(req, res) {
         const { accountId, updates } = req.body;
         if (!accountId || !updates) { res.status(400).json({ error: 'accountId and updates required' }); return; }
         // Non-super-admins can only patch their own account
-        if (!isSuperAdmin && profile.account_id !== accountId) {
+        if (!isSuperAdmin && effectiveAccountId !== accountId) {
           res.status(403).json({ error: 'Cannot modify another account' }); return;
         }
         const r = await sbFetch(`accounts?id=eq.${accountId}`, {
@@ -389,7 +393,7 @@ module.exports = async function handler(req, res) {
       // ── GHL proxy — uses the account's own token from the DB ─────────────
       case 'ghl-oauth-status': {
         // Return OAuth connection status for the caller's account
-        const oauthAcctRes = await sbFetch(`accounts?id=eq.${profile.account_id}&select=ghl_oauth_access_token,ghl_oauth_expires_at,ghl_oauth_location_id,ghl_location_id`);
+        const oauthAcctRes = await sbFetch(`accounts?id=eq.${effectiveAccountId}&select=ghl_oauth_access_token,ghl_oauth_expires_at,ghl_oauth_location_id,ghl_location_id`);
         const oauthAcctRows = await oauthAcctRes.json();
         const oauthAcct = oauthAcctRows[0];
         const connected = !!(oauthAcct?.ghl_oauth_access_token);
@@ -407,7 +411,7 @@ module.exports = async function handler(req, res) {
         const { access_token, refresh_token, expires_in, location_id } = req.body;
         if (!access_token) { res.status(400).json({ error: 'access_token required' }); return; }
         const expiresAt = new Date(Date.now() + (parseInt(expires_in) || 86400) * 1000).toISOString();
-        const saveRes = await sbFetch(`accounts?id=eq.${profile.account_id}`, {
+        const saveRes = await sbFetch(`accounts?id=eq.${effectiveAccountId}`, {
           method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
           body: JSON.stringify({
             ghl_oauth_access_token:  access_token,
@@ -423,7 +427,7 @@ module.exports = async function handler(req, res) {
       }
       case 'ghl-oauth-disconnect': {
         // Remove OAuth tokens from the account
-        await sbFetch(`accounts?id=eq.${profile.account_id}`, {
+        await sbFetch(`accounts?id=eq.${effectiveAccountId}`, {
           method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
           body: JSON.stringify({
             ghl_oauth_access_token:  null,
@@ -445,7 +449,7 @@ module.exports = async function handler(req, res) {
         }
 
         // Resolve which account to use
-        const acctId = ghlAcctId || profile.account_id;
+        const acctId = ghlAcctId || effectiveAccountId;
         if (!acctId) { res.status(400).json({ error: 'accountId required' }); return; }
 
         // Fetch the account's GHL credentials - prefer OAuth token, fall back to manual API key
@@ -511,16 +515,16 @@ module.exports = async function handler(req, res) {
         const { payload, idempotency_key: pcIdemKey } = req.body;
         if (!payload) { res.status(400).json({ error: 'payload required' }); return; }
         // Rate limit: max 5 postcards per 10 seconds per account
-        if (!_checkRate(`lob:${profile.account_id}`, 5, 10000)) {
+        if (!_checkRate(`lob:${effectiveAccountId}`, 5, 10000)) {
           res.status(429).json({ error: 'rate_limited', message: 'Too many postcard requests. Please wait a moment and try again.' }); return;
         }
         // Idempotency: reject duplicate sends within 30 seconds
-        if (pcIdemKey && !_checkIdem(`${profile.account_id}:${pcIdemKey}`)) {
+        if (pcIdemKey && !_checkIdem(`${effectiveAccountId}:${pcIdemKey}`)) {
           res.status(200).json({ _duplicate: true, message: 'Duplicate request ignored.' }); return;
         }
         // Enforce credit balance — uses only mailer_credits (no free credits system)
         const pcAcctRes = await sbFetch(
-          `accounts?id=eq.${profile.account_id}&select=id,plan,mailer_credits`
+          `accounts?id=eq.${effectiveAccountId}&select=id,plan,mailer_credits`
         );
         if (!pcAcctRes.ok) { res.status(500).json({ error: 'Failed to fetch account credits' }); return; }
         const pcAcctRows = await pcAcctRes.json();
@@ -538,7 +542,7 @@ module.exports = async function handler(req, res) {
           return;
         }
         // Deduct 1 credit BEFORE sending
-        await sbFetch(`accounts?id=eq.${profile.account_id}`, {
+        await sbFetch(`accounts?id=eq.${effectiveAccountId}`, {
           method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
           body: JSON.stringify({ mailer_credits: pcPaid - POSTCARD_CREDITS })
         });
@@ -554,7 +558,7 @@ module.exports = async function handler(req, res) {
         const lobData = await lobRes.json();
         // If Lob failed, refund the credit
         if (!lobRes.ok) {
-          await sbFetch(`accounts?id=eq.${profile.account_id}`, {
+          await sbFetch(`accounts?id=eq.${effectiveAccountId}`, {
             method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
             body: JSON.stringify({ mailer_credits: pcPaid })
           });
@@ -581,16 +585,16 @@ module.exports = async function handler(req, res) {
         const { toAddr, toName, photoDataUrl, headline, subtext, pinId, idempotency_key: cpIdemKey } = req.body;
         if (!toAddr || !photoDataUrl) { res.status(400).json({ error: 'toAddr and photoDataUrl required' }); return; }
         // Rate limit: max 5 campaign postcards per 10 seconds per account
-        if (!_checkRate(`lob:${profile.account_id}`, 5, 10000)) {
+        if (!_checkRate(`lob:${effectiveAccountId}`, 5, 10000)) {
           res.status(429).json({ error: 'rate_limited', message: 'Too many postcard requests. Please wait a moment and try again.' }); return;
         }
         // Idempotency: reject duplicate sends within 30 seconds (prevents double-tap)
-        if (cpIdemKey && !_checkIdem(`${profile.account_id}:${cpIdemKey}`)) {
+        if (cpIdemKey && !_checkIdem(`${effectiveAccountId}:${cpIdemKey}`)) {
           res.status(200).json({ _duplicate: true, message: 'Duplicate request ignored.' }); return;
         }
 
         // Enforce credit balance
-        const cpAcctRes = await sbFetch(`accounts?id=eq.${profile.account_id}&select=id,mailer_credits,company_name,company_addr,company_phone,logo_data`);
+        const cpAcctRes = await sbFetch(`accounts?id=eq.${effectiveAccountId}&select=id,mailer_credits,company_name,company_addr,company_phone,logo_data`);
         if (!cpAcctRes.ok) { res.status(500).json({ error: 'Failed to fetch account' }); return; }
         const cpAcctRows = await cpAcctRes.json();
         if (!cpAcctRows.length) { res.status(404).json({ error: 'Account not found' }); return; }
@@ -641,7 +645,7 @@ module.exports = async function handler(req, res) {
         const backHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:864px;height:576px;overflow:hidden;font-family:Arial,sans-serif;background:#fff;position:relative}.indicia{position:absolute;top:32px;right:32px;width:100px;height:60px;border:1px solid #ccc;display:flex;align-items:center;justify-content:center;font-size:9px;color:#999;text-align:center;line-height:1.3}.return-addr{position:absolute;top:32px;left:32px;font-size:10px;color:#333;line-height:1.6}.to-addr{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);text-align:center;font-size:13px;color:#222;line-height:1.8;font-weight:600}.co-name{font-size:14px;font-weight:800;color:#111}</style></head><body><div class="indicia">PRESORTED<br>FIRST CLASS<br>U.S. POSTAGE<br>PAID<br>LOB.COM</div><div class="return-addr"><div class="co-name">${co.replace(/</g,'&lt;')}</div><div>${(fp[0]||'').replace(/</g,'&lt;')}</div><div>${fromCity.replace(/</g,'&lt;')}, ${fromState} ${fromZip}</div></div><div class="to-addr"><div>${(toName||'Neighbor').replace(/</g,'&lt;')}</div><div>${toLine1.replace(/</g,'&lt;')}</div><div>${toCity.replace(/</g,'&lt;')}, ${toState} ${toZip}</div></div></body></html>`;
 
         // Deduct credit BEFORE sending
-        await sbFetch(`accounts?id=eq.${profile.account_id}`, {
+        await sbFetch(`accounts?id=eq.${effectiveAccountId}`, {
           method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
           body: JSON.stringify({ mailer_credits: cpCredits - CAMPAIGN_CREDITS })
         });
@@ -667,7 +671,7 @@ module.exports = async function handler(req, res) {
 
         // Refund if Lob failed
         if (!cpLobRes.ok) {
-          await sbFetch(`accounts?id=eq.${profile.account_id}`, {
+          await sbFetch(`accounts?id=eq.${effectiveAccountId}`, {
             method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
             body: JSON.stringify({ mailer_credits: cpCredits })
           });
@@ -680,7 +684,7 @@ module.exports = async function handler(req, res) {
           method: 'POST',
           headers: { 'Prefer': 'return=minimal' },
           body: JSON.stringify({
-            account_id: profile.account_id,
+            account_id: effectiveAccountId,
             sent_by: profile.id || null,
             address: toAddr,
             owner_name: toName || 'Neighbor',
@@ -704,13 +708,13 @@ module.exports = async function handler(req, res) {
         const { homeowner_name, address_line1, address_city, address_state, address_zip,
                 estimate_total, front_html, back_html, idem_key: erIdemKey } = req.body;
         if (!front_html) { res.status(400).json({ error: 'front_html required' }); return; }
-        if (!_checkRate(`lob:${profile.account_id}`, 5, 10000)) {
+        if (!_checkRate(`lob:${effectiveAccountId}`, 5, 10000)) {
           res.status(429).json({ error: 'rate_limited', message: 'Too many postcard requests. Please wait a moment.' }); return;
         }
-        if (erIdemKey && !_checkIdem(`${profile.account_id}:${erIdemKey}`)) {
+        if (erIdemKey && !_checkIdem(`${effectiveAccountId}:${erIdemKey}`)) {
           res.status(200).json({ _duplicate: true, message: 'Duplicate request ignored.' }); return;
         }
-        const erAcctRes = await sbFetch(`accounts?id=eq.${profile.account_id}&select=id,plan,mailer_credits,company_name,address,city,state,zip`);
+        const erAcctRes = await sbFetch(`accounts?id=eq.${effectiveAccountId}&select=id,plan,mailer_credits,company_name,address,city,state,zip`);
         if (!erAcctRes.ok) { res.status(500).json({ error: 'Failed to fetch account' }); return; }
         const erAcctRows = await erAcctRes.json();
         if (!erAcctRows.length) { res.status(404).json({ error: 'Account not found' }); return; }
@@ -724,7 +728,7 @@ module.exports = async function handler(req, res) {
           }); return;
         }
         // Deduct credit before send
-        await sbFetch(`accounts?id=eq.${profile.account_id}`, {
+        await sbFetch(`accounts?id=eq.${effectiveAccountId}`, {
           method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
           body: JSON.stringify({ mailer_credits: erPaid - ER_CREDITS })
         });
@@ -758,7 +762,7 @@ module.exports = async function handler(req, res) {
         const erLobData = await erLobRes.json();
         if (!erLobRes.ok) {
           // Refund credit
-          await sbFetch(`accounts?id=eq.${profile.account_id}`, {
+          await sbFetch(`accounts?id=eq.${effectiveAccountId}`, {
             method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
             body: JSON.stringify({ mailer_credits: erPaid })
           });
@@ -768,7 +772,7 @@ module.exports = async function handler(req, res) {
         await sbFetch('mailer_log', {
           method: 'POST', headers: { 'Prefer': 'return=minimal' },
           body: JSON.stringify({
-            account_id: profile.account_id,
+            account_id: effectiveAccountId,
             sent_by: profile.id || null,
             address: `${address_line1}, ${address_city}, ${address_state} ${address_zip}`,
             owner_name: homeowner_name || 'Homeowner',
@@ -790,7 +794,7 @@ module.exports = async function handler(req, res) {
         if (!ltPayload) { res.status(400).json({ error: 'payload required' }); return; }
         // Enforce credit balance — uses only mailer_credits (no free credits system)
         const ltAcctRes = await sbFetch(
-          `accounts?id=eq.${profile.account_id}&select=id,plan,mailer_credits`
+          `accounts?id=eq.${effectiveAccountId}&select=id,plan,mailer_credits`
         );
         if (!ltAcctRes.ok) { res.status(500).json({ error: 'Failed to fetch account credits' }); return; }
         const ltAcctRows = await ltAcctRes.json();
@@ -808,7 +812,7 @@ module.exports = async function handler(req, res) {
           return;
         }
         // Deduct 1 credit BEFORE sending
-        await sbFetch(`accounts?id=eq.${profile.account_id}`, {
+        await sbFetch(`accounts?id=eq.${effectiveAccountId}`, {
           method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
           body: JSON.stringify({ mailer_credits: ltPaid - LETTER_CREDITS })
         });
@@ -824,7 +828,7 @@ module.exports = async function handler(req, res) {
         const ltLobData = await ltLobRes.json();
         // If Lob failed, refund the credit
         if (!ltLobRes.ok) {
-          await sbFetch(`accounts?id=eq.${profile.account_id}`, {
+          await sbFetch(`accounts?id=eq.${effectiveAccountId}`, {
             method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
             body: JSON.stringify({ mailer_credits: ltPaid })
           });
@@ -880,7 +884,7 @@ module.exports = async function handler(req, res) {
         const { lat: rcLat, lng: rcLng, radius: rcRadius, limit: rcLimit } = req.query;
         if (!rcLat || !rcLng) { res.status(400).json({ error: 'lat and lng required' }); return; }
         // Rate limit: max 3 RentCast calls per 10 seconds per account
-        if (!_checkRate(`rentcast:${profile.account_id}`, 3, 10000)) {
+        if (!_checkRate(`rentcast:${effectiveAccountId}`, 3, 10000)) {
           res.status(429).json({ error: 'rate_limited', message: 'Too many nearby searches. Please wait a moment and try again.' }); return;
         }
         const radiusMiles = parseFloat(rcRadius) || 0.1; // default 0.1 miles (~528 ft)
@@ -996,7 +1000,7 @@ module.exports = async function handler(req, res) {
         if (!puEsts.length) { res.status(404).json({ error: 'Estimate not found' }); return; }
         const puEst = puEsts[0];
         // Verify ownership
-        if (puEst.account_id !== profile.account_id && !isSuperAdmin) {
+        if (puEst.account_id !== effectiveAccountId && !isSuperAdmin) {
           res.status(403).json({ error: 'Not your estimate' }); return;
         }
         // Already paid — allow free reprint
@@ -1007,7 +1011,7 @@ module.exports = async function handler(req, res) {
         // Deduct 1 credit — use free first, then paid
         const PRINT_CREDITS = 1;
         const puAcctRes = await sbFetch(
-          `accounts?id=eq.${profile.account_id}&select=id,lookup_credits,free_lookups_used,free_lookups_reset,free_lookups_limit`
+          `accounts?id=eq.${effectiveAccountId}&select=id,lookup_credits,free_lookups_used,free_lookups_reset,free_lookups_limit`
         );
         if (!puAcctRes.ok) { res.status(500).json({ error: 'Failed to fetch account' }); return; }
         const puAcctRows = await puAcctRes.json();
@@ -1016,7 +1020,7 @@ module.exports = async function handler(req, res) {
         // Monthly reset
         const puToday = new Date().toISOString().slice(0, 10);
         if ((puAcct.free_lookups_reset || '').slice(0, 7) !== puToday.slice(0, 7)) {
-          await sbFetch(`accounts?id=eq.${profile.account_id}`, {
+          await sbFetch(`accounts?id=eq.${effectiveAccountId}`, {
             method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
             body: JSON.stringify({ free_lookups_used: 0, free_lookups_reset: puToday })
           });
@@ -1041,7 +1045,7 @@ module.exports = async function handler(req, res) {
         const puUpdates = {};
         if (puFreeToUse > 0) puUpdates.free_lookups_used = (puAcct.free_lookups_used || 0) + puFreeToUse;
         if (puPaidToUse > 0) puUpdates.lookup_credits = puPaid - puPaidToUse;
-        await sbFetch(`accounts?id=eq.${profile.account_id}`, {
+        await sbFetch(`accounts?id=eq.${effectiveAccountId}`, {
           method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
           body: JSON.stringify(puUpdates)
         });
@@ -1231,7 +1235,7 @@ module.exports = async function handler(req, res) {
         // saves all data to pin, marks pin unlocked, optionally queues a postcard.
         const { pinId: upPinId, address: upAddress, queuePostcard: upQueuePostcard } = req.body;
         if (!upPinId || !upAddress) { res.status(400).json({ error: 'pinId and address required' }); return; }
-        const accountId = profile.account_id;
+        const accountId = effectiveAccountId;
         if (!accountId) { res.status(401).json({ error: 'not authenticated' }); return; }
 
         // 1. Check if already unlocked (idempotent)
@@ -1383,7 +1387,7 @@ module.exports = async function handler(req, res) {
         const { ownerName, address: tfAddress, city: tfCity, state: tfState, zip: tfZip, pinId: tfPinId, viewingAccountId: tfViewingAccountId } = req.body;
         if (!tfAddress) { res.status(400).json({ error: 'address required' }); return; }
         // Super admins may have null account_id in their profile — use viewingAccountId from client or skip dedup
-        const tfAccountId = profile.account_id || (isSuperAdmin ? tfViewingAccountId : null);
+        const tfAccountId = effectiveAccountId;
         if (!tfAccountId && !isSuperAdmin) { res.status(401).json({ error: 'not authenticated' }); return; }
         // SERVER-SIDE DEDUP: if this pin already has contact_data saved, return it without hitting Tracerfy
         if (tfPinId && tfAccountId) {
@@ -1452,7 +1456,7 @@ module.exports = async function handler(req, res) {
         // List campaigns for an account, most recent first
         // Super admins can pass targetAccountId to view any account's campaigns
         const { targetAccountId } = req.body || {};
-        const listAcctId = (isSuperAdmin && targetAccountId) ? targetAccountId : profile.account_id;
+        const listAcctId = effectiveAccountId;
         if (!listAcctId) { res.status(401).json({ error: 'auth required' }); return; }
         const limit = Math.min(parseInt(req.query.limit) || 20, 100);
         const r = await sbFetch(`campaign_targets?account_id=eq.${listAcctId}&order=campaign_date.desc&limit=${limit}`, {
@@ -1557,7 +1561,7 @@ module.exports = async function handler(req, res) {
         // Fetch contact_data for an already-unlocked pin (no credit cost)
         const { pinId: gcdPinId } = req.body;
         if (!gcdPinId) { res.status(400).json({ error: 'pinId required' }); return; }
-        const gcdRes = await sbFetch(`pins?id=eq.${gcdPinId}&account_id=eq.${profile.account_id}&select=id,contact_data,unlocked_at&limit=1`);
+        const gcdRes = await sbFetch(`pins?id=eq.${gcdPinId}&account_id=eq.${effectiveAccountId}&select=id,contact_data,unlocked_at&limit=1`);
         const gcdRows = gcdRes.ok ? await gcdRes.json() : [];
         const gcdPin = gcdRows[0];
         if (!gcdPin) { res.status(404).json({ error: 'pin not found' }); return; }
