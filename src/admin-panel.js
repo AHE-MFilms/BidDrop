@@ -669,10 +669,49 @@ async function createAccount(){
   if(!name||!email||!pass){toast('Company name, email and password are required','error');return;}
   if(pass.length<6){toast('Password must be at least 6 characters','error');return;}
   const resultEl = document.getElementById('new-acct-result');
-  resultEl.textContent='Creating account…';resultEl.style.color='var(--muted)';
+  resultEl.textContent='Checking for duplicates…';resultEl.style.color='var(--muted)';
   const btn = document.getElementById('btn-create-acct');
   if(btn){btn.disabled=true;btn.textContent='Creating…';}
   try {
+    // 0. Duplicate detection: check for existing account with same company name
+    const {data: dupAccts} = await sb.from('accounts')
+      .select('id,company_name')
+      .ilike('company_name', name)
+      .limit(1);
+    if(dupAccts && dupAccts.length){
+      const dup = dupAccts[0];
+      const proceed = await new Promise(resolve => {
+        bdConfirm(
+          `An account named "${dup.company_name}" already exists (ID: ${dup.id}).\n\nCreate another one anyway?`,
+          () => resolve(true), () => resolve(false)
+        );
+      });
+      if(!proceed){
+        resultEl.textContent='';
+        if(btn){btn.disabled=false;btn.textContent='Create Account + Admin Login';}
+        return;
+      }
+    }
+    // Also check if email is already tied to an active profile
+    const {data: dupProf} = await sb.from('user_profiles')
+      .select('id,email,account_id')
+      .eq('email', email.toLowerCase())
+      .neq('role','deleted')
+      .limit(1);
+    if(dupProf && dupProf.length){
+      const proceed = await new Promise(resolve => {
+        bdConfirm(
+          `Email "${email}" is already registered to an active account.\n\nProceed anyway? (This will reset their password and re-link their profile.)`,
+          () => resolve(true), () => resolve(false)
+        );
+      });
+      if(!proceed){
+        resultEl.textContent='';
+        if(btn){btn.disabled=false;btn.textContent='Create Account + Admin Login';}
+        return;
+      }
+    }
+    resultEl.textContent='Creating account…';
     // 1. Create account row
     const {data:acct, error:acctErr} = await sb.from('accounts').insert({
       name, company_name:name,
