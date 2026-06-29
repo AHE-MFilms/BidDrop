@@ -127,7 +127,7 @@ function selectTrade(tradeId){
   if(form) form.style.display = '';
   // Hide solar potential section when on roofing trade
   const _potRow = document.getElementById('solar-potential-row');
-  const _addSolarBtn = document.getElementById('add-solar-addon-btn');
+  const _addSolarBtn = document.getElementById('solar-autofill-kw-btn');
   if(_potRow) _potRow.style.display = tradeId === 'roofing' ? 'none' : '';
   if(_addSolarBtn) _addSolarBtn.style.display = tradeId === 'roofing' ? 'none' : '';
   // Auto-populate measurements from satellite data
