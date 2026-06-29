@@ -353,10 +353,36 @@ function updateEstimateSelectionBar(){
   const queueBtn = document.getElementById('est-bulk-queue-btn');
   const ghlBtn = document.getElementById('est-bulk-ghl-btn');
   const restoreBtn = document.getElementById('est-bulk-restore-btn');
-  if(delBtn) delBtn.style.display = isTrash ? 'none' : '';
-  if(queueBtn) queueBtn.style.display = isTrash ? 'none' : '';
-  if(ghlBtn) ghlBtn.style.display = isTrash ? 'none' : '';
+  const purgeBtn   = document.getElementById('est-bulk-purge-btn');
+  if(delBtn)     delBtn.style.display     = isTrash ? 'none' : '';
+  if(queueBtn)   queueBtn.style.display   = isTrash ? 'none' : '';
+  if(ghlBtn)     ghlBtn.style.display     = isTrash ? 'none' : '';
   if(restoreBtn) restoreBtn.style.display = isTrash ? '' : 'none';
+  if(purgeBtn)   purgeBtn.style.display   = (isTrash && isAdminOrAbove()) ? '' : 'none';
+}
+
+function bulkPurgeEstimates(){
+  if(!isAdminOrAbove()){ toast('Only admins can permanently delete estimates.','error'); return; }
+  const ids = [...document.querySelectorAll('.est-row-cb:checked')].map(cb=>cb.dataset.id).filter(Boolean);
+  if(!ids.length){ toast('No estimates selected','warn'); return; }
+  bdConfirm('Permanently delete '+ids.length+' estimate'+(ids.length!==1?'s':'')+' and their pins? This cannot be undone.', ()=>{
+    ids.forEach(estId=>{
+      const est = (S.estimates||[]).find(e=>e.id===estId);
+      S.estimates = (S.estimates||[]).filter(e=>e.id!==estId);
+      if(sb) sb.from('estimates').delete().eq('id', estId).then(({error})=>{ if(error) console.warn('[BidDrop] bulkPurge:', error.message); });
+      if(est && est.pinId){
+        S.pins = (S.pins||[]).filter(p=>p.id!==est.pinId);
+        if(sb) sb.from('pins').delete().eq('id', est.pinId).then(()=>{});
+        if(map && markers[est.pinId]){
+          if(clusterGroup) clusterGroup.removeLayer(markers[est.pinId]);
+          else map.removeLayer(markers[est.pinId]);
+          delete markers[est.pinId];
+        }
+      }
+    });
+    save(); renderPinList(); renderEstimatesTab();
+    toast(ids.length+' estimate'+(ids.length!==1?'s':'')+' permanently deleted','info');
+  });
 }
 
 // ── Estimate revision history ────────────────────────────────────────────
