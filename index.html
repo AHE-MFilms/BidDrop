@@ -1450,7 +1450,7 @@ tr:hover td{background:var(--card);}
           <!-- Contact Lookup Button (shown when pin is unlocked but no contact data yet) -->
           <div id="est-contact-lookup-btn" style="display:none;margin-bottom:8px;">
             <button onclick="estLookupContact()" style="width:100%;padding:9px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
-              📞 Look Up Phone &amp; Email (Tracerfy)
+              📞 Look Up Phone &amp; Email
             </button>
           </div>
           <!-- Unlock Pin CTA -->
@@ -7683,7 +7683,7 @@ async function checkRealConnectivity(){
     const tid = setTimeout(()=>ctrl.abort(), 3000);
     const r = await fetch('https://gtwbhxnrmfmdenogzuea.supabase.co/rest/v1/', {
       method:'HEAD', signal:ctrl.signal,
-      cache:'no-store', headers:{'apikey': SUPABASE_ANON_KEY||''}
+      cache:'no-store', headers:{'apikey': (typeof SUPABASE_ANON_KEY!=='undefined'?SUPABASE_ANON_KEY:''), 'Authorization': 'Bearer '+(typeof SUPABASE_ANON_KEY!=='undefined'?SUPABASE_ANON_KEY:'')}
     });
     clearTimeout(tid);
     return r.status < 600; // any real HTTP response = we're online
@@ -10269,7 +10269,7 @@ async function estLookupContact() {
   } catch(e) {
     toast('Lookup failed: ' + (e && e.message ? e.message.substring(0,80) : 'unknown'), 'error');
   } finally {
-    if (btn) { btn.disabled = false; btn.innerHTML = '📞 Look Up Phone &amp; Email (Tracerfy)'; }
+    if (btn) { btn.disabled = false; btn.innerHTML = '📞 Look Up Phone &amp; Email'; }
   }
 }
 
