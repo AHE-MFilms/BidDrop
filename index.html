@@ -1447,6 +1447,13 @@ tr:hover td{background:var(--card);}
               </div>
             </div>
           </div>
+          <!-- Unlock Pin CTA -->
+          <div id="est-unlock-wrap" style="margin-top:4px;">
+            <button id="est-unlock-btn" onclick="estUnlockPin()" style="width:100%;padding:11px;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+              🔓 Unlock Pin &mdash; 1 Credit
+            </button>
+            <div id="est-unlock-status" style="display:none;text-align:center;padding:8px;font-size:12px;color:#4ade80;font-weight:600;">✅ Pin Unlocked &mdash; all features active</div>
+          </div>
         </div>
       </div>
 
@@ -6389,7 +6396,8 @@ function buildContactInfoHTML(pid, cd){
   html += '</div>';
   return html;
 }
-async function lookupContactInfo(pid){
+async function lookupContactInfo(pid, opts){
+  opts = opts || {};
   const pin = (S.pins||[]).find(function(p){ return p.id===pid; });
   if(!pin) return;
   const el = document.getElementById('contact-info-'+pid);
@@ -6398,11 +6406,14 @@ async function lookupContactInfo(pid){
     if(el) el.innerHTML = buildContactInfoHTML(pid, pin.contactData);
     const m = markers[pid];
     if(m && m.getPopup && m.getPopup() && m.getPopup().update) m.getPopup().update();
+    _fillEstimatorContactFields(pin.contactData);
     return;
   }
-  // CREDIT GATE: require pin to be unlocked before hitting Tracerfy
-  const _unlocked = await requirePinUnlocked(pid);
-  if(!_unlocked) return;
+  // CREDIT GATE: require pin to be unlocked before hitting Tracerfy (skip if called post-unlock)
+  if(!opts.suppressUnlockCheck){
+    const _unlocked = await requirePinUnlocked(pid);
+    if(!_unlocked) return;
+  }
   if(el) el.innerHTML = '<div style="font-size:11px;color:#A78BFA;text-align:center;padding:6px;">⏳ Looking up…</div>';
   try{
     const parts = (pin.address||'').split(',').map(function(s){ return s.trim(); });
@@ -6446,14 +6457,31 @@ async function lookupContactInfo(pid){
     else if(el) el.innerHTML = buildContactInfoHTML(pid, cd);
     const m = markers[pid];
     if(m && m.getPopup && m.getPopup() && m.getPopup().update) m.getPopup().update();
+    // Auto-fill estimator phone + email fields if this pin is loaded in the estimator
+    _fillEstimatorContactFields(cd);
   } catch(err){
     console.error('Tracerfy error:', err);
     if(el) el.innerHTML = '<div style="font-size:10px;color:#EF4444;text-align:center;padding:4px;">Lookup failed: '+(err&&err.message?err.message.substring(0,80):'unknown error')+'</div>';
   }
 }
 
+// Fill estimator phone + email fields from contactData (called after Tracerfy lookup)
+function _fillEstimatorContactFields(cd){
+  if(!cd) return;
+  const phoneEl = document.getElementById('e-phone');
+  const emailEl = document.getElementById('e-email');
+  if(phoneEl && !phoneEl.value && cd.phones && cd.phones.length){
+    phoneEl.value = cd.phones[0].number || '';
+    if(typeof _accUpdateHomeownerSummary==='function') _accUpdateHomeownerSummary();
+  }
+  if(emailEl && !emailEl.value && cd.emails && cd.emails.length){
+    emailEl.value = cd.emails[0].address || '';
+    if(typeof _accUpdateHomeownerSummary==='function') _accUpdateHomeownerSummary();
+  }
+}
+
 // Rebuild a marker's popup HTML with fresh solar data (called after async fetch)
-// ── Popup HTML builder (shared by addMarker + rebind helpers) ──────────────
+// ── Popup HTML builder (shared by addMarker + rebind helpers) ──────────────────────
 function _buildPinPopupHTML(pin){
   const pid = pin.id;
   const _dmgPhotos = pin.damage_photos||[];
@@ -10101,6 +10129,42 @@ document.addEventListener('DOMContentLoaded', function() {
   // homeowner card starts open
   accSetDot('homeowner', 'active');
 });
+
+// ── ESTIMATOR UNLOCK BUTTON ──────────────────────────────────────────────────
+// Shows/hides the Unlock button based on current pin's lock state.
+function _estRefreshUnlockUI() {
+  const wrap = document.getElementById('est-unlock-wrap');
+  const btn  = document.getElementById('est-unlock-btn');
+  const status = document.getElementById('est-unlock-status');
+  if (!wrap) return;
+  if (!currentEstPinId) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  const unlocked = typeof isPinUnlocked === 'function' && isPinUnlocked(currentEstPinId);
+  if (unlocked) {
+    btn.style.display    = 'none';
+    status.style.display = 'block';
+  } else {
+    btn.style.display    = 'flex';
+    status.style.display = 'none';
+  }
+}
+
+// Called when rep clicks "🔓 Unlock Pin — 1 Credit"
+async function estUnlockPin() {
+  if (!currentEstPinId) { toast('Load a pinned home first', 'warn'); return; }
+  // requirePinUnlocked handles credit deduction + modal
+  const ok = typeof requirePinUnlocked === 'function'
+    ? await requirePinUnlocked(currentEstPinId)
+    : true;
+  if (!ok) return;
+  // After unlock: run Tracerfy contact lookup to fill phone + email
+  if (typeof lookupContactInfo === 'function') {
+    await lookupContactInfo(currentEstPinId, { suppressUnlockCheck: true });
+  }
+  _estRefreshUnlockUI();
+  _accUpdateHomeownerSummary();
+  toast('🔓 Pin unlocked — contact info loaded', 'success');
+}
 </script>
 </body>
 </html>

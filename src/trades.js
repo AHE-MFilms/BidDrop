@@ -724,6 +724,8 @@ function loadEstFromPicker(){
   // Refresh accordion summaries
   if(typeof _accUpdateHomeownerSummary==='function') _accUpdateHomeownerSummary();
   if(typeof _accUpdatePropertySummary==='function') _accUpdatePropertySummary();
+  // Refresh unlock button state
+  if(typeof _estRefreshUnlockUI==='function') _estRefreshUnlockUI();
   // Auto-lookup owner name if field is empty
   if(masterRentcastKey && p.address && !document.getElementById('e-owner').value.trim()){
     autoFillOwnerIfEmpty(p.address);

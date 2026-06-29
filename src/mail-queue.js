@@ -5,11 +5,17 @@
 //             sendLob() (print.js), escHtml() (ui.js)
 // Extracted from index.html — Tier 4 modularization
 
-function addToQueue(){
+async function addToQueue(){
   const addr=document.getElementById('e-addr').value.trim();
   if(!addr){toast('Enter a property address','error');return;}
   const grand=calcP();
   if(!grand){toast('Enter roof area to calculate price','error');return;}
+  // CREDIT GATE
+  if(typeof requirePinUnlocked==='function' && currentEstPinId){
+    const _ok = await requirePinUnlocked(currentEstPinId);
+    if(!_ok) return;
+    if(typeof _estRefreshUnlockUI==='function') _estRefreshUnlockUI();
+  }
 
   // Get primary structure info for queue row display
   const firstS=structures[0];
