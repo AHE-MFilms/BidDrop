@@ -154,7 +154,7 @@ function _showUnlockModal(pin, resolve) {
       <div style="text-align:left;background:rgba(255,255,255,.04);border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:12px;color:#d1d5db;line-height:1.9;">
         📞 Homeowner phone &amp; email (auto-filled)<br>
         🖨 Print letter / Print Now<br>
-        📬 Add to Mail Queue (postcard)<br>
+        📬 Add to Mail Queue (includes 1 postcard)<br>
         ⬆️ Sync to GoHighLevel CRM<br>
         📋 Sales Proposal PDF<br>
         🏛 Insurance Scope PDF
