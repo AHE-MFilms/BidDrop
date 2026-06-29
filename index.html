@@ -10224,22 +10224,11 @@ function _estRefreshUnlockUI() {
       // contactData already in memory — fill immediately
       _fillEstimatorContactFields(_pin.contactData);
     } else if (_pin) {
-      // contactData missing from memory (pin was unlocked in a previous session).
-      // Fetch contact_data directly from Supabase and fill fields.
-      (async function(){
-        try {
-          const { data, error } = await sb.from('pins')
-            .select('contact_data')
-            .eq('id', _pin.id)
-            .single();
-          if (!error && data && data.contact_data) {
-            _pin.contactData = data.contact_data; // cache in memory
-            _fillEstimatorContactFields(data.contact_data);
-          }
-        } catch(e) {
-          console.warn('[BidDrop] Failed to fetch contact_data from Supabase:', e);
-        }
-      })();
+      // contactData missing — run Tracerfy lookup via the proven lookupContactInfo path
+      // (same function used on the canvass map, handles dedup + saves to DB + fills fields)
+      if (typeof lookupContactInfo === 'function') {
+        lookupContactInfo(_pin.id, { suppressUnlockCheck: true });
+      }
     }
   } else {
     btn.style.display    = 'flex';
@@ -10255,15 +10244,11 @@ async function estUnlockPin() {
     ? await requirePinUnlocked(currentEstPinId)
     : true;
   if (!ok) return;
-  // After unlock: fill phone + email from contact_data already returned by unlock-pin server action
-  // (no second API call needed — _confirmUnlockPin already saved it to pin.contactData)
-  const _unlockedPin = (S.pins||[]).find(function(p){ return p.id === currentEstPinId; });
-  if (_unlockedPin && _unlockedPin.contactData && typeof _fillEstimatorContactFields === 'function') {
-    _fillEstimatorContactFields(_unlockedPin.contactData);
-  }
+  // After unlock: _estRefreshUnlockUI handles filling contact fields
+  // (reads pin.contactData if available, or runs lookupContactInfo if not)
   _estRefreshUnlockUI();
   _accUpdateHomeownerSummary();
-  toast('🔓 Pin unlocked — contact info loaded', 'success');
+  toast('🔓 Pin unlocked — looking up contact info…', 'success');
 }
 </script>
 </body>

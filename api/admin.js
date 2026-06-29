@@ -1552,6 +1552,18 @@ module.exports = async function handler(req, res) {
         const invoiceId = qbData.Invoice && qbData.Invoice.Id;
         return res.status(200).json({ ok: true, invoiceId, invoice: qbData.Invoice });
       }
+      case 'get-contact-data': {
+        // Fetch contact_data for an already-unlocked pin (no credit cost)
+        const { pinId: gcdPinId } = req.body;
+        if (!gcdPinId) { res.status(400).json({ error: 'pinId required' }); return; }
+        const gcdRes = await sbFetch(`pins?id=eq.${gcdPinId}&account_id=eq.${profile.account_id}&select=id,contact_data,unlocked_at&limit=1`);
+        const gcdRows = gcdRes.ok ? await gcdRes.json() : [];
+        const gcdPin = gcdRows[0];
+        if (!gcdPin) { res.status(404).json({ error: 'pin not found' }); return; }
+        if (!gcdPin.unlocked_at) { res.status(403).json({ error: 'pin not unlocked' }); return; }
+        return res.json({ ok: true, contact_data: gcdPin.contact_data || null });
+      }
+
       default:
         res.status(400).json({ error: `Unknown action: ${action}` });
     }
