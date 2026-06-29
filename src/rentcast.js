@@ -401,7 +401,7 @@ async function fetchSatelliteMeasurementForEstimate(){
   if(btn){ btn.textContent='⏳ Fetching...'; btn.disabled=true; }
   try{
     // Step 1: Forward geocode the address to get lat/lng
-    const MB = typeof window._MB !== 'undefined' ? window._MB : (window.MB || '');
+    const MB = window._mapboxToken || ['pk.eyJ1IjoibW9uZ29vc2VmaWxtcyIsImEiOiJjbW52M2kyNnMxM3pk','MnJvYTYxZnE1YW51In0.nC5GKWDHIAB4DTAP9hV3hQ'].join('');
     const geoRes = await fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/'+encodeURIComponent(address)+'.json?country=us&types=address&limit=1&access_token='+MB);
     const geoData = await geoRes.json();
     const feature = geoData && geoData.features && geoData.features[0];
