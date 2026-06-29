@@ -185,16 +185,50 @@ function autoCalcPaint(){ if(window._lastSolarData && window._lastSolarData.roof
 function _fmtMoney(n){ return '$'+Math.round(n).toLocaleString(); }
 function _applyMargin(base, ovh, mgn){ return base * (1 + (ovh||15)/100) * (1 + (mgn||20)/100); }
 
+// ── Solar mode toggle ────────────────────────────────────────────────────────
+window._solarMode = 'simple'; // 'simple' | 'detailed'
+function setSolarMode(mode){
+  window._solarMode = mode;
+  const simpleFields   = document.getElementById('solar-simple-fields');
+  const detailedFields = document.getElementById('solar-detailed-fields');
+  const simpleBtn      = document.getElementById('solar-mode-simple-btn');
+  const detailedBtn    = document.getElementById('solar-mode-detailed-btn');
+  if(simpleFields)   simpleFields.style.display   = mode === 'simple'   ? '' : 'none';
+  if(detailedFields) detailedFields.style.display = mode === 'detailed' ? '' : 'none';
+  if(simpleBtn){   simpleBtn.style.background   = mode === 'simple'   ? '#22C55E' : 'none'; simpleBtn.style.color   = mode === 'simple'   ? '#000' : 'var(--muted)'; }
+  if(detailedBtn){ detailedBtn.style.background = mode === 'detailed' ? '#22C55E' : 'none'; detailedBtn.style.color = mode === 'detailed' ? '#000' : 'var(--muted)'; }
+  calcTradeSolar();
+}
+
 function calcTradeSolar(){
   const c = S.cfg || {};
   const kw = parseFloat((document.getElementById('te-solar-kw')||{}).value) || 0;
   const ppw = parseFloat(c.solarPricePerWatt) || 3.50;
+  const mode = window._solarMode || 'simple';
+  // Simple mode: flat price override OR kW × $/W (no add-ons, no margin)
+  if(mode === 'simple'){
+    const flatEl = document.getElementById('te-solar-flat');
+    const flat = parseFloat((flatEl&&flatEl.value)||0);
+    const total = flat > 0 ? flat : Math.round(kw * 1000 * ppw);
+    const el = document.getElementById('te-solar-total');
+    if(el) el.textContent = _fmtMoney(total);
+    const monthly = document.getElementById('te-solar-monthly');
+    if(monthly) monthly.textContent = c.solarMonthlySavings ? 'Est. monthly savings: $'+(c.solarMonthlySavings||150)+'/mo' : '';
+    const incentivesRow = document.getElementById('te-solar-incentives-row');
+    if(incentivesRow) incentivesRow.style.display = 'none';
+    window._currentTradeTotal = total;
+    updateBundleBar();
+    return;
+  }
+  // Detailed mode: add-ons + margin + incentives
   let total = kw * 1000 * ppw;
   if((document.getElementById('te-solar-battery')||{}).checked) total += (c.solarBattery||8000);
   if((document.getElementById('te-solar-panel-upgrade')||{}).checked) total += (c.solarPanelUpgrade||150)*Math.ceil(kw/0.4);
   if((document.getElementById('te-solar-elec-upgrade')||{}).checked) total += (c.solarElecUpgrade||2500);
   if((document.getElementById('te-solar-roof-reinforce')||{}).checked) total += (c.solarRoofReinforce||1500);
   total = _applyMargin(total, c.solarOverhead||12, c.solarMargin||18);
+  const incentivesRow = document.getElementById('te-solar-incentives-row');
+  if(incentivesRow) incentivesRow.style.display = '';
   // Apply incentives
   const fedCredit = total * ((c.solarFedCredit||30)/100);
   const stateRebate = c.solarStateRebate || 0;

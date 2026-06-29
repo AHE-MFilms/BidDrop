@@ -1617,7 +1617,13 @@ tr:hover td{background:var(--card);}
       <!-- ── SOLAR FORM ── -->
       <div id="trade-form-solar" style="display:none;">
         <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;">
-          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:#22C55E;margin-bottom:12px;">☀️ SOLAR ESTIMATE</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:#22C55E;">☀️ SOLAR ESTIMATE</div>
+            <div style="display:flex;align-items:center;gap:0;background:var(--card);border:1px solid var(--border);border-radius:7px;overflow:hidden;">
+              <button id="solar-mode-simple-btn" onclick="setSolarMode('simple')" style="padding:5px 10px;font-size:10px;font-weight:700;border:none;cursor:pointer;background:#22C55E;color:#000;transition:all .15s;">Simple</button>
+              <button id="solar-mode-detailed-btn" onclick="setSolarMode('detailed')" style="padding:5px 10px;font-size:10px;font-weight:700;border:none;cursor:pointer;background:none;color:var(--muted);transition:all .15s;">Detailed</button>
+            </div>
+          </div>
           <div id="solar-autocalc-banner" style="display:none;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#22C55E;">
             📡 Auto-calculated from satellite data — adjust below if needed
           </div>
@@ -1628,33 +1634,43 @@ tr:hover td{background:var(--card);}
               <button onclick="autoCalcSolar()" style="flex-shrink:0;padding:0 10px;height:38px;background:rgba(34,197,94,.15);color:#22C55E;border:1px solid rgba(34,197,94,.3);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🛰 Auto</button>
             </div>
           </div>
-          <div class="fg" style="margin-bottom:10px;">
-            <div class="fl">Battery Add-On</div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <input type="checkbox" id="te-solar-battery" style="accent-color:var(--accent);width:16px;height:16px;" onchange="calcTradeSolar()">
-              <label for="te-solar-battery" style="font-size:12px;color:var(--mid);cursor:pointer;">Include battery storage</label>
-              <span id="te-solar-battery-price" style="font-size:11px;color:var(--muted);margin-left:auto;"></span>
+          <!-- Simple mode: flat price override -->
+          <div id="solar-simple-fields" style="">
+            <div class="fg" style="margin-bottom:10px;">
+              <div class="fl">Flat Price Override <span style="font-weight:400;color:var(--muted);font-size:10px;">— leave blank to use kW × $/W</span></div>
+              <input type="number" class="fi" id="te-solar-flat" placeholder="e.g. 28000" step="100" min="0" oninput="calcTradeSolar()" style="margin-bottom:0;">
             </div>
           </div>
-          <div class="fg" style="margin-bottom:10px;">
-            <div class="fl">Panel Upgrade</div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <input type="checkbox" id="te-solar-panel-upgrade" style="accent-color:var(--accent);width:16px;height:16px;" onchange="calcTradeSolar()">
-              <label for="te-solar-panel-upgrade" style="font-size:12px;color:var(--mid);cursor:pointer;">Premium panel upgrade</label>
+          <!-- Detailed mode: add-ons -->
+          <div id="solar-detailed-fields" style="display:none;">
+            <div class="fg" style="margin-bottom:10px;">
+              <div class="fl">Battery Add-On</div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input type="checkbox" id="te-solar-battery" style="accent-color:var(--accent);width:16px;height:16px;" onchange="calcTradeSolar()">
+                <label for="te-solar-battery" style="font-size:12px;color:var(--mid);cursor:pointer;">Include battery storage</label>
+                <span id="te-solar-battery-price" style="font-size:11px;color:var(--muted);margin-left:auto;"></span>
+              </div>
             </div>
-          </div>
-          <div class="fg" style="margin-bottom:10px;">
-            <div class="fl">Electrical Panel Upgrade</div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <input type="checkbox" id="te-solar-elec-upgrade" style="accent-color:var(--accent);width:16px;height:16px;" onchange="calcTradeSolar()">
-              <label for="te-solar-elec-upgrade" style="font-size:12px;color:var(--mid);cursor:pointer;">Electrical panel upgrade</label>
+            <div class="fg" style="margin-bottom:10px;">
+              <div class="fl">Panel Upgrade</div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input type="checkbox" id="te-solar-panel-upgrade" style="accent-color:var(--accent);width:16px;height:16px;" onchange="calcTradeSolar()">
+                <label for="te-solar-panel-upgrade" style="font-size:12px;color:var(--mid);cursor:pointer;">Premium panel upgrade</label>
+              </div>
             </div>
-          </div>
-          <div class="fg" style="margin-bottom:10px;">
-            <div class="fl">Roof Reinforcement</div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <input type="checkbox" id="te-solar-roof-reinforce" style="accent-color:var(--accent);width:16px;height:16px;" onchange="calcTradeSolar()">
-              <label for="te-solar-roof-reinforce" style="font-size:12px;color:var(--mid);cursor:pointer;">Roof reinforcement needed</label>
+            <div class="fg" style="margin-bottom:10px;">
+              <div class="fl">Electrical Panel Upgrade</div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input type="checkbox" id="te-solar-elec-upgrade" style="accent-color:var(--accent);width:16px;height:16px;" onchange="calcTradeSolar()">
+                <label for="te-solar-elec-upgrade" style="font-size:12px;color:var(--mid);cursor:pointer;">Electrical panel upgrade</label>
+              </div>
+            </div>
+            <div class="fg" style="margin-bottom:10px;">
+              <div class="fl">Roof Reinforcement</div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input type="checkbox" id="te-solar-roof-reinforce" style="accent-color:var(--accent);width:16px;height:16px;" onchange="calcTradeSolar()">
+                <label for="te-solar-roof-reinforce" style="font-size:12px;color:var(--mid);cursor:pointer;">Roof reinforcement needed</label>
+              </div>
             </div>
           </div>
           <div id="te-solar-incentives-row" style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.15);border-radius:8px;padding:10px;margin-bottom:10px;font-size:12px;color:var(--mid);">
@@ -2194,26 +2210,7 @@ tr:hover td{background:var(--card);}
           <input type="checkbox" id="a-iws" onchange="calcP();updatePreview();scheduleDraftSave()">
           Ice &amp; Water Shield (+$<span id="a-iws-price">42</span>/sq)
         </label>
-        <div id="solar-addon-row" style="display:none;">
-          <label class="addon-row" style="align-items:flex-start;flex-direction:column;gap:6px;">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <input type="checkbox" id="a-solar" onchange="calcP();updatePreview();scheduleDraftSave();toggleSolarInputs()">
-              <span>&#9728;&#65039; Solar Add-On</span>
-            </div>
-            <div id="solar-inputs" style="display:none;padding-left:26px;display:none;gap:8px;flex-wrap:wrap;align-items:center;">
-              <div style="display:flex;flex-direction:column;gap:2px;">
-                <span style="font-size:10px;color:var(--muted);font-weight:600;">System Size (kW)</span>
-                <input type="number" class="addon-qty" id="a-solar-kw" placeholder="8.5" step="0.1" min="0" style="width:80px;" oninput="onSolarKwInput();calcP();updatePreview();scheduleDraftSave()">
-              </div>
-              <div style="font-size:11px;color:var(--muted);padding-top:14px;">or</div>
-              <div style="display:flex;flex-direction:column;gap:2px;">
-                <span style="font-size:10px;color:var(--muted);font-weight:600;">Flat Price ($)</span>
-                <input type="number" class="addon-qty" id="a-solar-flat" placeholder="28000" step="100" min="0" style="width:100px;" oninput="onSolarFlatInput();calcP();updatePreview();scheduleDraftSave()">
-              </div>
-              <div style="font-size:10px;color:var(--muted);padding-top:14px;">&#8594; <span id="solar-calc-display" style="color:var(--accent);font-weight:700;"></span></div>
-            </div>
-          </label>
-        </div>
+
       </div>
 
       <!-- Good / Better / Best Tier Selector -->
