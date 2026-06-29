@@ -693,10 +693,10 @@ async function createAccount(){
     const adminData = await adminAPI('create-user', { email, password:pass, name });
     const userId = adminData.id;
     if(!userId) throw new Error('No user ID returned');
-    // 3. Create user profile as admin
-    const {error:profErr} = await sb.from('user_profiles').insert({
+    // 3. Create user profile as admin (upsert handles re-registration of previously deleted accounts)
+    const {error:profErr} = await sb.from('user_profiles').upsert({
       id: userId, account_id: acct.id, role:'admin', name, email, must_change_password:true
-    });
+    }, { onConflict: 'id' });
     if(profErr) throw profErr;
     resultEl.innerHTML = '✅ <strong>'+escHtml(name)+'</strong> is live!<br>'
       +'<span style="font-size:11px;color:var(--muted);">Login: '+escHtml(email)+'<br>'

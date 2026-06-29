@@ -181,6 +181,33 @@ module.exports = async function handler(req, res) {
           body: JSON.stringify({ email, password, email_confirm: true, user_metadata: { name } })
         });
         const d = await r.json();
+        // 422 = email already exists in Supabase Auth (e.g. previously deleted account re-registration)
+        // Recover: find the existing auth user, reset their password, and return their record
+        if (r.status === 422) {
+          try {
+            const listR = await fetch(`${SUPABASE_URL}/auth/v1/admin/users?per_page=1000`, {
+              headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}` }
+            });
+            const listD = await listR.json();
+            const existingUser = (listD.users || []).find(u => u.email && u.email.toLowerCase() === email.toLowerCase());
+            if (!existingUser) {
+              res.status(422).json({ error: 'Email already registered in auth but could not be located. Please contact support.' }); return;
+            }
+            // Reset password so the new account can use it
+            const resetR = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${existingUser.id}`, {
+              method: 'PUT',
+              headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ password, email_confirm: true, user_metadata: { name } })
+            });
+            const resetD = await resetR.json();
+            if (!resetR.ok) { res.status(resetR.status).json({ error: resetD.message || 'Could not recover existing auth user' }); return; }
+            console.log(`[create-user] Recovered existing auth user ${existingUser.id} for ${email}`);
+            res.status(200).json(resetD);
+            return;
+          } catch (recoverErr) {
+            res.status(422).json({ error: 'Email already registered. ' + (recoverErr.message || '') }); return;
+          }
+        }
         if (!r.ok) { res.status(r.status).json({ error: d.message || 'Create user failed' }); return; }
         res.status(200).json(d);
         break;
