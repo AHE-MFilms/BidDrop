@@ -46,7 +46,8 @@ async function showBuyCreditsModal(){
   try{
     const sess = (await sb.auth.getSession()).data.session;
     if(sess){
-      const r = await fetch('/api/credits?action=balance',{ headers:{ 'Authorization':'Bearer '+sess.access_token } });
+      const _vaIdC = window.currentAccount?.id ? '&viewingAccountId='+encodeURIComponent(window.currentAccount.id) : '';
+      const r = await fetch('/api/credits?action=balance'+_vaIdC,{ headers:{ 'Authorization':'Bearer '+sess.access_token } });
       if(r.ok){
         const b = await r.json();
         S.cfg.mailerCredits = b.paid_credits;

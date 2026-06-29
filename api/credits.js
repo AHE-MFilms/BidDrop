@@ -143,13 +143,16 @@ module.exports = async function handler(req, res) {
   const profile = await getCallerProfile(caller.id);
   if (!profile) { res.status(403).json({ error: 'No profile found' }); return; }
 
-  // Super admins have no account_id — return a zero-balance response for balance checks
-  if (!profile.account_id) {
+  // Super admins have no personal account_id — use viewingAccountId from body or query params
+  const isSuperAdmin = profile.role === 'super_admin';
+  const viewingAccountId = req.body?.viewingAccountId || req.query?.viewingAccountId || null;
+  const effectiveAccountId = (isSuperAdmin && viewingAccountId) ? viewingAccountId : profile.account_id;
+  if (!effectiveAccountId) {
     if (action === 'balance') {
       res.status(200).json({ paid_credits: 0, free_used: 0, free_limit: 0, free_remaining: 0, plan: 'super_admin', packs: CREDIT_PACKS });
       return;
     }
-    res.status(403).json({ error: 'Super admins do not have a credit account' });
+    res.status(403).json({ error: 'Super admins must select a company first' });
     return;
   }
 
@@ -166,7 +169,7 @@ module.exports = async function handler(req, res) {
         const purchaseRes = await sbFetch('credit_purchases', {
           method: 'POST',
           body: JSON.stringify({
-            account_id:        profile.account_id,
+            account_id:        effectiveAccountId,
             credits_purchased: pack.credits,
             amount_cents:      pack.amount_cents,
             status:            'pending'
@@ -186,7 +189,7 @@ module.exports = async function handler(req, res) {
           mode: 'payment',
           success_url: `${APP_URL}?credits_success=1&pack=${pack_id}`,
           cancel_url:  `${APP_URL}?credits_cancelled=1`,
-          metadata: { account_id: profile.account_id, pack_id, purchase_id: String(purchaseId || '') },
+          metadata: { account_id: effectiveAccountId, pack_id, purchase_id: String(purchaseId || '') },
         });
         if (purchaseId) {
           await sbFetch(`credit_purchases?id=eq.${purchaseId}`, {
@@ -200,7 +203,7 @@ module.exports = async function handler(req, res) {
 
       case 'balance': {
         const acctRes = await sbFetch(
-          `accounts?id=eq.${profile.account_id}&select=mailer_credits,plan`
+          `accounts?id=eq.${effectiveAccountId}&select=mailer_credits,plan`
         );
         if (!acctRes.ok) { res.status(500).json({ error: 'Failed to fetch balance' }); return; }
         const accts = await acctRes.json();
@@ -224,7 +227,7 @@ module.exports = async function handler(req, res) {
         const stripe = new Stripe(STRIPE_KEY, { apiVersion: STRIPE_API_VERSION });
         // Fetch the stripe_customer_id for this account
         const bpAcctRes = await sbFetch(
-          `accounts?id=eq.${profile.account_id}&select=stripe_customer_id,plan`
+          `accounts?id=eq.${effectiveAccountId}&select=stripe_customer_id,plan`
         );
         if (!bpAcctRes.ok) { res.status(500).json({ error: 'Failed to fetch account' }); return; }
         const bpAccts = await bpAcctRes.json();
@@ -246,7 +249,7 @@ module.exports = async function handler(req, res) {
         if (!STRIPE_KEY) { res.status(500).json({ error: 'Stripe not configured' }); return; }
         const stripe = new Stripe(STRIPE_KEY, { apiVersion: STRIPE_API_VERSION });
         const csAcctRes = await sbFetch(
-          `accounts?id=eq.${profile.account_id}&select=stripe_subscription_id,stripe_customer_id,company_name,plan`
+          `accounts?id=eq.${effectiveAccountId}&select=stripe_subscription_id,stripe_customer_id,company_name,plan`
         );
         if (!csAcctRes.ok) { res.status(500).json({ error: 'Failed to fetch account' }); return; }
         const csAccts = await csAcctRes.json();
@@ -261,7 +264,7 @@ module.exports = async function handler(req, res) {
           cancel_at_period_end: true,
         });
         // Store cancellation intent in DB
-        await sbFetch(`accounts?id=eq.${profile.account_id}`, {
+        await sbFetch(`accounts?id=eq.${effectiveAccountId}`, {
           method: 'PATCH',
           headers: { 'Prefer': 'return=minimal' },
           body: JSON.stringify({ cancel_at_period_end: true })
@@ -278,7 +281,7 @@ module.exports = async function handler(req, res) {
         if (!STRIPE_KEY) { res.status(500).json({ error: 'Stripe not configured' }); return; }
         const stripe = new Stripe(STRIPE_KEY, { apiVersion: STRIPE_API_VERSION });
         const raAcctRes = await sbFetch(
-          `accounts?id=eq.${profile.account_id}&select=stripe_subscription_id`
+          `accounts?id=eq.${effectiveAccountId}&select=stripe_subscription_id`
         );
         if (!raAcctRes.ok) { res.status(500).json({ error: 'Failed to fetch account' }); return; }
         const raAccts = await raAcctRes.json();
@@ -289,7 +292,7 @@ module.exports = async function handler(req, res) {
         await stripe.subscriptions.update(raAccts[0].stripe_subscription_id, {
           cancel_at_period_end: false,
         });
-        await sbFetch(`accounts?id=eq.${profile.account_id}`, {
+        await sbFetch(`accounts?id=eq.${effectiveAccountId}`, {
           method: 'PATCH',
           headers: { 'Prefer': 'return=minimal' },
           body: JSON.stringify({ cancel_at_period_end: false })
