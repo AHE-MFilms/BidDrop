@@ -9,9 +9,11 @@ async function openBillingPortal() {
   try {
     const sess = (await sb.auth.getSession()).data.session;
     if (!sess) { toast('Please log in first.', 'error'); return; }
+    const _vaIdBp = (typeof currentAccount !== 'undefined' && currentAccount?.id) || null;
     const r = await fetch('/api/credits?action=billing-portal', {
       method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + sess.access_token, 'Content-Type': 'application/json' }
+      headers: { 'Authorization': 'Bearer ' + sess.access_token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ viewingAccountId: _vaIdBp })
     });
     const d = await r.json();
     if (!r.ok || !d.portal_url) {
@@ -32,9 +34,11 @@ async function confirmCancelSubscription() {
   try {
     const sess = (await sb.auth.getSession()).data.session;
     if (!sess) { toast('Please log in first.', 'error'); return; }
+    const _vaIdCs = (typeof currentAccount !== 'undefined' && currentAccount?.id) || null;
     const r = await fetch('/api/credits?action=cancel-subscription', {
       method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + sess.access_token, 'Content-Type': 'application/json' }
+      headers: { 'Authorization': 'Bearer ' + sess.access_token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ viewingAccountId: _vaIdCs })
     });
     const d = await r.json();
     if (!r.ok) { toast(d.error || 'Could not cancel subscription. Please contact support@biddrop.io.', 'error'); return; }
@@ -59,9 +63,11 @@ async function reactivateSubscription() {
   try {
     const sess = (await sb.auth.getSession()).data.session;
     if (!sess) { toast('Please log in first.', 'error'); return; }
+    const _vaIdRa = (typeof currentAccount !== 'undefined' && currentAccount?.id) || null;
     const r = await fetch('/api/credits?action=reactivate-subscription', {
       method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + sess.access_token, 'Content-Type': 'application/json' }
+      headers: { 'Authorization': 'Bearer ' + sess.access_token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ viewingAccountId: _vaIdRa })
     });
     const d = await r.json();
     if (!r.ok) { toast(d.error || 'Could not reactivate. Please contact support@biddrop.io.', 'error'); return; }

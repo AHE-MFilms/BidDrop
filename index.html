@@ -9627,7 +9627,7 @@ async function submitInviteRep() {
     const res = await fetch('/api/admin?action=invite-rep', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` },
-      body: JSON.stringify({ name, email, role })
+      body: JSON.stringify({ name, email, role, viewingAccountId: (typeof currentAccount !== "undefined" && currentAccount?.id) || null })
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to invite rep');
