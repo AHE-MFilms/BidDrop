@@ -4,12 +4,36 @@
 //             calcStructPrice(), getMatCost() (estimates-calc.js)
 // Extracted from index.html — Tier 3 modularization
 
-const GBB_TIERS = {
-  good:   { mat:'1.3', label:'Good',   color:'#22C55E', desc:'Architectural Shingle — standard performance, 25-yr warranty' },
-  better: { mat:'1.5', label:'Better', color:'#F25C05', desc:'Impact-Resistant (Class 4) — hail protection, insurance discount' },
-  best:   { mat:'1.8', label:'Best',   color:'#A855F7', desc:'Designer / Premium — premium curb appeal, lifetime warranty' }
-};
-let _gbbTier = 'better'; // default
+// GBB_TIERS is now driven by S.cfg — use getGBBTiers() everywhere instead of the constant
+function getGBBTiers() {
+  const c = (window.S && S.cfg) || {};
+  return {
+    good:   { mat: String(c.gbbGoodMult   || 1.3), label: c.gbbGoodLabel   || 'Good',   color: c.gbbGoodColor   || '#22C55E', desc: c.gbbGoodDesc   || 'Architectural Shingle — standard performance, 25-yr warranty',  sub: c.gbbGoodMat   || 'Architectural Shingle' },
+    better: { mat: String(c.gbbBetterMult || 1.5), label: c.gbbBetterLabel || 'Better', color: c.gbbBetterColor || '#F25C05', desc: c.gbbBetterDesc || 'Impact-Resistant (Class 4) — hail protection, insurance discount', sub: c.gbbBetterMat || 'Impact-Resistant (Class 4)' },
+    best:   { mat: String(c.gbbBestMult   || 1.8), label: c.gbbBestLabel   || 'Best',   color: c.gbbBestColor   || '#A855F7', desc: c.gbbBestDesc   || 'Designer / Premium — premium curb appeal, lifetime warranty',      sub: c.gbbBestMat   || 'Designer / Premium' }
+  };
+}
+// Keep a legacy alias so any remaining GBB_TIERS references still work (returns live config)
+const GBB_TIERS = new Proxy({}, { get(_,k){ return getGBBTiers()[k]; } });
+let _gbbTier = (window.S && S.cfg && S.cfg.gbbDefault) || 'better'; // default from settings
+
+function refreshGBBButtons() {
+  // Refresh button labels + colors from live S.cfg (called after settings save)
+  const _tiers = getGBBTiers();
+  const icons = { good:'🟢', better:'🟠', best:'🟣' };
+  ['good','better','best'].forEach(k => {
+    const btn = document.getElementById('gbb-'+k);
+    if (!btn) return;
+    btn.textContent = icons[k] + ' ' + _tiers[k].label;
+    const active = k === _gbbTier;
+    const c = _tiers[k].color;
+    btn.style.borderColor = active ? c : 'var(--border)';
+    btn.style.background  = active ? c+'22' : 'none';
+    btn.style.color       = active ? c : 'var(--mid)';
+  });
+  const desc = document.getElementById('gbb-desc');
+  if (desc) desc.textContent = _tiers[_gbbTier]?.desc || '';
+}
 
 function setGBBTier(tier) {
   _gbbTier = tier;
@@ -23,6 +47,9 @@ function setGBBTier(tier) {
     btn.style.borderColor = active ? c : 'var(--border)';
     btn.style.background  = active ? c+'22' : 'none';
     btn.style.color       = active ? c : 'var(--mid)';
+    // Also update label text in case settings changed
+    const icons = { good:'🟢', better:'🟠', best:'🟣' };
+    btn.textContent = icons[k] + ' ' + GBB_TIERS[k].label;
   });
   // Update description
   const desc = document.getElementById('gbb-desc');
@@ -96,10 +123,13 @@ function calcTierTotal(matKey) {
 function renderProposalTierCards() {
   const wrap = document.getElementById('prop-tier-cards');
   if (!wrap) return;
+  const _t = getGBBTiers();
+  const _def = (S.cfg && S.cfg.gbbDefault) || 'better';
+  if (_gbbTier === 'better' && _def !== 'better') _gbbTier = _def; // sync default
   const tiers = [
-    { key:'good',   mat:'1.3', label:'Good',   color:'#22C55E', icon:'🟢', sub:'Architectural Shingle', badge:'' },
-    { key:'better', mat:'1.5', label:'Better',  color:'#F25C05', icon:'🟠', sub:'Impact-Resistant (Class 4)', badge:'MOST POPULAR' },
-    { key:'best',   mat:'1.8', label:'Best',    color:'#A855F7', icon:'🟣', sub:'Designer / Premium', badge:'TOP TIER' }
+    { key:'good',   mat:_t.good.mat,   label:_t.good.label,   color:_t.good.color,   icon:'🟢', sub:_t.good.sub,   badge:'' },
+    { key:'better', mat:_t.better.mat, label:_t.better.label, color:_t.better.color, icon:'🟠', sub:_t.better.sub, badge:'MOST POPULAR' },
+    { key:'best',   mat:_t.best.mat,   label:_t.best.label,   color:_t.best.color,   icon:'🟣', sub:_t.best.sub,   badge:'TOP TIER' }
   ];
   wrap.innerHTML = tiers.map(t => {
     const total = calcTierTotal(t.mat);

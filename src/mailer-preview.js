@@ -406,9 +406,23 @@ function updatePreview(){
   const taxRate = parseFloat(S.cfg.taxRate)||0;
   const taxAmt  = Math.round(grandTotal * taxRate / 100);
   const totalWithTax = grandTotal + taxAmt;
-  // GBB tier multipliers (relative to current grandTotal which uses 'better' mat 1.5x by default)
-  // We derive Good/Best from the current total using mat cost ratios
-  const matCostGood   = 1.3, matCostBetter = 1.5, matCostBest = 1.8;
+  // GBB tier multipliers — read from S.cfg (set in Settings → Pricing → Proposal Tiers)
+  const _gbbCfg = S.cfg || {};
+  const matCostGood   = parseFloat(_gbbCfg.gbbGoodMult)   || 1.3;
+  const matCostBetter = parseFloat(_gbbCfg.gbbBetterMult) || 1.5;
+  const matCostBest   = parseFloat(_gbbCfg.gbbBestMult)   || 1.8;
+  const gbbLabelGood   = _gbbCfg.gbbGoodLabel   || 'Good';
+  const gbbLabelBetter = _gbbCfg.gbbBetterLabel || 'Better';
+  const gbbLabelBest   = _gbbCfg.gbbBestLabel   || 'Best';
+  const gbbSubGood     = _gbbCfg.gbbGoodMat     || 'Architectural Shingle';
+  const gbbSubBetter   = _gbbCfg.gbbBetterMat   || 'Impact-Resistant Class 4';
+  const gbbSubBest     = _gbbCfg.gbbBestMat     || 'Designer / Premium';
+  const gbbDescGood    = _gbbCfg.gbbGoodDesc    || '25-yr warranty · Standard performance · Great value';
+  const gbbDescBetter  = _gbbCfg.gbbBetterDesc  || 'Hail protection · Insurance discount · 30-yr warranty';
+  const gbbDescBest    = _gbbCfg.gbbBestDesc    || 'Lifetime warranty · Premium curb appeal · Top-tier';
+  const gbbColorGood   = _gbbCfg.gbbGoodColor   || '#22C55E';
+  const gbbColorBetter = _gbbCfg.gbbBetterColor || color; // uses brand color
+  const gbbColorBest   = _gbbCfg.gbbBestColor   || '#A855F7';
   // Approximate: adjust total by mat ratio (mat is ~40% of total cost)
   const matFraction = 0.40;
   function gbbTotal(mult){
@@ -432,37 +446,37 @@ function updatePreview(){
     '<div class="ml-body">'+
     '<div style="font-family:Oswald,sans-serif;font-size:18px;font-weight:700;letter-spacing:.5px;margin-bottom:2px;color:#1a1a1a;">YOUR ROOFING PROPOSAL</div>'+
     '<div style="font-size:10px;color:#888;margin-bottom:12px;">Choose the option that fits your needs — '+escHtml(addr)+'</div>'+
-    // GBB cards
+    // GBB cards — labels/colors/descriptions driven by S.cfg (Settings → Pricing → Proposal Tiers)
     '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;">'+
     // GOOD
-    '<div style="border:2px solid #22C55E;border-radius:8px;overflow:hidden;">'+
-    '<div style="background:#22C55E;color:#fff;font-family:Oswald,sans-serif;font-size:13px;font-weight:700;padding:7px 10px;text-align:center;letter-spacing:.5px;">&#128994; GOOD</div>'+
+    '<div style="border:2px solid '+gbbColorGood+';border-radius:8px;overflow:hidden;">'+
+    '<div style="background:'+gbbColorGood+';color:#fff;font-family:Oswald,sans-serif;font-size:13px;font-weight:700;padding:7px 10px;text-align:center;letter-spacing:.5px;">🟢 '+escHtml(gbbLabelGood.toUpperCase())+'</div>'+
     '<div style="padding:10px;background:#f9fdf9;">'+
-    '<div style="font-size:9px;color:#555;font-weight:700;margin-bottom:4px;">Architectural Shingle</div>'+
-    '<div style="font-size:8px;color:#777;margin-bottom:8px;line-height:1.5;">25-yr warranty · Standard performance · Great value</div>'+
+    '<div style="font-size:9px;color:#555;font-weight:700;margin-bottom:4px;">'+escHtml(gbbSubGood)+'</div>'+
+    '<div style="font-size:8px;color:#777;margin-bottom:8px;line-height:1.5;">'+escHtml(gbbDescGood)+'</div>'+
     '<div style="font-size:18px;font-weight:700;color:#1a1a1a;font-family:Oswald,sans-serif;">$'+(totGood+taxGood).toLocaleString()+'</div>'+
     (taxRate>0?'<div style="font-size:8px;color:#888;">incl. '+taxRate+'% tax ($'+taxGood.toLocaleString()+')</div>':'')+
-    (finGood?'<div style="font-size:9px;color:#22C55E;font-weight:700;margin-top:4px;">~$'+finGood.toLocaleString()+'/mo</div>':'')+
+    (finGood?'<div style="font-size:9px;color:'+gbbColorGood+';font-weight:700;margin-top:4px;">~$'+finGood.toLocaleString()+'/mo</div>':'')+
     '</div></div>'+
     // BETTER
-    '<div style="border:2px solid '+color+';border-radius:8px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.12);">'+
-    '<div style="background:'+color+';color:#fff;font-family:Oswald,sans-serif;font-size:13px;font-weight:700;padding:7px 10px;text-align:center;letter-spacing:.5px;">&#11088; BETTER — POPULAR</div>'+
+    '<div style="border:2px solid '+gbbColorBetter+';border-radius:8px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.12);">'+
+    '<div style="background:'+gbbColorBetter+';color:#fff;font-family:Oswald,sans-serif;font-size:13px;font-weight:700;padding:7px 10px;text-align:center;letter-spacing:.5px;">⭐ '+escHtml(gbbLabelBetter.toUpperCase())+' — POPULAR</div>'+
     '<div style="padding:10px;background:#fffdf9;">'+
-    '<div style="font-size:9px;color:#555;font-weight:700;margin-bottom:4px;">Impact-Resistant Class 4</div>'+
-    '<div style="font-size:8px;color:#777;margin-bottom:8px;line-height:1.5;">Hail protection · Insurance discount · 30-yr warranty</div>'+
+    '<div style="font-size:9px;color:#555;font-weight:700;margin-bottom:4px;">'+escHtml(gbbSubBetter)+'</div>'+
+    '<div style="font-size:8px;color:#777;margin-bottom:8px;line-height:1.5;">'+escHtml(gbbDescBetter)+'</div>'+
     '<div style="font-size:18px;font-weight:700;color:#1a1a1a;font-family:Oswald,sans-serif;">$'+(totBetter+taxBetter).toLocaleString()+'</div>'+
     (taxRate>0?'<div style="font-size:8px;color:#888;">incl. '+taxRate+'% tax ($'+taxBetter.toLocaleString()+')</div>':'')+
-    (finBetter?'<div style="font-size:9px;color:'+color+';font-weight:700;margin-top:4px;">~$'+finBetter.toLocaleString()+'/mo</div>':'')+
+    (finBetter?'<div style="font-size:9px;color:'+gbbColorBetter+';font-weight:700;margin-top:4px;">~$'+finBetter.toLocaleString()+'/mo</div>':'')+
     '</div></div>'+
     // BEST
-    '<div style="border:2px solid #A855F7;border-radius:8px;overflow:hidden;">'+
-    '<div style="background:#A855F7;color:#fff;font-family:Oswald,sans-serif;font-size:13px;font-weight:700;padding:7px 10px;text-align:center;letter-spacing:.5px;">&#128309; BEST</div>'+
+    '<div style="border:2px solid '+gbbColorBest+';border-radius:8px;overflow:hidden;">'+
+    '<div style="background:'+gbbColorBest+';color:#fff;font-family:Oswald,sans-serif;font-size:13px;font-weight:700;padding:7px 10px;text-align:center;letter-spacing:.5px;">🟣 '+escHtml(gbbLabelBest.toUpperCase())+'</div>'+
     '<div style="padding:10px;background:#fdf9ff;">'+
-    '<div style="font-size:9px;color:#555;font-weight:700;margin-bottom:4px;">Designer / Premium</div>'+
-    '<div style="font-size:8px;color:#777;margin-bottom:8px;line-height:1.5;">Lifetime warranty · Premium curb appeal · Top-tier</div>'+
+    '<div style="font-size:9px;color:#555;font-weight:700;margin-bottom:4px;">'+escHtml(gbbSubBest)+'</div>'+
+    '<div style="font-size:8px;color:#777;margin-bottom:8px;line-height:1.5;">'+escHtml(gbbDescBest)+'</div>'+
     '<div style="font-size:18px;font-weight:700;color:#1a1a1a;font-family:Oswald,sans-serif;">$'+(totBest+taxBest).toLocaleString()+'</div>'+
     (taxRate>0?'<div style="font-size:8px;color:#888;">incl. '+taxRate+'% tax ($'+taxBest.toLocaleString()+')</div>':'')+
-    (finBest?'<div style="font-size:9px;color:#A855F7;font-weight:700;margin-top:4px;">~$'+finBest.toLocaleString()+'/mo</div>':'')+
+    (finBest?'<div style="font-size:9px;color:'+gbbColorBest+';font-weight:700;margin-top:4px;">~$'+finBest.toLocaleString()+'/mo</div>':'')+
     '</div></div>'+
     '</div>'+
     // Line items

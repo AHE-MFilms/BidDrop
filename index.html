@@ -3976,6 +3976,70 @@ tr:hover td{background:var(--card);}
               <div class="fg"></div>
             </div>
           </div><!-- /s-detailed-fields -->
+
+          <!-- ══ GOOD / BETTER / BEST TIERS ══ -->
+          <div class="stab-section-hdr" style="margin-top:20px;">🏆 Proposal Tiers — Good / Better / Best</div>
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:12px;color:var(--mid);margin-bottom:12px;">
+            💡 These three tiers appear on the printed proposal and the homeowner's quote page. <strong>Multiplier</strong> scales the material cost portion of the estimate (~40% of total). Good = lower-cost material, Best = premium material.
+          </div>
+          <!-- GOOD -->
+          <div style="background:var(--card2);border:1px solid #22C55E44;border-radius:8px;padding:12px 14px;margin-bottom:10px;">
+            <div style="font-size:12px;font-weight:700;color:#22C55E;margin-bottom:8px;">🟢 GOOD TIER</div>
+            <div class="frow">
+              <div class="fg"><label class="fl" for="s-gbb-good-label">Label</label><input type="text" class="fi" id="s-gbb-good-label" placeholder="Good" value="Good"></div>
+              <div class="fg"><label class="fl" for="s-gbb-good-mult">Multiplier (e.g. 1.3)</label><input type="number" class="fi" id="s-gbb-good-mult" placeholder="1.3" step="0.05" min="0.5" max="3"></div>
+            </div>
+            <div class="frow">
+              <div class="fg" style="flex:2"><label class="fl" for="s-gbb-good-mat">Material / Subtitle</label><input type="text" class="fi" id="s-gbb-good-mat" placeholder="Architectural Shingle"></div>
+              <div class="fg"><label class="fl" for="s-gbb-good-color">Color</label><input type="color" class="fi" id="s-gbb-good-color" value="#22C55E" style="height:38px;padding:2px 4px;"></div>
+            </div>
+            <div class="frow">
+              <div class="fg" style="flex:1"><label class="fl" for="s-gbb-good-desc">Description (shown on proposal)</label><input type="text" class="fi" id="s-gbb-good-desc" placeholder="Standard performance, 25-yr warranty"></div>
+            </div>
+          </div>
+          <!-- BETTER -->
+          <div style="background:var(--card2);border:1px solid var(--accent);border-radius:8px;padding:12px 14px;margin-bottom:10px;">
+            <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px;">🟠 BETTER TIER <span style="font-weight:400;font-size:10px;color:var(--muted);">(default / base price)</span></div>
+            <div class="frow">
+              <div class="fg"><label class="fl" for="s-gbb-better-label">Label</label><input type="text" class="fi" id="s-gbb-better-label" placeholder="Better" value="Better"></div>
+              <div class="fg"><label class="fl" for="s-gbb-better-mult">Multiplier (base = 1.5)</label><input type="number" class="fi" id="s-gbb-better-mult" placeholder="1.5" step="0.05" min="0.5" max="3"></div>
+            </div>
+            <div class="frow">
+              <div class="fg" style="flex:2"><label class="fl" for="s-gbb-better-mat">Material / Subtitle</label><input type="text" class="fi" id="s-gbb-better-mat" placeholder="Impact-Resistant (Class 4)"></div>
+              <div class="fg"><label class="fl" for="s-gbb-better-color">Color</label><input type="color" class="fi" id="s-gbb-better-color" value="#F25C05" style="height:38px;padding:2px 4px;"></div>
+            </div>
+            <div class="frow">
+              <div class="fg" style="flex:1"><label class="fl" for="s-gbb-better-desc">Description</label><input type="text" class="fi" id="s-gbb-better-desc" placeholder="Hail protection, insurance discount"></div>
+            </div>
+          </div>
+          <!-- BEST -->
+          <div style="background:var(--card2);border:1px solid #A855F744;border-radius:8px;padding:12px 14px;margin-bottom:10px;">
+            <div style="font-size:12px;font-weight:700;color:#A855F7;margin-bottom:8px;">🟣 BEST TIER</div>
+            <div class="frow">
+              <div class="fg"><label class="fl" for="s-gbb-best-label">Label</label><input type="text" class="fi" id="s-gbb-best-label" placeholder="Best" value="Best"></div>
+              <div class="fg"><label class="fl" for="s-gbb-best-mult">Multiplier (e.g. 1.8)</label><input type="number" class="fi" id="s-gbb-best-mult" placeholder="1.8" step="0.05" min="0.5" max="3"></div>
+            </div>
+            <div class="frow">
+              <div class="fg" style="flex:2"><label class="fl" for="s-gbb-best-mat">Material / Subtitle</label><input type="text" class="fi" id="s-gbb-best-mat" placeholder="Designer / Premium"></div>
+              <div class="fg"><label class="fl" for="s-gbb-best-color">Color</label><input type="color" class="fi" id="s-gbb-best-color" value="#A855F7" style="height:38px;padding:2px 4px;"></div>
+            </div>
+            <div class="frow">
+              <div class="fg" style="flex:1"><label class="fl" for="s-gbb-best-desc">Description</label><input type="text" class="fi" id="s-gbb-best-desc" placeholder="Lifetime warranty, premium curb appeal"></div>
+            </div>
+          </div>
+          <!-- Default tier selector -->
+          <div class="frow">
+            <div class="fg"><label class="fl" for="s-gbb-default">Default Selected Tier</label>
+              <select class="fs" id="s-gbb-default">
+                <option value="good">Good</option>
+                <option value="better" selected>Better</option>
+                <option value="best">Best</option>
+              </select>
+            </div>
+            <div class="fg"></div>
+          </div>
+          <!-- /GBB -->
+
           <div class="stab-section-hdr" style="margin-top:16px;">Financing Options</div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
             <input type="checkbox" id="s-fin-enabled" style="accent-color:var(--accent);width:16px;height:16px;" checked>
