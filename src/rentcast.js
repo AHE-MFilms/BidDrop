@@ -366,16 +366,10 @@ async function autoFillOwnerIfEmpty(address){
     updatePreview();
     toast('🏠 Owner: '+data.name,'info');
     if(typeof _accUpdateHomeownerSummary==='function') _accUpdateHomeownerSummary();
-    // Persist the auto-filled name to the pin so it survives page reload
-    if(currentEstPinId){
-      const _pin = (S.pins||[]).find(p=>p.id===currentEstPinId);
-      if(_pin){
-        if(!_pin.estimate) _pin.estimate = {};
-        _pin.estimate.owner = data.name;
-        if(sb) sb.from('pins').update({ estimate: _pin.estimate }).eq('id', currentEstPinId)
-          .then(({error})=>{ if(error && error.code !== 'PGRST204') console.warn('Owner persist:', error); });
-      }
-    }
+    // NOTE: Do NOT persist the auto-filled owner name to pin.estimate.owner here.
+    // Writing pin.estimate.owner triggers the grandfather rule in isPinUnlocked(),
+    // making the pin appear unlocked without a credit being spent.
+    // The owner name is saved to the estimate only when the user explicitly clicks Save.
   }
   showEquityBadge(data);
   // Store equity data on current pin for popup display + persist to Supabase
