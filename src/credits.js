@@ -34,6 +34,11 @@ function updateCreditBadge(){
   }
   // Keep sidebar credit label in sync with badge
   if(typeof updateSidebarBadge === 'function') updateSidebarBadge();
+  // Update inline credits under company name in sidebar user strip
+  const _inlineCred = document.getElementById('bd-sb-credits-inline');
+  if(_inlineCred){
+    _inlineCred.textContent = total > 0 ? '\ud83d\udcec ' + total + ' credits' : '\ud83d\udcec Buy Credits';
+  }
 }
 
 async function showBuyCreditsModal(){
