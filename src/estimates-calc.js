@@ -134,6 +134,8 @@ function calcP(){
   if(typeof scheduleDraftSave==='function') scheduleDraftSave();
   // Refresh insurance scope totals whenever estimate changes
   if(typeof calcInsuranceTotals==='function') calcInsuranceTotals();
+  // Update accordion trade summary
+  if(typeof _accOnTotalUpdated==='function') _accOnTotalUpdated('$'+_calcDisplayFinal.toLocaleString());
   return grand;
 }
 

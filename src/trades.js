@@ -128,6 +128,8 @@ function selectTrade(tradeId){
   // Auto-populate measurements from satellite data
   autoPopulateTradeMeasurements(tradeId);
   toast('🔧 '+TRADE_META[tradeId].label+' selected','info');
+  // Accordion: open Card 3 and update summary
+  if(typeof _accOnTradeSelected==='function') _accOnTradeSelected(TRADE_META[tradeId].label);
 }
 function autoPopulateTradeMeasurements(tradeId){
   // Use last known satellite data (stored in window._lastSolarData)
@@ -719,6 +721,9 @@ function loadEstFromPicker(){
   // Show cached equity data if already looked up previously
   if(p.equityData) showEquityBadge(p.equityData); else hideEquityBadge();
   toast('📋 Loaded: '+p.address.split(',')[0],'info');
+  // Refresh accordion summaries
+  if(typeof _accUpdateHomeownerSummary==='function') _accUpdateHomeownerSummary();
+  if(typeof _accUpdatePropertySummary==='function') _accUpdatePropertySummary();
   // Auto-lookup owner name if field is empty
   if(masterRentcastKey && p.address && !document.getElementById('e-owner').value.trim()){
     autoFillOwnerIfEmpty(p.address);

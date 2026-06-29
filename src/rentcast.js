@@ -365,6 +365,7 @@ async function autoFillOwnerIfEmpty(address){
     ownerEl.value = data.name;
     updatePreview();
     toast('🏠 Owner: '+data.name,'info');
+    if(typeof _accUpdateHomeownerSummary==='function') _accUpdateHomeownerSummary();
     // Persist the auto-filled name to the pin so it survives page reload
     if(currentEstPinId){
       const _pin = (S.pins||[]).find(p=>p.id===currentEstPinId);
