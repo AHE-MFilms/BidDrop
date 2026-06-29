@@ -69,7 +69,7 @@ async function loadCampaignHistory(){
   if(!el) return;
   el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);">Loading…</div>';
   try{
-    const data = await adminAPI('campaign-list', {});
+    const data = await adminAPI('campaign-list', { targetAccountId: window.currentAccount ? window.currentAccount.id : null });
     const campaigns = (data && data.campaigns) || [];
     if(!campaigns.length){
       el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);">No campaigns yet. Launch a Nearby Campaign from any pin popup.</div>';
