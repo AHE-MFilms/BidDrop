@@ -1380,10 +1380,11 @@ module.exports = async function handler(req, res) {
       case 'tracerfy': {
         // Skip-trace a homeowner by name + address using Tracerfy API
         // Returns phones (with DNC flag) and emails for the property owner
-        const { ownerName, address: tfAddress, city: tfCity, state: tfState, zip: tfZip, pinId: tfPinId } = req.body;
+        const { ownerName, address: tfAddress, city: tfCity, state: tfState, zip: tfZip, pinId: tfPinId, viewingAccountId: tfViewingAccountId } = req.body;
         if (!tfAddress) { res.status(400).json({ error: 'address required' }); return; }
-        const tfAccountId = profile.account_id;
-        if (!tfAccountId) { res.status(401).json({ error: 'not authenticated' }); return; }
+        // Super admins may have null account_id in their profile — use viewingAccountId from client or skip dedup
+        const tfAccountId = profile.account_id || (isSuperAdmin ? tfViewingAccountId : null);
+        if (!tfAccountId && !isSuperAdmin) { res.status(401).json({ error: 'not authenticated' }); return; }
         // SERVER-SIDE DEDUP: if this pin already has contact_data saved, return it without hitting Tracerfy
         if (tfPinId && tfAccountId) {
           const { data: existingPin } = await sbFetch(`pins?select=contact_data&id=eq.${tfPinId}&account_id=eq.${tfAccountId}&limit=1`);

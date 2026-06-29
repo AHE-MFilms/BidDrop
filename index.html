@@ -6435,7 +6435,8 @@ async function lookupContactInfo(pid, opts){
       city:      cityPart,
       state:     stateCode,
       zip:       zipCode,
-      pinId:     pid
+      pinId:     pid,
+      viewingAccountId: currentAccount ? currentAccount.id : null
     });
     const phones = [];
     const emails = [];
