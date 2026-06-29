@@ -1122,6 +1122,7 @@ tr:hover td{background:var(--card);}
     <div style="min-width:0;">
       <div class="bd-sb-uname" id="bd-sb-uname">Loading...</div>
       <div class="bd-sb-urole" id="bd-sb-urole"></div>
+      <div id="bd-sb-credits-inline" style="font-size:10px;color:var(--accent);font-weight:700;margin-top:2px;cursor:pointer;" onclick="showBuyCreditsModal()" title="Mailer credits"></div>
     </div>
   </div>
 
@@ -7232,7 +7233,7 @@ function openSorryForMess(pid){
     modal.className = 'modal-overlay';
     modal.style.cssText = 'display:none;z-index:9150;';
     modal.innerHTML = `
-      <div class="modal-box" style="max-width:420px;width:95%;background:var(--panel);border-radius:16px;padding:0;overflow:hidden;">
+      <div class="modal-box" style="max-width:460px;width:95%;background:var(--panel);border-radius:16px;padding:0;overflow:hidden;">
         <!-- Header -->
         <div style="background:linear-gradient(135deg,rgba(99,102,241,.15),rgba(99,102,241,.05));padding:20px 22px 16px;border-bottom:1px solid var(--border);">
           <div style="font-size:20px;margin-bottom:6px;">🏗️</div>
@@ -7240,9 +7241,24 @@ function openSorryForMess(pid){
           <div style="font-size:11px;color:var(--muted);margin-top:3px;">Send postcards to neighbors <em>before</em> your crew arrives</div>
         </div>
         <!-- Body -->
-        <div style="padding:18px 22px;">
+        <div style="padding:18px 22px;max-height:80vh;overflow-y:auto;">
           <!-- Job address -->
           <div id="sfm-addr" style="font-size:11px;color:var(--muted);margin-bottom:14px;"></div>
+
+          <!-- Postcard Image -->
+          <div style="font-size:11px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">📸 Postcard Image</div>
+          <div id="sfm-img-area" style="position:relative;width:100%;height:160px;background:#111827;border-radius:10px;overflow:hidden;margin-bottom:4px;cursor:pointer;border:2px dashed var(--border);" onclick="document.getElementById('sfm-img-input').click()">
+            <img id="sfm-img-preview" src="" style="width:100%;height:100%;object-fit:cover;display:none;">
+            <div id="sfm-img-placeholder" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;">
+              <div style="font-size:28px;">🏠</div>
+              <div style="font-size:12px;color:var(--muted);font-weight:600;">Click to upload a photo</div>
+              <div style="font-size:10px;color:var(--mid);">or uses house photo from pin by default</div>
+            </div>
+            <div id="sfm-img-change-btn" style="display:none;position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:4px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">Change Photo</div>
+          </div>
+          <input type="file" id="sfm-img-input" accept="image/*" style="display:none;" onchange="_sfmHandleImageUpload(this)">
+          <div id="sfm-img-source" style="font-size:10px;color:var(--muted);margin-bottom:14px;"></div>
+
           <!-- Message preview -->
           <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px;">
             <div style="font-size:10px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Postcard Message</div>
@@ -7270,12 +7286,50 @@ function openSorryForMess(pid){
   // Set content
   window._sfmSourcePid = pid;
   window._sfmCount = 25;
+  window._sfmImageDataUrl = null; // reset uploaded image
   const addrEl = document.getElementById('sfm-addr');
   if(addrEl) addrEl.textContent = 'Job address: ' + (srcPin.address||'Unknown');
   const inlineAddr = document.getElementById('sfm-job-addr-inline');
   if(inlineAddr) inlineAddr.textContent = (srcPin.address||'').split(',')[0] || srcPin.address || 'your address';
   _sfmUpdateCost(25);
+  // Auto-load pin house photo if available
+  const pinPhoto = srcPin.photo_url || srcPin.photo_data || null;
+  const prevImg = document.getElementById('sfm-img-preview');
+  const placeholder = document.getElementById('sfm-img-placeholder');
+  const changeBtn = document.getElementById('sfm-img-change-btn');
+  const srcLbl = document.getElementById('sfm-img-source');
+  if(pinPhoto && prevImg){
+    prevImg.src = pinPhoto;
+    prevImg.style.display = '';
+    if(placeholder) placeholder.style.display = 'none';
+    if(changeBtn) changeBtn.style.display = '';
+    if(srcLbl) srcLbl.textContent = 'Using house photo from pin — click to replace';
+    window._sfmImageDataUrl = pinPhoto;
+  } else {
+    if(prevImg){ prevImg.src=''; prevImg.style.display='none'; }
+    if(placeholder) placeholder.style.display = '';
+    if(changeBtn) changeBtn.style.display = 'none';
+    if(srcLbl) srcLbl.textContent = 'No house photo on file — upload one or the postcard will use a placeholder';
+  }
   openM('m-sorry-for-mess');
+}
+
+function _sfmHandleImageUpload(input){
+  const file = input && input.files && input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    window._sfmImageDataUrl = e.target.result;
+    const prevImg = document.getElementById('sfm-img-preview');
+    const placeholder = document.getElementById('sfm-img-placeholder');
+    const changeBtn = document.getElementById('sfm-img-change-btn');
+    const srcLbl = document.getElementById('sfm-img-source');
+    if(prevImg){ prevImg.src = e.target.result; prevImg.style.display = ''; }
+    if(placeholder) placeholder.style.display = 'none';
+    if(changeBtn) changeBtn.style.display = '';
+    if(srcLbl) srcLbl.textContent = 'Custom upload — click to change';
+  };
+  reader.readAsDataURL(file);
 }
 
 function _sfmSelectCount(btn, count){
@@ -7310,11 +7364,12 @@ async function _launchSorryForMess(){
 
   // Use the Nearby Campaign flow but with a pre-job template flag
   closeM('m-sorry-for-mess');
-  // Open the Nearby Campaign modal pre-configured for Sorry for the Mess
+  // Pass image and SFM message to the campaign panel
   window._sorryForMessMode = true;
   window._sorryForMessJobAddr = (srcPin.address||'').split(',')[0] || srcPin.address || '';
+  window._sorryForMessImage = window._sfmImageDataUrl || null;
   openNearbyCampaign(pid);
-  // Auto-click the matching count button
+  // Auto-click the matching count button and pre-fill the postcard panel
   setTimeout(function(){
     const btns = document.querySelectorAll('.nearby-count-btn');
     btns.forEach(function(b){
@@ -7325,7 +7380,23 @@ async function _launchSorryForMess(){
     if(titleEl) titleEl.textContent = '\ud83c\udfd7 Sorry for the Mess Campaign';
     const subtitleEl = document.getElementById('nearby-source-addr');
     if(subtitleEl) subtitleEl.textContent = 'Pre-job neighbor alert for: ' + (srcPin.address||'');
-  }, 200);
+    // Pre-fill the photo in the campaign postcard panel
+    if(window._sorryForMessImage){
+      window._coiPhotoDataUrl = window._sorryForMessImage;
+      const coiImg = document.getElementById('coi-photo-img');
+      const coiPreview = document.getElementById('coi-photo-preview');
+      const coiPlaceholder = document.getElementById('coi-photo-placeholder');
+      if(coiImg) coiImg.src = window._sorryForMessImage;
+      if(coiPreview) coiPreview.style.display = '';
+      if(coiPlaceholder) coiPlaceholder.style.display = 'none';
+    }
+    // Pre-fill headline and subtext with SFM message
+    const hlEl = document.getElementById('coi-headline');
+    const stEl = document.getElementById('coi-subtext');
+    const jobAddr = window._sorryForMessJobAddr || 'your address';
+    if(hlEl) hlEl.value = 'Sorry for the Mess!';
+    if(stEl) stEl.value = 'We\'re working at ' + jobAddr + '. Call us for a FREE roof inspection!';
+  }, 300);
 }
 
 function bulkSendPinsToFollowUp(){
@@ -8686,6 +8757,14 @@ function updateSidebarBadge(){
     const _freeLeft = Math.max(0, 0 - (S.cfg.freeMailerCreditsUsed||0));
     const _total = _paid + _freeLeft;
     creditLbl.textContent = _total > 0 ? _total + ' credits' : 'Buy Credits';
+  }
+  // Inline credits under company name in user strip
+  const inlineCred = document.getElementById('bd-sb-credits-inline');
+  if(inlineCred && window.S && S.cfg !== undefined){
+    const _paid2 = S.cfg.mailerCredits || 0;
+    const _freeLeft2 = Math.max(0, 0 - (S.cfg.freeMailerCreditsUsed||0));
+    const _total2 = _paid2 + _freeLeft2;
+    inlineCred.textContent = _total2 > 0 ? '📬 ' + _total2 + ' credits' : '📬 Buy Credits';
   }
 }
 // ══════════════════════════════════════════════════════════
