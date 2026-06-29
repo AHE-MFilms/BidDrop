@@ -1282,12 +1282,9 @@ module.exports = async function handler(req, res) {
               } catch(e) { clearTimeout(rcTimeout); }
               return null;
             })(),
-            // Tracerfy: phone + email
+            // Tracerfy: phone + email (always run when key is available)
             (async () => {
               if (!TRACERFY_KEY) return null;
-              const tfAcctRes = await sbFetch(`accounts?id=eq.${accountId}&select=tracerfy_enabled&limit=1`);
-              const tfAcctRows = tfAcctRes.ok ? await tfAcctRes.json() : [];
-              if (!tfAcctRows[0] || !tfAcctRows[0].tracerfy_enabled) return null;
               const existingOwner = (upPin.estimate && upPin.estimate.owner) || '';
               const tfParts = existingOwner.trim().split(/\s+/);
               const tfPayload = {

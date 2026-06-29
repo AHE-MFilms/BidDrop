@@ -10156,9 +10156,11 @@ async function estUnlockPin() {
     ? await requirePinUnlocked(currentEstPinId)
     : true;
   if (!ok) return;
-  // After unlock: run Tracerfy contact lookup to fill phone + email
-  if (typeof lookupContactInfo === 'function') {
-    await lookupContactInfo(currentEstPinId, { suppressUnlockCheck: true });
+  // After unlock: fill phone + email from contact_data already returned by unlock-pin server action
+  // (no second API call needed — _confirmUnlockPin already saved it to pin.contactData)
+  const _unlockedPin = (S.pins||[]).find(function(p){ return p.id === currentEstPinId; });
+  if (_unlockedPin && _unlockedPin.contactData && typeof _fillEstimatorContactFields === 'function') {
+    _fillEstimatorContactFields(_unlockedPin.contactData);
   }
   _estRefreshUnlockUI();
   _accUpdateHomeownerSummary();
