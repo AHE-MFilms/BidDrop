@@ -1455,8 +1455,9 @@ tr:hover td{background:var(--card);}
           </div>
           <!-- Unlock Pin CTA -->
           <div id="est-unlock-wrap" style="margin-top:4px;">
-            <button id="est-unlock-btn" onclick="estUnlockPin()" style="width:100%;padding:11px;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
-              🔓 Unlock Pin &mdash; 1 Credit
+            <button id="est-unlock-btn" onclick="estUnlockPin()" style="width:100%;padding:11px 11px 9px;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;">
+              <span style="display:flex;align-items:center;gap:6px;">🔓 Unlock This Lead &mdash; 1 Credit</span>
+              <span style="font-size:10px;font-weight:500;opacity:0.85;">Reveals owner name, phone &amp; email for this address</span>
             </button>
             <div id="est-unlock-status" style="display:none;text-align:center;padding:8px;font-size:12px;color:#4ade80;font-weight:600;">✅ Pin Unlocked &mdash; all features active</div>
           </div>

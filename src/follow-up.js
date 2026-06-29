@@ -314,4 +314,6 @@ function goEstFromPin(id){
       });
     }
   }
+  // Refresh unlock button state — must run after pin is loaded so isPinUnlocked sees the correct pin
+  if (typeof _estRefreshUnlockUI === 'function') _estRefreshUnlockUI();
 }
