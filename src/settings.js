@@ -427,9 +427,9 @@ function setPricingMode(mode){
 }
 
 function saveSettings(){
-  const n=id=>parseFloat(document.getElementById(id).value)||0;
-  const v=id=>document.getElementById(id).value;
-  const ck=id=>document.getElementById(id).checked;
+  const v=id=>{const e=document.getElementById(id);return e?e.value:'';};
+  const n=id=>parseFloat(v(id))||0;
+  const ck=id=>{const e=document.getElementById(id);return e?e.checked:false;};
   S.cfg={
     companyName:v('s-co')||'Your Roofing Co',
     companyAddr:v('s-addr'),
@@ -607,7 +607,7 @@ function saveSettings(){
     ghlApiKey:v('s-ghl-key'),
     ghlLocationId:v('s-ghl-loc'),
     ghlPipelineId:v('s-ghl-pipe'),
-    ghlStageId:document.getElementById('s-ghl-stage').value||'',
+    ghlStageId:(document.getElementById('s-ghl-stage')||{}).value||'',
     ghlSmsTpl:v('s-ghl-sms-tpl')||DEFAULTS.ghlSmsTpl,
     ghlEmailTpl:v('s-ghl-email-tpl')||DEFAULTS.ghlEmailTpl,
     jnApiKey:(document.getElementById('s-jn-key')||{}).value||'',
@@ -633,10 +633,10 @@ function saveSettings(){
     drip5Subtext:  (document.getElementById('s-drip5-subtext')||{}).value  || S.cfg.drip5Subtext  || "Your roof won't fix itself. Let's get started today.",
     drip6Headline: (document.getElementById('s-drip6-headline')||{}).value || S.cfg.drip6Headline || 'One last thing...',
     drip6Subtext:  (document.getElementById('s-drip6-subtext')||{}).value  || S.cfg.drip6Subtext  || "We'd love to earn your business. Call us anytime.",
-    repTitle:document.getElementById('s-reptitle').value||'',
-    headshotPos:document.getElementById('s-hspos').value||'30',
-    bookingUrl:document.getElementById('s-bookingurl').value||'',
-    leadAlertEmail:document.getElementById('s-lead-alert-email').value.trim()||'',
+    repTitle:(document.getElementById('s-reptitle')||{}).value||'',
+    headshotPos:(document.getElementById('s-hspos')||{value:'30'}).value||'30',
+    bookingUrl:(document.getElementById('s-bookingurl')||{}).value||'',
+    leadAlertEmail:((document.getElementById('s-lead-alert-email')||{}).value||'').trim()||'',
     dripEnabled: isAdminOrAbove() ? !!(document.getElementById('s-drip-enabled') && document.getElementById('s-drip-enabled').checked) : (S.cfg.dripEnabled||false),
     companyBio: (document.getElementById('s-bio')||{}).value || '',
     metaPixelId: (document.getElementById('s-meta-pixel-id')||{}).value || '',
