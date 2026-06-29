@@ -8936,7 +8936,7 @@ function renderDesignsGrid(){
   if(!grid) return;
   const designs = getDesigns();
   if(!designs.length){
-    grid.innerHTML = '<div style="padding:80px 40px;text-align:center;color:var(--muted);font-size:14px;grid-column:1/-1;"><div style="font-size:48px;margin-bottom:14px;">u{1F3A8}</div><div style="font-weight:700;color:var(--text);margin-bottom:6px;">No designs yet</div><div>Upload your first postcard design to get started</div></div>';
+    grid.innerHTML = '<div style="padding:80px 40px;text-align:center;color:var(--muted);font-size:14px;grid-column:1/-1;"><div style="font-size:48px;margin-bottom:14px;">📭</div><div style="font-weight:700;color:var(--text);margin-bottom:6px;">No designs yet</div><div>Upload your first postcard design to get started</div></div>';
     return;
   }
   grid.innerHTML = designs.map((d,i)=>`
