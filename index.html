@@ -9312,11 +9312,22 @@ async function renderDesignBackPreview(){
   if(b1||b2||b3){ tmpCfg.diff1=b1||tmpCfg.diff1; tmpCfg.diff2=b2||tmpCfg.diff2; tmpCfg.diff3=b3||tmpCfg.diff3; }
   // Disable canvas designer back for this preview
   tmpCfg.canvasDesignBackJson=null;
-  const sampleItem={addr:'123 Sample Street, Canton, MI 48187',total:9500,id:null};
-  const origCfg=S.cfg;
-  S.cfg=tmpCfg;
+  // Build overrides object from form fields
+  const overrides={};
+  const colorEl2=document.getElementById('nd-back-badge-color');
+  if(v('nd-back-badge-text')) overrides.postcardBackBadgeText=v('nd-back-badge-text');
+  if(colorEl2&&colorEl2.value) overrides.postcardBackBadgeColor=colorEl2.value;
+  if(v('nd-back-hook')) overrides.postcardHook=v('nd-back-hook');
+  if(v('nd-back-why')) overrides.postcardWhy=v('nd-back-why');
+  if(v('nd-back-quote')) overrides.postcardQuote=v('nd-back-quote');
+  if(v('nd-back-guarantee')) overrides.postcardGuarantee=v('nd-back-guarantee');
+  if(v('nd-back-scan-cta')) overrides.postcardScanCta=v('nd-back-scan-cta');
+  if(v('nd-back-scan-sub')) overrides.postcardScanSub=v('nd-back-scan-sub');
+  const b1=v('nd-back-badge1'), b2=v('nd-back-badge2'), b3=v('nd-back-badge3');
+  if(b1) overrides.diff1=b1; if(b2) overrides.diff2=b2; if(b3) overrides.diff3=b3;
   try{
-    const dataUrl=await renderPostcard6x9BackCanvas(sampleItem);
+    // Use the new design-back renderer (no pricing, QR -> booking URL)
+    const dataUrl=await renderDesignBackCanvas(S.cfg||{}, overrides);
     if(dataUrl){
       const img=new Image();
       img.onload=()=>{
@@ -9326,7 +9337,7 @@ async function renderDesignBackPreview(){
       img.src=dataUrl;
     }
   } catch(e){ console.warn('Design back preview error:',e); }
-  finally{ S.cfg=origCfg; if(spinner) spinner.style.display='none'; }
+  finally{ if(spinner) spinner.style.display='none'; }
 }
 function previewNewDesign(inp){
   if(!inp.files||!inp.files[0]) return;

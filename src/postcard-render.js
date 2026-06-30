@@ -1289,3 +1289,166 @@ function buildLobMailerHtml(item){
     '<div class="lob-wrap">'+page1+page2+page3+page4+'</div>'+
     '</body></html>';
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// renderDesignBackCanvas(cfg, overrides)
+// Renders the back of a custom-uploaded design postcard.
+// Same dark/white split layout as the estimate back but:
+//   - No pricing / estimate summary
+//   - QR links to bookingUrl (not estimate page)
+//   - All text driven by per-design overrides (falling back to cfg/S.cfg)
+// Returns a data URL (JPEG).
+// ─────────────────────────────────────────────────────────────────────────────
+async function renderDesignBackCanvas(cfg, overrides){
+  cfg = cfg || (window.S && window.S.cfg) || {};
+  overrides = overrides || {};
+  function ov(key){ return overrides[key] !== undefined && overrides[key] !== '' ? overrides[key] : (cfg[key] || null); }
+
+  const W=2775, H=1875, SAFE=75;
+  const LOB_ADDR_W=1200, LOB_ADDR_H=712;
+  const color      = ov('brandColor')            || '#F25C05';
+  const darkColor  = '#1a1a1a';
+  const co         = ov('companyName')            || 'Your Roofing Co';
+  const ph         = ov('companyPhone')           || '(000) 000-0000';
+  const repName    = ov('repName')                || '';
+  const repTitle   = ov('repTitle')               || '';
+  const backBadgeTxt   = ov('postcardBackBadgeText')  || 'YOUR ROOF ESTIMATE IS READY';
+  const backBadgeColor = ov('postcardBackBadgeColor') || color;
+  const hook           = ov('postcardHook')           || 'Most homeowners dread the pushy roofing salesman. I do things differently \u2014 I lead with my price, no pressure, no games. Your estimate is ready.';
+  const why            = ov('postcardWhy')            || 'We assessed your neighborhood and identified your home as a candidate for roof replacement. We look for things like missing shingles, moss, algae, buckling, granule loss, and age. The average roof lasts 18\u201320 years.';
+  const pcQuote        = ov('postcardQuote')          || '"They replaced our roof in one day, no mess, no drama." \u2014 Mike D., Canton MI';
+  const guarantee      = ov('postcardGuarantee')      || 'No door-knocking. No pressure. Just your price.';
+  const scanCta        = ov('postcardScanCta')        || 'SCAN TO BOOK';
+  const scanSub        = ov('postcardScanSub')        || 'No-pressure booking';
+  const whyLabel       = ov('postcardWhyLabel')       || 'WHY DID YOU RECEIVE THIS?';
+  const badges = [
+    ov('diff1') || 'Licensed, Bonded & Insured',
+    ov('diff2') || 'Manufacturer Certified',
+    ov('diff3') || 'Itemized Pricing'
+  ].filter(Boolean).slice(0, 3);
+  const hookSize  = parseInt(ov('postcardHookSize'))  || 36;
+  const whySize   = parseInt(ov('postcardWhySize'))   || 30;
+  const quoteSize = parseInt(ov('postcardQuoteSize')) || 32;
+  const guarSize  = parseInt(ov('postcardGuarSize'))  || 26;
+  const phoneSize = parseInt(ov('postcardPhoneSize')) || 42;
+  const bookingUrl = ov('bookingUrl') || 'https://biddrop.us';
+  const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=4&data=' + encodeURIComponent(bookingUrl);
+  const headshotUrl = (cfg.headshotData && cfg.headshotData.startsWith('http')) ? cfg.headshotData : null;
+  const logoUrl     = (cfg.logoData     && cfg.logoData.startsWith('http'))     ? cfg.logoData     : null;
+  const headshotPos = parseFloat(cfg.headshotPos || '30') / 100;
+  const [headshotImg, logoImg, qrImg] = await Promise.all([
+    loadImg(headshotUrl), loadImg(logoUrl), loadImg(qrUrl)
+  ]);
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const HERO_H   = Math.round(H * 0.52);
+  const BOTTOM_Y = HERO_H;
+  const BOTTOM_H = H - HERO_H;
+  const HS_W     = Math.round(W * 0.30);
+  const HR_X     = HS_W + SAFE;
+  const HR_W     = W - HR_X - SAFE;
+  // HERO BG
+  ctx.fillStyle = darkColor; ctx.fillRect(0, 0, W, HERO_H);
+  ctx.fillStyle = color; ctx.fillRect(0, HERO_H - 10, W, 10);
+  // HEADSHOT
+  if(headshotImg){
+    const scale = Math.max(HS_W / headshotImg.width, HERO_H / headshotImg.height);
+    const dw = Math.round(headshotImg.width * scale);
+    const dh = Math.round(headshotImg.height * scale);
+    const dy = Math.round((HERO_H - dh) * headshotPos);
+    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, HS_W, HERO_H); ctx.clip();
+    ctx.drawImage(headshotImg, 0, dy, dw, dh);
+    const grad = ctx.createLinearGradient(HS_W - 220, 0, HS_W, 0);
+    grad.addColorStop(0, 'rgba(26,26,26,0)'); grad.addColorStop(1, 'rgba(26,26,26,1)');
+    ctx.fillStyle = grad; ctx.fillRect(HS_W - 220, 0, 220, HERO_H);
+    ctx.restore();
+    if(repName){
+      const FADE_START = HS_W - 220, LT_RIGHT = FADE_START - 20;
+      const LT_H = repTitle ? 110 : 76, LT_Y = HERO_H - LT_H - 40;
+      ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(0, LT_Y, LT_RIGHT, LT_H);
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 44px Arial'; ctx.textAlign = 'right';
+      ctx.fillText(repName, LT_RIGHT - 16, LT_Y + 50);
+      if(repTitle){ ctx.font = '32px Arial'; ctx.fillStyle = 'rgba(255,255,255,0.72)'; ctx.fillText(repTitle, LT_RIGHT - 16, LT_Y + 94); }
+      ctx.textAlign = 'left';
+    }
+  }
+  // HERO RIGHT: company name + badge + hook + stars + quote (NO pricing)
+  let hy = SAFE;
+  ctx.font = 'bold 62px Arial'; ctx.fillStyle = '#fff';
+  ctx.fillText(co, HR_X, hy + 62); hy += 80;
+  ctx.font = 'bold 36px Arial';
+  const pillW = ctx.measureText(backBadgeTxt).width + 48;
+  ctx.fillStyle = backBadgeColor; roundRect(ctx, HR_X, hy, pillW, 60, 10); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.fillText(backBadgeTxt, HR_X + 24, hy + 42); hy += 80;
+  const hookLineH = Math.round(hookSize * 1.38);
+  ctx.font = 'italic ' + hookSize + 'px Georgia, serif'; ctx.fillStyle = 'rgba(255,255,255,0.88)';
+  const hookLines = wrapText(ctx, hook, HR_W);
+  hookLines.slice(0, 3).forEach((l, i) => { ctx.fillText(l, HR_X, hy + hookSize + i * hookLineH); });
+  hy += Math.min(hookLines.length, 3) * hookLineH + 28;
+  ctx.font = '46px Arial'; ctx.fillStyle = '#f59e0b';
+  ctx.fillText('\u2605\u2605\u2605\u2605\u2605', HR_X, hy + 46); hy += 64;
+  if(pcQuote){
+    const qLineH = Math.round(quoteSize * 1.36);
+    ctx.font = 'italic ' + quoteSize + 'px Georgia, serif'; ctx.fillStyle = 'rgba(255,255,255,0.80)';
+    const qLines = wrapText(ctx, pcQuote, HR_W);
+    qLines.slice(0, 2).forEach((l, i) => { ctx.fillText(l, HR_X, hy + quoteSize + i * qLineH); });
+  }
+  // BOTTOM white section
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, BOTTOM_Y, W, BOTTOM_H);
+  ctx.fillStyle = color; ctx.fillRect(0, BOTTOM_Y, W, 8);
+  const CONTENT_RIGHT = W - LOB_ADDR_W - SAFE;
+  const LEFT_COL_W    = Math.round(CONTENT_RIGHT * 0.60);
+  const RIGHT_COL_X   = LEFT_COL_W + SAFE * 2;
+  const RIGHT_COL_W   = CONTENT_RIGHT - LEFT_COL_W - SAFE * 2;
+  let by = BOTTOM_Y + SAFE;
+  ctx.font = 'bold 34px Arial'; ctx.fillStyle = color;
+  ctx.fillText(whyLabel, SAFE, by + 34); by += 52;
+  const whyLineH = Math.round(whySize * 1.4);
+  ctx.font = whySize + 'px Arial'; ctx.fillStyle = '#374151';
+  const whyLines = wrapText(ctx, why, LEFT_COL_W - SAFE);
+  whyLines.slice(0, 4).forEach((l, i) => { ctx.fillText(l, SAFE, by + whySize + i * whyLineH); });
+  by += Math.min(whyLines.length, 4) * whyLineH + 24;
+  ctx.font = 'bold 28px Arial';
+  let bx2 = SAFE;
+  badges.forEach(b => {
+    const label = '\u2713 ' + b; const bw2 = ctx.measureText(label).width + 26;
+    if(bx2 + bw2 > LEFT_COL_W + SAFE){ return; }
+    ctx.fillStyle = '#fff7ed'; ctx.strokeStyle = color; ctx.lineWidth = 2;
+    roundRect(ctx, bx2, by, bw2, 46, 7); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = color; ctx.fillText(label, bx2 + 13, by + 33); bx2 += bw2 + 12;
+  });
+  by += 60;
+  if(logoImg){
+    const logoMaxH = 140, logoMaxW = 500, logoAspect = logoImg.width / logoImg.height;
+    let lw = Math.min(logoMaxW, logoMaxH * logoAspect);
+    let lh = Math.round(lw / logoAspect);
+    if(lh > logoMaxH){ lh = logoMaxH; lw = Math.round(lh * logoAspect); }
+    const logoY = by + 40;
+    if(logoY + lh < H - SAFE){ ctx.drawImage(logoImg, SAFE, logoY, lw, lh); }
+  }
+  const BOTTOM_SAFE = H - SAFE;
+  let ry2 = BOTTOM_Y + SAFE;
+  if(qrImg){
+    const QR_SIZE = 180;
+    ctx.drawImage(qrImg, RIGHT_COL_X, ry2, QR_SIZE, QR_SIZE); ry2 += QR_SIZE + 10;
+    ctx.font = 'bold 28px Arial'; ctx.fillStyle = '#111827';
+    ctx.fillText(scanCta, RIGHT_COL_X, ry2 + 28); ry2 += 38;
+    ctx.font = '22px Arial'; ctx.fillStyle = '#6b7280';
+    ctx.fillText(scanSub, RIGHT_COL_X, ry2 + 24); ry2 += 36;
+  }
+  ctx.font = 'bold ' + phoneSize + 'px Arial'; ctx.fillStyle = '#111827';
+  ctx.fillText(ph, RIGHT_COL_X, ry2 + phoneSize); ry2 += phoneSize + 16;
+  if(ry2 + 50 < BOTTOM_SAFE){
+    const gLineH = Math.round(guarSize * 1.4);
+    ctx.font = 'bold ' + guarSize + 'px Arial'; ctx.fillStyle = color;
+    const gLines = wrapText(ctx, guarantee, RIGHT_COL_W);
+    gLines.forEach((l, i) => {
+      const lineY = ry2 + guarSize + i * gLineH;
+      if(lineY < BOTTOM_SAFE){ ctx.fillText(l, RIGHT_COL_X, lineY); }
+    });
+  }
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(W - LOB_ADDR_W, H - LOB_ADDR_H, LOB_ADDR_W, LOB_ADDR_H);
+  return canvas.toDataURL('image/jpeg', 0.92);
+}
