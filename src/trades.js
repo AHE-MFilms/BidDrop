@@ -140,7 +140,7 @@ function autoPopulateTradeMeasurements(tradeId){
   // Use last known satellite data (stored in window._solarData or _lastSolarData)
   const sd = window._lastSolarData || window._solarData;
   if(!sd) return;
-  const roofSqft = sd.roofSqft || 0;
+  const roofSqft = sd.roofSqft || sd.sqft || 0;
   const perimeterLf = Math.round(Math.sqrt(roofSqft) * 4); // rough perimeter estimate
   const wallSqft = Math.round(roofSqft * 0.85); // walls ≈ 85% of roof area as rough estimate
   switch(tradeId){
@@ -175,11 +175,11 @@ function autoPopulateTradeMeasurements(tradeId){
 
 // ── Auto-calc buttons (trigger satellite lookup then populate) ────────────────
 function autoCalcSolar(){ const _sd=window._lastSolarData||window._solarData; if(_sd && _sd.systemKw){ const el=document.getElementById('te-solar-kw'); if(el) el.value=_sd.systemKw; calcTradeSolar(); } else toast('🛰 Run a satellite lookup first (enter address above)','warn'); }
-function autoCalcFencing(){ const _sd=window._lastSolarData||window._solarData; if(_sd && _sd.roofSqft){ const lf=Math.round(Math.sqrt(_sd.roofSqft)*4); const el=document.getElementById('te-fen-lf'); if(el) el.value=lf; calcTradeFencing(); } else toast('🛰 Run a satellite lookup first','warn'); }
-function autoCalcSiding(){ const _sd=window._lastSolarData||window._solarData; if(_sd && _sd.roofSqft){ const el=document.getElementById('te-sid-sqft'); if(el) el.value=Math.round(_sd.roofSqft*0.85); calcTradeSiding(); } else toast('🛰 Run a satellite lookup first','warn'); }
-function autoCalcGutters(){ const _sd=window._lastSolarData||window._solarData; if(_sd && _sd.roofSqft){ const lf=Math.round(Math.sqrt(_sd.roofSqft)*4); const el=document.getElementById('te-gut-lf'); if(el) el.value=lf; calcTradeGutters(); } else toast('🛰 Run a satellite lookup first','warn'); }
-function autoCalcInsulation(){ const _sd=window._lastSolarData||window._solarData; if(_sd && _sd.roofSqft){ const el=document.getElementById('te-ins-sqft'); if(el) el.value=Math.round(_sd.roofSqft*0.9); calcTradeInsulation(); } else toast('🛰 Run a satellite lookup first','warn'); }
-function autoCalcPaint(){ const _sd=window._lastSolarData||window._solarData; if(_sd && _sd.roofSqft){ const el=document.getElementById('te-pnt-sqft'); if(el) el.value=Math.round(_sd.roofSqft*0.85); calcTradePaint(); } else toast('🛰 Run a satellite lookup first','warn'); }
+function autoCalcFencing(){ const _sd=window._lastSolarData||window._solarData; const _sqft=(_sd&&(_sd.roofSqft||_sd.sqft))||0; if(_sd && _sqft){ const lf=Math.round(Math.sqrt(_sqft)*4); const el=document.getElementById('te-fen-lf'); if(el) el.value=lf; calcTradeFencing(); } else toast('🛰 Run a satellite lookup first','warn'); }
+function autoCalcSiding(){ const _sd=window._lastSolarData||window._solarData; const _sqft=(_sd&&(_sd.roofSqft||_sd.sqft))||0; if(_sd && _sqft){ const el=document.getElementById('te-sid-sqft'); if(el) el.value=Math.round(_sqft*0.85); calcTradeSiding(); } else toast('🛰 Run a satellite lookup first','warn'); }
+function autoCalcGutters(){ const _sd=window._lastSolarData||window._solarData; const _sqft=(_sd&&(_sd.roofSqft||_sd.sqft))||0; if(_sd && _sqft){ const lf=Math.round(Math.sqrt(_sqft)*4); const el=document.getElementById('te-gut-lf'); if(el) el.value=lf; calcTradeGutters(); } else toast('🛰 Run a satellite lookup first','warn'); }
+function autoCalcInsulation(){ const _sd=window._lastSolarData||window._solarData; const _sqft=(_sd&&(_sd.roofSqft||_sd.sqft))||0; if(_sd && _sqft){ const el=document.getElementById('te-ins-sqft'); if(el) el.value=Math.round(_sqft*0.9); calcTradeInsulation(); } else toast('🛰 Run a satellite lookup first','warn'); }
+function autoCalcPaint(){ const _sd=window._lastSolarData||window._solarData; const _sqft=(_sd&&(_sd.roofSqft||_sd.sqft))||0; if(_sd && _sqft){ const el=document.getElementById('te-pnt-sqft'); if(el) el.value=Math.round(_sqft*0.85); calcTradePaint(); } else toast('🛰 Run a satellite lookup first','warn'); }
 
 // ── Trade calculators ─────────────────────────────────────────────────────────
 function _fmtMoney(n){ return '$'+Math.round(n).toLocaleString(); }
