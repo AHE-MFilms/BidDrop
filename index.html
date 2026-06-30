@@ -3278,7 +3278,7 @@ tr:hover td{background:var(--card);}
       <!-- Footer -->
       <div style="display:flex;gap:10px;padding:16px 24px;border-top:1px solid var(--border);background:var(--card);">
         <button onclick="closeAddDesignModal()" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:11px;font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">Cancel</button>
-        <button onclick="saveNewDesign()" style="flex:3;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;">💾 Save Design</button>
+        <button id="nd-save-btn" onclick="saveNewDesign()" style="flex:3;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;">💾 Save Design</button>
       </div>
     </div>
   </div>
@@ -9246,6 +9246,7 @@ function renderDesignsGrid(){
         ${d.backOverrides&&Object.keys(d.backOverrides).length ? '<div style="margin-bottom:7px;"><span style="background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#818cf8;font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;letter-spacing:.4px;">✓ CUSTOM BACK</span></div>' : ''}
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
           <button onclick="openPostcardFullPreview(${i})" style="flex:1;background:var(--accent);border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">&#128247; Preview</button>
+          <button onclick="openEditDesignBack(${i})" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;">&#9998; Edit Back</button>
           ${d.isDefault ? '<button disabled style="flex:1;background:rgba(242,92,5,.15);border:1px solid var(--accent);border-radius:6px;padding:6px 10px;color:var(--accent);font-size:11px;font-weight:700;cursor:default;">&#9733; Default</button>' : '<button onclick="setDesignAsDefault(\'' + d.id + '\')" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;">Set Default</button>'}
           <button onclick="deleteDesign(${i})" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:6px;padding:6px 10px;color:#EF4444;font-size:11px;font-weight:700;cursor:pointer;">Delete</button>
         </div>
@@ -9277,7 +9278,13 @@ function openAddDesignModal(){
   // Render default back preview using account settings
   setTimeout(renderDesignBackPreview, 200);
 }
-function closeAddDesignModal(){ document.getElementById('add-design-modal').style.display='none'; }
+function closeAddDesignModal(){
+  document.getElementById('add-design-modal').style.display='none';
+  window._editDesignBackMode = false;
+  window._editDesignBackIdx = null;
+  const saveBtn = document.getElementById('nd-save-btn');
+  if(saveBtn) saveBtn.textContent = 'Save Design';
+}
 // Debounce helper for live back preview
 let _ndBackPreviewTimer=null;
 function designBackPreviewDebounce(){
@@ -9381,6 +9388,36 @@ function previewNewDesign(inp){
 async function saveNewDesign(){
   const name=(document.getElementById('new-design-name').value||'').trim();
   if(!name){ toast('Please enter a design name','error'); return; }
+  // Edit back mode: update existing design without re-uploading front
+  if(window._editDesignBackMode){
+    const designs = getDesigns();
+    const d = designs[window._editDesignBackIdx];
+    if(!d){ toast('Design not found','error'); return; }
+    const desc=(document.getElementById('new-design-desc').value||'').trim();
+    const v=id=>{ const el=document.getElementById(id); return el?(el.value.trim()||''):''; };
+    const colorEl=document.getElementById('nd-back-badge-color');
+    const backOverrides={};
+    if(v('nd-back-badge-text')) backOverrides.postcardBackBadgeText=v('nd-back-badge-text');
+    if(colorEl&&colorEl.value&&colorEl.value!=='#F25C05') backOverrides.postcardBackBadgeColor=colorEl.value;
+    if(v('nd-back-hook')) backOverrides.postcardHook=v('nd-back-hook');
+    if(v('nd-back-why')) backOverrides.postcardWhy=v('nd-back-why');
+    if(v('nd-back-quote')) backOverrides.postcardQuote=v('nd-back-quote');
+    if(v('nd-back-guarantee')) backOverrides.postcardGuarantee=v('nd-back-guarantee');
+    if(v('nd-back-scan-cta')) backOverrides.postcardScanCta=v('nd-back-scan-cta');
+    if(v('nd-back-scan-sub')) backOverrides.postcardScanSub=v('nd-back-scan-sub');
+    if(v('nd-back-badge1')) backOverrides.diff1=v('nd-back-badge1');
+    if(v('nd-back-badge2')) backOverrides.diff2=v('nd-back-badge2');
+    if(v('nd-back-badge3')) backOverrides.diff3=v('nd-back-badge3');
+    d.name = name; d.desc = desc;
+    d.backOverrides = Object.keys(backOverrides).length ? backOverrides : null;
+    window._editDesignBackMode = false;
+    window._editDesignBackIdx = null;
+    const saveBtn = document.getElementById('nd-save-btn');
+    if(saveBtn) saveBtn.textContent = 'Save Design';
+    save(); closeAddDesignModal(); renderDesignsGrid(); renderDripStepDesignSelects();
+    toast('Back text updated for "'+name+'"','success');
+    return;
+  }
   if(!window._newDesignFile){ toast('Please upload a front image','error'); return; }
   if(window._newDesignDimsOk===false){ toast('Image is too small. Please upload a 1875×2775 px JPEG or PNG.','error'); return; }
   const desc=(document.getElementById('new-design-desc').value||'').trim();
@@ -9414,6 +9451,56 @@ async function saveNewDesign(){
   });
   save(); closeAddDesignModal(); renderDesignsGrid(); renderDripStepDesignSelects();
   toast('Design "'+name+'" saved!','success');
+}
+// Edit back text of an existing design (pre-fills the upload modal without requiring re-upload)
+window._editDesignBackIdx = null;
+function openEditDesignBack(idx){
+  const designs = getDesigns();
+  const d = designs[idx];
+  if(!d){ toast('Design not found','error'); return; }
+  window._editDesignBackIdx = idx;
+  // Reset fields first
+  const ids=['new-design-name','new-design-desc','nd-back-badge-text','nd-back-hook','nd-back-why','nd-back-quote','nd-back-guarantee','nd-back-scan-cta','nd-back-scan-sub','nd-back-badge1','nd-back-badge2','nd-back-badge3'];
+  ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  // Pre-fill name + desc
+  const nameEl = document.getElementById('new-design-name');
+  const descEl = document.getElementById('new-design-desc');
+  if(nameEl) nameEl.value = d.name || '';
+  if(descEl) descEl.value = d.desc || '';
+  // Pre-fill back overrides
+  const ov = d.backOverrides || {};
+  const fieldMap = {
+    'nd-back-badge-text': 'postcardBackBadgeText',
+    'nd-back-hook': 'postcardHook',
+    'nd-back-why': 'postcardWhy',
+    'nd-back-quote': 'postcardQuote',
+    'nd-back-guarantee': 'postcardGuarantee',
+    'nd-back-scan-cta': 'postcardScanCta',
+    'nd-back-scan-sub': 'postcardScanSub',
+    'nd-back-badge1': 'diff1',
+    'nd-back-badge2': 'diff2',
+    'nd-back-badge3': 'diff3'
+  };
+  Object.entries(fieldMap).forEach(([elId, key])=>{
+    const el = document.getElementById(elId);
+    if(el && ov[key]) el.value = ov[key];
+  });
+  const colorEl = document.getElementById('nd-back-badge-color');
+  if(colorEl) colorEl.value = ov.postcardBackBadgeColor || (S.cfg&&S.cfg.brandColor) || '#F25C05';
+  // Show existing front image in preview (no re-upload needed)
+  const fw = document.getElementById('nd-front-preview-wrap');
+  if(fw && d.url){
+    fw.innerHTML = '<img src="'+d.url+'" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">';
+  }
+  // Mark as edit mode (no file required)
+  window._newDesignFile = null;
+  window._newDesignDimsOk = true; // existing design already validated
+  window._editDesignBackMode = true;
+  // Change save button label
+  const saveBtn = document.getElementById('nd-save-btn');
+  if(saveBtn) saveBtn.textContent = 'Save Back Changes';
+  document.getElementById('add-design-modal').style.display = 'flex';
+  setTimeout(renderDesignBackPreview, 200);
 }
 function deleteDesign(idx){
   if(!confirm('Delete this design?')) return;
