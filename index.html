@@ -3195,47 +3195,33 @@ tr:hover td{background:var(--card);}
             <div class="fl">Description <span style="color:var(--muted);font-weight:400;">(optional)</span></div>
             <input class="fi" id="new-design-desc" placeholder="e.g. Use for storm follow-up campaigns" maxlength="120">
           </div>
-          <!-- BACK TYPE TOGGLE -->
+          <!-- BACK ARTWORK UPLOAD (always required for custom designs) -->
           <div style="border-top:1px solid var(--border);padding-top:16px;margin-bottom:4px;">
-            <div style="font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;">📬 Postcard Back</div>
-            <!-- Toggle row -->
-            <div style="display:flex;gap:8px;margin-bottom:14px;">
-              <label id="nd-back-toggle-standard-label" style="flex:1;display:flex;align-items:center;gap:8px;padding:10px 12px;border:2px solid var(--accent);border-radius:8px;cursor:pointer;background:rgba(242,92,5,.07);">
-                <input type="radio" name="nd-back-type" id="nd-back-type-standard" value="standard" checked onchange="ndBackTypeChanged()" style="accent-color:var(--accent);">
-                <span style="font-size:12px;font-weight:700;color:var(--text);">BidDrop Standard Back</span>
-              </label>
-              <label id="nd-back-toggle-custom-label" style="flex:1;display:flex;align-items:center;gap:8px;padding:10px 12px;border:2px solid var(--border);border-radius:8px;cursor:pointer;">
-                <input type="radio" name="nd-back-type" id="nd-back-type-custom" value="custom" onchange="ndBackTypeChanged()" style="accent-color:var(--accent);">
-                <span style="font-size:12px;font-weight:700;color:var(--text);">Upload My Own Back</span>
-              </label>
-            </div>
-            <!-- CUSTOM BACK UPLOAD (hidden by default) -->
-            <div id="nd-custom-back-section" style="display:none;margin-bottom:14px;">
-              <div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:11px;color:var(--text);">
-                <div style="font-weight:800;color:#F59E0B;margin-bottom:4px;">📐 Back Artwork Specs</div>
-                <div style="display:flex;flex-wrap:wrap;gap:4px 16px;">
-                  <span><b>Size:</b> 1875×2775 px (portrait)</span>
-                  <span><b>Format:</b> JPEG or PNG</span>
-                  <span><b>300 DPI</b></span>
-                  <span><b>Leave clear:</b> address zone (right-bottom), QR zone (left-bottom), postage (top-right)</span>
-                </div>
-                <div style="margin-top:8px;">
-                  <button onclick="downloadBackTemplate()" style="background:none;border:none;padding:0;color:var(--accent);font-weight:700;font-size:12px;cursor:pointer;text-decoration:underline;">⬇️ Download Back Template (PNG)</button>
-                  <span style="color:var(--muted);font-size:11px;margin-left:8px;">— shows all safe zones</span>
-                </div>
+            <div style="font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;">📬 Back Artwork <span style="color:#ef4444;font-size:11px;font-weight:700;">*Required</span></div>
+            <div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:11px;color:var(--text);">
+              <div style="font-weight:800;color:#F59E0B;margin-bottom:4px;">📐 Back Artwork Specs</div>
+              <div style="display:flex;flex-wrap:wrap;gap:4px 16px;">
+                <span><b>Size:</b> 1875×2775 px (portrait)</span>
+                <span><b>Format:</b> JPEG or PNG</span>
+                <span><b>300 DPI</b></span>
+                <span><b>Leave clear:</b> address zone (right-bottom), QR zone (left-bottom), postage (top-right)</span>
               </div>
-              <div class="fl" style="margin-bottom:6px;">Back Artwork <span style="color:var(--muted);font-weight:400;">(JPEG or PNG · 1875×2775 px)</span></div>
-              <div id="nd-back-upload-preview" style="width:100%;height:140px;border:2px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;cursor:pointer;overflow:hidden;position:relative;background:var(--card2);" onclick="document.getElementById('new-design-back-file').click()">
-                <span id="nd-back-upload-text" style="text-align:center;padding:12px;">Click to upload back artwork<br><span style="font-size:11px;opacity:.6;">JPEG or PNG · 1875×2775 px</span></span>
-                <img id="nd-back-upload-img" style="display:none;width:100%;height:100%;object-fit:contain;" src="">
+              <div style="margin-top:8px;">
+                <button onclick="downloadBackTemplate()" style="background:none;border:none;padding:0;color:var(--accent);font-weight:700;font-size:12px;cursor:pointer;text-decoration:underline;">⬇️ Download Back Template (PNG)</button>
+                <span style="color:var(--muted);font-size:11px;margin-left:8px;">— shows all safe zones</span>
               </div>
-              <div id="nd-back-size-warn" style="display:none;margin-top:6px;padding:6px 10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:6px;font-size:11px;color:#ef4444;"></div>
-              <input type="file" id="new-design-back-file" accept="image/jpeg,image/jpg,image/png" style="display:none;" onchange="previewNewDesignBack(this)">
-              <div style="margin-top:8px;font-size:11px;color:var(--muted);">BidDrop will automatically overlay the QR code and address block in the correct Lob-compliant zones.</div>
             </div>
+            <div class="fl" style="margin-bottom:6px;">Back Artwork <span style="color:var(--muted);font-weight:400;">(JPEG or PNG · 1875×2775 px)</span></div>
+            <div id="nd-back-upload-preview" style="width:100%;height:140px;border:2px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;cursor:pointer;overflow:hidden;position:relative;background:var(--card2);" onclick="document.getElementById('new-design-back-file').click()">
+              <span id="nd-back-upload-text" style="text-align:center;padding:12px;">Click to upload back artwork<br><span style="font-size:11px;opacity:.6;">JPEG or PNG · 1875×2775 px</span></span>
+              <img id="nd-back-upload-img" style="display:none;width:100%;height:100%;object-fit:contain;" src="">
+            </div>
+            <div id="nd-back-size-warn" style="display:none;margin-top:6px;padding:6px 10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:6px;font-size:11px;color:#ef4444;"></div>
+            <input type="file" id="new-design-back-file" accept="image/jpeg,image/jpg,image/png" style="display:none;" onchange="previewNewDesignBack(this)">
+            <div style="margin-top:8px;font-size:11px;color:var(--muted);">BidDrop will automatically overlay the QR code and address block in the correct Lob-compliant zones.</div>
           </div>
-          <!-- BACK TEXT CUSTOMIZATION (hidden when custom back is uploaded) -->
-          <div id="nd-standard-back-section" style="margin-bottom:4px;">
+          <!-- HIDDEN SECTION (kept for JS compatibility but not shown) -->
+          <div id="nd-standard-back-section" style="display:none;margin-bottom:4px;">
             <div style="font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.5px;text-transform:uppercase;margin-bottom:12px;">✏️ Customize Back Text</div>
             <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">These fields override your account defaults for this design only. Leave blank to use account defaults.</div>
             <!-- Badge pill -->
@@ -3304,7 +3290,7 @@ tr:hover td{background:var(--card);}
           </div>
           <!-- Back preview -->
           <div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;">BACK <span id="nd-back-preview-label" style="font-weight:400;text-transform:none;letter-spacing:0;">(auto-generated · updates as you type)</span></div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;">BACK <span id="nd-back-preview-label" style="font-weight:400;text-transform:none;letter-spacing:0;">(your artwork + QR &amp; address overlay)</span></div>
             <div style="position:relative;">
               <canvas id="nd-back-preview-canvas" style="width:100%;border:1px solid var(--border);border-radius:8px;display:block;"></canvas>
               <div id="nd-back-preview-spinner" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.5);border-radius:8px;display:flex;align-items:center;justify-content:center;">
@@ -9311,13 +9297,6 @@ function openAddDesignModal(){
   window._newDesignBackFile=null;
   window._newDesignBackDimsOk=false;
   window._editDesignBackUrl=null;
-  // Reset back type toggle to standard
-  const stdRadio=document.getElementById('nd-back-type-standard');
-  if(stdRadio){ stdRadio.checked=true; }
-  const customSec=document.getElementById('nd-custom-back-section');
-  const standardSec=document.getElementById('nd-standard-back-section');
-  if(customSec) customSec.style.display='none';
-  if(standardSec) standardSec.style.display='block';
   // Reset back upload preview
   const ndBackUploadText=document.getElementById('nd-back-upload-text');
   const ndBackUploadImg=document.getElementById('nd-back-upload-img');
@@ -9334,8 +9313,19 @@ function openAddDesignModal(){
   const bc=document.getElementById('nd-back-preview-canvas');
   if(bc){ const ctx=bc.getContext('2d'); ctx.clearRect(0,0,bc.width,bc.height); }
   document.getElementById('add-design-modal').style.display='flex';
-  // Render default back preview using account settings
-  setTimeout(renderDesignBackPreview, 200);
+  // Show blank back canvas placeholder (no standard back for custom designs)
+  setTimeout(()=>{
+    const canvas=document.getElementById('nd-back-preview-canvas');
+    if(canvas){
+      canvas.width=375; canvas.height=562;
+      const ctx=canvas.getContext('2d');
+      ctx.fillStyle='#1a1a1a'; ctx.fillRect(0,0,375,562);
+      ctx.fillStyle='rgba(255,255,255,0.25)'; ctx.font='14px Arial'; ctx.textAlign='center';
+      ctx.fillText('Upload back artwork to preview',187,270);
+      ctx.fillText('with QR + address overlay',187,295);
+      ctx.textAlign='left';
+    }
+  }, 200);
 }
 function closeAddDesignModal(){
   document.getElementById('add-design-modal').style.display='none';
@@ -9581,26 +9571,17 @@ async function saveNewDesign(){
     if(v('nd-back-badge2')) backOverrides.diff2=v('nd-back-badge2');
     if(v('nd-back-badge3')) backOverrides.diff3=v('nd-back-badge3');
     d.name = name; d.desc = desc;
-    // Handle back type changes in edit mode
-    const isCustomBackEdit = document.getElementById('nd-back-type-custom') && document.getElementById('nd-back-type-custom').checked;
-    if(isCustomBackEdit){
-      // Custom back selected
-      if(window._newDesignBackFile){
-        // New back file uploaded — upload it
-        const acctIdEdit=(currentAccount&&currentAccount.id)||'shared';
-        const safeNEdit=name.toLowerCase().replace(/[^a-z0-9]/g,'-').substring(0,30);
-        toast('Uploading back artwork…','info');
-        const backPathEdit=acctIdEdit+'/designs/'+safeNEdit+'-back-'+Date.now()+'.jpg';
-        const newBackUrl=await uploadToStorage(window._newDesignBackFile,backPathEdit,1800,0.92,'image/jpeg');
-        d.backUrl = newBackUrl || d.backUrl;
-      }
-      // Keep existing backUrl if no new file uploaded (window._editDesignBackUrl)
-      d.backOverrides = null; // custom back doesn't use text overrides
-    } else {
-      // Standard back selected — clear any existing backUrl
-      d.backUrl = null;
-      d.backOverrides = Object.keys(backOverrides).length ? backOverrides : null;
+    // Always custom back for designs — upload new file if provided
+    if(window._newDesignBackFile){
+      const acctIdEdit=(currentAccount&&currentAccount.id)||'shared';
+      const safeNEdit=name.toLowerCase().replace(/[^a-z0-9]/g,'-').substring(0,30);
+      toast('Uploading back artwork…','info');
+      const backPathEdit=acctIdEdit+'/designs/'+safeNEdit+'-back-'+Date.now()+'.jpg';
+      const newBackUrl=await uploadToStorage(window._newDesignBackFile,backPathEdit,1800,0.92,'image/jpeg');
+      d.backUrl = newBackUrl || d.backUrl;
     }
+    // Keep existing backUrl if no new file uploaded
+    d.backOverrides = null;
     window._editDesignBackMode = false;
     window._editDesignBackIdx = null;
     const saveBtn = document.getElementById('nd-save-btn');
@@ -9633,22 +9614,19 @@ async function saveNewDesign(){
   const path=acctId+'/designs/'+safeN+'-'+ts+'.jpg';
   toast('Uploading design…','info');
   const url=await uploadToStorage(window._newDesignFile,path,1800,0.92,'image/jpeg');
-  // Check if custom back is selected and uploaded
-  const isCustomBack = document.getElementById('nd-back-type-custom') && document.getElementById('nd-back-type-custom').checked;
-  let backUrl = null;
-  if(isCustomBack && window._newDesignBackFile){
-    if(window._newDesignBackDimsOk===false){ toast('Back image is too small. Please upload a 1875×2775 px image.','error'); return; }
-    toast('Uploading back artwork…','info');
-    const backPath=acctId+'/designs/'+safeN+'-back-'+ts+'.jpg';
-    backUrl=await uploadToStorage(window._newDesignBackFile,backPath,1800,0.92,'image/jpeg');
-  }
+  // Back image is always required for custom designs
+  if(!window._newDesignBackFile){ toast('Please upload a back artwork image','error'); return; }
+  if(window._newDesignBackDimsOk===false){ toast('Back image is too small. Please upload a 1875×2775 px image.','error'); return; }
+  toast('Uploading back artwork…','info');
+  const backPath=acctId+'/designs/'+safeN+'-back-'+ts+'.jpg';
+  const backUrl=await uploadToStorage(window._newDesignBackFile,backPath,1800,0.92,'image/jpeg');
   if(!S.cfg.postcardDesigns) S.cfg.postcardDesigns=[];
   S.cfg.postcardDesigns.push({
     id:'des_'+ts,
     name, desc,
     url:url||null,
     backUrl:backUrl||null,
-    backOverrides:(!isCustomBack&&Object.keys(backOverrides).length)?backOverrides:null,
+    backOverrides:null,
     createdAt:new Date().toISOString()
   });
   save(); closeAddDesignModal(); renderDesignsGrid(); renderDripStepDesignSelects();
@@ -9701,34 +9679,22 @@ function openEditDesignBack(idx){
   window._newDesignBackDimsOk = true;
   window._editDesignBackUrl = d.backUrl || null;
   window._editDesignBackMode = true;
-  // Set back type toggle based on whether design has a custom back
-  const stdRadio = document.getElementById('nd-back-type-standard');
-  const cusRadio = document.getElementById('nd-back-type-custom');
-  const customSec = document.getElementById('nd-custom-back-section');
-  const standardSec = document.getElementById('nd-standard-back-section');
+  // Always show back upload section — custom designs always have uploaded backs
+  const ndBackUploadText = document.getElementById('nd-back-upload-text');
+  const ndBackUploadImg = document.getElementById('nd-back-upload-img');
   if(d.backUrl){
-    if(cusRadio) cusRadio.checked = true;
-    if(customSec) customSec.style.display = 'block';
-    if(standardSec) standardSec.style.display = 'none';
-    // Show existing back image in the upload preview
-    const ndBackUploadText = document.getElementById('nd-back-upload-text');
-    const ndBackUploadImg = document.getElementById('nd-back-upload-img');
     if(ndBackUploadText) ndBackUploadText.style.display = 'none';
     if(ndBackUploadImg){ ndBackUploadImg.src = d.backUrl; ndBackUploadImg.style.display = 'block'; }
   } else {
-    if(stdRadio) stdRadio.checked = true;
-    if(customSec) customSec.style.display = 'none';
-    if(standardSec) standardSec.style.display = 'block';
+    if(ndBackUploadText) ndBackUploadText.style.display = '';
+    if(ndBackUploadImg){ ndBackUploadImg.style.display = 'none'; ndBackUploadImg.src = ''; }
   }
   // Change save button label
   const saveBtn = document.getElementById('nd-save-btn');
   if(saveBtn) saveBtn.textContent = 'Save Back Changes';
   document.getElementById('add-design-modal').style.display = 'flex';
-  if(d.backUrl){
-    setTimeout(renderCustomBackPreviewInModal, 200);
-  } else {
-    setTimeout(renderDesignBackPreview, 200);
-  }
+  // Always render custom back preview
+  setTimeout(renderCustomBackPreviewInModal, 200);
 }
 function deleteDesign(idx){
   if(!confirm('Delete this design?')) return;
