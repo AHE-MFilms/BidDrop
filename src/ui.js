@@ -155,7 +155,7 @@ function _showUnlockModal(pin, resolve) {
         📞 Homeowner phone &amp; email (auto-filled)<br>
         🖨 Print letter / Print Now<br>
         📬 Add to Mail Queue (includes 1 postcard)<br>
-        ⬆️ Sync to GoHighLevel CRM<br>
+        ⬆️ Sync to GoHighLevel CRM or supported CRM<br>
         📋 Sales Proposal PDF<br>
         🏛 Insurance Scope PDF
       </div>
