@@ -1087,14 +1087,14 @@ function renderQueue(){
         '<td style="font-family:var(--font-m);font-size:10px;color:var(--muted);">'+fmtDate(i.at)+'</td>'+
         '<td><span class="spill" style="background:'+sc+'22;color:'+sc+';border:1px solid '+sc+'44;">'+sl+'</span></td>'+
         '<td style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;">'+
-        (i.status==='needs_approval'?'<button class="btn-xs" onclick="approveQueueItem(''+qid+'')" style="background:#7C3AED;border-color:#7C3AED;color:#fff;">&#10003; Approve</button>':'')+
-        ((i.status==='pending'||i.status==='approved') && S.cfg.enablePostcard!==false?'<button class="btn-xs" onclick="openSendPostcardModal(''+qid+'')" style="background:#0e7490;border-color:#0e7490;color:#fff;" title="Send postcard">&#128236; Send Postcard</button>':'')+
+        (i.status==='needs_approval'?'<button class="btn-xs" data-id="'+qid+'" onclick="approveQueueItem(this.dataset.id)" style="background:#7C3AED;border-color:#7C3AED;color:#fff;">&#10003; Approve</button>':'')+
+        ((i.status==='pending'||i.status==='approved') && S.cfg.enablePostcard!==false?'<button class="btn-xs" data-id="'+qid+'" onclick="openSendPostcardModal(this.dataset.id)" style="background:#0e7490;border-color:#0e7490;color:#fff;" title="Send postcard">&#128236; Send Postcard</button>':'')+
         (i.status==='sent'?'<span style="font-size:10px;color:var(--muted);">'+fmtDate(i.mailedAt)+'</span>':'')+
-        (i.status==='failed' && S.cfg.enablePostcard!==false?'<button class="btn-xs" onclick="sendLobPostcard6x9(''+qid+'')" style="background:#0e7490;border-color:#0e7490;color:#fff;">Retry Card</button>':'')+
-        (i.status==='pending'?'<button class="btn-xs" onclick="editEstimate(''+qid+'')">&#9999;&#65039; Edit</button>':'')+
-        '<button class="btn-xs" onclick="previewQueueItem(''+qid+'')"">Preview Letter</button>'+
-        '<button class="btn-xs" onclick="previewPostcard6x9(''+qid+'')" style="background:#0e749022;border-color:#0e7490;color:#0e7490;" title="Preview postcard front & back">Preview Card</button>'+
-        '<button class="btn-xs danger" onclick="rmQ(''+qid+'')" title="Delete">&#128465; Delete</button>'+
+        (i.status==='failed' && S.cfg.enablePostcard!==false?'<button class="btn-xs" data-id="'+qid+'" onclick="sendLobPostcard6x9(this.dataset.id)" style="background:#0e7490;border-color:#0e7490;color:#fff;">Retry Card</button>':'')+
+        (i.status==='pending'?'<button class="btn-xs" data-id="'+qid+'" onclick="editEstimate(this.dataset.id)">&#9999;&#65039; Edit</button>':'')+
+        '<button class="btn-xs" data-id="'+qid+'" onclick="previewQueueItem(this.dataset.id)">Preview Letter</button>'+
+        '<button class="btn-xs" data-id="'+qid+'" onclick="previewPostcard6x9(this.dataset.id)" style="background:#0e749022;border-color:#0e7490;color:#0e7490;" title="Preview postcard front & back">Preview Card</button>'+
+        '<button class="btn-xs danger" data-id="'+qid+'" onclick="rmQ(this.dataset.id)" title="Delete">&#128465; Delete</button>'+
         '</td></tr>'
       );
     });
