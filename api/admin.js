@@ -1217,6 +1217,8 @@ module.exports = async function handler(req, res) {
         const results = [];
         // Run each DDL statement individually via Supabase pg_meta API (uses SERVICE_KEY)
         const statements = batchSql.split('; ');
+        // Append one-time data migration: backfill source='unlock' on existing unlock queue items
+        statements.push(`UPDATE queue SET source = 'unlock' WHERE id LIKE 'mq_unlock_%' AND source IS NULL`);
         for (const stmt of statements) {
           if (!stmt.trim()) continue;
           try {
