@@ -798,19 +798,27 @@ function spmSelect(choice){
 function spmConfirm(){
   if(!_spmChoice || !_spmQueueId) return;
   closeM('m-send-postcard');
-  // Apply design backOverrides to S.cfg temporarily if a custom design is selected
+  // Apply design settings to the queue item so sendLobPostcard6x9 can use them
   const design = window._spmDesign;
-  if(design && design.backOverrides && Object.keys(design.backOverrides).length){
-    // Stamp the design id and backOverrides onto the queue item so sendLobPostcard6x9 can use them
-    const item = (S.queue||[]).find(x=>x.id===_spmQueueId);
+  const item = (S.queue||[]).find(x=>x.id===_spmQueueId);
+  if(design){
     if(item){
       item._sendDesignId = design.id;
       item._sendDesignUrl = design.url || null;
-      item._sendBackOverrides = design.backOverrides;
+      // Custom back: pass backUrl for renderCustomBackCanvas
+      if(design.backUrl){
+        item._sendDesignBackUrl = design.backUrl;
+        item._sendBackOverrides = null;
+      } else if(design.backOverrides && Object.keys(design.backOverrides).length){
+        item._sendDesignBackUrl = null;
+        item._sendBackOverrides = design.backOverrides;
+      } else {
+        item._sendDesignBackUrl = null;
+        item._sendBackOverrides = null;
+      }
     }
   } else {
-    const item = (S.queue||[]).find(x=>x.id===_spmQueueId);
-    if(item){ delete item._sendDesignId; delete item._sendDesignUrl; delete item._sendBackOverrides; }
+    if(item){ delete item._sendDesignId; delete item._sendDesignUrl; delete item._sendBackOverrides; delete item._sendDesignBackUrl; }
   }
   if(_spmChoice==='single'){
     sendLobPostcard6x9(_spmQueueId);

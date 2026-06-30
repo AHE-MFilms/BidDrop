@@ -1267,9 +1267,14 @@ async function sendLobPostcard6x9(id){
   try{
     const ts=Date.now();
     const acctId=(currentAccount&&currentAccount.id)||'shared';
+    // Determine back renderer: custom uploaded back vs standard BidDrop back
+    const _customBackUrl = item._sendDesignBackUrl || null;
+    const backRenderFn = _customBackUrl
+      ? () => renderCustomBackCanvas(_customBackUrl, S.cfg||{})
+      : () => renderPostcard6x9BackCanvas(syntheticItem);
     const [fDataUrl,bDataUrl]=await Promise.all([
       renderFrontCanvasForDesign(syntheticItem),
-      renderPostcard6x9BackCanvas(syntheticItem)
+      backRenderFn()
     ]);
     if(!fDataUrl||!bDataUrl){toast('Failed to render postcard images','error');return;}
     // Upload both JPEGs via server-side API

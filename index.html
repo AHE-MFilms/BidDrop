@@ -3195,8 +3195,47 @@ tr:hover td{background:var(--card);}
             <div class="fl">Description <span style="color:var(--muted);font-weight:400;">(optional)</span></div>
             <input class="fi" id="new-design-desc" placeholder="e.g. Use for storm follow-up campaigns" maxlength="120">
           </div>
-          <!-- BACK TEXT CUSTOMIZATION -->
+          <!-- BACK TYPE TOGGLE -->
           <div style="border-top:1px solid var(--border);padding-top:16px;margin-bottom:4px;">
+            <div style="font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;">📬 Postcard Back</div>
+            <!-- Toggle row -->
+            <div style="display:flex;gap:8px;margin-bottom:14px;">
+              <label id="nd-back-toggle-standard-label" style="flex:1;display:flex;align-items:center;gap:8px;padding:10px 12px;border:2px solid var(--accent);border-radius:8px;cursor:pointer;background:rgba(242,92,5,.07);">
+                <input type="radio" name="nd-back-type" id="nd-back-type-standard" value="standard" checked onchange="ndBackTypeChanged()" style="accent-color:var(--accent);">
+                <span style="font-size:12px;font-weight:700;color:var(--text);">BidDrop Standard Back</span>
+              </label>
+              <label id="nd-back-toggle-custom-label" style="flex:1;display:flex;align-items:center;gap:8px;padding:10px 12px;border:2px solid var(--border);border-radius:8px;cursor:pointer;">
+                <input type="radio" name="nd-back-type" id="nd-back-type-custom" value="custom" onchange="ndBackTypeChanged()" style="accent-color:var(--accent);">
+                <span style="font-size:12px;font-weight:700;color:var(--text);">Upload My Own Back</span>
+              </label>
+            </div>
+            <!-- CUSTOM BACK UPLOAD (hidden by default) -->
+            <div id="nd-custom-back-section" style="display:none;margin-bottom:14px;">
+              <div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:11px;color:var(--text);">
+                <div style="font-weight:800;color:#F59E0B;margin-bottom:4px;">📐 Back Artwork Specs</div>
+                <div style="display:flex;flex-wrap:wrap;gap:4px 16px;">
+                  <span><b>Size:</b> 1875×2775 px (portrait)</span>
+                  <span><b>Format:</b> JPEG or PNG</span>
+                  <span><b>300 DPI</b></span>
+                  <span><b>Leave clear:</b> address zone (right-bottom), QR zone (left-bottom), postage (top-right)</span>
+                </div>
+                <div style="margin-top:8px;">
+                  <a href="/manus-storage/biddrop_back_template_82a592aa.png" download="BidDrop_Back_Template.png" style="color:var(--accent);font-weight:700;text-decoration:none;font-size:12px;">⬇️ Download Back Template (PNG)</a>
+                  <span style="color:var(--muted);font-size:11px;margin-left:8px;">— shows all safe zones</span>
+                </div>
+              </div>
+              <div class="fl" style="margin-bottom:6px;">Back Artwork <span style="color:var(--muted);font-weight:400;">(JPEG or PNG · 1875×2775 px)</span></div>
+              <div id="nd-back-upload-preview" style="width:100%;height:140px;border:2px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;cursor:pointer;overflow:hidden;position:relative;background:var(--card2);" onclick="document.getElementById('new-design-back-file').click()">
+                <span id="nd-back-upload-text" style="text-align:center;padding:12px;">Click to upload back artwork<br><span style="font-size:11px;opacity:.6;">JPEG or PNG · 1875×2775 px</span></span>
+                <img id="nd-back-upload-img" style="display:none;width:100%;height:100%;object-fit:contain;" src="">
+              </div>
+              <div id="nd-back-size-warn" style="display:none;margin-top:6px;padding:6px 10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:6px;font-size:11px;color:#ef4444;"></div>
+              <input type="file" id="new-design-back-file" accept="image/jpeg,image/jpg,image/png" style="display:none;" onchange="previewNewDesignBack(this)">
+              <div style="margin-top:8px;font-size:11px;color:var(--muted);">BidDrop will automatically overlay the QR code and address block in the correct Lob-compliant zones.</div>
+            </div>
+          </div>
+          <!-- BACK TEXT CUSTOMIZATION (hidden when custom back is uploaded) -->
+          <div id="nd-standard-back-section" style="margin-bottom:4px;">
             <div style="font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.5px;text-transform:uppercase;margin-bottom:12px;">✏️ Customize Back Text</div>
             <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">These fields override your account defaults for this design only. Leave blank to use account defaults.</div>
             <!-- Badge pill -->
@@ -3251,6 +3290,7 @@ tr:hover td{background:var(--card);}
               </div>
             </div>
           </div>
+          </div><!-- /nd-standard-back-section -->
         </div>
         <!-- RIGHT: Live preview -->
         <div style="padding:22px 24px;background:var(--bg);display:flex;flex-direction:column;gap:14px;overflow-y:auto;max-height:80vh;">
@@ -3264,7 +3304,7 @@ tr:hover td{background:var(--card);}
           </div>
           <!-- Back preview -->
           <div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;">BACK <span style="font-weight:400;text-transform:none;letter-spacing:0;">(auto-generated · updates as you type)</span></div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;">BACK <span id="nd-back-preview-label" style="font-weight:400;text-transform:none;letter-spacing:0;">(auto-generated · updates as you type)</span></div>
             <div style="position:relative;">
               <canvas id="nd-back-preview-canvas" style="width:100%;border:1px solid var(--border);border-radius:8px;display:block;"></canvas>
               <div id="nd-back-preview-spinner" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.5);border-radius:8px;display:flex;align-items:center;justify-content:center;">
@@ -9243,10 +9283,10 @@ function renderDesignsGrid(){
         <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;">${d.name||'Untitled'}</div>
         ${d.desc ? '<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">'+d.desc+'</div>' : ''}
         <div style="font-size:10px;color:var(--muted);margin-bottom:6px;">Uploaded ${d.createdAt ? new Date(d.createdAt).toLocaleDateString() : 'recently'}</div>
-        ${d.backOverrides&&Object.keys(d.backOverrides).length ? '<div style="margin-bottom:7px;"><span style="background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#818cf8;font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;letter-spacing:.4px;">✓ CUSTOM BACK</span></div>' : ''}
+        ${d.backUrl ? '<div style="margin-bottom:7px;"><span style="background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#22c55e;font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;letter-spacing:.4px;">🖼 CUSTOM BACK</span></div>' : (d.backOverrides&&Object.keys(d.backOverrides).length ? '<div style="margin-bottom:7px;"><span style="background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#818cf8;font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;letter-spacing:.4px;">✓ CUSTOM TEXT</span></div>' : '')}
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
           <button onclick="openPostcardFullPreview(${i})" style="flex:1;background:var(--accent);border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">&#128247; Preview</button>
-          <button onclick="openEditDesignBack(${i})" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;">&#9998; Edit Back</button>
+          <button onclick="openEditDesignBack(${i})" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;">${d.backUrl?'🖼️':'✏️'} Edit Back</button>
           ${d.isDefault ? '<button disabled style="flex:1;background:rgba(242,92,5,.15);border:1px solid var(--accent);border-radius:6px;padding:6px 10px;color:var(--accent);font-size:11px;font-weight:700;cursor:default;">&#9733; Default</button>' : '<button onclick="setDesignAsDefault(\'' + d.id + '\')" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;">Set Default</button>'}
           <button onclick="deleteDesign(${i})" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:6px;padding:6px 10px;color:#EF4444;font-size:11px;font-weight:700;cursor:pointer;">Delete</button>
         </div>
@@ -9268,6 +9308,25 @@ function openAddDesignModal(){
   document.getElementById('new-design-file').value='';
   window._newDesignFile=null;
   window._newDesignDimsOk=false;
+  window._newDesignBackFile=null;
+  window._newDesignBackDimsOk=false;
+  window._editDesignBackUrl=null;
+  // Reset back type toggle to standard
+  const stdRadio=document.getElementById('nd-back-type-standard');
+  if(stdRadio){ stdRadio.checked=true; }
+  const customSec=document.getElementById('nd-custom-back-section');
+  const standardSec=document.getElementById('nd-standard-back-section');
+  if(customSec) customSec.style.display='none';
+  if(standardSec) standardSec.style.display='block';
+  // Reset back upload preview
+  const ndBackUploadText=document.getElementById('nd-back-upload-text');
+  const ndBackUploadImg=document.getElementById('nd-back-upload-img');
+  if(ndBackUploadText) ndBackUploadText.style.display='';
+  if(ndBackUploadImg){ ndBackUploadImg.style.display='none'; ndBackUploadImg.src=''; }
+  const ndBackFileInput=document.getElementById('new-design-back-file');
+  if(ndBackFileInput) ndBackFileInput.value='';
+  const ndBackSizeWarn=document.getElementById('nd-back-size-warn');
+  if(ndBackSizeWarn) ndBackSizeWarn.style.display='none';
   // Reset front preview wrap
   const fw=document.getElementById('nd-front-preview-wrap');
   if(fw) fw.innerHTML='<span style="color:var(--muted);font-size:12px;">Upload front artwork to preview</span>';
@@ -9284,6 +9343,102 @@ function closeAddDesignModal(){
   window._editDesignBackIdx = null;
   const saveBtn = document.getElementById('nd-save-btn');
   if(saveBtn) saveBtn.textContent = 'Save Design';
+}
+function ndBackTypeChanged(){
+  const isCustom = document.getElementById('nd-back-type-custom') && document.getElementById('nd-back-type-custom').checked;
+  const customSec = document.getElementById('nd-custom-back-section');
+  const standardSec = document.getElementById('nd-standard-back-section');
+  const labelEl = document.getElementById('nd-back-preview-label');
+  const stdLabel = document.getElementById('nd-back-toggle-standard-label');
+  const cusLabel = document.getElementById('nd-back-toggle-custom-label');
+  if(isCustom){
+    if(customSec) customSec.style.display='block';
+    if(standardSec) standardSec.style.display='none';
+    if(labelEl) labelEl.textContent='(custom back with QR + address overlay)';
+    if(stdLabel){ stdLabel.style.border='2px solid var(--border)'; stdLabel.style.background=''; }
+    if(cusLabel){ cusLabel.style.border='2px solid var(--accent)'; cusLabel.style.background='rgba(242,92,5,.07)'; }
+    // Show custom back preview if already uploaded
+    if(window._newDesignBackFile || window._editDesignBackUrl){
+      renderCustomBackPreviewInModal();
+    } else {
+      // Clear canvas to show placeholder
+      const canvas = document.getElementById('nd-back-preview-canvas');
+      if(canvas){ const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width,canvas.height); canvas.width=375; canvas.height=562; ctx.fillStyle='#1a1a1a'; ctx.fillRect(0,0,375,562); ctx.fillStyle='rgba(255,255,255,0.3)'; ctx.font='16px Arial'; ctx.textAlign='center'; ctx.fillText('Upload back artwork to preview',187,270); ctx.textAlign='left'; }
+    }
+  } else {
+    if(customSec) customSec.style.display='none';
+    if(standardSec) standardSec.style.display='block';
+    if(labelEl) labelEl.textContent='(auto-generated · updates as you type)';
+    if(stdLabel){ stdLabel.style.border='2px solid var(--accent)'; stdLabel.style.background='rgba(242,92,5,.07)'; }
+    if(cusLabel){ cusLabel.style.border='2px solid var(--border)'; cusLabel.style.background=''; }
+    renderDesignBackPreview();
+  }
+}
+function previewNewDesignBack(inp){
+  if(!inp.files||!inp.files[0]) return;
+  const file=inp.files[0];
+  const warnEl=document.getElementById('nd-back-size-warn');
+  if(!['image/jpeg','image/jpg','image/png'].includes(file.type)){
+    warnEl.textContent='❌ Invalid format. Please upload a JPEG or PNG file.';
+    warnEl.style.display='block';
+    window._newDesignBackFile=null; inp.value=''; return;
+  }
+  window._newDesignBackFile=file;
+  window._newDesignBackDimsOk=false;
+  const r=new FileReader();
+  r.onload=ev=>{
+    document.getElementById('nd-back-upload-text').style.display='none';
+    const img=document.getElementById('nd-back-upload-img');
+    img.src=ev.target.result; img.style.display='block';
+    // Check dimensions
+    const tmpImg=new Image();
+    tmpImg.onload=function(){
+      const w=tmpImg.naturalWidth, h=tmpImg.naturalHeight;
+      const validPortrait=(w===1875&&h===2775);
+      const validLandscape=(w===2775&&h===1875);
+      if(validPortrait||validLandscape){
+        warnEl.style.display='none';
+        window._newDesignBackDimsOk=true;
+      } else {
+        const minOk=(w>=1800&&h>=2700)||(w>=2700&&h>=1800);
+        if(minOk){
+          warnEl.innerHTML='⚠️ Recommended size is <b>1875×2775 px</b>. Your image is '+w+'×'+h+' px — may work but could have border issues.';
+          warnEl.style.display='block';
+          window._newDesignBackDimsOk=true;
+        } else {
+          warnEl.innerHTML='❌ Image too small ('+w+'×'+h+' px). Required: <b>1875×2775 px</b>.';
+          warnEl.style.display='block';
+          window._newDesignBackDimsOk=false;
+        }
+      }
+      // Render preview with overlay
+      renderCustomBackPreviewInModal();
+    };
+    tmpImg.src=ev.target.result;
+  };
+  r.readAsDataURL(file);
+}
+async function renderCustomBackPreviewInModal(){
+  const canvas=document.getElementById('nd-back-preview-canvas');
+  if(!canvas) return;
+  const spinner=document.getElementById('nd-back-preview-spinner');
+  if(spinner) spinner.style.display='flex';
+  try{
+    let backSrc = null;
+    if(window._newDesignBackFile){
+      backSrc = await new Promise(res=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.readAsDataURL(window._newDesignBackFile); });
+    } else if(window._editDesignBackUrl){
+      backSrc = window._editDesignBackUrl;
+    }
+    if(!backSrc){ if(spinner) spinner.style.display='none'; return; }
+    const dataUrl = await renderCustomBackCanvas(backSrc, S.cfg||{});
+    if(dataUrl){
+      const img=new Image();
+      img.onload=()=>{ canvas.width=img.width; canvas.height=img.height; canvas.getContext('2d').drawImage(img,0,0); };
+      img.src=dataUrl;
+    }
+  } catch(e){ console.warn('Custom back preview error:',e); }
+  finally{ if(spinner) spinner.style.display='none'; }
 }
 // Debounce helper for live back preview
 let _ndBackPreviewTimer=null;
@@ -9409,13 +9564,32 @@ async function saveNewDesign(){
     if(v('nd-back-badge2')) backOverrides.diff2=v('nd-back-badge2');
     if(v('nd-back-badge3')) backOverrides.diff3=v('nd-back-badge3');
     d.name = name; d.desc = desc;
-    d.backOverrides = Object.keys(backOverrides).length ? backOverrides : null;
+    // Handle back type changes in edit mode
+    const isCustomBackEdit = document.getElementById('nd-back-type-custom') && document.getElementById('nd-back-type-custom').checked;
+    if(isCustomBackEdit){
+      // Custom back selected
+      if(window._newDesignBackFile){
+        // New back file uploaded — upload it
+        const acctIdEdit=(currentAccount&&currentAccount.id)||'shared';
+        const safeNEdit=name.toLowerCase().replace(/[^a-z0-9]/g,'-').substring(0,30);
+        toast('Uploading back artwork…','info');
+        const backPathEdit=acctIdEdit+'/designs/'+safeNEdit+'-back-'+Date.now()+'.jpg';
+        const newBackUrl=await uploadToStorage(window._newDesignBackFile,backPathEdit,1800,0.92,'image/jpeg');
+        d.backUrl = newBackUrl || d.backUrl;
+      }
+      // Keep existing backUrl if no new file uploaded (window._editDesignBackUrl)
+      d.backOverrides = null; // custom back doesn't use text overrides
+    } else {
+      // Standard back selected — clear any existing backUrl
+      d.backUrl = null;
+      d.backOverrides = Object.keys(backOverrides).length ? backOverrides : null;
+    }
     window._editDesignBackMode = false;
     window._editDesignBackIdx = null;
     const saveBtn = document.getElementById('nd-save-btn');
     if(saveBtn) saveBtn.textContent = 'Save Design';
     save(); closeAddDesignModal(); renderDesignsGrid(); renderDripStepDesignSelects();
-    toast('Back text updated for "'+name+'"','success');
+    toast('Back updated for "'+name+'"','success');
     return;
   }
   if(!window._newDesignFile){ toast('Please upload a front image','error'); return; }
@@ -9438,15 +9612,26 @@ async function saveNewDesign(){
   if(v('nd-back-badge3')) backOverrides.diff3=v('nd-back-badge3');
   const acctId=(currentAccount&&currentAccount.id)||'shared';
   const safeN=name.toLowerCase().replace(/[^a-z0-9]/g,'-').substring(0,30);
-  const path=acctId+'/designs/'+safeN+'-'+Date.now()+'.jpg';
+  const ts=Date.now();
+  const path=acctId+'/designs/'+safeN+'-'+ts+'.jpg';
   toast('Uploading design…','info');
   const url=await uploadToStorage(window._newDesignFile,path,1800,0.92,'image/jpeg');
+  // Check if custom back is selected and uploaded
+  const isCustomBack = document.getElementById('nd-back-type-custom') && document.getElementById('nd-back-type-custom').checked;
+  let backUrl = null;
+  if(isCustomBack && window._newDesignBackFile){
+    if(window._newDesignBackDimsOk===false){ toast('Back image is too small. Please upload a 1875×2775 px image.','error'); return; }
+    toast('Uploading back artwork…','info');
+    const backPath=acctId+'/designs/'+safeN+'-back-'+ts+'.jpg';
+    backUrl=await uploadToStorage(window._newDesignBackFile,backPath,1800,0.92,'image/jpeg');
+  }
   if(!S.cfg.postcardDesigns) S.cfg.postcardDesigns=[];
   S.cfg.postcardDesigns.push({
-    id:'des_'+Date.now(),
+    id:'des_'+ts,
     name, desc,
     url:url||null,
-    backOverrides:Object.keys(backOverrides).length?backOverrides:null,
+    backUrl:backUrl||null,
+    backOverrides:(!isCustomBack&&Object.keys(backOverrides).length)?backOverrides:null,
     createdAt:new Date().toISOString()
   });
   save(); closeAddDesignModal(); renderDesignsGrid(); renderDripStepDesignSelects();
@@ -9495,12 +9680,38 @@ function openEditDesignBack(idx){
   // Mark as edit mode (no file required)
   window._newDesignFile = null;
   window._newDesignDimsOk = true; // existing design already validated
+  window._newDesignBackFile = null;
+  window._newDesignBackDimsOk = true;
+  window._editDesignBackUrl = d.backUrl || null;
   window._editDesignBackMode = true;
+  // Set back type toggle based on whether design has a custom back
+  const stdRadio = document.getElementById('nd-back-type-standard');
+  const cusRadio = document.getElementById('nd-back-type-custom');
+  const customSec = document.getElementById('nd-custom-back-section');
+  const standardSec = document.getElementById('nd-standard-back-section');
+  if(d.backUrl){
+    if(cusRadio) cusRadio.checked = true;
+    if(customSec) customSec.style.display = 'block';
+    if(standardSec) standardSec.style.display = 'none';
+    // Show existing back image in the upload preview
+    const ndBackUploadText = document.getElementById('nd-back-upload-text');
+    const ndBackUploadImg = document.getElementById('nd-back-upload-img');
+    if(ndBackUploadText) ndBackUploadText.style.display = 'none';
+    if(ndBackUploadImg){ ndBackUploadImg.src = d.backUrl; ndBackUploadImg.style.display = 'block'; }
+  } else {
+    if(stdRadio) stdRadio.checked = true;
+    if(customSec) customSec.style.display = 'none';
+    if(standardSec) standardSec.style.display = 'block';
+  }
   // Change save button label
   const saveBtn = document.getElementById('nd-save-btn');
   if(saveBtn) saveBtn.textContent = 'Save Back Changes';
   document.getElementById('add-design-modal').style.display = 'flex';
-  setTimeout(renderDesignBackPreview, 200);
+  if(d.backUrl){
+    setTimeout(renderCustomBackPreviewInModal, 200);
+  } else {
+    setTimeout(renderDesignBackPreview, 200);
+  }
 }
 function deleteDesign(idx){
   if(!confirm('Delete this design?')) return;
@@ -9720,8 +9931,15 @@ async function renderPostcardPreviewBack(d){
   const spinner = document.getElementById('pcp-back-spinner');
   if(spinner) spinner.style.display = 'flex';
   try{
-    const overrides = d.backOverrides || {};
-    const dataUrl = await renderDesignBackCanvas(S.cfg||{}, overrides);
+    let dataUrl;
+    if(d.backUrl){
+      // Custom back: composite uploaded image + QR + address block overlay
+      dataUrl = await renderCustomBackCanvas(d.backUrl, S.cfg||{});
+    } else {
+      // Standard BidDrop back: use design text overrides
+      const overrides = d.backOverrides || {};
+      dataUrl = await renderDesignBackCanvas(S.cfg||{}, overrides);
+    }
     if(dataUrl){
       const img = new Image();
       img.onload = () => {
