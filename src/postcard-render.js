@@ -1462,31 +1462,24 @@ async function renderDesignBackCanvas(cfg, overrides){
 async function renderCustomBackCanvas(backImageSrc, cfg) {
   cfg = cfg || (window.S && window.S.cfg) || {};
 
-  // Canvas dimensions: Lob 6x9 landscape at 300 DPI (with 0.25" bleed)
+  // Canvas dimensions: Lob 6x9 landscape at 300 DPI (9.25" x 6.25" with 0.25" bleed)
   const W = 2775, H = 1875;
-  const BLEED = 75; // 0.25" * 300 DPI
 
-  // ── Zone coordinates (all in canvas pixels) ──────────────────────────────
-  // QR code zone: bottom-left, 1.5" x 1.5" square, 0.25" inside trim
-  const QR_X = BLEED + BLEED;          // 150
-  const QR_SIZE = 450;                  // 1.5" x 1.5"
-  const QR_Y = H - BLEED - BLEED - QR_SIZE; // 1275 (bottom at 1725)
+  // ── Zone coordinates measured from official Lob 6x9 template ────────────
+  // QR code zone (bottom-left)
+  const QR_X = 135, QR_Y = 1180, QR_SIZE = 366;
 
-  // Address zone: 4" x 2" from right trim, bottom-right
-  const ADDR_W = 1200, ADDR_H = 600;
-  const ADDR_X = W - BLEED - ADDR_W;   // 1500
-  const ADDR_Y = H - BLEED - ADDR_H;   // 1200
+  // Address zone (right side, "4 x 2 from right trim")
+  const ADDR_X = 1003, ADDR_Y = 990, ADDR_W = 1707, ADDR_H = 637;
 
-  // Postage/indicia zone: top-right, ~1.5" x 1"
-  const POST_W = 450, POST_H = 300;
-  const POST_X = W - BLEED - POST_W;   // 2250
-  const POST_Y = BLEED;                 // 75
+  // Postage / indicia zone (top-right)
+  const POST_X = 2303, POST_Y = 54, POST_W = 461, POST_H = 271;
 
   const canvas = document.createElement('canvas');
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d');
 
-  // 1. Draw uploaded back image (cover-fit)
+  // 1. Draw uploaded back image (cover-fit to fill canvas)
   const backImg = await loadImg(backImageSrc);
   if (backImg) {
     const scale = Math.max(W / backImg.width, H / backImg.height);
@@ -1510,7 +1503,7 @@ async function renderCustomBackCanvas(backImageSrc, cfg) {
 
   // 4. White out QR zone and draw QR code (bottom-left)
   ctx.fillStyle = '#ffffff';
-  ctx.fillRect(QR_X - 10, QR_Y - 10, QR_SIZE + 20, QR_SIZE + 20);
+  ctx.fillRect(QR_X - 8, QR_Y - 8, QR_SIZE + 16, QR_SIZE + 16);
 
   const bookingUrl = cfg.bookingUrl || 'https://biddrop.us';
   const qrApiUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=4&data=' + encodeURIComponent(bookingUrl);
@@ -1520,13 +1513,13 @@ async function renderCustomBackCanvas(backImageSrc, cfg) {
     // "SCAN TO BOOK" label below QR
     const scanCta = cfg.postcardScanCta || 'SCAN TO BOOK';
     const scanSub = cfg.postcardScanSub || 'No-pressure booking';
-    ctx.font = 'bold 28px Arial';
+    ctx.font = 'bold 24px Arial';
     ctx.fillStyle = '#111827';
     ctx.textAlign = 'left';
-    ctx.fillText(scanCta, QR_X, QR_Y + QR_SIZE + 36);
-    ctx.font = '22px Arial';
+    ctx.fillText(scanCta, QR_X, QR_Y + QR_SIZE + 30);
+    ctx.font = '20px Arial';
     ctx.fillStyle = '#6b7280';
-    ctx.fillText(scanSub, QR_X, QR_Y + QR_SIZE + 64);
+    ctx.fillText(scanSub, QR_X, QR_Y + QR_SIZE + 56);
   }
 
   return canvas.toDataURL('image/jpeg', 0.92);
