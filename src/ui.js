@@ -156,7 +156,6 @@ function _showUnlockModal(pin, resolve) {
         🖨 Print letter / Print Now<br>
         📬 Add to Mail Queue (includes 1 postcard)<br>
         ⬆️ Sync to GoHighLevel CRM or supported CRM<br>
-        📋 Sales Proposal PDF<br>
         🏛 Insurance Scope PDF
       </div>
       <div style="background:rgba(255,255,255,.06);border-radius:10px;padding:10px 14px;margin-bottom:18px;font-size:12px;color:#d1d5db;">
