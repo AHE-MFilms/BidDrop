@@ -771,9 +771,14 @@ function loadEstFromPicker(){
   if(typeof _accUpdatePropertySummary==='function') _accUpdatePropertySummary();
   // Refresh unlock button state
   if(typeof _estRefreshUnlockUI==='function') _estRefreshUnlockUI();
-  // Auto-lookup owner name if field is empty
-  if(masterRentcastKey && p.address && !document.getElementById('e-owner').value.trim()){
+  // Auto-lookup owner name + always refresh equity/property snapshot
+  if(masterRentcastKey && p.address){
+    // autoFillOwnerIfEmpty always fetches equity data and shows the badge,
+    // regardless of whether the owner name field is already filled
     autoFillOwnerIfEmpty(p.address);
+  } else if(p.equityData){
+    // Fallback: show cached equity data if RentCast key not available
+    showEquityBadge(p.equityData);
   }
   // Fetch satellite roof measurement (non-blocking)
   hideSolarBanner();
