@@ -1212,7 +1212,26 @@ module.exports = async function handler(req, res) {
           `CREATE INDEX IF NOT EXISTS idx_estimates_qb ON estimates(account_id, qb_invoice_id)`,
           /* ── Solar overlay: store systemKw on pins for map overlay ── */
           `ALTER TABLE pins ADD COLUMN IF NOT EXISTS solar_kw NUMERIC`,
-          `ALTER TABLE pins ADD COLUMN IF NOT EXISTS solar_potential TEXT`
+          `ALTER TABLE pins ADD COLUMN IF NOT EXISTS solar_potential TEXT`,
+          /* ── mailer_log: tracks every physical mail send ── */
+          `CREATE TABLE IF NOT EXISTS mailer_log (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            account_id TEXT,
+            sent_by TEXT,
+            address TEXT,
+            owner_name TEXT,
+            estimate_total NUMERIC DEFAULT 0,
+            lob_id TEXT,
+            queue_item_id TEXT,
+            company_name TEXT,
+            mailer_type TEXT,
+            credits_used INTEGER DEFAULT 1,
+            sent_at TIMESTAMPTZ DEFAULT NOW()
+          )`,
+          `ALTER TABLE mailer_log ADD COLUMN IF NOT EXISTS mailer_type TEXT`,
+          `ALTER TABLE mailer_log ADD COLUMN IF NOT EXISTS queue_item_id TEXT`,
+          `ALTER TABLE mailer_log ADD COLUMN IF NOT EXISTS credits_used INTEGER DEFAULT 1`,
+          `CREATE INDEX IF NOT EXISTS idx_mailer_log_account_sent ON mailer_log(account_id, sent_at DESC)`
         ].join('; ');
         const results = [];
         // Run each DDL statement individually via Supabase pg_meta API (uses SERVICE_KEY)
