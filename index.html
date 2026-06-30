@@ -812,6 +812,29 @@ tr:hover td{background:var(--card);}
       </div>
     </div>
 
+    <!-- Follow-Up Blitz Sale Bundle -->
+    <div id="blitz-sale-banner" style="background:linear-gradient(135deg,#7C3AED22,#16a34a22);border:2px solid #7C3AED;border-radius:12px;padding:14px 16px;margin-bottom:16px;position:relative;overflow:hidden;">
+      <div style="font-family:var(--font-h);font-size:15px;font-weight:800;color:var(--text);margin-bottom:2px;">🔥 Follow-Up Blitz — Buy 3 Get 5 Postcards!</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Unlock a lead (1 credit) + start the Blitz (2 credits) = <strong style="color:#22C55E;">5 postcards total — 2 FREE</strong></div>
+      <div id="blitz-sale-countdown" style="font-size:11px;color:#a78bfa;font-weight:600;margin-bottom:10px;"></div>
+      <button onclick="buyCredits('pack_blitz_sale',this)" style="background:#7C3AED;border:none;border-radius:10px;padding:10px 18px;color:#fff;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">
+        Get 5 Credits for $12 →
+      </button>
+    </div>
+    <script>
+    (function(){
+      var end = new Date('2026-08-26T23:59:59');
+      function tick(){
+        var diff = end - new Date();
+        if(diff <= 0){ var el=document.getElementById('blitz-sale-countdown'); if(el) el.textContent='Sale ended'; return; }
+        var d=Math.floor(diff/86400000),h=Math.floor((diff%86400000)/3600000),m=Math.floor((diff%3600000)/60000);
+        var el=document.getElementById('blitz-sale-countdown');
+        if(el) el.textContent='⏳ Sale ends in '+d+'d '+h+'h '+m+'m';
+        setTimeout(tick,60000);
+      }
+      tick();
+    })();
+    <\/script>
     <!-- Credit packs -->
     <div style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Buy Credits — Volume discounts at 100+ credits</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
@@ -8347,48 +8370,56 @@ function startDripSequence(){
   if(!isPlanAtLeast('agency')){ showPlanUpgradePrompt('Follow-Up Blitz','agency'); return; }
   const est = (S.estimates||[]).find(e=>e.id===_dripEstId);
   if(!est){ toast('Estimate not found','error'); return; }
-  // Credit pre-check: Follow-Up Blitz costs 3 credits (6 mailers, but steps 4-6 are free = 3×1)
-  const BLITZ_CREDITS = 3;
-  const planFreeMapD = {starter:0,pro:0,agency:0,enterprise:0};
-  const freeLimitD = planFreeMapD[(S.cfg.plan||'starter').toLowerCase()] || 0;
-  const freeLeftD  = Math.max(0, freeLimitD - (S.cfg.freeMailerCreditsUsed || 0));
-  const paid      = S.cfg.mailerCredits || 0;
-  const total     = freeLeftD + paid;
-  if(total < BLITZ_CREDITS){
-    toast(`Not enough credits for Follow-Up Blitz. Need 3 credits ($12.00) for 6 postcards, you have ${total}. Please purchase more credits.`,'error');
+  // Credit pre-check:
+  // If the estimate is already unlocked (pin.unlockQueuedPostcard or pin.unlocked),
+  // Step 1 was already queued during unlock — Blitz only needs 2 more credits for Steps 2-5.
+  // If NOT already unlocked, Blitz needs 3 credits total (Step 1 + Steps 2-5).
+  const pin = (S.pins||[]).find(p=>p.id===est.pinId);
+  const step1AlreadyQueued = !!(pin && (pin.unlockQueuedPostcard || pin.unlocked));
+  const BLITZ_CREDITS = step1AlreadyQueued ? 2 : 3;
+  const paid = S.cfg.mailerCredits || 0;
+  if(paid < BLITZ_CREDITS){
+    const msg = step1AlreadyQueued
+      ? `Need 2 more credits ($8.00) for Steps 2–5 of the Blitz. You have ${paid}. Step 1 is already queued from your unlock.`
+      : `Need 3 credits ($12.00) for the full 5-postcard Blitz. You have ${paid}.`;
+    toast(msg,'error');
     setTimeout(()=>showBuyCreditsModal(), 800);
     return;
   }
-  const d2 = parseInt(document.getElementById('drip-delay-2').value)||7;
-  const d3 = parseInt(document.getElementById('drip-delay-3').value)||14;
-  const d4 = parseInt(document.getElementById('drip-delay-4').value)||21;
-  const d5 = parseInt(document.getElementById('drip-delay-5').value)||30;
-  const d6 = parseInt(document.getElementById('drip-delay-6').value)||45;
+  const d2 = parseInt((document.getElementById('drip-delay-2')||{}).value)||7;
+  const d3 = parseInt((document.getElementById('drip-delay-3')||{}).value)||14;
+  const d4 = parseInt((document.getElementById('drip-delay-4')||{}).value)||21;
+  const d5 = parseInt((document.getElementById('drip-delay-5')||{}).value)||30;
   const now = new Date();
   const msDay = 86400000;
   est.drip = {
     startedAt: now.toISOString(),
-    blitz: true, // marks this as a Follow-Up Blitz (discount pricing)
+    blitz: true,
+    step1FromUnlock: step1AlreadyQueued,
     steps: [
-      { step:1, type:'postcard', label:'First Postcard',       sendAt: now.toISOString(),                              sentAt:null, queueId:null },
-      { step:2, type:'postcard', label:'Follow-Up Postcard',   sendAt: new Date(now.getTime()+d2*msDay).toISOString(), sentAt:null, queueId:null },
-      { step:3, type:'postcard', label:'Urgency Postcard',     sendAt: new Date(now.getTime()+d3*msDay).toISOString(), sentAt:null, queueId:null },
-      { step:4, type:'postcard', label:'Final Notice (Free)',  sendAt: new Date(now.getTime()+d4*msDay).toISOString(), sentAt:null, queueId:null },
-      { step:5, type:'postcard', label:'Re-Engage (Free)',     sendAt: new Date(now.getTime()+d5*msDay).toISOString(), sentAt:null, queueId:null },
-      { step:6, type:'postcard', label:'Final Goodbye (Free)', sendAt: new Date(now.getTime()+d6*msDay).toISOString(), sentAt:null, queueId:null }
+      { step:1, type:'postcard', label:'First Postcard',     sendAt: now.toISOString(),                              sentAt: step1AlreadyQueued ? now.toISOString() : null, queueId:null },
+      { step:2, type:'postcard', label:'Follow-Up Postcard', sendAt: new Date(now.getTime()+d2*msDay).toISOString(), sentAt:null, queueId:null },
+      { step:3, type:'postcard', label:'Urgency Postcard',   sendAt: new Date(now.getTime()+d3*msDay).toISOString(), sentAt:null, queueId:null },
+      { step:4, type:'postcard', label:'Final Notice',       sendAt: new Date(now.getTime()+d4*msDay).toISOString(), sentAt:null, queueId:null },
+      { step:5, type:'postcard', label:'Final Goodbye',      sendAt: new Date(now.getTime()+d5*msDay).toISOString(), sentAt:null, queueId:null }
     ]
   };
-  // Add step 1 to mail queue immediately
-  addEstimateToMailQueueWithDripTag(est, 1);
-  // Schedule steps 2-6 as future queue items (status='scheduled')
-  [1,2,3,4,5].forEach(i=>{
+  // Step 1: only queue if NOT already queued from unlock
+  if(!step1AlreadyQueued){
+    addEstimateToMailQueueWithDripTag(est, 1);
+  }
+  // Schedule steps 2-5
+  [1,2,3,4].forEach(i=>{
     const step = est.drip.steps[i];
     scheduleDripStep(est, step);
   });
   save();
   closeM('m-drip');
   renderEstimatesTab();
-  toast('🔥 Follow-Up Blitz started! Step 1 added to Mail Queue. Steps 2–6 scheduled automatically.','success');
+  const creditMsg = step1AlreadyQueued
+    ? '🔥 Follow-Up Blitz started! Step 1 already queued from unlock. Steps 2–5 scheduled automatically.'
+    : '🔥 Follow-Up Blitz started! Step 1 added to Mail Queue. Steps 2–5 scheduled automatically.';
+  toast(creditMsg,'success');
 }
 
 function addEstimateToMailQueueWithDripTag(est, stepNum){
@@ -10263,11 +10294,11 @@ function openCampaignQRStats(campaignId) {
           <div style="display:flex;flex-direction:column;gap:6px;">
             <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--card2);border:1px solid var(--border);border-radius:8px;cursor:pointer;">
               <input type="radio" name="er-delivery" value="mail" checked style="accent-color:var(--accent);">
-              <div><div style="font-size:13px;font-weight:700;color:var(--text);">📬 Mail via USPS</div><div style="font-size:11px;color:var(--muted);">Printed & mailed by Lob · 1 credit</div></div>
+              <div><div style="font-size:13px;font-weight:700;color:var(--text);">📬 Mail via USPS</div><div style="font-size:11px;color:var(--muted);">Printed &amp; mailed via USPS First Class · 1 credit</div></div>
             </label>
             <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--card2);border:1px solid var(--border);border-radius:8px;cursor:pointer;">
               <input type="radio" name="er-delivery" value="queue" style="accent-color:var(--accent);">
-              <div><div style="font-size:13px;font-weight:700;color:var(--text);">📋 Add to Mail Queue</div><div style="font-size:11px;color:var(--muted);">Review before sending · 0 credits now</div></div>
+              <div><div style="font-size:13px;font-weight:700;color:var(--text);">📋 Save to Queue</div><div style="font-size:11px;color:var(--muted);">Already queued — update &amp; review before sending · 0 credits now</div></div>
             </label>
           </div>
         </div>
@@ -10285,6 +10316,85 @@ function openCampaignQRStats(campaignId) {
         <button id="er-send-btn" onclick="sendEstimateReveal()" style="background:var(--accent);border:none;border-radius:10px;padding:14px;color:#fff;font-family:var(--font-b);font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.5px;width:100%;">📬 Send Estimate Reveal Postcard</button>
         <div id="er-status" style="font-size:12px;color:var(--muted);text-align:center;min-height:18px;"></div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Follow-Up Blitz Modal ── -->
+<div id="m-drip" class="overlay" style="display:none;z-index:25500;align-items:flex-start;padding-top:max(env(safe-area-inset-top,0px),20px);overflow-y:auto;" onclick="if(event.target===this)closeM('m-drip')">
+  <div style="background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px;width:min(520px,96vw);margin:auto;box-shadow:0 24px 60px rgba(0,0,0,.6);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div style="font-family:var(--font-h);font-size:18px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;">🔥 Follow-Up Blitz</div>
+      <button onclick="closeM('m-drip')" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;">✕</button>
+    </div>
+    <div id="drip-est-label" style="font-size:13px;color:var(--muted);margin-bottom:18px;"></div>
+    <!-- Steps -->
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+      <!-- Step 1 -->
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="background:var(--accent);color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 1</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);">First Postcard <span style="font-size:11px;background:#22C55E22;color:#22C55E;border-radius:8px;padding:1px 7px;font-weight:700;">Covered by Unlock</span></div>
+          <div style="margin-left:auto;font-size:12px;color:var(--muted);">Sends immediately</div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px;">Already queued when you unlocked this lead — no extra credit needed.</div>
+      </div>
+      <!-- Step 2 -->
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="background:#7C3AED;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 2</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);">Follow-Up Postcard <span style="font-size:11px;color:var(--muted);">1 credit</span></div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+            <input type="number" id="drip-delay-2" value="7" min="1" max="90" style="width:52px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 6px;color:var(--text);font-size:12px;text-align:center;">
+            <span style="font-size:12px;color:var(--muted);">days after step 1</span>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px);">Reminder — “Your estimate is still available.”</div>
+      </div>
+      <!-- Step 3 -->
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="background:#7C3AED;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 3</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);">Urgency Postcard <span style="font-size:11px;color:var(--muted);">1 credit</span></div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+            <input type="number" id="drip-delay-3" value="14" min="1" max="90" style="width:52px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 6px;color:var(--text);font-size:12px;text-align:center;">
+            <span style="font-size:12px;color:var(--muted);">days after step 1</span>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px;">Urgency — “Roof damage doesn’t wait.”</div>
+      </div>
+      <!-- Step 4 -->
+      <div style="background:var(--card2);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:14px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="background:#16a34a;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 4</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);">Final Notice <span style="font-size:11px;background:#22C55E22;color:#22C55E;border-radius:8px;padding:1px 7px;font-weight:700;">FREE</span></div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+            <input type="number" id="drip-delay-4" value="21" min="1" max="90" style="width:52px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 6px;color:var(--text);font-size:12px;text-align:center;">
+            <span style="font-size:12px;color:var(--muted);">days after step 1</span>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px;">Last chance — “We’d love to earn your business.”</div>
+      </div>
+      <!-- Step 5 -->
+      <div style="background:var(--card2);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:14px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="background:#16a34a;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 5</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);">Final Goodbye <span style="font-size:11px;background:#22C55E22;color:#22C55E;border-radius:8px;padding:1px 7px;font-weight:700;">FREE</span></div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+            <input type="number" id="drip-delay-5" value="30" min="1" max="180" style="width:52px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 6px;color:var(--text);font-size:12px;text-align:center;">
+            <span style="font-size:12px;color:var(--muted);">days after step 1</span>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px;">Final goodbye — “One last thing. We’d love to earn your business.”</div>
+      </div>
+    </div>
+    <!-- Info note -->
+    <div style="background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:10px 14px;font-size:12px;color:#C4B5FD;margin-bottom:18px;">
+      <strong>🔥 Buy 3 Get 5!</strong> Unlock a lead (1 credit) + start the Blitz (2 credits) = <strong style="color:#4ade80;">5 postcards total — Steps 4 &amp; 5 are FREE.</strong> Steps 2–5 are scheduled automatically. Cancel anytime from the Estimates tab.
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="startDripSequence()" style="flex:1;background:#7C3AED;border:none;border-radius:8px;padding:14px;color:#fff;font-family:var(--font-b);font-size:14px;font-weight:700;cursor:pointer;">🔥 Start Follow-Up Blitz — 2 Credits · 5 Postcards Total</button>
+      <button onclick="closeM('m-drip')" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:14px 20px;color:var(--muted);font-family:var(--font-b);font-size:14px;cursor:pointer;">Cancel</button>
     </div>
   </div>
 </div>

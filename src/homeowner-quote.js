@@ -762,7 +762,7 @@ function spmSelect(choice){
       btn.textContent='🏠 Send 1 Postcard — 1 Credit';
       btn.style.background='var(--accent)';
     } else {
-      btn.textContent='🔥 Start Follow-Up Blitz — 3 Credits (6 Postcards)';
+      btn.textContent='🔥 Start Follow-Up Blitz — 2 Credits (5 Postcards Total)';
       btn.style.background='#7C3AED';
     }
     btn.style.opacity='1'; btn.style.pointerEvents='auto';
