@@ -715,6 +715,7 @@ let _spmChoice  = null;
 function openSendPostcardModal(queueId){
   _spmQueueId = queueId;
   _spmChoice  = null;
+  window._spmDesign = null; // reset design selection
   const item = (S.queue||[]).find(x=>x.id===queueId);
   const lbl = document.getElementById('spm-homeowner');
   if(lbl && item) lbl.textContent = (item.owner||'Homeowner') + ' — ' + (item.addr||'');
@@ -735,7 +736,38 @@ function openSendPostcardModal(queueId){
   });
   const btn = document.getElementById('spm-confirm-btn');
   if(btn){ btn.textContent='Select an option above'; btn.style.opacity='.4'; btn.style.pointerEvents='none'; btn.style.background='var(--accent)'; }
+  // Reset design row to Standard
+  _spmUpdateDesignRow(null);
   openM('m-send-postcard');
+}
+function _spmUpdateDesignRow(design){
+  const nameEl = document.getElementById('spm-design-name');
+  const noteEl = document.getElementById('spm-design-back-note');
+  const thumbEl = document.getElementById('spm-design-thumb');
+  if(!nameEl) return;
+  if(!design){
+    nameEl.textContent = 'Standard (Account Default)';
+    noteEl.textContent = 'Uses your account back text';
+    thumbEl.innerHTML = '<span style="font-size:16px;">&#128203;</span>';
+  } else {
+    nameEl.textContent = design.name || 'Custom Design';
+    noteEl.textContent = design.backOverrides && Object.keys(design.backOverrides).length
+      ? '✓ Custom back text included'
+      : 'Uses account back text';
+    if(design.url){
+      thumbEl.innerHTML = '<img src="'+design.url+'" style="width:100%;height:100%;object-fit:cover;">';
+    } else {
+      thumbEl.innerHTML = '<span style="font-size:16px;">&#127912;</span>';
+    }
+  }
+}
+function spmPickDesign(){
+  if(typeof openDesignPicker === 'function'){
+    openDesignPicker(function(design){
+      window._spmDesign = design || null;
+      _spmUpdateDesignRow(design || null);
+    }, window._spmDesign ? window._spmDesign.id : null);
+  }
 }
 
 function spmSelect(choice){
@@ -766,6 +798,20 @@ function spmSelect(choice){
 function spmConfirm(){
   if(!_spmChoice || !_spmQueueId) return;
   closeM('m-send-postcard');
+  // Apply design backOverrides to S.cfg temporarily if a custom design is selected
+  const design = window._spmDesign;
+  if(design && design.backOverrides && Object.keys(design.backOverrides).length){
+    // Stamp the design id and backOverrides onto the queue item so sendLobPostcard6x9 can use them
+    const item = (S.queue||[]).find(x=>x.id===_spmQueueId);
+    if(item){
+      item._sendDesignId = design.id;
+      item._sendDesignUrl = design.url || null;
+      item._sendBackOverrides = design.backOverrides;
+    }
+  } else {
+    const item = (S.queue||[]).find(x=>x.id===_spmQueueId);
+    if(item){ delete item._sendDesignId; delete item._sendDesignUrl; delete item._sendBackOverrides; }
+  }
   if(_spmChoice==='single'){
     sendLobPostcard6x9(_spmQueueId);
   } else {

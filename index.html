@@ -3159,45 +3159,133 @@ tr:hover td{background:var(--card);}
       </div>
     </div>
   </div>
-  <!-- ADD DESIGN MODAL -->
-  <div id="add-design-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;align-items:center;justify-content:center;">
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;width:420px;max-width:95vw;max-height:90vh;overflow-y:auto;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-        <div style="font-size:16px;font-weight:800;color:var(--text);">📤 Upload Postcard Design</div>
-        <button onclick="closeAddDesignModal()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;">×</button>
-      </div>
-      <!-- Spec callout -->
-      <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:11px;line-height:1.6;color:var(--text);">
-        <div style="font-weight:800;color:#F59E0B;margin-bottom:6px;">📐 6×9 Postcard Requirements</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;">
-          <div><b>Format:</b> JPEG or PNG</div>
-          <div><b>Resolution:</b> 300 DPI</div>
-          <div><b>Bleed (canvas):</b> 1875 × 2775 px</div>
-          <div><b>Trim line:</b> 1800 × 2700 px</div>
-          <div style="grid-column:1/-1;"><b>Safe zone (keep text inside):</b> 1725 × 2625 px</div>
+  <!-- ADD DESIGN MODAL — Full upload + back editor + side-by-side preview -->
+  <div id="add-design-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 12px;">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;width:100%;max-width:1100px;overflow:hidden;margin:auto;">
+      <!-- Header -->
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px 16px;border-bottom:1px solid var(--border);">
+        <div>
+          <div style="font-family:var(--font-h);font-size:20px;font-weight:800;color:var(--text);">📤 Upload New Design</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px;">Upload your front artwork · Customize the back · Preview both sides</div>
         </div>
-        <div style="margin-top:6px;color:var(--muted);">Extend background to bleed edge. Keep all text &amp; logos inside the safe zone.</div>
+        <button onclick="closeAddDesignModal()" style="background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer;line-height:1;padding:4px 8px;">×</button>
       </div>
-      <div style="margin-bottom:12px;">
-        <div class="fl">Design Name</div>
-        <input class="fi" id="new-design-name" placeholder="e.g. Storm Urgency, Final Notice, Summer Special" maxlength="60">
-      </div>
-      <div style="margin-bottom:12px;">
-        <div class="fl">Front Image <span style="color:var(--muted);font-weight:400;">(JPEG or PNG · 1875×2775 px · 300 DPI)</span></div>
-        <div id="new-design-preview" style="width:100%;height:140px;border:2px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;cursor:pointer;overflow:hidden;position:relative;" onclick="document.getElementById('new-design-file').click()">
-          <span id="new-design-preview-text">Click to upload · JPEG or PNG · 1875×2775 px</span>
-          <img id="new-design-preview-img" style="display:none;width:100%;height:100%;object-fit:cover;" src="">
+      <!-- Body: two columns -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;min-height:500px;">
+        <!-- LEFT: Upload + back text fields -->
+        <div style="padding:22px 24px;border-right:1px solid var(--border);overflow-y:auto;max-height:80vh;">
+          <!-- Spec strip -->
+          <div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:11px;color:var(--text);display:flex;flex-wrap:wrap;gap:6px 18px;">
+            <span style="font-weight:800;color:#F59E0B;">📐 Front Artwork Specs</span>
+            <span><b>Format:</b> JPEG or PNG</span>
+            <span><b>Bleed:</b> 1875×2775 px</span>
+            <span><b>Safe zone:</b> 1725×2625 px</span>
+            <span><b>300 DPI</b></span>
+          </div>
+          <!-- Design name -->
+          <div style="margin-bottom:14px;">
+            <div class="fl">Design Name</div>
+            <input class="fi" id="new-design-name" placeholder="e.g. Storm Follow-Up, Gutters Special" maxlength="60" oninput="designBackPreviewDebounce()">
+          </div>
+          <!-- Front image upload -->
+          <div style="margin-bottom:14px;">
+            <div class="fl">Front Artwork <span style="color:var(--muted);font-weight:400;">(JPEG or PNG · 1875×2775 px)</span></div>
+            <div id="new-design-preview" style="width:100%;height:160px;border:2px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;cursor:pointer;overflow:hidden;position:relative;background:var(--card2);" onclick="document.getElementById('new-design-file').click()">
+              <span id="new-design-preview-text" style="text-align:center;padding:12px;">Click to upload front artwork<br><span style="font-size:11px;opacity:.6;">JPEG or PNG · 1875×2775 px · 300 DPI</span></span>
+              <img id="new-design-preview-img" style="display:none;width:100%;height:100%;object-fit:contain;" src="">
+            </div>
+            <div id="new-design-size-warn" style="display:none;margin-top:6px;padding:6px 10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:6px;font-size:11px;color:#ef4444;"></div>
+            <input type="file" id="new-design-file" accept="image/jpeg,image/jpg,image/png" style="display:none;" onchange="previewNewDesign(this)">
+          </div>
+          <!-- Description -->
+          <div style="margin-bottom:18px;">
+            <div class="fl">Description <span style="color:var(--muted);font-weight:400;">(optional)</span></div>
+            <input class="fi" id="new-design-desc" placeholder="e.g. Use for storm follow-up campaigns" maxlength="120">
+          </div>
+          <!-- BACK TEXT CUSTOMIZATION -->
+          <div style="border-top:1px solid var(--border);padding-top:16px;margin-bottom:4px;">
+            <div style="font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.5px;text-transform:uppercase;margin-bottom:12px;">✏️ Customize Back Text</div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">These fields override your account defaults for this design only. Leave blank to use account defaults.</div>
+            <!-- Badge pill -->
+            <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;margin-bottom:12px;">
+              <div>
+                <div class="fl">Badge Pill Text</div>
+                <input class="fi" id="nd-back-badge-text" placeholder="YOUR ROOF ESTIMATE IS READY" maxlength="50" oninput="designBackPreviewDebounce()">
+              </div>
+              <div>
+                <div class="fl">Color</div>
+                <input type="color" id="nd-back-badge-color" value="#F25C05" style="width:44px;height:36px;border:1px solid var(--border);border-radius:6px;cursor:pointer;background:var(--card2);padding:2px;" oninput="designBackPreviewDebounce()">
+              </div>
+            </div>
+            <!-- Hook -->
+            <div style="margin-bottom:12px;">
+              <div class="fl">Hook Line <span style="color:var(--muted);font-weight:400;">(hero section)</span></div>
+              <textarea class="fi" id="nd-back-hook" rows="3" placeholder="Most homeowners dread the pushy roofing salesman..." style="resize:vertical;" oninput="designBackPreviewDebounce()"></textarea>
+            </div>
+            <!-- Why -->
+            <div style="margin-bottom:12px;">
+              <div class="fl">Why Did You Receive This?</div>
+              <textarea class="fi" id="nd-back-why" rows="3" placeholder="We assessed your neighborhood and identified your home..." style="resize:vertical;" oninput="designBackPreviewDebounce()"></textarea>
+            </div>
+            <!-- Quote -->
+            <div style="margin-bottom:12px;">
+              <div class="fl">Customer Quote <span style="color:var(--muted);font-weight:400;">(optional)</span></div>
+              <input class="fi" id="nd-back-quote" placeholder='"They replaced our roof in one day." — Mike D.' maxlength="160" oninput="designBackPreviewDebounce()">
+            </div>
+            <!-- Guarantee -->
+            <div style="margin-bottom:12px;">
+              <div class="fl">Guarantee Line</div>
+              <input class="fi" id="nd-back-guarantee" placeholder="No door-knocking. No pressure. Just your price." maxlength="100" oninput="designBackPreviewDebounce()">
+            </div>
+            <!-- Scan CTA -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+              <div>
+                <div class="fl">Scan CTA</div>
+                <input class="fi" id="nd-back-scan-cta" placeholder="SCAN TO BOOK" maxlength="30" oninput="designBackPreviewDebounce()">
+              </div>
+              <div>
+                <div class="fl">Scan Sub-label</div>
+                <input class="fi" id="nd-back-scan-sub" placeholder="No-pressure booking" maxlength="40" oninput="designBackPreviewDebounce()">
+              </div>
+            </div>
+            <!-- Trust badges -->
+            <div style="margin-bottom:4px;">
+              <div class="fl">Trust Badges <span style="color:var(--muted);font-weight:400;">(up to 3)</span></div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <input class="fi" id="nd-back-badge1" placeholder="Licensed, Bonded &amp; Insured" maxlength="40" oninput="designBackPreviewDebounce()">
+                <input class="fi" id="nd-back-badge2" placeholder="Manufacturer Certified" maxlength="40" oninput="designBackPreviewDebounce()">
+                <input class="fi" id="nd-back-badge3" placeholder="Itemized Pricing" maxlength="40" oninput="designBackPreviewDebounce()">
+              </div>
+            </div>
+          </div>
         </div>
-        <div id="new-design-size-warn" style="display:none;margin-top:6px;padding:6px 10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:6px;font-size:11px;color:#ef4444;"></div>
-        <input type="file" id="new-design-file" accept="image/jpeg,image/jpg,image/png" style="display:none;" onchange="previewNewDesign(this)">
+        <!-- RIGHT: Live preview -->
+        <div style="padding:22px 24px;background:var(--bg);display:flex;flex-direction:column;gap:14px;overflow-y:auto;max-height:80vh;">
+          <div style="font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--text);letter-spacing:.5px;text-transform:uppercase;">Live Preview</div>
+          <!-- Front preview -->
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;">FRONT</div>
+            <div id="nd-front-preview-wrap" style="width:100%;aspect-ratio:2/3;background:var(--card2);border:1px solid var(--border);border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+              <span style="color:var(--muted);font-size:12px;">Upload front artwork to preview</span>
+            </div>
+          </div>
+          <!-- Back preview -->
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;">BACK <span style="font-weight:400;text-transform:none;letter-spacing:0;">(auto-generated · updates as you type)</span></div>
+            <div style="position:relative;">
+              <canvas id="nd-back-preview-canvas" style="width:100%;border:1px solid var(--border);border-radius:8px;display:block;"></canvas>
+              <div id="nd-back-preview-spinner" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.5);border-radius:8px;display:flex;align-items:center;justify-content:center;">
+                <div style="color:#fff;font-size:12px;">Rendering…</div>
+              </div>
+            </div>
+          </div>
+          <button onclick="renderDesignBackPreview()" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 16px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;">🔄 Refresh Preview</button>
+        </div>
       </div>
-      <div style="margin-bottom:16px;">
-        <div class="fl">Description <span style="color:var(--muted);font-weight:400;">(optional)</span></div>
-        <input class="fi" id="new-design-desc" placeholder="e.g. Use for storm follow-up campaigns" maxlength="120">
-      </div>
-      <div style="display:flex;gap:10px;">
-        <button onclick="closeAddDesignModal()" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">Cancel</button>
-        <button onclick="saveNewDesign()" style="flex:2;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;">Upload & Save</button>
+      <!-- Footer -->
+      <div style="display:flex;gap:10px;padding:16px 24px;border-top:1px solid var(--border);background:var(--card);">
+        <button onclick="closeAddDesignModal()" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:11px;font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">Cancel</button>
+        <button onclick="saveNewDesign()" style="flex:3;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;">💾 Save Design</button>
       </div>
     </div>
   </div>
@@ -9161,7 +9249,8 @@ function renderDesignsGrid(){
       <div style="padding:12px;">
         <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;">${d.name||'Untitled'}</div>
         ${d.desc ? '<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">'+d.desc+'</div>' : ''}
-        <div style="font-size:10px;color:var(--muted);margin-bottom:8px;">Uploaded ${d.createdAt ? new Date(d.createdAt).toLocaleDateString() : 'recently'}</div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:6px;">Uploaded ${d.createdAt ? new Date(d.createdAt).toLocaleDateString() : 'recently'}</div>
+        ${d.backOverrides&&Object.keys(d.backOverrides).length ? '<div style="margin-bottom:7px;"><span style="background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#818cf8;font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;letter-spacing:.4px;">✓ CUSTOM BACK</span></div>' : ''}
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
           <button onclick="openPostcardFullPreview(${i})" style="flex:1;background:var(--accent);border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">&#128247; Preview</button>
           ${d.isDefault ? '<button disabled style="flex:1;background:rgba(242,92,5,.15);border:1px solid var(--accent);border-radius:6px;padding:6px 10px;color:var(--accent);font-size:11px;font-weight:700;cursor:default;">&#9733; Default</button>' : '<button onclick="setDesignAsDefault(\'' + d.id + '\')" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;">Set Default</button>'}
@@ -9174,20 +9263,74 @@ function renderDesignsGrid(){
 
 function openUploadDesignModal(){ openAddDesignModal(); }
 function openAddDesignModal(){
-  document.getElementById('new-design-name').value='';
-  document.getElementById('new-design-desc').value='';
+  // Reset all fields
+  const ids=['new-design-name','new-design-desc','nd-back-badge-text','nd-back-hook','nd-back-why','nd-back-quote','nd-back-guarantee','nd-back-scan-cta','nd-back-scan-sub','nd-back-badge1','nd-back-badge2','nd-back-badge3'];
+  ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  const colorEl=document.getElementById('nd-back-badge-color');
+  if(colorEl) colorEl.value=S.cfg&&S.cfg.brandColor?S.cfg.brandColor:'#F25C05';
   document.getElementById('new-design-preview-text').style.display='';
   document.getElementById('new-design-preview-img').style.display='none';
   document.getElementById('new-design-preview-img').src='';
   document.getElementById('new-design-file').value='';
   window._newDesignFile=null;
+  window._newDesignDimsOk=false;
+  // Reset front preview wrap
+  const fw=document.getElementById('nd-front-preview-wrap');
+  if(fw) fw.innerHTML='<span style="color:var(--muted);font-size:12px;">Upload front artwork to preview</span>';
+  // Clear back canvas
+  const bc=document.getElementById('nd-back-preview-canvas');
+  if(bc){ const ctx=bc.getContext('2d'); ctx.clearRect(0,0,bc.width,bc.height); }
   document.getElementById('add-design-modal').style.display='flex';
+  // Render default back preview using account settings
+  setTimeout(renderDesignBackPreview, 200);
 }
 function closeAddDesignModal(){ document.getElementById('add-design-modal').style.display='none'; }
+// Debounce helper for live back preview
+let _ndBackPreviewTimer=null;
+function designBackPreviewDebounce(){
+  clearTimeout(_ndBackPreviewTimer);
+  _ndBackPreviewTimer=setTimeout(renderDesignBackPreview, 600);
+}
+async function renderDesignBackPreview(){
+  const canvas=document.getElementById('nd-back-preview-canvas');
+  if(!canvas) return;
+  const spinner=document.getElementById('nd-back-preview-spinner');
+  if(spinner) spinner.style.display='flex';
+  // Build a temp cfg merging account defaults with the design-specific overrides
+  const v=id=>{ const el=document.getElementById(id); return el?(el.value.trim()||''):''; };
+  const tmpCfg=Object.assign({},S.cfg||{});
+  if(v('nd-back-badge-text')) tmpCfg.postcardBackBadgeText=v('nd-back-badge-text');
+  const colorEl=document.getElementById('nd-back-badge-color');
+  if(colorEl&&colorEl.value) tmpCfg.postcardBackBadgeColor=colorEl.value;
+  if(v('nd-back-hook')) tmpCfg.postcardHook=v('nd-back-hook');
+  if(v('nd-back-why')) tmpCfg.postcardWhy=v('nd-back-why');
+  if(v('nd-back-quote')) tmpCfg.postcardQuote=v('nd-back-quote');
+  if(v('nd-back-guarantee')) tmpCfg.postcardGuarantee=v('nd-back-guarantee');
+  if(v('nd-back-scan-cta')) tmpCfg.postcardScanCta=v('nd-back-scan-cta');
+  if(v('nd-back-scan-sub')) tmpCfg.postcardScanSub=v('nd-back-scan-sub');
+  const b1=v('nd-back-badge1'), b2=v('nd-back-badge2'), b3=v('nd-back-badge3');
+  if(b1||b2||b3){ tmpCfg.diff1=b1||tmpCfg.diff1; tmpCfg.diff2=b2||tmpCfg.diff2; tmpCfg.diff3=b3||tmpCfg.diff3; }
+  // Disable canvas designer back for this preview
+  tmpCfg.canvasDesignBackJson=null;
+  const sampleItem={addr:'123 Sample Street, Canton, MI 48187',total:9500,id:null};
+  const origCfg=S.cfg;
+  S.cfg=tmpCfg;
+  try{
+    const dataUrl=await renderPostcard6x9BackCanvas(sampleItem);
+    if(dataUrl){
+      const img=new Image();
+      img.onload=()=>{
+        canvas.width=img.width; canvas.height=img.height;
+        canvas.getContext('2d').drawImage(img,0,0);
+      };
+      img.src=dataUrl;
+    }
+  } catch(e){ console.warn('Design back preview error:',e); }
+  finally{ S.cfg=origCfg; if(spinner) spinner.style.display='none'; }
+}
 function previewNewDesign(inp){
   if(!inp.files||!inp.files[0]) return;
   const file=inp.files[0];
-  // Validate format
   const warnEl=document.getElementById('new-design-size-warn');
   if(!['image/jpeg','image/jpg','image/png'].includes(file.type)){
     warnEl.textContent='❌ Invalid format. Please upload a JPEG or PNG file.';
@@ -9198,28 +9341,30 @@ function previewNewDesign(inp){
   window._newDesignDimsOk=false;
   const r=new FileReader();
   r.onload=ev=>{
+    // Update the small upload box
     document.getElementById('new-design-preview-text').style.display='none';
     const img=document.getElementById('new-design-preview-img');
     img.src=ev.target.result; img.style.display='block';
-    // Check dimensions after image loads
+    // Update the larger right-panel front preview
+    const fw=document.getElementById('nd-front-preview-wrap');
+    if(fw) fw.innerHTML='<img src="'+ev.target.result+'" style="width:100%;height:100%;object-fit:contain;">';
+    // Check dimensions
     const tmpImg=new Image();
     tmpImg.onload=function(){
       const w=tmpImg.naturalWidth, h=tmpImg.naturalHeight;
-      // Accept portrait (1875×2775) or landscape (2775×1875)
       const validPortrait=(w===1875&&h===2775);
       const validLandscape=(w===2775&&h===1875);
       if(validPortrait||validLandscape){
         warnEl.style.display='none';
         window._newDesignDimsOk=true;
       } else {
-        // Warn but allow — some printers accept slightly different sizes
         const minOk=(w>=1800&&h>=2700)||(w>=2700&&h>=1800);
         if(minOk){
-          warnEl.innerHTML='⚠️ Recommended size is <b>1875×2775 px</b> (bleed). Your image is '+w+'×'+h+' px — it may work but could have border issues.';
+          warnEl.innerHTML='⚠️ Recommended size is <b>1875×2775 px</b>. Your image is '+w+'×'+h+' px — may work but could have border issues.';
           warnEl.style.display='block';
-          window._newDesignDimsOk=true; // allow with warning
+          window._newDesignDimsOk=true;
         } else {
-          warnEl.innerHTML='❌ Image is too small ('+w+'×'+h+' px). Required: <b>1875×2775 px</b> (6.25"×9.25" at 300 DPI). Please resize and re-upload.';
+          warnEl.innerHTML='❌ Image too small ('+w+'×'+h+' px). Required: <b>1875×2775 px</b>. Please resize and re-upload.';
           warnEl.style.display='block';
           window._newDesignDimsOk=false;
         }
@@ -9232,16 +9377,37 @@ function previewNewDesign(inp){
 async function saveNewDesign(){
   const name=(document.getElementById('new-design-name').value||'').trim();
   if(!name){ toast('Please enter a design name','error'); return; }
-  if(!window._newDesignFile){ toast('Please upload an image','error'); return; }
+  if(!window._newDesignFile){ toast('Please upload a front image','error'); return; }
   if(window._newDesignDimsOk===false){ toast('Image is too small. Please upload a 1875×2775 px JPEG or PNG.','error'); return; }
   const desc=(document.getElementById('new-design-desc').value||'').trim();
+  // Collect back text overrides (only store non-empty values)
+  const v=id=>{ const el=document.getElementById(id); return el?(el.value.trim()||''):''; };
+  const colorEl=document.getElementById('nd-back-badge-color');
+  const backOverrides={};
+  if(v('nd-back-badge-text')) backOverrides.postcardBackBadgeText=v('nd-back-badge-text');
+  if(colorEl&&colorEl.value&&colorEl.value!=='#F25C05') backOverrides.postcardBackBadgeColor=colorEl.value;
+  if(v('nd-back-hook')) backOverrides.postcardHook=v('nd-back-hook');
+  if(v('nd-back-why')) backOverrides.postcardWhy=v('nd-back-why');
+  if(v('nd-back-quote')) backOverrides.postcardQuote=v('nd-back-quote');
+  if(v('nd-back-guarantee')) backOverrides.postcardGuarantee=v('nd-back-guarantee');
+  if(v('nd-back-scan-cta')) backOverrides.postcardScanCta=v('nd-back-scan-cta');
+  if(v('nd-back-scan-sub')) backOverrides.postcardScanSub=v('nd-back-scan-sub');
+  if(v('nd-back-badge1')) backOverrides.diff1=v('nd-back-badge1');
+  if(v('nd-back-badge2')) backOverrides.diff2=v('nd-back-badge2');
+  if(v('nd-back-badge3')) backOverrides.diff3=v('nd-back-badge3');
   const acctId=(currentAccount&&currentAccount.id)||'shared';
   const safeN=name.toLowerCase().replace(/[^a-z0-9]/g,'-').substring(0,30);
   const path=acctId+'/designs/'+safeN+'-'+Date.now()+'.jpg';
   toast('Uploading design…','info');
   const url=await uploadToStorage(window._newDesignFile,path,1800,0.92,'image/jpeg');
   if(!S.cfg.postcardDesigns) S.cfg.postcardDesigns=[];
-  S.cfg.postcardDesigns.push({id:'des_'+Date.now(),name,desc,url:url||null,createdAt:new Date().toISOString()});
+  S.cfg.postcardDesigns.push({
+    id:'des_'+Date.now(),
+    name, desc,
+    url:url||null,
+    backOverrides:Object.keys(backOverrides).length?backOverrides:null,
+    createdAt:new Date().toISOString()
+  });
   save(); closeAddDesignModal(); renderDesignsGrid(); renderDripStepDesignSelects();
   toast('Design "'+name+'" saved!','success');
 }
@@ -10344,6 +10510,20 @@ function openCampaignQRStats(campaignId) {
         <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">5 postcards over 45 days<br>Step 1 already queued ✓</div>
         <div style="font-size:20px;font-weight:700;color:#a855f7;font-family:var(--font-h);">2 credits</div>
         <div style="font-size:11px;color:#22C55E;font-weight:600;">🔥 Buy 3 Get 5 Total!</div>
+      </div>
+    </div>
+    <!-- Design selection -->
+    <div style="margin-bottom:16px;">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Design</div>
+      <div id="spm-design-row" style="display:flex;align-items:center;gap:10px;">
+        <div id="spm-design-thumb" style="width:48px;height:32px;background:var(--card2);border:1px solid var(--border);border-radius:6px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+          <span style="font-size:16px;">📋</span>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div id="spm-design-name" style="font-size:12px;font-weight:700;color:var(--text);">Standard (Account Default)</div>
+          <div id="spm-design-back-note" style="font-size:10px;color:var(--muted);">Uses your account back text</div>
+        </div>
+        <button onclick="spmPickDesign()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:5px 12px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;">Change</button>
       </div>
     </div>
     <!-- Confirm button -->

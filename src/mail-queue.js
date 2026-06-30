@@ -1239,18 +1239,28 @@ async function sendLobPostcard6x9(id){
   if(!fromZip)fromZip='48000';
   fromState=toStateAbbr(fromState);
   // Build a synthetic item with all config fields for the canvas builders
+  // Merge design backOverrides if rep selected a custom design in the Send Postcard modal
+  const _backOvr = item._sendBackOverrides || {};
   const syntheticItem=Object.assign({},item,{
     companyName:co,companyAddr:fromRaw,companyPhone:S.cfg.companyPhone||'',
     logoData:S.cfg.logoData||'',headshotData:S.cfg.headshotData||'',
     repName:S.cfg.repName||'',repTitle:S.cfg.repTitle||'',
-    pcHook:S.cfg.pcHook||'',pcWhy:S.cfg.pcWhy||'',pcQuote:S.cfg.pcQuote||'',
-    pcGuarantee:S.cfg.pcGuarantee||'',
+    pcHook:_backOvr.postcardHook||S.cfg.pcHook||'',
+    pcWhy:_backOvr.postcardWhy||S.cfg.pcWhy||'',
+    pcQuote:_backOvr.postcardQuote||S.cfg.pcQuote||'',
+    pcGuarantee:_backOvr.postcardGuarantee||S.cfg.pcGuarantee||'',
+    postcardBackBadgeText:_backOvr.postcardBackBadgeText||S.cfg.postcardBackBadgeText||'',
+    postcardBackBadgeColor:_backOvr.postcardBackBadgeColor||S.cfg.postcardBackBadgeColor||'',
+    postcardScanCta:_backOvr.postcardScanCta||S.cfg.postcardScanCta||'',
+    postcardScanSub:_backOvr.postcardScanSub||S.cfg.postcardScanSub||'',
     diff1:S.cfg.diff1||'',diff2:S.cfg.diff2||'',diff3:S.cfg.diff3||'',
     diff4:S.cfg.diff4||'',diff5:S.cfg.diff5||'',diff6:S.cfg.diff6||'',
     yrsInBusiness:S.cfg.yrsInBusiness||'',warrantyYrs:S.cfg.warrantyYrs||'',
     finEnabled:S.cfg.finEnabled,finApr:S.cfg.finApr,finTerm:S.cfg.finTerm,finDown:S.cfg.finDown,
     bookingUrl:S.cfg.bookingUrl||''
   });
+  // If a custom design front URL is set, override photo_url for the front render
+  if(item._sendDesignUrl) syntheticItem._customFrontUrl = item._sendDesignUrl;
   toast('Rendering postcard images…','info');
   // Render front & back to JPEG via canvas, upload to Supabase, send URLs to Lob
   let frontUrl, backUrl;
