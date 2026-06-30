@@ -3220,7 +3220,7 @@ tr:hover td{background:var(--card);}
                   <span><b>Leave clear:</b> address zone (right-bottom), QR zone (left-bottom), postage (top-right)</span>
                 </div>
                 <div style="margin-top:8px;">
-                  <a href="/manus-storage/biddrop_back_template_82a592aa.png" download="BidDrop_Back_Template.png" style="color:var(--accent);font-weight:700;text-decoration:none;font-size:12px;">⬇️ Download Back Template (PNG)</a>
+                  <button onclick="downloadBackTemplate()" style="background:none;border:none;padding:0;color:var(--accent);font-weight:700;font-size:12px;cursor:pointer;text-decoration:underline;">⬇️ Download Back Template (PNG)</button>
                   <span style="color:var(--muted);font-size:11px;margin-left:8px;">— shows all safe zones</span>
                 </div>
               </div>
@@ -9343,6 +9343,23 @@ function closeAddDesignModal(){
   window._editDesignBackIdx = null;
   const saveBtn = document.getElementById('nd-save-btn');
   if(saveBtn) saveBtn.textContent = 'Save Design';
+}
+async function downloadBackTemplate(){
+  try{
+    const url='/manus-storage/biddrop_back_template_82a592aa.png';
+    const resp=await fetch(url);
+    if(!resp.ok) throw new Error('HTTP '+resp.status);
+    const blob=await resp.blob();
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='BidDrop_Back_Template.png';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(a.href); document.body.removeChild(a); },1000);
+  } catch(e){
+    // Fallback: open in new tab
+    window.open('/manus-storage/biddrop_back_template_82a592aa.png','_blank');
+  }
 }
 function ndBackTypeChanged(){
   const isCustom = document.getElementById('nd-back-type-custom') && document.getElementById('nd-back-type-custom').checked;
