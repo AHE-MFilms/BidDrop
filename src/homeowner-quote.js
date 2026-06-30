@@ -713,35 +713,19 @@ let _spmQueueId = null;
 let _spmChoice  = null;
 
 function openSendPostcardModal(queueId){
-  // Open the Estimate Reveal Postcard modal for this queue item
+  _spmQueueId = queueId;
+  _spmChoice  = null;
   const item = (S.queue||[]).find(x=>x.id===queueId);
-  if(!item){ toast('Queue item not found','error'); return; }
-
-  // Try to find a linked estimate in S.estimates
-  const estId = item.estId || item.estimateId || item.estimate_id || null;
-  const linkedEst = estId ? (S.estimates||[]).find(e=>e.id===estId) : null;
-
-  if(linkedEst){
-    // Ideal path: open the Estimate Reveal modal with the full estimate
-    openEstimateReveal(linkedEst.id);
-  } else {
-    // Fallback: synthesize a minimal estimate from queue item data so the
-    // Estimate Reveal modal can still be used (shows address, owner, total)
-    const synth = {
-      id: item.estId || ('q_synth_'+queueId),
-      owner: item.owner || 'Homeowner',
-      addr:  item.addr  || '',
-      total: item.total || 0,
-      email: item.email || '',
-      photo_url: item.photo_url || null,
-      structures: item.structures || []
-    };
-    // Temporarily inject into S.estimates so openEstimateReveal can find it
-    if(!S.estimates) S.estimates = [];
-    const existing = S.estimates.find(e=>e.id===synth.id);
-    if(!existing) S.estimates.push(synth);
-    openEstimateReveal(synth.id);
-  }
+  const lbl = document.getElementById('spm-homeowner');
+  if(lbl && item) lbl.textContent = (item.owner||'Homeowner') + ' — ' + (item.addr||'');
+  // Reset selection state
+  ['single','blitz'].forEach(k=>{
+    const el = document.getElementById('spm-opt-'+k);
+    if(el){ el.style.borderColor='var(--border)'; el.style.background=''; }
+  });
+  const btn = document.getElementById('spm-confirm-btn');
+  if(btn){ btn.textContent='Select an option above'; btn.style.opacity='.4'; btn.style.pointerEvents='none'; btn.style.background='var(--accent)'; }
+  openM('m-send-postcard');
 }
 
 function spmSelect(choice){
