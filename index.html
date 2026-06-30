@@ -9352,34 +9352,7 @@ async function downloadBackTemplate(){
   }
 }
 function ndBackTypeChanged(){
-  const isCustom = document.getElementById('nd-back-type-custom') && document.getElementById('nd-back-type-custom').checked;
-  const customSec = document.getElementById('nd-custom-back-section');
-  const standardSec = document.getElementById('nd-standard-back-section');
-  const labelEl = document.getElementById('nd-back-preview-label');
-  const stdLabel = document.getElementById('nd-back-toggle-standard-label');
-  const cusLabel = document.getElementById('nd-back-toggle-custom-label');
-  if(isCustom){
-    if(customSec) customSec.style.display='block';
-    if(standardSec) standardSec.style.display='none';
-    if(labelEl) labelEl.textContent='(custom back with QR + address overlay)';
-    if(stdLabel){ stdLabel.style.border='2px solid var(--border)'; stdLabel.style.background=''; }
-    if(cusLabel){ cusLabel.style.border='2px solid var(--accent)'; cusLabel.style.background='rgba(242,92,5,.07)'; }
-    // Show custom back preview if already uploaded
-    if(window._newDesignBackFile || window._editDesignBackUrl){
-      renderCustomBackPreviewInModal();
-    } else {
-      // Clear canvas to show placeholder
-      const canvas = document.getElementById('nd-back-preview-canvas');
-      if(canvas){ const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width,canvas.height); canvas.width=375; canvas.height=562; ctx.fillStyle='#1a1a1a'; ctx.fillRect(0,0,375,562); ctx.fillStyle='rgba(255,255,255,0.3)'; ctx.font='16px Arial'; ctx.textAlign='center'; ctx.fillText('Upload back artwork to preview',187,270); ctx.textAlign='left'; }
-    }
-  } else {
-    if(customSec) customSec.style.display='none';
-    if(standardSec) standardSec.style.display='block';
-    if(labelEl) labelEl.textContent='(auto-generated · updates as you type)';
-    if(stdLabel){ stdLabel.style.border='2px solid var(--accent)'; stdLabel.style.background='rgba(242,92,5,.07)'; }
-    if(cusLabel){ cusLabel.style.border='2px solid var(--border)'; cusLabel.style.background=''; }
-    renderDesignBackPreview();
-  }
+  // No-op: toggle removed. Custom designs always use uploaded back.
 }
 function previewNewDesignBack(inp){
   if(!inp.files||!inp.files[0]) return;
