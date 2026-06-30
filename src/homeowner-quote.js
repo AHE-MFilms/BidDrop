@@ -719,7 +719,8 @@ function openSendPostcardModal(queueId){
   const lbl = document.getElementById('spm-homeowner');
   if(lbl && item) lbl.textContent = (item.owner||'Homeowner') + ' — ' + (item.addr||'');
   // Show credit cost for single send — 0 if paid by unlock, 1 otherwise
-  const paidByUnlock = item && item.source === 'unlock';
+  // Fallback: also check item.id prefix in case source column hasn't loaded yet
+  const paidByUnlock = item && (item.source === 'unlock' || (item.id && item.id.startsWith('mq_unlock_')));
   const singleCostEl = document.getElementById('spm-single-cost');
   if(singleCostEl){
     singleCostEl.textContent = paidByUnlock ? '0 credits — included with unlock' : '1 credit';

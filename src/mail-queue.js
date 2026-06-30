@@ -156,6 +156,15 @@ function _updateQSortArrows(){
   });
 }
 // ────────────────────────────────────────────────────────────────────────────
+// Helper: trigger unlock modal from the estimates table row
+function requirePinUnlockedForEst(estId){
+  const est = (S.estimates||[]).find(e=>e.id===estId);
+  if(!est){ toast('Estimate not found','error'); return; }
+  const pin = est.pinId ? (S.pins||[]).find(p=>p.id===est.pinId) : (S.pins||[]).find(p=>p.address===est.addr);
+  if(!pin){ toast('No pin linked to this estimate — drop a pin first','warn'); return; }
+  if(pin.unlockedAt){ renderEstimatesTab(); return; } // already unlocked, just refresh
+  requirePinUnlocked(pin.id).then(ok=>{ if(ok) renderEstimatesTab(); });
+}
 function renderEstimatesTab(){
   const allEsts = S.estimates || [];
   // Populate rep filter dropdown
@@ -226,6 +235,9 @@ function renderEstimatesTab(){
       ? '<div style="margin-top:4px;"><span style="background:rgba(14,116,144,.15);color:#22d3ee;border:1px solid rgba(14,116,144,.6);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;">📬 MAILED</span>'+(_mailedItem.mailedAt?'<div style="font-size:10px;color:var(--muted);margin-top:2px;">'+new Date(_mailedItem.mailedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+'</div>':'')+'</div>'
       : '';
     const eid = escHtml(est.id);
+    // Unlock check: find the linked pin and see if it has been unlocked
+    const _estPinForUnlock = est.pinId ? (S.pins||[]).find(p=>p.id===est.pinId) : (S.pins||[]).find(p=>p.address===est.addr);
+    const _pinUnlocked = _estPinForUnlock ? (isSuperAdmin() || !!_estPinForUnlock.unlockedAt) : false;
     const actionBtns = _estView === 'trash'
       ? `<button onclick="restoreEstimate('${eid}')" style="background:#1a7f4b;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#8629; Restore</button>`
         +(isAdminOrAbove()?`<button onclick="hardDeleteEstimate('${eid}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">&#10005; Purge</button>`:'')
@@ -248,16 +260,19 @@ function renderEstimatesTab(){
             +(()=>{
             const estAddr = (est.addr||'').trim().toLowerCase();
             const inQueue = (S.queue||[]).some(function(q){ return q.addr.trim().toLowerCase()===estAddr && q.status==='pending'; });
+            if(!_pinUnlocked){
+              return `<button onclick="requirePinUnlockedForEst('${eid}')" title="Unlock this pin to send to Mail Queue" style="background:#374151;border:1px solid #6b7280;border-radius:6px;padding:5px 10px;color:#9CA3AF;font-weight:700;cursor:pointer;white-space:nowrap;display:flex;flex-direction:column;align-items:center;line-height:1.2;"><span style="font-size:9px;opacity:.85;">&#128274; Unlock to</span><span style="font-size:12px;">Queue</span></button>`;
+            }
             return inQueue
               ? `<button onclick="goTab('mailqueue')" title="Already in Mail Queue — click to view" style="background:#0e7490;border:none;border-radius:6px;padding:5px 10px;color:#fff;font-weight:700;cursor:pointer;white-space:nowrap;display:flex;flex-direction:column;align-items:center;line-height:1.2;"><span style="font-size:9px;opacity:.85;">&#10003; In</span><span style="font-size:12px;">Queue</span></button>`
               : `<button onclick="addEstimateToMailQueue('${eid}')" style="background:var(--accent);border:none;border-radius:6px;padding:5px 10px;color:#fff;font-weight:700;cursor:pointer;white-space:nowrap;display:flex;flex-direction:column;align-items:center;line-height:1.2;"><span style="font-size:9px;opacity:.85;">&#128228; Send to</span><span style="font-size:12px;">Mail Queue</span></button>`;
           })()
-            +(S.cfg && S.cfg.dripEnabled ? `<button onclick="openDripModal('${eid}')" style="background:#7C3AED;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🔥 Blitz</button>` : '')
-            +(()=>{const _ra=(S&&S.cfg&&S.cfg.tplAccentColor)||'#F25C05';return`<button onclick="openEstimateReveal('${eid}')" style="background:${_ra};border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">📋 Estimate Card</button>`;})()
-          +`<button onclick="previewEstimatePostcard('${eid}')" style="background:#0e7490;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128247; Preview Postcard</button>`
-            +`<button onclick="previewEstimateLetter('${eid}')" style="background:#1f3d68;border:none;border-radius:6px;padding:6px 10px;color:#C8D8E8;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128065; Preview Letter</button>`
-            +`<button onclick="printEstimate('${eid}')" style="background:#1f3d68;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128424; Print</button>`
-            +`<button onclick="downloadEstimatePDF('${eid}')" style="background:#1f3d68;border:none;border-radius:6px;padding:6px 10px;color:#93c5fd;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#11015; PDF</button>`
+            +(_pinUnlocked && S.cfg && S.cfg.dripEnabled ? `<button onclick="openDripModal('${eid}')" style="background:#7C3AED;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🔥 Blitz</button>` : '')
+            +(()=>{const _ra=(S&&S.cfg&&S.cfg.tplAccentColor)||'#F25C05';return _pinUnlocked?`<button onclick="openEstimateReveal('${eid}')" style="background:${_ra};border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">📋 Estimate Card</button>`:'';})()
+          +(_pinUnlocked?`<button onclick="previewEstimatePostcard('${eid}')" style="background:#0e7490;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128247; Preview Postcard</button>`:'')
+            +(_pinUnlocked?`<button onclick="previewEstimateLetter('${eid}')" style="background:#1f3d68;border:none;border-radius:6px;padding:6px 10px;color:#C8D8E8;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128065; Preview Letter</button>`:'')
+            +(_pinUnlocked?`<button onclick="printEstimate('${eid}')" style="background:#1f3d68;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128424; Print</button>`:'')
+            +(_pinUnlocked?`<button onclick="downloadEstimatePDF('${eid}')" style="background:#1f3d68;border:none;border-radius:6px;padding:6px 10px;color:#93c5fd;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#11015; PDF</button>`:'')
             +(S.cfg && S.cfg.qbClientId ? `<button onclick="sendEstimateToQB('${eid}')" title="${est.qbInvoiceId ? 'QB Invoice #'+est.qbInvoiceId+' — click to update' : 'Send to QuickBooks as invoice'}" style="background:${est.qbInvoiceId ? 'rgba(44,160,28,.15)' : '#1c3a1c'};border:1px solid ${est.qbInvoiceId ? '#2ca01c' : '#2ca01c44'};border-radius:6px;padding:6px 10px;color:${est.qbInvoiceId ? '#4ade80' : '#86efac'};font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">${est.qbInvoiceId ? '&#10003; QB Invoice' : '&#128196; QuickBooks'}</button>` : '')
             +(est.signedAt ? `<button onclick="downloadSignedEstimatePDF('${eid}')" title="Signed by ${escHtml(est.sigName||'homeowner')} on ${new Date(est.signedAt).toLocaleDateString()}" style="background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);border-radius:6px;padding:6px 10px;color:#4ade80;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#11015; Signed</button>` : '')
             +`<button onclick="openEstimatePage('${eid}')" style="background:#065f46;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#127758; View Page</button>`
@@ -786,6 +801,13 @@ function loadEstimateIntoEstimator(estId){
 function addEstimateToMailQueue(estId){
   const est = (S.estimates||[]).find(function(e){return e.id===estId;});
   if(!est){ toast('Estimate not found','error'); return; }
+  // Gate behind unlock (secondary guard — UI should already hide button)
+  const _gatePin = est.pinId ? (S.pins||[]).find(p=>p.id===est.pinId) : (S.pins||[]).find(p=>p.address===est.addr);
+  if(!isSuperAdmin() && _gatePin && !_gatePin.unlockedAt){
+    toast('🔒 Unlock this pin first (1 credit) to send to Mail Queue','warn');
+    if(_gatePin) requirePinUnlocked(_gatePin.id);
+    return;
+  }
   // Block duplicate pending entries for the same address
   const addr = (est.addr||'').trim().toLowerCase();
   const existing = (S.queue||[]).find(function(q){ return q.addr.trim().toLowerCase()===addr && q.status==='pending'; });
@@ -854,13 +876,27 @@ async function sendEstimateViaGHL(estId){
 async function printEstimate(estId){
   const est = (S.estimates||[]).find(e=>e.id===estId);
   if(!est){ toast('Estimate not found','error'); return; }
+  // Gate behind unlock
+  if(est.pinId){
+    const unlocked = await requirePinUnlocked(est.pinId);
+    if(!unlocked){ toast('🔒 Unlock this pin first to print the estimate','warn'); return; }
+  } else if(!isSuperAdmin()){
+    toast('🔒 This estimate must be linked to an unlocked pin to print','warn'); return;
+  }
   loadEstimateIntoEstimator(estId);
   setTimeout(()=>{ printNow(); }, 300);
 }
-function downloadEstimatePDF(estId){
+async function downloadEstimatePDF(estId){
   // Open the estimate page in a new window and trigger print-to-PDF
   const est = (S.estimates||[]).find(e=>e.id===estId);
   if(!est){ toast('Estimate not found','error'); return; }
+  // Gate behind unlock
+  if(est.pinId){
+    const unlocked = await requirePinUnlocked(est.pinId);
+    if(!unlocked){ toast('🔒 Unlock this pin first to download the PDF','warn'); return; }
+  } else if(!isSuperAdmin()){
+    toast('🔒 This estimate must be linked to an unlocked pin to download PDF','warn'); return;
+  }
   // Build the estimate page URL and open with print flag
   const baseUrl = window.location.origin;
   const w = window.open(baseUrl+'/e/'+estId+'?print=1','_blank','width=900,height=700');
@@ -1156,7 +1192,8 @@ async function sendLobPostcard6x9(id){
   toast('Sending postcard…','info');
   try{
     // paid_by_unlock: postcard was pre-paid when the pin was unlocked — no additional credit charge
-    const isPaidByUnlock = item.source === 'unlock';
+    // Fallback: also check item.id prefix in case source column hasn't propagated yet
+    const isPaidByUnlock = item.source === 'unlock' || (item.id && item.id.startsWith('mq_unlock_'));
     const d=await adminAPI('lob-postcard',{payload:{
       description:'Roof Bid Postcard — '+item.addr,
       to:{name:item.owner||'Homeowner',address_line1:toLine1,address_city:toCity,address_state:toState,address_zip:toZip,address_country:'US'},
