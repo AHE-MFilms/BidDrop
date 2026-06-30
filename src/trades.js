@@ -137,8 +137,8 @@ function selectTrade(tradeId){
   if(typeof _accOnTradeSelected==='function') _accOnTradeSelected(TRADE_META[tradeId].label);
 }
 function autoPopulateTradeMeasurements(tradeId){
-  // Use last known satellite data (stored in window._lastSolarData)
-  const sd = window._lastSolarData;
+  // Use last known satellite data (stored in window._solarData or _lastSolarData)
+  const sd = window._lastSolarData || window._solarData;
   if(!sd) return;
   const roofSqft = sd.roofSqft || 0;
   const perimeterLf = Math.round(Math.sqrt(roofSqft) * 4); // rough perimeter estimate
@@ -174,12 +174,12 @@ function autoPopulateTradeMeasurements(tradeId){
 }
 
 // ── Auto-calc buttons (trigger satellite lookup then populate) ────────────────
-function autoCalcSolar(){ if(window._lastSolarData && window._lastSolarData.systemKw){ const el=document.getElementById('te-solar-kw'); if(el) el.value=window._lastSolarData.systemKw; calcTradeSolar(); } else toast('🛰 Run a satellite lookup first (enter address above)','warn'); }
-function autoCalcFencing(){ if(window._lastSolarData && window._lastSolarData.roofSqft){ const lf=Math.round(Math.sqrt(window._lastSolarData.roofSqft)*4); const el=document.getElementById('te-fen-lf'); if(el) el.value=lf; calcTradeFencing(); } else toast('🛰 Run a satellite lookup first','warn'); }
-function autoCalcSiding(){ if(window._lastSolarData && window._lastSolarData.roofSqft){ const el=document.getElementById('te-sid-sqft'); if(el) el.value=Math.round(window._lastSolarData.roofSqft*0.85); calcTradeSiding(); } else toast('🛰 Run a satellite lookup first','warn'); }
-function autoCalcGutters(){ if(window._lastSolarData && window._lastSolarData.roofSqft){ const lf=Math.round(Math.sqrt(window._lastSolarData.roofSqft)*4); const el=document.getElementById('te-gut-lf'); if(el) el.value=lf; calcTradeGutters(); } else toast('🛰 Run a satellite lookup first','warn'); }
-function autoCalcInsulation(){ if(window._lastSolarData && window._lastSolarData.roofSqft){ const el=document.getElementById('te-ins-sqft'); if(el) el.value=Math.round(window._lastSolarData.roofSqft*0.9); calcTradeInsulation(); } else toast('🛰 Run a satellite lookup first','warn'); }
-function autoCalcPaint(){ if(window._lastSolarData && window._lastSolarData.roofSqft){ const el=document.getElementById('te-pnt-sqft'); if(el) el.value=Math.round(window._lastSolarData.roofSqft*0.85); calcTradePaint(); } else toast('🛰 Run a satellite lookup first','warn'); }
+function autoCalcSolar(){ const _sd=window._lastSolarData||window._solarData; if(_sd && _sd.systemKw){ const el=document.getElementById('te-solar-kw'); if(el) el.value=_sd.systemKw; calcTradeSolar(); } else toast('🛰 Run a satellite lookup first (enter address above)','warn'); }
+function autoCalcFencing(){ const _sd=window._lastSolarData||window._solarData; if(_sd && _sd.roofSqft){ const lf=Math.round(Math.sqrt(_sd.roofSqft)*4); const el=document.getElementById('te-fen-lf'); if(el) el.value=lf; calcTradeFencing(); } else toast('🛰 Run a satellite lookup first','warn'); }
+function autoCalcSiding(){ const _sd=window._lastSolarData||window._solarData; if(_sd && _sd.roofSqft){ const el=document.getElementById('te-sid-sqft'); if(el) el.value=Math.round(_sd.roofSqft*0.85); calcTradeSiding(); } else toast('🛰 Run a satellite lookup first','warn'); }
+function autoCalcGutters(){ const _sd=window._lastSolarData||window._solarData; if(_sd && _sd.roofSqft){ const lf=Math.round(Math.sqrt(_sd.roofSqft)*4); const el=document.getElementById('te-gut-lf'); if(el) el.value=lf; calcTradeGutters(); } else toast('🛰 Run a satellite lookup first','warn'); }
+function autoCalcInsulation(){ const _sd=window._lastSolarData||window._solarData; if(_sd && _sd.roofSqft){ const el=document.getElementById('te-ins-sqft'); if(el) el.value=Math.round(_sd.roofSqft*0.9); calcTradeInsulation(); } else toast('🛰 Run a satellite lookup first','warn'); }
+function autoCalcPaint(){ const _sd=window._lastSolarData||window._solarData; if(_sd && _sd.roofSqft){ const el=document.getElementById('te-pnt-sqft'); if(el) el.value=Math.round(_sd.roofSqft*0.85); calcTradePaint(); } else toast('🛰 Run a satellite lookup first','warn'); }
 
 // ── Trade calculators ─────────────────────────────────────────────────────────
 function _fmtMoney(n){ return '$'+Math.round(n).toLocaleString(); }
