@@ -10622,6 +10622,9 @@ function _estRefreshUnlockUI() {
   // isPinUnlocked requires a pin OBJECT, not an ID string
   const _pin = (S.pins||[]).find(function(p){ return p.id === currentEstPinId; });
   const unlocked = typeof isPinUnlocked === 'function' && isPinUnlocked(_pin);
+  // Gate the RentCast "Look Up" button behind unlock
+  var rcLookupBtn = document.getElementById('rc-lookup-btn');
+  if (rcLookupBtn) rcLookupBtn.style.display = unlocked ? '' : 'none';
   if (unlocked) {
     btn.style.display    = 'none';
     status.style.display = 'block';
@@ -10640,6 +10643,9 @@ function _estRefreshUnlockUI() {
   } else {
     btn.style.display    = 'flex';
     status.style.display = 'none';
+    // Also hide the contact lookup button when locked
+    var lookupBtn2 = document.getElementById('est-contact-lookup-btn');
+    if (lookupBtn2) lookupBtn2.style.display = 'none';
   }
 }
 
