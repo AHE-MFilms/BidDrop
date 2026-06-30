@@ -390,6 +390,7 @@ async function loadQueueFromSupabase(){
       structures: structs, total: row.total,
       status: row.status, lobId: row.lob_id,
       mailedAt: row.mailed_at, at: row.created_at,
+      source: row.source||null,
       photo_url: meta.photo_url||null,
       photo_data: meta.photo_data||null,
       pinId: meta.pin_id||null
@@ -411,6 +412,7 @@ async function sbSaveQueueItem(item){
     structures: [...structs, meta], total: item.total,
     status: item.status, lob_id: item.lobId||null,
     mailed_at: item.mailedAt||null,
+    source: item.source||null,
     rep_name: repName,
     drip_step: item.drip_step||null,
     drip_est_id: item.drip_est_id||null,

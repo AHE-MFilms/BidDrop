@@ -718,6 +718,15 @@ function openSendPostcardModal(queueId){
   const item = (S.queue||[]).find(x=>x.id===queueId);
   const lbl = document.getElementById('spm-homeowner');
   if(lbl && item) lbl.textContent = (item.owner||'Homeowner') + ' — ' + (item.addr||'');
+  // Show credit cost for single send — 0 if paid by unlock, 1 otherwise
+  const paidByUnlock = item && item.source === 'unlock';
+  const singleCostEl = document.getElementById('spm-single-cost');
+  if(singleCostEl){
+    singleCostEl.textContent = paidByUnlock ? '0 credits — included with unlock' : '1 credit';
+    singleCostEl.style.color = paidByUnlock ? '#4ade80' : 'var(--accent)';
+  }
+  // Store for use in spmSelect
+  window._spmPaidByUnlock = paidByUnlock;
   // Reset selection state
   ['single','blitz'].forEach(k=>{
     const el = document.getElementById('spm-opt-'+k);
@@ -743,7 +752,7 @@ function spmSelect(choice){
   const btn = document.getElementById('spm-confirm-btn');
   if(btn){
     if(choice==='single'){
-      btn.textContent='🏠 Send 1 Postcard — 1 Credit';
+      btn.textContent = window._spmPaidByUnlock ? '🏠 Send Postcard — FREE (included with unlock)' : '🏠 Send 1 Postcard — 1 Credit';
       btn.style.background='var(--accent)';
     } else {
       btn.textContent='🔥 Start Follow-Up Blitz — 2 Credits (5 Postcards Total)';

@@ -1155,6 +1155,8 @@ async function sendLobPostcard6x9(id){
   }
   toast('Sending postcard…','info');
   try{
+    // paid_by_unlock: postcard was pre-paid when the pin was unlocked — no additional credit charge
+    const isPaidByUnlock = item.source === 'unlock';
     const d=await adminAPI('lob-postcard',{payload:{
       description:'Roof Bid Postcard — '+item.addr,
       to:{name:item.owner||'Homeowner',address_line1:toLine1,address_city:toCity,address_state:toState,address_zip:toZip,address_country:'US'},
@@ -1163,7 +1165,7 @@ async function sendLobPostcard6x9(id){
       back:backUrl,
       size:'6x9',
       use_type:'marketing'
-    }});
+    }, paid_by_unlock: isPaidByUnlock});
     if(d&&d.error==='no_credits'){
       toast('Not enough credits to send a postcard (1 credit = $4.00). Please purchase more credits.','error');
       if(d._credits){ S.cfg.mailerCredits = d._credits.paid_credits ?? S.cfg.mailerCredits; if(d._credits.free_used !== undefined) S.cfg.freeMailerCreditsUsed = d._credits.free_used; }

@@ -539,7 +539,7 @@ module.exports = async function handler(req, res) {
       // ── Lob postcard proxy ────────────────────────────────────────────────
       case 'lob-postcard': {
         const POSTCARD_CREDITS = 1; // 1 credit = $4.00 = 1 postcard
-        const { payload, idempotency_key: pcIdemKey } = req.body;
+        const { payload, idempotency_key: pcIdemKey, paid_by_unlock: pcPaidByUnlock } = req.body;
         if (!payload) { res.status(400).json({ error: 'payload required' }); return; }
         // Rate limit: max 5 postcards per 10 seconds per account
         if (!_checkRate(`lob:${effectiveAccountId}`, 5, 10000)) {
@@ -549,7 +549,7 @@ module.exports = async function handler(req, res) {
         if (pcIdemKey && !_checkIdem(`${effectiveAccountId}:${pcIdemKey}`)) {
           res.status(200).json({ _duplicate: true, message: 'Duplicate request ignored.' }); return;
         }
-        // Enforce credit balance — uses only mailer_credits (no free credits system)
+        // Fetch current credit balance
         const pcAcctRes = await sbFetch(
           `accounts?id=eq.${effectiveAccountId}&select=id,plan,mailer_credits`
         );
@@ -558,21 +558,23 @@ module.exports = async function handler(req, res) {
         if (!pcAcctRows.length) { res.status(404).json({ error: 'Account not found' }); return; }
         const pcAcct = pcAcctRows[0];
         const pcPaid  = pcAcct.mailer_credits || 0;
-        const pcTotal = pcPaid;
-        if (pcTotal < POSTCARD_CREDITS) {
-          res.status(402).json({
-            error: 'no_credits',
-            message: `Sending a postcard costs ${POSTCARD_CREDITS} credit ($4.00). You have ${pcTotal} credits. Please purchase more credits to continue.`,
-            credits_needed: POSTCARD_CREDITS,
-            credits_available: pcTotal
+        // paid_by_unlock: postcard was pre-paid when the pin was unlocked — no additional credit deduction
+        if (!pcPaidByUnlock) {
+          if (pcPaid < POSTCARD_CREDITS) {
+            res.status(402).json({
+              error: 'no_credits',
+              message: `Sending a postcard costs ${POSTCARD_CREDITS} credit ($4.00). You have ${pcPaid} credits. Please purchase more credits to continue.`,
+              credits_needed: POSTCARD_CREDITS,
+              credits_available: pcPaid
+            });
+            return;
+          }
+          // Deduct 1 credit BEFORE sending
+          await sbFetch(`accounts?id=eq.${effectiveAccountId}`, {
+            method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ mailer_credits: pcPaid - POSTCARD_CREDITS })
           });
-          return;
         }
-        // Deduct 1 credit BEFORE sending
-        await sbFetch(`accounts?id=eq.${effectiveAccountId}`, {
-          method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ mailer_credits: pcPaid - POSTCARD_CREDITS })
-        });
         // Send the postcard
         const lobRes = await fetch('https://api.lob.com/v1/postcards', {
           method: 'POST',
@@ -583,14 +585,14 @@ module.exports = async function handler(req, res) {
           body: JSON.stringify(payload)
         });
         const lobData = await lobRes.json();
-        // If Lob failed, refund the credit
-        if (!lobRes.ok) {
+        // If Lob failed and we deducted a credit, refund it
+        if (!lobRes.ok && !pcPaidByUnlock) {
           await sbFetch(`accounts?id=eq.${effectiveAccountId}`, {
             method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
             body: JSON.stringify({ mailer_credits: pcPaid })
           });
         }
-        const pcNewPaid = lobRes.ok ? pcPaid - POSTCARD_CREDITS : pcPaid;
+        const pcNewPaid = (lobRes.ok && !pcPaidByUnlock) ? pcPaid - POSTCARD_CREDITS : pcPaid;
         if (lobRes.ok) {
           res.status(200).json({
             ...lobData,
@@ -1168,6 +1170,7 @@ module.exports = async function handler(req, res) {
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS google_place_id TEXT`,
           `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS booking_clicks INTEGER DEFAULT 0`,
           `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS call_clicks INTEGER DEFAULT 0`,
+          `ALTER TABLE queue ADD COLUMN IF NOT EXISTS source TEXT`,
           `ALTER TABLE queue ADD COLUMN IF NOT EXISTS drip_step INTEGER`,
           `ALTER TABLE queue ADD COLUMN IF NOT EXISTS drip_est_id TEXT`,
           `ALTER TABLE queue ADD COLUMN IF NOT EXISTS scheduled_send_at TIMESTAMPTZ`,
