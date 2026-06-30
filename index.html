@@ -9308,8 +9308,8 @@ async function renderDesignBackPreview(){
   if(v('nd-back-guarantee')) tmpCfg.postcardGuarantee=v('nd-back-guarantee');
   if(v('nd-back-scan-cta')) tmpCfg.postcardScanCta=v('nd-back-scan-cta');
   if(v('nd-back-scan-sub')) tmpCfg.postcardScanSub=v('nd-back-scan-sub');
-  const b1=v('nd-back-badge1'), b2=v('nd-back-badge2'), b3=v('nd-back-badge3');
-  if(b1||b2||b3){ tmpCfg.diff1=b1||tmpCfg.diff1; tmpCfg.diff2=b2||tmpCfg.diff2; tmpCfg.diff3=b3||tmpCfg.diff3; }
+  const _b1=v('nd-back-badge1'), _b2=v('nd-back-badge2'), _b3=v('nd-back-badge3');
+  if(_b1||_b2||_b3){ tmpCfg.diff1=_b1||tmpCfg.diff1; tmpCfg.diff2=_b2||tmpCfg.diff2; tmpCfg.diff3=_b3||tmpCfg.diff3; }
   // Disable canvas designer back for this preview
   tmpCfg.canvasDesignBackJson=null;
   // Build overrides object from form fields
@@ -9323,8 +9323,8 @@ async function renderDesignBackPreview(){
   if(v('nd-back-guarantee')) overrides.postcardGuarantee=v('nd-back-guarantee');
   if(v('nd-back-scan-cta')) overrides.postcardScanCta=v('nd-back-scan-cta');
   if(v('nd-back-scan-sub')) overrides.postcardScanSub=v('nd-back-scan-sub');
-  const b1=v('nd-back-badge1'), b2=v('nd-back-badge2'), b3=v('nd-back-badge3');
-  if(b1) overrides.diff1=b1; if(b2) overrides.diff2=b2; if(b3) overrides.diff3=b3;
+  const _nb1=v('nd-back-badge1'), _nb2=v('nd-back-badge2'), _nb3=v('nd-back-badge3');
+  if(_nb1) overrides.diff1=_nb1; if(_nb2) overrides.diff2=_nb2; if(_nb3) overrides.diff3=_nb3;
   try{
     // Use the new design-back renderer (no pricing, QR -> booking URL)
     const dataUrl=await renderDesignBackCanvas(S.cfg||{}, overrides);
