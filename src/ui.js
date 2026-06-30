@@ -223,6 +223,8 @@ async function _confirmUnlockPin(pinId) {
           addr: result.queue_item_addr || address,
           status: 'needs_approval',
           source: 'unlock',
+          send_num: 1,
+          campaign_label: 'Free Postcard',
           at: new Date().toISOString()
         });
         if (typeof renderQueue === 'function') renderQueue();

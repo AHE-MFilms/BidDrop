@@ -1231,7 +1231,10 @@ module.exports = async function handler(req, res) {
           `ALTER TABLE mailer_log ADD COLUMN IF NOT EXISTS mailer_type TEXT`,
           `ALTER TABLE mailer_log ADD COLUMN IF NOT EXISTS queue_item_id TEXT`,
           `ALTER TABLE mailer_log ADD COLUMN IF NOT EXISTS credits_used INTEGER DEFAULT 1`,
-          `CREATE INDEX IF NOT EXISTS idx_mailer_log_account_sent ON mailer_log(account_id, sent_at DESC)`
+          `CREATE INDEX IF NOT EXISTS idx_mailer_log_account_sent ON mailer_log(account_id, sent_at DESC)`,
+          /* ── Campaign send numbering (Build 12) ── */
+          `ALTER TABLE queue ADD COLUMN IF NOT EXISTS send_num INTEGER DEFAULT 1`,
+          `ALTER TABLE queue ADD COLUMN IF NOT EXISTS campaign_label TEXT`
         ].join('; ');
         const results = [];
         // Run each DDL statement individually via Supabase pg_meta API (uses SERVICE_KEY)

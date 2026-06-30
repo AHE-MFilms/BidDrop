@@ -5,6 +5,22 @@
 //             sendLob() (print.js), escHtml() (ui.js)
 // Extracted from index.html — Tier 4 modularization
 
+// ── Campaign send numbering ─────────────────────────────────────────────────
+// Returns the next send number for a given address (1-indexed).
+// Unlock free postcard is always #1. Each subsequent send increments.
+function _nextSendNum(addr){
+  var norm = (addr||'').trim().toLowerCase();
+  var existing = (S.queue||[]).filter(function(q){
+    return (q.addr||'').trim().toLowerCase() === norm;
+  });
+  return existing.length + 1;
+}
+// Returns a human-readable campaign label for a send number
+function _sendLabel(num, source){
+  if(num === 1 || source === 'unlock') return 'Free Postcard';
+  return 'Campaign ' + num;
+}
+
 async function addToQueue(){
   const addr=document.getElementById('e-addr').value.trim();
   if(!addr){toast('Enter a property address','error');return;}
@@ -38,12 +54,15 @@ async function addToQueue(){
       return;
     }
   }
+  var _sn = _nextSendNum(addr);
   const item={
     id:'q'+Date.now(),
     owner:document.getElementById('e-owner').value.trim()||'Homeowner',
     addr, sqft:totalSqft, pitch:pitchLabel, mat:matLabel,
     structures:JSON.parse(JSON.stringify(structures)),
     total:grand, status:'pending',
+    send_num: _sn,
+    campaign_label: _sendLabel(_sn, null),
     // Snapshot photos at queue time so sendLob has them even if estimator is cleared
     photo_url: (window._homePhotoData && window._homePhotoData.startsWith('http')) ? window._homePhotoData : null,
     photo_data: (window._homePhotoData && !window._homePhotoData.startsWith('http')) ? window._homePhotoData : null,
@@ -640,11 +659,11 @@ function bulkAddToMailQueue(){
     const est = (S.estimates||[]).find(e=>e.id===id);
     if(!est) return;
     const addr = (est.addr||'').trim().toLowerCase();
-    const existing = (S.queue||[]).find(q=>q.addr.trim().toLowerCase()===addr && q.status==='pending');
-    if(existing){ skipped++; return; }
+    // No duplicate blocking — each send is numbered as a new campaign
     const pin = (S.pins||[]).find(p=>p.id===est.pinId);
     const mainStruct = (est.structures||[])[0] || {};
     const matMap = {'1.0':'3-Tab Shingle','1.3':'Architectural Shingle','1.8':'Designer Shingle','2.5':'Metal Roofing'};
+    var _bsn = _nextSendNum(est.addr);
     const qItem = {
       id: 'q_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
       pinId: est.pinId||null, estId: est.id||null,
@@ -655,7 +674,10 @@ function bulkAddToMailQueue(){
       photo_data: est.photo_data||null,
       photo_url: est.photo_url||(pin?pin.photo_url:null)||null,
       damage_photos: est.damage_photos||null,
-      status: 'pending', lobId: null, mailedAt: null,
+      status: 'pending',
+      send_num: _bsn,
+      campaign_label: _sendLabel(_bsn, null),
+      lobId: null, mailedAt: null,
       at: new Date().toISOString()
     };
     if(!S.queue) S.queue=[];
@@ -810,21 +832,16 @@ function addEstimateToMailQueue(estId){
     if(_gatePin) requirePinUnlocked(_gatePin.id);
     return;
   }
-  // Block duplicate pending entries for the same address
+  // Build a queue item from the estimate (multiple campaigns per address allowed — numbered)
   const addr = (est.addr||'').trim().toLowerCase();
-  const existing = (S.queue||[]).find(function(q){ return q.addr.trim().toLowerCase()===addr && q.status==='pending'; });
-  if(existing){
-    toast('\u26a0\ufe0f Already in Mail Queue — remove the existing entry first if you want to re-add','warn');
-    return;
-  }
-  // Build a queue item from the estimate
   const pin = (S.pins||[]).find(function(p){return p.id===est.pinId;});
   const mainStruct = (est.structures||[])[0] || {};
   const matMap = {'1.0':'3-Tab Shingle','1.3':'Architectural Shingle','1.8':'Designer Shingle','2.5':'Metal Roofing'};
+  var _qsn = _nextSendNum(est.addr);
   const qItem = {
     id: 'q_' + Date.now(),
-    pinId: est.pinId || null,   // Fix A: store pinId so queue can look up live estimate
-    estId: est.id || null,      // Fix A: store estId for direct lookup
+    pinId: est.pinId || null,
+    estId: est.id || null,
     owner: est.owner || 'Homeowner',
     addr: est.addr || '',
     email: est.email || '',
@@ -837,6 +854,8 @@ function addEstimateToMailQueue(estId){
     photo_url: est.photo_url || (pin ? pin.photo_url : null) || null,
     damage_photos: window._damagePhotos||est.damage_photos||null,
     status: 'pending',
+    send_num: _qsn,
+    campaign_label: _sendLabel(_qsn, null),
     lobId: null, mailedAt: null,
     at: new Date().toISOString()
   };
@@ -965,16 +984,20 @@ function renderQueue(){
   const empty=document.getElementById('q-empty');
   if(!S.queue.length){tbl.style.display='none';empty.style.display='block';if(typeof updateSidebarBadge==='function')updateSidebarBadge();return;}
   tbl.style.display='table';empty.style.display='none';
+  // Sort all items by date
   const sortedQueue = _sortList([...S.queue], _qSort.col, _qSort.dir);
   _updateQSortArrows();
-  tbody.innerHTML=sortedQueue.map(i=>{
-    // Fix A: sync live estimate data from S.estimates so queue always shows current numbers
+
+  // Group by address for numbered campaign view
+  const _addrOrder = [];
+  const _byAddr = {};
+  sortedQueue.forEach(function(i){
     if(i.status !== 'sent'){
-      const liveEst = (S.estimates||[]).find(e=>
-        (i.estId && e.id===i.estId) ||
-        (i.pinId && e.pinId===i.pinId) ||
-        (e.addr||'').trim().toLowerCase()===(i.addr||'').trim().toLowerCase()
-      );
+      const liveEst = (S.estimates||[]).find(function(e){
+        return (i.estId && e.id===i.estId) ||
+               (i.pinId && e.pinId===i.pinId) ||
+               (e.addr||'').trim().toLowerCase()===(i.addr||'').trim().toLowerCase();
+      });
       if(liveEst){
         i.total = liveEst.total || i.total;
         i.owner = liveEst.owner || i.owner;
@@ -984,29 +1007,60 @@ function renderQueue(){
         i.mat = mm[ms.material] || ms.material || i.mat;
       }
     }
-    const sc={pending:'#F59E0B',sent:'#22C55E',failed:'#EF4444',needs_approval:'#A78BFA',approved:'#38BDF8'}[i.status]||'#3D5269';
-    const sl={pending:'Pending',sent:'Mailed \u2713',failed:'Failed',needs_approval:'Needs Approval',approved:'Approved'}[i.status]||i.status;
-    const qid = i.id;
-    return '<tr>'+
-      '<td style="text-align:center;"><input type="checkbox" class="q-row-cb" data-id="'+escHtml(qid)+'" onchange="updateQueueBulkBar()" style="cursor:pointer;width:16px;height:16px;accent-color:var(--accent);"></td>'+
-      '<td style="font-weight:600;">'+escHtml(i.owner)+(i.drip_step?'<br><span style="font-size:9px;background:#7C3AED22;color:#C4B5FD;border:1px solid #7C3AED44;border-radius:10px;padding:1px 6px;font-weight:700;">📮 Drip Step '+i.drip_step+'</span>':'')+'</td>'+
-      '<td style="color:var(--mid);font-size:11px;">'+escHtml(i.addr)+(i.drip_step && S.cfg && S.cfg['postcardStep'+i.drip_step] ? '<br><img src="'+S.cfg['postcardStep'+i.drip_step]+'" style="width:60px;height:40px;object-fit:cover;border-radius:4px;margin-top:3px;border:1px solid var(--border);" title="Postcard front preview">' : '')+'</td>'+
-      '<td style="font-family:var(--font-m);color:var(--accent);font-weight:600;">$'+i.total.toLocaleString()+'</td>'+
-      '<td style="font-size:11px;color:var(--mid);">'+escHtml(i.mat)+'</td>'+
-      '<td style="font-family:var(--font-m);font-size:10px;color:var(--muted);">'+fmtDate(i.at)+'</td>'+
-      '<td><span class="spill" style="background:'+sc+'22;color:'+sc+';border:1px solid '+sc+'44;">'+sl+'</span></td>'+
-      '<td style="display:flex;gap:5px;align-items:center;">'+
+    const key = (i.addr||'').trim().toLowerCase();
+    if(!_byAddr[key]){ _byAddr[key] = []; _addrOrder.push(key); }
+    _byAddr[key].push(i);
+  });
 
-      (i.status==='needs_approval'?'<button class="btn-xs" onclick="approveQueueItem(\''+qid+'\')" style="background:#7C3AED;border-color:#7C3AED;color:#fff;">\u2713 Approve</button>':'')+
-      ((i.status==='pending'||i.status==='approved') && S.cfg.enablePostcard!==false?'<button class="btn-xs" onclick="openSendPostcardModal(\''+qid+'\')" style="background:#0e7490;border-color:#0e7490;color:#fff;" title="Send postcard">\ud83d\udcec Send Postcard</button>':'')+
-      (i.status==='sent'?'<span style="font-size:10px;color:var(--muted);">'+fmtDate(i.mailedAt)+'</span>':'')+
-      (i.status==='failed' && S.cfg.enablePostcard!==false?'<button class="btn-xs" onclick="sendLobPostcard6x9(\''+qid+'\')" style="background:#0e7490;border-color:#0e7490;color:#fff;">Retry Card</button>':'')+
-      (i.status==='pending'?'<button class="btn-xs" onclick="editEstimate(\''+qid+'\')">✏️ Edit</button>':'')+
-      '<button class="btn-xs" onclick="previewQueueItem(\''+qid+'\')"">Preview Letter</button>'+
-      '<button class="btn-xs" onclick="previewPostcard6x9(\''+qid+'\')" style="background:#0e749022;border-color:#0e7490;color:#0e7490;" title="Preview postcard front & back">Preview Card</button>'+
-      '<button class="btn-xs danger" onclick="rmQ(\''+qid+'\')" title="Delete">🗑 Delete</button>'+
-      '</td></tr>';
-  }).join('');
+  var rows = [];
+  _addrOrder.forEach(function(addrKey){
+    const items = _byAddr[addrKey];
+    const firstItem = items[0];
+    const shortAddr = (firstItem.addr||'').split(',')[0];
+    const cityState = (firstItem.addr||'').split(',').slice(1).join(',').trim();
+    const hasMultiple = items.length > 1;
+
+    if(hasMultiple){
+      rows.push(
+        '<tr style="background:rgba(255,255,255,.03);border-top:2px solid var(--border);">'+
+        '<td colspan="8" style="padding:8px 12px;">'+
+        '<span style="font-size:12px;font-weight:700;color:var(--text);">'+escHtml(shortAddr)+'</span>'+
+        '<span style="font-size:11px;color:var(--muted);margin-left:6px;">'+escHtml(cityState)+'</span>'+
+        '<span style="font-size:10px;color:var(--accent);margin-left:10px;font-weight:600;">'+items.length+' campaigns</span>'+
+        '</td></tr>'
+      );
+    }
+
+    items.forEach(function(i, idx){
+      const sc={pending:'#F59E0B',sent:'#22C55E',failed:'#EF4444',needs_approval:'#A78BFA',approved:'#38BDF8'}[i.status]||'#3D5269';
+      const sl={pending:'Pending',sent:'Mailed &#10003;',failed:'Failed',needs_approval:'Needs Approval',approved:'Approved'}[i.status]||i.status;
+      const qid = i.id;
+      const sendN = i.send_num || (idx + 1);
+      const campLabel = i.campaign_label || (sendN === 1 ? 'Free Postcard' : 'Campaign ' + sendN);
+      const campBadge = '<span style="font-size:9px;font-weight:700;background:rgba(249,115,22,.15);color:#F97316;border:1px solid rgba(249,115,22,.3);border-radius:10px;padding:1px 7px;white-space:nowrap;">#'+sendN+' '+escHtml(campLabel)+'</span>';
+
+      rows.push('<tr style="border-bottom:1px solid var(--border);">'+
+        '<td style="text-align:center;'+(hasMultiple?'padding-left:20px;':'')+'"><input type="checkbox" class="q-row-cb" data-id="'+escHtml(qid)+'" onchange="updateQueueBulkBar()" style="cursor:pointer;width:16px;height:16px;accent-color:var(--accent);"></td>'+
+        '<td style="font-weight:600;">'+escHtml(i.owner)+'<br>'+campBadge+(i.drip_step?'<br><span style="font-size:9px;background:#7C3AED22;color:#C4B5FD;border:1px solid #7C3AED44;border-radius:10px;padding:1px 6px;font-weight:700;">&#128232; Drip Step '+i.drip_step+'</span>':'')+'</td>'+
+        '<td style="color:var(--mid);font-size:11px;">'+(hasMultiple?'':escHtml(i.addr))+(i.drip_step && S.cfg && S.cfg['postcardStep'+i.drip_step] ? '<br><img src="'+S.cfg['postcardStep'+i.drip_step]+'" style="width:60px;height:40px;object-fit:cover;border-radius:4px;margin-top:3px;border:1px solid var(--border);" title="Postcard front preview">' : '')+'</td>'+
+        '<td style="font-family:var(--font-m);color:var(--accent);font-weight:600;">'+(i.total?'$'+i.total.toLocaleString():'&mdash;')+'</td>'+
+        '<td style="font-size:11px;color:var(--mid);">'+escHtml(i.mat||'&mdash;')+'</td>'+
+        '<td style="font-family:var(--font-m);font-size:10px;color:var(--muted);">'+fmtDate(i.at)+'</td>'+
+        '<td><span class="spill" style="background:'+sc+'22;color:'+sc+';border:1px solid '+sc+'44;">'+sl+'</span></td>'+
+        '<td style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;">'+
+        (i.status==='needs_approval'?'<button class="btn-xs" onclick="approveQueueItem(''+qid+'')" style="background:#7C3AED;border-color:#7C3AED;color:#fff;">&#10003; Approve</button>':'')+
+        ((i.status==='pending'||i.status==='approved') && S.cfg.enablePostcard!==false?'<button class="btn-xs" onclick="openSendPostcardModal(''+qid+'')" style="background:#0e7490;border-color:#0e7490;color:#fff;" title="Send postcard">&#128236; Send Postcard</button>':'')+
+        (i.status==='sent'?'<span style="font-size:10px;color:var(--muted);">'+fmtDate(i.mailedAt)+'</span>':'')+
+        (i.status==='failed' && S.cfg.enablePostcard!==false?'<button class="btn-xs" onclick="sendLobPostcard6x9(''+qid+'')" style="background:#0e7490;border-color:#0e7490;color:#fff;">Retry Card</button>':'')+
+        (i.status==='pending'?'<button class="btn-xs" onclick="editEstimate(''+qid+'')">&#9999;&#65039; Edit</button>':'')+
+        '<button class="btn-xs" onclick="previewQueueItem(''+qid+'')"">Preview Letter</button>'+
+        '<button class="btn-xs" onclick="previewPostcard6x9(''+qid+'')" style="background:#0e749022;border-color:#0e7490;color:#0e7490;" title="Preview postcard front & back">Preview Card</button>'+
+        '<button class="btn-xs danger" onclick="rmQ(''+qid+'')" title="Delete">&#128465; Delete</button>'+
+        '</td></tr>'
+      );
+    });
+  });
+  tbody.innerHTML = rows.join('');
   // Sync sidebar queue badge
   if(typeof updateSidebarBadge === 'function') updateSidebarBadge();
 }
