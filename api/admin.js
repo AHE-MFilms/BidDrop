@@ -1361,21 +1361,26 @@ module.exports = async function handler(req, res) {
         });
 
         // 6. Optionally queue a postcard
+        let upQueueItemId = null;
+        const upOwnerName = (upUpdates.estimate && upUpdates.estimate.owner) || (upPin.estimate && upPin.estimate.owner) || '';
         if (upQueuePostcard) {
+          upQueueItemId = 'mq_unlock_' + upPinId + '_' + Date.now();
           const queueItem = {
-            id: 'mq_unlock_' + upPinId + '_' + Date.now(),
+            id: upQueueItemId,
             account_id: accountId,
             pin_id: upPinId,
             addr: upAddress,
+            owner: upOwnerName,
             status: 'needs_approval',
             source: 'unlock',
             created_at: new Date().toISOString()
           };
-          await sbFetch('mail_queue', {
+          // Write to 'queue' table (the table the client reads from)
+          await sbFetch('queue', {
             method: 'POST',
             headers: { 'Prefer': 'resolution=ignore-duplicates,return=minimal' },
             body: JSON.stringify(queueItem)
-          }).catch(() => {});
+          }).catch((e) => { console.warn('[unlock-pin] queue insert error:', e); });
           await sbFetch(`pins?id=eq.${upPinId}`, {
             method: 'PATCH',
             headers: { 'Prefer': 'return=minimal' },
@@ -1386,10 +1391,13 @@ module.exports = async function handler(req, res) {
         return res.json({
           ok: true,
           unlocked_at: upUpdates.unlocked_at,
-          owner: upUpdates.estimate && upUpdates.estimate.owner || null,
+          owner: upOwnerName || null,
           equity_data: upUpdates.equity_data || null,
           contact_data: upUpdates.contact_data || null,
           postcard_queued: !!upQueuePostcard,
+          queue_item_id: upQueueItemId,
+          queue_item_addr: upAddress,
+          queue_item_owner: upOwnerName,
           _credits: { paid_credits: upBalance - 1 }
         });
       }

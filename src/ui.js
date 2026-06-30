@@ -211,6 +211,22 @@ async function _confirmUnlockPin(pinId) {
       // Always update contactData if server returned it (covers already_unlocked case too)
       if (result.contact_data) pin.contactData = result.contact_data;
       if (result.postcard_queued) pin.unlockQueuedPostcard = true;
+      // Add the unlock postcard item to S.queue in memory so it shows immediately
+      // and the Send Postcard modal correctly detects it as source='unlock' (free)
+      if (result.postcard_queued && result.queue_item_id) {
+        if (!S.queue) S.queue = [];
+        S.queue = S.queue.filter(function(q){ return q.id !== result.queue_item_id; });
+        S.queue.unshift({
+          id: result.queue_item_id,
+          pinId: pinId,
+          owner: result.queue_item_owner || result.owner || 'Homeowner',
+          addr: result.queue_item_addr || address,
+          status: 'needs_approval',
+          source: 'unlock',
+          at: new Date().toISOString()
+        });
+        if (typeof renderQueue === 'function') renderQueue();
+      }
     }
     // Deduct credit from local state
     if (result._credits != null) {
