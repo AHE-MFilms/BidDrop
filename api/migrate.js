@@ -303,6 +303,13 @@ export default async function handler(req, res) {
       name: 'accounts.canvas_template_name',
       sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS canvas_template_name text"
     },
+    // ── Build 14: Queue source tracking (free postcard with unlock) ──
+    { name: 'queue.source',           sql: "ALTER TABLE queue ADD COLUMN IF NOT EXISTS source text" },
+    { name: 'queue.drip_step',        sql: "ALTER TABLE queue ADD COLUMN IF NOT EXISTS drip_step integer" },
+    { name: 'queue.drip_est_id',      sql: "ALTER TABLE queue ADD COLUMN IF NOT EXISTS drip_est_id text" },
+    { name: 'queue.scheduled_send_at',sql: "ALTER TABLE queue ADD COLUMN IF NOT EXISTS scheduled_send_at timestamptz" },
+    // Backfill: mark existing unlock-sourced queue items so they get free sends
+    { name: 'queue.source_backfill',  sql: "UPDATE queue SET source = 'unlock' WHERE id LIKE 'mq_unlock_%' AND source IS NULL" },
   ];
 
   // Try to run DDL via rpc/exec_sql
