@@ -227,7 +227,22 @@ function renderEstimatesTab(){
   const trashedPins = _estView==='trash'
     ? (S.pins||[]).filter(p=>p.deleted_at && (now - new Date(p.deleted_at).getTime() < 30*24*60*60*1000))
     : [];
-  if(!list.length && !trashedPins.length){
+  // Collect active pins that have no saved estimate (active view only)
+  const estimatedPinIds = new Set((S.estimates||[]).filter(e=>!e.deletedAt&&!e.isRevision).map(e=>e.pinId).filter(Boolean));
+  const estimatedAddrs = new Set((S.estimates||[]).filter(e=>!e.deletedAt&&!e.isRevision).map(e=>(e.addr||'').trim().toLowerCase()).filter(Boolean));
+  const pinsWithoutEst = _estView==='trash' ? [] : (S.pins||[]).filter(p=>{
+    if(p.deleted_at) return false; // skip trashed pins
+    if(estimatedPinIds.has(p.id)) return false; // already has estimate by pinId
+    if(estimatedAddrs.has((p.address||'').trim().toLowerCase())) return false; // already has estimate by address
+    // Apply rep filter
+    if(repFilter && (p.rep||'') !== repFilter) return false;
+    // Apply search filter
+    if(searchQ){
+      if(!(p.address||'').toLowerCase().includes(searchQ) && !(p.rep||'').toLowerCase().includes(searchQ)) return false;
+    }
+    return true;
+  });
+  if(!list.length && !trashedPins.length && !pinsWithoutEst.length){
     empty.style.display='block'; table.style.display='none';
     const lbl2 = empty.querySelector('div:nth-child(2)');
     if(lbl2) lbl2.textContent = searchQ ? 'No estimates match "'+searchQ+'"' : (_estView==='trash' ? 'Trash is empty' : 'No saved estimates yet');
@@ -357,6 +372,30 @@ function renderEstimatesTab(){
       +'<td style="padding:12px;text-align:right;font-family:var(--font-h);font-size:16px;font-weight:700;color:var(--muted);">—</td>'
       +'<td style="padding:12px;font-size:12px;color:var(--muted);">'+date+'<div style="margin-top:4px;"><span style="background:rgba(239,68,68,.1);color:var(--danger);border:1px solid var(--danger);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;">DELETED</span></div></td>'
       +'<td style="padding:12px;text-align:center;"><div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">'+pinActionBtns+'</div></td>'
+      +'</tr>';
+  }).join('') + pinsWithoutEst.map(function(pin){
+    // Active pins with no estimate yet — show as PIN ONLY with a Start Estimate button
+    const date = pin.at ? new Date(pin.at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
+    const addr = pin.address || '—';
+    const shortAddr = addr.split(',')[0];
+    const cityState = addr.split(',').slice(1).join(',').trim();
+    const pid = escHtml(pin.id);
+    const ownerName = (pin.estimate && pin.estimate.owner) || (pin.contactData && pin.contactData.ownerName) || '';
+    const statusColors = {pinned:'#64748B',contacted:'#3B82F6',quoted:'#0EA5E9',interested:'#22C55E',signed:'#A855F7',sold:'#F59E0B',lost:'#EF4444'};
+    const statusColor = statusColors[pin.status] || '#64748B';
+    const statusLabel = {pinned:'Pinned',contacted:'Contacted',quoted:'Quoted',interested:'Interested',signed:'Signed',sold:'Sold',lost:'Lost'}[pin.status] || (pin.status||'Pinned');
+    return '<tr style="border-bottom:1px solid var(--border);">'
+      +'<td style="padding:10px 8px;"><input type="checkbox" class="est-row-cb" data-id="" style="cursor:pointer;width:16px;height:16px;accent-color:var(--accent);opacity:.4;" disabled></td>'
+      +'<td style="padding:12px;font-size:14px;font-weight:600;color:var(--text);">'+escHtml(shortAddr)+'<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+escHtml(cityState)+'</div>'
+        +(ownerName?'<div style="font-size:11px;color:var(--mid);margin-top:2px;">'+escHtml(ownerName)+'</div>':'')
+        +'<div style="margin-top:3px;"><span style="background:rgba(100,116,139,.12);color:#94A3B8;border:1px solid rgba(100,116,139,.3);border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;">PIN ONLY</span></div></td>'
+      +'<td style="padding:12px;font-size:13px;color:var(--mid);">'+escHtml(pin.rep||'—')+'</td>'
+      +'<td style="padding:12px;font-size:12px;color:var(--muted);">—</td>'
+      +'<td style="padding:12px;text-align:right;font-family:var(--font-h);font-size:16px;font-weight:700;color:var(--muted);">—</td>'
+      +'<td style="padding:12px;font-size:12px;color:var(--muted);">'+date+'<div style="margin-top:4px;"><span style="background:'+statusColor+'22;color:'+statusColor+';border:1px solid '+statusColor+'44;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;">'+escHtml(statusLabel)+'</span></div></td>'
+      +'<td style="padding:12px;text-align:center;"><div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">'
+        +'<button data-pid="'+pid+'" onclick="goEstFromPin(this.dataset.pid)" style="background:var(--accent);border:none;border-radius:6px;padding:6px 12px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128203; Start Estimate</button>'
+      +'</div></td>'
       +'</tr>';
   }).join('');
 }
