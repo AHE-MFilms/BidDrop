@@ -1459,28 +1459,36 @@ async function renderDesignBackCanvas(cfg, overrides){
 // Overlays: QR code (bottom-left zone), address block white rect, postage white rect.
 // Returns a data URL (JPEG).
 // ─────────────────────────────────────────────────────────────────────────────
-async function renderCustomBackCanvas(backImageSrc, cfg){
+async function renderCustomBackCanvas(backImageSrc, cfg) {
   cfg = cfg || (window.S && window.S.cfg) || {};
-  // Canvas: landscape 2775x1875 (matches Lob 6x9 at 300dpi landscape orientation)
+
+  // Canvas dimensions: Lob 6x9 landscape at 300 DPI (with 0.25" bleed)
   const W = 2775, H = 1875;
-  const LOB_ADDR_W = 1200, LOB_ADDR_H = 712;
-  const SAFE = 75;
-  // QR zone: bottom-left of address area
-  const QR_X = SAFE + 38;
-  const QR_Y = H - LOB_ADDR_H + SAFE;
-  const QR_SIZE = 300;
-  // Postage indicia: top-right corner
-  const POST_W = 350, POST_H = 350;
-  const POST_X = W - SAFE - POST_W;
-  const POST_Y = SAFE;
+  const BLEED = 75; // 0.25" * 300 DPI
+
+  // ── Zone coordinates (all in canvas pixels) ──────────────────────────────
+  // QR code zone: bottom-left, 1.5" x 1.5" square, 0.25" inside trim
+  const QR_X = BLEED + BLEED;          // 150
+  const QR_SIZE = 450;                  // 1.5" x 1.5"
+  const QR_Y = H - BLEED - BLEED - QR_SIZE; // 1275 (bottom at 1725)
+
+  // Address zone: 4" x 2" from right trim, bottom-right
+  const ADDR_W = 1200, ADDR_H = 600;
+  const ADDR_X = W - BLEED - ADDR_W;   // 1500
+  const ADDR_Y = H - BLEED - ADDR_H;   // 1200
+
+  // Postage/indicia zone: top-right, ~1.5" x 1"
+  const POST_W = 450, POST_H = 300;
+  const POST_X = W - BLEED - POST_W;   // 2250
+  const POST_Y = BLEED;                 // 75
 
   const canvas = document.createElement('canvas');
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d');
 
-  // 1. Draw uploaded back image as base layer (cover-fit)
+  // 1. Draw uploaded back image (cover-fit)
   const backImg = await loadImg(backImageSrc);
-  if(backImg){
+  if (backImg) {
     const scale = Math.max(W / backImg.width, H / backImg.height);
     const dw = Math.round(backImg.width * scale);
     const dh = Math.round(backImg.height * scale);
@@ -1492,31 +1500,34 @@ async function renderCustomBackCanvas(backImageSrc, cfg){
     ctx.fillRect(0, 0, W, H);
   }
 
-  // 2. Overlay QR code in bottom-left zone
-  const bookingUrl = cfg.bookingUrl || 'https://biddrop.us';
-  const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=4&data=' + encodeURIComponent(bookingUrl);
-  const qrImg = await loadImg(qrUrl);
-  if(qrImg){
-    // White background for QR contrast
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(QR_X - 10, QR_Y - 10, QR_SIZE + 20, QR_SIZE + 20);
-    ctx.drawImage(qrImg, QR_X, QR_Y, QR_SIZE, QR_SIZE);
-    // Scan CTA label below QR
-    const scanCta = cfg.postcardScanCta || 'SCAN TO BOOK';
-    const scanSub = cfg.postcardScanSub || 'No-pressure booking';
-    ctx.font = 'bold 28px Arial'; ctx.fillStyle = '#111827'; ctx.textAlign = 'left';
-    ctx.fillText(scanCta, QR_X, QR_Y + QR_SIZE + 36);
-    ctx.font = '22px Arial'; ctx.fillStyle = '#6b7280';
-    ctx.fillText(scanSub, QR_X, QR_Y + QR_SIZE + 64);
-  }
-
-  // 3. White rectangle for Lob address block (right side, bottom)
+  // 2. White out address zone (right side)
   ctx.fillStyle = '#ffffff';
-  ctx.fillRect(W - LOB_ADDR_W, H - LOB_ADDR_H, LOB_ADDR_W, LOB_ADDR_H);
+  ctx.fillRect(ADDR_X, ADDR_Y, ADDR_W, ADDR_H);
 
-  // 4. White rectangle for postage indicia (top-right corner)
+  // 3. White out postage/indicia zone (top-right)
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(POST_X, POST_Y, POST_W, POST_H);
+
+  // 4. White out QR zone and draw QR code (bottom-left)
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(QR_X - 10, QR_Y - 10, QR_SIZE + 20, QR_SIZE + 20);
+
+  const bookingUrl = cfg.bookingUrl || 'https://biddrop.us';
+  const qrApiUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=4&data=' + encodeURIComponent(bookingUrl);
+  const qrImg = await loadImg(qrApiUrl);
+  if (qrImg) {
+    ctx.drawImage(qrImg, QR_X, QR_Y, QR_SIZE, QR_SIZE);
+    // "SCAN TO BOOK" label below QR
+    const scanCta = cfg.postcardScanCta || 'SCAN TO BOOK';
+    const scanSub = cfg.postcardScanSub || 'No-pressure booking';
+    ctx.font = 'bold 28px Arial';
+    ctx.fillStyle = '#111827';
+    ctx.textAlign = 'left';
+    ctx.fillText(scanCta, QR_X, QR_Y + QR_SIZE + 36);
+    ctx.font = '22px Arial';
+    ctx.fillStyle = '#6b7280';
+    ctx.fillText(scanSub, QR_X, QR_Y + QR_SIZE + 64);
+  }
 
   return canvas.toDataURL('image/jpeg', 0.92);
 }
