@@ -797,6 +797,8 @@ function loadEstimateIntoEstimator(estId){
   renderStructures(); calcP(); updatePreview();
   goTab('estimate');
   toast('📋 Loaded into Estimator — edit and save to update','info');
+  // Refresh unlock/Look Up button state for the loaded pin
+  if(typeof _estRefreshUnlockUI==='function') _estRefreshUnlockUI();
 }
 function addEstimateToMailQueue(estId){
   const est = (S.estimates||[]).find(function(e){return e.id===estId;});
