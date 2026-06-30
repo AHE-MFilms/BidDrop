@@ -7902,15 +7902,15 @@ async function checkRealConnectivity(){
   // If browser says offline, trust it immediately (saves a network round-trip)
   if(!navigator.onLine) return false;
   try{
-    // Probe Supabase health endpoint — tiny, no auth needed, same domain we use anyway
+    // Probe Supabase health — use accounts table (root /rest/v1/ always 401s with anon key)
     const ctrl = new AbortController();
     const tid = setTimeout(()=>ctrl.abort(), 3000);
-    const r = await fetch('https://gtwbhxnrmfmdenogzuea.supabase.co/rest/v1/', {
+    const r = await fetch('https://gtwbhxnrmfmdenogzuea.supabase.co/rest/v1/accounts?select=id&limit=0', {
       method:'HEAD', signal:ctrl.signal,
       cache:'no-store', headers:{'apikey': (typeof SUPABASE_ANON_KEY!=='undefined'?SUPABASE_ANON_KEY:''), 'Authorization': 'Bearer '+(typeof SUPABASE_ANON_KEY!=='undefined'?SUPABASE_ANON_KEY:'')}
     });
     clearTimeout(tid);
-    return r.status < 600; // any real HTTP response = we're online
+    return r.status < 500; // 200/400 = online, 5xx/network error = offline
   } catch(e){
     return false;
   }
