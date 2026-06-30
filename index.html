@@ -3133,17 +3133,10 @@ tr:hover td{background:var(--card);}
         </div>
         <!-- Back side (address block) -->
         <div>
-          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;">BACK SIDE (Address Block)</div>
-          <div id="pcp-back" style="background:#fff;border-radius:10px;overflow:hidden;aspect-ratio:1.5;position:relative;padding:20px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;">
-            <div style="display:flex;justify-content:flex-end;">
-              <div style="width:60px;height:60px;background:#f3f4f6;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#9ca3af;">LOGO</div>
-            </div>
-            <div style="text-align:right;">
-              <div id="pcp-homeowner-name" style="font-size:13px;font-weight:700;color:#111;font-family:serif;">John & Jane Smith</div>
-              <div id="pcp-homeowner-addr" style="font-size:11px;color:#374151;margin-top:2px;font-family:serif;">123 Maple Street</div>
-              <div id="pcp-homeowner-city" style="font-size:11px;color:#374151;font-family:serif;">Springfield, IL 62701</div>
-            </div>
-            <div style="font-size:9px;color:#9ca3af;text-align:center;">PRESORTED STANDARD · US POSTAGE PAID</div>
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;">BACK SIDE (Design Back)</div>
+          <div id="pcp-back" style="background:#1a1a1a;border-radius:10px;overflow:hidden;aspect-ratio:1.5;position:relative;display:flex;align-items:center;justify-content:center;">
+            <canvas id="pcp-back-canvas" style="width:100%;height:100%;display:block;"></canvas>
+            <div id="pcp-back-spinner" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.5);border-radius:10px;align-items:center;justify-content:center;font-size:12px;color:#fff;">Rendering...</div>
           </div>
         </div>
       </div>
@@ -9615,10 +9608,12 @@ function campaignQueueWithDrip(campaignId,pinIds){
   if(typeof updateSidebarBadge==='function') updateSidebarBadge();
   toast('Queued '+pins.length+' contacts × '+steps.length+' steps = '+queued+' postcards (Step 1 needs approval)','success');
 }
+window._pcpCurrentDesignIdx = null;
 function openPostcardFullPreview(designIdx){
   const designs = getDesigns();
   const d = designs[designIdx];
   if(!d){ toast('Design not found','error'); return; }
+  window._pcpCurrentDesignIdx = designIdx;
   const modal = document.getElementById('m-postcard-preview');
   if(!modal) return;
   // Set front side
@@ -9628,20 +9623,34 @@ function openPostcardFullPreview(designIdx){
       ? '<img src="'+d.url+'" style="width:100%;height:100%;object-fit:cover;">'
       : '<div style="color:var(--muted);font-size:12px;padding:20px;text-align:center;">No image for this design</div>';
   }
-  // Update back side with current input values
-  updatePostcardPreviewData();
   modal.style.display = 'flex';
+  // Render the design back canvas
+  renderPostcardPreviewBack(d);
+}
+async function renderPostcardPreviewBack(d){
+  const canvas = document.getElementById('pcp-back-canvas');
+  if(!canvas) return;
+  const spinner = document.getElementById('pcp-back-spinner');
+  if(spinner) spinner.style.display = 'flex';
+  try{
+    const overrides = d.backOverrides || {};
+    const dataUrl = await renderDesignBackCanvas(S.cfg||{}, overrides);
+    if(dataUrl){
+      const img = new Image();
+      img.onload = () => {
+        canvas.width = img.width; canvas.height = img.height;
+        canvas.getContext('2d').drawImage(img, 0, 0);
+      };
+      img.src = dataUrl;
+    }
+  } catch(e){ console.warn('pcp back render error:', e); }
+  finally{ if(spinner) spinner.style.display = 'none'; }
 }
 function updatePostcardPreviewData(){
-  const name = document.getElementById('pcp-name-input')?.value || 'Homeowner';
-  const addr = document.getElementById('pcp-addr-input')?.value || '123 Main St';
-  const city = document.getElementById('pcp-city-input')?.value || 'City, ST 00000';
-  const nameEl = document.getElementById('pcp-homeowner-name');
-  const addrEl = document.getElementById('pcp-homeowner-addr');
-  const cityEl = document.getElementById('pcp-homeowner-city');
-  if(nameEl) nameEl.textContent = name;
-  if(addrEl) addrEl.textContent = addr;
-  if(cityEl) cityEl.textContent = city;
+  // Re-render back if design is open (sample data inputs are now just for reference)
+  const designs = getDesigns();
+  const d = window._pcpCurrentDesignIdx != null ? designs[window._pcpCurrentDesignIdx] : null;
+  if(d) renderPostcardPreviewBack(d);
 }
 // -- END DESIGNS + DRIP MODULE ------------------------------------------------
 
