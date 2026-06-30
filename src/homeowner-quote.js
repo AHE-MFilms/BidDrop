@@ -713,19 +713,18 @@ let _spmQueueId = null;
 let _spmChoice  = null;
 
 function openSendPostcardModal(queueId){
-  _spmQueueId = queueId;
-  _spmChoice  = null;
+  // Open the Estimate Reveal Postcard modal directly for this queue item
   const item = (S.queue||[]).find(x=>x.id===queueId);
-  const lbl = document.getElementById('spm-homeowner');
-  if(lbl && item) lbl.textContent = item.owner + ' — ' + item.addr;
-  // Reset selection
-  ['single','blitz'].forEach(k=>{
-    const el = document.getElementById('spm-opt-'+k);
-    if(el){ el.style.borderColor='var(--border)'; el.style.background=''; }
-  });
-  const btn = document.getElementById('spm-confirm-btn');
-  if(btn){ btn.textContent='Select an option above'; btn.style.opacity='.4'; btn.style.pointerEvents='none'; }
-  openM('m-send-postcard');
+  if(!item){ toast('Queue item not found','error'); return; }
+  // Pre-populate the reveal modal with this queue item's data
+  // Find the estimate linked to this queue item and open the reveal modal
+  const estId = item.estId || item.estimateId || item.estimate_id || null;
+  if(estId){
+    openEstimateReveal(estId);
+  } else {
+    // Fall back to sending directly via the queue item
+    sendLobPostcard6x9(queueId);
+  }
 }
 
 function spmSelect(choice){

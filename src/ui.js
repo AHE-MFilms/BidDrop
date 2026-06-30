@@ -215,7 +215,7 @@ async function _confirmUnlockPin(pinId) {
     }
     // Deduct credit from local state
     if (result._credits != null) {
-      S.cfg.mailerCredits = result._credits;
+      S.cfg.mailerCredits = result._credits.paid_credits ?? result._credits;
     } else {
       S.cfg.mailerCredits = Math.max(0, (S.cfg.mailerCredits||0) - 1);
     }
