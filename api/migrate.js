@@ -232,11 +232,17 @@ export default async function handler(req, res) {
         postcards_sent integer DEFAULT 0,
         ghl_pushed integer DEFAULT 0,
         status text DEFAULT 'active',
+        design_id text,
+        design_name text,
+        design_url text,
         created_at timestamptz DEFAULT now()
       )`
     },
     {
-      name: 'accounts.pixel_id',
+      { name: 'campaign_targets.design_id', sql: "ALTER TABLE campaign_targets ADD COLUMN IF NOT EXISTS design_id text" },
+      { name: 'campaign_targets.design_name', sql: "ALTER TABLE campaign_targets ADD COLUMN IF NOT EXISTS design_name text" },
+      { name: 'campaign_targets.design_url', sql: "ALTER TABLE campaign_targets ADD COLUMN IF NOT EXISTS design_url text" },
+            name: 'accounts.pixel_id',
       sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS pixel_id text"
     },
     {
