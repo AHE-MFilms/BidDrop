@@ -79,7 +79,9 @@ for (const fname of jsFiles) {
   const src = fs.readFileSync(path.join(SRC_JS, fname), 'utf8');
   // Count backticks not in comments or strings — rough heuristic
   // Skip trades.js which has intentional inline function strings
-  if (fname === 'trades.js') continue;
+  // Skip the original monolithic files that have been split into parts
+  const skipFiles = new Set(['trades.js', 'mail-queue.js', 'homeowner-quote.js']);
+  if (skipFiles.has(fname)) continue;
   const backticks = (src.match(/`/g) || []).length;
   if (backticks % 2 !== 0) {
     tlIssues.push(fname);

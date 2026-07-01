@@ -92,17 +92,22 @@ for (const htmlFile of HTML_FILES) {
   process.stdout.write(`  ${htmlFile} ... `);
 
   let html = fs.readFileSync(htmlFile, 'utf8');
-  // ── Resolve HTML partials (src/html/*.html) ──────────────────────────────
+  // ── Resolve HTML partials (src/html/*.html) — recursive so nested partials work ──
   if (htmlFile === 'index.html') {
     const htmlDir = path.join(__dirname, 'src', 'html');
-    html = html.replace(/<!-- @@PARTIAL:([^\s>]+) -->/g, function(match, fname) {
-      const partialPath = path.join(htmlDir, fname);
-      if (fs.existsSync(partialPath)) {
-        return fs.readFileSync(partialPath, 'utf8');
-      }
-      console.warn('WARNING: partial not found:', fname);
-      return match;
-    });
+    function resolvePartials(src, depth) {
+      if (depth > 5) return src; // guard against circular references
+      return src.replace(/<!-- @@PARTIAL:([^\s>]+) -->/g, function(match, fname) {
+        const partialPath = path.join(htmlDir, fname);
+        if (fs.existsSync(partialPath)) {
+          const content = fs.readFileSync(partialPath, 'utf8');
+          return resolvePartials(content, depth + 1);
+        }
+        console.warn('WARNING: partial not found:', fname);
+        return match;
+      });
+    }
+    html = resolvePartials(html, 0);
   }
   let fileObf = 0;
   let fileFallback = 0;

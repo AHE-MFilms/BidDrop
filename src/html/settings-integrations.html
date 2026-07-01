@@ -1,0 +1,284 @@
+
+    <!-- ══ TAB: INTEGRATIONS ══ -->
+    <div class="stab-tab-pane" id="stab-tabpane-integrations">
+
+    <!-- Integration cards CSS -->
+    <style>
+      .int-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;}
+      @media(max-width:900px){.int-grid{grid-template-columns:1fr;}}
+      .int-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+      .int-card-header{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);background:var(--card2);}
+      .int-logo{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+      .int-card-title{font-family:var(--font-h);font-size:14px;font-weight:700;color:var(--text);}
+      .int-card-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+      .int-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:6px;}
+      .int-card-body{padding:14px 16px;}
+      .int-status{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-left:auto;}
+      .int-status.connected{background:rgba(34,197,94,.12);color:#22C55E;}
+      .int-status.not-connected{background:rgba(156,163,175,.1);color:var(--muted);}
+    </style>
+
+    <div class="int-grid">
+
+      <!-- ── GoHighLevel ── -->
+      <div class="int-card">
+        <div class="int-card-header">
+          <div class="int-logo" style="background:#1a7f4b;">🏆</div>
+          <div style="flex:1;">
+            <div class="int-card-title">GoHighLevel <span class="int-badge" style="background:var(--accent);color:#fff;">RECOMMENDED</span></div>
+            <div class="int-card-sub">CRM · Pipelines · SMS · Email automation</div>
+          </div>
+          <div id="ghl-int-status" class="int-status not-connected">● Not Connected</div>
+        </div>
+        <div class="int-card-body">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Automatically create contacts and opportunities in your GHL sub-account when pins are dropped or estimates are created. Get your API key from <strong>Settings → Integrations → API Keys</strong> in GHL.</div>
+          <div class="fg" style="margin-bottom:8px;"><label class="fl" for="s-ghl-key">Location API Key</label><input class="fi" id="s-ghl-key" placeholder="pit-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" type="password" autocomplete="off" oninput="updateIntStatus('ghl')"></div>
+          <div class="frow" style="margin-bottom:8px;">
+            <div class="fg"><label class="fl" for="s-ghl-loc">Location ID</label><input class="fi" id="s-ghl-loc" placeholder="gz85VU6SxGXS7lqHAQGx" oninput="updateIntStatus('ghl')"></div>
+            <div class="fg"><label class="fl" for="s-ghl-pipe">Pipeline ID</label><input class="fi" id="s-ghl-pipe" placeholder="bxskBIBdbklHry0B63qx" value="bxskBIBdbklHry0B63qx"></div>
+          </div>
+          <div class="fg" style="margin-bottom:10px;"><div class="fl">Default Stage</div>
+            <select class="fs" id="s-ghl-stage" style="font-size:12px;padding:10px 10px;">
+              <option value="">— select stage —</option>
+              <option value="new">New Lead</option>
+              <option value="contacted">Contacted</option>
+              <option value="qualified">Qualified</option>
+              <option value="proposal">Proposal Sent</option>
+              <option value="closed_won">Closed Won</option>
+            </select>
+          </div>
+          <div style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
+            <div style="font-size:11px;font-weight:700;color:#22C55E;margin-bottom:4px;">🔄 Sync Existing Leads</div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Push all pins not yet synced to GHL. Safe to run multiple times.</div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <button id="btn-ghl-bulk-sync" onclick="ghlBulkSync()" style="background:#166534;border:1px solid #22C55E;border-radius:7px;padding:7px 14px;color:#4ade80;font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">🔄 Sync All Leads</button>
+              <span id="ghl-bulk-sync-status" style="font-size:11px;color:var(--muted);"></span>
+            </div>
+          </div>
+          <div style="margin-bottom:8px;"><div class="fl">SMS Template</div><textarea class="fi" id="s-ghl-sms-tpl" rows="2" style="resize:vertical;font-size:12px;" placeholder="Hi {name}! This is {rep} from {company}..."></textarea></div>
+          <div><div class="fl">Email Template</div><textarea class="fi" id="s-ghl-email-tpl" rows="3" style="resize:vertical;font-size:12px;" placeholder="Hi {name}, I hope this message finds you well!..."></textarea></div>
+          <div style="font-size:10px;color:var(--muted);margin-top:6px;">Tokens: <code style="background:var(--card2);padding:1px 4px;border-radius:3px;color:var(--accent);">{name}</code> <code style="background:var(--card2);padding:1px 4px;border-radius:3px;color:var(--accent);">{rep}</code> <code style="background:var(--card2);padding:1px 4px;border-radius:3px;color:var(--accent);">{company}</code> <code style="background:var(--card2);padding:1px 4px;border-radius:3px;color:var(--accent);">{address}</code></div>
+        </div>
+      </div>
+
+      <!-- ── JobNimbus ── -->
+      <div class="int-card">
+        <div class="int-card-header">
+          <div class="int-logo" style="background:#2563EB;">📋</div>
+          <div style="flex:1;">
+            <div class="int-card-title">JobNimbus</div>
+            <div class="int-card-sub">CRM · Job tracking · Roofing workflow</div>
+          </div>
+          <div id="jn-int-status" class="int-status not-connected">● Not Connected</div>
+        </div>
+        <div class="int-card-body">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Automatically create or update contacts in JobNimbus when pins are saved or estimates are created. Get your API key from <strong>Settings → API Keys</strong> in JobNimbus.</div>
+          <div class="fg" style="margin-bottom:8px;"><label class="fl" for="s-jn-key">API Key</label><input class="fi" id="s-jn-key" placeholder="eyJhbGci..." type="password" autocomplete="off" oninput="updateIntStatus('jn')"></div>
+          <div class="frow" style="margin-bottom:10px;">
+            <div class="fg"><label class="fl" for="s-jn-record-type">Contact Record Type</label><input class="fi" id="s-jn-record-type" placeholder="Customer" value="Customer"></div>
+            <div class="fg"><label class="fl" for="s-jn-status">Contact Status</label><input class="fi" id="s-jn-status" placeholder="Lead" value="Lead"></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <button onclick="jnTestConnection()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 14px;color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">🔗 Test Connection</button>
+            <span id="jn-test-status" style="font-size:11px;color:var(--muted);"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Jobber ── -->
+      <div class="int-card">
+        <div class="int-card-header">
+          <div class="int-logo" style="background:#FF6B35;">🔧</div>
+          <div style="flex:1;">
+            <div class="int-card-title">Jobber</div>
+            <div class="int-card-sub">Field service · Scheduling · Invoicing</div>
+          </div>
+          <div id="jobber-int-status" class="int-status not-connected">● Not Connected</div>
+        </div>
+        <div class="int-card-body">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Push leads from BidDrop directly into Jobber as new clients or requests. Get your API key from <strong>Settings → Integrations → API Access</strong> in Jobber.</div>
+          <div class="fg" style="margin-bottom:10px;"><label class="fl" for="s-jobber-key">Jobber API Key</label><input class="fi" id="s-jobber-key" placeholder="Bearer eyJhbGci..." type="password" autocomplete="off" oninput="updateIntStatus('jobber')"></div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <button onclick="jobberTestConnection()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 14px;color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">🔗 Test Connection</button>
+            <span id="jobber-test-status" style="font-size:11px;color:var(--muted);"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Meta Pixel ── -->
+      <div class="int-card">
+        <div class="int-card-header">
+          <div class="int-logo" style="background:#1877F2;">📘</div>
+          <div style="flex:1;">
+            <div class="int-card-title">Meta Pixel <span class="int-badge" style="background:#3B82F6;color:#fff;">PRO+</span></div>
+            <div class="int-card-sub">Facebook · Instagram retargeting</div>
+          </div>
+          <div id="meta-int-status" class="int-status not-connected">● Not Connected</div>
+        </div>
+        <div class="int-card-body">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">When a homeowner scans your QR code and views their estimate page, BidDrop fires a <strong>ViewContent</strong> event — building your retargeting audience automatically. Get your Pixel ID from <strong>Meta Events Manager</strong>.</div>
+          <div class="fg" style="margin-bottom:10px;"><label class="fl" for="s-meta-pixel-id">Meta Pixel ID</label><input class="fi" id="s-meta-pixel-id" placeholder="1234567890123456" autocomplete="off" oninput="updateIntStatus('meta')"></div>
+        </div>
+      </div>
+
+      <!-- ── Google Tag / Ads ── -->
+      <div class="int-card">
+        <div class="int-card-header">
+          <div class="int-logo" style="background:#4285F4;">🎯</div>
+          <div style="flex:1;">
+            <div class="int-card-title">Google Tag / Ads <span class="int-badge" style="background:#3B82F6;color:#fff;">PRO+</span></div>
+            <div class="int-card-sub">Google Ads · Analytics retargeting</div>
+          </div>
+          <div id="gtag-int-status" class="int-status not-connected">● Not Connected</div>
+        </div>
+        <div class="int-card-body">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Fire Google Ads conversion events when homeowners view their estimate page. Use your <strong>Measurement ID</strong> (G-XXXXXXXXXX) for GA4 or your <strong>Conversion ID</strong> (AW-XXXXXXXXX) for Google Ads.</div>
+          <div class="fg" style="margin-bottom:10px;"><label class="fl" for="s-google-tag-id">Google Tag ID</label><input class="fi" id="s-google-tag-id" placeholder="G-XXXXXXXXXX or AW-XXXXXXXXX" autocomplete="off" oninput="updateIntStatus('gtag')"></div>
+        </div>
+      </div>
+
+      <!-- ── Webhook / Zapier ── -->
+      <div class="int-card">
+        <div class="int-card-header">
+          <div class="int-logo" style="background:#FF4A00;">⚡</div>
+          <div style="flex:1;">
+            <div class="int-card-title">Webhook / Zapier</div>
+            <div class="int-card-sub">Connect any app · Custom automations</div>
+          </div>
+          <div id="webhook-int-status" class="int-status not-connected">● Not Connected</div>
+        </div>
+        <div class="int-card-body">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Send lead data to any app via a webhook URL. Works with Zapier, Make (Integromat), n8n, or any custom endpoint. BidDrop will POST a JSON payload when a pin is saved or an estimate is created.</div>
+          <div class="fg" style="margin-bottom:8px;"><label class="fl" for="s-webhook-url">Webhook URL</label><input class="fi" id="s-webhook-url" placeholder="https://hooks.zapier.com/hooks/catch/..." autocomplete="off" oninput="updateIntStatus('webhook')"></div>
+          <div style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 12px;font-size:11px;color:var(--muted);margin-bottom:10px;">
+            <strong style="color:var(--text);">Payload includes:</strong> name, address, phone, email, rep name, estimate total, roof sq ft, timestamp
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <button onclick="webhookTest()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 14px;color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">⚡ Send Test Payload</button>
+            <span id="webhook-test-status" style="font-size:11px;color:var(--muted);"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── RentCast (Agency) ── -->
+      <div id="rentcast-settings-section" class="int-card" style="display:none;">
+        <div class="int-card-header">
+          <div class="int-logo" style="background:#7C3AED;">🏠</div>
+          <div style="flex:1;">
+            <div class="int-card-title">RentCast <span class="int-badge" style="background:var(--accent);color:#fff;">AGENCY</span></div>
+            <div class="int-card-sub">Property owner name auto-fill</div>
+          </div>
+        </div>
+        <div class="int-card-body">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Auto-fills homeowner name when a pin is dropped. Get a free key at <a href="https://app.rentcast.io/app/api-access" target="_blank" style="color:var(--accent);">rentcast.io</a>.</div>
+          <div class="fg"><label class="fl" for="s-rentcast-key">RentCast API Key</label><input class="fi" id="s-rentcast-key" placeholder="live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" type="password"></div>
+        </div>
+      </div>
+
+      <!-- ── Lob (Agency) ── -->
+      <div id="lob-settings-section" class="int-card" style="display:none;">
+        <div class="int-card-header">
+          <div class="int-logo" style="background:#0EA5E9;">✉️</div>
+          <div style="flex:1;">
+            <div class="int-card-title">Lob Direct Mail <span class="int-badge" style="background:var(--accent);color:#fff;">AGENCY</span></div>
+            <div class="int-card-sub">Postcard printing &amp; mailing</div>
+          </div>
+        </div>
+        <div class="int-card-body">
+          <div class="fg"><label class="fl" for="s-lob">Lob API Key</label><input class="fi" id="s-lob" placeholder="live_c39f..."></div>
+        </div>
+      </div>
+
+      <!-- ── Storm Notifications ── -->
+      <div class="int-card" id="storm-notif-card">
+        <div class="int-card-header">
+          <div class="int-logo" style="background:#1e3a5f;">&#127783;</div>
+          <div style="flex:1;">
+            <div class="int-card-title">Storm Alerts <span class="int-badge" style="background:#3b82f6;color:#fff;">PUSH</span></div>
+            <div class="int-card-sub">Get notified when a new hail or wind storm hits your territory</div>
+          </div>
+          <div id="storm-notif-status-badge" class="int-status not-connected">&#9679; Off</div>
+        </div>
+        <div class="int-card-body">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Enable browser push notifications to receive an alert whenever a new storm event (hail or 50+ MPH wind) is detected within your canvass territory. BidDrop checks NOAA data every 30 minutes.</div>
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px;">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+              <span style="font-size:13px;color:var(--mid);font-weight:600;">Push Notifications</span>
+              <div id="storm-notif-toggle-track" onclick="toggleStormNotifications()" style="position:relative;width:42px;height:24px;background:#374151;border-radius:12px;cursor:pointer;transition:background .2s;flex-shrink:0;">
+                <div id="storm-notif-toggle-thumb" style="position:absolute;top:3px;left:3px;width:18px;height:18px;background:#9ca3af;border-radius:50%;transition:left .2s,background .2s;"></div>
+              </div>
+              <span id="storm-notif-toggle-lbl" style="font-size:11px;font-weight:700;color:var(--muted);">OFF</span>
+            </label>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--mid);">
+              <input type="checkbox" id="storm-notif-hail" checked style="accent-color:#3b82f6;"> Hail events
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--mid);">
+              <input type="checkbox" id="storm-notif-wind" checked style="accent-color:#3b82f6;"> Wind events (50+ MPH)
+            </label>
+          </div>
+          <div id="storm-notif-permission-warning" style="display:none;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:7px;padding:8px 12px;font-size:11px;color:#f87171;margin-bottom:10px;">&#9888; Browser notifications are blocked. Please allow notifications in your browser settings and try again.</div>
+          <div id="storm-notif-success-msg" style="display:none;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.3);border-radius:7px;padding:8px 12px;font-size:11px;color:#4ade80;margin-bottom:10px;">&#10003; Storm alerts are active. You will be notified when new storms hit your territory.</div>
+          <button onclick="testStormNotification()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 14px;color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">&#127783; Send Test Notification</button>
+        </div>
+      </div>
+      <!-- ── QuickBooks Integration ── -->
+      <div class="int-card" id="quickbooks-int-card">
+        <div class="int-card-header">
+          <div class="int-logo" style="background:#1c3a1c;">&#128196;</div>
+          <div style="flex:1;">
+            <div class="int-card-title">QuickBooks Online <span class="int-badge" style="background:#2ca01c;color:#fff;">INVOICES</span></div>
+            <div class="int-card-sub">Send estimates to QuickBooks as invoices automatically</div>
+          </div>
+          <div id="qb-int-status" class="int-status not-connected">&#9679; Not Connected</div>
+        </div>
+        <div class="int-card-body">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Connect QuickBooks Online to automatically create invoices from BidDrop estimates. Each estimate gets a &#128196; QuickBooks button that sends the estimate as a QuickBooks invoice.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--mid);display:block;margin-bottom:5px;">Client ID</label>
+              <input id="s-qb-client-id" type="text" placeholder="QuickBooks Client ID" oninput="updateQBStatus()" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-size:12px;font-family:var(--font-m);">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--mid);display:block;margin-bottom:5px;">Client Secret</label>
+              <input id="s-qb-client-secret" type="password" placeholder="QuickBooks Client Secret" oninput="updateQBStatus()" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-size:12px;font-family:var(--font-m);">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--mid);display:block;margin-bottom:5px;">Realm ID (Company ID)</label>
+              <input id="s-qb-realm-id" type="text" placeholder="QuickBooks Realm ID" oninput="updateQBStatus()" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-size:12px;font-family:var(--font-m);">
+            </div>
+            <div style="display:flex;align-items:flex-end;gap:8px;">
+              <button onclick="saveQBSettings()" style="flex:1;background:var(--accent);border:none;border-radius:7px;padding:9px 14px;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;cursor:pointer;">Save</button>
+              <button onclick="connectQuickBooks()" style="flex:1;background:#2ca01c;border:none;border-radius:7px;padding:9px 14px;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;cursor:pointer;">&#128279; Connect QB</button>
+            </div>
+          </div>
+          <div id="qb-connect-status" style="font-size:11px;color:var(--muted);">Get your credentials from <a href="https://developer.intuit.com/app/developer/myapps" target="_blank" style="color:var(--accent);">Intuit Developer Portal</a>. Use sandbox for testing, production for live invoices.</div>
+        </div>
+      </div>
+      <!-- ── CompanyCam Integration ── -->
+      <div class="int-card" id="companycam-int-card">
+        <div class="int-card-header">
+          <div class="int-logo" style="background:#1a2e1a;">&#128247;</div>
+          <div style="flex:1;">
+            <div class="int-card-title">CompanyCam <span class="int-badge" style="background:#22c55e;color:#fff;">PHOTOS</span></div>
+            <div class="int-card-sub">Sync job-site photos from CompanyCam to BidDrop pins</div>
+          </div>
+          <div id="companycam-int-status" class="int-status not-connected">&#9679; Not Connected</div>
+        </div>
+        <div class="int-card-body">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Connect your CompanyCam account to view and sync job-site photos directly from any pin. Photos are pulled by property address using the CompanyCam API.</div>
+          <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;margin-bottom:12px;">
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--mid);display:block;margin-bottom:5px;">CompanyCam API Key</label>
+              <input id="s-companycam-key" type="password" placeholder="Bearer token from CompanyCam dashboard" oninput="updateCompanyCamStatus()" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-size:12px;font-family:var(--font-m);">
+            </div>
+            <button onclick="saveCompanyCamKey()" style="background:var(--accent);border:none;border-radius:7px;padding:9px 18px;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">Save</button>
+          </div>
+          <div style="font-size:11px;color:var(--muted);">Get your API key from <a href="https://app.companycam.com/settings/api" target="_blank" style="color:var(--accent);">CompanyCam Settings → API</a>. Once connected, a 📷 CompanyCam button will appear on each pin.</div>
+        </div>
+      </div>
+    </div><!-- /int-grid -->
+    </div><!-- /stab-tab-pane integrations -->

@@ -1,0 +1,63 @@
+
+    <!-- ══ TAB: BILLING ══ -->
+    <div class="stab-tab-pane" id="stab-tabpane-billing">
+    <!-- ── SUBSCRIPTION & BILLING CARD ── -->
+    <div class="stab-card" id="stab-billing-card" style="margin-top:14px;">
+      <div class="stab-card-hdr" onclick="toggleStabCard('billing')">
+        <span>&#128179; Subscription &amp; Billing</span>
+        <span class="stab-chevron" id="stab-chevron-billing">&#9662;</span>
+      </div>
+      <div class="stab-card-body" id="stab-body-billing">
+        <div id="billing-status-row" style="margin-bottom:14px;"></div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+          <button id="btn-manage-subscription" onclick="openBillingPortal()" style="background:var(--accent);border:none;border-radius:8px;padding:10px 20px;color:#fff;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">&#128179; Manage Subscription</button>
+          <button id="btn-cancel-subscription" onclick="confirmCancelSubscription()" style="background:none;border:1px solid var(--danger);border-radius:8px;padding:10px 18px;color:var(--danger);font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;">Cancel Plan</button>
+          <button id="btn-reactivate-subscription" onclick="reactivateSubscription()" style="display:none;background:none;border:1px solid #22C55E;border-radius:8px;padding:10px 18px;color:#22C55E;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;">&#9989; Undo Cancellation</button>
+        </div>
+        <div style="margin-top:12px;font-size:15px;color:var(--muted);line-height:1.6;">
+          <strong>Manage Subscription</strong> opens the Stripe billing portal where you can upgrade, downgrade, update your payment method, or view invoices.<br>
+          <strong>Cancel Plan</strong> will cancel your subscription at the end of the current billing period &mdash; your account stays active until then.
+        </div>
+      </div>
+    </div>
+
+    </div><!-- /stab-tab-pane billing -->
+
+    <!-- ══ TAB: TRADE STATUSES (Pipeline Labels) ══ -->
+    <div class="stab-tab-pane" id="stab-tabpane-trade-statuses">
+      <div class="stab-card stab-full" style="margin-top:14px;">
+        <div class="stab-card-hdr" onclick="toggleStabCard('trade-statuses')">
+          <span>🏷 Trade-Specific Pipeline Labels</span>
+          <span class="stab-chevron" id="stab-chevron-trade-statuses">▾</span>
+        </div>
+        <div class="stab-card-body" id="stab-body-trade-statuses">
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:13px;color:var(--mid);margin-bottom:16px;">
+            🏷 Customize the pin status labels for each trade. These labels appear on pin cards, filters, and the pipeline view. Leave blank to use the default label.
+          </div>
+          <div id="trade-statuses-accordion"></div>
+        </div>
+      </div>
+    </div><!-- /stab-tab-pane trade-statuses -->
+
+    <!-- ══ TAB: TRADE POSTCARD COPY ══ -->
+    <div class="stab-tab-pane" id="stab-tabpane-trade-postcard">
+      <div class="stab-card stab-full" style="margin-top:14px;">
+        <div class="stab-card-hdr" onclick="toggleStabCard('trade-postcard')">
+          <span>📬 Trade-Specific Postcard Copy</span>
+          <span class="stab-chevron" id="stab-chevron-trade-postcard">▾</span>
+        </div>
+        <div class="stab-card-body" id="stab-body-trade-postcard">
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:13px;color:var(--mid);margin-bottom:16px;">
+            📬 Set default postcard headlines and copy for each trade. When a postcard is generated for a trade-specific pin, these defaults will pre-fill the Marketing tab fields.
+          </div>
+          <div id="trade-postcard-accordion"></div>
+        </div>
+      </div>
+    </div><!-- /stab-tab-pane trade-postcard -->
+
+    <!-- ── BOTTOM SAVE BUTTON ── -->
+    <div style="display:flex;justify-content:center;gap:16px;padding:8px 0 24px;flex-shrink:0;">
+      <button onclick="saveSettings()" class="stab-save-btn stab-save-lg">&#128190; Save Settings</button>
+      <button onclick="doLogout()" class="stab-signout-btn">Sign Out</button>
+    </div>
+

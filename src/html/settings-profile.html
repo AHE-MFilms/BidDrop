@@ -1,0 +1,277 @@
+    <div class="stab-tab-pane active" id="stab-tabpane-profile">
+  <!-- ── TWO-COLUMN GRID ── -->
+    <div class="stab-grid">
+
+      <!-- LEFT: Team Members -->
+      <div class="stab-card" id="stab-team-card">
+        <div class="stab-card-hdr" onclick="toggleStabCard('team')">
+          <span>&#128101; Team Members</span>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div id="settings-team-role-badge" style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:9px;background:var(--accent-dim);color:var(--accent);text-transform:uppercase;"></div>
+            <span class="stab-chevron" id="stab-chevron-team">&#9662;</span>
+          </div>
+        </div>
+        <div class="stab-card-body" id="stab-body-team">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div id="settings-team-plan-info" style="font-size:12px;color:var(--muted);"></div>
+            <button onclick="openInviteRepModal()" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;">+ Invite Rep</button>
+          </div>
+          <div id="settings-team-body" style="padding:4px 0;">
+            <div style="color:var(--mid);font-size:13px;">Loading team...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Invite Rep Modal -->
+      <div id="invite-rep-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;align-items:center;justify-content:center;">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:28px 32px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.5);">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+            <div style="font-size:18px;font-weight:800;">Invite a Team Member</div>
+            <button onclick="closeInviteRepModal()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1;">&times;</button>
+          </div>
+          <div style="margin-bottom:14px;">
+            <label style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px;">Full Name</label>
+            <input id="invite-rep-name" class="fi" placeholder="Jane Smith" style="width:100%;box-sizing:border-box;">
+          </div>
+          <div style="margin-bottom:14px;">
+            <label style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px;">Email Address</label>
+            <input id="invite-rep-email" class="fi" type="email" placeholder="jane@yourcompany.com" style="width:100%;box-sizing:border-box;">
+          </div>
+          <div style="margin-bottom:20px;">
+            <label style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px;">Role</label>
+            <select id="invite-rep-role" class="fi" style="width:100%;box-sizing:border-box;">
+              <option value="rep">Field Rep</option>
+              <option value="admin">Team Admin</option>
+            </select>
+          </div>
+          <div id="invite-rep-error" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:10px 14px;font-size:13px;color:#ef4444;margin-bottom:14px;"></div>
+          <div style="display:flex;gap:10px;">
+            <button onclick="closeInviteRepModal()" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;color:var(--fg);">Cancel</button>
+            <button onclick="submitInviteRep()" id="invite-rep-submit-btn" style="flex:2;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;">Send Invite</button>
+          </div>
+          <div style="margin-top:12px;font-size:12px;color:var(--muted);text-align:center;">They'll receive an email with a temporary password to log in.</div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Company Info -->
+      <div class="stab-card">
+        <div class="stab-card-hdr" onclick="toggleStabCard('company')">
+          <span>&#127970; Company Info</span>
+          <span class="stab-chevron" id="stab-chevron-company">&#9662;</span>
+        </div>
+        <div class="stab-card-body" id="stab-body-company">
+          <div class="frow">
+            <div class="fg"><label class="fl" for="s-co">Company Name</label><input class="fi" id="s-co" placeholder="T&amp;M Roofing"></div>
+            <div class="fg"><label class="fl" for="s-ph">Phone</label><input class="fi" id="s-ph" placeholder="(313) 555-0100" oninput="autoFormatPhone(this)"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl" for="s-addr">Company Address</label><input class="fi" id="s-addr" placeholder="123 Business Dr, Detroit MI 48000"></div>
+            <div class="fg"><label class="fl" for="s-color">Brand Color</label><input type="color" class="fi" id="s-color" value="#F25C05" style="padding:4px;cursor:pointer;height:42px;"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl" for="s-rep">Rep / Owner Name</label><input class="fi" id="s-rep" placeholder="Ted Smith"></div>
+            <div class="fg"><label class="fl" for="s-reptitle">Rep Title</label><input class="fi" id="s-reptitle" placeholder="Owner, Sales Rep, etc."></div>
+          </div>
+          <div class="fg"><label class="fl" for="s-bookingurl">Booking / QR Code URL <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; QR auto-generates from this link</span></label><input class="fi" id="s-bookingurl" placeholder="https://calendly.com/yourname"></div>
+          <div class="fg stab-full"><label class="fl" for="s-lead-alert-email">Lead Alert Email <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; notified when a homeowner fills out their estimate page. Defaults to your account email. Separate multiple with commas.</span></label><input class="fi" id="s-lead-alert-email" type="text" placeholder="sales@yourcompany.com, manager@yourcompany.com"></div>
+          <div class="frow">
+            <div class="fg"><label class="fl" for="s-lic">License / CCB #</label><input class="fi" id="s-lic" placeholder="CCB#226995"></div>
+            <div class="fg"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl" for="s-yrs">Years in Business</label><input class="fi" id="s-yrs" placeholder="20+"></div>
+            <div class="fg"><label class="fl" for="s-warr">Workmanship Warranty (yrs)</label><input class="fi" id="s-warr" placeholder="10"></div>
+           </div>
+          <div class="fg stab-full" style="margin-top:4px;"><div class="fl">Company Bio <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; shown on homeowner estimate pages</span></div><textarea class="fi" id="s-bio" rows="3" placeholder="We're a family-owned roofing company serving Metro Detroit for 20+ years. We specialize in storm damage restoration and insurance claims, making the process seamless for homeowners." style="resize:vertical;min-height:80px;"></textarea></div>
+          <!-- Retargeting Pixels -->
+          <div style="margin-top:18px;padding:14px;background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.2);border-radius:10px;">
+            <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#3B82F6;margin-bottom:10px;">&#127919; Retargeting Pixels <span style="font-size:9px;font-weight:600;padding:2px 7px;border-radius:10px;background:#3B82F6;color:#fff;margin-left:6px;">PRO+</span></div>
+            <div style="font-size:15px;color:var(--muted);margin-bottom:12px;">When a homeowner scans your postcard QR code and views their estimate page, BidDrop fires your pixel events automatically — building your retargeting audience in Meta Ads &amp; Google Ads.</div>
+            <div class="frow">
+              <div class="fg"><label class="fl" for="s-meta-pixel-id">Meta Pixel ID <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; from Meta Events Manager</span></label><input class="fi" id="s-meta-pixel-id" placeholder="1234567890123456" autocomplete="off"></div>
+              <div class="fg"><label class="fl" for="s-google-tag-id">Google Tag ID <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; e.g. G-XXXXXXXXXX or AW-XXXXXXXXX</span></label><input class="fi" id="s-google-tag-id" placeholder="G-XXXXXXXXXX" autocomplete="off"></div>
+            </div>
+            <div style="font-size:15px;color:var(--muted);margin-top:6px;">Events fired: <strong>EstimateViewed</strong> (when homeowner opens their page) · <strong>BookingClicked</strong> (when they tap Schedule) · <strong>CallClicked</strong> (when they tap your phone number)</div>
+          </div>
+          <!-- Google Reviews -->
+          <div style="margin-top:14px;padding:14px;background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2);border-radius:10px;">
+            <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#22C55E;margin-bottom:10px;">&#11088; Google Reviews &#8212; Estimate Page</div>
+            <div style="font-size:15px;color:var(--muted);margin-bottom:12px;">Connect your Google My Business listing so real Google reviews appear on your homeowner estimate pages. Without this, placeholder reviews are shown.</div>
+            <div class="fg"><label class="fl" for="s-google-place-id">Google Place ID <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; powers real Google reviews on estimate pages</span></label><input class="fi" id="s-google-place-id" placeholder="ChIJN1t_tDeuEmsRUsoyG83frY4" autocomplete="off"></div>
+            <div style="font-size:13px;color:var(--muted);margin-top:8px;">Find your Place ID at <a href="https://developers.google.com/maps/documentation/javascript/examples/places-placeid-finder" target="_blank" style="color:#22C55E;">developers.google.com/maps &rarr; Place ID Finder</a></div>
+          </div>
+        </div>
+      </div>
+      <!-- FULL WIDTH: Share & Embed -->
+      <div class="stab-card stab-full" id="stab-embed-card">
+        <div class="stab-card-hdr" onclick="toggleStabCard('embed')">
+          <span>&#128279; Share &amp; Embed &#8212; Website Estimator &amp; Quote Page</span>
+          <span class="stab-chevron" id="stab-chevron-embed">&#9662;</span>
+        </div>
+        <div class="stab-card-body" id="stab-body-embed">
+          <div id="embed-no-slug" style="display:none;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:15px;color:var(--muted);">
+            &#128279; Your quote page URL hasn't been set yet. Contact BidDrop support to get your custom slug (e.g. <code style="background:var(--card);padding:1px 5px;border-radius:3px;color:var(--accent);">/q/rapidroof</code>).
+          </div>
+          <div id="embed-has-slug">
+            <div style="margin-bottom:14px;">
+              <div class="stab-section-hdr">Your Public Estimator URL</div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <code id="embed-url-display" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;font-size:13px;color:var(--accent);font-family:var(--font-m);word-break:break-all;"></code>
+                <button onclick="copyEmbedText('embed-url-display')" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:7px 14px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128203; Copy URL</button>
+                <a id="embed-url-open" href="#" target="_blank" style="background:var(--accent);border:none;border-radius:6px;padding:7px 14px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;">&#8599; Open</a>
+              </div>
+              <div style="font-size:15px;color:var(--muted);margin-top:6px;">Share this link directly, add it to your Google Business profile, or use it in a QR code.</div>
+            </div>
+            <div style="margin-bottom:14px;">
+              <div class="stab-section-hdr">Website Button Code</div>
+              <div style="font-size:15px;color:var(--muted);margin-bottom:6px;">Paste this into your website to add a &ldquo;Get a Free Estimate&rdquo; button.</div>
+              <div style="position:relative;">
+                <pre id="embed-btn-code" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-size:15px;color:var(--mid);font-family:var(--font-m);white-space:pre-wrap;word-break:break-all;margin:0;"></pre>
+                <button onclick="copyEmbedText('embed-btn-code')" style="position:absolute;top:8px;right:8px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 10px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;">&#128203; Copy</button>
+              </div>
+            </div>
+            <div>
+              <div class="stab-section-hdr">Iframe Embed Code</div>
+              <div style="font-size:15px;color:var(--muted);margin-bottom:6px;">Embed the full estimator directly inside your website page.</div>
+              <div style="position:relative;">
+                <pre id="embed-iframe-code" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-size:15px;color:var(--mid);font-family:var(--font-m);white-space:pre-wrap;word-break:break-all;margin:0;"></pre>
+                <button onclick="copyEmbedText('embed-iframe-code')" style="position:absolute;top:8px;right:8px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 10px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;">&#128203; Copy</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- FULL WIDTH: BidDrop Pixel -->
+      <div class="stab-card stab-full" id="px-settings-section">
+        <div class="stab-card-hdr" onclick="toggleStabCard('pixel')">
+          <span>&#128225; BidDrop Pixel &#8212; Retarget Website Visitors with Direct Mail</span>
+          <span class="stab-chevron" id="stab-chevron-pixel">&#9662;</span>
+        </div>
+        <div class="stab-card-body" id="stab-body-pixel">
+          <!-- Explainer -->
+          <div style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:14px 16px;margin-bottom:18px;">
+            <div style="font-weight:700;color:#3B82F6;margin-bottom:4px;">&#128161; How it works</div>
+            <div style="font-size:13px;color:var(--mid);line-height:1.6;">Install the BidDrop Pixel on your website. When a homeowner spends <strong>20+ seconds</strong> on your site, BidDrop captures the visit. Once you connect an identity resolution provider, we match the visitor to their home address and you can send them a postcard automatically.</div>
+          </div>
+          <!-- Pixel ID -->
+          <div style="margin-bottom:18px;">
+            <div class="stab-section-hdr">Your Pixel ID</div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <code id="px-id-display" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;font-size:13px;color:var(--accent);font-family:var(--font-m);word-break:break-all;min-width:120px;">Not generated yet</code>
+              <button onclick="generatePixelId()" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:7px 14px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">&#9881; Generate ID</button>
+            </div>
+          </div>
+          <!-- Embed Code -->
+          <div style="margin-bottom:18px;">
+            <div class="stab-section-hdr">Embed Code</div>
+            <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">Paste this snippet into the <code style="background:var(--card2);padding:1px 5px;border-radius:3px;">&lt;head&gt;</code> of every page on your website.</div>
+            <div style="position:relative;">
+              <textarea id="px-embed-code" readonly rows="3" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-size:12px;color:var(--mid);font-family:var(--font-m);resize:none;outline:none;line-height:1.5;"></textarea>
+              <button onclick="copyPixelCode()" style="position:absolute;top:8px;right:8px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 10px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;">&#128203; Copy</button>
+            </div>
+          </div>
+          <!-- Resolution API Key -->
+          <div style="margin-bottom:18px;">
+            <div class="stab-section-hdr">Identity Resolution API Key <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; Optional (DirectMail.io, Customers.ai, etc.)</span></div>
+            <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">Once you sign up with an identity resolution provider, paste your API key here. BidDrop will automatically resolve visitor IPs to mailing addresses.</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <input id="px-resolution-key" type="password" class="fi" placeholder="sk-live-xxxxxxxxxxxx" autocomplete="off" style="flex:1;min-width:200px;" />
+              <button onclick="saveResolutionKey()" style="background:var(--accent);border:none;border-radius:7px;padding:8px 18px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Save Key</button>
+            </div>
+            <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;">
+              <a href="https://directmail.io/features/identity-resolution-pixel/" target="_blank" style="font-size:12px;color:var(--info);text-decoration:none;">&#8599; DirectMail.io</a>
+              <a href="https://customers.ai" target="_blank" style="font-size:12px;color:var(--info);text-decoration:none;">&#8599; Customers.ai</a>
+              <a href="https://www.postpilot.com/sitematch" target="_blank" style="font-size:12px;color:var(--info);text-decoration:none;">&#8599; PostPilot SiteMatch</a>
+            </div>
+          </div>
+          <!-- View Leads CTA -->
+          <div style="display:flex;gap:10px;">
+            <button onclick="goTab('pixel')" style="background:var(--accent);border:none;border-radius:8px;padding:10px 22px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">&#128225; View Pixel Leads</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- FULL WIDTH: Branding -->
+      <div class="stab-card stab-full">
+        <div class="stab-card-hdr" onclick="toggleStabCard('branding')">
+          <span>&#127912; Branding &#8212; Logo, Headshot &amp; Reviews</span>
+          <span class="stab-chevron" id="stab-chevron-branding">&#9662;</span>
+        </div>
+        <div class="stab-card-body" id="stab-body-branding">
+          <div class="stab-branding-grid">
+            <!-- Logo -->
+            <div>
+              <div class="fl">Company Logo</div>
+              <div style="display:flex;gap:10px;align-items:center;margin-top:6px;">
+                <div id="logo-preview" style="width:80px;height:50px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--muted);overflow:hidden;flex-shrink:0;">No logo</div>
+                <div style="flex:1;">
+                  <button onclick="showPhotoActionSheet(function(files){handleLogoUpload({files:files});},{multiple:false})" style="display:block;width:100%;background:var(--card);border:2px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;cursor:pointer;color:var(--mid);font-size:12px;font-weight:600;">&#128193; Upload Logo</button>
+                  <div style="font-size:15px;color:var(--muted);margin-top:5px;line-height:1.5;text-align:center;">
+                    PNG or SVG &bull; transparent background<br>
+                    <strong style="color:var(--mid);">400 &times; 200 px</strong> recommended &bull; max 2 MB
+                  </div>
+                  <button onclick="clearLogo()" style="width:100%;margin-top:5px;background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-align:center;">Remove logo</button>
+                </div>
+              </div>
+            </div>
+            <!-- Headshot -->
+            <div>
+              <div class="fl">Rep Headshot <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; transparent PNG preferred</span></div>
+              <div style="display:flex;gap:10px;align-items:center;margin-top:6px;">
+                <div id="headshot-preview" style="width:70px;height:90px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--muted);overflow:hidden;flex-shrink:0;text-align:center;line-height:1.4;">No photo</div>
+                <div style="flex:1;">
+                  <button onclick="showPhotoActionSheet(function(files){handleHeadshotUpload({files:files});},{multiple:false})" style="display:block;width:100%;background:var(--card);border:2px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;cursor:pointer;color:var(--mid);font-size:12px;font-weight:600;">&#128100; Upload Headshot</button>
+                  <div style="font-size:15px;color:var(--muted);margin-top:5px;line-height:1.5;text-align:center;">
+                    PNG preferred &bull; transparent background<br>
+                    <strong style="color:var(--mid);">400 &times; 500 px</strong> (portrait) &bull; max 2 MB
+                  </div>
+                  <button onclick="clearHeadshot()" style="width:100%;margin-top:5px;background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-align:center;">Remove headshot</button>
+                  <div style="margin-top:8px;">
+                    <label class="fl" style="margin-bottom:4px;">Face Position</label>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span style="font-size:15px;color:var(--muted);">Top</span>
+                      <input type="range" id="s-hspos" min="0" max="100" value="30" style="flex:1;accent-color:var(--accent);" oninput="updatePreview()">
+                      <span style="font-size:15px;color:var(--muted);">Bottom</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Default Rep Video -->
+            <div>
+              <div class="fl">Default Rep Video <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; auto-fills on every new estimate</span></div>
+              <div style="margin-top:6px;display:flex;flex-direction:column;gap:6px;">
+                <input class="fi" id="s-rep-video-url" type="url" placeholder="YouTube, Vimeo, or Loom link" style="font-size:12px;" oninput="updateRepVideoPreview(this.value)">
+                <div style="font-size:12px;color:var(--muted);line-height:1.6;">&#127910; Supports <strong style="color:var(--mid);">YouTube, Vimeo, and Loom</strong> &mdash; paste the link and we embed it directly on every homeowner&rsquo;s estimate page. Reps can record a different video per estimate.<br>&#127381; <strong style="color:var(--mid);">Keep it under 45 seconds</strong> &mdash; introduce yourself, mention the address, and tell them their estimate is ready. Short and personal wins every time.</div>
+                <div id="s-rep-video-preview" style="display:none;border-radius:8px;overflow:hidden;background:#000;aspect-ratio:16/9;"></div>
+              </div>
+            </div>
+            <!-- Review 1 -->
+            <div>
+              <div class="fl">Review Image 1 (Page 4)</div>
+              <div id="review1-preview" style="width:100%;height:80px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--muted);overflow:hidden;margin:6px 0 5px;">No image</div>
+              <label style="display:block;background:var(--card);border:2px solid var(--border);border-radius:7px;padding:8px;text-align:center;cursor:pointer;color:var(--mid);font-size:11px;font-weight:600;">&#11088; Upload Review 1<input type="file" accept="image/*" style="display:none;" onchange="handleReviewUpload(this,1)"></label>
+              <div style="font-size:15px;color:var(--muted);margin-top:4px;line-height:1.5;text-align:center;">
+                Screenshot or JPG/PNG &bull; <strong style="color:var(--mid);">800 &times; 400 px</strong><br>
+                Landscape orientation &bull; max 2 MB
+              </div>
+              <button onclick="clearReview(1)" style="width:100%;margin-top:4px;background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;text-align:center;">Remove</button>
+            </div>
+            <!-- Review 2 -->
+            <div>
+              <div class="fl">Review Image 2 (Page 4)</div>
+              <div id="review2-preview" style="width:100%;height:80px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--muted);overflow:hidden;margin:6px 0 5px;">No image</div>
+              <label style="display:block;background:var(--card);border:2px solid var(--border);border-radius:7px;padding:8px;text-align:center;cursor:pointer;color:var(--mid);font-size:11px;font-weight:600;">&#11088; Upload Review 2<input type="file" accept="image/*" style="display:none;" onchange="handleReviewUpload(this,2)"></label>
+              <div style="font-size:15px;color:var(--muted);margin-top:4px;line-height:1.5;text-align:center;">
+                Screenshot or JPG/PNG &bull; <strong style="color:var(--mid);">800 &times; 400 px</strong><br>
+                Landscape orientation &bull; max 2 MB
+              </div>
+              <button onclick="clearReview(2)" style="width:100%;margin-top:4px;background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;text-align:center;">Remove</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LEFT: Pricing & Estimator -->
+    </div><!-- /stab-grid profile -->
+    </div><!-- /stab-tab-pane profile -->
