@@ -3,6 +3,8 @@
 // renders the full estimate UI, nearby campaign panel, GHL/tracerfy bulk send.
 // Depends on: sb, adminAPI(), toast(), haversineM()
 // Extracted from index.html — Tier 5 modularization
+// Self-contained escHtml (this file loads before map-core.js)
+function _esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 async function initEstimatePage(estId) {
   // Hide the main app shell entirely
@@ -303,17 +305,17 @@ async function initEstimatePage(estId) {
 
     // ── Welcome card ────────────────────────────────────────────────────────
     const ownerFirstName = (est.owner || '').split(' ')[0] || 'Homeowner';
-    const bioText = acct.companyBio || `${acct.companyName} is a locally owned roofing company proudly serving homeowners in your area. We specialize in full roof replacements, storm damage restoration, and working directly with insurance companies to make the process as smooth as possible. Our team is fully licensed, bonded, and insured — and we stand behind every job with a written workmanship warranty.`;
+    const bioText = _esc(acct.companyBio) || `${_esc(acct.companyName)} is a locally owned roofing company proudly serving homeowners in your area. We specialize in full roof replacements, storm damage restoration, and working directly with insurance companies to make the process as smooth as possible. Our team is fully licensed, bonded, and insured — and we stand behind every job with a written workmanship warranty.`;
     const inspNote = est.inspectionNote || '';
     const welcomeHtml = `
       <div class="ep-section ep-fade" style="padding:24px 20px 20px;">
         <div style="font-size:22px;font-weight:800;margin-bottom:4px;">Welcome, ${ownerFirstName}! <span style="font-size:20px;">👋</span></div>
-        <div style="font-size:14px;color:rgba(255,255,255,.55);margin-bottom:16px;">${acct.companyName}</div>
+        <div style="font-size:14px;color:rgba(255,255,255,.55);margin-bottom:16px;">${_esc(acct.companyName)}</div>
         <p style="font-size:14px;line-height:1.7;color:rgba(255,255,255,.8);margin:0 0 ${inspNote ? '16px' : '0'};">${bioText}</p>
         ${inspNote ? `
         <div style="background:rgba(255,255,255,.06);border-left:3px solid ${brand};border-radius:0 12px 12px 0;padding:14px 16px;margin-top:4px;">
           <div style="font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:${brand};margin-bottom:6px;">📋 What We Found At Your Property</div>
-          <p style="font-size:13px;line-height:1.65;color:rgba(255,255,255,.85);margin:0;">${inspNote}</p>
+          <p style="font-size:13px;line-height:1.65;color:rgba(255,255,255,.85);margin:0;">${_esc(inspNote)}</p>
         </div>` : ''}
       </div>`;
     // ── Countdown ──────────────────────────────────────────────────────────
@@ -417,7 +419,7 @@ async function initEstimatePage(estId) {
       <div class="ep-section ep-fade-d3">
         <div class="ep-section-title">\uD83C\uDFC6 Why Choose Us</div>
         <div style="display:flex;flex-wrap:wrap;gap:8px;">
-          ${badges.map(b => `<span class="ep-badge">\u2713 ${b}</span>`).join('')}
+          ${badges.map(b => `<span class="ep-badge">\u2713 ${_esc(b)}</span>`).join('')}
         </div>
       </div>` : '';
 
@@ -430,9 +432,9 @@ async function initEstimatePage(estId) {
             : `<div class="ep-rep-avatar-placeholder">\uD83D\uDC64</div>`
           }
           <div>
-            <div style="font-size:16px;font-weight:800;">${acct.repName || est.rep || 'Your Rep'}</div>
-            <div style="font-size:13px;opacity:.5;margin-top:2px;">${acct.repTitle || 'Roofing Specialist'}</div>
-            <div style="font-size:12px;opacity:.35;margin-top:2px;">${acct.companyName}</div>
+            <div style="font-size:16px;font-weight:800;">${_esc(acct.repName || est.rep || 'Your Rep')}</div>
+            <div style="font-size:13px;opacity:.5;margin-top:2px;">${_esc(acct.repTitle || 'Roofing Specialist')}</div>
+            <div style="font-size:12px;opacity:.35;margin-top:2px;">${_esc(acct.companyName)}</div>
           </div>
         </div>
       </div>`;
@@ -466,7 +468,7 @@ async function initEstimatePage(estId) {
     const footerHtml = `
       <div class="ep-footer">
         ${acct.logoData ? `<img src="${acct.logoData}" class="ep-footer-logo" alt="Logo">` : ''}
-        <div style="font-weight:700;">${acct.companyName}</div>
+        <div style="font-weight:700;">${_esc(acct.companyName)}</div>
         ${acct.companyAddr ? `<div style="margin-top:3px;">${acct.companyAddr}</div>` : ''}
         <div style="margin-top:8px;">Estimate prepared ${new Date(est.savedAt).toLocaleDateString()}</div>
         <div style="margin-top:4px;font-size:10px;">Powered by BidDrop</div>

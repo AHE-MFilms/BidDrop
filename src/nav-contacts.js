@@ -463,7 +463,7 @@ function renderDesignsGrid(){
         </div>
       </div>
       <div style="padding:12px;">
-        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;">${d.name||'Untitled'}</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;">${escHtml(d.name||'Untitled')}</div>
         ${d.desc ? '<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">'+d.desc+'</div>' : ''}
         <div style="font-size:10px;color:var(--muted);margin-bottom:6px;">Uploaded ${d.createdAt ? new Date(d.createdAt).toLocaleDateString() : 'recently'}</div>
         ${d.backUrl ? '<div style="margin-bottom:7px;"><span style="background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#22c55e;font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;letter-spacing:.4px;">🖼 CUSTOM BACK</span></div>' : (d.backOverrides&&Object.keys(d.backOverrides).length ? '<div style="margin-bottom:7px;"><span style="background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#818cf8;font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;letter-spacing:.4px;">✓ CUSTOM TEXT</span></div>' : '')}
@@ -969,7 +969,7 @@ function renderDripStepCards(){
   if(!container) return;
   const steps=getDripSteps();
   const designs=getDesigns();
-  const designOpts='<option value="">— Default design —</option>'+designs.map(d=>'<option value="'+d.id+'">'+d.name+'</option>').join('');
+  const designOpts='<option value="">— Default design —</option>'+designs.map(d=>'<option value="'+d.id+'">'+escHtml(d.name||'')+'</option>').join('');
   container.innerHTML=steps.map((step,i)=>`
     <div style="background:var(--card);border:1px solid ${step.enabled?'rgba(242,92,5,.3)':'var(--border)'};border-radius:12px;padding:16px 20px;display:flex;gap:16px;align-items:flex-start;">
       <div style="flex-shrink:0;text-align:center;min-width:48px;">

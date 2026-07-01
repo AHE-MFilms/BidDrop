@@ -3,6 +3,8 @@
 // intercepts before app boot, renders the quote UI, handles send-postcard modal.
 // Depends on: sb, adminAPI(), toast()
 // Extracted from index.html — Tier 5 modularization
+// Self-contained _esc (this file loads before map-core.js)
+function _esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 
 async function initQuotePage(slug) {
@@ -382,14 +384,14 @@ async function initQuotePage(slug) {
   const badges = [
     cfg.yearsInBusiness ? `<div class="q-badge"><span class="q-badge-icon">🏆</span>${cfg.yearsInBusiness} Years in Business</div>` : '',
     cfg.warrantyYears   ? `<div class="q-badge"><span class="q-badge-icon">🛡</span>${cfg.warrantyYears}-Year Warranty</div>` : '',
-    cfg.diff1 ? `<div class="q-badge"><span class="q-badge-icon">✓</span>${cfg.diff1}</div>` : '',
-    cfg.diff2 ? `<div class="q-badge"><span class="q-badge-icon">✓</span>${cfg.diff2}</div>` : '',
+    cfg.diff1 ? `<div class="q-badge"><span class="q-badge-icon">✓</span>${_esc(cfg.diff1)}</div>` : '',
+    cfg.diff2 ? `<div class="q-badge"><span class="q-badge-icon">✓</span>${_esc(cfg.diff2)}</div>` : '',
     cfg.financingEnabled ? `<div class="q-badge"><span class="q-badge-icon">💳</span>Financing Available</div>` : '',
   ].filter(Boolean).join('');
 
   // Build differentiators grid
   const diffItems = [cfg.diff3, cfg.diff4, cfg.diff5, cfg.diff6].filter(Boolean)
-    .map(d => `<div class="q-diff">${d}</div>`).join('');
+    .map(d => `<div class="q-diff">${_esc(d)}</div>`).join('');
 
   // Financing monthly estimate helper
   function monthlyPayment(total) {
@@ -425,10 +427,10 @@ async function initQuotePage(slug) {
   const root = document.getElementById('q-root');
   root.innerHTML = `
     <div id="q-hero">
-      ${cfg.logoData ? `<img id="q-logo" src="${cfg.logoData}" alt="${cfg.companyName}">` : `<div id="q-logo-text">${cfg.companyName}</div>`}
+      ${cfg.logoData ? `<img id="q-logo" src="${cfg.logoData}" alt="${_esc(cfg.companyName)}">` : `<div id="q-logo-text">${_esc(cfg.companyName)}</div>`}
       <div id="q-headline">Get Your Free<br>Roof Estimate</div>
       <div id="q-subhead">Find out what your roof replacement costs in under 60 seconds — no sales pitch, no pressure.</div>
-      ${cfg.companyPhone ? `<a id="q-phone-link" href="tel:${cfg.companyPhone}">📞 ${cfg.companyPhone}</a>` : ''}
+      ${cfg.companyPhone ? `<a id="q-phone-link" href="tel:${cfg.companyPhone}">📞 ${_esc(cfg.companyPhone)}</a>` : ''}
     </div>
 
     ${badges ? `<div id="q-trust">${badges}</div>` : ''}
@@ -511,12 +513,12 @@ async function initQuotePage(slug) {
         <div id="q-confirm-card">
           <div id="q-confirm-icon">🎉</div>
           <div id="q-confirm-title">You're All Set!</div>
-          <div id="q-confirm-sub">We've received your request and a roofing specialist from <strong>${cfg.companyName}</strong> will be in touch shortly to confirm your estimate and schedule a free assessment.<br><br>Estimated response time: <strong>within 24 hours</strong></div>
+          <div id="q-confirm-sub">We've received your request and a roofing specialist from <strong>${_esc(cfg.companyName)}</strong> will be in touch shortly to confirm your estimate and schedule a free assessment.<br><br>Estimated response time: <strong>within 24 hours</strong></div>
           ${cfg.bookingUrl ? `<a href="${cfg.bookingUrl}" target="_blank" class="q-btn-primary" style="display:block;text-decoration:none;text-align:center;">📅 Schedule My Assessment Now</a>` : ''}
         </div>
         <div style="background:var(--qcard);border:1px solid var(--qborder);border-radius:12px;padding:16px;text-align:center;">
           <div style="font-size:12px;color:var(--qmuted);margin-bottom:8px;">Questions? Call or text us directly:</div>
-          ${cfg.companyPhone ? `<a href="tel:${cfg.companyPhone}" style="font-family:var(--qfont-h);font-size:20px;font-weight:700;color:var(--qaccent);text-decoration:none;">${cfg.companyPhone}</a>` : `<div style="font-size:14px;color:var(--qmid);">${cfg.companyName}</div>`}
+          ${cfg.companyPhone ? `<a href="tel:${cfg.companyPhone}" style="font-family:var(--qfont-h);font-size:20px;font-weight:700;color:var(--qaccent);text-decoration:none;">${cfg.companyPhone}</a>` : `<div style="font-size:14px;color:var(--qmid);">${_esc(cfg.companyName)}</div>`}
         </div>
       </div>
 

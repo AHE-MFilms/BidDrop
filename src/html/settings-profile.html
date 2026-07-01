@@ -61,16 +61,16 @@
         </div>
         <div class="stab-card-body" id="stab-body-company">
           <div class="frow">
-            <div class="fg"><label class="fl" for="s-co">Company Name</label><input class="fi" id="s-co" placeholder="T&amp;M Roofing"></div>
-            <div class="fg"><label class="fl" for="s-ph">Phone</label><input class="fi" id="s-ph" placeholder="(313) 555-0100" oninput="autoFormatPhone(this)"></div>
+            <div class="fg"><label class="fl" for="s-co">Company Name</label><input class="fi" id="s-co" placeholder="T&amp;M Roofing" maxlength="100"></div>
+            <div class="fg"><label class="fl" for="s-ph">Phone</label><input class="fi" id="s-ph" placeholder="(313) 555-0100" maxlength="20" oninput="autoFormatPhone(this)"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl" for="s-addr">Company Address</label><input class="fi" id="s-addr" placeholder="123 Business Dr, Detroit MI 48000"></div>
+            <div class="fg"><label class="fl" for="s-addr">Company Address</label><input class="fi" id="s-addr" placeholder="123 Business Dr, Detroit MI 48000" maxlength="200"></div>
             <div class="fg"><label class="fl" for="s-color">Brand Color</label><input type="color" class="fi" id="s-color" value="#F25C05" style="padding:4px;cursor:pointer;height:42px;"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label class="fl" for="s-rep">Rep / Owner Name</label><input class="fi" id="s-rep" placeholder="Ted Smith"></div>
-            <div class="fg"><label class="fl" for="s-reptitle">Rep Title</label><input class="fi" id="s-reptitle" placeholder="Owner, Sales Rep, etc."></div>
+            <div class="fg"><label class="fl" for="s-rep">Rep / Owner Name</label><input class="fi" id="s-rep" placeholder="Ted Smith" maxlength="80"></div>
+            <div class="fg"><label class="fl" for="s-reptitle">Rep Title</label><input class="fi" id="s-reptitle" maxlength="80" placeholder="Owner, Sales Rep, etc."></div>
           </div>
           <div class="fg"><label class="fl" for="s-bookingurl">Booking / QR Code URL <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; QR auto-generates from this link</span></label><input class="fi" id="s-bookingurl" placeholder="https://calendly.com/yourname"></div>
           <div class="fg stab-full"><label class="fl" for="s-lead-alert-email">Lead Alert Email <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; notified when a homeowner fills out their estimate page. Defaults to your account email. Separate multiple with commas.</span></label><input class="fi" id="s-lead-alert-email" type="text" placeholder="sales@yourcompany.com, manager@yourcompany.com"></div>
@@ -82,7 +82,7 @@
             <div class="fg"><label class="fl" for="s-yrs">Years in Business</label><input class="fi" id="s-yrs" placeholder="20+"></div>
             <div class="fg"><label class="fl" for="s-warr">Workmanship Warranty (yrs)</label><input class="fi" id="s-warr" placeholder="10"></div>
            </div>
-          <div class="fg stab-full" style="margin-top:4px;"><div class="fl">Company Bio <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; shown on homeowner estimate pages</span></div><textarea class="fi" id="s-bio" rows="3" placeholder="We're a family-owned roofing company serving Metro Detroit for 20+ years. We specialize in storm damage restoration and insurance claims, making the process seamless for homeowners." style="resize:vertical;min-height:80px;"></textarea></div>
+          <div class="fg stab-full" style="margin-top:4px;"><div class="fl">Company Bio <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">&#8212; shown on homeowner estimate pages</span></div><textarea class="fi" id="s-bio" rows="3" maxlength="600" placeholder="We're a family-owned roofing company serving Metro Detroit for 20+ years. We specialize in storm damage restoration and insurance claims, making the process seamless for homeowners." style="resize:vertical;min-height:80px;"></textarea></div>
           <!-- Retargeting Pixels -->
           <div style="margin-top:18px;padding:14px;background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.2);border-radius:10px;">
             <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#3B82F6;margin-bottom:10px;">&#127919; Retargeting Pixels <span style="font-size:9px;font-weight:600;padding:2px 7px;border-radius:10px;background:#3B82F6;color:#fff;margin-left:6px;">PRO+</span></div>

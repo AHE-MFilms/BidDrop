@@ -3,6 +3,9 @@
 // mailer log, leaderboard, activity chart, client account editing.
 // Depends on: sb, S, currentAccount, adminAPI(), toast(), escHtml() (ui.js)
 // Extracted from index.html — Tier 5 modularization
+// Fallback escHtml/escJs in case map-core.js hasn't loaded yet (load-order safety)
+if(typeof escHtml==='undefined'){var escHtml=function(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');};}
+if(typeof escJs==='undefined'){var escJs=function(s){return(s||'').replace(/\\/g,'\\\\').replace(/'/g,'\\x27').replace(/"/g,'\\x22');};}
 
 let _agencyData = null; // cached {accounts, profiles, pins, mailerLog}
 
@@ -27,7 +30,7 @@ async function renderAgencyView(){
     const filterSel = document.getElementById('ag-log-filter');
     if(filterSel){
       filterSel.innerHTML = '<option value="all">All Clients</option>' +
-        clientAccounts.map(a=>'<option value="'+a.id+'">'+(a.company_name||a.name)+'</option>').join('');
+        clientAccounts.map(a=>'<option value="'+a.id+'">'+escHtml(a.company_name||a.name||'')+'</option>').join('');
     }
 
     renderAgencyKPIs();
@@ -170,7 +173,7 @@ function _renderAgencyAccountCards(accounts){
     const tdC = td+'text-align:center;';
     return '<tr style="background:'+rowBg+';transition:background .1s;" onmouseover="this.style.background=\'var(--card2)\'" onmouseout="this.style.background=\''+rowBg+'\'">' +
       '<td style="'+td+'min-width:160px;">' +
-        '<div style="font-weight:700;font-size:13px;color:var(--text);">'+(a.company_name||a.name)+'</div>' +
+        '<div style="font-weight:700;font-size:13px;color:var(--text);">'+escHtml(a.company_name||a.name||'')+'</div>' +
         '<div style="font-size:10px;color:var(--muted);margin-top:2px;">'+users.length+' user'+(users.length!==1?'s':'')+' · '+(a.plan||'starter')+'</div>' +
       '</td>' +
       '<td style="'+tdC+'">' +

@@ -3,6 +3,9 @@
 // user CRUD, account creation, delete client account.
 // Depends on: sb, S, currentAccount, adminAPI(), toast(), escHtml() (ui.js)
 // Extracted from index.html — Tier 4 modularization
+// Fallback escHtml/escJs in case map-core.js hasn't loaded yet (load-order safety)
+if(typeof escHtml==='undefined'){var escHtml=function(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');};}
+if(typeof escJs==='undefined'){var escJs=function(s){return(s||'').replace(/\\/g,'\\\\').replace(/'/g,'\\x27').replace(/"/g,'\\x22');};}
 
 let _allAccounts = [];
 let _coSwitcherOpen = false;
@@ -355,7 +358,7 @@ function filterAdminAccounts(){
     const activeColor = a.active!==false ? '#22C55E' : '#EF4444';
     return '<div class="ag-acct-card">' +
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">' +
-        '<div class="ag-acct-name">'+(a.company_name||a.name)+'</div>' +
+        '<div class="ag-acct-name">'+escHtml(a.company_name||a.name||'')+'</div>' +
         '<div style="display:flex;gap:4px;">' +
           '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;background:'+planColor+'22;color:'+planColor+';border:1px solid '+planColor+'44;text-transform:uppercase;">'+(a.plan||'starter')+'</span>' +
           '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;background:'+activeColor+'22;color:'+activeColor+';border:1px solid '+activeColor+'44;">'+(a.active!==false?'Active':'Inactive')+'</span>' +
@@ -429,7 +432,7 @@ function renderSuperAdminPanel(accounts, allProfiles){
       const activeColor = a.active!==false ? '#22C55E' : '#EF4444';
       return '<div class="ag-acct-card">' +
         '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">' +
-          '<div class="ag-acct-name">'+(a.company_name||a.name)+'</div>' +
+          '<div class="ag-acct-name">'+escHtml(a.company_name||a.name||'')+'</div>' +
           '<div style="display:flex;gap:4px;">' +
             '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;background:'+planColor+'22;color:'+planColor+';border:1px solid '+planColor+'44;text-transform:uppercase;">'+(a.plan||'starter')+'</span>' +
             '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;background:'+activeColor+'22;color:'+activeColor+';border:1px solid '+activeColor+'44;">'+(a.active!==false?'Active':'Inactive')+'</span>' +
@@ -441,7 +444,7 @@ function renderSuperAdminPanel(accounts, allProfiles){
         '<div style="margin:10px 0 6px;border-top:1px solid var(--border);padding-top:8px;">' +
           users.map(u=>'<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 0;">' +
             '<div style="font-size:11px;color:var(--mid);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' +
-              '👤 <span style="font-weight:600;">'+(u.name||u.email||u.id.slice(0,8))+'</span>' +
+              '👤 <span style="font-weight:600;">'+escHtml(u.name||u.email||u.id.slice(0,8))+'</span>' +
               ' — <span style="color:var(--accent);font-weight:700;">'+u.role+'</span>' +
               (u.email?' <span style="color:var(--muted);font-size:10px;">'+escHtml(u.email)+'</span>':'')+
             '</div>' +
@@ -607,8 +610,8 @@ function renderAccountAdminPanel(profiles){
     '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">Team Members</div>' +
     profiles.map(u=>'<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">' +
       '<div>' +
-      '<div style="font-weight:700;font-size:14px;">'+(u.name||'Unnamed')+'</div>' +
-      '<div style="font-size:11px;color:var(--muted);">'+(u.email||'')+'</div>' +
+      '<div style="font-weight:700;font-size:14px;">'+escHtml(u.name||'Unnamed')+'</div>' +
+      '<div style="font-size:11px;color:var(--muted);">'+escHtml(u.email||'')+'</div>' +
       '</div>' +
       '<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:9px;background:var(--accent-dim);color:var(--accent);text-transform:uppercase;">'+u.role+'</span>' +
       '<button onclick="editTeamMember(\'' +u.id+ '\',\'' +escJs(u.name||'')+ '\',\'' +escJs(u.email||'')+ '\',\'' +escJs(u.phone||'')+ '\',\'' +escJs(u.role||'rep')+ '\')" style="background:none;border:1px solid var(--border);border-radius:5px;color:var(--muted);cursor:pointer;font-size:11px;padding:3px 10px;font-weight:600;white-space:nowrap;margin-left:6px;">✏️ Edit</button>' +
@@ -622,7 +625,7 @@ function renderAddUserForm(accounts){
   const acctSelector = (accounts && accounts.length)
     ? '<div class="fg"><div class="fl">Account</div>' +
       '<select class="fs" id="new-user-account">' +
-      accounts.map(a=>'<option value="'+a.id+'">'+(a.company_name||a.name)+'</option>').join('') +
+      accounts.map(a=>'<option value="'+a.id+'">'+escHtml(a.company_name||a.name||'')+'</option>').join('') +
       '</select></div>'
     : '';
   return '<div style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:16px;">' +
