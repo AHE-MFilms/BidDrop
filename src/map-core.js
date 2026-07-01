@@ -1300,10 +1300,11 @@ function handlePopupPhotoInput(e){
 }
 
 // Pipeline statuses (active working leads)
-// Action-based pipeline sets (replaces old trade-specific statuses)
-// Archive statuses (closed / parked leads)
-const PIPELINE_STATUSES = new Set(['pinned','mailed','emailed','called','responded','quoted']);
-const ARCHIVE_STATUSES  = new Set(['signed','not_interested']);
+// Includes legacy DB values: needs_roof, interested, contacted (pre-migration status names)
+const PIPELINE_STATUSES = new Set(['pinned','mailed','emailed','called','responded','quoted',
+  'needs_roof','interested','contacted']); // legacy values kept for backward compat
+// Archive statuses — legacy: converted/lost map to archive
+const ARCHIVE_STATUSES  = new Set(['signed','not_interested','converted','lost']);
 
 function switchPinView(view){
   curView = view;
