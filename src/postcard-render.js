@@ -1467,7 +1467,8 @@ async function renderCustomBackCanvas(backImageSrc, cfg) {
 
   // ── Zones measured from official 2775x1875 Lob template ─────────────────
   // QR code zone (bottom-left white box)
-  const QR_X = 73, QR_Y = 1124, QR_SIZE = 619;
+  // QR zone: x=211..672, y=1251..1728
+  const QR_X = 211, QR_Y = 1251, QR_W = 461, QR_H = 477;
 
   // Address zone (cream "LEAVE EMPTY" box, right side)
   const ADDR_X = 970, ADDR_Y = 937, ADDR_W = 1707, ADDR_H = 689;
@@ -1503,7 +1504,7 @@ async function renderCustomBackCanvas(backImageSrc, cfg) {
 
   // 4. White out QR zone and draw QR code
   ctx.fillStyle = '#ffffff';
-  ctx.fillRect(QR_X, QR_Y, QR_SIZE, QR_SIZE);
+  ctx.fillRect(QR_X, QR_Y, QR_W, QR_H);
 
   const bookingUrl = cfg.bookingUrl || 'https://biddrop.us';
   const qrApiUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=700x700&margin=4&data=' + encodeURIComponent(bookingUrl);
@@ -1511,17 +1512,17 @@ async function renderCustomBackCanvas(backImageSrc, cfg) {
   if (qrImg) {
     // Draw QR with small padding inside the white box
     const pad = 20;
-    ctx.drawImage(qrImg, QR_X + pad, QR_Y + pad, QR_SIZE - pad*2, QR_SIZE - pad*2);
+    ctx.drawImage(qrImg, QR_X + pad, QR_Y + pad, QR_W - pad*2, QR_H - pad*2);
     // "SCAN TO BOOK" label below QR
     const scanCta = cfg.postcardScanCta || 'SCAN TO BOOK';
     const scanSub = cfg.postcardScanSub || 'No-pressure booking';
     ctx.font = 'bold 30px Arial';
     ctx.fillStyle = '#111827';
     ctx.textAlign = 'left';
-    ctx.fillText(scanCta, QR_X, QR_Y + QR_SIZE + 40);
+    ctx.fillText(scanCta, QR_X, QR_Y + QR_H + 40);
     ctx.font = '24px Arial';
     ctx.fillStyle = '#6b7280';
-    ctx.fillText(scanSub, QR_X, QR_Y + QR_SIZE + 72);
+    ctx.fillText(scanSub, QR_X, QR_Y + QR_H + 72);
   }
 
   return canvas.toDataURL('image/jpeg', 0.92);
