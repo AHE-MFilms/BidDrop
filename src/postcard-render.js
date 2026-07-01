@@ -1471,7 +1471,8 @@ async function renderCustomBackCanvas(backImageSrc, cfg) {
   const QR_X = 211, QR_Y = 1251, QR_W = 461, QR_H = 477;
 
   // Address zone (cream "LEAVE EMPTY" box, right side)
-  const ADDR_X = 970, ADDR_Y = 937, ADDR_W = 1707, ADDR_H = 689;
+  // Address zone: x=1314..2775, y=1049..1875 (user-measured)
+  const ADDR_X = 1314, ADDR_Y = 1049, ADDR_W = 1461, ADDR_H = 826;
 
   // Postage / indicia zone (top-right grey box)
   const POST_X = 2083, POST_Y = 0, POST_W = 691, POST_H = 466;

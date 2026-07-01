@@ -9336,7 +9336,7 @@ function closeAddDesignModal(){
 }
 async function downloadBackTemplate(){
   try{
-    const url='https://files.manuscdn.com/user_upload_by_module/session_file/310519663363612497/eJkfBoisRaXuYFLs.png';
+    const url='https://files.manuscdn.com/user_upload_by_module/session_file/310519663363612497/flPZZrHBTSoxzZXV.png';
     const resp=await fetch(url);
     if(!resp.ok) throw new Error('HTTP '+resp.status);
     const blob=await resp.blob();
@@ -9348,7 +9348,7 @@ async function downloadBackTemplate(){
     setTimeout(()=>{ URL.revokeObjectURL(a.href); document.body.removeChild(a); },1000);
   } catch(e){
     // Fallback: open in new tab
-    window.open('https://files.manuscdn.com/user_upload_by_module/session_file/310519663363612497/eJkfBoisRaXuYFLs.png','_blank');
+    window.open('https://files.manuscdn.com/user_upload_by_module/session_file/310519663363612497/flPZZrHBTSoxzZXV.png','_blank');
   }
 }
 function ndBackTypeChanged(){
