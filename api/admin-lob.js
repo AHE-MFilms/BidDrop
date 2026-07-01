@@ -51,15 +51,65 @@ async function handle(action, req, res, ctx) {
             body: JSON.stringify({ mailer_credits: pcPaid - POSTCARD_CREDITS })
           });
         }
-        // Send the postcard
-        const lobRes = await fetch('https://api.lob.com/v1/postcards', {
-          method: 'POST',
-          headers: {
-            'Authorization': 'Basic ' + Buffer.from(LOB_KEY + ':').toString('base64'),
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(payload)
-        });
+        // Send the postcard — use multipart/form-data when front/back are base64 dataUrls
+        // (LOB accepts: public URL, HTML string, or multipart file upload)
+        const _lobAuth = 'Basic ' + Buffer.from(LOB_KEY + ':').toString('base64');
+        let lobRes;
+        try {
+          const frontIsData = payload.front && payload.front.startsWith('data:');
+          const backIsData  = payload.back  && payload.back.startsWith('data:');
+          if (frontIsData || backIsData) {
+            // Use multipart/form-data to send files directly
+            const form = new FormData();
+            // Add all non-file fields
+            const { front: _f, back: _b, ...restPayload } = payload;
+            // Flatten address objects into form fields
+            const addFields = (prefix, obj) => {
+              if (!obj || typeof obj !== 'object') return;
+              Object.entries(obj).forEach(([k, v]) => form.append(`${prefix}[${k}]`, v || ''));
+            };
+            form.append('description', restPayload.description || '');
+            form.append('size', restPayload.size || '6x9');
+            if (restPayload.use_type) form.append('use_type', restPayload.use_type);
+            addFields('to',   payload.to);
+            addFields('from', payload.from);
+            // Attach front
+            if (frontIsData) {
+              const buf = Buffer.from(_f.replace(/^data:[^;]+;base64,/, ''), 'base64');
+              form.set('front', new Blob([buf], { type: 'image/jpeg' }), 'front.jpg');
+            } else {
+              form.append('front', _f);
+            }
+            // Attach back
+            if (backIsData) {
+              const buf = Buffer.from(_b.replace(/^data:[^;]+;base64,/, ''), 'base64');
+              form.set('back', new Blob([buf], { type: 'image/jpeg' }), 'back.jpg');
+            } else {
+              form.append('back', _b);
+            }
+            lobRes = await fetch('https://api.lob.com/v1/postcards', {
+              method: 'POST',
+              headers: { 'Authorization': _lobAuth },
+              body: form
+            });
+          } else {
+            // Both are URLs or HTML — use JSON
+            lobRes = await fetch('https://api.lob.com/v1/postcards', {
+              method: 'POST',
+              headers: { 'Authorization': _lobAuth, 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+          }
+        } catch (sendErr) {
+          console.error('[Lob] send error:', sendErr.message);
+          if (!pcPaidByUnlock) {
+            await sbFetch(`accounts?id=eq.${effectiveAccountId}`, {
+              method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
+              body: JSON.stringify({ mailer_credits: pcPaid })
+            });
+          }
+          return res.status(500).json({ error: 'Postcard send failed: ' + sendErr.message });
+        }
         const lobData = await lobRes.json();
         if (!lobRes.ok) {
           console.error('[Lob] postcard error', lobRes.status, JSON.stringify(lobData).slice(0, 500));

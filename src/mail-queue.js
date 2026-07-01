@@ -1349,21 +1349,9 @@ async function sendLobPostcard6x9(id){
     // Upload both JPEGs via server-side API
     const session=await sb.auth.getSession();
     const jwt=session?.data?.session?.access_token;
-    const uploadJpeg=async(dataUrl,name)=>{
-      const resp=await fetch('/api/admin?action=upload-photo',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+jwt},
-        body:JSON.stringify({path:acctId+'/postcards/'+name,dataUrl,mimeType:'image/jpeg'})
-      });
-      if(!resp.ok)throw new Error('Upload failed: '+resp.status);
-      const r=await resp.json();
-      return r.url;
-    };
-    [frontUrl,backUrl]=await Promise.all([
-      uploadJpeg(fDataUrl,'front_'+ts+'.jpg'),
-      uploadJpeg(bDataUrl,'back_'+ts+'.jpg')
-    ]);
-    if(!frontUrl||!backUrl){toast('Failed to upload postcard images','error');return;}
+    // Pass dataUrls directly to the server — the server uploads to LOB using multipart
+    frontUrl = fDataUrl;
+    backUrl  = bDataUrl;
   }catch(renderErr){
     toast('Postcard render error: '+renderErr.message,'error');
     return;
@@ -1579,11 +1567,20 @@ function previewQueueItem(id){
 // Preview the 6x9 postcard front and back in a modal
 async function previewPostcard6x9(id){
   const item = S.queue.find(x=>x.id===id); if(!item) return;
+  // Resolve photo: queue item → linked pin → linked estimate → satellite fallback
   let photoUrl = item.photo_url || item.photo_data || null;
   if(!photoUrl){
     const ap = item.all_photos || {};
     const fp = (ap.front||[])[0] || null;
     if(fp) photoUrl = fp;
+  }
+  if(!photoUrl && item.pinId){
+    const linkedPin = (S.pins||[]).find(p=>p.id===item.pinId);
+    if(linkedPin) photoUrl = linkedPin.photo_url || linkedPin.photo_data || null;
+  }
+  if(!photoUrl && item.estId){
+    const linkedEst = (S.estimates||[]).find(e=>e.id===item.estId);
+    if(linkedEst) photoUrl = linkedEst.photo_url || linkedEst.photo_data || null;
   }
   if(!photoUrl){
     try{
