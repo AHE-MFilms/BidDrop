@@ -313,8 +313,11 @@ async function loadPinsFromSupabase(){
   let {data, error} = await sb.from('pins').select('*').eq('account_id', currentAccount.id)
     .is('deleted_at', null)
     .order('created_at', {ascending:false}).limit(500);
-  // Fallback: if deleted_at column doesn't exist yet (migration not run), load without that filter
-  if(error && (error.code === '42703' || (error.message && error.message.includes('deleted_at')))){
+  // Fallback: if deleted_at column doesn't exist yet (migration not run), load without that filter.
+  // Supabase/PostgREST may return error.code '42703', 'PGRST204', error.status 400,
+  // or error.message containing 'deleted_at', 'column', or 'does not exist'.
+  if(error && (error.code==='42703'||error.code==='PGRST204'||error.status===400||
+      (error.message&&(error.message.includes('deleted_at')||error.message.includes('column')||error.message.includes('does not exist'))))){
     console.warn('[BidDrop] pins.deleted_at column missing — loading without soft-delete filter. Run migration to fix.');
     const fallback = await sb.from('pins').select('*').eq('account_id', currentAccount.id)
       .order('created_at', {ascending:false}).limit(500);
