@@ -138,6 +138,7 @@ async function handle(action, req, res, ctx) {
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS estimate_page_countdown BOOLEAN DEFAULT FALSE`,
           `CREATE INDEX IF NOT EXISTS idx_estimates_account_saved ON estimates(account_id, saved_at DESC)`,
           `ALTER TABLE pins ADD COLUMN IF NOT EXISTS source TEXT`,
+          `ALTER TABLE pins ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ`,
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS mailer_credits INTEGER DEFAULT 0`,
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS free_mailer_credits_used INTEGER DEFAULT 0`,
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS free_mailer_credits_reset DATE`,

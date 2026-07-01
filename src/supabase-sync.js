@@ -310,9 +310,17 @@ async function loadPinsFromSupabase(){
   totalPinCount = countRes.count || 0;
   pinListPage = 0;
   // 2. Load the 500 most-recent pins so the sidebar and dashboard work immediately
-  const {data, error} = await sb.from('pins').select('*').eq('account_id', currentAccount.id)
+  let {data, error} = await sb.from('pins').select('*').eq('account_id', currentAccount.id)
     .is('deleted_at', null)
     .order('created_at', {ascending:false}).limit(500);
+  // Fallback: if deleted_at column doesn't exist yet (migration not run), load without that filter
+  if(error && (error.code === '42703' || (error.message && error.message.includes('deleted_at')))){
+    console.warn('[BidDrop] pins.deleted_at column missing — loading without soft-delete filter. Run migration to fix.');
+    const fallback = await sb.from('pins').select('*').eq('account_id', currentAccount.id)
+      .order('created_at', {ascending:false}).limit(500);
+    data = fallback.data;
+    error = fallback.error;
+  }
   if(error){console.error('Load pins error:', error); return;}
   S.pins = (data||[]).map(_rowToPin);
   // One-time migration: copy any estimates still only in pins.estimate into the estimates table
