@@ -6,7 +6,7 @@ async function printNow(){
   const _unlocked = await requirePinUnlocked(currentEstPinId);
   if(!_unlocked) return;
   // Build full print window and immediately trigger print
-  const content = document.getElementById('mailer-preview').innerHTML;
+  const _mpEl = document.getElementById('mailer-preview'); if(!_mpEl){toast('Mailer preview not loaded','warn');return;} const content = _mpEl.innerHTML;
   const win = window.open('','_blank','width=900,height=1100');
   win.document.write(`<!DOCTYPE html>
 <html>
@@ -44,10 +44,10 @@ async function printNow(){
 function updateFinPreview(){
   const el=document.getElementById('fin-preview-val');
   if(!el)return;
-  const apr=parseFloat(document.getElementById('s-fin-apr').value)||9.99;
-  const term=parseInt(document.getElementById('s-fin-term').value)||60;
-  const down=parseFloat(document.getElementById('s-fin-down').value)||0;
-  const total=parseInt((document.getElementById('e-total').textContent||'').replace(/[^0-9]/g,''))||0;
+  const apr=parseFloat(document.getElementById('s-fin-apr')?.value||'9.99')||9.99;
+  const term=parseInt(document.getElementById('s-fin-term')?.value||'60')||60;
+  const down=parseFloat(document.getElementById('s-fin-down')?.value||'0')||0;
+  const total=parseInt((document.getElementById('e-total')?.textContent||'').replace(/[^0-9]/g,''))||0;
   if(!total){el.textContent='—';return;}
   const loan=total*(1-down/100);
   const r=apr/100/12;
@@ -60,7 +60,7 @@ function updateFinPreview(){
 // ═══════════════════════════════
 function printPreview(){
   if(!isPlanAtLeast('pro')){ showPlanUpgradePrompt('Print Preview','pro'); return; }
-  const content=document.getElementById('mailer-preview').innerHTML;
+  const _mpEl2=document.getElementById('mailer-preview'); if(!_mpEl2) return; const content=_mpEl2.innerHTML;
   const win=window.open('','_blank','width=900,height=1100');
   win.document.write(`<!DOCTYPE html>
 <html>

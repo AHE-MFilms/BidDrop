@@ -13,10 +13,10 @@ function updateCreditBadge(){
   const total    = freeLeft + paid;
   if(total > 0){
     badge.textContent = total + ' credits';
-    document.getElementById('credit-badge-btn').style.borderColor = 'rgba(255,255,255,.15)';
+    document.getElementById('credit-badge-btn')?.style && (document.getElementById('credit-badge-btn').style.borderColor = 'rgba(255,255,255,.15)');
   } else {
     badge.textContent = 'Buy Credits';
-    document.getElementById('credit-badge-btn').style.borderColor = '#ef4444';
+    document.getElementById('credit-badge-btn')?.style && (document.getElementById('credit-badge-btn').style.borderColor = '#ef4444');
   }
   // Update the Mail Queue credits bar total
   const qTotal = document.getElementById('qcb-total');

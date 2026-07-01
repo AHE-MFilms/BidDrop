@@ -721,14 +721,14 @@ function loadEstFromPicker(){
   if(!p) return;
   currentEstPinId = p.id;
   // Reset form fields and clear any contact picker lists from previous pin
-  document.getElementById('e-owner').value = '';
-  document.getElementById('e-email').value = '';
+  const _eo=document.getElementById('e-owner'); if(_eo) _eo.value='';
+  const _ee=document.getElementById('e-email'); if(_ee) _ee.value='';
   if(document.getElementById('e-phone')) document.getElementById('e-phone').value = '';
   var _oldPhonePicker = document.getElementById('e-phone-picker-list');
   if(_oldPhonePicker) _oldPhonePicker.remove();
   var _oldEmailPicker = document.getElementById('e-email-picker-list');
   if(_oldEmailPicker) _oldEmailPicker.remove();
-  document.getElementById('e-addr').value = p.address || '';
+  const _ea=document.getElementById('e-addr'); if(_ea) _ea.value=p.address||'';
   clearHomePhoto();
   ['a-sky','a-chim','a-gut','a-iws','a-solar'].forEach(function(id){var el=document.getElementById(id);if(el)el.checked=false;});
   ['a-solar-kw','a-solar-flat'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
@@ -881,9 +881,9 @@ function _resetPriceOverride(){
 function newEstimate(){
   currentEstPinId = null;
   window._editingEstimateId = null; // always clear so next save is a fresh record
-  document.getElementById('e-owner').value = '';
-  document.getElementById('e-addr').value = '';
-  document.getElementById('e-email').value = '';
+  const _eo2=document.getElementById('e-owner'); if(_eo2) _eo2.value='';
+  const _ea2=document.getElementById('e-addr'); if(_ea2) _ea2.value='';
+  const _ee2=document.getElementById('e-email'); if(_ee2) _ee2.value='';
   window._damagePhotos = [];
   clearHomePhoto(); // always wipe photo when starting fresh
   clearDraftBanner();
@@ -1128,7 +1128,7 @@ function autoSaveEstimateToPin(pinId){
 function togglePinPanel(){
   const p=document.getElementById('map-panel');
   p.classList.toggle('open');
-  document.getElementById('fab-pins').textContent=p.classList.contains('open')?'✕':'📍';
+  const _fab=document.getElementById('fab-pins'); if(_fab) _fab.textContent=p.classList.contains('open')?'✕':'📍';
 }
 
 function toggleMailPreview(){

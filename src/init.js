@@ -132,7 +132,7 @@ function openManageTeam(accountId){
   if(!_agencyData) return;
   const a = _agencyData.accounts.find(x=>x.id===accountId);
   if(!a){ toast('Account not found','error'); return; }
-  document.getElementById('mt-company-name').textContent = a.company_name||a.name;
+  const _mtCo=document.getElementById('mt-company-name'); if(_mtCo) _mtCo.textContent=a.company_name||a.name;
   document.getElementById('m-manage-team').dataset.accountId = accountId;
   renderManageTeam(accountId);
   openM('m-manage-team');

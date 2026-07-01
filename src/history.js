@@ -43,8 +43,8 @@ async function loadHistory(){
 }
 
 function histTab(tab){
-  document.getElementById('hist-panel-mailers').style.display = tab==='mailers' ? '' : 'none';
-  document.getElementById('hist-panel-credits').style.display = tab==='credits' ? '' : 'none';
+  document.getElementById('hist-panel-mailers')?.style && (document.getElementById('hist-panel-mailers').style.display = tab==='mailers' ? '' : 'none');
+  document.getElementById('hist-panel-credits')?.style && (document.getElementById('hist-panel-credits').style.display = tab==='credits' ? '' : 'none');
   const campPanel = document.getElementById('hist-panel-campaigns');
   if(campPanel) campPanel.style.display = tab==='campaigns' ? '' : 'none';
   const mBtn = document.getElementById('hist-tab-mailers');
@@ -118,7 +118,7 @@ function renderHistMailers(){
   if(!el) return;
   if(!slice.length){
     el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);">No mailers found.</div>';
-    document.getElementById('hist-mailers-pagination').innerHTML = '';
+    const _hmp=document.getElementById('hist-mailers-pagination'); if(_hmp) _hmp.innerHTML='';
     return;
   }
 

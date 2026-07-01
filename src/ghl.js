@@ -292,8 +292,8 @@ async function ghlOAuthDisconnect() {
 async function ghlFetchStages() {
   const btn = document.getElementById('btn-fetch-stages');
   const sel = document.getElementById('s-ghl-stage');
-  const pipelineId = document.getElementById('s-ghl-pipe').value.trim() || S.cfg.ghlPipelineId;
-  const locId = document.getElementById('s-ghl-loc').value.trim() || S.cfg.ghlLocationId;
+  const pipelineId = (document.getElementById('s-ghl-pipe')?.value || '').trim() || S.cfg.ghlPipelineId;
+  const locId = (document.getElementById('s-ghl-loc')?.value || '').trim() || S.cfg.ghlLocationId;
   if(!locId){ toast('Enter a GHL Location ID first','error'); return; }
   // GHL API key is stored server-side — no client-side check needed
   btn.textContent='Loading...'; btn.disabled=true;
@@ -700,9 +700,9 @@ async function sendViaGHL(){
   if(!isPlanAtLeast('pro')){ showPlanUpgradePrompt('GHL Integration','pro'); return; }
   const _unlocked = await requirePinUnlocked(currentEstPinId);
   if(!_unlocked) return;
-  const owner  = document.getElementById('e-owner').value.trim();
-  const addr   = document.getElementById('e-addr').value.trim();
-  const email  = document.getElementById('e-email').value.trim();
+  const owner  = (document.getElementById('e-owner')?.value || '').trim();
+  const addr   = (document.getElementById('e-addr')?.value || '').trim();
+  const email  = (document.getElementById('e-email')?.value || '').trim();
   const phone  = (document.getElementById('e-phone')||{}).value.trim()||'';
   const total  = calcP();
 

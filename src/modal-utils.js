@@ -1,6 +1,47 @@
 // BidDrop — Modal helpers, toast, credit lookup, auth helpers
 // Extracted from index.html inline block
 
+// ═══════════════════════════════════════════════════════════════
+//  GLOBAL ERROR BOUNDARY
+//  Catches any uncaught JS error or unhandled promise rejection
+//  and shows a non-blocking toast instead of silently freezing.
+// ═══════════════════════════════════════════════════════════════
+(function _installErrorBoundary() {
+  // Prevent double-install on hot reload
+  if (window.__bdErrorBoundaryInstalled) return;
+  window.__bdErrorBoundaryInstalled = true;
+
+  function _showErrorToast(msg, source) {
+    // Use the app's own toast() if available, otherwise fall back to console
+    if (typeof toast === 'function') {
+      toast('⚠️ ' + (msg || 'Unexpected error') + (source ? ' [' + source + ']' : ''), 'error');
+    } else {
+      console.error('[BidDrop error boundary]', msg, source);
+    }
+  }
+
+  // Synchronous errors (TypeError: Cannot read properties of null, etc.)
+  window.addEventListener('error', function(e) {
+    // Ignore cross-origin script errors (no useful info available)
+    if (!e.message || e.message === 'Script error.') return;
+    // Ignore ResizeObserver loop limit exceeded (harmless browser noise)
+    if (e.message && e.message.includes('ResizeObserver loop')) return;
+    var src = e.filename ? e.filename.split('/').pop() + ':' + e.lineno : '';
+    _showErrorToast(e.message, src);
+    // Don't suppress — let it still log to console for debugging
+  });
+
+  // Unhandled promise rejections (async function throws, fetch fails, etc.)
+  window.addEventListener('unhandledrejection', function(e) {
+    var msg = e.reason
+      ? (e.reason.message || String(e.reason)).substring(0, 120)
+      : 'Unhandled promise rejection';
+    // Ignore Supabase realtime channel noise
+    if (msg.includes('channel') || msg.includes('WebSocket')) return;
+    _showErrorToast(msg, 'async');
+  });
+})();
+
 //  MODAL / TOAST / UTILS
 // ═══════════════════════════════
 

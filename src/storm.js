@@ -37,8 +37,8 @@ function toggleStormEvents(){
 
 function closeStormPanel(){
   _stormPanelOpen = false;
-  document.getElementById('btn-storm-toggle').classList.remove('active');
-  document.getElementById('storm-panel').style.display = 'none';
+  document.getElementById('btn-storm-toggle')?.classList.remove('active');
+  const _sp=document.getElementById('storm-panel'); if(_sp) _sp.style.display='none';
 }
 
 // ── Storm state persistence ──────────────────────────────────────────────────
@@ -148,7 +148,7 @@ async function loadStormEvents(){
   if(!_hailLayerOn) return;
   clearStormMarkers();
   _stormData = [];
-  const days = parseInt(document.getElementById('storm-days').value) || 7;
+  const days = parseInt(document.getElementById('storm-days')?.value||'7') || 7;
   const statusEl = document.getElementById('storm-status');
   statusEl.textContent = 'Loading...';
 
@@ -215,7 +215,7 @@ async function loadStormEvents(){
 
 function renderStormMarkers(){
   clearStormMarkers();
-  const minSize = parseFloat(document.getElementById('storm-min-size').value) || 0.75;
+  const minSize = parseFloat(document.getElementById('storm-min-size')?.value||'0.75') || 0.75;
   const filtered = _stormData.filter(r => r.size >= minSize);
   const statusEl = document.getElementById('storm-status');
 
@@ -290,9 +290,9 @@ function stormDropPin(lat, lon, locationHint){
   map.closePopup();
   // Set the temp lat/lng and open the pin modal pre-filled
   tempLL = {lat, lng: lon};
-  document.getElementById('p-addr').value = locationHint || '';
-  document.getElementById('p-notes').value = 'Hail damage reported in this area.';
-  document.getElementById('p-status').value = 'pinned';
+  const _pAddr=document.getElementById('p-addr'); if(_pAddr) _pAddr.value=locationHint||'';
+  const _pNotes=document.getElementById('p-notes'); if(_pNotes) _pNotes.value='Hail damage reported in this area.';
+  const _pStatus=document.getElementById('p-status'); if(_pStatus) _pStatus.value='pinned';
   const repInp = document.getElementById('p-rep');
   if(repInp && currentProfile) repInp.value = currentProfile.name || '';
   resetPinModal();

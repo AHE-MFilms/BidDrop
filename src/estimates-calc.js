@@ -90,18 +90,18 @@ function onSolarFlatInput(){
 
 function calcP(){
   if(!structures.length){
-    document.getElementById('e-total').textContent='$0';
-    document.getElementById('e-breakdown').textContent='Add a structure above to calculate';
+    const _eTotal=document.getElementById('e-total'); if(_eTotal) _eTotal.textContent='$0';
+    const _eBreak=document.getElementById('e-breakdown'); if(_eBreak) _eBreak.textContent='Add a structure above to calculate';
     return 0;
   }
   let grand=structures.reduce((sum,s)=>sum+calcStructPrice(s),0);
   const c=S.cfg;
   if(document.getElementById('a-sky')&&document.getElementById('a-sky').checked)
-    grand+=(parseFloat(c.costSkylight)||375)*(parseInt(document.getElementById('a-sky-q').value)||1);
+    grand+=(parseFloat(c.costSkylight)||375)*(parseInt(document.getElementById('a-sky-q')?.value||'1')||1);
   if(document.getElementById('a-chim')&&document.getElementById('a-chim').checked)
     grand+=(parseFloat(c.costChimney)||295);
   if(document.getElementById('a-gut')&&document.getElementById('a-gut').checked)
-    grand+=(parseFloat(c.costGutter)||9)*(parseInt(document.getElementById('a-gut-q').value)||120);
+    grand+=(parseFloat(c.costGutter)||9)*(parseInt(document.getElementById('a-gut-q')?.value||'120')||120);
   if(document.getElementById('a-iws')&&document.getElementById('a-iws').checked)
     grand+=(parseFloat(c.costIceWater)||42)*structures.reduce(function(sum,s){var sqft=parseFloat(s.sqft)||0;var pitchMult=parseFloat(s.pitch)||1.118;return sum+(sqft/100*1.10*pitchMult);},0);
   grand+=getSolarPrice();
@@ -123,10 +123,10 @@ function calcP(){
         : _calcTradeTotal)
     : displayTotal;
   const _calcDisplayFinal = (window._priceOverrideOn && overrideVal > 0) ? overrideVal : (_calcFinalTotal || displayTotal);
-  document.getElementById('e-total').textContent='$'+_calcDisplayFinal.toLocaleString();
-  document.getElementById('e-breakdown').textContent=_calcIsNonRoof
+  document.getElementById('e-total') && (document.getElementById('e-total').textContent='$'+_calcDisplayFinal.toLocaleString());
+  document.getElementById('e-breakdown') && (document.getElementById('e-breakdown').textContent=_calcIsNonRoof
     ? (_calcActiveTr.charAt(0).toUpperCase()+_calcActiveTr.slice(1)+' estimate · $'+_calcDisplayFinal.toLocaleString())
-    : (structures.length+' structure'+(structures.length>1?'s':'')+' · Calc: $'+grand.toLocaleString()+(window._priceOverrideOn&&overrideVal>0?' · Override: $'+overrideVal.toLocaleString():''));
+    : (structures.length+' structure'+(structures.length>1?'s':'')+' · Calc: $'+grand.toLocaleString()+(window._priceOverrideOn&&overrideVal>0?' · Override: $'+overrideVal.toLocaleString():'')));
   structures.forEach(s=>{
     const el=document.getElementById('sp-'+s.id);
     if(el)el.textContent='$'+calcStructPrice(s).toLocaleString();

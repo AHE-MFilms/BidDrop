@@ -1,7 +1,7 @@
 // BidDrop — UI helpers: modals, toast, date formatting, role/plan checks
 // Depends on: state.js (S, currentProfile, currentAccount)
 
-function openM(id){document.getElementById(id).style.display='flex';}
+function openM(id){const _el=document.getElementById(id); if(_el) _el.style.display='flex';}
 function closeM(id){
   const el=document.getElementById(id);
   if(!el) return;
@@ -194,7 +194,7 @@ function _unlockReject(pinId) {
 async function _confirmUnlockPin(pinId) {
   const btn = document.getElementById('bd-unlock-confirm-btn');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Unlocking…'; }
-  const queuePostcard = document.getElementById('bd-unlock-postcard-chk') ? document.getElementById('bd-unlock-postcard-chk').checked : true;
+  const queuePostcard = document.getElementById('bd-unlock-postcard-chk')?.checked ?? true;
   const pin = (S.pins||[]).find(p => p.id === pinId);
   const address = pin ? pin.address : '';
   try {
