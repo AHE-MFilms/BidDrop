@@ -384,7 +384,7 @@ function renderEstimatesTab(){
     const statusColor = statusColors[pin.status] || '#64748B';
     const statusLabel = {pinned:'Pinned',contacted:'Contacted',quoted:'Quoted',interested:'Interested',signed:'Signed',sold:'Sold',lost:'Lost'}[pin.status] || (pin.status||'Pinned');
     return '<tr style="border-bottom:1px solid var(--border);">'
-      +'<td style="padding:10px 8px;"><input type="checkbox" class="est-row-cb" data-id="" style="cursor:pointer;width:16px;height:16px;accent-color:var(--accent);opacity:.4;" disabled></td>'
+      +'<td style="padding:10px 8px;"><input type="checkbox" class="est-row-cb active-pin-cb" data-id="" data-pid="'+pid+'" onchange="updateEstimateSelectionBar()" style="cursor:pointer;width:16px;height:16px;accent-color:var(--accent);"></td>'
       +'<td style="padding:12px;font-size:14px;font-weight:600;color:var(--text);">'+escHtml(shortAddr)+'<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+escHtml(cityState)+'</div>'
         +(ownerName?'<div style="font-size:11px;color:var(--mid);margin-top:2px;">'+escHtml(ownerName)+'</div>':'')
         +'<div style="margin-top:3px;"><span style="background:rgba(100,116,139,.12);color:#94A3B8;border:1px solid rgba(100,116,139,.3);border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;">PIN ONLY</span></div></td>'
@@ -394,6 +394,7 @@ function renderEstimatesTab(){
       +'<td style="padding:12px;font-size:12px;color:var(--muted);">'+date+'<div style="margin-top:4px;"><span style="background:'+statusColor+'22;color:'+statusColor+';border:1px solid '+statusColor+'44;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;">'+escHtml(statusLabel)+'</span></div></td>'
       +'<td style="padding:12px;text-align:center;"><div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">'
         +'<button data-pid="'+pid+'" onclick="goEstFromPin(this.dataset.pid)" style="background:var(--accent);border:none;border-radius:6px;padding:6px 12px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128203; Start Estimate</button>'
+        +'<button data-pid="'+pid+'" onclick="deleteActivePin(this.dataset.pid)" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">&#128465; Delete</button>'
       +'</div></td>'
       +'</tr>';
   }).join('');
@@ -585,10 +586,14 @@ function deleteEstimate(estId){
   }
 }
 async function bulkDeleteEstimates(){
-  const ids = Array.from(document.querySelectorAll('.est-row-cb:checked')).map(cb=>cb.dataset.id);
-  if(!ids.length) return;
-  bdConfirm('Move '+ids.length+' estimate(s) and their pins to Trash?', ()=>{
+  const ids = Array.from(document.querySelectorAll('.est-row-cb:checked')).map(cb=>cb.dataset.id).filter(Boolean);
+  // Also collect active pin-only rows (no estimate, just a pin)
+  const activePinIds = Array.from(document.querySelectorAll('.active-pin-cb:checked')).map(cb=>cb.dataset.pid).filter(Boolean);
+  const total = ids.length + activePinIds.length;
+  if(!total) return;
+  bdConfirm('Delete '+total+' item(s) and their pins?', ()=>{
   const now = new Date().toISOString();
+  // Handle estimates
   ids.forEach(id=>{
     const e=(S.estimates||[]).find(x=>x.id===id);
     if(e){
@@ -596,7 +601,7 @@ async function bulkDeleteEstimates(){
       if(sb) sb.from('estimates').update({deleted_at: now}).eq('id', id).then(({error})=>{
         if(error) console.warn('[BidDrop] bulkDeleteEstimates:', error.message);
       });
-      // Cascade: also soft-delete the linked pin
+      // Cascade: also delete the linked pin
       if(e.pinId){
         const pin=(S.pins||[]).find(p=>p.id===e.pinId);
         if(pin && !pin.deleted_at){
@@ -611,8 +616,20 @@ async function bulkDeleteEstimates(){
       }
     }
   });
+  // Handle active PIN ONLY rows — hard-delete since they have no estimate
+  activePinIds.forEach(pid=>{
+    S.pins = (S.pins||[]).filter(p=>p.id!==pid);
+    if(sb) sb.from('pins').delete().eq('id', pid).eq('account_id', currentAccount.id).then(({error})=>{
+      if(error) console.warn('[BidDrop] bulkDeleteActivePins:', error.message);
+    });
+    if(map && markers[pid]){
+      if(clusterGroup) clusterGroup.removeLayer(markers[pid]);
+      else map.removeLayer(markers[pid]);
+      delete markers[pid];
+    }
+  });
   save(); clearEstimateSelection(); renderPinList(); renderEstimatesTab();
-  toast('Moved '+ids.length+' estimate(s) and pins to Trash','info');
+  toast('Deleted '+total+' item(s)','info');
   }); // end bdConfirm
 }
 
