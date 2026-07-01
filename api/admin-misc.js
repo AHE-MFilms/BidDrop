@@ -269,10 +269,14 @@ async function handle(action, req, res, ctx) {
         if (!accountId) { res.status(401).json({ error: 'not authenticated' }); return; }
 
         // 1. Check if already unlocked (idempotent)
-        const upPinRes = await sbFetch(`pins?id=eq.${upPinId}&account_id=eq.${accountId}&select=id,unlocked_at,contact_data,estimate,status&limit=1`);
+        const upPinRes = await sbFetch(`pins?id=eq.${upPinId}&select=id,unlocked_at,contact_data,estimate,status,account_id&limit=1`);
         const upPinRows = upPinRes.ok ? await upPinRes.json() : [];
         const upPin = upPinRows[0];
         if (!upPin) { res.status(404).json({ error: 'pin not found' }); return; }
+        // Verify the pin belongs to the effective account (security check)
+        if (upPin.account_id && upPin.account_id !== accountId) {
+          res.status(403).json({ error: 'pin does not belong to this account' }); return;
+        }
         if (upPin.unlocked_at) {
           // Return existing contact_data so the client can fill fields without a separate fetch
           return res.json({ ok: true, already_unlocked: true, unlocked_at: upPin.unlocked_at, contact_data: upPin.contact_data || null });
