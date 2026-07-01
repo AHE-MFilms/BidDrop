@@ -215,6 +215,16 @@ if (fallbackCount > 0) {
 }
 console.log(`   Output → dist/\n`);
 
+// ─── Post-build validation ────────────────────────────────────────────────────
+// Runs validate-build.js automatically after every build.
+// Exit code 1 blocks the commit/deploy if structural issues are found.
+try {
+  const { execSync } = require('child_process');
+  execSync('node validate-build.js', { stdio: 'inherit', cwd: __dirname });
+} catch (e) {
+  process.exit(1);
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function copyDir(src, dest) {
   if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
