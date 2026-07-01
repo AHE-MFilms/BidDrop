@@ -1475,7 +1475,8 @@ async function renderCustomBackCanvas(backImageSrc, cfg) {
   const ADDR_X = 1314, ADDR_Y = 1049, ADDR_W = 1461, ADDR_H = 826;
 
   // Postage / indicia zone (top-right grey box)
-  const POST_X = 2083, POST_Y = 0, POST_W = 691, POST_H = 466;
+  // Postage/indicia zone: Lob spec 1.5"x1.25" flush top-right corner
+  const POST_X = 2325, POST_Y = 0, POST_W = 450, POST_H = 375;
 
   const canvas = document.createElement('canvas');
   canvas.width = W; canvas.height = H;
