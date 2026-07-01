@@ -307,6 +307,7 @@ async function loadPinsFromSupabase(){
   if(!currentAccount) return;
   // 1. Fetch server-side count (cheap — no row data transferred)
   const countRes = await sb.from('pins').select('id', {count:'exact', head:true}).eq('account_id', currentAccount.id);
+  console.log('[BidDrop] Pin count query — account_id:', currentAccount.id, '| count:', countRes.count, '| error:', countRes.error);
   totalPinCount = countRes.count || 0;
   pinListPage = 0;
   // 2. Load the 500 most-recent pins so the sidebar and dashboard work immediately
@@ -325,6 +326,7 @@ async function loadPinsFromSupabase(){
     error = fallback.error;
   }
   if(error){console.error('Load pins error:', error); return;}
+  console.log('[BidDrop] Pin data loaded — rows:', (data||[]).length, '| sample statuses:', (data||[]).slice(0,5).map(r=>r.status));
   S.pins = (data||[]).map(_rowToPin);
   // One-time migration: copy any estimates still only in pins.estimate into the estimates table
   await migrateEstimatesFromPins();
