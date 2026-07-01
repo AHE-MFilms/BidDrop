@@ -231,7 +231,15 @@ function buildDripPostcardFrontHtml({ photoUrl, headline, subtext, companyName, 
       <div class="phone-line">&#128222; ${escH(ph)}</div>
     </div>
   </div>
-<!-- Nearby Campaign Postcard Modal -->
+</body>
+</html>`;
+}
+
+// ── Inject m-campaign-postcard modal into page DOM (once) ─────────────────────
+(function(){
+  if(document.getElementById('m-campaign-postcard')) return;
+  const _wrap = document.createElement('div');
+  _wrap.innerHTML = `<!-- Nearby Campaign Postcard Modal -->
 <div id="m-campaign-postcard" class="modal-overlay" style="display:none;z-index:9000;">
   <div class="modal-box" style="max-width:520px;width:95%;background:var(--panel);border-radius:14px;padding:24px;position:relative;">
     <button onclick="closeM('m-campaign-postcard')" style="position:absolute;top:14px;right:14px;background:none;border:none;color:var(--mid);font-size:20px;cursor:pointer;line-height:1;">✕</button>
@@ -276,11 +284,10 @@ function buildDripPostcardFrontHtml({ photoUrl, headline, subtext, companyName, 
       <div id="coi-progress-text" style="font-size:11px;color:var(--muted);margin-top:4px;">0 / 0 sent</div>
     </div>
   </div>
-</div>
+</div>`;
+  document.body.appendChild(_wrap.firstElementChild);
+})();
 
-</body>
-</html>`;
-}
 
 // Get the drip message config for a given step number (2, 3, 4)
 function getDripStepMessage(step){
