@@ -1,0 +1,189 @@
+  <div class="tab-pane active" id="tab-map" style="position:relative;">
+    <div id="the-map"></div>
+    <div class="map-search-wrap" id="map-search-wrap">
+      <input class="map-search-inp" id="map-search-inp" placeholder="🔍 Search address..." oninput="onSearchInput()" onkeydown="if(event.key==='Enter')searchAddress()">
+      <button class="map-search-btn" onclick="searchAddress()">→</button>
+      <div class="map-search-results" id="map-search-results"></div>
+    </div>
+    <div class="map-toolbar">
+      <button class="mtool-btn" id="btn-locate" onclick="locateMe()" title="Center map on my location">📍 Locate Me</button>
+      <button class="mtool-btn" id="btn-satellite" onclick="toggleSatellite()">🛰 Satellite</button>
+      <button class="mtool-btn" id="btn-measure" onclick="toggleMeasure()">📐 Measure Roof</button>
+      <button class="mtool-btn" id="btn-zones-toggle" onclick="toggleZonesOnMap()">🗂 Zones</button>
+      <button class="mtool-btn" id="btn-storm-toggle" onclick="toggleStormEvents()">⛈ Storm Events</button>
+      <button class="mtool-btn" id="btn-property-layer" onclick="togglePropertyLayer()" title="Color-code pins by home age (build year from RentCast — not actual roof age)">🏠 Home Age</button>
+      <button class="mtool-btn" id="solar-overlay-btn" onclick="toggleSolarOverlay()" title="Show solar kW potential overlay on pins with solar data">☀️ Solar kW</button>
+    </div>
+    <!-- Storm Events Panel -->
+    <div id="storm-panel" style="display:none;position:absolute;top:12px;left:12px;z-index:2000;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;width:280px;box-shadow:0 4px 20px rgba(0,0,0,.5);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);">⛈ Storm Overlay</div>
+        <button onclick="closeStormPanel()" style="background:none;border:none;color:var(--mid);font-size:16px;cursor:pointer;line-height:1;">✕</button>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:12px;">Source: NOAA Storm Prediction Center · Free</div>
+
+      <!-- Hail Layer Toggle -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="font-size:12px;font-weight:700;color:#60a5fa;">🧊 Hail Strikes</div>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <span style="font-size:10px;color:var(--muted);" id="hail-toggle-lbl">OFF</span>
+          <div onclick="toggleHailLayer()" id="hail-toggle-track" style="width:36px;height:20px;border-radius:10px;background:#374151;cursor:pointer;position:relative;transition:background .2s;">
+            <div id="hail-toggle-thumb" style="position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#9ca3af;transition:all .2s;"></div>
+          </div>
+        </label>
+      </div>
+      <div id="hail-controls" style="display:none;margin-bottom:10px;">
+        <div style="margin-bottom:8px;">
+          <label style="font-size:10px;font-weight:700;color:var(--mid);display:block;margin-bottom:4px;">DATE RANGE</label>
+          <select id="storm-days" onchange="loadStormEvents();_saveStormState()" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:6px 10px;font-size:12px;">
+            <option value="1">Today</option>
+            <option value="3">Last 3 Days</option>
+            <option value="7">Last 7 Days</option>
+            <option value="14">Last 14 Days</option>
+            <option value="30" selected>Last 30 Days</option>
+            <option value="60">Last 60 Days</option>
+            <option value="90">Last 90 Days</option>
+            <option value="180">Last 6 Months</option>
+            <option value="365">Last 1 Year</option>
+          </select>
+        </div>
+        <div style="margin-bottom:8px;">
+          <label style="font-size:10px;font-weight:700;color:var(--mid);display:block;margin-bottom:4px;">MIN HAIL SIZE</label>
+          <select id="storm-min-size" onchange="renderStormMarkers();_saveStormState()" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:6px 10px;font-size:12px;">
+            <option value="0.75" selected>0.75"+ (Penny)</option>
+            <option value="1.00">1.00"+ (Quarter)</option>
+            <option value="1.50">1.50"+ (Golf Ball)</option>
+            <option value="2.00">2.00"+ (Baseball+)</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:6px;font-size:10px;color:var(--mid);flex-wrap:wrap;">
+          <span style="display:flex;align-items:center;gap:3px;"><span style="width:9px;height:9px;border-radius:50%;background:#FBBF24;display:inline-block;"></span>Penny</span>
+          <span style="display:flex;align-items:center;gap:3px;"><span style="width:9px;height:9px;border-radius:50%;background:#F59E0B;display:inline-block;"></span>Quarter</span>
+          <span style="display:flex;align-items:center;gap:3px;"><span style="width:9px;height:9px;border-radius:50%;background:#F97316;display:inline-block;"></span>Golf Ball</span>
+          <span style="display:flex;align-items:center;gap:3px;"><span style="width:9px;height:9px;border-radius:50%;background:#EF4444;display:inline-block;"></span>Baseball+</span>
+        </div>
+        <div id="storm-status" style="font-size:10px;color:var(--mid);text-align:center;min-height:14px;"></div>
+      </div>
+
+      <div style="border-top:1px solid var(--border);margin:10px 0;"></div>
+
+      <!-- Wind Layer Toggle -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="font-size:12px;font-weight:700;color:#34d399;">💨 Wind 50 MPH+ (90 days)</div>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <span style="font-size:10px;color:var(--muted);" id="wind-toggle-lbl">OFF</span>
+          <div onclick="toggleWindLayer()" id="wind-toggle-track" style="width:36px;height:20px;border-radius:10px;background:#374151;cursor:pointer;position:relative;transition:background .2s;">
+            <div id="wind-toggle-thumb" style="position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#9ca3af;transition:all .2s;"></div>
+          </div>
+        </label>
+      </div>
+      <div id="wind-status" style="font-size:10px;color:var(--mid);text-align:center;min-height:14px;"></div>
+    </div>
+    <div class="measure-hud" id="measure-hud">
+      <!-- Row 1: Footprint + Actual Roof Area side by side -->
+      <div style="display:flex;gap:12px;align-items:flex-start;width:100%;">
+        <div style="flex:1;">
+          <div class="mhud-lbl">Footprint</div>
+          <div style="display:flex;align-items:baseline;gap:3px;">
+            <div class="mhud-sqft" id="mhud-sqft" style="font-size:22px;">0</div>
+            <div style="font-size:10px;color:var(--mid);">sq ft</div>
+          </div>
+        </div>
+        <div style="flex:1;">
+          <div class="mhud-lbl" style="color:var(--accent);">Actual Roof Area</div>
+          <div style="display:flex;align-items:baseline;gap:3px;">
+            <div class="mhud-sqft" id="mhud-actual-sqft" style="font-size:22px;">0</div>
+            <div style="font-size:10px;color:var(--mid);">sq ft</div>
+          </div>
+          <div style="font-size:11px;color:var(--accent);font-weight:700;" id="mhud-squares">0 sq</div>
+        </div>
+      </div>
+      <!-- Row 2: Pitch selector -->
+      <div style="width:100%;margin-top:8px;">
+        <div class="mhud-lbl" style="margin-bottom:4px;">Pitch</div>
+        <select id="mhud-pitch-sel" onchange="updateMeasurePitch()" style="width:100%;background:var(--card);color:var(--fg,var(--text));border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px;font-family:var(--font-b);">
+          <option value="1.054">4/12 — Low</option>
+          <option value="1.083">5/12</option>
+          <option value="1.118" selected>6/12 — Standard</option>
+          <option value="1.158">7/12</option>
+          <option value="1.202">8/12 — Moderate</option>
+          <option value="1.250">9/12</option>
+          <option value="1.302">10/12 — Steep</option>
+          <option value="1.357">11/12</option>
+          <option value="1.414">12/12 — Very Steep</option>
+        </select>
+      </div>
+      <div id="mhud-bldg-count" style="font-size:11px;color:var(--accent);font-weight:600;min-height:14px;width:100%;"></div>
+      <div class="mhud-hint" id="mhud-hint">Tap each corner of the roof. Double-tap to finish.</div>
+      <div class="mhud-row" style="display:flex;gap:6px;margin-top:8px;width:100%;">
+        <button class="mhud-btn" onclick="undoMeasurePoint()">↩ Undo</button>
+        <button class="mhud-btn" onclick="clearMeasure()">Clear</button>
+        <button class="mhud-btn pr" id="btn-use-measure" onclick="useRoofMeasurement()" style="opacity:.4;pointer-events:none;">📋 Add to Estimate</button>
+      </div>
+    </div>
+    <button class="fab-pins" onclick="togglePinPanel()" id="fab-pins" style="display:none;">📍</button>
+    <div class="map-panel" id="map-panel">
+      <div class="map-panel-drag" id="map-panel-drag" onclick="togglePinPanel()"></div>
+      <div class="mp-hdr">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <div class="mp-title" style="margin:0;">
+            Pinned Homes
+            <span class="badge" id="pin-count">0</span>
+          </div>
+          <button id="pin-bulk-toggle" onclick="togglePinBulkMode()" style="background:none;border:1px solid var(--border);border-radius:7px;padding:4px 10px;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.4px;text-transform:uppercase;white-space:nowrap;">☑ Select</button>
+        </div>
+        <!-- Pipeline / Archive tab switcher -->
+        <div style="display:flex;gap:6px;margin-bottom:6px;">
+          <button id="view-tab-pipeline" class="view-tab active" onclick="switchPinView('pipeline')" style="flex:1;background:var(--accent);border:none;border-radius:7px;padding:5px 0;color:#fff;font-size:11px;font-weight:800;cursor:pointer;letter-spacing:.3px;">
+            🎯 Pipeline <span id="badge-pipeline" style="background:rgba(255,255,255,.25);border-radius:8px;padding:1px 6px;margin-left:3px;font-size:10px;">0</span>
+          </button>
+          <button id="view-tab-archive" class="view-tab" onclick="switchPinView('archive')" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:5px 0;color:var(--muted);font-size:11px;font-weight:800;cursor:pointer;letter-spacing:.3px;">
+            🗂 Archive <span id="badge-archive" style="background:var(--border);border-radius:8px;padding:1px 6px;margin-left:3px;font-size:10px;">0</span>
+          </button>
+        </div>
+        <!-- Status chips — shown contextually based on active view -->
+        <div class="filters" id="pipeline-chips">
+          <button class="fchip active" data-s="pipeline" onclick="filterPins('pipeline')">All Active</button>
+          <button class="fchip" data-s="pinned" onclick="filterPins('pinned')">📍 Pinned</button>
+          <button class="fchip" data-s="mailed" onclick="filterPins('mailed')">📬 Mailed</button>
+          <button class="fchip" data-s="emailed" onclick="filterPins('emailed')">📧 Emailed</button>
+          <button class="fchip" data-s="called" onclick="filterPins('called')">📞 Called</button>
+          <button class="fchip" data-s="responded" onclick="filterPins('responded')">💬 Responded</button>
+          <button class="fchip" data-s="quoted" onclick="filterPins('quoted')">📋 Quoted</button>
+        </div>
+        <div class="filters" id="archive-chips" style="display:none;">
+          <button class="fchip active" data-s="archive" onclick="filterPins('archive')">All Closed</button>
+          <button class="fchip" data-s="signed" onclick="filterPins('signed')">✅ Signed</button>
+          <button class="fchip" data-s="not_interested" onclick="filterPins('not_interested')">❌ Not Interested</button>
+        </div>
+        <!-- Trade filter chips — only shown when account has 2+ enabled trades -->
+        <div class="filters" id="pin-trade-chips" style="display:none;"></div>
+      </div>
+      <!-- Pin bulk action bar -->
+      <div id="pin-bulk-bar" style="display:none;flex-direction:column;gap:6px;padding:8px 10px;background:var(--card2);border-bottom:1px solid var(--border);flex-shrink:0;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--text);cursor:pointer;">
+            <input type="checkbox" id="pin-select-all" onchange="toggleAllPinSelect(this.checked)" style="cursor:pointer;"> Select All
+          </label>
+          <span id="pin-selected-count" style="font-size:12px;color:var(--muted);margin-left:4px;">0 selected</span>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button onclick="bulkDeletePins()" style="background:#EF4444;border:none;border-radius:6px;padding:5px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">🗑 Delete</button>
+          <button onclick="bulkSetPinStatus('pinned')" style="background:rgba(107,114,128,.2);border:1px solid #6B7280;border-radius:6px;padding:5px 10px;color:#9CA3AF;font-size:11px;font-weight:700;cursor:pointer;">📍 Pinned</button>
+          <button onclick="bulkSetPinStatus('mailed')" style="background:rgba(59,130,246,.15);border:1px solid var(--info);border-radius:6px;padding:5px 10px;color:var(--info);font-size:11px;font-weight:700;cursor:pointer;">📬 Mailed</button>
+          <button onclick="bulkSetPinStatus('emailed')" style="background:rgba(168,85,247,.15);border:1px solid #A855F7;border-radius:6px;padding:5px 10px;color:#A855F7;font-size:11px;font-weight:700;cursor:pointer;">📧 Emailed</button>
+          <button onclick="bulkSetPinStatus('called')" style="background:rgba(234,179,8,.2);border:1px solid #EAB308;border-radius:6px;padding:5px 10px;color:#EAB308;font-size:11px;font-weight:700;cursor:pointer;">📞 Called</button>
+          <button onclick="bulkSetPinStatus('responded')" style="background:rgba(245,158,11,.2);border:1px solid #F59E0B;border-radius:6px;padding:5px 10px;color:#F59E0B;font-size:11px;font-weight:700;cursor:pointer;">💬 Responded</button>
+          <button onclick="bulkSetPinStatus('quoted')" style="background:rgba(14,165,233,.15);border:1px solid #0EA5E9;border-radius:6px;padding:5px 10px;color:#0EA5E9;font-size:11px;font-weight:700;cursor:pointer;">📋 Quoted</button>
+          <button onclick="bulkSetPinStatus('signed')" style="background:rgba(34,197,94,.15);border:1px solid var(--success);border-radius:6px;padding:5px 10px;color:var(--success);font-size:11px;font-weight:700;cursor:pointer;">✅ Signed</button>
+          <button onclick="bulkSetPinStatus('not_interested')" style="background:rgba(61,82,105,.2);border:1px solid var(--muted);border-radius:6px;padding:5px 10px;color:var(--mid);font-size:11px;font-weight:700;cursor:pointer;">❌ Not Interested</button>
+          <button onclick="bulkSendPinsToFollowUp()" style="background:#1a7f4b;border:none;border-radius:6px;padding:5px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">✉️ Follow Up All</button>
+        </div>
+      </div>
+            <div class="map-tip" id="map-tip">👆 Drop a pin → tap it → Measure This Roof</div>
+      <div id="campaign-filter-banner" style="display:none;align-items:center;gap:6px;padding:6px 11px;background:rgba(242,92,5,.1);border-bottom:1px solid rgba(242,92,5,.25);"></div>
+      <div class="pin-list" id="pin-list"></div>
+    </div>
+  </div>
+
+  <!-- ESTIMATE -->

@@ -92,6 +92,18 @@ for (const htmlFile of HTML_FILES) {
   process.stdout.write(`  ${htmlFile} ... `);
 
   let html = fs.readFileSync(htmlFile, 'utf8');
+  // ── Resolve HTML partials (src/html/*.html) ──────────────────────────────
+  if (htmlFile === 'index.html') {
+    const htmlDir = path.join(__dirname, 'src', 'html');
+    html = html.replace(/<!-- @@PARTIAL:([^\s>]+) -->/g, function(match, fname) {
+      const partialPath = path.join(htmlDir, fname);
+      if (fs.existsSync(partialPath)) {
+        return fs.readFileSync(partialPath, 'utf8');
+      }
+      console.warn('WARNING: partial not found:', fname);
+      return match;
+    });
+  }
   let fileObf = 0;
   let fileFallback = 0;
 

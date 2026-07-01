@@ -1,0 +1,57 @@
+  <div class="tab-pane" id="tab-history" style="flex-direction:column;overflow-y:auto;padding:24px;gap:20px;">
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+      <div>
+        <div style="font-family:var(--font-h);font-size:22px;font-weight:700;color:var(--text);">📑 Order &amp; Credit History</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:4px;">All mailers sent and credits purchased on your account.</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 20px;text-align:center;">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Credits Available</div>
+          <div id="hist-credits-balance" style="font-size:24px;font-weight:700;color:var(--accent);font-family:var(--font-h);">—</div>
+        </div>
+        <button onclick="openM('m-buy-credits')" class="btn-primary" style="height:48px;padding:0 20px;">+ Buy Credits</button>
+      </div>
+    </div>
+
+    <!-- Tabs within history -->
+    <div style="display:flex;gap:0;border-bottom:2px solid var(--border);">
+      <button id="hist-tab-mailers" onclick="histTab('mailers')" style="padding:10px 20px;background:none;border:none;border-bottom:2px solid var(--accent);margin-bottom:-2px;color:var(--accent);font-weight:600;cursor:pointer;font-size:14px;">📬 Mailers Sent</button>
+      <button id="hist-tab-credits" onclick="histTab('credits')" style="padding:10px 20px;background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--muted);font-weight:600;cursor:pointer;font-size:14px;">💳 Credit Purchases</button>
+      <button id="hist-tab-campaigns" onclick="histTab('campaigns')" style="padding:10px 20px;background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--muted);font-weight:600;cursor:pointer;font-size:14px;">📍 Campaigns</button>
+    </div>
+
+    <!-- Mailers panel -->
+    <div id="hist-panel-mailers">
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
+        <input id="hist-search" type="text" placeholder="Search by name or address…" oninput="renderHistMailers()" style="flex:1;min-width:200px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:9px 14px;color:var(--text);font-size:13px;">
+        <select id="hist-type-filter" onchange="renderHistMailers()" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;">
+          <option value="">All Types</option>
+          <option value="postcard">Postcards</option>
+          <option value="letter">Letters</option>
+        </select>
+      </div>
+      <div id="hist-mailers-table" style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+        <div style="padding:40px;text-align:center;color:var(--muted);">Loading…</div>
+      </div>
+      <div id="hist-mailers-pagination" style="display:flex;justify-content:center;gap:8px;margin-top:14px;"></div>
+    </div>
+
+    <!-- Credits panel -->
+    <div id="hist-panel-credits" style="display:none;">
+      <div id="hist-credits-table" style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+        <div style="padding:40px;text-align:center;color:var(--muted);">Loading…</div>
+      </div>
+    </div>
+    <!-- Campaigns panel -->
+    <div id="hist-panel-campaigns" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+        <div style="font-size:13px;color:var(--muted);">All Nearby Campaigns launched from your account.</div>
+        <button onclick="loadCampaignHistory()" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;color:var(--mid);font-size:12px;cursor:pointer;">&#8635; Refresh</button>
+      </div>
+      <div id="hist-campaigns-table" style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+        <div style="padding:40px;text-align:center;color:var(--muted);">Loading campaigns…</div>
+      </div>
+    </div>
+  </div>
+  <!-- END HISTORY -->

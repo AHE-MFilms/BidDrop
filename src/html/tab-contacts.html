@@ -1,0 +1,71 @@
+  <div class="tab-pane" id="tab-contacts" style="flex-direction:column;overflow-y:auto;padding:24px 28px;gap:16px;">
+    <!-- Page Header -->
+    <div class="dash-page-hdr">
+      <div>
+        <div class="dash-page-title">📒 Lists &amp; Contacts</div>
+        <div class="dash-page-sub">All pinned homeowners — search, filter, and push to GHL</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button id="contacts-ghl-bulk-btn" onclick="contactsBulkGHL()" style="display:none;background:var(--accent);border:none;border-radius:7px;padding:8px 16px;color:#fff;font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">⬆ Push Selected to GHL</button>
+        <button onclick="renderContacts()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 14px;color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">↻ Refresh</button>
+      </div>
+    </div>
+    <!-- Filters + Search -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+      <input id="contacts-search" type="text" placeholder="🔍 Search name or address..." oninput="renderContacts()" style="flex:1;min-width:200px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:9px 14px;color:var(--text);font-family:var(--font-b);font-size:12px;outline:none;">
+      <select id="contacts-status-filter" onchange="renderContacts()" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:var(--font-b);font-size:11px;cursor:pointer;">
+        <option value="">All Statuses</option>
+        <option value="pipeline">Pipeline</option>
+        <option value="pinned">📍 Pinned</option>
+        <option value="mailed">📬 Mailed</option>
+        <option value="emailed">📧 Emailed</option>
+        <option value="called">📞 Called</option>
+        <option value="responded">💬 Responded</option>
+        <option value="quoted">📋 Quoted</option>
+        <option value="signed">✅ Signed</option>
+        <option value="not_interested">❌ Not Interested</option>
+      </select>
+      <select id="contacts-ghl-filter" onchange="renderContacts()" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:var(--font-b);font-size:11px;cursor:pointer;">
+        <option value="">All GHL Status</option>
+        <option value="synced">Synced to GHL</option>
+        <option value="unsynced">Not in GHL</option>
+      </select>
+      <select id="contacts-rep-filter" onchange="renderContacts()" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:var(--font-b);font-size:11px;cursor:pointer;">
+        <option value="">All Reps</option>
+      </select>
+    </div>
+    <!-- Stats strip -->
+    <div id="contacts-stats" style="display:flex;gap:12px;flex-wrap:wrap;"></div>
+    <!-- Bulk select bar -->
+    <div id="contacts-bulk-bar" style="display:none;background:var(--card2);border:1px solid var(--accent);border-radius:8px;padding:10px 16px;display:none;align-items:center;gap:12px;">
+      <input type="checkbox" id="contacts-select-all" onchange="contactsToggleAll(this.checked)" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;">
+      <span id="contacts-selected-count" style="font-size:12px;font-weight:700;color:var(--text);">0 selected</span>
+      <button onclick="contactsBulkGHL()" style="background:var(--accent);border:none;border-radius:6px;padding:6px 14px;color:#fff;font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">⬆ Push to GHL</button>
+      <button onclick="contactsBulkAddToQueue()" style="background:#0e7490;border:none;border-radius:6px;padding:6px 14px;color:#fff;font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">📬 Add to Mail Queue</button>
+      <button onclick="contactsDeselectAll()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 12px;color:var(--muted);font-family:var(--font-b);font-size:11px;cursor:pointer;">Clear</button>
+    </div>
+    <!-- Contacts Table -->
+    <div class="dash-card" style="padding:0;overflow:hidden;">
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;" id="contacts-table">
+          <thead>
+            <tr style="border-bottom:2px solid var(--border);">
+              <th style="padding:12px 14px;width:36px;"><input type="checkbox" id="contacts-hdr-cb" onchange="contactsToggleAll(this.checked)" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer;"></th>
+              <th style="padding:12px 14px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);text-align:left;">Homeowner</th>
+              <th style="padding:12px 14px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);text-align:left;">Address</th>
+              <th style="padding:12px 14px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);text-align:left;">Status</th>
+              <th style="padding:12px 14px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);text-align:left;">Rep</th>
+              <th style="padding:12px 14px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);text-align:left;">Trades</th>
+              <th style="padding:12px 14px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);text-align:left;">GHL</th>
+              <th style="padding:12px 14px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);text-align:left;">Pinned</th>
+              <th style="padding:12px 14px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);text-align:left;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="contacts-tbody"></tbody>
+        </table>
+        <div id="contacts-empty" style="display:none;text-align:center;padding:48px;color:var(--muted);font-size:13px;">No contacts found. Drop some pins on the map to get started.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAMPAIGNS TAB -->

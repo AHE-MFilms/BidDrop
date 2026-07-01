@@ -1,0 +1,201 @@
+  <div id="m-postcard-preview" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center;padding:16px;">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;width:780px;max-width:100%;max-height:90vh;overflow-y:auto;">
+      <div style="padding:18px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-size:15px;font-weight:800;color:var(--text);font-family:var(--font-h);">&#127247; Postcard Full Preview</div>
+        <button onclick="document.getElementById('m-postcard-preview').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1;">&times;</button>
+      </div>
+      <div style="padding:20px 22px;display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <!-- Front side -->
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;">FRONT SIDE</div>
+          <div id="pcp-front" style="background:#111;border-radius:10px;overflow:hidden;aspect-ratio:1.5;position:relative;display:flex;align-items:center;justify-content:center;">
+            <div style="color:var(--muted);font-size:12px;">No design selected</div>
+          </div>
+        </div>
+        <!-- Back side (address block) -->
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;">BACK SIDE (Design Back)</div>
+          <div id="pcp-back" style="background:#1a1a1a;border-radius:10px;overflow:hidden;aspect-ratio:1.5;position:relative;display:flex;align-items:center;justify-content:center;">
+            <canvas id="pcp-back-canvas" style="width:100%;height:100%;display:block;"></canvas>
+            <div id="pcp-back-spinner" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.5);border-radius:10px;align-items:center;justify-content:center;font-size:12px;color:#fff;">Rendering...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ADD DESIGN MODAL — Full upload + back editor + side-by-side preview -->
+  <div id="add-design-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 12px;">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;width:100%;max-width:1100px;overflow:hidden;margin:auto;">
+      <!-- Header -->
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px 16px;border-bottom:1px solid var(--border);">
+        <div>
+          <div style="font-family:var(--font-h);font-size:20px;font-weight:800;color:var(--text);">📤 Upload New Design</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px;">Upload your front artwork · Customize the back · Preview both sides</div>
+        </div>
+        <button onclick="closeAddDesignModal()" style="background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer;line-height:1;padding:4px 8px;">×</button>
+      </div>
+      <!-- Body: two columns -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;min-height:500px;">
+        <!-- LEFT: Upload + back text fields -->
+        <div style="padding:22px 24px;border-right:1px solid var(--border);overflow-y:auto;max-height:80vh;">
+          <!-- Spec strip -->
+          <div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:11px;color:var(--text);display:flex;flex-wrap:wrap;gap:6px 18px;">
+            <span style="font-weight:800;color:#F59E0B;">📐 Front Artwork Specs</span>
+            <span><b>Format:</b> JPEG or PNG</span>
+            <span><b>Bleed:</b> 1875×2775 px</span>
+            <span><b>Safe zone:</b> 1725×2625 px</span>
+            <span><b>300 DPI</b></span>
+          </div>
+          <!-- Design name -->
+          <div style="margin-bottom:14px;">
+            <div class="fl">Design Name</div>
+            <input class="fi" id="new-design-name" placeholder="e.g. Storm Follow-Up, Gutters Special" maxlength="60" oninput="designBackPreviewDebounce()">
+          </div>
+          <!-- Front image upload -->
+          <div style="margin-bottom:14px;">
+            <div class="fl">Front Artwork <span style="color:var(--muted);font-weight:400;">(JPEG or PNG · 1875×2775 px)</span></div>
+            <div id="new-design-preview" style="width:100%;height:160px;border:2px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;cursor:pointer;overflow:hidden;position:relative;background:var(--card2);" onclick="document.getElementById('new-design-file').click()">
+              <span id="new-design-preview-text" style="text-align:center;padding:12px;">Click to upload front artwork<br><span style="font-size:11px;opacity:.6;">JPEG or PNG · 1875×2775 px · 300 DPI</span></span>
+              <img id="new-design-preview-img" style="display:none;width:100%;height:100%;object-fit:contain;" src="">
+            </div>
+            <div id="new-design-size-warn" style="display:none;margin-top:6px;padding:6px 10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:6px;font-size:11px;color:#ef4444;"></div>
+            <input type="file" id="new-design-file" accept="image/jpeg,image/jpg,image/png" style="display:none;" onchange="previewNewDesign(this)">
+          </div>
+          <!-- Description -->
+          <div style="margin-bottom:18px;">
+            <div class="fl">Description <span style="color:var(--muted);font-weight:400;">(optional)</span></div>
+            <input class="fi" id="new-design-desc" placeholder="e.g. Use for storm follow-up campaigns" maxlength="120">
+          </div>
+          <!-- BACK ARTWORK UPLOAD (always required for custom designs) -->
+          <div style="border-top:1px solid var(--border);padding-top:16px;margin-bottom:4px;">
+            <div style="font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;">📬 Back Artwork <span style="color:#ef4444;font-size:11px;font-weight:700;">*Required</span></div>
+            <div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:11px;color:var(--text);">
+              <div style="font-weight:800;color:#F59E0B;margin-bottom:4px;">📐 Back Artwork Specs</div>
+              <div style="display:flex;flex-wrap:wrap;gap:4px 16px;">
+                <span><b>Size:</b> 1875×2775 px (portrait)</span>
+                <span><b>Format:</b> JPEG or PNG</span>
+                <span><b>300 DPI</b></span>
+                <span><b>Leave clear:</b> address zone (right-bottom), QR zone (left-bottom), postage (top-right)</span>
+              </div>
+              <div style="margin-top:8px;">
+                <button onclick="downloadBackTemplate()" style="background:none;border:none;padding:0;color:var(--accent);font-weight:700;font-size:12px;cursor:pointer;text-decoration:underline;">⬇️ Download Back Template (PNG)</button>
+                <span style="color:var(--muted);font-size:11px;margin-left:8px;">— shows all safe zones</span>
+              </div>
+            </div>
+            <div class="fl" style="margin-bottom:6px;">Back Artwork <span style="color:var(--muted);font-weight:400;">(JPEG or PNG · 1875×2775 px)</span></div>
+            <div id="nd-back-upload-preview" style="width:100%;height:140px;border:2px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;cursor:pointer;overflow:hidden;position:relative;background:var(--card2);" onclick="document.getElementById('new-design-back-file').click()">
+              <span id="nd-back-upload-text" style="text-align:center;padding:12px;">Click to upload back artwork<br><span style="font-size:11px;opacity:.6;">JPEG or PNG · 1875×2775 px</span></span>
+              <img id="nd-back-upload-img" style="display:none;width:100%;height:100%;object-fit:contain;" src="">
+            </div>
+            <div id="nd-back-size-warn" style="display:none;margin-top:6px;padding:6px 10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:6px;font-size:11px;color:#ef4444;"></div>
+            <input type="file" id="new-design-back-file" accept="image/jpeg,image/jpg,image/png" style="display:none;" onchange="previewNewDesignBack(this)">
+            <div style="margin-top:8px;font-size:11px;color:var(--muted);">BidDrop will automatically overlay the QR code and address block in the correct Lob-compliant zones.</div>
+          </div>
+          <!-- HIDDEN SECTION (kept for JS compatibility but not shown) -->
+          <div id="nd-standard-back-section" style="display:none;margin-bottom:4px;">
+            <div style="font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.5px;text-transform:uppercase;margin-bottom:12px;">✏️ Customize Back Text</div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">These fields override your account defaults for this design only. Leave blank to use account defaults.</div>
+            <!-- Badge pill -->
+            <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;margin-bottom:12px;">
+              <div>
+                <div class="fl">Badge Pill Text</div>
+                <input class="fi" id="nd-back-badge-text" placeholder="YOUR ROOF ESTIMATE IS READY" maxlength="50" oninput="designBackPreviewDebounce()">
+              </div>
+              <div>
+                <div class="fl">Color</div>
+                <input type="color" id="nd-back-badge-color" value="#F25C05" style="width:44px;height:36px;border:1px solid var(--border);border-radius:6px;cursor:pointer;background:var(--card2);padding:2px;" oninput="designBackPreviewDebounce()">
+              </div>
+            </div>
+            <!-- Hook -->
+            <div style="margin-bottom:12px;">
+              <div class="fl">Hook Line <span style="color:var(--muted);font-weight:400;">(hero section)</span></div>
+              <textarea class="fi" id="nd-back-hook" rows="3" placeholder="Most homeowners dread the pushy roofing salesman..." style="resize:vertical;" oninput="designBackPreviewDebounce()"></textarea>
+            </div>
+            <!-- Why -->
+            <div style="margin-bottom:12px;">
+              <div class="fl">Why Did You Receive This?</div>
+              <textarea class="fi" id="nd-back-why" rows="3" placeholder="We assessed your neighborhood and identified your home..." style="resize:vertical;" oninput="designBackPreviewDebounce()"></textarea>
+            </div>
+            <!-- Quote -->
+            <div style="margin-bottom:12px;">
+              <div class="fl">Customer Quote <span style="color:var(--muted);font-weight:400;">(optional)</span></div>
+              <input class="fi" id="nd-back-quote" placeholder='"They replaced our roof in one day." — Mike D.' maxlength="160" oninput="designBackPreviewDebounce()">
+            </div>
+            <!-- Guarantee -->
+            <div style="margin-bottom:12px;">
+              <div class="fl">Guarantee Line</div>
+              <input class="fi" id="nd-back-guarantee" placeholder="No door-knocking. No pressure. Just your price." maxlength="100" oninput="designBackPreviewDebounce()">
+            </div>
+            <!-- Scan CTA -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+              <div>
+                <div class="fl">Scan CTA</div>
+                <input class="fi" id="nd-back-scan-cta" placeholder="SCAN TO BOOK" maxlength="30" oninput="designBackPreviewDebounce()">
+              </div>
+              <div>
+                <div class="fl">Scan Sub-label</div>
+                <input class="fi" id="nd-back-scan-sub" placeholder="No-pressure booking" maxlength="40" oninput="designBackPreviewDebounce()">
+              </div>
+            </div>
+            <!-- Trust badges -->
+            <div style="margin-bottom:4px;">
+              <div class="fl">Trust Badges <span style="color:var(--muted);font-weight:400;">(up to 3)</span></div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <input class="fi" id="nd-back-badge1" placeholder="Licensed, Bonded &amp; Insured" maxlength="40" oninput="designBackPreviewDebounce()">
+                <input class="fi" id="nd-back-badge2" placeholder="Manufacturer Certified" maxlength="40" oninput="designBackPreviewDebounce()">
+                <input class="fi" id="nd-back-badge3" placeholder="Itemized Pricing" maxlength="40" oninput="designBackPreviewDebounce()">
+              </div>
+            </div>
+          </div>
+          </div><!-- /nd-standard-back-section -->
+        </div>
+        <!-- RIGHT: Live preview -->
+        <div style="padding:22px 24px;background:var(--bg);display:flex;flex-direction:column;gap:14px;overflow-y:auto;max-height:80vh;">
+          <div style="font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--text);letter-spacing:.5px;text-transform:uppercase;">Live Preview</div>
+          <!-- Front preview -->
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;">FRONT</div>
+            <div id="nd-front-preview-wrap" style="width:100%;aspect-ratio:2/3;background:var(--card2);border:1px solid var(--border);border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+              <span style="color:var(--muted);font-size:12px;">Upload front artwork to preview</span>
+            </div>
+          </div>
+          <!-- Back preview -->
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;">BACK <span id="nd-back-preview-label" style="font-weight:400;text-transform:none;letter-spacing:0;">(your artwork + QR &amp; address overlay)</span></div>
+            <div style="position:relative;">
+              <canvas id="nd-back-preview-canvas" style="width:100%;border:1px solid var(--border);border-radius:8px;display:block;"></canvas>
+              <div id="nd-back-preview-spinner" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.5);border-radius:8px;display:flex;align-items:center;justify-content:center;">
+                <div style="color:#fff;font-size:12px;">Rendering…</div>
+              </div>
+            </div>
+          </div>
+          <button onclick="renderDesignBackPreview()" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 16px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;">🔄 Refresh Preview</button>
+        </div>
+      </div>
+      <!-- Footer -->
+      <div style="display:flex;gap:10px;padding:16px 24px;border-top:1px solid var(--border);background:var(--card);">
+        <button onclick="closeAddDesignModal()" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:11px;font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">Cancel</button>
+        <button id="nd-save-btn" onclick="saveNewDesign()" style="flex:3;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;">💾 Save Design</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DESIGN PICKER MODAL (used when sending from Mail Queue) -->
+  <div id="design-picker-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;width:560px;max-width:95vw;max-height:85vh;overflow-y:auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+        <div style="font-size:16px;font-weight:800;color:var(--text);">🎨 Choose Postcard Design</div>
+        <button onclick="closeDesignPicker()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;">×</button>
+      </div>
+      <div id="design-picker-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:16px;">
+        <!-- Populated by JS -->
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="closeDesignPicker()" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">Cancel</button>
+        <button onclick="confirmDesignPick()" style="flex:2;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;">Use Selected Design</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- TERRITORY INTEL TAB -->

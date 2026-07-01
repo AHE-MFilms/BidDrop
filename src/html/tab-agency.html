@@ -1,0 +1,90 @@
+  <div class="tab-pane" id="tab-agency" style="flex-direction:column;overflow-y:scroll;padding:20px;gap:16px;">
+    <!-- Top KPI bar -->
+    <div class="stats-row" id="agency-kpi-row" style="margin-bottom:4px;flex-shrink:0;">
+      <div class="stat-card"><div class="stat-icon">🏢</div><div class="stat-lbl">Active Clients</div><div class="stat-val" id="ag-clients">—</div><div class="stat-sub">Accounts</div></div>
+      <div class="stat-card"><div class="stat-icon">📬</div><div class="stat-lbl">Mailers This Month</div><div class="stat-val" id="ag-mailers-mo">—</div><div class="stat-sub">All clients</div></div>
+      <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-lbl">Revenue This Month</div><div class="stat-val" id="ag-rev-mo">—</div><div class="stat-sub">Mailer billing</div></div>
+      <div class="stat-card"><div class="stat-icon">📍</div><div class="stat-lbl">Total Pins</div><div class="stat-val" id="ag-pins">—</div><div class="stat-sub">All accounts</div></div>
+    </div>
+    <!-- Client Accounts Table -->
+    <div style="flex-shrink:0;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+        <div class="dc-title" style="margin-bottom:0;">Client Accounts</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input id="ag-search" type="text" placeholder="🔍 Search clients..." oninput="filterAgencyAccounts()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:6px 12px;color:var(--text);font-size:12px;width:180px;outline:none;" />
+          <select id="ag-sort" onchange="filterAgencyAccounts()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--text);font-size:12px;cursor:pointer;">
+            <option value="name_asc">Name A→Z</option>
+            <option value="name_desc">Name Z→A</option>
+            <option value="plan">Plan</option>
+            <option value="pins_desc">Most Pins</option>
+            <option value="mailers_desc">Most Mailers</option>
+            <option value="revenue_desc">Most Revenue</option>
+            <option value="activity">Recent Activity</option>
+            <option value="created">Date Added</option>
+          </select>
+          <select id="ag-filter-plan" onchange="filterAgencyAccounts()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--text);font-size:12px;cursor:pointer;">
+            <option value="all">All Plans</option>
+            <option value="starter">Starter</option>
+            <option value="pro">Pro</option>
+            <option value="agency">Agency</option>
+            <option value="enterprise">Enterprise</option>
+          </select>
+          <select id="ag-filter-status" onchange="filterAgencyAccounts()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--text);font-size:12px;cursor:pointer;">
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+          <button onclick="goTab('admin');setTimeout(showAddAccountForm,400)" style="background:var(--accent);border:none;border-radius:8px;padding:8px 16px;color:white;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.4px;">+ Onboard New Client</button>
+        </div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:12px;">
+            <thead>
+              <tr style="background:var(--card2);border-bottom:1px solid var(--border);">
+                <th style="padding:10px 14px;text-align:left;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">COMPANY</th>
+                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">PLAN</th>
+                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">STATUS</th>
+                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">PINS</th>
+                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">CONVERTED</th>
+                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">MAILERS MO.</th>
+                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">TOTAL MAIL</th>
+                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">REVENUE</th>
+                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">CREDITS</th>
+                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">LAST ACTIVITY</th>
+                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody id="agency-accounts-grid"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <!-- Mailer log table -->
+    <div class="dash-card" style="flex-shrink:0;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="dc-title" style="margin-bottom:0;">Mailer Log</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select id="ag-log-filter" class="fs" style="padding:5px 10px;font-size:11px;width:auto;" onchange="renderAgencyMailerLog()">
+            <option value="all">All Clients</option>
+          </select>
+          <select id="ag-log-period" class="fs" style="padding:5px 10px;font-size:11px;width:auto;" onchange="agMailerLogPeriodChange()">
+            <option value="30">Last 30 days</option>
+            <option value="60">Last 60 days</option>
+            <option value="90">Last 90 days</option>
+            <option value="0">All time</option>
+            <option value="custom">Custom Range...</option>
+          </select>
+          <span id="ag-log-custom-range" style="display:none;align-items:center;gap:4px;">
+            <input type="date" id="ag-log-date-from" onchange="renderAgencyMailerLog()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:4px 8px;color:var(--text);font-size:11px;cursor:pointer;" />
+            <span style="color:var(--muted);font-size:11px;">to</span>
+            <input type="date" id="ag-log-date-to" onchange="renderAgencyMailerLog()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:4px 8px;color:var(--text);font-size:11px;cursor:pointer;" />
+          </span>
+        </div>
+      </div>
+      <div id="agency-mailer-log" style="overflow-x:auto;">
+        <div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">Loading mailer log…</div>
+      </div>
+    </div>
+  </div>
+  <!-- HISTORY -->

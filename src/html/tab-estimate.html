@@ -1,0 +1,955 @@
+  <div class="tab-pane" id="tab-estimate">
+    <div class="est-form">
+      <!-- ── FORM HEADER ── -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;">
+        <div style="font-family:var(--font-h);font-size:14px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--text);">Build Estimate</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button onclick="newEstimate()" style="background:none;border:1px solid var(--border);border-radius:7px;padding:4px 10px;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.4px;text-transform:uppercase;">✕ New</button>
+        </div>
+      </div>
+      <!-- ── MODE TOGGLE (compact, in header area) ── -->
+      <div id="est-mode-bar" style="display:flex;gap:0;flex-shrink:0;border-bottom:1px solid var(--border);">
+        <button id="est-mode-sales" onclick="setEstMode('sales')" style="flex:1;padding:8px 0;border:none;border-bottom:2px solid var(--accent);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font-h);letter-spacing:.4px;background:rgba(242,92,5,.08);color:var(--accent);">💼 Sales Proposal</button>
+        <button id="est-mode-ins" onclick="setEstMode('insurance')" style="flex:1;padding:8px 0;border:none;border-bottom:2px solid transparent;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font-h);letter-spacing:.4px;background:none;color:var(--muted);">🏛 Insurance Scope</button>
+      </div>
+
+      <!-- ── ACCORDION PANEL ── -->
+      <div class="acc-panel">
+
+      <!-- ══ CARD 1: HOMEOWNER ══ -->
+      <div class="acc-card" id="acc-card-homeowner">
+        <div class="acc-hdr open" id="acc-hdr-homeowner" onclick="toggleAccCard('homeowner')">
+          <div class="acc-hdr-left">
+            <div class="acc-dot active" id="acc-dot-homeowner"></div>
+            <div class="acc-icon">👤</div>
+            <div>
+              <div class="acc-title">Homeowner</div>
+              <div class="acc-summary" id="acc-sum-homeowner">Name, phone, email</div>
+            </div>
+          </div>
+          <div class="acc-chevron">▼</div>
+        </div>
+        <div class="acc-body open" id="acc-body-homeowner">
+          <!-- Draft restored banner -->
+          <div id="draft-banner" style="display:none;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);border-radius:7px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:#93C5FD;align-items:center;gap:8px;">
+            <span>💾 Draft restored</span><span id="draft-banner-time" style="color:var(--muted);"></span>
+            <button onclick="discardDraft()" style="margin-left:auto;background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-decoration:underline;">Discard</button>
+          </div>
+          <!-- Pin picker -->
+          <div class="fg" id="est-pin-picker-wrap" style="margin-bottom:10px;">
+            <div class="fl" style="font-size:10px;">Load from Pinned Home</div>
+            <select class="fs" id="est-pin-picker" onchange="loadEstFromPicker()" style="font-size:12px;padding:8px 10px;">
+              <option value="">— Select a pinned address —</option>
+            </select>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <div class="fl" style="font-size:10px;">Homeowner Name</div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <input class="fi" id="e-owner" placeholder="Jane Smith" oninput="updatePreview();scheduleDraftSave();_accUpdateHomeownerSummary()" style="flex:1;margin-bottom:0;font-size:13px;padding:9px 12px;">
+              <button id="rc-lookup-btn" onclick="manualRentcastLookup()" title="Look up owner name &amp; property data" style="flex-shrink:0;padding:0 10px;height:36px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🏠 Look Up</button>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+            <div>
+              <div class="fl" style="font-size:10px;">Phone <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:9px;">— GHL</span></div>
+              <div id="e-phone-wrap">
+                <input class="fi" id="e-phone" placeholder="(555) 000-0000" type="tel" oninput="_accUpdateHomeownerSummary()" style="font-size:12px;padding:8px 10px;">
+              </div>
+            </div>
+            <div>
+              <div class="fl" style="font-size:10px;">Email <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:9px;">— GHL</span></div>
+              <div id="e-email-wrap">
+                <input class="fi" id="e-email" placeholder="jane@email.com" type="email" oninput="_accUpdateHomeownerSummary()" style="font-size:12px;padding:8px 10px;">
+              </div>
+            </div>
+          </div>
+          <!-- Contact Lookup Button (shown when pin is unlocked but no contact data yet) -->
+          <div id="est-contact-lookup-btn" style="display:none;margin-bottom:8px;">
+            <button onclick="estLookupContact()" style="width:100%;padding:9px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+              📞 Look Up Phone &amp; Email
+            </button>
+          </div>
+          <!-- Unlock Pin CTA -->
+          <div id="est-unlock-wrap" style="margin-top:4px;">
+            <button id="est-unlock-btn" onclick="estUnlockPin()" style="width:100%;padding:11px 11px 9px;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;">
+              <span style="display:flex;align-items:center;gap:6px;">🔓 Unlock This Lead &mdash; 1 Credit</span>
+              <span style="font-size:10px;font-weight:500;opacity:0.85;">Reveals owner name, phone &amp; email &bull; Unlocks postcard &amp; print</span>
+            </button>
+            <div id="est-unlock-status" style="display:none;text-align:center;padding:8px;font-size:12px;color:#4ade80;font-weight:600;">✅ Pin Unlocked &mdash; all features active</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ CARD 2: PROPERTY ══ -->
+      <div class="acc-card" id="acc-card-property">
+        <div class="acc-hdr" id="acc-hdr-property" onclick="toggleAccCard('property')">
+          <div class="acc-hdr-left">
+            <div class="acc-dot" id="acc-dot-property"></div>
+            <div class="acc-icon">🏠</div>
+            <div>
+              <div class="acc-title">Property</div>
+              <div class="acc-summary" id="acc-sum-property">Address &amp; measurements</div>
+            </div>
+          </div>
+          <div class="acc-chevron">▼</div>
+        </div>
+        <div class="acc-body" id="acc-body-property">
+          <div class="fg" style="margin-bottom:10px;">
+            <div class="fl" style="font-size:10px;">Property Address</div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <input class="fi" id="e-addr" placeholder="123 Oak St, Detroit MI 48000" oninput="updatePreview();scheduleDraftSave();_accUpdatePropertySummary()" style="flex:1;margin-bottom:0;font-size:12px;padding:8px 10px;">
+              <button id="est-satellite-btn" onclick="fetchSatelliteMeasurementForEstimate()" title="Get satellite roof measurements for this address" style="flex-shrink:0;padding:0 10px;height:36px;background:linear-gradient(135deg,#0a1628,#0f2a1a);border:1px solid rgba(242,92,5,.5);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;color:#F25C05;white-space:nowrap;">🛰 Measure</button>
+            </div>
+          </div>
+          <!-- Equity snapshot badge (shown after RentCast lookup) -->
+          <div id="equity-badge" style="display:none;background:linear-gradient(135deg,#0f2027,#1a3a2a);border:1px solid #22C55E44;border-radius:10px;padding:10px 12px;margin-bottom:10px;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:#22C55E;margin-bottom:6px;">🏠 PROPERTY SNAPSHOT</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <div style="flex:1;min-width:70px;"><div style="font-size:10px;color:#A8BECE;margin-bottom:2px;">Est. Value</div><div id="eq-value" style="font-size:14px;font-weight:700;color:#FFF;">—</div></div>
+              <div style="flex:1;min-width:70px;"><div style="font-size:10px;color:#A8BECE;margin-bottom:2px;">Est. Equity</div><div id="eq-equity" style="font-size:14px;font-weight:700;color:#22C55E;">—</div></div>
+              <div style="flex:1;min-width:70px;"><div style="font-size:10px;color:#A8BECE;margin-bottom:2px;">Mortgage Bal.</div><div id="eq-mortgage" style="font-size:14px;font-weight:700;color:#F25C05;">—</div></div>
+            </div>
+            <div id="eq-property-row" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid rgba(34,197,94,.2);font-size:11px;color:#A8BECE;line-height:1.6;"><span id="eq-year-built"></span></div>
+          </div>
+          <!-- Photos -->
+          <div class="fg" style="margin-bottom:0;">
+            <div class="fl" style="font-size:10px;">Property Photos <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:9px;">— first photo on mailer</span></div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <div id="home-photo-preview" onclick="openPhotoModal()" title="Click to manage photos" style="width:64px;height:48px;background:var(--card2);border:2px dashed var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--muted);overflow:hidden;flex-shrink:0;cursor:pointer;">No photo</div>
+              <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+                <button onclick="openPhotoModal()" style="background:var(--accent);border:none;border-radius:7px;padding:9px 12px;text-align:center;cursor:pointer;color:#fff;font-size:12px;font-weight:700;width:100%;">📷 Manage Photos</button>
+                <div id="est-photo-strip" style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;min-height:16px;"><span style="color:var(--muted);font-size:11px;">No photos yet</span></div>
+              </div>
+            </div>
+            <input type="file" id="home-photo-inp" accept="image/*" style="display:none;" onchange="handleHomePhoto(this)">
+            <button id="clear-photo-btn" onclick="clearHomePhoto()" style="display:none;"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ CARD 3: TRADE & PRICING ══ -->
+      <div class="acc-card" id="acc-card-trade">
+        <div class="acc-hdr" id="acc-hdr-trade" onclick="toggleAccCard('trade')">
+          <div class="acc-hdr-left">
+            <div class="acc-dot" id="acc-dot-trade"></div>
+            <div class="acc-icon">🔧</div>
+            <div>
+              <div class="acc-title">Trade &amp; Pricing</div>
+              <div class="acc-summary" id="acc-sum-trade">Select trade to build estimate</div>
+            </div>
+          </div>
+          <div class="acc-chevron">▼</div>
+        </div>
+        <div class="acc-body" id="acc-body-trade">
+          <!-- Insurance claim details (shown only in insurance mode) -->
+          <div id="ins-claim-section" style="display:none;background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.2);border-radius:10px;padding:12px;margin-bottom:12px;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#60A5FA;margin-bottom:10px;">🏛 Insurance Claim Details</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div class="fg" style="margin-bottom:0;">
+            <div class="fl">Claim Number</div>
+            <input class="fi" id="ins-claim-num" placeholder="e.g. CLM-2026-48821" oninput="scheduleDraftSave()">
+          </div>
+          <div class="fg" style="margin-bottom:0;">
+            <div class="fl">Insurance Company</div>
+            <input class="fi" id="ins-carrier" placeholder="e.g. State Farm" oninput="scheduleDraftSave()">
+          </div>
+          <div class="fg" style="margin-bottom:0;">
+            <div class="fl">Date of Loss</div>
+            <input class="fi" id="ins-dol" type="date" oninput="scheduleDraftSave()">
+          </div>
+          <div class="fg" style="margin-bottom:0;">
+            <div class="fl">Policy Number</div>
+            <input class="fi" id="ins-policy" placeholder="e.g. SF-9921-44B" oninput="scheduleDraftSave()">
+          </div>
+          <div class="fg" style="margin-bottom:0;">
+            <div class="fl">Adjuster Name</div>
+            <input class="fi" id="ins-adjuster" placeholder="Adjuster name" oninput="scheduleDraftSave()">
+          </div>
+          <div class="fg" style="margin-bottom:0;">
+            <div class="fl">Adjuster Phone</div>
+            <input class="fi" id="ins-adj-phone" placeholder="(555) 000-0000" type="tel" oninput="scheduleDraftSave()">
+          </div>
+          <div class="fg" style="margin-bottom:0;">
+            <div class="fl">Price List Code <span title="Xactimate regional price list, e.g. MIDET8X_JUN26" style="cursor:help;color:var(--muted);">ⓘ</span></div>
+            <input class="fi" id="ins-price-list" placeholder="e.g. MIDET8X_JUN26" oninput="scheduleDraftSave()">
+          </div>
+          <div class="fg" style="margin-bottom:0;">
+            <div class="fl">Deductible ($)</div>
+            <input class="fi" id="ins-deductible" type="number" placeholder="1000" min="0" oninput="calcInsuranceTotals();scheduleDraftSave()">
+          </div>
+        </div>
+        <!-- O&P + Depreciation row -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;">
+          <div class="fg" style="margin-bottom:0;">
+            <label class="fl" style="display:flex;align-items:center;gap:6px;">
+              <input type="checkbox" id="ins-op-toggle" checked onchange="calcInsuranceTotals()" style="accent-color:var(--accent);width:14px;height:14px;">
+              O&amp;P %
+            </label>
+            <input class="fi" id="ins-op-pct" type="number" value="20" min="0" max="50" oninput="calcInsuranceTotals()">
+          </div>
+          <div class="fg" style="margin-bottom:0;">
+            <div class="fl">Depreciation %</div>
+            <input class="fi" id="ins-depr-pct" type="number" value="0" min="0" max="80" oninput="calcInsuranceTotals()">
+          </div>
+          <div class="fg" style="margin-bottom:0;">
+            <div class="fl">Roof Age (yrs) <span style="font-size:10px;color:var(--muted);">(auto-calc)</span></div>
+            <input class="fi" id="ins-roof-age" type="number" placeholder="12" min="0" max="50" oninput="autoCalcDepreciation()">
+          </div>
+        </div>
+        <!-- Insurance totals summary -->
+        <div id="ins-totals-box" style="margin-top:12px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:12px;">
+          <div style="display:flex;justify-content:space-between;padding:3px 0;color:var(--mid);"><span>Subtotal (materials + labor)</span><span id="ins-t-subtotal">$0</span></div>
+          <div id="ins-steep-row" style="display:none;justify-content:space-between;padding:3px 0;color:var(--mid);"><span id="ins-steep-lbl">Steep slope surcharge</span><span id="ins-t-steep">$0</span></div>
+          <div id="ins-stories-row" style="display:none;justify-content:space-between;padding:3px 0;color:var(--mid);"><span id="ins-stories-lbl">High roof surcharge</span><span id="ins-t-stories">$0</span></div>
+          <div id="ins-op-row" style="display:flex;justify-content:space-between;padding:3px 0;color:var(--mid);"><span id="ins-op-lbl">O&amp;P (20%)</span><span id="ins-t-op">$0</span></div>
+          <div style="display:flex;justify-content:space-between;padding:3px 0;color:var(--mid);"><span>Sales Tax (<span id="ins-tax-pct-lbl">0</span>%)</span><span id="ins-t-tax">$0</span></div>
+          <div style="display:flex;justify-content:space-between;padding:5px 0;border-top:1px solid var(--border);margin-top:4px;font-weight:700;color:#60A5FA;"><span>RCV (Replacement Cost Value)</span><span id="ins-t-rcv">$0</span></div>
+          <div style="display:flex;justify-content:space-between;padding:3px 0;color:#EF4444;"><span>Depreciation (<span id="ins-depr-pct-lbl">0</span>%)</span><span id="ins-t-depr">−$0</span></div>
+          <div style="display:flex;justify-content:space-between;padding:3px 0;color:var(--mid);"><span>ACV (Actual Cash Value)</span><span id="ins-t-acv">$0</span></div>
+          <div style="display:flex;justify-content:space-between;padding:3px 0;color:#EF4444;"><span>Deductible</span><span id="ins-t-ded">−$0</span></div>
+          <div style="display:flex;justify-content:space-between;padding:5px 0;border-top:1px solid var(--border);margin-top:4px;font-weight:700;color:#22C55E;"><span>Est. Insurance Payout</span><span id="ins-t-payout">$0</span></div>
+        </div>
+          </div><!-- /ins-claim-section -->
+          <!-- TRADE SELECTOR -->
+      <div id="trade-selector-wrap" style="margin-bottom:12px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--accent);margin-bottom:12px;display:flex;align-items:center;gap:6px;">🔧 Select Trade <span style="font-weight:400;color:var(--muted);font-size:10px;text-transform:none;letter-spacing:0;">— choose one to build estimate</span></div>
+        <div id="trade-selector-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+          <!-- Populated dynamically by renderTradeSelector() -->
+        </div>
+        <div id="trade-selector-empty" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:12px;font-size:12px;color:#EF4444;text-align:center;">
+          ⚠️ No trades enabled. Go to Settings → Pricing and enable at least one trade.
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════════
+           TRADE FORMS — one per trade, shown/hidden based on selection
+      ═══════════════════════════════════════════════════════════════════ -->
+
+      <!-- ── ROOFING FORM (existing structures system) ── -->
+      <div id="trade-form-roofing" style="display:none;">
+        <!-- Existing roofing content is kept below; this wrapper just controls visibility -->
+      </div>
+
+      <!-- ── SOLAR FORM ── -->
+      <div id="trade-form-solar" style="display:none;">
+        <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:#22C55E;">☀️ SOLAR ESTIMATE</div>
+            <div style="display:flex;align-items:center;gap:0;background:var(--card);border:1px solid var(--border);border-radius:7px;overflow:hidden;">
+              <button id="solar-mode-simple-btn" onclick="setSolarMode('simple')" style="padding:5px 10px;font-size:10px;font-weight:700;border:none;cursor:pointer;background:#22C55E;color:#000;transition:all .15s;">Simple</button>
+              <button id="solar-mode-detailed-btn" onclick="setSolarMode('detailed')" style="padding:5px 10px;font-size:10px;font-weight:700;border:none;cursor:pointer;background:none;color:var(--muted);transition:all .15s;">Detailed</button>
+            </div>
+          </div>
+          <div id="solar-autocalc-banner" style="display:none;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#22C55E;">
+            📡 Auto-calculated from satellite data — adjust below if needed
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <div class="fl">System Size (kW) <span style="font-weight:400;color:var(--muted);font-size:10px;">— auto from satellite</span></div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <input type="number" class="fi" id="te-solar-kw" placeholder="8.5" step="0.1" min="0" oninput="calcTradeSolar()" style="flex:1;margin-bottom:0;">
+              <button onclick="autoCalcSolar()" style="flex-shrink:0;padding:0 10px;height:38px;background:rgba(34,197,94,.15);color:#22C55E;border:1px solid rgba(34,197,94,.3);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🛰 Auto</button>
+            </div>
+          </div>
+          <!-- Simple mode: flat price override -->
+          <div id="solar-simple-fields" style="">
+            <div class="fg" style="margin-bottom:10px;">
+              <div class="fl">Flat Price Override <span style="font-weight:400;color:var(--muted);font-size:10px;">— leave blank to use kW × $/W</span></div>
+              <input type="number" class="fi" id="te-solar-flat" placeholder="e.g. 28000" step="100" min="0" oninput="calcTradeSolar()" style="margin-bottom:0;">
+            </div>
+          </div>
+          <!-- Detailed mode: add-ons -->
+          <div id="solar-detailed-fields" style="display:none;">
+            <div class="fg" style="margin-bottom:10px;">
+              <div class="fl">Battery Add-On</div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input type="checkbox" id="te-solar-battery" style="accent-color:var(--accent);width:16px;height:16px;" onchange="calcTradeSolar()">
+                <label for="te-solar-battery" style="font-size:12px;color:var(--mid);cursor:pointer;">Include battery storage</label>
+                <span id="te-solar-battery-price" style="font-size:11px;color:var(--muted);margin-left:auto;"></span>
+              </div>
+            </div>
+            <div class="fg" style="margin-bottom:10px;">
+              <div class="fl">Panel Upgrade</div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input type="checkbox" id="te-solar-panel-upgrade" style="accent-color:var(--accent);width:16px;height:16px;" onchange="calcTradeSolar()">
+                <label for="te-solar-panel-upgrade" style="font-size:12px;color:var(--mid);cursor:pointer;">Premium panel upgrade</label>
+              </div>
+            </div>
+            <div class="fg" style="margin-bottom:10px;">
+              <div class="fl">Electrical Panel Upgrade</div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input type="checkbox" id="te-solar-elec-upgrade" style="accent-color:var(--accent);width:16px;height:16px;" onchange="calcTradeSolar()">
+                <label for="te-solar-elec-upgrade" style="font-size:12px;color:var(--mid);cursor:pointer;">Electrical panel upgrade</label>
+              </div>
+            </div>
+            <div class="fg" style="margin-bottom:10px;">
+              <div class="fl">Roof Reinforcement</div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input type="checkbox" id="te-solar-roof-reinforce" style="accent-color:var(--accent);width:16px;height:16px;" onchange="calcTradeSolar()">
+                <label for="te-solar-roof-reinforce" style="font-size:12px;color:var(--mid);cursor:pointer;">Roof reinforcement needed</label>
+              </div>
+            </div>
+          </div>
+          <div id="te-solar-incentives-row" style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.15);border-radius:8px;padding:10px;margin-bottom:10px;font-size:12px;color:var(--mid);">
+            <div style="font-weight:700;color:#22C55E;margin-bottom:6px;">💰 Incentives Applied</div>
+            <div id="te-solar-incentives-detail"></div>
+          </div>
+          <div id="te-solar-total-box" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Net Solar Estimate</div>
+            <div id="te-solar-total" style="font-size:28px;font-weight:800;color:var(--accent);font-family:var(--font-h);">$0</div>
+            <div id="te-solar-monthly" style="font-size:11px;color:#22C55E;margin-top:4px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── FENCING FORM ── -->
+      <div id="trade-form-fencing" style="display:none;">
+        <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--accent);margin-bottom:12px;">🪵 FENCING ESTIMATE</div>
+          <div class="fg" style="margin-bottom:10px;">
+            <div class="fl">Fence Type</div>
+            <select class="fs" id="te-fen-type" onchange="calcTradeFencing()">
+              <option value="wood">🪵 Wood</option>
+              <option value="vinyl">🏠 Vinyl</option>
+              <option value="chain">⛓ Chain Link</option>
+              <option value="aluminum">🏗 Aluminum</option>
+              <option value="split">🌲 Split Rail</option>
+              <option value="cedar">🌳 Cedar</option>
+            </select>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <div class="fl">Linear Footage <span style="font-weight:400;color:var(--muted);font-size:10px;">— auto from property perimeter</span></div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <input type="number" class="fi" id="te-fen-lf" placeholder="150" min="1" oninput="calcTradeFencing()" style="flex:1;margin-bottom:0;">
+              <button onclick="autoCalcFencing()" style="flex-shrink:0;padding:0 10px;height:38px;background:rgba(242,92,5,.15);color:var(--accent);border:1px solid rgba(242,92,5,.3);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🛰 Auto</button>
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <div class="fl">Gates</div>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-fen-gate-single" style="accent-color:var(--accent);" onchange="calcTradeFencing()"> Single Gate</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-fen-gate-double" style="accent-color:var(--accent);" onchange="calcTradeFencing()"> Double Gate</label>
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <div class="fl">Old Fence Removal</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="checkbox" id="te-fen-removal" style="accent-color:var(--accent);width:16px;height:16px;" onchange="calcTradeFencing()">
+              <label for="te-fen-removal" style="font-size:12px;color:var(--mid);cursor:pointer;">Remove existing fence</label>
+            </div>
+          </div>
+          <div id="te-fen-total-box" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Fencing Estimate</div>
+            <div id="te-fen-total" style="font-size:28px;font-weight:800;color:var(--accent);font-family:var(--font-h);">$0</div>
+            <div id="te-fen-breakdown" style="font-size:11px;color:var(--muted);margin-top:4px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SIDING FORM ── -->
+      <div id="trade-form-siding" style="display:none;">
+        <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--accent);margin-bottom:12px;">🏗 SIDING ESTIMATE</div>
+          <div class="fg" style="margin-bottom:10px;">
+            <div class="fl">Siding Material</div>
+            <select class="fs" id="te-sid-type" onchange="calcTradeSiding()">
+              <option value="vinyl">🏠 Vinyl</option>
+              <option value="hardie">🧱 Fiber Cement (Hardie)</option>
+              <option value="wood">🪵 Wood / Cedar</option>
+              <option value="engwood">🌲 Engineered Wood</option>
+              <option value="metal">🏗 Metal / Steel</option>
+              <option value="stucco">🏛 Stucco</option>
+            </select>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <div class="fl">Wall Square Footage <span style="font-weight:400;color:var(--muted);font-size:10px;">— auto from building footprint</span></div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <input type="number" class="fi" id="te-sid-sqft" placeholder="1200" min="1" oninput="calcTradeSiding()" style="flex:1;margin-bottom:0;">
+              <button onclick="autoCalcSiding()" style="flex-shrink:0;padding:0 10px;height:38px;background:rgba(242,92,5,.15);color:var(--accent);border:1px solid rgba(242,92,5,.3);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🛰 Auto</button>
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <div class="fl">Add-Ons</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-sid-removal" style="accent-color:var(--accent);" onchange="calcTradeSiding()"> Old siding removal</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-sid-housewrap" style="accent-color:var(--accent);" onchange="calcTradeSiding()"> House wrap / moisture barrier</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-sid-insulation" style="accent-color:var(--accent);" onchange="calcTradeSiding()"> Insulation backer</label>
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <div class="fl">Trim / Fascia (linear ft)</div>
+            <input type="number" class="fi" id="te-sid-trim-lf" placeholder="0" min="0" oninput="calcTradeSiding()">
+          </div>
+          <div id="te-sid-total-box" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Siding Estimate</div>
+            <div id="te-sid-total" style="font-size:28px;font-weight:800;color:var(--accent);font-family:var(--font-h);">$0</div>
+            <div id="te-sid-breakdown" style="font-size:11px;color:var(--muted);margin-top:4px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── GUTTERS FORM ── -->
+      <div id="trade-form-gutters" style="display:none;">
+        <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--accent);margin-bottom:12px;">🌊 GUTTERS ESTIMATE</div>
+          <div class="fg" style="margin-bottom:10px;">
+            <div class="fl">Gutter Type</div>
+            <select class="fs" id="te-gut-type" onchange="calcTradeGutters()">
+              <option value="alum5">Aluminum 5" K-Style</option>
+              <option value="alum6">Aluminum 6" K-Style</option>
+              <option value="seamless">Seamless Aluminum</option>
+              <option value="copper">Copper</option>
+              <option value="halfrnd">Half-Round</option>
+              <option value="vinyl">Vinyl</option>
+            </select>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <div class="fl">Linear Footage <span style="font-weight:400;color:var(--muted);font-size:10px;">— auto from roof perimeter</span></div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <input type="number" class="fi" id="te-gut-lf" placeholder="180" min="1" oninput="calcTradeGutters()" style="flex:1;margin-bottom:0;">
+              <button onclick="autoCalcGutters()" style="flex-shrink:0;padding:0 10px;height:38px;background:rgba(242,92,5,.15);color:var(--accent);border:1px solid rgba(242,92,5,.3);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🛰 Auto</button>
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <div class="fl">Downspouts (qty)</div>
+            <input type="number" class="fi" id="te-gut-downspouts" placeholder="4" min="0" oninput="calcTradeGutters()">
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <div class="fl">Add-Ons</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-gut-guard" style="accent-color:var(--accent);" onchange="calcTradeGutters()"> Gutter guard / screen</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-gut-removal" style="accent-color:var(--accent);" onchange="calcTradeGutters()"> Old gutter removal</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-gut-fascia" style="accent-color:var(--accent);" onchange="calcTradeGutters()"> Fascia board repair</label>
+            </div>
+          </div>
+          <div id="te-gut-total-box" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Gutters Estimate</div>
+            <div id="te-gut-total" style="font-size:28px;font-weight:800;color:var(--accent);font-family:var(--font-h);">$0</div>
+            <div id="te-gut-breakdown" style="font-size:11px;color:var(--muted);margin-top:4px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── INSULATION FORM ── -->
+      <div id="trade-form-insulation" style="display:none;">
+        <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--accent);margin-bottom:12px;">🏠 INSULATION ESTIMATE</div>
+          <div class="fg" style="margin-bottom:10px;">
+            <div class="fl">Insulation Type</div>
+            <select class="fs" id="te-ins-type" onchange="calcTradeInsulation()">
+              <option value="blowR30">Blown-In Fiberglass R-30</option>
+              <option value="blowR38">Blown-In Fiberglass R-38</option>
+              <option value="cellR30">Blown-In Cellulose R-30</option>
+              <option value="cellR38">Blown-In Cellulose R-38</option>
+              <option value="foamOpen">Open-Cell Spray Foam</option>
+              <option value="foamClosed">Closed-Cell Spray Foam</option>
+              <option value="battR13">Fiberglass Batt R-13</option>
+              <option value="battR19">Fiberglass Batt R-19</option>
+            </select>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <div class="fl">Attic Square Footage <span style="font-weight:400;color:var(--muted);font-size:10px;">— auto from roof area</span></div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <input type="number" class="fi" id="te-ins-sqft" placeholder="1200" min="1" oninput="calcTradeInsulation()" style="flex:1;margin-bottom:0;">
+              <button onclick="autoCalcInsulation()" style="flex-shrink:0;padding:0 10px;height:38px;background:rgba(242,92,5,.15);color:var(--accent);border:1px solid rgba(242,92,5,.3);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🛰 Auto</button>
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <div class="fl">Add-Ons</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-ins-removal" style="accent-color:var(--accent);" onchange="calcTradeInsulation()"> Old insulation removal</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-ins-airsealing" style="accent-color:var(--accent);" onchange="calcTradeInsulation()"> Air sealing</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-ins-vapor" style="accent-color:var(--accent);" onchange="calcTradeInsulation()"> Vapor barrier</label>
+            </div>
+          </div>
+          <div id="te-ins-total-box" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Insulation Estimate</div>
+            <div id="te-ins-total" style="font-size:28px;font-weight:800;color:var(--accent);font-family:var(--font-h);">$0</div>
+            <div id="te-ins-breakdown" style="font-size:11px;color:var(--muted);margin-top:4px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── EXTERIOR PAINT FORM ── -->
+      <div id="trade-form-paint" style="display:none;">
+        <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--accent);margin-bottom:12px;">🎨 EXTERIOR PAINT ESTIMATE</div>
+          <div class="fg" style="margin-bottom:10px;">
+            <div class="fl">Primary Surface</div>
+            <select class="fs" id="te-pnt-surface" onchange="calcTradePaint()">
+              <option value="siding1c">Siding — 1 Coat</option>
+              <option value="siding2c">Siding — 2 Coats</option>
+              <option value="deck1c">Deck / Porch — 1 Coat</option>
+              <option value="deck2c">Deck / Porch — 2 Coats</option>
+              <option value="masonry">Foundation / Masonry</option>
+            </select>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <div class="fl">Square Footage <span style="font-weight:400;color:var(--muted);font-size:10px;">— auto from building footprint</span></div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <input type="number" class="fi" id="te-pnt-sqft" placeholder="1200" min="1" oninput="calcTradePaint()" style="flex:1;margin-bottom:0;">
+              <button onclick="autoCalcPaint()" style="flex-shrink:0;padding:0 10px;height:38px;background:rgba(242,92,5,.15);color:var(--accent);border:1px solid rgba(242,92,5,.3);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🛰 Auto</button>
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <div class="fl">Trim / Fascia (linear ft)</div>
+            <input type="number" class="fi" id="te-pnt-trim-lf" placeholder="0" min="0" oninput="calcTradePaint()">
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <div class="fl">Add-Ons</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-pnt-powerwash" style="accent-color:var(--accent);" onchange="calcTradePaint()"> Power washing</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-pnt-primer" style="accent-color:var(--accent);" onchange="calcTradePaint()"> Primer coat</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-pnt-garage-door" style="accent-color:var(--accent);" onchange="calcTradePaint()"> Garage door painting</label>
+            </div>
+          </div>
+          <div id="te-pnt-total-box" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Paint Estimate</div>
+            <div id="te-pnt-total" style="font-size:28px;font-weight:800;color:var(--accent);font-family:var(--font-h);">$0</div>
+            <div id="te-pnt-breakdown" style="font-size:11px;color:var(--muted);margin-top:4px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── DOORS FORM ── -->
+      <div id="trade-form-doors" style="display:none;">
+        <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--accent);margin-bottom:12px;">🚪 DOORS ESTIMATE</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+            <div>
+              <label class="fl" style="margin-bottom:6px;">Steel Entry Door</label>
+              <input type="number" class="fi" id="te-dor-steel-entry" placeholder="0" min="0" oninput="calcTradeDoors()">
+            </div>
+            <div>
+              <label class="fl" style="margin-bottom:6px;">Fiberglass Entry Door</label>
+              <input type="number" class="fi" id="te-dor-fiber-entry" placeholder="0" min="0" oninput="calcTradeDoors()">
+            </div>
+            <div>
+              <label class="fl" style="margin-bottom:6px;">Wood Entry Door</label>
+              <input type="number" class="fi" id="te-dor-wood-entry" placeholder="0" min="0" oninput="calcTradeDoors()">
+            </div>
+            <div>
+              <label class="fl" style="margin-bottom:6px;">Storm Door</label>
+              <input type="number" class="fi" id="te-dor-storm" placeholder="0" min="0" oninput="calcTradeDoors()">
+            </div>
+            <div>
+              <label class="fl" style="margin-bottom:6px;">Single Garage Door</label>
+              <input type="number" class="fi" id="te-dor-garage-single" placeholder="0" min="0" oninput="calcTradeDoors()">
+            </div>
+            <div>
+              <label class="fl" style="margin-bottom:6px;">Double Garage Door</label>
+              <input type="number" class="fi" id="te-dor-garage-double" placeholder="0" min="0" oninput="calcTradeDoors()">
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:10px;">
+            <div class="fl">Add-Ons</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-dor-hardware" style="accent-color:var(--accent);" onchange="calcTradeDoors()"> Hardware / deadbolt upgrade (per door)</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-dor-weatherstrip" style="accent-color:var(--accent);" onchange="calcTradeDoors()"> Weatherstripping (per door)</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-dor-opener" style="accent-color:var(--accent);" onchange="calcTradeDoors()"> Garage door opener</label>
+            </div>
+          </div>
+          <div id="te-dor-total-box" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Doors Estimate</div>
+            <div id="te-dor-total" style="font-size:28px;font-weight:800;color:var(--accent);font-family:var(--font-h);">$0</div>
+            <div id="te-dor-breakdown" style="font-size:11px;color:var(--muted);margin-top:4px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── WINDOWS FORM ── -->
+      <div id="trade-form-windows" style="display:none;">
+        <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--accent);margin-bottom:12px;">🪟 WINDOWS ESTIMATE</div>
+
+          <!-- Method selector -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:14px;">
+            <button onclick="setWinMethod('A')" id="win-method-A" style="padding:10px 4px;border-radius:8px;border:2px solid var(--accent);background:rgba(242,92,5,.12);color:var(--accent);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;text-align:center;">
+              🏠 Method A<br><span style="font-size:10px;font-weight:400;color:var(--muted);">By home size</span>
+            </button>
+            <button onclick="setWinMethod('B')" id="win-method-B" style="padding:10px 4px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;text-align:center;">
+              🔢 Method B<br><span style="font-size:10px;font-weight:400;color:var(--muted);">Window type mix</span>
+            </button>
+            <button onclick="setWinMethod('C')" id="win-method-C" style="padding:10px 4px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;text-align:center;">
+              📐 Method C<br><span style="font-size:10px;font-weight:400;color:var(--muted);">Count each window</span>
+            </button>
+          </div>
+
+          <!-- METHOD A: By home size -->
+          <div id="win-form-A">
+            <div class="fg" style="margin-bottom:10px;">
+              <div class="fl">Home Size</div>
+              <select class="fs" id="te-win-size" onchange="calcTradeWindows()">
+                <option value="sm">Small (&lt; 1,200 sqft) — ~9 windows</option>
+                <option value="md" selected>Medium (1,200–2,000 sqft) — ~13 windows</option>
+                <option value="lg">Large (2,000–3,000 sqft) — ~18 windows</option>
+                <option value="xl">XL (3,000+ sqft) — ~25 windows</option>
+              </select>
+            </div>
+            <div class="fg" style="margin-bottom:10px;">
+              <div class="fl">Dominant Window Type</div>
+              <select class="fs" id="te-win-type-A" onchange="calcTradeWindows()">
+                <option value="dbl_hung">Double-Hung (most common)</option>
+                <option value="casement">Casement</option>
+                <option value="picture">Picture / Fixed</option>
+                <option value="sliding">Sliding</option>
+              </select>
+            </div>
+            <div class="fg" style="margin-bottom:10px;">
+              <div class="fl">Estimated Window Count <span style="font-weight:400;color:var(--muted);font-size:10px;">— adjust if you can see the house</span></div>
+              <input type="number" class="fi" id="te-win-count-A" placeholder="13" min="1" oninput="calcTradeWindows()">
+            </div>
+          </div>
+
+          <!-- METHOD B: Window type mix -->
+          <div id="win-form-B" style="display:none;">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Enter approximate quantities for each window type you observed:</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+              <div><label class="fl" style="margin-bottom:4px;">Double-Hung</label><input type="number" class="fi" id="te-win-b-dblhung" placeholder="0" min="0" oninput="calcTradeWindows()"></div>
+              <div><label class="fl" style="margin-bottom:4px;">Casement</label><input type="number" class="fi" id="te-win-b-casement" placeholder="0" min="0" oninput="calcTradeWindows()"></div>
+              <div><label class="fl" style="margin-bottom:4px;">Picture / Fixed</label><input type="number" class="fi" id="te-win-b-picture" placeholder="0" min="0" oninput="calcTradeWindows()"></div>
+              <div><label class="fl" style="margin-bottom:4px;">Sliding</label><input type="number" class="fi" id="te-win-b-sliding" placeholder="0" min="0" oninput="calcTradeWindows()"></div>
+              <div><label class="fl" style="margin-bottom:4px;">Bay / Bow</label><input type="number" class="fi" id="te-win-b-bay" placeholder="0" min="0" oninput="calcTradeWindows()"></div>
+              <div><label class="fl" style="margin-bottom:4px;">Storm Windows</label><input type="number" class="fi" id="te-win-b-storm" placeholder="0" min="0" oninput="calcTradeWindows()"></div>
+            </div>
+            <div id="te-win-b-count-display" style="font-size:12px;color:var(--muted);margin-bottom:10px;text-align:center;"></div>
+          </div>
+
+          <!-- METHOD C: Count each window individually -->
+          <div id="win-form-C" style="display:none;">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Walk the house and count each window type:</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+              <div><label class="fl" style="margin-bottom:4px;">Double-Hung</label><input type="number" class="fi" id="te-win-c-dblhung" placeholder="0" min="0" oninput="calcTradeWindows()"></div>
+              <div><label class="fl" style="margin-bottom:4px;">Casement</label><input type="number" class="fi" id="te-win-c-casement" placeholder="0" min="0" oninput="calcTradeWindows()"></div>
+              <div><label class="fl" style="margin-bottom:4px;">Picture / Fixed</label><input type="number" class="fi" id="te-win-c-picture" placeholder="0" min="0" oninput="calcTradeWindows()"></div>
+              <div><label class="fl" style="margin-bottom:4px;">Sliding</label><input type="number" class="fi" id="te-win-c-sliding" placeholder="0" min="0" oninput="calcTradeWindows()"></div>
+              <div><label class="fl" style="margin-bottom:4px;">Bay / Bow</label><input type="number" class="fi" id="te-win-c-bay" placeholder="0" min="0" oninput="calcTradeWindows()"></div>
+              <div><label class="fl" style="margin-bottom:4px;">Skylight</label><input type="number" class="fi" id="te-win-c-skylight" placeholder="0" min="0" oninput="calcTradeWindows()"></div>
+              <div><label class="fl" style="margin-bottom:4px;">Storm Windows</label><input type="number" class="fi" id="te-win-c-storm" placeholder="0" min="0" oninput="calcTradeWindows()"></div>
+              <div><label class="fl" style="margin-bottom:4px;">Egress</label><input type="number" class="fi" id="te-win-c-egress" placeholder="0" min="0" oninput="calcTradeWindows()"></div>
+            </div>
+            <div id="te-win-c-count-display" style="font-size:12px;color:var(--muted);margin-bottom:10px;text-align:center;"></div>
+          </div>
+
+          <!-- Shared add-ons (all methods) -->
+          <div class="fg" style="margin-bottom:10px;">
+            <div class="fl">Add-Ons</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-win-lowe" style="accent-color:var(--accent);" onchange="calcTradeWindows()"> Low-E / Energy glass upgrade</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-win-triple" style="accent-color:var(--accent);" onchange="calcTradeWindows()"> Triple pane upgrade</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-win-trim" style="accent-color:var(--accent);" onchange="calcTradeWindows()"> Trim / casing upgrade</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);cursor:pointer;"><input type="checkbox" id="te-win-removal" style="accent-color:var(--accent);" onchange="calcTradeWindows()"> Old window removal</label>
+            </div>
+          </div>
+
+          <div id="te-win-total-box" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Windows Estimate</div>
+            <div id="te-win-total" style="font-size:28px;font-weight:800;color:var(--accent);font-family:var(--font-h);">$0</div>
+            <div id="te-win-breakdown" style="font-size:11px;color:var(--muted);margin-top:4px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── MULTI-TRADE BUNDLE BAR ── -->
+      <div id="trade-bundle-bar" style="display:none;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:12px 14px;margin-bottom:8px;">
+        <div style="font-size:11px;font-weight:700;color:#22C55E;margin-bottom:8px;">📦 BUNDLED PROPOSAL</div>
+        <div id="trade-bundle-list" style="font-size:12px;color:var(--mid);margin-bottom:10px;"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:10px;color:var(--muted);">Bundle Total</div>
+            <div id="trade-bundle-total" style="font-size:22px;font-weight:800;color:#22C55E;font-family:var(--font-h);">$0</div>
+          </div>
+          <button onclick="addAnotherTrade()" style="background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:8px 14px;color:#22C55E;font-size:12px;font-weight:700;cursor:pointer;">+ Add Another Trade</button>
+        </div>
+      </div>
+
+      <!-- Satellite Unavailable banner (shown when Solar API billing is disabled or unavailable) -->
+      <div id="solar-unavailable-banner" style="display:none;background:rgba(107,114,128,.08);border:1px solid rgba(107,114,128,.25);border-radius:10px;padding:10px 14px;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:20px;">&#128752;</span>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#A8BECE;margin-bottom:2px;">Satellite measurement unavailable</div>
+            <div style="font-size:10px;color:#6B7280;">Enter roof sq&nbsp;ft manually below, or try again later.</div>
+          </div>
+        </div>
+      </div>
+      <!-- Satellite Roof Measurement banner (shown after Solar API lookup) -->
+      <div id="solar-roof-banner" style="display:none;background:linear-gradient(135deg,#0a1628,#0f2a1a);border:1px solid rgba(242,92,5,.35);border-radius:10px;padding:12px 14px;margin-bottom:10px;">
+        <!-- Header row -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:#F25C05;">&#128752; SATELLITE ROOF &amp; SOLAR ANALYSIS</div>
+          <div id="solar-imagery-date" style="font-size:9px;color:var(--muted);"></div>
+        </div>
+        <!-- Row 1: Roof measurements -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+          <div style="flex:1;min-width:65px;background:rgba(255,255,255,.04);border-radius:6px;padding:7px 8px;">
+            <div style="font-size:9px;color:#A8BECE;margin-bottom:2px;">Roof Area</div>
+            <div id="solar-sqft" style="font-size:17px;font-weight:700;color:#FFFFFF;">—</div>
+            <div style="font-size:8px;color:var(--muted);">sq ft</div>
+          </div>
+          <div style="flex:1;min-width:65px;background:rgba(255,255,255,.04);border-radius:6px;padding:7px 8px;">
+            <div style="font-size:9px;color:#A8BECE;margin-bottom:2px;">Squares</div>
+            <div id="solar-squares" style="font-size:17px;font-weight:700;color:#F25C05;">—</div>
+            <div style="font-size:8px;color:var(--muted);">roofing sq</div>
+          </div>
+          <div style="flex:1;min-width:65px;background:rgba(255,255,255,.04);border-radius:6px;padding:7px 8px;">
+            <div style="font-size:9px;color:#A8BECE;margin-bottom:2px;">Pitch</div>
+            <div id="solar-pitch" style="font-size:17px;font-weight:700;color:#22C55E;">—</div>
+            <div style="font-size:8px;color:var(--muted);">dominant</div>
+          </div>
+          <div style="flex:1;min-width:65px;background:rgba(255,255,255,.04);border-radius:6px;padding:7px 8px;">
+            <div style="font-size:9px;color:#A8BECE;margin-bottom:2px;">Shading</div>
+            <div id="solar-shading" style="font-size:17px;font-weight:700;color:#22C55E;">—</div>
+            <div style="font-size:8px;color:var(--muted);">roof quality</div>
+          </div>
+        </div>
+        <!-- Row 2: Solar potential (hidden until data available) -->
+        <div id="solar-potential-row" style="display:none;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:8px;padding:9px 10px;margin-bottom:10px;">
+          <div style="font-size:9px;font-weight:700;letter-spacing:.6px;color:#22C55E;margin-bottom:8px;">&#9728;&#65039; SOLAR POTENTIAL (Project Sunroof)</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:70px;">
+              <div style="font-size:9px;color:#A8BECE;margin-bottom:1px;">System Size</div>
+              <div id="solar-system-kw" style="font-size:15px;font-weight:700;color:#FFFFFF;">—</div>
+              <div style="font-size:8px;color:var(--muted);">kW max</div>
+            </div>
+            <div style="flex:1;min-width:70px;">
+              <div style="font-size:9px;color:#A8BECE;margin-bottom:1px;">Max Panels</div>
+              <div id="solar-max-panels" style="font-size:15px;font-weight:700;color:#F25C05;">—</div>
+              <div id="solar-panel-w" style="font-size:8px;color:var(--muted);">— W each</div>
+            </div>
+            <div style="flex:1;min-width:70px;">
+              <div style="font-size:9px;color:#A8BECE;margin-bottom:1px;">Annual Output</div>
+              <div id="solar-annual-kwh" style="font-size:15px;font-weight:700;color:#22C55E;">—</div>
+              <div style="font-size:8px;color:var(--muted);">kWh/yr (AC)</div>
+            </div>
+            <div style="flex:1;min-width:70px;">
+              <div style="font-size:9px;color:#A8BECE;margin-bottom:1px;">Peak Sun</div>
+              <div id="solar-peak-sun" style="font-size:15px;font-weight:700;color:#FCD34D;">—</div>
+              <div style="font-size:8px;color:var(--muted);">hrs/day</div>
+            </div>
+          </div>
+          <!-- Carbon offset row -->
+          <div id="solar-carbon-row" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid rgba(34,197,94,.15);display:flex;gap:10px;flex-wrap:wrap;">
+            <div style="font-size:9px;color:#86EFAC;">&#127807; Carbon offset: <span id="solar-carbon-kg" style="font-weight:700;color:#22C55E;">—</span> kg CO&#8322;/yr &nbsp;&#8776;&nbsp; <span id="solar-trees" style="font-weight:700;color:#22C55E;">—</span> trees planted/yr</div>
+          </div>
+        </div>
+        <!-- Segment shading breakdown (collapsible) -->
+        <div id="solar-segments-wrap" style="display:none;margin-bottom:10px;">
+          <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'" style="font-size:9px;font-weight:700;color:#6688A8;cursor:pointer;margin-bottom:4px;letter-spacing:.4px;">&#9660; ROOF SEGMENTS &amp; SHADING</div>
+          <div id="solar-segments-list" style="display:none;"></div>
+        </div>
+        <!-- Action buttons -->
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <button onclick="applySolarToEstimate()" style="background:#F25C05;border:none;border-radius:7px;padding:7px 14px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">&#10003; Apply to Estimate</button>
+          <button id="solar-autofill-kw-btn" onclick="applySolarKwToAddon()" style="display:none;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);border-radius:7px;padding:7px 12px;color:#22C55E;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#9728;&#65039; Add Solar Add-On (<span id="solar-autofill-kw-label">—</span> kW)</button>
+          <span style="font-size:10px;color:var(--muted);">Auto-fills sq ft &amp; pitch</span>
+        </div>
+      </div>
+      <!-- Equity snapshot badge (shown after RentCast lookup) -->
+      <div id="equity-badge" style="display:none;background:linear-gradient(135deg,#0f2027,#1a3a2a);border:1px solid #22C55E44;border-radius:10px;padding:12px 14px;margin-bottom:10px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:#22C55E;margin-bottom:6px;">🏠 PROPERTY SNAPSHOT</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:80px;">
+            <div style="font-size:10px;color:#A8BECE;margin-bottom:2px;">Est. Value</div>
+            <div id="eq-value" style="font-size:15px;font-weight:700;color:#FFFFFF;">—</div>
+          </div>
+          <div style="flex:1;min-width:80px;">
+            <div style="font-size:10px;color:#A8BECE;margin-bottom:2px;">Est. Equity</div>
+            <div id="eq-equity" style="font-size:15px;font-weight:700;color:#22C55E;">—</div>
+          </div>
+          <div style="flex:1;min-width:80px;">
+            <div style="font-size:10px;color:#A8BECE;margin-bottom:2px;">Mortgage Bal.</div>
+            <div id="eq-mortgage" style="font-size:15px;font-weight:700;color:#F25C05;">—</div>
+          </div>
+        </div>
+        <div id="eq-property-row" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid rgba(34,197,94,.2);font-size:12px;color:#A8BECE;line-height:1.6;">
+          <span id="eq-year-built"></span>
+        </div>
+      </div>
+      <div class="fg" id="estimate-page-settings-section" style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:12px;">
+        <label class="fl" style="color:#10b981;">&#127758; Estimate Page Settings <span id="estimate-page-plan-badge" style="display:none;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;background:#D97706;color:#fff;margin-left:6px;text-transform:uppercase;letter-spacing:.5px;">Pro+ Only</span></label>
+        <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-top:6px;">
+          <div>
+            <label style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Offer Expires</label>
+            <input class="fi" id="e-expires" type="date" style="margin-top:3px;font-size:12px;" title="Optional: set an expiration date shown as a countdown on the estimate page">
+          </div>
+          <div>
+            <label style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Rep Video <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;">&#8212; shown on homeowner estimate page</span></label>
+            <div style="margin-top:4px;display:flex;flex-direction:column;gap:5px;">
+              <!-- YouTube link only -->
+              <div style="display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:7px 10px;">
+                <span style="font-size:15px;">&#127910;</span>
+                <span style="font-size:11px;color:var(--mid);font-weight:700;">YouTube</span>
+                <span style="font-size:11px;color:var(--muted);">&#47;</span>
+                <span style="font-size:11px;color:var(--mid);font-weight:700;">Vimeo</span>
+                <span style="font-size:11px;color:var(--muted);">&#47;</span>
+                <span style="font-size:11px;color:var(--mid);font-weight:700;">Loom</span>
+              </div>
+              <input class="fi" id="e-video" type="url" placeholder="YouTube, Vimeo, or Loom link" style="font-size:12px;" oninput="onEstVideoUrlInput()">
+              <div style="font-size:10px;color:var(--muted);">&#127381; Keep it under 45 seconds &mdash; short &amp; personal wins every time. We embed it directly on the homeowner&rsquo;s estimate page.<br>Supports YouTube, Vimeo, and Loom.</div>
+              <!-- Preview / status -->
+              <div id="e-video-status" style="display:none;font-size:11px;color:var(--accent);font-weight:600;"></div>
+              <div id="e-video-preview-wrap" style="display:none;border-radius:8px;overflow:hidden;background:#000;aspect-ratio:16/9;"></div>
+              <button id="e-video-clear-btn" onclick="clearEstVideo()" style="display:none;background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-align:left;">&#10005; Remove video</button>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:8px;">
+          <label style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Assessment Note <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);">&mdash; shown on estimate page as a personal message</span></label>
+          <textarea class="fi" id="e-insp-note" rows="2" placeholder="e.g. During our visit we found significant hail damage to the ridge caps and several missing shingles on the south-facing slope. We recommend a full replacement before winter." style="margin-top:3px;font-size:12px;resize:vertical;min-height:60px;" oninput="scheduleDraftSave()"></textarea>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--muted);">&#128065; Homeowners see this page when they scan the postcard QR code. <a href="#" onclick="if(!isPlanAtLeast('pro')){showPlanUpgradePrompt('Estimate Pages','pro');return false;}if(currentEstRecord)(function(){const slug=(S.cfg&&S.cfg.companyName?S.cfg.companyName.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''):'roofing');window.open('https://biddrop.us/'+slug+'/'+encodeURIComponent(currentEstRecord.id),'_blank','noopener,noreferrer');})();return false;" style="color:#10b981;">Preview page &#8599;</a></div>
+      </div>
+      <!-- structures, add-ons, GBB are inside Card 3 (trade) below -->
+      <div id="structures-list"></div>
+
+      <button onclick="addStructure(0,'')" style="width:100%;background:var(--card2);border:2px dashed var(--accent);border-radius:9px;padding:12px;color:var(--accent);font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px;">
+        🏗 + Add Structure
+      </button>
+
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">Property Add-ons</div>
+        <label class="addon-row">
+          <input type="checkbox" id="a-sky" onchange="calcP();updatePreview();scheduleDraftSave()">
+          Skylights (+$350 ea)
+          <input type="number" class="addon-qty" id="a-sky-q" value="1" min="1" max="10" onchange="calcP();updatePreview();scheduleDraftSave()">
+        </label>
+        <label class="addon-row">
+          <input type="checkbox" id="a-chim" onchange="calcP();updatePreview();scheduleDraftSave()">
+          Chimney Flashing (+$280)
+        </label>
+        <label class="addon-row">
+          <input type="checkbox" id="a-gut" onchange="calcP();updatePreview();scheduleDraftSave()">
+          Gutters (+$8/lf)
+          <input type="number" class="addon-qty" id="a-gut-q" value="120" min="1" onchange="calcP();updatePreview();scheduleDraftSave()"> lf
+        </label>
+        <label class="addon-row">
+          <input type="checkbox" id="a-iws" onchange="calcP();updatePreview();scheduleDraftSave()">
+          Ice &amp; Water Shield (+$<span id="a-iws-price">42</span>/sq)
+        </label>
+
+      </div>
+
+      <!-- Good / Better / Best Tier Selector -->
+      <div id="gbb-selector-wrap" style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:2px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">&#127942; Proposal Tier</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;" id="gbb-btns">
+          <button onclick="setGBBTier('good')" id="gbb-good" style="padding:10px 6px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--mid);font-family:var(--font-b);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;">&#128994; Good</button>
+          <button onclick="setGBBTier('better')" id="gbb-better" style="padding:10px 6px;border-radius:8px;border:1px solid var(--accent);background:rgba(242,92,5,.12);color:var(--accent);font-family:var(--font-b);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;">&#128992; Better</button>
+          <button onclick="setGBBTier('best')" id="gbb-best" style="padding:10px 6px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--mid);font-family:var(--font-b);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;">&#128309; Best</button>
+        </div>
+        <div id="gbb-desc" style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center;">Architectural Shingle &#8212; standard performance</div>
+      </div>
+        </div><!-- /acc-body-trade -->
+      </div><!-- /acc-card-trade -->
+
+      <!-- ══ CARD 4: OUTPUT SETTINGS (collapsed by default) ══ -->
+      <div class="acc-card" id="acc-card-output">
+        <div class="acc-hdr" id="acc-hdr-output" onclick="toggleAccCard('output')">
+          <div class="acc-hdr-left">
+            <div class="acc-dot" id="acc-dot-output"></div>
+            <div class="acc-icon">⚙️</div>
+            <div>
+              <div class="acc-title">Output Settings</div>
+              <div class="acc-summary" id="acc-sum-output">Expiry, video, notes — optional</div>
+            </div>
+          </div>
+          <div class="acc-chevron">▼</div>
+        </div>
+        <div class="acc-body" id="acc-body-output">
+          <div id="estimate-page-settings-section" style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:12px;">
+            <label class="fl" style="color:#10b981;font-size:10px;">🌎 Estimate Page Settings <span id="estimate-page-plan-badge" style="display:none;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;background:#D97706;color:#fff;margin-left:6px;text-transform:uppercase;letter-spacing:.5px;">Pro+ Only</span></label>
+            <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-top:6px;">
+              <div>
+                <label style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Offer Expires</label>
+                <input class="fi" id="e-expires" type="date" style="margin-top:3px;font-size:12px;" title="Optional: set an expiration date shown as a countdown on the estimate page">
+              </div>
+              <div>
+                <label style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Rep Video <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;">— shown on homeowner estimate page</span></label>
+                <div style="margin-top:4px;display:flex;flex-direction:column;gap:5px;">
+                  <input class="fi" id="e-video" type="url" placeholder="YouTube, Vimeo, or Loom link" style="font-size:12px;" oninput="onEstVideoUrlInput()">
+                  <div style="font-size:10px;color:var(--muted);">Supports YouTube, Vimeo, and Loom. Keep it under 45 seconds.</div>
+                  <div id="e-video-status" style="display:none;font-size:11px;color:var(--accent);font-weight:600;"></div>
+                  <div id="e-video-preview-wrap" style="display:none;border-radius:8px;overflow:hidden;background:#000;aspect-ratio:16/9;"></div>
+                  <button id="e-video-clear-btn" onclick="clearEstVideo()" style="display:none;background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-align:left;">✕ Remove video</button>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top:8px;">
+              <label style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Assessment Note <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);">— personal message on estimate page</span></label>
+              <textarea class="fi" id="e-insp-note" rows="2" placeholder="e.g. During our visit we found significant hail damage to the ridge caps..." style="margin-top:3px;font-size:12px;resize:vertical;min-height:60px;" oninput="scheduleDraftSave()"></textarea>
+            </div>
+            <div style="margin-top:8px;font-size:11px;color:var(--muted);">&#128065; Homeowners see this page when they scan the postcard QR code. <a href="#" onclick="if(!isPlanAtLeast('pro')){showPlanUpgradePrompt('Estimate Pages','pro');return false;}if(currentEstRecord)(function(){const slug=(S.cfg&&S.cfg.companyName?S.cfg.companyName.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''):'roofing');window.open('https://biddrop.us/'+slug+'/'+encodeURIComponent(currentEstRecord.id),'_blank','noopener,noreferrer');})();return false;" style="color:#10b981;">Preview page &#8599;</a></div>
+          </div>
+        </div>
+      </div>
+
+      </div><!-- /acc-panel -->
+
+      <!-- ── STICKY TOTAL BAR ── -->
+      <div class="est-sticky-bar">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px;">
+          <div>
+            <div class="est-sticky-total">Estimated Total</div>
+            <div class="est-sticky-val" id="e-total">$0</div>
+            <div style="font-size:11px;color:var(--muted);" id="e-breakdown">Add a structure to calculate</div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button onclick="saveEstimateNow()" style="background:var(--accent);border:none;border-radius:8px;padding:8px 14px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;letter-spacing:.4px;">&#128190; Save</button>
+            <button onclick="clearEst()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;">Clear</button>
+          </div>
+        </div>
+        <div class="est-sticky-actions">
+          <button class="btn-primary" id="add-queue-btn" onclick="addToQueue()" style="padding:12px;font-size:13px;">📬 Add to Mail Queue</button>
+          <div class="est-sticky-row">
+            <button style="background:#1a7f4b;border:none;border-radius:8px;padding:10px;color:#fff;font-family:var(--font-b);font-size:12px;font-weight:700;cursor:pointer;" onclick="sendViaGHL()">⬆ Sync GHL</button>
+            <button style="background:#1f3d68;border:none;border-radius:8px;padding:10px;color:#fff;font-family:var(--font-b);font-size:12px;font-weight:700;cursor:pointer;" onclick="if(!isPlanAtLeast('pro')){showPlanUpgradePrompt('Print Now','pro');}else{printNow();}">&#128424; Print Now</button>
+          </div>
+          <div class="est-sticky-row">
+            <button onclick="if(!isPlanAtLeast('pro')){showPlanUpgradePrompt('Proposal','pro');}else{openProposalModal();}" style="background:linear-gradient(135deg,#1a3a6b,#0f2040);border:1px solid rgba(59,130,246,.5);border-radius:8px;padding:10px;color:#60a5fa;font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;display:none;">📋 Proposal</button>
+            <button id="open-proposal-btn" onclick="if(!isPlanAtLeast('pro')){showPlanUpgradePrompt('Insurance Scope PDF','pro');}else{printInsuranceScopePDF();}" style="display:none;background:linear-gradient(135deg,#1e3a8a,#1e40af);border:1px solid rgba(96,165,250,.5);border-radius:8px;padding:10px;color:#93c5fd;font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">🏛 Insurance PDF</button>
+            <button onclick="if(!isPlanAtLeast('pro')){showPlanUpgradePrompt('Print Preview','pro');}else{printPreview();}" style="background:var(--card2);border:1px solid var(--info);border-radius:8px;padding:10px;color:var(--info);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;display:none;">🖨 Preview</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="est-preview" id="est-preview" style="flex-direction:column;align-items:center;">
+      <!-- Preview mode toggle tabs (sticky inside panel) -->
+      <div id="preview-mode-bar" style="width:100%;max-width:680px;display:flex;gap:0;margin-bottom:20px;border-radius:8px;overflow:hidden;border:1px solid var(--border);flex-shrink:0;">
+        <button id="preview-tab-letter" onclick="setPreviewMode('letter')" style="flex:1;padding:10px 0;font-family:var(--font-b);font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--accent);color:#fff;letter-spacing:.4px;">&#128228; Letter</button>
+        <button id="preview-tab-proposal" onclick="setPreviewMode('proposal')" style="flex:1;padding:10px 0;font-family:var(--font-b);font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--card2);color:var(--muted);letter-spacing:.4px;display:none;">&#128203; Proposal</button>
+        <button id="preview-tab-postcard" onclick="previewEstimatorPostcardFullscreen()" style="flex:1;padding:10px 0;font-family:var(--font-b);font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--card2);color:var(--muted);letter-spacing:.4px;">&#127968; Postcard</button>
+      </div>
+      <!-- Letter preview -->
+      <div class="mailer" id="mailer-preview"></div>
+      <!-- Proposal preview (new Asbury-style layout in iframe) -->
+      <div id="proposal-preview-wrap" style="display:none;width:100%;max-width:680px;">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px;text-align:center;">Proposal preview — what the homeowner receives</div>
+        <div id="prop-preview-scaler" style="width:100%;overflow:hidden;border-radius:8px;border:1px solid var(--border);position:relative;background:#fff;">
+          <iframe id="prop-preview-iframe" style="width:850px;height:1100px;border:none;background:#fff;transform-origin:top left;display:block;" frameborder="0"></iframe>
+        </div>
+        <!-- Print button below proposal preview -->
+        <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <button id="prop-preview-print-btn" onclick="printProposalWithCredit()" style="background:var(--accent);border:none;border-radius:10px;padding:13px;color:#fff;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">&#128424; Print / Save PDF <span id="prop-print-cost-badge" style="font-size:10px;font-weight:600;background:rgba(255,255,255,.2);border-radius:20px;padding:2px 8px;">1 Credit</span></button>
+          <button onclick="emailProposal()" style="background:linear-gradient(135deg,#1a3a6b,#0f2040);border:1px solid rgba(59,130,246,.5);border-radius:10px;padding:13px;color:#60a5fa;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">&#128231; Email to Homeowner</button>
+        </div>
+      </div>
+      <!-- Postcard preview (6x9 front + back) using scaled iframes -->
+      <div id="postcard-preview-wrap" style="display:none;width:100%;max-width:680px;">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:12px;text-align:center;">6&times;9 postcard &mdash; front on top, back below. Actual print size: 9&quot;&times;6&quot;.</div>
+        <div style="margin-bottom:18px;">
+          <div style="font-size:10px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Front &mdash; House Photo</div>
+          <div id="pc-front-scaler" style="width:100%;overflow:hidden;border-radius:8px;border:1px solid var(--border);position:relative;">
+            <iframe id="pc-front-preview" style="width:864px;height:576px;border:none;background:#1a2333;transform-origin:top left;display:block;" frameborder="0"></iframe>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Back &mdash; Estimate Summary</div>
+          <div id="pc-back-scaler" style="width:100%;overflow:hidden;border-radius:8px;border:1px solid var(--border);position:relative;">
+            <iframe id="pc-back-preview" style="width:864px;height:576px;border:none;background:#fff;transform-origin:top left;display:block;" frameborder="0"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ESTIMATES HISTORY -->

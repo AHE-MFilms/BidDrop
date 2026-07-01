@@ -188,6 +188,15 @@ async function switchAccount(accountId){
   // If the Settings tab is currently active, refresh it with the new account's data
   const settingsPane = document.getElementById('tab-settings');
   if(settingsPane && settingsPane.classList.contains('active')) renderSettingsTab();
+  // If the Campaigns tab is currently active, refresh it for the new account
+  const campaignsPane = document.getElementById('tab-campaigns');
+  if(campaignsPane && campaignsPane.classList.contains('active')) setTimeout(function(){ if(typeof loadCampaignsTab==='function') loadCampaignsTab(); }, 600);
+  // If the Agency tab is currently active, refresh it for the new account
+  const agencyPane = document.getElementById('tab-agency');
+  if(agencyPane && agencyPane.classList.contains('active')) setTimeout(function(){ if(typeof loadAgencyTab==='function') loadAgencyTab(); }, 600);
+  // If the Designs tab is currently active, refresh it for the new account
+  const designsPane = document.getElementById('tab-designs');
+  if(designsPane && designsPane.classList.contains('active')) setTimeout(function(){ if(typeof loadDesignsTab==='function') loadDesignsTab(); }, 600);
 }
 
 

@@ -1,0 +1,50 @@
+  <div class="tab-pane" id="tab-leaderboard" style="flex-direction:column;overflow-y:auto;padding:22px;gap:18px;">
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-family:var(--font-h);font-size:22px;font-weight:800;color:var(--text);">🏆 Rep Leaderboard</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">Live rankings — updated in real time as pins and estimates are saved</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <select id="lbt-period" onchange="renderFullLeaderboard()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-size:12px;cursor:pointer;font-family:var(--font-b);">
+          <option value="today">Today</option>
+          <option value="7" selected>Last 7 Days</option>
+          <option value="30">Last 30 Days</option>
+          <option value="all">All Time</option>
+        </select>
+        <select id="lbt-metric" onchange="renderFullLeaderboard()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-size:12px;cursor:pointer;font-family:var(--font-b);">
+          <option value="pins">Pins Dropped</option>
+          <option value="estimates">Estimates Built</option>
+          <option value="mailers">Mailers Sent</option>
+          <option value="signed">Signed / Converted</option>
+          <option value="conv">Conversion %</option>
+        </select>
+        <button onclick="renderFullLeaderboard()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 12px;color:var(--text);font-size:12px;cursor:pointer;">↻ Refresh</button>
+      </div>
+    </div>
+
+    <!-- Podium (top 3) -->
+    <div id="lbt-podium" style="display:flex;gap:12px;justify-content:center;align-items:flex-end;min-height:140px;flex-wrap:wrap;"></div>
+
+    <!-- Full rankings table -->
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+      <div style="display:grid;grid-template-columns:44px 1fr repeat(5,80px);gap:0;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--card2);">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.6px;color:var(--muted);">#</div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:.6px;color:var(--muted);">REP</div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:.6px;color:var(--accent);text-align:center;">PINS</div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:.6px;color:#A855F7;text-align:center;">ESTS</div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:.6px;color:#3B82F6;text-align:center;">MAILED</div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:.6px;color:#22C55E;text-align:center;">SIGNED</div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:.6px;color:#F59E0B;text-align:center;">CONV%</div>
+      </div>
+      <div id="lbt-rows" style=""></div>
+    </div>
+
+    <!-- Goal progress section (admin-set daily goals) -->
+    <div id="lbt-goals-wrap" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;">
+      <div style="font-family:var(--font-h);font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px;">📈 Daily Goals</div>
+      <div id="lbt-goals-list"></div>
+    </div>
+  </div>
+
+  <!-- HOT LEADS TAB -->

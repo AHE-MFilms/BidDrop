@@ -1,0 +1,59 @@
+  <div class="tab-pane" id="tab-dashboard">
+    <!-- Page Header -->
+    <div class="dash-page-hdr">
+      <div>
+        <div class="dash-page-title">📊 Dashboard</div>
+        <div class="dash-page-sub">Overview of your canvass activity and performance</div>
+      </div>
+      <button onclick="renderDash()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 14px;color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">↻ Refresh</button>
+    </div>
+    <!-- Storm Alert Banner (shown when storm events exist) -->
+    <div class="dash-storm-banner" id="dash-storm-banner" style="display:none;">
+      <div class="dash-storm-icon">⛈️</div>
+      <div class="dash-storm-text">
+        <div class="dash-storm-title" id="dash-storm-title">Storm Event Detected</div>
+        <div class="dash-storm-sub" id="dash-storm-sub">Hail activity in your canvass area. Launch a targeted campaign.</div>
+      </div>
+      <button class="dash-storm-cta" onclick="goTab('map');setTimeout(()=>toggleStormEvents&&toggleStormEvents(),200)">⚡ View Storm Map</button>
+    </div>
+    <!-- KPI Strip -->
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-icon">📍</div><div class="stat-lbl">Homes Pinned</div><div class="stat-val" id="s-pins">0</div><div class="stat-sub">All canvassers</div></div>
+      <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-lbl">Estimates Built</div><div class="stat-val" id="s-ests">0</div><div class="stat-sub">Saved estimates</div></div>
+      <div class="stat-card"><div class="stat-icon">📬</div><div class="stat-lbl">Bids Mailed</div><div class="stat-val" id="s-mailed">0</div><div class="stat-sub">Direct Mail Sent</div></div>
+      <div class="stat-card"><div class="stat-icon">🏆</div><div class="stat-lbl">Conversion Rate</div><div class="stat-val" id="s-conv">—</div><div class="stat-sub">Converted / Mailed</div></div>
+    </div>
+    <!-- Activity Chart + Team -->
+    <div class="dash-grid">
+      <div class="dash-card"><div class="dc-title">Canvass Activity — Last 7 Days</div><div style="position:relative;height:160px;"><canvas id="act-chart"></canvas></div></div>
+      <div class="dash-card"><div class="dc-title">Team</div><div id="team-list"></div><button class="btn-add-team" onclick="addTeamMember()">+ Add Team Member</button></div>
+    </div>
+    <!-- Trade Breakdown -->
+    <div class="dash-card">
+      <div class="dc-title">Estimates by Trade</div>
+      <div class="trade-grid" id="dash-trade-grid">
+        <div class="trade-chip"><div class="trade-chip-icon">🏠</div><div class="trade-chip-info"><div class="trade-chip-name">Roofing</div><div class="trade-chip-val" id="td-roofing">0</div></div></div>
+        <div class="trade-chip"><div class="trade-chip-icon">☀️</div><div class="trade-chip-info"><div class="trade-chip-name">Solar</div><div class="trade-chip-val" id="td-solar">0</div></div></div>
+        <div class="trade-chip"><div class="trade-chip-icon">🧱</div><div class="trade-chip-info"><div class="trade-chip-name">Siding</div><div class="trade-chip-val" id="td-siding">0</div></div></div>
+        <div class="trade-chip"><div class="trade-chip-icon">🪩</div><div class="trade-chip-info"><div class="trade-chip-name">Fence</div><div class="trade-chip-val" id="td-fence">0</div></div></div>
+        <div class="trade-chip"><div class="trade-chip-icon">🚰</div><div class="trade-chip-info"><div class="trade-chip-name">Gutters</div><div class="trade-chip-val" id="td-gutters">0</div></div></div>
+        <div class="trade-chip"><div class="trade-chip-icon">🚨</div><div class="trade-chip-info"><div class="trade-chip-name">Other</div><div class="trade-chip-val" id="td-other">0</div></div></div>
+      </div>
+    </div>
+    <!-- Recent Activity -->
+    <div class="dash-card"><div class="dc-title">Recent Activity</div><div class="act-feed" id="act-feed"></div></div>
+    <!-- REP LEADERBOARD -->
+    <div class="dash-card" id="leaderboard-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="dc-title" style="margin-bottom:0;">🏆 Rep Leaderboard</div>
+        <select id="lb-period" onchange="renderLeaderboard()" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:11px;font-family:var(--font-b);cursor:pointer;">
+          <option value="all">All Time</option>
+          <option value="30">Last 30 Days</option>
+          <option value="7">Last 7 Days</option>
+        </select>
+      </div>
+      <div id="leaderboard-list"><div style="text-align:center;padding:18px;color:var(--muted);font-size:11px;">No data yet.</div></div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD TAB -->

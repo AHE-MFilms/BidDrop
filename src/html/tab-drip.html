@@ -1,0 +1,61 @@
+  <div class="tab-pane" id="tab-drip" style="flex-direction:column;overflow-y:auto;padding:24px 28px;gap:20px;">
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-family:var(--font-h);font-size:20px;font-weight:800;color:var(--text);">🔥 Drip Automations</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">Configure your follow-up postcard sequences — choose designs, timing, and triggers</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span style="font-size:12px;color:var(--muted);">Drip enabled</span>
+        <div id="drip-tab-toggle" onclick="toggleDripFromTab()" style="width:40px;height:22px;border-radius:11px;background:var(--border);cursor:pointer;position:relative;transition:background .2s;">
+          <div id="drip-tab-knob" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s;"></div>
+        </div>
+        <button onclick="saveDripSequence()" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;">Save Sequence</button>
+      </div>
+    </div>
+
+    <!-- Trigger section -->
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">⚡ Trigger</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:13px;color:var(--text);">
+          <input type="radio" name="drip-trigger" value="estimate_save" id="drip-trigger-estimate" style="accent-color:var(--accent);" checked> On Estimate Save
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:13px;color:var(--text);">
+          <input type="radio" name="drip-trigger" value="manual" id="drip-trigger-manual" style="accent-color:var(--accent);"> Manual (Blitz button)
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:13px;color:var(--text);">
+          <input type="radio" name="drip-trigger" value="campaign" id="drip-trigger-campaign" style="accent-color:var(--accent);"> Campaign Launch
+        </label>
+      </div>
+    </div>
+
+    <!-- Steps builder -->
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);">📬 Sequence Steps</div>
+        <button onclick="addDripStep()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:6px 14px;font-size:12px;color:var(--text);cursor:pointer;font-weight:600;">+ Add Step</button>
+      </div>
+      <div id="drip-steps-builder" style="display:flex;flex-direction:column;gap:12px;">
+        <!-- Steps rendered by JS -->
+      </div>
+    </div>
+
+    <!-- Info banner -->
+    <div style="background:linear-gradient(135deg,rgba(242,92,5,.08),rgba(168,85,247,.06));border:1px solid rgba(242,92,5,.2);border-radius:10px;padding:14px 16px;">
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;">
+        <strong style="color:var(--text);">&#128161; How it works:</strong> When a drip sequence is triggered, Step 1 is added to the Mail Queue immediately. Subsequent steps are scheduled automatically based on the delay you set. Each step uses the postcard design you assign &mdash; or falls back to the default design if none is set.
+      </div>
+    </div>
+    <!-- Active Drip Contacts -->
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);">&#9889; Active Drip Contacts</div>
+        <button onclick="renderActiveDripContacts()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:5px 12px;font-size:11px;color:var(--mid);cursor:pointer;font-weight:600;">&#8635; Refresh</button>
+      </div>
+      <div id="drip-active-contacts" style="display:flex;flex-direction:column;gap:8px;">
+        <div style="text-align:center;padding:24px;color:var(--muted);font-size:12px;">Loading active drip contacts&hellip;</div>
+      </div>
+    </div>
+  </div>
+    <!-- POSTCARD FULL PREVIEW MODAL -->

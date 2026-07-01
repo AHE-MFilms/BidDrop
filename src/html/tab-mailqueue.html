@@ -1,0 +1,50 @@
+  <div class="tab-pane" id="tab-mailqueue">
+    <!-- Credits bar -->
+    <div id="queue-credits-bar" style="background:var(--card);border-bottom:1px solid var(--border);padding:10px 22px;display:flex;align-items:center;gap:16px;flex-shrink:0;flex-wrap:wrap;">
+      <span style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--mid);">Your Credits</span>
+      <div style="display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 18px;">
+        <span style="font-size:24px;font-weight:800;color:var(--accent);" id="qcb-total">—</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);">Credits Available</div>
+          <div style="font-size:10px;color:var(--mid);">1 credit = $4.00 = 1 postcard mailed</div>
+        </div>
+      </div>
+      <span id="qcb-free" style="display:none;">—</span>
+      <span id="qcb-paid" style="display:none;">—</span>
+      <button onclick="showBuyCreditsModal()" style="margin-left:auto;background:var(--accent);border:none;border-radius:8px;padding:8px 20px;color:#fff;font-family:var(--font-b);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.5px;text-transform:uppercase;white-space:nowrap;">+ Buy Credits</button>
+    </div>
+    <div class="q-hdr">
+      <span class="q-title">📬 Mail Queue</span>
+      <button class="btn-send-all" onclick="sendAllPending()">Send All Pending</button>
+    </div>
+    <div class="q-body">
+      <div class="q-empty" id="q-empty">
+        <div class="q-empty-icon">📭</div>
+        <div class="q-empty-title">Mail Queue is Empty</div>
+        <div class="q-empty-sub">Build an estimate and click "Add to Mail Queue" to get started.</div>
+      </div>
+      <div id="q-bulk-bar" style="display:none;align-items:center;gap:10px;margin-bottom:10px;padding:8px 12px;background:var(--card2);border-radius:8px;border:1px solid var(--border);">
+        <span id="q-selected-count" style="font-size:13px;font-weight:600;color:var(--text);">0 selected</span>
+        <button onclick="bulkApproveQueue()" style="background:#7C3AED;border:none;border-radius:6px;padding:6px 14px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">✓ Approve Selected</button>
+        <button onclick="bulkDeleteQueue()" style="background:#EF4444;border:none;border-radius:6px;padding:6px 14px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">🗑 Delete Selected</button>
+        <button onclick="clearQueueSelection()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 14px;color:var(--muted);font-size:12px;cursor:pointer;">Clear</button>
+      </div>
+      <table id="q-table" style="display:none;">
+        <thead>
+          <tr>
+            <th style="width:36px;"><input type="checkbox" id="q-select-all" onchange="toggleAllQueueSelect(this.checked)" style="cursor:pointer;width:16px;height:16px;accent-color:var(--accent);"></th>
+            <th onclick="setQSort('owner')" style="cursor:pointer;user-select:none;white-space:nowrap;">Homeowner <span id="q-sort-owner"></span></th>
+            <th onclick="setQSort('addr')" style="cursor:pointer;user-select:none;white-space:nowrap;">Address <span id="q-sort-addr"></span></th>
+            <th onclick="setQSort('total')" style="cursor:pointer;user-select:none;white-space:nowrap;">Estimate <span id="q-sort-total"></span></th>
+            <th onclick="setQSort('mat')" style="cursor:pointer;user-select:none;white-space:nowrap;">Material <span id="q-sort-mat"></span></th>
+            <th onclick="setQSort('at')" style="cursor:pointer;user-select:none;white-space:nowrap;">Created <span id="q-sort-at"></span></th>
+            <th onclick="setQSort('status')" style="cursor:pointer;user-select:none;white-space:nowrap;">Status <span id="q-sort-status"></span></th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="q-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->

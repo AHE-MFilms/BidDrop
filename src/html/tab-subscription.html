@@ -1,0 +1,56 @@
+  <div class="tab-pane" id="tab-subscription" style="flex-direction:column;overflow-y:auto;padding:22px;gap:16px;">
+    <div>
+      <h2 style="font-family:var(--font-h);font-size:22px;font-weight:800;color:var(--text);margin:0;">Plan &amp; Billing</h2>
+      <p style="font-size:13px;color:var(--muted);margin:4px 0 0;">Manage your BidDrop subscription, credits, and billing.</p>
+    </div>
+    <!-- Current plan card -->
+    <div id="sub-current-card" style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:20px 24px;">
+      <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Current Plan</div>
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        <div id="sub-plan-badge" style="font-size:22px;font-weight:900;color:var(--accent);">—</div>
+        <div style="flex:1;">
+          <div id="sub-plan-desc" style="font-size:13px;color:var(--muted);">Loading…</div>
+          <div id="sub-credits-line" style="font-size:13px;color:var(--text);margin-top:4px;"></div>
+        </div>
+        <button onclick="goTab('settings')" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 16px;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;">⚙ Settings</button>
+      </div>
+    </div>
+    <!-- Plan comparison table -->
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border);">
+            <th style="text-align:left;padding:10px 12px;color:var(--muted);font-weight:700;">Feature</th>
+            <th style="text-align:center;padding:10px 12px;color:var(--muted);font-weight:700;">Starter<br><span style="font-size:11px;font-weight:400;">$97/mo</span></th>
+            <th style="text-align:center;padding:10px 12px;color:var(--accent);font-weight:700;">Pro<br><span style="font-size:11px;font-weight:400;">$197/mo</span></th>
+            <th style="text-align:center;padding:10px 12px;color:var(--muted);font-weight:700;">Agency<br><span style="font-size:11px;font-weight:400;">$397/mo</span></th>
+            <th style="text-align:center;padding:10px 12px;color:var(--muted);font-weight:700;">Enterprise<br><span style="font-size:11px;font-weight:400;">Custom</span></th>
+          </tr>
+        </thead>
+        <tbody id="sub-plan-table-body">
+          <tr style="border-bottom:1px solid var(--border);"><td style="padding:9px 12px;color:var(--text);">Monthly Credits</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">15</td><td style="text-align:center;padding:9px 12px;color:var(--accent);font-weight:700;">40</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">100</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">200</td></tr>
+          <tr style="border-bottom:1px solid var(--border);"><td style="padding:9px 12px;color:var(--text);">Field Reps</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">3</td><td style="text-align:center;padding:9px 12px;color:var(--accent);font-weight:700;">10</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">Unlimited</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">Unlimited</td></tr>
+          <tr style="border-bottom:1px solid var(--border);"><td style="padding:9px 12px;color:var(--text);">Trades</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">Roofing only</td><td style="text-align:center;padding:9px 12px;color:var(--accent);font-weight:700;">All 9 trades</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">All 9 trades</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">All 9 trades</td></tr>
+          <tr style="border-bottom:1px solid var(--border);"><td style="padding:9px 12px;color:var(--text);">Nearby Campaigns</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">—</td><td style="text-align:center;padding:9px 12px;color:var(--accent);font-weight:700;">✓</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">✓</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">✓</td></tr>
+          <tr style="border-bottom:1px solid var(--border);"><td style="padding:9px 12px;color:var(--text);">Drip Automations</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">—</td><td style="text-align:center;padding:9px 12px;color:var(--accent);font-weight:700;">✓</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">✓</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">✓</td></tr>
+          <tr style="border-bottom:1px solid var(--border);"><td style="padding:9px 12px;color:var(--text);">GHL Integration</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">—</td><td style="text-align:center;padding:9px 12px;color:var(--accent);font-weight:700;">✓</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">✓</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">✓</td></tr>
+          <tr style="border-bottom:1px solid var(--border);"><td style="padding:9px 12px;color:var(--text);">Print Feature</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">—</td><td style="text-align:center;padding:9px 12px;color:var(--accent);font-weight:700;">✓</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">✓</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">✓</td></tr>
+          <tr style="border-bottom:1px solid var(--border);"><td style="padding:9px 12px;color:var(--text);">Territory Intel</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">—</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">—</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">✓</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">✓</td></tr>
+          <tr><td style="padding:9px 12px;color:var(--text);">White Label</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">—</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">—</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">—</td><td style="text-align:center;padding:9px 12px;color:var(--muted);">✓</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- Action buttons -->
+    <div id="sub-action-btns" style="display:flex;gap:12px;flex-wrap:wrap;">
+      <button onclick="subUpgrade()" id="sub-btn-upgrade" style="background:var(--accent);border:none;border-radius:8px;padding:10px 22px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">⬆ Upgrade Plan</button>
+      <button onclick="subCancel()" id="sub-btn-cancel" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 22px;color:var(--danger);font-size:14px;font-weight:700;cursor:pointer;">Cancel Subscription</button>
+      <button onclick="showBuyCreditsModal()" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 22px;color:var(--text);font-size:14px;font-weight:700;cursor:pointer;">🔍 Buy Credits</button>
+    </div>
+    <!-- Credit history -->
+    <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:16px 20px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">Credit Balance</div>
+      <div id="sub-credit-detail" style="font-size:13px;color:var(--muted);">Loading…</div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS TAB -->

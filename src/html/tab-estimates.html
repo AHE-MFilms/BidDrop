@@ -1,0 +1,55 @@
+  <div class="tab-pane" id="tab-estimates">
+    <div style="width:100%;padding:22px;overflow-y:auto;">
+      <!-- Header -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:12px;border-bottom:2px solid var(--border);">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="pane-title" style="margin:0;padding:0;border:none;">🗂 Saved Estimates</div>
+          <div style="display:flex;gap:4px;margin-left:8px;">
+            <button id="est-tab-active" onclick="switchEstView('active')" style="background:var(--accent);border:none;border-radius:6px;padding:5px 12px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">Active</button>
+            <button id="est-tab-trash" onclick="switchEstView('trash')" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:5px 12px;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;">🗑 Trash</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <div style="position:relative;display:flex;align-items:center;">
+            <span style="position:absolute;left:9px;font-size:13px;pointer-events:none;">🔍</span>
+            <input id="est-search" type="text" placeholder="Search address, homeowner, rep…" oninput="renderEstimatesTab()" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:6px 10px 6px 30px;color:var(--text);font-size:12px;width:230px;font-family:var(--font-b);">
+          </div>
+          <select id="est-rep-filter" onchange="renderEstimatesTab()" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-size:12px;cursor:pointer;"><option value="">All Reps</option></select>
+          <button onclick="exportEstimatesCSV()" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:7px 12px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;">⬇ CSV</button>
+          <button onclick="goTab('estimate')" style="background:var(--accent);border:none;border-radius:8px;padding:9px 16px;color:#fff;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;">+ New Estimate</button>
+        </div>
+      </div>
+      <!-- Bulk action bar -->
+      <div id="est-bulk-bar" style="display:none;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;padding:8px 12px;background:var(--card2);border-radius:8px;border:1px solid var(--border);">
+        <span id="est-selected-count" style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;">0 selected</span>
+        <button id="est-bulk-delete-btn" onclick="bulkDeleteEstimates()" style="background:#EF4444;border:none;border-radius:6px;padding:6px 12px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">🗑 Delete</button>
+        <button id="est-bulk-queue-btn" onclick="bulkAddToMailQueue()" style="background:var(--accent);border:none;border-radius:6px;padding:6px 12px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">📨 Send to Mail Queue</button>
+        <button id="est-bulk-ghl-btn" onclick="bulkSendViaGHL()" style="background:#1a7f4b;border:none;border-radius:6px;padding:6px 12px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">⚡ Send All via GHL</button>
+        <button id="est-bulk-restore-btn" onclick="bulkRestoreEstimates()" style="display:none;background:#1a7f4b;border:none;border-radius:6px;padding:6px 12px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">↩ Restore</button>
+        <button id="est-bulk-purge-btn" onclick="bulkPurgeEstimates()" style="display:none;background:none;border:1px solid var(--danger);border-radius:6px;padding:6px 12px;color:var(--danger);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">✕ Purge All</button>
+        <button onclick="clearEstimateSelection()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 12px;color:var(--muted);font-size:12px;cursor:pointer;white-space:nowrap;">Clear</button>
+      </div>
+      <div id="estimates-empty" style="text-align:center;padding:60px 20px;color:var(--muted);">
+        <div style="font-size:40px;margin-bottom:12px;">🗂</div>
+        <div style="font-size:16px;font-weight:600;margin-bottom:6px;">No saved estimates yet</div>
+        <div style="font-size:13px;">Build and save an estimate in the Estimator tab — it will appear here.</div>
+      </div>
+      <table id="estimates-table" style="display:none;width:100%;border-collapse:collapse;">
+        <thead>
+          <tr id="est-thead-row" style="border-bottom:2px solid var(--border);">
+            <th style="padding:10px 8px;width:32px;"><input type="checkbox" id="est-select-all" onchange="toggleAllEstimateSelect(this.checked)" style="cursor:pointer;"></th>
+            <th onclick="setEstSort('addr')" style="text-align:left;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);cursor:pointer;user-select:none;white-space:nowrap;">Address <span id="est-sort-addr"></span></th>
+            <th onclick="setEstSort('owner')" style="text-align:left;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);cursor:pointer;user-select:none;white-space:nowrap;">Homeowner <span id="est-sort-owner"></span></th>
+            <th onclick="setEstSort('rep')" style="text-align:left;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);cursor:pointer;user-select:none;white-space:nowrap;">Rep <span id="est-sort-rep"></span></th>
+            <th onclick="setEstSort('total')" style="text-align:right;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);cursor:pointer;user-select:none;white-space:nowrap;">Total <span id="est-sort-total"></span></th>
+            <th onclick="setEstSort('savedAt')" style="text-align:left;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);cursor:pointer;user-select:none;white-space:nowrap;">Saved <span id="est-sort-savedAt"></span></th>
+            <th style="text-align:center;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">&#128065; Page</th>
+            <th style="text-align:center;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">&#128247; Photos</th>
+            <th style="text-align:center;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="estimates-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+    <!-- MAIL QUEUE -->

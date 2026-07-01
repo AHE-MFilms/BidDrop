@@ -1,0 +1,92 @@
+  <div class="tab-pane" id="tab-analytics" style="flex-direction:column;overflow-y:auto;padding:22px;gap:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-family:var(--font-h);font-size:20px;font-weight:800;color:var(--text);">📊 Insights &amp; Analytics</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">Performance overview — postcards, scans, conversions, and rep stats</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <select id="an-period" onchange="_anPeriodChanged()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-size:12px;cursor:pointer;"><option value="7">Last 7 Days</option><option value="30" selected>Last 30 Days</option><option value="90">Last 90 Days</option><option value="all">All Time</option><option value="custom">Custom Range</option></select>
+        <div id="an-custom-range" style="display:none;align-items:center;gap:6px;">
+          <input type="date" id="an-date-from" onchange="loadAnalytics()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--text);font-size:12px;cursor:pointer;font-family:inherit;">
+          <span style="color:var(--muted);font-size:12px;">→</span>
+          <input type="date" id="an-date-to" onchange="loadAnalytics()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--text);font-size:12px;cursor:pointer;font-family:inherit;">
+        </div>
+        <button onclick="loadAnalytics()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 12px;color:var(--text);font-size:12px;cursor:pointer;">↻ Refresh</button>
+        <button onclick="exportAnalyticsCSV()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 12px;color:var(--text);font-size:12px;cursor:pointer;">⬇ CSV</button>
+        <button onclick="exportAnalyticsPDF()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 12px;color:var(--text);font-size:12px;cursor:pointer;">⬇ PDF</button>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-icon">📬</div><div class="stat-lbl">Postcards Sent</div><div class="stat-val" id="an-postcards">—</div><div class="stat-sub">In period</div></div>
+      <div class="stat-card"><div class="stat-icon">🔍</div><div class="stat-lbl">QR Scans</div><div class="stat-val" id="an-scans">—</div><div class="stat-sub">Homeowners who scanned</div></div>
+      <div class="stat-card"><div class="stat-icon">📈</div><div class="stat-lbl">Engagement Rate</div><div class="stat-val" id="an-open-rate">—</div><div class="stat-sub">Engaged / Estimates</div></div>
+      <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-lbl">Signed Jobs</div><div class="stat-val" id="an-signed">—</div><div class="stat-sub">Pins marked Signed</div></div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-lbl">Estimates Built</div><div class="stat-val" id="an-estimates">—</div><div class="stat-sub">In period</div></div>
+      <div class="stat-card"><div class="stat-icon">📍</div><div class="stat-lbl">Homes Pinned</div><div class="stat-val" id="an-pins">—</div><div class="stat-sub">In period</div></div>
+      <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-lbl">Est. Pipeline Value</div><div class="stat-val" id="an-pipeline">—</div><div class="stat-sub">Sum of estimate totals</div></div>
+      <div class="stat-card"><div class="stat-icon">🎯</div><div class="stat-lbl">Close Rate</div><div class="stat-val" id="an-close-rate">—</div><div class="stat-sub">Signed / Estimates</div></div>
+    </div>
+    <!-- Retargeting KPIs row -->
+    <div class="stats-row" style="background:rgba(59,130,246,.05);border:1px solid rgba(59,130,246,.15);border-radius:12px;padding:12px;">
+      <div style="width:100%;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid rgba(59,130,246,.15);display:flex;align-items:center;gap:8px;">
+        <span style="font-size:13px;font-weight:700;color:#3B82F6;letter-spacing:.4px;">🎯 RETARGETING PERFORMANCE</span>
+        <span style="font-size:10px;color:var(--muted);">Homeowner estimate page engagement — fires your Meta &amp; Google pixels</span>
+      </div>
+      <div class="stat-card" style="background:transparent;border:none;"><div class="stat-icon">👁️</div><div class="stat-lbl">Page Views</div><div class="stat-val" id="an-page-views">—</div><div class="stat-sub">Homeowners who opened page</div></div>
+      <div class="stat-card" style="background:transparent;border:none;"><div class="stat-icon">📅</div><div class="stat-lbl">Booking Clicks</div><div class="stat-val" id="an-booking-clicks">—</div><div class="stat-sub">Tapped Schedule button</div></div>
+      <div class="stat-card" style="background:transparent;border:none;"><div class="stat-icon">📞</div><div class="stat-lbl">Call Clicks</div><div class="stat-val" id="an-call-clicks">—</div><div class="stat-sub">Tapped phone number</div></div>
+      <div class="stat-card" style="background:transparent;border:none;"><div class="stat-icon">🔄</div><div class="stat-lbl">Page View Rate</div><div class="stat-val" id="an-view-rate">—</div><div class="stat-sub">Viewed / Estimates</div></div>
+    </div>
+    <div class="dash-grid">
+      <div class="dash-card"><div class="dc-title">📬 Postcards Sent — Daily</div><div style="position:relative;height:160px;"><canvas id="an-chart-postcards"></canvas></div></div>
+      <div class="dash-card"><div class="dc-title">🔍 QR Scans — Daily</div><div style="position:relative;height:160px;"><canvas id="an-chart-scans"></canvas></div></div>
+    </div>
+    <div class="dash-card">
+      <div class="dc-title" style="margin-bottom:12px;">👤 Rep Performance</div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead><tr style="background:var(--card2);border-bottom:1px solid var(--border);">
+            <th style="padding:10px 14px;text-align:left;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">REP</th>
+            <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">PINS</th>
+            <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">ESTIMATES</th>
+            <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">MAILERS</th>
+            <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">QR SCANS</th>
+            <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">SIGNED</th>
+            <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">PIPELINE $</th>
+            <th style="padding:10px 14px;text-align:left;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">TOP TRADES</th>
+          </tr></thead>
+          <tbody id="an-rep-table"></tbody>
+        </table>
+      </div>
+    </div>
+    <!-- Per-Estimate Engagement Table -->
+    <div class="dash-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+        <div class="dc-title" style="margin-bottom:0;">📋 Estimate Page Engagement</div>
+        <div style="font-size:11px;color:var(--muted);">Per-estimate scan, view &amp; click data — proof your postcards are working</div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead><tr style="background:var(--card2);border-bottom:1px solid var(--border);">
+            <th style="padding:10px 14px;text-align:left;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">ADDRESS</th>
+            <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">ESTIMATE</th>
+            <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">QR SCANS</th>
+            <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">PAGE VIEWS</th>
+            <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">BOOKING CLICKS</th>
+            <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">CALL CLICKS</th>
+            <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">FIRST VIEWED</th>
+            <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;">VIEW PAGE</th>
+            <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;"></th>
+          </tr></thead>
+          <tbody id="an-est-table"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="dash-grid">
+      <div class="dash-card"><div class="dc-title">🏠 Top Material Choices</div><div id="an-materials" style="min-height:80px;"></div></div>
+      <div class="dash-card"><div class="dc-title">📍 Pin Status Breakdown</div><div style="position:relative;height:160px;"><canvas id="an-chart-status"></canvas></div></div>
+    </div>
+  </div>
+  <!-- AGENCY VIEW — super_admin only -->

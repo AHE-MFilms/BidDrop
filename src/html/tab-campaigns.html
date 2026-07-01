@@ -1,0 +1,29 @@
+  <div class="tab-pane" id="tab-campaigns" style="flex-direction:column;overflow-y:auto;padding:24px 28px;gap:16px;">
+    <div class="dash-page-hdr">
+      <div>
+        <div class="dash-page-title">📣 Campaigns</div>
+        <div class="dash-page-sub">Manage and track your active canvass campaigns</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="loadCampaignsTab()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 14px;color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">↻ Refresh</button>
+        <button onclick="goTab('map')" style="background:var(--accent);border:none;border-radius:7px;padding:8px 16px;color:#fff;font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">+ New Campaign</button>
+      </div>
+    </div>
+    <!-- Campaign stats strip -->
+    <div id="campaigns-stats" style="display:flex;gap:12px;flex-wrap:wrap;"></div>
+    <!-- Active campaigns list -->
+    <div class="dash-card" style="padding:0;overflow:hidden;">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:12px;font-weight:700;color:var(--text);letter-spacing:.3px;">ACTIVE CAMPAIGNS</div>
+        <select id="campaigns-status-filter" onchange="loadCampaignsTab()" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--text);font-size:11px;cursor:pointer;">
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="completed">Completed</option>
+          <option value="paused">Paused</option>
+        </select>
+      </div>
+      <div id="campaigns-list"><div style="padding:40px;text-align:center;color:var(--muted);font-size:13px;">Loading campaigns…</div></div>
+    </div>
+  </div>
+
+  <!-- POSTCARD DESIGNS TAB -->

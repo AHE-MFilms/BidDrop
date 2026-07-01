@@ -1,0 +1,21 @@
+  <div class="tab-pane" id="tab-hotleads" style="flex-direction:column;overflow-y:auto;padding:22px;gap:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-family:var(--font-h);font-size:20px;font-weight:800;color:var(--text);">🔥 Hot Leads</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">Homeowners who scanned their postcard QR code</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <input id="hl-search" type="text" placeholder="🔍 Search name or address..." oninput="renderHotLeads()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:7px 12px;color:var(--text);font-size:12px;width:200px;outline:none;" />
+        <select id="hl-filter" onchange="renderHotLeads()" style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-size:12px;cursor:pointer;"><option value="all">All Scans</option><option value="today">Today</option><option value="week">This Week</option><option value="month">This Month</option></select>
+        <button onclick="loadHotLeads()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 12px;color:var(--text);font-size:12px;cursor:pointer;">↻ Refresh</button>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-icon">🔥</div><div class="stat-lbl">Total Scans</div><div class="stat-val" id="hl-total-scans">—</div><div class="stat-sub">All time</div></div>
+      <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-lbl">Scans Today</div><div class="stat-val" id="hl-today-scans">—</div><div class="stat-sub">Last 24 hours</div></div>
+      <div class="stat-card"><div class="stat-icon">📈</div><div class="stat-lbl">Engagement Rate</div><div class="stat-val" id="hl-scan-rate">—</div><div class="stat-sub">Engaged / Total estimates</div></div>
+      <div class="stat-card"><div class="stat-icon">🏆</div><div class="stat-lbl">Multi-Scan Leads</div><div class="stat-val" id="hl-multi-scans">—</div><div class="stat-sub">Scanned 2+ times</div></div>
+    </div>
+    <div class="dash-card" style="padding:0;overflow:hidden;"><div id="hl-list" style="min-height:200px;"></div></div>
+  </div>
+  <!-- PIXEL LEADS TAB -->

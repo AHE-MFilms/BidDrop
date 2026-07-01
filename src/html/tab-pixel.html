@@ -1,0 +1,39 @@
+  <div class="tab-pane" id="tab-pixel" style="flex-direction:column;overflow-y:auto;padding:22px;gap:16px;">
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-family:var(--font-h);font-size:20px;font-weight:800;color:var(--text);">📡 Pixel Leads</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">Website visitors who spent 20+ seconds on your site</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <button onclick="goTab('settings');setTimeout(()=>document.getElementById('px-settings-section')?.scrollIntoView({behavior:'smooth'}),200)" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 12px;color:var(--mid);font-size:12px;cursor:pointer;">⚙️ Pixel Settings</button>
+        <button onclick="loadPixelLeads()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 12px;color:var(--text);font-size:12px;cursor:pointer;">↻ Refresh</button>
+      </div>
+    </div>
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-icon">📡</div><div class="stat-lbl">Total Hits</div><div class="stat-val" id="px-stat-total">—</div><div class="stat-sub">All captured visitors</div></div>
+      <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-lbl">Pending</div><div class="stat-val" id="px-stat-pending">—</div><div class="stat-sub">Awaiting resolution</div></div>
+      <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-lbl">Resolved</div><div class="stat-val" id="px-stat-resolved">—</div><div class="stat-sub">Address matched</div></div>
+      <div class="stat-card"><div class="stat-icon">📬</div><div class="stat-lbl">Postcards Queued</div><div class="stat-val" id="px-stat-queued">—</div><div class="stat-sub">Ready to mail</div></div>
+    </div>
+    <!-- Filter chips -->
+    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+      <button class="fchip px-filter-chip active" data-f="pending" onclick="setPixelFilter('pending')">⏳ Pending</button>
+      <button class="fchip px-filter-chip" data-f="resolved" onclick="setPixelFilter('resolved')">✅ Resolved</button>
+      <button class="fchip px-filter-chip" data-f="queued" onclick="setPixelFilter('queued')">📬 Queued</button>
+      <button class="fchip px-filter-chip" data-f="dismissed" onclick="setPixelFilter('dismissed')">✕ Dismissed</button>
+      <button class="fchip px-filter-chip" data-f="all" onclick="setPixelFilter('all')">All</button>
+    </div>
+    <!-- Leads list -->
+    <div class="dash-card" style="padding:0;overflow:hidden;">
+      <div id="pixel-leads-list" style="min-height:200px;"></div>
+    </div>
+    <!-- No pixel ID warning -->
+    <div id="px-no-pixel-warn" style="display:none;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:16px 20px;">
+      <div style="font-weight:700;color:#F59E0B;margin-bottom:4px;">⚠️ Pixel not set up yet</div>
+      <div style="font-size:13px;color:var(--mid);">Go to <strong>Settings → Pixel</strong> to generate your embed code and install it on your website.</div>
+    </div>
+  </div>
+
+  <!-- LISTS & CONTACTS TAB -->
