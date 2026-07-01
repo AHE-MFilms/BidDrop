@@ -81,7 +81,18 @@ async function sbDeletePin(pinId){
   if(!currentAccount) return;
   // Soft-delete: set deleted_at so pin moves to Trash (recoverable for 30 days)
   const {error} = await sb.from('pins').update({deleted_at: new Date().toISOString()}).eq('id', pinId);
-  if(error) throw new Error(error.message);
+  if(error){
+    // If deleted_at column doesn't exist yet (pre-migration), fall back to hard-delete
+    const isColMissing = error.code==='42703'||error.code==='PGRST204'||error.status===400||
+      (error.message&&(error.message.includes('deleted_at')||error.message.includes('column')||error.message.includes('does not exist')));
+    if(isColMissing){
+      console.warn('[BidDrop] sbDeletePin: deleted_at column missing, falling back to hard-delete. Run migration to enable soft-delete.');
+      const {error:delErr} = await sb.from('pins').delete().eq('id', pinId).eq('account_id', currentAccount.id);
+      if(delErr) throw new Error(delErr.message);
+    } else {
+      throw new Error(error.message);
+    }
+  }
 }
 async function sbRestorePin(pinId){
   if(!currentAccount) return;

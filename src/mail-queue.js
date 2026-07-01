@@ -364,7 +364,7 @@ function renderEstimatesTab(){
     const pinActionBtns = '<button data-pid="' + pid + '" onclick="restorePin(this.dataset.pid)" style="background:#1a7f4b;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#8629; Restore Pin</button>'
       + (isAdminOrAbove() ? '<button data-pid="' + pid + '" onclick="hardDeletePin(this.dataset.pid)" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">&#10005; Purge</button>' : '');
     return '<tr style="border-bottom:1px solid var(--border);opacity:.75;">'
-      +'<td style="padding:10px 8px;"></td>'
+      +'<td style="padding:10px 8px;"><input type="checkbox" class="est-row-cb pin-only-cb" data-id="" data-pid="'+pid+'" onchange="updateEstimateSelectionBar()" style="cursor:pointer;width:16px;height:16px;accent-color:var(--accent);"></td>'
       +'<td style="padding:12px;font-size:14px;font-weight:600;color:var(--text);">'+escHtml(shortAddr)+'<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+escHtml(addr.split(',').slice(1).join(',').trim())+'</div><div style="margin-top:3px;"><span style="background:rgba(242,92,5,.1);color:var(--accent);border:1px solid rgba(242,92,5,.3);border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;">PIN ONLY</span></div></td>'
       +'<td style="padding:12px;font-size:13px;color:var(--mid);">—</td>'
       +'<td style="padding:12px;font-size:12px;color:var(--muted);">'+escHtml(pin.rep||'—')+'</td>'
@@ -435,16 +435,20 @@ function updateEstimateSelectionBar(){
 
 function bulkPurgeEstimates(){
   if(!isAdminOrAbove()){ toast('Only admins can permanently delete estimates.','error'); return; }
-  const ids = [...document.querySelectorAll('.est-row-cb:checked')].map(cb=>cb.dataset.id).filter(Boolean);
-  if(!ids.length){ toast('No estimates selected','warn'); return; }
-  bdConfirm('Permanently delete '+ids.length+' estimate'+(ids.length!==1?'s':'')+' and their pins? This cannot be undone.', ()=>{
-    ids.forEach(estId=>{
+  // Collect estimate ids (has data-id) and pin-only ids (has data-pid, no data-id)
+  const estIds = [...document.querySelectorAll('.est-row-cb:checked')].map(cb=>cb.dataset.id).filter(Boolean);
+  const pinOnlyIds = [...document.querySelectorAll('.pin-only-cb:checked')].map(cb=>cb.dataset.pid).filter(Boolean);
+  const total = estIds.length + pinOnlyIds.length;
+  if(!total){ toast('No items selected','warn'); return; }
+  bdConfirm('Permanently delete '+total+' item'+(total!==1?'s':'')+' and their pins? This cannot be undone.', ()=>{
+    // Delete estimates + their pins
+    estIds.forEach(estId=>{
       const est = (S.estimates||[]).find(e=>e.id===estId);
       S.estimates = (S.estimates||[]).filter(e=>e.id!==estId);
       if(sb) sb.from('estimates').delete().eq('id', estId).then(({error})=>{ if(error) console.warn('[BidDrop] bulkPurge:', error.message); });
       if(est && est.pinId){
         S.pins = (S.pins||[]).filter(p=>p.id!==est.pinId);
-        if(sb) sb.from('pins').delete().eq('id', est.pinId).then(()=>{});
+        if(sb) sb.from('pins').delete().eq('id', est.pinId).eq('account_id', currentAccount.id).then(()=>{});
         if(map && markers[est.pinId]){
           if(clusterGroup) clusterGroup.removeLayer(markers[est.pinId]);
           else map.removeLayer(markers[est.pinId]);
@@ -452,8 +456,18 @@ function bulkPurgeEstimates(){
         }
       }
     });
+    // Delete pin-only rows
+    pinOnlyIds.forEach(pid=>{
+      S.pins = (S.pins||[]).filter(p=>p.id!==pid);
+      if(sb) sb.from('pins').delete().eq('id', pid).eq('account_id', currentAccount.id).then(({error})=>{ if(error) console.warn('[BidDrop] bulkPurgePins:', error.message); });
+      if(map && markers[pid]){
+        if(clusterGroup) clusterGroup.removeLayer(markers[pid]);
+        else map.removeLayer(markers[pid]);
+        delete markers[pid];
+      }
+    });
     save(); renderPinList(); renderEstimatesTab();
-    toast(ids.length+' estimate'+(ids.length!==1?'s':'')+' permanently deleted','info');
+    toast(total+' item'+(total!==1?'s':'')+' permanently deleted','info');
   });
 }
 
@@ -612,11 +626,22 @@ async function hardDeletePin(pinId){
   bdConfirm('Permanently delete this pin? This cannot be undone.', async ()=>{
   if(!currentAccount) return;
   try{
-    await sb.from('pins').delete().eq('id', pinId);
-  S.pins = S.pins.filter(p=>p.id!==pinId);
-  if(typeof renderEstimatesTab==='function') renderEstimatesTab();
-  toast('Pin permanently deleted','info');
+    const {error} = await sb.from('pins').delete().eq('id', pinId).eq('account_id', currentAccount.id);
+    if(error) throw new Error(error.message);
+    S.pins = S.pins.filter(p=>p.id!==pinId);
+    // Also remove linked estimates from memory
+    if(S.estimates) S.estimates = S.estimates.filter(e=>e.pinId!==pinId);
+    // Remove map marker
+    if(map && markers[pinId]){
+      if(clusterGroup) clusterGroup.removeLayer(markers[pinId]);
+      else map.removeLayer(markers[pinId]);
+      delete markers[pinId];
+    }
+    if(typeof renderEstimatesTab==='function') renderEstimatesTab();
+    if(typeof renderPinList==='function') renderPinList();
+    toast('Pin permanently deleted','info');
   }catch(e){
+    console.error('[BidDrop] hardDeletePin error:', e);
     toast('Purge failed: '+e.message,'error');
   }
   }); // end bdConfirm
