@@ -585,6 +585,34 @@ function deleteEstimate(estId){
     doDelete();
   }
 }
+function deleteActivePin(pinId){
+  // Soft-delete a PIN ONLY active row — moves it to Trash (recoverable)
+  // Falls back to hard-delete if deleted_at column doesn't exist yet (pre-migration)
+  if(!currentAccount) return;
+  bdConfirm('Move this pin to Trash?', async ()=>{
+    const now = new Date().toISOString();
+    const pin = (S.pins||[]).find(p=>p.id===pinId);
+    if(!pin) return;
+    // Set client-side immediately so it disappears from Active and appears in Trash
+    pin.deleted_at = now;
+    // Remove map marker
+    if(map && markers[pinId]){
+      if(clusterGroup) clusterGroup.removeLayer(markers[pinId]);
+      else map.removeLayer(markers[pinId]);
+      delete markers[pinId];
+    }
+    renderPinList();
+    renderEstimatesTab();
+    toast('Moved to Trash — recoverable for 30 days','info');
+    // Persist to DB (sbDeletePin handles missing column fallback)
+    try{
+      await sbDeletePin(pinId);
+    }catch(e){
+      console.warn('[BidDrop] deleteActivePin DB error:', e.message);
+      // Already removed client-side; DB will be cleaned up on next hard-delete/migration
+    }
+  });
+}
 async function bulkDeleteEstimates(){
   const ids = Array.from(document.querySelectorAll('.est-row-cb:checked')).map(cb=>cb.dataset.id).filter(Boolean);
   // Also collect active pin-only rows (no estimate, just a pin)
