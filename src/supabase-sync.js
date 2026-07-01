@@ -405,7 +405,7 @@ async function sbSaveQueueItem(item){
   const meta = {id:'_meta', photo_url: item.photo_url||null, photo_data: item.photo_data||null, pin_id: item.pinId||null};
   // Capture rep name at send time for analytics attribution
   const repName = item.rep_name || currentProfile?.name || currentProfile?.full_name || currentUser?.email?.split('@')[0] || null;
-  const {error} = await sb.from('queue').upsert({
+  const fullPayload = {
     id: item.id, account_id: currentAccount.id, created_by: currentUser.id,
     owner: item.owner, addr: item.addr, email: item.email||'',
     sqft: item.sqft, pitch: item.pitch, mat: item.mat,
@@ -417,8 +417,27 @@ async function sbSaveQueueItem(item){
     drip_step: item.drip_step||null,
     drip_est_id: item.drip_est_id||null,
     scheduled_send_at: item.scheduled_send_at||null
-  });
-  if(error) console.error('Queue save error:', error);
+  };
+  const {error} = await sb.from('queue').upsert(fullPayload);
+  if(error){
+    // If 400: newer columns (source, rep_name, drip_step, drip_est_id, scheduled_send_at)
+    // may not exist yet — migration not run. Retry with base columns only.
+    if(error.code === '42703' || (error.message && error.message.includes('column'))){
+      console.warn('Queue save: retrying without newer columns (run migration to fix permanently)', error.message);
+      const basePayload = {
+        id: item.id, account_id: currentAccount.id, created_by: currentUser.id,
+        owner: item.owner, addr: item.addr, email: item.email||'',
+        sqft: item.sqft, pitch: item.pitch, mat: item.mat,
+        structures: [...structs, meta], total: item.total,
+        status: item.status, lob_id: item.lobId||null,
+        mailed_at: item.mailedAt||null
+      };
+      const {error: e2} = await sb.from('queue').upsert(basePayload);
+      if(e2) console.error('Queue save error (fallback):', e2);
+    } else {
+      console.error('Queue save error:', error);
+    }
+  }
 }
 
 async function sbAddActivity(txt, ref){
