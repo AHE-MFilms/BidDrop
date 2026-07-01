@@ -538,7 +538,11 @@ function goTab(t){
     _autoSaveEstimateOnLeave();
   }
   document.querySelectorAll('.tab-btn,.bnav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
-  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active',p.id==='tab-'+t));
+  document.querySelectorAll('.tab-pane').forEach(p=>{
+    const isActive = p.id==='tab-'+t;
+    p.classList.toggle('active', isActive);
+    if(isActive) p.scrollTop = 0; // always start at top when switching tabs
+  });
   if(t==='map'){setTimeout(()=>map&&map.invalidateSize(),80);}
   if(t==='dashboard')renderDash();
   if(t==='mailqueue')renderQueue();
