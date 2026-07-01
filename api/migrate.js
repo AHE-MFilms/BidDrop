@@ -316,6 +316,27 @@ export default async function handler(req, res) {
     { name: 'queue.scheduled_send_at',sql: "ALTER TABLE queue ADD COLUMN IF NOT EXISTS scheduled_send_at timestamptz" },
     // Backfill: mark existing unlock-sourced queue items so they get free sends
     { name: 'queue.source_backfill',  sql: "UPDATE queue SET source = 'unlock' WHERE id LIKE 'mq_unlock_%' AND source IS NULL" },
+
+    // ── Build 15: Performance indexes on high-query columns ──
+    // pins — most frequently filtered/sorted
+    { name: 'idx.pins_account_id',       sql: "CREATE INDEX IF NOT EXISTS idx_pins_account_id ON pins(account_id)" },
+    { name: 'idx.pins_status',           sql: "CREATE INDEX IF NOT EXISTS idx_pins_status ON pins(status)" },
+    { name: 'idx.pins_campaign_id',      sql: "CREATE INDEX IF NOT EXISTS idx_pins_campaign_id ON pins(campaign_id)" },
+    { name: 'idx.pins_account_status',   sql: "CREATE INDEX IF NOT EXISTS idx_pins_account_status ON pins(account_id, status)" },
+    // estimates — frequently joined to pins
+    { name: 'idx.estimates_account_id',  sql: "CREATE INDEX IF NOT EXISTS idx_estimates_account_id ON estimates(account_id)" },
+    { name: 'idx.estimates_pin_id',      sql: "CREATE INDEX IF NOT EXISTS idx_estimates_pin_id ON estimates(pin_id)" },
+    // queue — drip scheduler queries by status + scheduled_send_at
+    { name: 'idx.queue_account_id',      sql: "CREATE INDEX IF NOT EXISTS idx_queue_account_id ON queue(account_id)" },
+    { name: 'idx.queue_status',          sql: "CREATE INDEX IF NOT EXISTS idx_queue_status ON queue(status)" },
+    { name: 'idx.queue_scheduled',       sql: "CREATE INDEX IF NOT EXISTS idx_queue_scheduled_send_at ON queue(scheduled_send_at) WHERE status = 'pending'" },
+    // campaign_targets — filtered by account_id
+    { name: 'idx.campaign_targets_acct', sql: "CREATE INDEX IF NOT EXISTS idx_campaign_targets_account_id ON campaign_targets(account_id)" },
+    // pixel_hits — filtered by account_id + resolution_status
+    { name: 'idx.pixel_hits_account_id', sql: "CREATE INDEX IF NOT EXISTS idx_pixel_hits_account_id ON pixel_hits(account_id)" },
+    { name: 'idx.pixel_hits_status',     sql: "CREATE INDEX IF NOT EXISTS idx_pixel_hits_resolution_status ON pixel_hits(resolution_status)" },
+    // mailer_log — audit queries by account_id
+    { name: 'idx.mailer_log_account_id', sql: "CREATE INDEX IF NOT EXISTS idx_mailer_log_account_id ON mailer_log(account_id) WHERE account_id IS NOT NULL" },
   ];
 
   // Try to run DDL via rpc/exec_sql
