@@ -61,6 +61,9 @@ async function handle(action, req, res, ctx) {
           body: JSON.stringify(payload)
         });
         const lobData = await lobRes.json();
+        if (!lobRes.ok) {
+          console.error('[Lob] postcard error', lobRes.status, JSON.stringify(lobData).slice(0, 500));
+        }
         // If Lob failed and we deducted a credit, refund it
         if (!lobRes.ok && !pcPaidByUnlock) {
           await sbFetch(`accounts?id=eq.${effectiveAccountId}`, {

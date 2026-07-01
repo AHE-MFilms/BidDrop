@@ -71,7 +71,6 @@ async function addToQueue(){
     at:new Date().toISOString(), mailedAt:null, lobId:null
   };
   S.queue.unshift(item);
-  S.estimates.push(item);
   addAct('Estimate for <strong>'+escHtml(addr)+'</strong> queued','mailed');
   sbSaveQueueItem(item).catch(e=>console.error('Queue:',e));
   sbAddActivity('Estimate queued for <strong>'+escHtml(addr)+'</strong> — $'+grand.toLocaleString(),'mailed');
