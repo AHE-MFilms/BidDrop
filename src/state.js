@@ -2,7 +2,11 @@
 // Loaded before all other modules.
 
 const SUPABASE_URL = 'https://gtwbhxnrmfmdenogzuea.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0d2JoeG5ybWZtZGVub2d6dWVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MDIwMDEsImV4cCI6MjA5MDM3ODAwMX0.BsQ16dnGb4xKIgIPxvgqjdGUnZ9H374car1_4e1Umbs';
+// @@ENV:SUPABASE_ANON_KEY@@ is replaced at build time by build.js
+// Falls back to the hardcoded value if the env var is not set (local dev)
+const SUPABASE_ANON_KEY = '@@ENV:SUPABASE_ANON_KEY@@' !== '@@ENV:SUPABASE_ANON_KEY@@'
+  ? '@@ENV:SUPABASE_ANON_KEY@@'
+  : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0d2JoeG5ybWZtZGVub2d6dWVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MDIwMDEsImV4cCI6MjA5MDM3ODAwMX0.BsQ16dnGb4xKIgIPxvgqjdGUnZ9H374car1_4e1Umbs';
 let sb; // Supabase client — initialized after page load
 let masterLobKey = '';      // Fetched at login from AHE agency account — never exposed to client UI
 let masterRentcastKey = ''; // Fetched at login from AHE agency account — never exposed to client UI

@@ -54,57 +54,29 @@
     }
   ],
   "functions": {
-    "api/credits.js": {
-      "maxDuration": 30
-    },
-    "api/quote.js": {
-      "maxDuration": 15
-    },
-    "api/estimate.js": {
-      "maxDuration": 15
-    },
-    "api/oauth.js": {
-      "maxDuration": 15
-    },
-    "api/cron-drip.js": {
-      "maxDuration": 60
-    },
-    "api/signup.js": {
-      "maxDuration": 15
-    },
-    "api/signup-webhook.js": {
-      "maxDuration": 30
-    },
-    "api/cron-trial-check.js": {
-      "maxDuration": 30
-    },
-    "api/billing-webhook.js": {
-      "maxDuration": 30
-    },
-    "api/admin.js": {
-      "maxDuration": 60
-    },
-    "api/solar.js": {
-      "maxDuration": 10
-    },
-    "api/jobnimbus.js": {
-      "maxDuration": 15
-    },
-    "api/send-proposal.js": {
-      "maxDuration": 15
-    },
-    "api/migrate.js": {
-      "maxDuration": 30
-    },
-    "api/r.js": {
-      "maxDuration": 15
-    },
-    "api/pixel.js": {
-      "maxDuration": 10
-    },
-    "api/canvas.js": {
-      "maxDuration": 15
-    }
+    "api/credits.js":          { "maxDuration": 30 },
+    "api/quote.js":            { "maxDuration": 15 },
+    "api/estimate.js":         { "maxDuration": 15 },
+    "api/oauth.js":            { "maxDuration": 15 },
+    "api/cron-drip.js":        { "maxDuration": 60 },
+    "api/signup.js":           { "maxDuration": 15 },
+    "api/signup-webhook.js":   { "maxDuration": 30 },
+    "api/cron-trial-check.js": { "maxDuration": 30 },
+    "api/billing-webhook.js":  { "maxDuration": 30 },
+    "api/admin.js":            { "maxDuration": 60 },
+    "api/admin-users.js":      { "maxDuration": 30 },
+    "api/admin-ghl.js":        { "maxDuration": 30 },
+    "api/admin-lob.js":        { "maxDuration": 60 },
+    "api/admin-rentcast.js":   { "maxDuration": 15 },
+    "api/admin-storage.js":    { "maxDuration": 30 },
+    "api/admin-misc.js":       { "maxDuration": 60 },
+    "api/solar.js":            { "maxDuration": 10 },
+    "api/jobnimbus.js":        { "maxDuration": 15 },
+    "api/send-proposal.js":    { "maxDuration": 15 },
+    "api/migrate.js":          { "maxDuration": 30 },
+    "api/r.js":                { "maxDuration": 15 },
+    "api/pixel.js":            { "maxDuration": 10 },
+    "api/canvas.js":           { "maxDuration": 15 }
   },
   "headers": [
     {
@@ -113,6 +85,26 @@
         {
           "key": "Cache-Control",
           "value": "no-store, no-cache, must-revalidate"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=(self)"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com https://maps.googleapis.com https://maps.gstatic.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.supabase.co https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com https://tile.openstreetmap.org https://maps.googleapis.com https://maps.gstatic.com https://*.googleapis.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.lob.com https://api.rentcast.io https://api.tracerfy.com https://api.companycam.com https://rest.gohighlevel.com https://services.leadconnectorhq.com https://api.stripe.com https://api.quickbooks.com https://api.jobnimbus.com https://api.openai.com; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self';"
         }
       ]
     }

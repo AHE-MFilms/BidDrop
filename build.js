@@ -108,6 +108,10 @@ for (const htmlFile of HTML_FILES) {
       });
     }
     html = resolvePartials(html, 0);
+    // ── Inject env variables at build time (@@ENV:VAR_NAME@@ placeholders) ──
+    html = html.replace(/@@ENV:([A-Z0-9_]+)@@/g, (match, varName) => {
+      return process.env[varName] || match;
+    });
   }
   let fileObf = 0;
   let fileFallback = 0;
