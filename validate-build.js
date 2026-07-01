@@ -120,7 +120,55 @@ if (missingFns.length > 0) {
   pass(`All ${criticalFunctions.length} critical functions are defined`);
 }
 
-// ── 8. dist file size sanity check ──────────────────────────────────────────
+// ── 8. onclick / event-handler linkage check ───────────────────────────────
+// Every function called from onclick="fnName()" must be defined in src/ files.
+// This catches the "button silently does nothing" class of bugs at build time.
+{
+  const calledFns = new Set();
+  const EVENT_ATTRS = ['onclick','onchange','onsubmit','oninput','onkeyup','onkeydown','onfocus','onblur'];
+  for (const evt of EVENT_ATTRS) {
+    const re = new RegExp(evt + '="([^"]+)"', 'g');
+    let m;
+    while ((m = re.exec(html)) !== null) {
+      const val = m[1].trim();
+      const fnMatch = val.match(/^([a-zA-Z_$][a-zA-Z0-9_$]*)\s*[(;]/);
+      if (fnMatch) calledFns.add(fnMatch[1]);
+    }
+  }
+
+  // Collect definitions from all src/*.js and src/html/*.html script blocks
+  const definedFns = new Set();
+  function _extractFns(src) {
+    const defRe = /(?:^|[\n;{(,])\s*(?:async\s+)?function\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(/gm;
+    let dm;
+    while ((dm = defRe.exec(src)) !== null) definedFns.add(dm[1]);
+  }
+  for (const fname of jsFiles) _extractFns(fs.readFileSync(path.join(SRC_JS, fname), 'utf8'));
+  for (const fname of fs.readdirSync(SRC_HTML).filter(f => f.endsWith('.html'))) {
+    const src = fs.readFileSync(path.join(SRC_HTML, fname), 'utf8');
+    const scriptRe = /<script[^>]*>([\s\S]*?)<\/script>/gi;
+    let sm;
+    while ((sm = scriptRe.exec(src)) !== null) _extractFns(sm[1]);
+  }
+  _extractFns(indexHtml);
+
+  const SKIP_FNS = new Set([
+    'if','document','this','window','event','return','void',
+    'setTimeout','setInterval','clearTimeout','clearInterval',
+    'parseInt','parseFloat','isNaN','isFinite',
+    'encodeURIComponent','decodeURIComponent',
+    'JSON','Math','Object','Array','String','Boolean','Number',
+    'Promise','fetch','console','alert','confirm','location',
+  ]);
+  const missingLinks = [...calledFns].filter(f => !definedFns.has(f) && !SKIP_FNS.has(f)).sort();
+  if (missingLinks.length > 0) {
+    fail(`${missingLinks.length} event-handler function(s) called in HTML but not defined in src/: ${missingLinks.join(', ')}`);
+  } else {
+    pass(`All ${calledFns.size} event-handler functions are defined in src/`);
+  }
+}
+
+// ── 9. dist file size sanity check ──────────────────────────────────────────
 const sizeKB = Math.round(html.length / 1024);
 if (sizeKB < 400) {
   fail(`dist/index.html is suspiciously small (${sizeKB} KB) — build may be incomplete`);

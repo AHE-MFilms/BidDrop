@@ -34,6 +34,8 @@ async function loadHotLeads(){
       if(empty) empty.style.display='block';
       return;
     }
+    // Cache for client-side filter (renderHotLeads uses this)
+    _hlAllRows = rows;
     // Sort: QR scans first (hottest), then page views
     rows.sort((a,b)=>{
       const aScore = (a.qr_scan_count||0)*3 + (a.page_views||0);
@@ -98,6 +100,69 @@ async function loadHotLeads(){
     container.innerHTML='<div style="text-align:center;padding:30px;color:var(--danger);font-size:13px;">Error loading hot leads: '+escHtml(e.message)+'</div>';
   }
 }
+// ── Client-side filter/search (no re-fetch needed) ──────────────────────────
+// _hlAllRows caches the full result set so renderHotLeads() can filter locally
+let _hlAllRows = [];
+function renderHotLeads() {
+  const container = document.getElementById('hl-list');
+  const empty = document.getElementById('hl-empty');
+  if (!container) return;
+  const q = (document.getElementById('hl-search')?.value || '').toLowerCase().trim();
+  const period = document.getElementById('hl-filter')?.value || 'all';
+  const now = Date.now();
+  const periodMs = { today: 86400000, week: 7*86400000, month: 30*86400000 };
+  let rows = _hlAllRows.filter(r => {
+    if (q && !((r.owner||'').toLowerCase().includes(q) || (r.addr||'').toLowerCase().includes(q))) return false;
+    if (period !== 'all' && periodMs[period]) {
+      const last = r.page_last_viewed_at ? new Date(r.page_last_viewed_at).getTime() : 0;
+      if (now - last > periodMs[period]) return false;
+    }
+    return true;
+  });
+  if (!rows.length) {
+    container.innerHTML = '';
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  // Re-use the same row renderer from loadHotLeads
+  container.innerHTML = rows.map(r => {
+    const scans = r.qr_scan_count||0;
+    const views = r.page_views||0;
+    const lastSeen = r.page_last_viewed_at ? timeAgo(r.page_last_viewed_at) : 'never';
+    const heatScore = scans*3 + views;
+    const heatColor = heatScore>=9?'#EF4444':heatScore>=4?'#F59E0B':'#3B82F6';
+    const heatLabel = heatScore>=9?'🔥 Very Hot':heatScore>=4?'🌡 Warm':'👀 Viewed';
+    const total = r.total ? '$'+Number(r.total).toLocaleString() : '—';
+    const pin = S.pins.find(p=>p.address&&r.addr&&p.address.trim()===r.addr.trim());
+    const pinId = pin ? pin.id : null;
+    const hasGhl = !!(S.cfg&&S.cfg.ghlLocationId);
+    const hasEmail = !!(r.email);
+    return '<div class="hl-row" onclick="openHotLeadDetail(\''+r.id+'\')" style="cursor:pointer;">'+
+      '<div class="hl-heat" style="background:'+heatColor+'22;border:1px solid '+heatColor+'44;border-radius:8px;padding:6px 10px;text-align:center;min-width:90px;">'+
+        '<div style="font-size:11px;font-weight:700;color:'+heatColor+';">'+heatLabel+'</div>'+
+        (scans?'<div style="font-size:10px;color:var(--muted);">'+scans+' QR scan'+(scans!==1?'s':'')+'</div>':'')+
+        '<div style="font-size:10px;color:var(--muted);">'+views+' view'+(views!==1?'s':'')+'</div>'+
+      '</div>'+
+      '<div style="flex:1;min-width:0;">'+
+        '<div style="font-weight:700;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(r.owner||'Homeowner')+'</div>'+
+        '<div style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(r.addr||'')+'</div>'+
+        '<div style="font-size:11px;color:var(--muted);margin-top:2px;">Last seen: '+lastSeen+' · Rep: '+escHtml(r.rep||'—')+'</div>'+
+        (hasEmail?'<div style="font-size:11px;color:#22C55E;margin-top:1px;">✉ '+escHtml(r.email)+'</div>':'')+'</div>'+
+      '<div style="text-align:right;flex-shrink:0;">'+
+        '<div style="font-size:16px;font-weight:800;color:var(--accent);">'+total+'</div>'+
+        '<div style="font-size:11px;color:var(--muted);">'+escHtml(r.mat||'')+'</div>'+
+        '<div style="display:flex;gap:6px;margin-top:6px;justify-content:flex-end;flex-wrap:wrap;">'+
+          '<button onclick="event.stopPropagation();window.open(\'/e/'+r.id+'\',\'_blank\'" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:10px;cursor:pointer;font-weight:700;">View Page</button>'+
+          (pinId?'<button onclick="event.stopPropagation();goTab(\'map\');setTimeout(()=>openPinPanel(\''+pinId+'\'),400)" style="background:var(--accent);border:none;border-radius:6px;padding:4px 8px;color:#fff;font-size:10px;cursor:pointer;font-weight:700;">Open Pin</button>':'')+
+          (hasGhl?'<button onclick="event.stopPropagation();hlSendToGHL(this)" data-est-id="'+r.id+'" data-owner="'+escHtml(r.owner||'')+'" data-addr="'+escHtml(r.addr||'')+'" data-email="'+escHtml(r.email||'')+'" data-total="'+(r.total||0)+'" data-rep="'+escHtml(r.rep||'')+'" style="background:#0f172a;border:1px solid #334155;border-radius:6px;padding:4px 8px;color:#7dd3fc;font-size:10px;cursor:pointer;font-weight:700;">Send to GHL →</button>':'')+'</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+  const countEl = document.getElementById('hl-count');
+  if (countEl) countEl.textContent = rows.length+' hot lead'+(rows.length!==1?'s':'');
+}
+
 function openHotLeadDetail(estimateId){
   window.open('/e/'+estimateId,'_blank');
 }
