@@ -159,20 +159,9 @@
         <div style="font-size:11px;color:#22C55E;font-weight:600;">🔥 Buy 3 Get 5 Total!</div>
       </div>
     </div>
-    <!-- Design selection -->
-    <div style="margin-bottom:16px;">
-      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Design</div>
-      <div id="spm-design-row" style="display:flex;align-items:center;gap:10px;">
-        <div id="spm-design-thumb" style="width:48px;height:32px;background:var(--card2);border:1px solid var(--border);border-radius:6px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
-          <span style="font-size:16px;">📋</span>
-        </div>
-        <div style="flex:1;min-width:0;">
-          <div id="spm-design-name" style="font-size:12px;font-weight:700;color:var(--text);">Standard (Account Default)</div>
-          <div id="spm-design-back-note" style="font-size:10px;color:var(--muted);">Uses your account back text</div>
-        </div>
-        <button onclick="spmPickDesign()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:5px 12px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;">Change</button>
-      </div>
-    </div>
+    <!-- Design: always Standard (Account Default) for pin drops. Custom designs are for Campaigns only. -->
+    <!-- Hidden elements kept for JS compatibility -->
+    <div style="display:none;"><div id="spm-design-row"></div><div id="spm-design-thumb"></div><div id="spm-design-name"></div><div id="spm-design-back-note"></div></div>
     <!-- Confirm button -->
     <button id="spm-confirm-btn" onclick="spmConfirm()" style="width:100%;background:var(--accent);border:none;border-radius:10px;padding:14px;color:#fff;font-family:var(--font-b);font-size:14px;font-weight:700;cursor:pointer;opacity:.4;pointer-events:none;">Select an option above</button>
     <button onclick="closeM('m-send-postcard')" style="width:100%;margin-top:8px;background:none;border:1px solid var(--border);border-radius:10px;padding:10px;color:var(--muted);font-family:var(--font-b);font-size:13px;cursor:pointer;">Cancel</button>
