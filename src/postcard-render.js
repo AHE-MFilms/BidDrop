@@ -58,6 +58,7 @@ async function pcPreviewRefresh(){
     postcardShowPrice:!!(document.getElementById('s-pc-show-price')&&document.getElementById('s-pc-show-price').checked),
     postcardShowMonthly:!!(document.getElementById('s-pc-show-monthly')&&document.getElementById('s-pc-show-monthly').checked),
     postcardShowPhone:!!(document.getElementById('s-pc-show-phone')&&document.getElementById('s-pc-show-phone').checked),
+    postcardShowPriceBack:!!(document.getElementById('s-pc-show-price-back')&&document.getElementById('s-pc-show-price-back').checked),
     postcardHl1Size:parseInt(v('s-pc-hl1-sz'))||160,
     postcardHl2Size:parseInt(v('s-pc-hl2-sz'))||160,
     postcardHookSize:parseInt(v('s-pc-hook-sz'))||36,
@@ -573,7 +574,9 @@ async function renderPostcard6x9BackCanvas(item){
   hookLines.slice(0,3).forEach((l,i)=>{ctx.fillText(l,HR_X,hy+hookSize+i*hookLineH);});
   hy+=Math.min(hookLines.length,3)*hookLineH+28;;
 
-  // Price bar
+  // Price bar (optional — controlled by postcardShowPriceBack setting)
+  const showPriceBack=cfg.postcardShowPriceBack!==false;
+  if(showPriceBack){
   const PB_H=finMo?200:160;
   ctx.fillStyle=color;
   roundRect(ctx,HR_X,hy,HR_W,PB_H,18);ctx.fill();
@@ -595,6 +598,7 @@ async function renderPostcard6x9BackCanvas(item){
     ctx.fillText('$'+total.toLocaleString(),HR_X+24,hy+164);
   }
   hy+=PB_H+24;
+  } // end showPriceBack
 
   // Stars + review
   ctx.font='46px Arial';ctx.fillStyle='#f59e0b';
