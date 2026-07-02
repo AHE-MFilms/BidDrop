@@ -185,4 +185,16 @@ async function estUnlockPin() {
   _estRefreshUnlockUI();
   _accUpdateHomeownerSummary();
   toast('🔓 Pin unlocked — looking up contact info…', 'success');
+  // Auto-save the estimate after unlock so the postcard has current pricing data.
+  // Use a short delay so the UI updates (owner/phone/email fields) are reflected first.
+  setTimeout(() => {
+    if (typeof saveEstimateNow === 'function' && currentEstPinId) {
+      // Temporarily suppress the post-save redirect to estimates tab
+      const _origNewEst = typeof newEstimate === 'function' ? newEstimate : null;
+      const _origGoTab  = typeof goTab === 'function' ? goTab : null;
+      window._suppressEstSaveRedirect = true;
+      try { saveEstimateNow(); } catch(e) { console.warn('[estUnlockPin] auto-save error:', e); }
+      window._suppressEstSaveRedirect = false;
+    }
+  }, 800);
 }

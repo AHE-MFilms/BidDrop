@@ -1111,7 +1111,7 @@ function saveEstimateNow(){
   if(pin.owner || document.getElementById('e-owner')?.value){ pin.owner = document.getElementById('e-owner')?.value||pin.owner; }
   jnUpsertContact(pin).catch(e=>console.warn('[JN] estimate save push:', e.message));
   toast('✅ Estimate saved!','success');
-  setTimeout(()=>{ newEstimate(); goTab('estimates'); }, 600);
+  if (!window._suppressEstSaveRedirect) setTimeout(()=>{ newEstimate(); goTab('estimates'); }, 600);
 }
 function autoSaveEstimateToPin(pinId){
   try{
