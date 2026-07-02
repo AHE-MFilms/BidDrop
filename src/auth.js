@@ -82,7 +82,7 @@ async function onSignedIn(user){
       try{
         const sess2 = (await sb.auth.getSession()).data.session;
         if(sess2){
-          const _vaId2 = window.currentAccount?.id ? '&viewingAccountId='+encodeURIComponent(window.currentAccount.id) : '';
+          const _vaId2 = currentAccount?.id ? '&viewingAccountId='+encodeURIComponent(currentAccount.id) : '';
           const r2 = await fetch('/api/credits?action=balance'+_vaId2,{ headers:{ 'Authorization':'Bearer '+sess2.access_token } });
           if(r2.ok){ const b2=await r2.json(); S.cfg.mailerCredits=b2.paid_credits; S.cfg.freeMailerCreditsUsed=b2.free_used; updateCreditBadge(); }
         }
@@ -94,7 +94,7 @@ async function onSignedIn(user){
       history.replaceState({}, '', window.location.pathname);
       // Refresh credit balance from server
       try{
-        const _vaIdBal = window.currentAccount?.id ? '&viewingAccountId='+encodeURIComponent(window.currentAccount.id) : '';
+        const _vaIdBal = currentAccount?.id ? '&viewingAccountId='+encodeURIComponent(currentAccount.id) : '';
         const bal = await fetch('/api/credits?action=balance'+_vaIdBal, { headers:{ 'Authorization':'Bearer '+(await sb.auth.getSession()).data.session?.access_token } });
         if(bal.ok){ const b=await bal.json(); S.cfg.mailerCredits=b.paid_credits; S.cfg.freeMailerCreditsUsed=b.free_used; updateCreditBadge(); }
       }catch(_){}

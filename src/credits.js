@@ -51,7 +51,7 @@ async function showBuyCreditsModal(){
   try{
     const sess = (await sb.auth.getSession()).data.session;
     if(sess){
-      const _vaIdC = window.currentAccount?.id ? '&viewingAccountId='+encodeURIComponent(window.currentAccount.id) : '';
+      const _vaIdC = currentAccount?.id ? '&viewingAccountId='+encodeURIComponent(currentAccount.id) : '';
       const r = await fetch('/api/credits?action=balance'+_vaIdC,{ headers:{ 'Authorization':'Bearer '+sess.access_token } });
       if(r.ok){
         const b = await r.json();
@@ -71,7 +71,7 @@ async function buyCredits(packId, btn){
     const origText = btn.innerHTML;
     btn.innerHTML = '<span style="opacity:.5;">Loading...</span>';
     btn.disabled = true;
-    const _vaIdCo = window.currentAccount?.id || null;
+    const _vaIdCo = currentAccount?.id || null;
     const r = await fetch('/api/credits?action=checkout',{
       method:'POST',
       headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+sess.access_token },

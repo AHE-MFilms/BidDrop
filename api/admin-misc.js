@@ -267,15 +267,22 @@ async function handle(action, req, res, ctx) {
         const { pinId: upPinId, address: upAddress, queuePostcard: upQueuePostcard } = req.body;
         if (!upPinId || !upAddress) { res.status(400).json({ error: 'pinId and address required' }); return; }
         const accountId = effectiveAccountId;
+        console.log('[unlock-pin] pinId:', upPinId, '| effectiveAccountId:', accountId, '| isSuperAdmin:', isSuperAdmin, '| viewingAccountId:', req.body?.viewingAccountId);
         if (!accountId) { res.status(401).json({ error: 'not authenticated' }); return; }
 
         // 1. Check if already unlocked (idempotent)
-        const upPinRes = await sbFetch(`pins?id=eq.${upPinId}&select=id,unlocked_at,contact_data,estimate,status,account_id,photo_url,photo_data,all_photos&limit=1`);
-        const upPinRows = upPinRes.ok ? await upPinRes.json() : [];
-        const upPin = upPinRows[0];
+        // Retry up to 3 times with 800ms delay to handle timing race where pin save hasn't completed yet
+        let upPin = null;
+        for (let _attempt = 0; _attempt < 3; _attempt++) {
+          if (_attempt > 0) await new Promise(r => setTimeout(r, 800));
+          const upPinRes = await sbFetch(`pins?id=eq.${upPinId}&select=id,unlocked_at,contact_data,estimate,status,account_id,photo_url,photo_data,all_photos&limit=1`);
+          const upPinRows = upPinRes.ok ? await upPinRes.json() : [];
+          if (upPinRows[0]) { upPin = upPinRows[0]; break; }
+        }
         if (!upPin) { res.status(404).json({ error: 'pin not found' }); return; }
         // Verify the pin belongs to the effective account (security check)
-        if (upPin.account_id && upPin.account_id !== accountId) {
+        // Super admins can unlock any account's pin; regular users can only unlock their own
+        if (!isSuperAdmin && upPin.account_id && upPin.account_id !== accountId) {
           res.status(403).json({ error: 'pin does not belong to this account' }); return;
         }
         if (upPin.unlocked_at) {

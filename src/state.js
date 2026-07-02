@@ -23,7 +23,7 @@ async function adminAPI(action, body={}, queryParams={}, _retried=false) {
   }
   const token = session ? session.access_token : '';
   // Automatically include viewingAccountId so super admin can act on behalf of viewed account
-  const enrichedBody = { ...body, viewingAccountId: (typeof window !== 'undefined' && window.currentAccount?.id) || null };
+  const enrichedBody = { ...body, viewingAccountId: (typeof currentAccount !== 'undefined' && currentAccount?.id) || null };
   const qs = new URLSearchParams({ action, ...queryParams }).toString();
   const res = await fetch('/api/admin?' + qs, {
     method: 'POST',
