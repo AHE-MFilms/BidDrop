@@ -311,6 +311,7 @@ export default async function handler(req, res) {
     },
     // ── Build 14: Queue source tracking (free postcard with unlock) ──
     { name: 'queue.source',           sql: "ALTER TABLE queue ADD COLUMN IF NOT EXISTS source text" },
+    { name: 'queue.rep_name',         sql: "ALTER TABLE queue ADD COLUMN IF NOT EXISTS rep_name text" },
     { name: 'queue.drip_step',        sql: "ALTER TABLE queue ADD COLUMN IF NOT EXISTS drip_step integer" },
     { name: 'queue.drip_est_id',      sql: "ALTER TABLE queue ADD COLUMN IF NOT EXISTS drip_est_id text" },
     { name: 'queue.scheduled_send_at',sql: "ALTER TABLE queue ADD COLUMN IF NOT EXISTS scheduled_send_at timestamptz" },
