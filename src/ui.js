@@ -204,7 +204,8 @@ async function _confirmUnlockPin(pinId) {
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Unlocking…'; }
   const queuePostcard = document.getElementById('bd-unlock-postcard-chk')?.checked ?? true;
   const pin = (S.pins||[]).find(p => p.id === pinId);
-  const address = pin ? pin.address : '';
+  const address = pin ? pin.address
+    : ((document.getElementById('e-addr') && document.getElementById('e-addr').value.trim()) || '');
   try {
     const result = await adminAPI('unlock-pin', { pinId, address, queuePostcard });
     // Update in-memory pin

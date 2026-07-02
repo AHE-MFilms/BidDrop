@@ -65,14 +65,24 @@ async function sbSavePin(pin){
   // If Supabase assigned a different id (UUID auto-gen), reconcile local state
   const savedId = upsertData && upsertData.id;
   if(savedId && savedId !== pin.id){
-    const idx = S.pins.findIndex(p=>p.id===pin.id);
+    const oldId = pin.id;
+    const idx = S.pins.findIndex(p=>p.id===oldId);
     if(idx>=0){ S.pins[idx].id = savedId; }
-    if(markers[pin.id]){
-      const m = markers[pin.id];
-      delete markers[pin.id];
+    if(markers[oldId]){
+      const m = markers[oldId];
+      delete markers[oldId];
       markers[savedId] = m;
     }
     pin.id = savedId;
+    // Also update any in-memory estimates that reference the old pin ID
+    (S.estimates||[]).forEach(e=>{ if(e.pinId===oldId) e.pinId = savedId; });
+    // Update currentEstPinId if it was pointing to the old ID
+    if(typeof currentEstPinId !== 'undefined' && currentEstPinId === oldId) currentEstPinId = savedId;
+    // Persist the updated pin_id to the estimates table in Supabase
+    if(sb) sb.from('estimates').update({pin_id: savedId}).eq('pin_id', oldId).eq('account_id', currentAccount.id).then(({error:eErr})=>{
+      if(eErr) console.warn('[BidDrop] reconcile estimate pin_id error:', eErr.message);
+      else console.log('[BidDrop] Reconciled estimate pin_id from', oldId, 'to', savedId);
+    });
     renderPinList();
   }
 }

@@ -295,11 +295,12 @@ async function handle(action, req, res, ctx) {
               updated_at: new Date().toISOString()
             })
           });
+          const createBody = await createRes.text();
+          console.log('[unlock-pin] pin create response status:', createRes.status, '| body:', createBody.slice(0, 300));
           if (createRes.ok) {
-            const created = await createRes.json();
-            upPin = Array.isArray(created) ? created[0] : created;
+            try { const created = JSON.parse(createBody); upPin = Array.isArray(created) ? created[0] : created; } catch(e) {}
           }
-          if (!upPin) { res.status(404).json({ error: 'pin not found and could not be created' }); return; }
+          if (!upPin) { res.status(404).json({ error: 'pin not found and could not be created', createStatus: createRes.status, createBody: createBody.slice(0,200) }); return; }
         }
         // Verify the pin belongs to the effective account (security check)
         // Super admins can unlock any account's pin; regular users can only unlock their own
