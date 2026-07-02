@@ -61,7 +61,7 @@ async function sbSavePin(pin){
     all_photos: _allPhotosForSupabase(pin.all_photos),
     updated_at: new Date().toISOString()
   }, {onConflict:'id'}).select('id').single();
-  if(error){ console.error('Pin save error:', error); return; }
+  if(error){ console.error('Pin save error:', error); if(typeof toast==='function') toast('\u26a0\ufe0f Pin save failed: '+((error&&error.message)||JSON.stringify(error)), 'error'); return; }
   // If Supabase assigned a different id (UUID auto-gen), reconcile local state
   const savedId = upsertData && upsertData.id;
   if(savedId && savedId !== pin.id){
