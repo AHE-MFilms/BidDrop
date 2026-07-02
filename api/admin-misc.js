@@ -270,7 +270,7 @@ async function handle(action, req, res, ctx) {
         if (!accountId) { res.status(401).json({ error: 'not authenticated' }); return; }
 
         // 1. Check if already unlocked (idempotent)
-        const upPinRes = await sbFetch(`pins?id=eq.${upPinId}&select=id,unlocked_at,contact_data,estimate,status,account_id&limit=1`);
+        const upPinRes = await sbFetch(`pins?id=eq.${upPinId}&select=id,unlocked_at,contact_data,estimate,status,account_id,photo_url,photo_data,all_photos&limit=1`);
         const upPinRows = upPinRes.ok ? await upPinRes.json() : [];
         const upPin = upPinRows[0];
         if (!upPin) { res.status(404).json({ error: 'pin not found' }); return; }
@@ -387,6 +387,14 @@ async function handle(action, req, res, ctx) {
         const upOwnerName = (upUpdates.estimate && upUpdates.estimate.owner) || (upPin.estimate && upPin.estimate.owner) || '';
         if (upQueuePostcard) {
           upQueueItemId = 'mq_unlock_' + upPinId + '_' + Date.now();
+          // Resolve best photo from pin: prefer a URL (publicly accessible), fall back to data URL
+          const upPhotoUrl  = upPin.photo_url  || null;
+          const upPhotoData = (!upPhotoUrl && upPin.photo_data) ? upPin.photo_data : null;
+          // Also check all_photos.front[0] if no direct photo
+          const upAllPhotos = upPin.all_photos || null;
+          const upFrontPhoto = (!upPhotoUrl && !upPhotoData && upAllPhotos && upAllPhotos.front && upAllPhotos.front[0]) ? upAllPhotos.front[0] : null;
+          const upBestPhotoUrl  = upPhotoUrl  || (upFrontPhoto && upFrontPhoto.startsWith('http')  ? upFrontPhoto : null) || null;
+          const upBestPhotoData = upPhotoData || (upFrontPhoto && !upFrontPhoto.startsWith('http') ? upFrontPhoto : null) || null;
           const queueItem = {
             id: upQueueItemId,
             account_id: accountId,
@@ -395,7 +403,9 @@ async function handle(action, req, res, ctx) {
             owner: upOwnerName,
             status: 'needs_approval',
             source: 'unlock',
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
+            ...(upBestPhotoUrl  ? { photo_url:  upBestPhotoUrl  } : {}),
+            ...(upBestPhotoData ? { photo_data: upBestPhotoData } : {})
           };
           // Write to 'queue' table (the table the client reads from)
           await sbFetch('queue', {

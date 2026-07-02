@@ -216,6 +216,11 @@ async function _confirmUnlockPin(pinId) {
       if (result.postcard_queued && result.queue_item_id) {
         if (!S.queue) S.queue = [];
         S.queue = S.queue.filter(function(q){ return q.id !== result.queue_item_id; });
+        // Resolve photo from the pin for immediate in-memory use
+        var _unlockPin2 = (S.pins||[]).find(function(p){ return p.id === pinId; });
+        var _upFront = _unlockPin2 && _unlockPin2.all_photos && _unlockPin2.all_photos.front && _unlockPin2.all_photos.front[0];
+        var _upPhotoUrl  = (_unlockPin2 && _unlockPin2.photo_url)  || (_upFront && _upFront.startsWith('http')  ? _upFront : null) || null;
+        var _upPhotoData = (_unlockPin2 && _unlockPin2.photo_data) || (_upFront && !_upFront.startsWith('http') ? _upFront : null) || null;
         S.queue.unshift({
           id: result.queue_item_id,
           pinId: pinId,
@@ -225,7 +230,9 @@ async function _confirmUnlockPin(pinId) {
           source: 'unlock',
           send_num: 1,
           campaign_label: 'Free Postcard',
-          at: new Date().toISOString()
+          at: new Date().toISOString(),
+          photo_url:  _upPhotoUrl  || undefined,
+          photo_data: _upPhotoData || undefined
         });
         if (typeof renderQueue === 'function') renderQueue();
       }

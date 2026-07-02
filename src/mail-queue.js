@@ -1576,7 +1576,10 @@ async function previewPostcard6x9(id){
   }
   if(!photoUrl && item.pinId){
     const linkedPin = (S.pins||[]).find(p=>p.id===item.pinId);
-    if(linkedPin) photoUrl = linkedPin.photo_url || linkedPin.photo_data || null;
+    if(linkedPin){
+      const _lpFront = linkedPin.all_photos && linkedPin.all_photos.front && linkedPin.all_photos.front[0];
+      photoUrl = linkedPin.photo_url || linkedPin.photo_data || _lpFront || null;
+    }
   }
   if(!photoUrl && item.estId){
     const linkedEst = (S.estimates||[]).find(e=>e.id===item.estId);
