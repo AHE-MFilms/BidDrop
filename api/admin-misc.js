@@ -267,43 +267,33 @@ async function handle(action, req, res, ctx) {
         const { pinId: upPinId, address: upAddress, queuePostcard: upQueuePostcard } = req.body;
         if (!upPinId || !upAddress) { res.status(400).json({ error: 'pinId and address required' }); return; }
         const accountId = effectiveAccountId;
-        console.log('[unlock-pin] pinId:', upPinId, '| effectiveAccountId:', accountId, '| isSuperAdmin:', isSuperAdmin, '| viewingAccountId:', req.body?.viewingAccountId);
         if (!accountId) { res.status(401).json({ error: 'not authenticated' }); return; }
 
         // 1. Check if already unlocked (idempotent)
-        // Retry up to 3 times with 800ms delay to handle timing race where pin save hasn't completed yet
-        let upPin = null;
-        for (let _attempt = 0; _attempt < 3; _attempt++) {
-          if (_attempt > 0) await new Promise(r => setTimeout(r, 800));
-          const upPinRes = await sbFetch(`pins?id=eq.${upPinId}&select=id,unlocked_at,contact_data,estimate,status,account_id,photo_url,photo_data,all_photos&limit=1`);
-          const upPinRows = upPinRes.ok ? await upPinRes.json() : [];
-          if (upPinRows[0]) { upPin = upPinRows[0]; break; }
-        }
+        const upPinRes = await sbFetch(`pins?id=eq.${upPinId}&select=id,unlocked_at,contact_data,estimate,status,account_id,photo_url,photo_data,all_photos&limit=1`);
+        const upPinRows = upPinRes.ok ? await upPinRes.json() : [];
+        let upPin = upPinRows[0];
         if (!upPin) {
-          // Pin not found in DB — this happens when pin was saved to localStorage but not synced to DB.
-          // Create a minimal pin row so unlock can proceed.
-          console.log('[unlock-pin] pin not in DB, creating minimal row for pinId:', upPinId);
-          const createRes = await sbFetch('pins', {
+          // Pin not in DB yet — upsert a minimal row so unlock can proceed.
+          // This handles the case where pin was saved to localStorage but not yet synced to Supabase.
+          console.log('[unlock-pin] pin not in DB, upserting minimal row:', upPinId);
+          const upsertRes = await sbFetch(`pins?on_conflict=id`, {
             method: 'POST',
-            headers: { 'Prefer': 'return=representation', 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              id: upPinId,
-              account_id: accountId,
-              address: upAddress,
-              status: 'pinned',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            })
+            headers: { 'Prefer': 'return=representation,resolution=merge-duplicates', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: upPinId, account_id: accountId, address: upAddress, status: 'pinned', lat: 0, lng: 0 })
           });
-          const createBody = await createRes.text();
-          console.log('[unlock-pin] pin create response status:', createRes.status, '| body:', createBody.slice(0, 300));
-          if (createRes.ok) {
-            try { const created = JSON.parse(createBody); upPin = Array.isArray(created) ? created[0] : created; } catch(e) {}
+          if (upsertRes.ok) {
+            const rows = await upsertRes.json();
+            upPin = Array.isArray(rows) ? rows[0] : rows;
           }
-          if (!upPin) { res.status(404).json({ error: 'pin not found and could not be created', createStatus: createRes.status, createBody: createBody.slice(0,200) }); return; }
+          if (!upPin) {
+            const errBody = upsertRes ? await upsertRes.text().catch(()=>'') : '';
+            console.error('[unlock-pin] pin upsert failed:', upsertRes?.status, errBody.slice(0,200));
+            res.status(404).json({ error: 'pin not found' }); return;
+          }
         }
         // Verify the pin belongs to the effective account (security check)
-        // Super admins can unlock any account's pin; regular users can only unlock their own
+        // Super admins bypass this check so they can unlock on behalf of any account
         if (!isSuperAdmin && upPin.account_id && upPin.account_id !== accountId) {
           res.status(403).json({ error: 'pin does not belong to this account' }); return;
         }

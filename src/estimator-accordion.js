@@ -167,6 +167,17 @@ async function estLookupContact() {
 // Called when rep clicks "🔓 Unlock Pin — 1 Credit"
 async function estUnlockPin() {
   if (!currentEstPinId) { toast('Load a pinned home first', 'warn'); return; }
+  // Ensure the pin exists in the DB before attempting unlock.
+  // If the pin is in memory but not yet persisted (e.g. just dropped or not yet synced),
+  // save it now so the server-side unlock handler can find it.
+  const pinToSync = (S.pins||[]).find(p => p.id === currentEstPinId);
+  if (pinToSync && typeof sbSavePin === 'function') {
+    try {
+      await sbSavePin(pinToSync);
+    } catch(e) {
+      console.warn('[estUnlockPin] pin pre-save failed:', e);
+    }
+  }
   const ok = typeof requirePinUnlocked === 'function'
     ? await requirePinUnlocked(currentEstPinId)
     : true;
