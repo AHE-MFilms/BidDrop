@@ -18,16 +18,14 @@
     <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;">
       <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">⚡ Trigger</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:13px;color:var(--text);">
-          <input type="radio" name="drip-trigger" value="estimate_save" id="drip-trigger-estimate" style="accent-color:var(--accent);" checked> On Estimate Save
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--card2);border:1px solid rgba(242,92,5,.4);border-radius:8px;padding:8px 14px;font-size:13px;color:var(--text);">
+          <input type="radio" name="drip-trigger" value="manual" id="drip-trigger-manual" style="accent-color:var(--accent);" checked> 🔥 Manual (Blitz button)
         </label>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:13px;color:var(--text);">
-          <input type="radio" name="drip-trigger" value="manual" id="drip-trigger-manual" style="accent-color:var(--accent);"> Manual (Blitz button)
-        </label>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:13px;color:var(--text);">
-          <input type="radio" name="drip-trigger" value="campaign" id="drip-trigger-campaign" style="accent-color:var(--accent);"> Campaign Launch
+          <input type="radio" name="drip-trigger" value="campaign" id="drip-trigger-campaign" style="accent-color:var(--accent);"> 📣 Campaign Launch
         </label>
       </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;">🔥 <strong style="color:var(--text);">Blitz</strong> — rep manually starts the sequence for a specific homeowner from the Mail Queue. &nbsp;📣 <strong style="color:var(--text);">Campaign</strong> — bulk drip fires when a campaign is launched.</div>
     </div>
 
     <!-- Steps builder -->

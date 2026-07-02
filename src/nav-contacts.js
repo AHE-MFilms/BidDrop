@@ -959,7 +959,7 @@ function renderDripBuilder(){
     tog.style.background=on?'var(--accent)':'var(--border)';
     knob.style.left=on?'21px':'3px';
   }
-  const trigger=(S.cfg.dripStepsJson&&S.cfg.dripStepsJson._trigger)||'estimate_save';
+  const trigger=(S.cfg.dripStepsJson&&S.cfg.dripStepsJson._trigger)||'manual';
   const trigEl=document.getElementById('drip-trigger-'+trigger);
   if(trigEl) trigEl.checked=true;
   renderDripStepCards();
@@ -993,11 +993,20 @@ function renderDripStepCards(){
         </div>
         <div style="margin-bottom:8px;">
           <label style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Headline (max 40 chars)</label>
-          <input class="fi" aria-label="Drip step headline" value="${(step.headline||'').replace(/"/g,'&quot;')}" maxlength="40" onchange="updateDripStepField(${i},'headline',this.value)" placeholder="e.g. Still thinking it over?">
+          <input class="fi" aria-label="Drip step headline" id="drip-headline-${i}" value="${(step.headline||'').replace(/"/g,'&quot;')}" maxlength="40" oninput="updateDripStepField(${i},'headline',this.value)" placeholder="e.g. Still thinking it over?">
         </div>
-        <div>
+        <div style="margin-bottom:10px;">
           <label style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Subtext (max 80 chars)</label>
-          <input class="fi" aria-label="Drip step subtext" value="${(step.subtext||'').replace(/"/g,'&quot;')}" maxlength="80" onchange="updateDripStepField(${i},'subtext',this.value)" placeholder="e.g. Your estimate is still valid.">
+          <input class="fi" aria-label="Drip step subtext" id="drip-subtext-${i}" value="${(step.subtext||'').replace(/"/g,'&quot;')}" maxlength="80" oninput="updateDripStepField(${i},'subtext',this.value)" placeholder="e.g. Your estimate is still valid.">
+        </div>
+        <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--card2);">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-bottom:1px solid var(--border);">
+            <span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">📬 Postcard Preview</span>
+            <button onclick="previewDripStepFullscreen(${i})" style="background:var(--accent);border:none;border-radius:6px;padding:4px 12px;font-size:11px;font-weight:700;color:#fff;cursor:pointer;">👁 Preview Postcard</button>
+          </div>
+          <div id="drip-preview-thumb-${i}" style="padding:10px;min-height:50px;display:flex;align-items:center;justify-content:center;">
+            <div style="color:var(--muted);font-size:12px;text-align:center;">Click <strong style="color:var(--text);">Preview Postcard</strong> to see how this step will look</div>
+          </div>
         </div>
       </div>
       <button onclick="removeDripStep(${i})" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;flex-shrink:0;padding:0;line-height:1;" title="Remove step">&#x2715;</button>
@@ -1007,6 +1016,60 @@ function renderDripStepCards(){
 function renderDripStepDesignSelects(){
   const dripTab=document.getElementById('tab-drip');
   if(dripTab&&dripTab.classList.contains('active')) renderDripStepCards();
+}
+async function previewDripStepFullscreen(idx){
+  const steps=getDripSteps();
+  const step=steps[idx];
+  if(!step){ toast('Step not found','error'); return; }
+  // Build a synthetic queue item using the step's headline/subtext + account defaults
+  const headline=step.headline||'';
+  const subtext=step.subtext||'';
+  const companyName=(S.cfg&&S.cfg.companyName)||'Your Roofing Company';
+  const phone=(S.cfg&&S.cfg.phone)||'';
+  const slug=companyName.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  // Use a sample address for satellite photo
+  const sampleAddr='123 Main Street, Anytown, MI 48188';
+  const MB=window._mapboxToken||['pk.eyJ1IjoibW9uZ29vc2VmaWxtcyIsImEiOiJjbW52M2kyNnMxM3pk','MnJvYTYxZnE1YW51In0.nC5GKWDHIAB4DTAP9hV3hQ'].join('');
+  let photoUrl=null;
+  try{
+    const geoRes=await fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/'+encodeURIComponent(sampleAddr)+'.json?country=us&types=address&limit=1&access_token='+MB);
+    const geoData=await geoRes.json();
+    if(geoData.features&&geoData.features[0]){
+      const [lon,lat]=geoData.features[0].center;
+      photoUrl=`https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/${lon},${lat},19,0/900x600@2x?access_token=${MB}`;
+    }
+  }catch(e){}
+  const fakeItem={
+    id:null,
+    slug,
+    addr:sampleAddr,
+    owner:'Sample Homeowner',
+    total:15000,
+    structures:[],
+    photo_url:photoUrl,
+    photo_data:null,
+    damage_photos:[],
+    all_photos:null,
+    headline,
+    subtext,
+    designId:step.designId||null
+  };
+  // Override S.cfg temporarily with step's headline/subtext so the canvas renderer picks them up
+  const _origH1=S.cfg&&S.cfg.postcardHeadline1;
+  const _origH2=S.cfg&&S.cfg.postcardHeadline2;
+  if(S.cfg&&headline){
+    S.cfg.postcardHeadline1=headline;
+    S.cfg.postcardHeadline2=subtext;
+  }
+  try{
+    await _showPostcardCanvasModal('m-drip-step-preview-'+idx,'Sample Homeowner',sampleAddr,fakeItem);
+  }finally{
+    // Restore original values
+    if(S.cfg){
+      S.cfg.postcardHeadline1=_origH1;
+      S.cfg.postcardHeadline2=_origH2;
+    }
+  }
 }
 function toggleDripFromTab(){
   S.cfg.dripEnabled=!S.cfg.dripEnabled; save(); renderDripBuilder();
@@ -1032,7 +1095,7 @@ function updateDripStepField(idx,field,value){
 }
 function saveDripSequence(){
   const triggerEl=document.querySelector('input[name="drip-trigger"]:checked');
-  const trigger=triggerEl?triggerEl.value:'estimate_save';
+  const trigger=triggerEl?triggerEl.value:'manual';
   const steps=getDripSteps();
   steps._trigger=trigger;
   S.cfg.dripStepsJson=steps; save();
