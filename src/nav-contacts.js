@@ -1054,12 +1054,18 @@ async function previewDripStepFullscreen(idx){
     subtext,
     designId:step.designId||null
   };
-  // Override S.cfg temporarily with step's headline/subtext so the canvas renderer picks them up
+  // Override S.cfg temporarily with step's headline/subtext + smaller font sizes so text fits
   const _origH1=S.cfg&&S.cfg.postcardHeadline1;
   const _origH2=S.cfg&&S.cfg.postcardHeadline2;
-  if(S.cfg&&headline){
-    S.cfg.postcardHeadline1=headline;
-    S.cfg.postcardHeadline2=subtext;
+  const _origHl1Size=S.cfg&&S.cfg.postcardHl1Size;
+  const _origHl2Size=S.cfg&&S.cfg.postcardHl2Size;
+  if(S.cfg){
+    S.cfg.postcardHeadline1=headline||'Your estimate is still valid.';
+    S.cfg.postcardHeadline2=subtext||'';
+    // Use smaller font sizes so drip text fits within the postcard width (canvas is 2775px wide)
+    // At 160px, a 40-char headline overflows. At 90px it fits comfortably.
+    S.cfg.postcardHl1Size=90;
+    S.cfg.postcardHl2Size=72;
   }
   try{
     await _showPostcardCanvasModal('m-drip-step-preview-'+idx,'Sample Homeowner',sampleAddr,fakeItem);
@@ -1068,6 +1074,8 @@ async function previewDripStepFullscreen(idx){
     if(S.cfg){
       S.cfg.postcardHeadline1=_origH1;
       S.cfg.postcardHeadline2=_origH2;
+      S.cfg.postcardHl1Size=_origHl1Size;
+      S.cfg.postcardHl2Size=_origHl2Size;
     }
   }
 }

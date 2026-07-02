@@ -200,13 +200,21 @@ async function renderPostcard6x9FrontCanvas(item){
   ctx.fillStyle='#fff';ctx.textBaseline='middle';
   ctx.fillText(badgeTxtCfg,bx+28,by+bh/2);
   ctx.textBaseline='alphabetic';
-  // HEADLINE (bottom-left area)
+  // HEADLINE (bottom-left area) — truncate with ellipsis if too wide
+  function fitText(ctx,text,maxW){
+    if(!text) return '';
+    if(ctx.measureText(text).width<=maxW) return text;
+    let t=text;
+    while(t.length>0&&ctx.measureText(t+'…').width>maxW) t=t.slice(0,-1);
+    return t+'…';
+  }
+  const maxTxtW=W-PAD*2-40;
   ctx.fillStyle='#fff';
   ctx.font='bold '+hl1Size+'px Arial';
   const hl1Y=H-(showPrice?530:420);
-  ctx.fillText(hl1Txt,PAD,hl1Y);
+  ctx.fillText(fitText(ctx,hl1Txt,maxTxtW),PAD,hl1Y);
   ctx.font='bold '+hl2Size+'px Arial';
-  ctx.fillText(hl2Txt,PAD,hl1Y+hl2Size+20);
+  ctx.fillText(fitText(ctx,hl2Txt,maxTxtW),PAD,hl1Y+hl2Size+20);
   // Address line
   ctx.font='bold '+addrSize+'px Arial';ctx.fillStyle='rgba(255,255,255,0.92)';
   ctx.fillText('\u{1F4CD} '+addrLine,PAD,H-(showPrice?268:180));
