@@ -124,9 +124,17 @@ function isPinUnlocked(pin) {
 
 // Returns a promise that resolves to true if the pin is unlocked (or becomes unlocked).
 // If not unlocked, shows the unlock prompt modal and resolves to true/false based on user action.
-async function requirePinUnlocked(pinId) {
-  const pin = (S.pins||[]).find(p => p.id === pinId);
-  if (!pin) return false;
+async function requirePinUnlocked(pinId, fallbackAddress) {
+  let pin = (S.pins||[]).find(p => p.id === pinId);
+  if (!pin) {
+    // Pin not in memory — try to find address from current estimate or estimator field
+    const addr = fallbackAddress ||
+      (document.getElementById('e-addr') && document.getElementById('e-addr').value.trim()) ||
+      '';
+    if (!addr) return false;
+    // Create a minimal in-memory pin so unlock modal can show and API can proceed
+    pin = { id: pinId, address: addr, status: 'pinned' };
+  }
   if (isPinUnlocked(pin)) return true;
   return new Promise(resolve => {
     _showUnlockModal(pin, resolve);

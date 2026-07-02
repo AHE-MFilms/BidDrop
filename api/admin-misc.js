@@ -279,7 +279,28 @@ async function handle(action, req, res, ctx) {
           const upPinRows = upPinRes.ok ? await upPinRes.json() : [];
           if (upPinRows[0]) { upPin = upPinRows[0]; break; }
         }
-        if (!upPin) { res.status(404).json({ error: 'pin not found' }); return; }
+        if (!upPin) {
+          // Pin not found in DB — this happens when pin was saved to localStorage but not synced to DB.
+          // Create a minimal pin row so unlock can proceed.
+          console.log('[unlock-pin] pin not in DB, creating minimal row for pinId:', upPinId);
+          const createRes = await sbFetch('pins', {
+            method: 'POST',
+            headers: { 'Prefer': 'return=representation', 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: upPinId,
+              account_id: accountId,
+              address: upAddress,
+              status: 'pinned',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+          });
+          if (createRes.ok) {
+            const created = await createRes.json();
+            upPin = Array.isArray(created) ? created[0] : created;
+          }
+          if (!upPin) { res.status(404).json({ error: 'pin not found and could not be created' }); return; }
+        }
         // Verify the pin belongs to the effective account (security check)
         // Super admins can unlock any account's pin; regular users can only unlock their own
         if (!isSuperAdmin && upPin.account_id && upPin.account_id !== accountId) {
