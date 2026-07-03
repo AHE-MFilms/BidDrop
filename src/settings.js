@@ -50,13 +50,11 @@ function openSettings(){
   const _pcShowMonthly=document.getElementById('s-pc-show-monthly'); if(_pcShowMonthly) _pcShowMonthly.checked=c.postcardShowMonthly!==false;
   const _pcShowPhone=document.getElementById('s-pc-show-phone'); if(_pcShowPhone) _pcShowPhone.checked=c.postcardShowPhone!==false;
   const _pcShowPriceBack=document.getElementById('s-pc-show-price-back'); if(_pcShowPriceBack) _pcShowPriceBack.checked=c.postcardShowPriceBack!==false;
-  // Design selector
-  const _pcDes=c.postcardDesign||'1';
-  const _pcDesEl=document.getElementById('s-pc-design-'+_pcDes);
+  // Design selector — locked to Estimate Reveal (design 1)
+  const _pcDesEl=document.getElementById('s-pc-design-1');
   if(_pcDesEl)_pcDesEl.checked=true;
-  const _isBuiltinTpl=['t3','t4','t5','t6'].includes(_pcDes);
-  const _d1f=document.getElementById('s-pc-d1-fields'); if(_d1f) _d1f.style.display=(_pcDes==='2'||_isBuiltinTpl)?'none':'';
-  const _d2f=document.getElementById('s-pc-d2-fields'); if(_d2f) _d2f.style.display=_pcDes==='2'?'':'none';
+  const _d1f=document.getElementById('s-pc-d1-fields'); if(_d1f) _d1f.style.display='';
+  const _d2f=document.getElementById('s-pc-d2-fields'); if(_d2f) _d2f.style.display='none';
   document.getElementById('s-pc-d2-topline').value=c.postcardD2TopLine||'';
   document.getElementById('s-pc-d2-accent').value=c.postcardD2Accent||'';
   document.getElementById('s-pc-d2-headline').value=c.postcardD2Headline||'';
@@ -365,17 +363,7 @@ function openSettings(){
   // Show drip card only for admins
   const dripCard = document.getElementById('stab-drip-card');
   if(dripCard) dripCard.style.display = isAdminOrAbove() ? 'block' : 'none';
-  // Postcard design radio button show/hide
-  document.querySelectorAll('input[name="pc-design"]').forEach(r=>{
-    r.removeEventListener('change',r._pcDesignHandler||null);
-    r._pcDesignHandler=()=>{
-      const v=document.querySelector('input[name="pc-design"]:checked')?.value||'1';
-      const _isB=['t3','t4','t5','t6'].includes(v);
-      const _d1=document.getElementById('s-pc-d1-fields'); if(_d1) _d1.style.display=(v==='2'||_isB)?'none':'';
-      const _d2=document.getElementById('s-pc-d2-fields'); if(_d2) _d2.style.display=v==='2'?'':'';
-    };
-    r.addEventListener('change',r._pcDesignHandler);
-  });
+  // Postcard design locked to Estimate Reveal — no toggle needed
   // Populate Share & Embed card
   populateEmbedCard();
   // Populate Pixel settings panel

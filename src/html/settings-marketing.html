@@ -40,42 +40,9 @@
           <div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;">
             <div style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;">&#9632; Front Side</div>
 
-            <!-- Design selector -->
-            <div class="fg" style="margin-bottom:10px;">
-              <div class="fl">Layout</div>
-              <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">
-                <label style="flex:1;min-width:120px;cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:7px;padding:8px 10px;">
-                  <input type="radio" name="pc-design" id="s-pc-design-1" value="1" style="accent-color:var(--accent);margin-right:5px;">
-                  <span style="font-size:15px;color:var(--mid);font-weight:600;">Estimate Reveal</span>
-                  <div style="font-size:9px;color:var(--muted);margin-top:2px;margin-left:18px;">Full house photo + price overlay</div>
-                </label>
-                <label style="flex:1;min-width:120px;cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:7px;padding:8px 10px;">
-                  <input type="radio" name="pc-design" id="s-pc-design-2" value="2" style="accent-color:var(--accent);margin-right:5px;">
-                  <span style="font-size:15px;color:var(--mid);font-weight:600;">Neighborhood Bold</span>
-                  <div style="font-size:9px;color:var(--muted);margin-top:2px;margin-left:18px;">Left text + right photo + brand bar</div>
-                </label>
-                <label style="flex:1;min-width:120px;cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:7px;padding:8px 10px;">
-                  <input type="radio" name="pc-design" id="s-pc-design-t3" value="t3" style="accent-color:var(--accent);margin-right:5px;">
-                  <span style="font-size:15px;color:var(--mid);font-weight:600;">&#127754; Storm / Wind</span>
-                  <div style="font-size:9px;color:var(--muted);margin-top:2px;margin-left:18px;">Bold storm-response mailer</div>
-                </label>
-                <label style="flex:1;min-width:120px;cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:7px;padding:8px 10px;">
-                  <input type="radio" name="pc-design" id="s-pc-design-t4" value="t4" style="accent-color:var(--accent);margin-right:5px;">
-                  <span style="font-size:15px;color:var(--mid);font-weight:600;">&#9728;&#65039; Solar</span>
-                  <div style="font-size:9px;color:var(--muted);margin-top:2px;margin-left:18px;">Navy panel with savings headline</div>
-                </label>
-                <label style="flex:1;min-width:120px;cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:7px;padding:8px 10px;">
-                  <input type="radio" name="pc-design" id="s-pc-design-t5" value="t5" style="accent-color:var(--accent);margin-right:5px;">
-                  <span style="font-size:15px;color:var(--mid);font-weight:600;">&#127810; Gutters</span>
-                  <div style="font-size:9px;color:var(--muted);margin-top:2px;margin-left:18px;">Dark panel with bullet points</div>
-                </label>
-                <label style="flex:1;min-width:120px;cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:7px;padding:8px 10px;">
-                  <input type="radio" name="pc-design" id="s-pc-design-t6" value="t6" style="accent-color:var(--accent);margin-right:5px;">
-                  <span style="font-size:15px;color:var(--mid);font-weight:600;">&#127968; General Roofing</span>
-                  <div style="font-size:9px;color:var(--muted);margin-top:2px;margin-left:18px;">Center panel + starburst badge</div>
-                </label>
-              </div>
-            </div>
+            <!-- Design: locked to Estimate Reveal (house photo + price overlay) -->
+            <!-- Hidden input keeps postcardDesign='1' for all saves -->
+            <input type="radio" name="pc-design" id="s-pc-design-1" value="1" checked style="display:none;">
 
             <!-- DESIGN 1 FRONT FIELDS -->
             <div id="s-pc-d1-fields">
