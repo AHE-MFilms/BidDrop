@@ -167,7 +167,7 @@ async function loadStormEvents(){
   let completed = 0;
   const fetchOne = async (dateStr) => {
     try {
-      const url = `https://www.spc.noaa.gov/climo/reports/${dateStr}_rpts_filtered_hail.csv`;
+      const url = `/api/storm-proxy?date=${dateStr}&type=hail`;
       const res = await fetch(url);
       completed++;
       statusEl.textContent = `Loading… ${completed}/${dates.length}`;
@@ -327,7 +327,7 @@ async function loadWindEvents(){
   let completed = 0;
   const fetchWind = async (dateStr) => {
     try {
-      const url = `https://www.spc.noaa.gov/climo/reports/${dateStr}_rpts_filtered_wind.csv`;
+      const url = `/api/storm-proxy?date=${dateStr}&type=wind`;
       const res = await fetch(url);
       completed++;
       if(statusEl) statusEl.textContent = `Loading wind… ${completed}/90`;

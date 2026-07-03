@@ -1081,6 +1081,84 @@ function clearEst(){
 
 function saveLobKey(){/* Agency model: key stored server-side */}
 
+// ── Queue Tab Switcher ────────────────────────────────────────────────────────
+let _queueActiveTab = 'pending'; // 'pending' | 'scheduled'
+
+function switchQueueTab(tab){
+  _queueActiveTab = tab;
+  const pendBtn = document.getElementById('q-tab-pending');
+  const schedBtn = document.getElementById('q-tab-scheduled');
+  const sendAllBtn = document.getElementById('q-send-all-btn');
+  const pendingTable = document.getElementById('q-table');
+  const pendingEmpty = document.getElementById('q-empty');
+  const schedTable = document.getElementById('q-scheduled-table');
+  const schedEmpty = document.getElementById('q-scheduled-empty');
+  const bulkBar = document.getElementById('q-bulk-bar');
+
+  if(tab === 'scheduled'){
+    if(pendBtn){ pendBtn.style.background='var(--card2)'; pendBtn.style.color='var(--mid)'; pendBtn.style.border='1px solid var(--border)'; }
+    if(schedBtn){ schedBtn.style.background='var(--accent)'; schedBtn.style.color='#fff'; schedBtn.style.border='none'; }
+    if(sendAllBtn) sendAllBtn.style.display='none';
+    if(bulkBar) bulkBar.style.display='none';
+    if(pendingTable) pendingTable.style.display='none';
+    if(pendingEmpty) pendingEmpty.style.display='none';
+    renderScheduledQueue();
+  } else {
+    if(pendBtn){ pendBtn.style.background='var(--accent)'; pendBtn.style.color='#fff'; pendBtn.style.border='none'; }
+    if(schedBtn){ schedBtn.style.background='var(--card2)'; schedBtn.style.color='var(--mid)'; schedBtn.style.border='1px solid var(--border)'; }
+    if(sendAllBtn) sendAllBtn.style.display='';
+    if(schedTable) schedTable.style.display='none';
+    if(schedEmpty) schedEmpty.style.display='none';
+    renderQueue();
+  }
+}
+
+function renderScheduledQueue(){
+  const tbody = document.getElementById('q-scheduled-tbody');
+  const tbl = document.getElementById('q-scheduled-table');
+  const empty = document.getElementById('q-scheduled-empty');
+  if(!tbody || !tbl || !empty) return;
+
+  const scheduled = (S.queue||[]).filter(i => i.status === 'scheduled' && i.scheduled_send_at);
+  scheduled.sort((a,b) => new Date(a.scheduled_send_at) - new Date(b.scheduled_send_at));
+
+  if(!scheduled.length){
+    tbl.style.display='none';
+    empty.style.display='block';
+    return;
+  }
+  tbl.style.display='table';
+  empty.style.display='none';
+
+  const now = new Date();
+  const stepNames = ['','First Postcard','Follow-Up','Urgency','Final Notice','Final Goodbye'];
+  const stepColors = ['','#F59E0B','#F97316','#EF4444','#A855F7','#3B82F6'];
+
+  const rows = scheduled.map(i => {
+    const sendDate = new Date(i.scheduled_send_at);
+    const daysAway = Math.ceil((sendDate - now) / 86400000);
+    const daysLabel = daysAway <= 0
+      ? '<span style="color:#22C55E;font-weight:700;">Today</span>'
+      : daysAway === 1
+        ? '<span style="color:#F59E0B;font-weight:700;">Tomorrow</span>'
+        : '<span style="color:var(--mid);">'+daysAway+' days</span>';
+    const sendDateStr = sendDate.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    const step = i.drip_step || 0;
+    const stepColor = stepColors[step] || '#6B7280';
+    const stepName = stepNames[step] || 'Step '+step;
+    return '<tr style="border-bottom:1px solid var(--border);">'
+      +'<td style="font-weight:600;">'+escHtml(i.owner||'—')+'</td>'
+      +'<td style="font-size:11px;color:var(--mid);">'+escHtml(i.addr||'—')+'</td>'
+      +'<td><span style="font-size:10px;background:'+stepColor+'22;color:'+stepColor+';border:1px solid '+stepColor+'44;border-radius:10px;padding:2px 8px;font-weight:700;white-space:nowrap;">📨 Step '+step+'</span><br><span style="font-size:10px;color:var(--muted);">'+escHtml(stepName)+'</span></td>'
+      +'<td style="font-family:var(--font-m);font-size:12px;font-weight:600;color:var(--text);">'+sendDateStr+'</td>'
+      +'<td>'+daysLabel+'</td>'
+      +'<td><span style="font-size:10px;background:#3D526922;color:#94A3B8;border:1px solid #3D526944;border-radius:10px;padding:2px 8px;font-weight:700;">📅 Scheduled</span></td>'
+      +'<td><button class="btn-xs danger" data-id="'+escHtml(i.id)+'" onclick="rmQ(this.dataset.id)" title="Cancel">✕ Cancel</button></td>'
+      +'</tr>';
+  });
+  tbody.innerHTML = rows.join('');
+}
+
 function renderQueue(){
   // Agency model: Lob key loaded at login, not shown in UI
   // Promote any scheduled drip items whose send date has passed
