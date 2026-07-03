@@ -51,6 +51,10 @@
     {
       "path": "/api/cron-trial-check",
       "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/cron-purge-trash",
+      "schedule": "0 2 * * *"
     }
   ],
   "functions": {
@@ -74,6 +78,7 @@
     "api/jobnimbus.js":        { "maxDuration": 15 },
     "api/send-proposal.js":    { "maxDuration": 15 },
     "api/migrate.js":          { "maxDuration": 30 },
+    "api/cron-purge-trash.js": { "maxDuration": 30 },
     "api/r.js":                { "maxDuration": 15 },
     "api/pixel.js":            { "maxDuration": 10 },
     "api/canvas.js":           { "maxDuration": 15 }
