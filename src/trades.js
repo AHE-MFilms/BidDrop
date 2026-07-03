@@ -1605,9 +1605,7 @@ function initSbSections(){
   _applySbState(_getSbState());
 }
 
-// Auto-expand the section containing the active nav item when goTab is called
-const _origGoTab = typeof goTab === 'function' ? goTab : null;
-// Hook: after goTab, ensure the active item's section is expanded
+// Init collapsible sections on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
   initSbSections();
 });
