@@ -598,7 +598,18 @@ tr:hover td{background:var(--card);}
   letter-spacing:1px;text-transform:uppercase;color:var(--muted);
   padding:14px 16px 4px;
   flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between;
+  cursor:pointer;user-select:none;
+  transition:color .12s;
 }
+.bd-sb-section:hover{color:var(--text);}
+.bd-sb-section .bd-sb-chevron{
+  font-size:9px;transition:transform .2s ease;opacity:.6;
+  margin-right:2px;
+}
+.bd-sb-section.collapsed .bd-sb-chevron{transform:rotate(-90deg);}
+.bd-sb-group{overflow:hidden;transition:max-height .22s ease;}
+.bd-sb-group.collapsed{max-height:0!important;}
 /* Sidebar nav item */
 .bd-snav-item{
   display:flex;align-items:center;gap:10px;
@@ -1167,46 +1178,58 @@ tr:hover td{background:var(--card);}
   </div>
 
   <!-- CANVASS -->
-  <div class="bd-sb-section">Canvass</div>
-  <button class="bd-snav-item" onclick="goTab('territory')" data-nav="territory"><span class="bd-snav-icon">🌩</span><span class="bd-snav-label">Territory Intel</span></button>
-  <button class="bd-snav-item active" onclick="goTab('map')" data-nav="map"><span class="bd-snav-icon">🗺</span><span class="bd-snav-label">Canvass Map</span></button>
-  <button class="bd-snav-item" onclick="goTab('zones')" data-nav="zones"><span class="bd-snav-icon">🗂</span><span class="bd-snav-label">Canvass Areas</span></button>
+  <div class="bd-sb-section" data-section="canvass" onclick="toggleSbSection('canvass')"><span>Canvass</span><span class="bd-sb-chevron">▼</span></div>
+  <div class="bd-sb-group" id="bd-sbg-canvass">
+    <button class="bd-snav-item" onclick="goTab('territory')" data-nav="territory"><span class="bd-snav-icon">🌩</span><span class="bd-snav-label">Territory Intel</span></button>
+    <button class="bd-snav-item active" onclick="goTab('map')" data-nav="map"><span class="bd-snav-icon">🗺</span><span class="bd-snav-label">Canvass Map</span></button>
+    <button class="bd-snav-item" onclick="goTab('zones')" data-nav="zones"><span class="bd-snav-icon">🗂</span><span class="bd-snav-label">Canvass Areas</span></button>
+  </div>
 
   <!-- ESTIMATE -->
   <div class="bd-sb-divider"></div>
-  <div class="bd-sb-section">Estimate</div>
-  <button class="bd-snav-item" onclick="goTab('estimate')" data-nav="estimate"><span class="bd-snav-icon">📋</span><span class="bd-snav-label">Estimator</span></button>
-  <button class="bd-snav-item" onclick="goTab('estimates')" data-nav="estimates"><span class="bd-snav-icon">🗂</span><span class="bd-snav-label">Estimates</span></button>
+  <div class="bd-sb-section" data-section="estimate" onclick="toggleSbSection('estimate')"><span>Estimate</span><span class="bd-sb-chevron">▼</span></div>
+  <div class="bd-sb-group" id="bd-sbg-estimate">
+    <button class="bd-snav-item" onclick="goTab('estimate')" data-nav="estimate"><span class="bd-snav-icon">📋</span><span class="bd-snav-label">Estimator</span></button>
+    <button class="bd-snav-item" onclick="goTab('estimates')" data-nav="estimates"><span class="bd-snav-icon">🗂</span><span class="bd-snav-label">Estimates</span></button>
+  </div>
 
   <!-- FOLLOW-UP -->
   <div class="bd-sb-divider"></div>
-  <div class="bd-sb-section">Follow-Up</div>
-  <button class="bd-snav-item" onclick="goTab('hotleads')" data-nav="hotleads" id="bd-sb-hotleads-item"><span class="bd-snav-icon">🔥</span><span class="bd-snav-label">Hot Leads</span></button>
-  <button class="bd-snav-item" onclick="goTab('drip')" data-nav="drip"><span class="bd-snav-icon">💧</span><span class="bd-snav-label">Drip Automations</span></button>
-  <button class="bd-snav-item" onclick="goTab('mailqueue')" data-nav="mailqueue"><span class="bd-snav-icon">📬</span><span class="bd-snav-label">Mail Queue</span><span class="bd-snav-badge" id="bd-sb-queue-badge" style="display:none;">0</span></button>
-  <button class="bd-snav-item" onclick="goTab('history')" data-nav="history"><span class="bd-snav-icon">📑</span><span class="bd-snav-label">Mail History</span></button>
+  <div class="bd-sb-section" data-section="followup" onclick="toggleSbSection('followup')"><span>Follow-Up</span><span class="bd-sb-chevron">▼</span></div>
+  <div class="bd-sb-group" id="bd-sbg-followup">
+    <button class="bd-snav-item" onclick="goTab('hotleads')" data-nav="hotleads" id="bd-sb-hotleads-item"><span class="bd-snav-icon">🔥</span><span class="bd-snav-label">Hot Leads</span></button>
+    <button class="bd-snav-item" onclick="goTab('drip')" data-nav="drip"><span class="bd-snav-icon">💧</span><span class="bd-snav-label">Drip Automations</span></button>
+    <button class="bd-snav-item" onclick="goTab('mailqueue')" data-nav="mailqueue"><span class="bd-snav-icon">📬</span><span class="bd-snav-label">Mail Queue</span><span class="bd-snav-badge" id="bd-sb-queue-badge" style="display:none;">0</span></button>
+    <button class="bd-snav-item" onclick="goTab('history')" data-nav="history"><span class="bd-snav-icon">📑</span><span class="bd-snav-label">Mail History</span></button>
+  </div>
 
   <!-- AREA CAMPAIGNS -->
   <div class="bd-sb-divider"></div>
-  <div class="bd-sb-section">Area Campaigns</div>
-  <button class="bd-snav-item" onclick="goTab('campaigns')" data-nav="campaigns"><span class="bd-snav-icon">📣</span><span class="bd-snav-label">Campaigns</span></button>
-  <button class="bd-snav-item" onclick="goTab('designs')" data-nav="designs"><span class="bd-snav-icon">📤</span><span class="bd-snav-label">Postcard Designs</span></button>
-  <button class="bd-snav-item" onclick="goTab('contacts')" data-nav="contacts"><span class="bd-snav-icon">📒</span><span class="bd-snav-label">Lists &amp; Contacts</span></button>
+  <div class="bd-sb-section" data-section="areacampaigns" onclick="toggleSbSection('areacampaigns')"><span>Area Campaigns</span><span class="bd-sb-chevron">▼</span></div>
+  <div class="bd-sb-group" id="bd-sbg-areacampaigns">
+    <button class="bd-snav-item" onclick="goTab('campaigns')" data-nav="campaigns"><span class="bd-snav-icon">📣</span><span class="bd-snav-label">Campaigns</span></button>
+    <button class="bd-snav-item" onclick="goTab('designs')" data-nav="designs"><span class="bd-snav-icon">📤</span><span class="bd-snav-label">Postcard Designs</span></button>
+    <button class="bd-snav-item" onclick="goTab('contacts')" data-nav="contacts"><span class="bd-snav-icon">📒</span><span class="bd-snav-label">Lists &amp; Contacts</span></button>
+  </div>
 
   <!-- RESULTS -->
   <div class="bd-sb-divider"></div>
-  <div class="bd-sb-section">Results</div>
-  <button class="bd-snav-item" onclick="goTab('dashboard')" data-nav="dashboard"><span class="bd-snav-icon">📊</span><span class="bd-snav-label">Dashboard</span></button>
-  <button class="bd-snav-item" onclick="goTab('analytics')" data-nav="analytics" id="bd-sb-analytics-item"><span class="bd-snav-icon">📈</span><span class="bd-snav-label">Analytics</span></button>
-  <button class="bd-snav-item" onclick="goTab('leaderboard')" data-nav="leaderboard"><span class="bd-snav-icon">🏆</span><span class="bd-snav-label">Leaderboard</span></button>
+  <div class="bd-sb-section" data-section="results" onclick="toggleSbSection('results')"><span>Results</span><span class="bd-sb-chevron">▼</span></div>
+  <div class="bd-sb-group" id="bd-sbg-results">
+    <button class="bd-snav-item" onclick="goTab('dashboard')" data-nav="dashboard"><span class="bd-snav-icon">📊</span><span class="bd-snav-label">Dashboard</span></button>
+    <button class="bd-snav-item" onclick="goTab('analytics')" data-nav="analytics" id="bd-sb-analytics-item"><span class="bd-snav-icon">📈</span><span class="bd-snav-label">Analytics</span></button>
+    <button class="bd-snav-item" onclick="goTab('leaderboard')" data-nav="leaderboard"><span class="bd-snav-icon">🏆</span><span class="bd-snav-label">Leaderboard</span></button>
+  </div>
 
   <!-- ACCOUNT -->
   <div class="bd-sb-divider"></div>
-  <div class="bd-sb-section">Account</div>
-  <button class="bd-snav-item" onclick="goTab('subscription')" data-nav="subscription"><span class="bd-snav-icon">💳</span><span class="bd-snav-label">Plan &amp; Billing</span></button>
-  <button class="bd-snav-item" id="bd-sb-settings-item" onclick="goTab('settings')" data-nav="settings"><span class="bd-snav-icon">⚙️</span><span class="bd-snav-label">Settings</span></button>
-  <button class="bd-snav-item" id="bd-sb-agency-item" onclick="goTab('agency')" data-nav="agency" style="display:none;"><span class="bd-snav-icon">🏢</span><span class="bd-snav-label">Agency</span></button>
-  <button class="bd-snav-item" id="bd-sb-admin-item" onclick="navGo('admin')" data-nav="admin" style="display:none;"><span class="bd-snav-icon">🛡</span><span class="bd-snav-label">Admin Panel</span></button>
+  <div class="bd-sb-section" data-section="account" onclick="toggleSbSection('account')"><span>Account</span><span class="bd-sb-chevron">▼</span></div>
+  <div class="bd-sb-group" id="bd-sbg-account">
+    <button class="bd-snav-item" onclick="goTab('subscription')" data-nav="subscription"><span class="bd-snav-icon">💳</span><span class="bd-snav-label">Plan &amp; Billing</span></button>
+    <button class="bd-snav-item" id="bd-sb-settings-item" onclick="goTab('settings')" data-nav="settings"><span class="bd-snav-icon">⚙️</span><span class="bd-snav-label">Settings</span></button>
+    <button class="bd-snav-item" id="bd-sb-agency-item" onclick="goTab('agency')" data-nav="agency" style="display:none;"><span class="bd-snav-icon">🏢</span><span class="bd-snav-label">Agency</span></button>
+    <button class="bd-snav-item" id="bd-sb-admin-item" onclick="navGo('admin')" data-nav="admin" style="display:none;"><span class="bd-snav-icon">🛡</span><span class="bd-snav-label">Admin Panel</span></button>
+  </div>
 
   <!-- Bottom strip -->
   <div class="bd-sb-bottom">

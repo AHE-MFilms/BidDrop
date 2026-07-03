@@ -1549,3 +1549,65 @@ function renderTradePostcardAccordion(){
     container.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:13px;padding:20px;">No trades enabled. Enable trades in Settings → Pricing.</div>';
   }
 }
+
+
+// ── Collapsible Sidebar Sections ──────────────────────────────────────────────
+const SB_SECTIONS = ['canvass','estimate','followup','areacampaigns','results','account'];
+const SB_DEFAULTS_OPEN = ['canvass','estimate']; // open by default
+const SB_STORAGE_KEY = 'bd_sb_sections';
+
+function _getSbState(){
+  try{
+    const raw = localStorage.getItem(SB_STORAGE_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  // Default: canvass + estimate open, rest collapsed
+  const state = {};
+  SB_SECTIONS.forEach(s => { state[s] = SB_DEFAULTS_OPEN.includes(s); });
+  return state;
+}
+
+function _saveSbState(state){
+  try{ localStorage.setItem(SB_STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+}
+
+function _applySbState(state){
+  SB_SECTIONS.forEach(s => {
+    const group = document.getElementById('bd-sbg-'+s);
+    const header = document.querySelector('[data-section="'+s+'"]');
+    if(!group || !header) return;
+    const open = !!state[s];
+    if(open){
+      group.classList.remove('collapsed');
+      group.style.maxHeight = group.scrollHeight + 'px';
+      header.classList.remove('collapsed');
+    } else {
+      group.classList.add('collapsed');
+      group.style.maxHeight = '0';
+      header.classList.add('collapsed');
+    }
+  });
+}
+
+function toggleSbSection(section){
+  const state = _getSbState();
+  state[section] = !state[section];
+  _saveSbState(state);
+  _applySbState(state);
+}
+
+function initSbSections(){
+  // Set initial max-height for open groups (needed for CSS transition)
+  SB_SECTIONS.forEach(s => {
+    const group = document.getElementById('bd-sbg-'+s);
+    if(group) group.style.maxHeight = group.scrollHeight + 'px';
+  });
+  _applySbState(_getSbState());
+}
+
+// Auto-expand the section containing the active nav item when goTab is called
+const _origGoTab = typeof goTab === 'function' ? goTab : null;
+// Hook: after goTab, ensure the active item's section is expanded
+document.addEventListener('DOMContentLoaded', () => {
+  initSbSections();
+});
