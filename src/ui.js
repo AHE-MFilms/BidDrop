@@ -136,6 +136,19 @@ async function requirePinUnlocked(pinId, fallbackAddress) {
     pin = { id: pinId, address: addr, status: 'pinned' };
   }
   if (isPinUnlocked(pin)) return true;
+  // Refresh live credit balance before showing modal so it always reflects reality
+  try {
+    const sess = (await sb.auth.getSession()).data.session;
+    if (sess) {
+      const _vaId = currentAccount?.id ? '&viewingAccountId='+encodeURIComponent(currentAccount.id) : '';
+      const r = await fetch('/api/credits?action=balance'+_vaId, { headers:{ 'Authorization':'Bearer '+sess.access_token } });
+      if (r.ok) {
+        const b = await r.json();
+        S.cfg.mailerCredits = b.paid_credits;
+        if (typeof updateCreditBadge === 'function') updateCreditBadge();
+      }
+    }
+  } catch(_) {}
   return new Promise(resolve => {
     _showUnlockModal(pin, resolve);
   });
