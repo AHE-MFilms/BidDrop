@@ -1552,7 +1552,7 @@ function renderTradePostcardAccordion(){
 
 
 // ── Collapsible Sidebar Sections ──────────────────────────────────────────────
-const SB_SECTIONS = ['canvass','estimate','followup','areacampaigns','results','account'];
+const SB_SECTIONS = ['canvass','estimate','mailing','followup','results','account'];
 const SB_DEFAULTS_OPEN = ['canvass','estimate']; // open by default
 const SB_STORAGE_KEY = 'bd_sb_sections';
 
