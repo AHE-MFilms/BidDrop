@@ -234,3 +234,71 @@ function editEstimate(id){
   toast('✏️ Editing estimate — make changes and hit Update','info');
 }
 
+
+
+// Queue Tab Switcher
+let _queueActiveTab = 'pending';
+
+function switchQueueTab(tab){
+  _queueActiveTab = tab;
+  var pendBtn = document.getElementById('q-tab-pending');
+  var schedBtn = document.getElementById('q-tab-scheduled');
+  var sendAllBtn = document.getElementById('q-send-all-btn');
+  var pendingTable = document.getElementById('q-table');
+  var pendingEmpty = document.getElementById('q-empty');
+  var schedTable = document.getElementById('q-scheduled-table');
+  var schedEmpty = document.getElementById('q-scheduled-empty');
+  var bulkBar = document.getElementById('q-bulk-bar');
+  if(tab === 'scheduled'){
+    if(pendBtn){ pendBtn.style.background='var(--card2)'; pendBtn.style.color='var(--mid)'; pendBtn.style.border='1px solid var(--border)'; }
+    if(schedBtn){ schedBtn.style.background='var(--accent)'; schedBtn.style.color='#fff'; schedBtn.style.border='none'; }
+    if(sendAllBtn) sendAllBtn.style.display='none';
+    if(bulkBar) bulkBar.style.display='none';
+    if(pendingTable) pendingTable.style.display='none';
+    if(pendingEmpty) pendingEmpty.style.display='none';
+    renderScheduledQueue();
+  } else {
+    if(pendBtn){ pendBtn.style.background='var(--accent)'; pendBtn.style.color='#fff'; pendBtn.style.border='none'; }
+    if(schedBtn){ schedBtn.style.background='var(--card2)'; schedBtn.style.color='var(--mid)'; schedBtn.style.border='1px solid var(--border)'; }
+    if(sendAllBtn) sendAllBtn.style.display='';
+    if(schedTable) schedTable.style.display='none';
+    if(schedEmpty) schedEmpty.style.display='none';
+    renderQueue();
+  }
+}
+
+function renderScheduledQueue(){
+  var tbody = document.getElementById('q-scheduled-tbody');
+  var tbl = document.getElementById('q-scheduled-table');
+  var empty = document.getElementById('q-scheduled-empty');
+  if(!tbody || !tbl || !empty) return;
+  var scheduled = (S.queue||[]).filter(function(i){ return i.status === 'scheduled' && i.scheduled_send_at; });
+  scheduled.sort(function(a,b){ return new Date(a.scheduled_send_at) - new Date(b.scheduled_send_at); });
+  if(!scheduled.length){ tbl.style.display='none'; empty.style.display='block'; return; }
+  tbl.style.display='table';
+  empty.style.display='none';
+  var now = new Date();
+  var stepNames = ['','First Postcard','Follow-Up','Urgency','Final Notice','Final Goodbye'];
+  var stepColors = ['','#F59E0B','#F97316','#EF4444','#A855F7','#3B82F6'];
+  var rows = scheduled.map(function(i){
+    var sendDate = new Date(i.scheduled_send_at);
+    var daysAway = Math.ceil((sendDate - now) / 86400000);
+    var daysLabel = daysAway <= 0 ? '<span style="color:#22C55E;font-weight:700;">Today</span>'
+      : daysAway === 1 ? '<span style="color:#F59E0B;font-weight:700;">Tomorrow</span>'
+      : '<span style="color:var(--mid);">'+daysAway+' days</span>';
+    var sendDateStr = sendDate.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    var step = i.drip_step || 0;
+    var stepColor = stepColors[step] || '#6B7280';
+    var stepName = stepNames[step] || 'Step '+step;
+    return '<tr style="border-bottom:1px solid var(--border);">'
+      +'<td style="font-weight:600;">'+escHtml(i.owner||'&mdash;')+'</td>'
+      +'<td style="font-size:11px;color:var(--mid);">'+escHtml(i.addr||'&mdash;')+'</td>'
+      +'<td><span style="font-size:10px;background:'+stepColor+'22;color:'+stepColor+';border:1px solid '+stepColor+'44;border-radius:10px;padding:2px 8px;font-weight:700;white-space:nowrap;">Step '+step+'</span><br><span style="font-size:10px;color:var(--muted);">'+escHtml(stepName)+'</span></td>'
+      +'<td style="font-family:var(--font-m);font-size:12px;font-weight:600;color:var(--text);">'+sendDateStr+'</td>'
+      +'<td>'+daysLabel+'</td>'
+      +'<td><span style="font-size:10px;background:#3D526922;color:#94A3B8;border:1px solid #3D526944;border-radius:10px;padding:2px 8px;font-weight:700;">Scheduled</span></td>'
+      +'<td><button class="btn-xs danger" data-id="'+escHtml(i.id)+'" onclick="rmQ(this.dataset.id)" title="Cancel">Cancel</button></td>'
+      +'</tr>';
+  });
+  tbody.innerHTML = rows.join('');
+}
