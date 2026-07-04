@@ -265,8 +265,15 @@ export default async function handler(req, res) {
   }
 
   // Verify Stripe webhook signature
+  // IMPORTANT: STRIPE_WEBHOOK_SECRET_SIGNUP must be set to the signing secret for the
+  // /api/signup-webhook endpoint in Stripe Dashboard — it is DIFFERENT from the
+  // credits webhook secret (STRIPE_WEBHOOK_SECRET). If only STRIPE_WEBHOOK_SECRET is
+  // set, both webhooks share the same secret which will cause signature failures.
   const sig = req.headers['stripe-signature'];
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET_SIGNUP || process.env.STRIPE_WEBHOOK_SECRET;
+  if (!process.env.STRIPE_WEBHOOK_SECRET_SIGNUP) {
+    console.warn('[signup-webhook] WARNING: STRIPE_WEBHOOK_SECRET_SIGNUP is not set — falling back to STRIPE_WEBHOOK_SECRET. Set a separate secret per Stripe endpoint to avoid signature failures.');
+  }
 
   let event;
   try {

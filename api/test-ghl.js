@@ -9,16 +9,16 @@
 //   GET  /api/test-ghl          → check credentials + fetch location info
 //   GET  /api/test-ghl?create=true  → also create a test contact tagged "biddrop-test"
 //
-// SECURITY: This endpoint checks for a simple secret header or query param.
-// Pass ?secret=BIDDROP_TEST_SECRET (or set BIDDROP_TEST_SECRET env var).
-// If no secret is configured, it only works from localhost.
+// SECURITY: Requires BIDDROP_TEST_SECRET env var to be set in Vercel.
+// Pass ?secret=YOUR_SECRET. No hardcoded fallback — endpoint is disabled if env var is missing.
 
 export default async function handler(req, res) {
-  // Simple auth guard — require ?secret= param matching env var
-  const expectedSecret = process.env.BIDDROP_TEST_SECRET || 'biddrop-test-2026';
+  // Simple auth guard — require ?secret= param matching BIDDROP_TEST_SECRET env var.
+  // No hardcoded fallback — if env var is not set, endpoint is locked entirely.
+  const expectedSecret = process.env.BIDDROP_TEST_SECRET;
   const providedSecret = req.query.secret;
-  if (providedSecret !== expectedSecret) {
-    return res.status(401).json({ error: 'Unauthorized. Pass ?secret=YOUR_SECRET' });
+  if (!expectedSecret || providedSecret !== expectedSecret) {
+    return res.status(403).json({ error: 'Forbidden. Set BIDDROP_TEST_SECRET in Vercel env vars and pass ?secret=YOUR_SECRET' });
   }
 
   const GHL_API_KEY = process.env.GHL_API_KEY;
