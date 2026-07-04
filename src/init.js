@@ -361,39 +361,52 @@ function refreshDripModal(){
   const selId = picker ? picker.value : (seqs[0]&&seqs[0].id);
   const seq = seqs.find(s=>s.id===selId) || seqs[0];
   const steps = (seq && seq.steps && seq.steps.filter(s=>s.enabled!==false)) || [];
-  // Render steps — Step 1 is always 'Sends today', Steps 2+ show their day offset
+  // Render steps:
+  // Step 1 is always the auto-generated Estimate Postcard (system-defined, not in sequence settings)
+  // Steps 2-5 come from the configured sequence (user-defined follow-ups)
+  const totalPostcards = 1 + steps.length; // 1 auto + N follow-ups
+  const lastDay = steps.length > 0 ? steps[steps.length-1].day : 0;
   const stepsEl = document.getElementById('drip-steps-list');
   if(stepsEl){
-    stepsEl.innerHTML = steps.map((step,i)=>{
-      const isFirst = i===0;
+    // Build the auto Step 1 card
+    const step1Card = '<div style="background:var(--card2);border:1px solid rgba(242,92,5,.35);border-radius:10px;padding:12px 14px;">'
+      +'<div style="display:flex;align-items:center;gap:8px;">'
+      +'<div style="background:var(--accent);color:#fff;font-family:var(--font-h);font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;">STEP 1</div>'
+      +'<div style="font-size:13px;font-weight:600;color:var(--text);flex:1;">Estimate Postcard</div>'
+      +'<span style="font-size:11px;color:var(--accent);font-weight:600;">Sends today</span>'
+      +'</div>'
+      +'<div style="font-size:11px;color:var(--muted);margin-top:4px;padding-left:2px;">Your personalized estimate reveal postcard</div>'
+      +'<div style="font-size:10px;color:var(--muted);margin-top:4px;padding-left:2px;">🎨 Default design — auto-generated</div>'
+      +'</div>';
+    // Build follow-up step cards (Steps 2-5)
+    const followUpCards = steps.map((step,i)=>{
+      const stepNum = i+2; // Steps 2, 3, 4, 5...
       const designName = (()=>{
         if(!step.designId) return 'Default design';
         const designs = (typeof getDesigns==='function') ? getDesigns() : [];
         const d = designs.find(x=>x.id===step.designId);
         return d ? (d.name||'Custom design') : 'Custom design';
       })();
-      const dayLabel = isFirst
-        ? '<span style="font-size:11px;color:var(--accent);font-weight:600;">Sends today</span>'
-        : '<span style="font-size:11px;color:var(--muted);">Day '+step.day+'</span>';
-      return '<div style="background:var(--card2);border:1px solid '+(isFirst?'rgba(242,92,5,.3)':'var(--border)')+';border-radius:10px;padding:12px 14px;">'
+      return '<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;">'
         +'<div style="display:flex;align-items:center;gap:8px;">'
-        +'<div style="background:'+(isFirst?'var(--accent)':'#7C3AED')+';color:#fff;font-family:var(--font-h);font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;">STEP '+(i+1)+'</div>'
-        +'<div style="font-size:13px;font-weight:600;color:var(--text);flex:1;">'+escHtml(step.headline||('Step '+(i+1)))+'</div>'
-        +dayLabel
+        +'<div style="background:#7C3AED;color:#fff;font-family:var(--font-h);font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;">STEP '+stepNum+'</div>'
+        +'<div style="font-size:13px;font-weight:600;color:var(--text);flex:1;">'+escHtml(step.headline||('Step '+stepNum))+'</div>'
+        +'<span style="font-size:11px;color:var(--muted);">Day '+step.day+'</span>'
         +'</div>'
         +(step.subtext?'<div style="font-size:11px;color:var(--muted);margin-top:4px;padding-left:2px;">'+escHtml(step.subtext)+'</div>':'')
         +'<div style="font-size:10px;color:var(--muted);margin-top:4px;padding-left:2px;">🎨 '+escHtml(designName)+'</div>'
         +'</div>';
     }).join('');
+    stepsEl.innerHTML = step1Card + followUpCards;
   }
   // Blitz is always 3 credits for the full sequence (bundle pricing)
   const BLITZ_BUNDLE_CREDITS = 3;
   const noteEl = document.getElementById('drip-credit-note');
   if(noteEl){
-    noteEl.innerHTML = '🔥 <strong>'+(seq?escHtml(seq.name):'Sequence')+'</strong> — '+steps.length+' postcard'+(steps.length!==1?'s':'')+' over '+(steps.length>1?'Day 0 to Day '+(steps[steps.length-1].day):'Day 0')+'. Includes today’s postcard. <strong style="color:#4ade80;">'+BLITZ_BUNDLE_CREDITS+' credits total.</strong> All steps scheduled automatically.';
+    noteEl.innerHTML = '🔥 <strong>'+(seq?escHtml(seq.name):'Sequence')+'</strong> — '+totalPostcards+' postcards total (Step 1 sends today + '+steps.length+' follow-ups over '+lastDay+' days). <strong style="color:#4ade80;">'+BLITZ_BUNDLE_CREDITS+' credits total.</strong> All steps scheduled automatically.';
   }
   const btn = document.getElementById('drip-start-btn');
-  if(btn) btn.textContent = '🔥 Start Blitz — '+BLITZ_BUNDLE_CREDITS+' Credits · '+steps.length+' Postcards Total';
+  if(btn) btn.textContent = '🔥 Start Blitz — '+BLITZ_BUNDLE_CREDITS+' Credits · '+totalPostcards+' Postcards Total';
 }
 
 function startDripSequence(){
