@@ -379,6 +379,7 @@
       margin-bottom: 16px;
     }
     .form-row.single { grid-template-columns: 1fr; }
+    .form-row.two-col { grid-template-columns: 1fr 1fr; }
     .form-group {
       display: flex;
       flex-direction: column;
@@ -882,6 +883,25 @@
           </div>
           <div class="form-row single">
             <div class="form-group">
+              <label for="streetAddress">Company Street Address *</label>
+              <input type="text" id="streetAddress" placeholder="123 Main St" autocomplete="street-address" />
+              <div class="form-error" id="errStreetAddress">Required</div>
+            </div>
+          </div>
+          <div class="form-row two-col">
+            <div class="form-group">
+              <label for="city">City *</label>
+              <input type="text" id="city" placeholder="Nashville" autocomplete="address-level2" />
+              <div class="form-error" id="errCity">Required</div>
+            </div>
+            <div class="form-group">
+              <label for="zip">ZIP Code *</label>
+              <input type="text" id="zip" placeholder="37201" autocomplete="postal-code" maxlength="10" />
+              <div class="form-error" id="errZip">Required</div>
+            </div>
+          </div>
+          <div class="form-row single">
+            <div class="form-group">
               <label for="state">State *</label>
               <select id="state" autocomplete="address-level1">
                 <option value="">Select your state...</option>
@@ -1064,6 +1084,9 @@
         { id: 'companyName', errId: 'errCompanyName', check: v => v.trim().length > 0 },
         { id: 'email', errId: 'errEmail', check: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) },
         { id: 'phone', errId: 'errPhone', check: v => v.trim().length >= 7 },
+        { id: 'streetAddress', errId: 'errStreetAddress', check: v => v.trim().length > 0 },
+        { id: 'city', errId: 'errCity', check: v => v.trim().length > 0 },
+        { id: 'zip', errId: 'errZip', check: v => v.trim().length >= 5 },
         { id: 'state', errId: 'errState', check: v => v !== '' }
       ];
 
@@ -1086,6 +1109,9 @@
         companyName: document.getElementById('companyName').value.trim(),
         email: document.getElementById('email').value.trim(),
         phone: document.getElementById('phone').value.trim(),
+        streetAddress: document.getElementById('streetAddress').value.trim(),
+        city: document.getElementById('city').value.trim(),
+        zip: document.getElementById('zip').value.trim(),
         state: document.getElementById('state').value,
         plan: selectedPlan.plan,
         planName: selectedPlan.name,

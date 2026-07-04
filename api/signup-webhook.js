@@ -364,6 +364,9 @@ export default async function handler(req, res) {
   const email       = meta.email;
   const phone       = meta.phone;
   const state       = meta.state;
+  const streetAddress = meta.street_address || '';
+  const city         = meta.city || '';
+  const zip          = meta.zip || '';
   const plan        = meta.plan;
   const planName    = meta.plan_name;
 
@@ -473,6 +476,7 @@ export default async function handler(req, res) {
       name: companyName || `${firstName} ${lastName}`,
       company_name: companyName || `${firstName} ${lastName}`,
       company_phone: phone || null,
+      company_addr: [streetAddress, city, state, zip].filter(Boolean).join(', ') || null,
       plan: plan,
       active: true,
       mailer_credits: planConfig.mailer_credits || 10,
