@@ -20,7 +20,7 @@ function switchSettingsTab(tab){
   // Render dynamic accordions on demand
   if(tab === 'trade-statuses') renderTradeStatusAccordion();
   if(tab === 'trade-postcard') renderTradePostcardAccordion();
-  if(tab === 'blitz'){ setTimeout(renderDripBuilder, 50); setTimeout(renderActiveDripContacts, 100); }
+
 }
 function restoreSettingsTab(){
   try{
