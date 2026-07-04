@@ -1,0 +1,51 @@
+
+    <!-- ══ TAB: BLITZ SEQUENCE ══ -->
+    <div class="stab-tab-pane" id="stab-tabpane-blitz">
+      <div style="display:flex;flex-direction:column;gap:20px;padding:4px 0;">
+
+        <!-- Header row -->
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+          <div>
+            <div style="font-family:var(--font-h);font-size:18px;font-weight:800;color:var(--text);">🔥 Blitz Sequence</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px;">Configure your Follow-Up Blitz — set designs, timing, and step messaging</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span style="font-size:12px;color:var(--muted);">Blitz enabled</span>
+            <div id="drip-tab-toggle" onclick="toggleDripFromTab()" style="width:40px;height:22px;border-radius:11px;background:var(--border);cursor:pointer;position:relative;transition:background .2s;">
+              <div id="drip-tab-knob" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s;"></div>
+            </div>
+            <button onclick="saveDripSequence()" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;">Save Sequence</button>
+          </div>
+        </div>
+
+        <!-- Steps builder -->
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <div style="font-size:13px;font-weight:700;color:var(--text);">📬 Sequence Steps</div>
+            <button onclick="addDripStep()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:6px 14px;font-size:12px;color:var(--text);cursor:pointer;font-weight:600;">+ Add Step</button>
+          </div>
+          <div id="drip-steps-builder" style="display:flex;flex-direction:column;gap:12px;">
+            <!-- Steps rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Info banner -->
+        <div style="background:linear-gradient(135deg,rgba(242,92,5,.08),rgba(168,85,247,.06));border:1px solid rgba(242,92,5,.2);border-radius:10px;padding:14px 16px;">
+          <div style="font-size:12px;color:var(--muted);line-height:1.6;">
+            <strong style="color:var(--text);">💡 How it works:</strong> When a Blitz is triggered for a homeowner, Step 1 is added to the Mail Queue immediately. Subsequent steps are scheduled automatically based on the delay you set. Each step uses the postcard design you assign — or falls back to the default design if none is set.
+          </div>
+        </div>
+
+        <!-- Active Blitz Contacts -->
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <div style="font-size:13px;font-weight:700;color:var(--text);">⚡ Active Blitz Contacts</div>
+            <button onclick="renderActiveDripContacts()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:5px 12px;font-size:11px;color:var(--mid);cursor:pointer;font-weight:600;">↻ Refresh</button>
+          </div>
+          <div id="drip-active-contacts" style="display:flex;flex-direction:column;gap:8px;">
+            <div style="text-align:center;padding:24px;color:var(--muted);font-size:12px;">Loading active Blitz contacts…</div>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /stab-tab-pane blitz -->

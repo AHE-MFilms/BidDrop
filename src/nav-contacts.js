@@ -1015,7 +1015,8 @@ function renderDripStepCards(){
 }
 function renderDripStepDesignSelects(){
   const dripTab=document.getElementById('tab-drip');
-  if(dripTab&&dripTab.classList.contains('active')) renderDripStepCards();
+  const blitzPane=document.getElementById('stab-tabpane-blitz');
+  if((dripTab&&dripTab.classList.contains('active'))||(blitzPane&&blitzPane.classList.contains('active'))) renderDripStepCards();
 }
 async function previewDripStepFullscreen(idx){
   const steps=getDripSteps();
