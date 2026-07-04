@@ -134,6 +134,7 @@ async function fetchBlitzPromo(){
       .select('blitz_promo_enabled, blitz_promo_config')
       .eq('id', AGENCY_ACCOUNT_ID)
       .single();
+    // Silently ignore if columns don't exist yet (pre-migration) or row not found
     if(error || !data) return;
     window.S.blitzPromo = {
       enabled: data.blitz_promo_enabled || false,
