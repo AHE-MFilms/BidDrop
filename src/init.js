@@ -136,17 +136,17 @@ async function fetchBlitzPromo(){
       .single();
     // Silently ignore if columns don't exist yet (pre-migration) or row not found
     if(error || !data) return;
-    window.S.blitzPromo = {
+    S.blitzPromo = {
       enabled: data.blitz_promo_enabled || false,
       config: data.blitz_promo_config || { buy: 3, get: 5, label: 'Buy 3 Get 5 Total!' }
     };
     // Update the badge in the Send Postcard popup if it's already open
     updateBlitzPromoBadge();
-  } catch(e){ console.warn('fetchBlitzPromo:', e.message); }
+  } catch(e){ /* silently ignore — columns may not exist yet */ }
 }
 
 function updateBlitzPromoBadge(){
-  const promo = window.S?.blitzPromo;
+  const promo = (typeof S !== 'undefined') ? S.blitzPromo : null;
   const badge = document.getElementById('spm-blitz-promo-badge');
   if(!badge) return;
   if(promo && promo.enabled && promo.config){

@@ -1246,7 +1246,7 @@ async function saveBlitzPromo(){
     if(error) throw new Error(error.message);
     _blitzPromoState = { enabled, buy, get, label };
     // Also update the live S.blitzPromo so the badge reflects immediately
-    window.S.blitzPromo = { enabled, config: { buy, get, label } };
+    if(typeof S !== 'undefined') S.blitzPromo = { enabled, config: { buy, get, label } };
     updateBlitzPromoBadge();
     if(res) res.innerHTML='<span style="color:#22c55e">✅ Promo settings saved!</span>';
     toast(enabled ? '🔥 Blitz Promo is now LIVE for all clients!' : '✅ Blitz Promo turned OFF', enabled ? 'success' : 'info');
