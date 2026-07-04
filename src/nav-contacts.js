@@ -1011,15 +1011,18 @@ function _renderBlitzSeqCard(seq,si){
       +'<button onclick="removeBlitzStep(\''+seq.id+'\','+i+')" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;flex-shrink:0;padding:0;line-height:1;" title="Remove step">&#x2715;</button>'
       +'</div>';
   }).join('');
+  const bodyId='blitz-body-'+seq.id;
+  const collapsed=seq.collapsed===true;
   return '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;">'
-    +'<div style="display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border);background:var(--card2);">'
-    +'<div onclick="toggleBlitzSequence(\''+seq.id+'\')" style="width:36px;height:20px;border-radius:10px;background:'+(seq.enabled?'var(--accent)':'var(--border)')+';cursor:pointer;position:relative;flex-shrink:0;transition:background .2s;"><div style="position:absolute;top:3px;left:'+(seq.enabled?'17px':'3px')+';width:14px;height:14px;border-radius:50%;background:#fff;transition:left .2s;"></div></div>'
-    +'<input value="'+escHtml(seq.name||'Sequence '+(si+1))+'" oninput="updateBlitzSeqName(\''+seq.id+'\',this.value)" style="flex:1;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:var(--font-h);font-size:15px;font-weight:700;padding:2px 4px;outline:none;" placeholder="Sequence name">'
-    +'<span style="font-size:11px;color:var(--muted);white-space:nowrap;">'+(seq.steps||[]).length+' step'+((seq.steps||[]).length!==1?'s':'')+'</span>'
-    +'<button onclick="saveBlitzSequence(\''+seq.id+'\')" style="background:var(--accent);color:#fff;border:none;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">Save</button>'
-    +(si>0?'<button onclick="deleteBlitzSequence(\''+seq.id+'\')" style="background:none;border:1px solid rgba(239,68,68,.3);border-radius:7px;padding:6px 10px;font-size:12px;color:#EF4444;cursor:pointer;" title="Delete sequence">&#x2715;</button>':'')
+    +'<div onclick="toggleBlitzSeqCollapse(\''+seq.id+'\')" style="display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--card2);cursor:pointer;user-select:none;">'
+    +'<div onclick="event.stopPropagation();toggleBlitzSequence(\''+seq.id+'\')" style="width:36px;height:20px;border-radius:10px;background:'+(seq.enabled?'var(--accent)':'var(--border)')+';cursor:pointer;position:relative;flex-shrink:0;transition:background .2s;"><div style="position:absolute;top:3px;left:'+(seq.enabled?'17px':'3px')+';width:14px;height:14px;border-radius:50%;background:#fff;transition:left .2s;"></div></div>'
+    +'<input onclick="event.stopPropagation()" value="'+escHtml(seq.name||'Sequence '+(si+1))+'" oninput="updateBlitzSeqName(\''+seq.id+'\',this.value)" style="flex:1;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:var(--font-h);font-size:15px;font-weight:700;padding:2px 4px;outline:none;" placeholder="Sequence name">'
+    +'<span style="font-size:11px;color:var(--muted);white-space:nowrap;">'+(seq.steps||[]).length+' step'+((seq.steps||[]).length!==1?'s':'')+' </span>'
+    +'<button onclick="event.stopPropagation();saveBlitzSequence(\''+seq.id+'\')" style="background:var(--accent);color:#fff;border:none;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">Save</button>'
+    +(si>0?'<button onclick="event.stopPropagation();deleteBlitzSequence(\''+seq.id+'\')" style="background:none;border:1px solid rgba(239,68,68,.3);border-radius:7px;padding:6px 10px;font-size:12px;color:#EF4444;cursor:pointer;" title="Delete sequence">&#x2715;</button>':'')
+    +'<span style="font-size:18px;color:var(--muted);line-height:1;display:inline-block;transform:'+(collapsed?'rotate(-90deg)':'rotate(0deg)')+';transition:transform .2s;">▾</span>'
     +'</div>'
-    +'<div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px;">'
+    +'<div id="'+bodyId+'" style="'+(collapsed?'display:none;':'')+'padding:14px 18px;flex-direction:column;gap:10px;">'
     +stepsHtml
     +'<button onclick="addBlitzStep(\''+seq.id+'\')" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 14px;font-size:12px;color:var(--text);cursor:pointer;font-weight:600;align-self:flex-start;">+ Add Step</button>'
     +'</div></div>';
@@ -1029,6 +1032,21 @@ function addBlitzSequence(){
   seqs.push({id:'seq_'+Date.now(),name:'New Sequence',enabled:true,steps:getDefaultDripSteps()});
   S.cfg.blitzSequences=seqs; save(); renderBlitzSequenceList();
   toast('New sequence created — give it a name and save!','success');
+}
+function toggleBlitzSeqCollapse(seqId){
+  const seqs=getBlitzSequences(); const seq=seqs.find(s=>s.id===seqId);
+  if(!seq) return;
+  seq.collapsed=!seq.collapsed;
+  S.cfg.blitzSequences=seqs;
+  // Toggle DOM directly without full re-render for snappiness
+  const body=document.getElementById('blitz-body-'+seqId);
+  const header=body&&body.previousElementSibling;
+  const chevron=header&&header.querySelector('span[style*="rotate"]');
+  if(body){
+    if(seq.collapsed){ body.style.display='none'; }
+    else { body.style.display='flex'; }
+  }
+  if(chevron) chevron.style.transform=seq.collapsed?'rotate(-90deg)':'rotate(0deg)';
 }
 function deleteBlitzSequence(seqId){
   const seqs=getBlitzSequences();
