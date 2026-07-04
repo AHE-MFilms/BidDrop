@@ -49,7 +49,7 @@ async function loadAnalytics(){
     // ── Estimates from Supabase ───────────────────────────────────────────────
     // Use only guaranteed-safe columns (no qr_scan_count/page_views which may not exist yet)
     let estBaseQ = sb.from('estimates').select('id,addr,owner,rep,total,mat,created_at,qr_scan_count,page_views,booking_clicks,call_clicks,page_first_viewed_at')
-      .eq('account_id', currentAccount.id);
+      .eq('account_id', currentAccount.id).is('deleted_at', null).eq('is_revision', false);
     if(cutoff) estBaseQ = estBaseQ.gte('created_at', cutoff.toISOString());
     const estResult = await estBaseQ.order('created_at',{ascending:false}).limit(2000);
     const {data:estimates} = estResult;

@@ -254,10 +254,12 @@ async function loadEstimatesFromSupabase(){
     status: 'saved'
   }));
   // Merge: keep any in-memory estimates not yet in DB, replace those that are
+  // Exclude soft-deleted and revision estimates so S.estimates only contains active records
+  const activeLoaded = loaded.filter(e => !e.deletedAt && !e.isRevision);
   const dbIds = new Set(loaded.map(e => e.id));
-  const memOnly = (S.estimates || []).filter(e => !dbIds.has(e.id));
-  S.estimates = [...loaded, ...memOnly];
-  console.log('[BidDrop] Loaded', loaded.length, 'estimates from Supabase');
+  const memOnly = (S.estimates || []).filter(e => !dbIds.has(e.id) && !e.deletedAt && !e.isRevision);
+  S.estimates = [...activeLoaded, ...memOnly];
+  console.log('[BidDrop] Loaded', activeLoaded.length, 'estimates from Supabase');
   // Backfill pin.estimate JSONB so map badges and goEstFromPin always have fresh data
   _backfillPinEstimatesFromTable();
 }
