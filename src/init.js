@@ -361,28 +361,24 @@ function refreshDripModal(){
   const selId = picker ? picker.value : (seqs[0]&&seqs[0].id);
   const seq = seqs.find(s=>s.id===selId) || seqs[0];
   const steps = (seq && seq.steps && seq.steps.filter(s=>s.enabled!==false)) || [];
-  // Determine if step 1 was already sent (initial pin postcard)
-  const _pin4steps = _dripEstId ? (S.pins||[]).find(p=>{ const _e=(S.estimates||[]).find(e=>e.id===_dripEstId); return _e&&p.id===_e.pinId; }) : null;
-  const _step1Sent = !!(_pin4steps && (_pin4steps.unlockQueuedPostcard || _pin4steps.unlocked));
-  // Render steps
+  // Render steps — Step 1 is always 'Sends today', Steps 2+ show their day offset
   const stepsEl = document.getElementById('drip-steps-list');
   if(stepsEl){
     stepsEl.innerHTML = steps.map((step,i)=>{
       const isFirst = i===0;
-      const alreadySent = isFirst && _step1Sent;
       const designName = (()=>{
         if(!step.designId) return 'Default design';
         const designs = (typeof getDesigns==='function') ? getDesigns() : [];
         const d = designs.find(x=>x.id===step.designId);
         return d ? (d.name||'Custom design') : 'Custom design';
       })();
-      const dayLabel = alreadySent
-        ? '<span style="font-size:11px;color:#4ade80;font-weight:600;">✓ Already sent</span>'
-        : (isFirst ? '<span style="font-size:11px;color:var(--muted);">Day 0 — sends now</span>' : '<span style="font-size:11px;color:var(--muted);">Day '+step.day+'</span>');
-      return '<div style="background:'+(alreadySent?'rgba(74,222,128,.06)':'var(--card2)')+';border:1px solid '+(alreadySent?'rgba(74,222,128,.25)':'var(--border)')+';border-radius:10px;padding:12px 14px;">'
+      const dayLabel = isFirst
+        ? '<span style="font-size:11px;color:var(--accent);font-weight:600;">Sends today</span>'
+        : '<span style="font-size:11px;color:var(--muted);">Day '+step.day+'</span>';
+      return '<div style="background:var(--card2);border:1px solid '+(isFirst?'rgba(242,92,5,.3)':'var(--border)')+';border-radius:10px;padding:12px 14px;">'
         +'<div style="display:flex;align-items:center;gap:8px;">'
-        +'<div style="background:'+(alreadySent?'#166534':(isFirst?'var(--accent)':'#7C3AED'))+';color:#fff;font-family:var(--font-h);font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;">'+(alreadySent?'✓ SENT':'STEP '+(i+1))+'</div>'
-        +'<div style="font-size:13px;font-weight:600;color:'+(alreadySent?'#86efac':'var(--text)')+';flex:1;">'+escHtml(step.headline||('Step '+(i+1)))+'</div>'
+        +'<div style="background:'+(isFirst?'var(--accent)':'#7C3AED')+';color:#fff;font-family:var(--font-h);font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;">STEP '+(i+1)+'</div>'
+        +'<div style="font-size:13px;font-weight:600;color:var(--text);flex:1;">'+escHtml(step.headline||('Step '+(i+1)))+'</div>'
         +dayLabel
         +'</div>'
         +(step.subtext?'<div style="font-size:11px;color:var(--muted);margin-top:4px;padding-left:2px;">'+escHtml(step.subtext)+'</div>':'')
@@ -390,19 +386,14 @@ function refreshDripModal(){
         +'</div>';
     }).join('');
   }
-  // Update credit note and button
-  const pin = _dripEstId ? (S.pins||[]).find(p=>{
-    const est=(S.estimates||[]).find(e=>e.id===_dripEstId); return est&&p.id===est.pinId;
-  }) : null;
-  const step1Queued = !!(pin && (pin.unlockQueuedPostcard || pin.unlocked));
-  const credits = step1Queued ? Math.max(0,steps.length-1) : steps.length;
+  // Blitz is always 3 credits for the full sequence (bundle pricing)
+  const BLITZ_BUNDLE_CREDITS = 3;
   const noteEl = document.getElementById('drip-credit-note');
   if(noteEl){
-    noteEl.innerHTML = '🔥 <strong>'+(seq?escHtml(seq.name):'Sequence')+'</strong> — '+steps.length+' step'+( steps.length!==1?'s':'')+' over '+(steps.length>1?'Day 0 to Day '+(steps[steps.length-1].day):'Day 0')+'. '
-      +(step1Queued?'Step 1 already queued from unlock. ':'')+'<strong style="color:#4ade80;">'+credits+' credit'+(credits!==1?'s':'')+' needed.</strong> Steps are scheduled automatically.';
+    noteEl.innerHTML = '🔥 <strong>'+(seq?escHtml(seq.name):'Sequence')+'</strong> — '+steps.length+' postcard'+(steps.length!==1?'s':'')+' over '+(steps.length>1?'Day 0 to Day '+(steps[steps.length-1].day):'Day 0')+'. Includes today’s postcard. <strong style="color:#4ade80;">'+BLITZ_BUNDLE_CREDITS+' credits total.</strong> All steps scheduled automatically.';
   }
   const btn = document.getElementById('drip-start-btn');
-  if(btn) btn.textContent = '🔥 Start Blitz — '+credits+' Credit'+(credits!==1?'s':'')+' · '+steps.length+' Postcard'+(steps.length!==1?'s':'');
+  if(btn) btn.textContent = '🔥 Start Blitz — '+BLITZ_BUNDLE_CREDITS+' Credits · '+steps.length+' Postcards Total';
 }
 
 function startDripSequence(){
@@ -416,12 +407,10 @@ function startDripSequence(){
   const seq = seqs.find(s=>s.id===selId) || seqs[0];
   const seqSteps = (seq && seq.steps && seq.steps.filter(s=>s.enabled!==false)) || [];
   if(!seqSteps.length){ toast('No enabled steps in this sequence','error'); return; }
-  const pin = (S.pins||[]).find(p=>p.id===est.pinId);
-  const step1AlreadyQueued = !!(pin && (pin.unlockQueuedPostcard || pin.unlocked));
-  const BLITZ_CREDITS = step1AlreadyQueued ? Math.max(0,seqSteps.length-1) : seqSteps.length;
+  const BLITZ_CREDITS = 3; // Bundle pricing: always 3 credits for a full Blitz sequence
   const paid = S.cfg.mailerCredits || 0;
   if(paid < BLITZ_CREDITS){
-    toast('Need '+BLITZ_CREDITS+' credit'+(BLITZ_CREDITS!==1?'s':'')+' for this Blitz. You have '+paid+'.','error');
+    toast('Need '+BLITZ_CREDITS+' credits for this Blitz. You have '+paid+'.','error');
     setTimeout(()=>showBuyCreditsModal(), 800);
     return;
   }
@@ -432,7 +421,6 @@ function startDripSequence(){
     blitz: true,
     sequenceId: seq ? seq.id : null,
     sequenceName: seq ? seq.name : null,
-    step1FromUnlock: step1AlreadyQueued,
     steps: seqSteps.map((s,i)=>({
       step: i+1,
       type: 'postcard',
@@ -441,16 +429,14 @@ function startDripSequence(){
       subtext: s.subtext||'',
       designId: s.designId||null,
       sendAt: i===0 ? now.toISOString() : new Date(now.getTime()+(s.day||0)*msDay).toISOString(),
-      sentAt: (i===0 && step1AlreadyQueued) ? now.toISOString() : null,
+      sentAt: null,
       queueId: null
     }))
   };
-  // Step 1: only queue if NOT already queued from unlock
-  if(!step1AlreadyQueued){
-    addEstimateToMailQueueWithDripTag(est, 1);
-  }
-  // Schedule remaining steps
-  est.drip.steps.slice(step1AlreadyQueued?1:1).forEach(step=>{
+  // Step 1 sends immediately (today's postcard — included in the 3-credit bundle)
+  addEstimateToMailQueueWithDripTag(est, 1);
+  // Schedule remaining steps (2 onward)
+  est.drip.steps.slice(1).forEach(step=>{
     scheduleDripStep(est, step);
   });
   save();
