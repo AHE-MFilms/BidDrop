@@ -662,6 +662,30 @@ async function handle(action, req, res, ctx) {
         return res.json({ ok: true, contact_data: gcdPin.contact_data || null });
       }
 
+    case 'get-blitz-promo': {
+        // Fetch blitz promo config from the agency account row (service key bypasses schema cache)
+        const gbpRes = await sbFetch(`accounts?id=eq.${AGENCY_ACCT_ID}&select=blitz_promo_enabled,blitz_promo_config&limit=1`);
+        if (!gbpRes.ok) { res.status(200).json({ enabled: false, config: { buy: 3, get: 5, label: 'Buy 3 Get 5 Total!' } }); return; }
+        const gbpRows = await gbpRes.json();
+        const gbpRow = gbpRows[0] || {};
+        return res.json({
+          enabled: gbpRow.blitz_promo_enabled || false,
+          config: gbpRow.blitz_promo_config || { buy: 3, get: 5, label: 'Buy 3 Get 5 Total!' }
+        });
+      }
+
+    case 'save-blitz-promo': {
+        if (!isSuperAdmin) { res.status(403).json({ error: 'Super admin only' }); return; }
+        const { enabled: sbpEnabled, config: sbpConfig } = req.body;
+        const sbpRes = await sbFetch(`accounts?id=eq.${AGENCY_ACCT_ID}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ blitz_promo_enabled: !!sbpEnabled, blitz_promo_config: sbpConfig })
+        });
+        if (!sbpRes.ok) { const e = await sbpRes.text(); res.status(500).json({ error: e }); return; }
+        return res.json({ ok: true });
+      }
+
     default:
       return false;
   }

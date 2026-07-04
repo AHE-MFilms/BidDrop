@@ -129,20 +129,16 @@ async function fetchMasterLobKey(){
 
 async function fetchBlitzPromo(){
   try {
-    const { data, error } = await sb
-      .from('accounts')
-      .select('blitz_promo_enabled, blitz_promo_config')
-      .eq('id', AGENCY_ACCOUNT_ID)
-      .single();
-    // Silently ignore if columns don't exist yet (pre-migration) or row not found
-    if(error || !data) return;
+    const r = await fetch('/api/admin?action=get-blitz-promo', { credentials: 'include' });
+    if(!r.ok) return;
+    const data = await r.json();
+    if(!S) return;
     S.blitzPromo = {
-      enabled: data.blitz_promo_enabled || false,
-      config: data.blitz_promo_config || { buy: 3, get: 5, label: 'Buy 3 Get 5 Total!' }
+      enabled: data.enabled || false,
+      config: data.config || { buy: 3, get: 5, label: 'Buy 3 Get 5 Total!' }
     };
-    // Update the badge in the Send Postcard popup if it's already open
     updateBlitzPromoBadge();
-  } catch(e){ /* silently ignore — columns may not exist yet */ }
+  } catch(e){ /* silently ignore */ }
 }
 
 function updateBlitzPromoBadge(){

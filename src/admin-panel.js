@@ -1184,12 +1184,11 @@ let _blitzPromoState = { enabled: false, buy: 3, get: 5, label: 'Buy 3 Get 5 Tot
 
 async function loadBlitzPromoState(){
   try {
-    const { data, error } = await sb.from('accounts')
-      .select('blitz_promo_enabled, blitz_promo_config')
-      .eq('id', AGENCY_ACCOUNT_ID).single();
-    if(error || !data) return;
-    const cfg = data.blitz_promo_config || { buy: 3, get: 5, label: 'Buy 3 Get 5 Total!' };
-    _blitzPromoState = { enabled: !!data.blitz_promo_enabled, buy: cfg.buy||3, get: cfg.get||5, label: cfg.label||'Buy 3 Get 5 Total!' };
+    const r = await fetch('/api/admin?action=get-blitz-promo', { credentials: 'include' });
+    if(!r.ok) return;
+    const data = await r.json();
+    const cfg = data.config || { buy: 3, get: 5, label: 'Buy 3 Get 5 Total!' };
+    _blitzPromoState = { enabled: !!data.enabled, buy: cfg.buy||3, get: cfg.get||5, label: cfg.label||'Buy 3 Get 5 Total!' };
     _applyBlitzPromoUI();
   } catch(e){ console.warn('loadBlitzPromoState:', e.message); }
 }
@@ -1239,11 +1238,12 @@ async function saveBlitzPromo(){
     const get   = parseInt(document.getElementById('bp-get')?.value)||5;
     const label = (document.getElementById('bp-label')?.value||'').trim() || ('Buy '+buy+' Get '+get+' Total!');
     const enabled = _blitzPromoState.enabled;
-    const { error } = await sb.from('accounts').update({
-      blitz_promo_enabled: enabled,
-      blitz_promo_config: { buy, get, label }
-    }).eq('id', AGENCY_ACCOUNT_ID);
-    if(error) throw new Error(error.message);
+    const saveRes = await fetch('/api/admin?action=save-blitz-promo', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled, config: { buy, get, label } })
+    });
+    if(!saveRes.ok) { const e = await saveRes.json(); throw new Error(e.error || 'Save failed'); }
     _blitzPromoState = { enabled, buy, get, label };
     // Also update the live S.blitzPromo so the badge reflects immediately
     if(typeof S !== 'undefined') S.blitzPromo = { enabled, config: { buy, get, label } };
