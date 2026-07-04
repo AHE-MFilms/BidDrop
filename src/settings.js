@@ -248,6 +248,23 @@ function openSettings(){
   _sck('s-sid-fin-enabled', c.sidFinEnabled!==false);
   _sset('s-sid-fin-apr', c.sidFinApr||9.99);
   _sset('s-sid-fin-term', c.sidFinTerm||60);
+  // Show/hide pricing trade tabs based on enabled_trades (set by Super Admin).
+  // Roofing is always visible; all others only appear if the Super Admin has enabled them.
+  {
+    const _et = (S.cfg && S.cfg.enabledTrades) || {roofing:true};
+    const _tradeTabs = ['solar','fencing','siding','gutters','insulation','paint','doors','windows'];
+    _tradeTabs.forEach(t => {
+      const btn = document.getElementById('ptab-' + t);
+      if (btn) btn.style.display = _et[t] ? '' : 'none';
+    });
+    // If the stored tab is now disabled, fall back to roofing
+    try {
+      const _stored = localStorage.getItem('bd_pricing_tab');
+      if (_stored && _stored !== 'roofing' && !_et[_stored]) {
+        localStorage.removeItem('bd_pricing_tab');
+      }
+    } catch(e) {}
+  }
   // Restore pricing sub-tab
   restorePricingTab();
   // Refresh trade toggles and selector
