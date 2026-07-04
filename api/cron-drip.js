@@ -245,14 +245,26 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true, sent: 0, message: 'No items due' });
   }
 
-  const results = [];
+   // Dedup guard: atomically mark items as 'processing' before working on them.
+  // If Vercel fires the cron twice in the same minute, the second run will skip
+  // any items already claimed by the first run.
+  const itemIds = items.map(i => `"${i.id}"`).join(',');
+  const claimRes = await sb(`queue?id=in.(${itemIds})&status=eq.scheduled`, {
+    method: 'PATCH',
+    headers: { 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ status: 'processing' })
+  });
+  if (!claimRes.ok) {
+    console.error('[cron-drip] Failed to claim items for processing');
+    return res.status(500).json({ error: 'Failed to claim queue items' });
+  }
 
+  const results = [];
   for (const item of items) {
     const accountId = item.account_id;
     const step = item.drip_step || 2;
     console.log(`[cron-drip] Processing item ${item.id} step ${step} for ${item.addr}`);
-
-    try {
+    try {{
       // 2. Fetch account config (branding, company info, drip messages)
       const cfgRes = await sb(
         `accounts?id=eq.${accountId}&select=plan,mailer_credits,` +
@@ -407,6 +419,11 @@ export default async function handler(req, res) {
 
     } catch (err) {
       console.error(`[cron-drip] Error processing ${item.id}:`, err.message);
+      // Revert 'processing' back to 'scheduled' so the next cron run retries it
+      await sb(`queue?id=eq.${item.id}`, {
+        method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ status: 'scheduled' })
+      }).catch(() => {});
       results.push({ id: item.id, status: 'error', error: err.message });
     }
   }

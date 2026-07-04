@@ -50,7 +50,7 @@
     },
     {
       "path": "/api/cron-trial-check",
-      "schedule": "0 13 * * *"
+      "schedule": "5 13 * * *"
     },
     {
       "path": "/api/cron-purge-trash",
@@ -81,7 +81,9 @@
     "api/cron-purge-trash.js": { "maxDuration": 30 },
     "api/r.js":                { "maxDuration": 15 },
     "api/pixel.js":            { "maxDuration": 10 },
-    "api/canvas.js":           { "maxDuration": 15 }
+    "api/canvas.js":           { "maxDuration": 15 },
+    "api/storm-proxy.js":       { "maxDuration": 15 },
+    "api/health.js":            { "maxDuration": 10 }
   },
   "headers": [
     {
