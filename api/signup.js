@@ -57,7 +57,7 @@ export default async function handler(req, res) {
   if (plan === 'enterprise') {
     return res.status(400).json({
       error: 'enterprise_contact',
-      message: 'Enterprise is a custom plan. Please contact us at john@americashomeexperts.com to get started.',
+      message: 'Enterprise is a custom plan. Please contact us at support@biddrop.io to get started.',
     });
   }
 
@@ -153,8 +153,8 @@ export default async function handler(req, res) {
           max_reps: String(PLAN_MAX_REPS[plan] || 1),
         },
       },
-      success_url: `https://biddrop.americashomeexperts.com/signup?success=1`,
-      cancel_url: `https://biddrop.americashomeexperts.com/signup`,
+      success_url: `${(process.env.APP_URL || 'https://biddrop.us').trim()}/signup?success=1`,
+      cancel_url: `${(process.env.APP_URL || 'https://biddrop.us').trim()}/signup`,
       allow_promotion_codes: true,
       billing_address_collection: 'auto',
       metadata: {

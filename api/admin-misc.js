@@ -237,7 +237,11 @@ async function handle(action, req, res, ctx) {
           /* ── Named Blitz Sequences (Option B — Build 13) ── */
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS blitz_sequences JSONB`,
           `ALTER TABLE queue ADD COLUMN IF NOT EXISTS blitz_sequence_id TEXT`,
-          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS blitz_sequence_id TEXT`
+          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS blitz_sequence_id TEXT`,
+          /* ── Per-step Blitz copy stored on queue items (Build 13b) ── */
+          `ALTER TABLE queue ADD COLUMN IF NOT EXISTS drip_headline TEXT`,
+          `ALTER TABLE queue ADD COLUMN IF NOT EXISTS drip_subtext TEXT`,
+          `ALTER TABLE queue ADD COLUMN IF NOT EXISTS drip_design_id TEXT`
         ].join('; ');
         const results = [];
         // Run each DDL statement individually via Supabase pg_meta API (uses SERVICE_KEY)
@@ -584,7 +588,7 @@ async function handle(action, req, res, ctx) {
         const alertEmail = acctData?.lead_alert_email;
         if (!alertEmail) { res.status(200).json({ sent: false, reason: 'no alert email configured' }); return; }
         const companyName = acctData?.company_name || 'BidDrop';
-        const appUrl = (process.env.APP_URL || 'https://biddrop.americashomeexperts.com').trim();
+        const appUrl = (process.env.APP_URL || 'https://biddrop.us').trim();
         const approvalEmailHtml = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;color:#111"><div style="background:#111;padding:28px 32px;border-radius:10px 10px 0 0"><span style="font-size:26px;font-weight:900;color:#fff">Bid<span style="color:#F97316">Drop</span></span></div><div style="padding:36px 32px;border:1px solid #e5e5e5;border-top:none;border-radius:0 0 10px 10px"><h1 style="font-size:22px;font-weight:800;margin:0 0 12px">&#128274; ${approvalCount} Postcard${approvalCount!==1?'s':''} Waiting for Approval</h1><p style="font-size:15px;color:#333;line-height:1.6;margin:0 0 24px">${approvalCount} postcard${approvalCount!==1?'s':''} in your <strong>${companyName}</strong> mail queue need${approvalCount===1?'s':''} your approval before they can be sent.</p><a href="${appUrl}" style="display:block;background:#F97316;color:#fff;text-decoration:none;text-align:center;padding:16px 24px;border-radius:8px;font-size:17px;font-weight:800;margin-bottom:24px">Review &amp; Approve &#8594;</a><p style="font-size:12px;color:#999;border-top:1px solid #eee;padding-top:16px;margin:0">Go to Mail Queue tab in BidDrop to approve or reject items. For help, contact <a href="mailto:support@biddrop.io" style="color:#F97316">support@biddrop.io</a></p></div></div>`;
         const resendKey = process.env.RESEND_API_KEY;
         if (!resendKey) { res.status(200).json({ sent: false, reason: 'no RESEND_API_KEY' }); return; }

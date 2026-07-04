@@ -13,7 +13,7 @@ const SUPABASE_URL  = process.env.SUPABASE_URL || 'https://gtwbhxnrmfmdenogzuea.
 const SERVICE_KEY   = process.env.SUPABASE_SERVICE_KEY;
 const GHL_CLIENT_ID     = process.env.GHL_CLIENT_ID     || '69f796d2528efc733a30a9ab-moq4vxxq';
 const GHL_CLIENT_SECRET = process.env.GHL_CLIENT_SECRET || 'dbc9f4c7-ca65-425d-800b-b43ec6a82643';
-const REDIRECT_URI  = 'https://biddrop.americashomeexperts.com/api/oauth/callback';
+const REDIRECT_URI  = `${(process.env.APP_URL || 'https://biddrop.us').trim()}/api/oauth/callback`;
 const GHL_TOKEN_URL = 'https://services.leadconnectorhq.com/oauth/token';
 const GHL_INSTALL_BASE = 'https://marketplace.leadconnectorhq.com/v2/oauth/chooselocation';
 

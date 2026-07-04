@@ -29,7 +29,7 @@ const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 // Pin to a stable API version — Stripe v22 defaults to 2026-03-25.dahlia
 // which has breaking changes for checkout sessions
 const STRIPE_API_VERSION = '2023-10-16';
-const APP_URL        = (process.env.APP_URL || 'https://biddrop.americashomeexperts.com').trim();
+const APP_URL        = (process.env.APP_URL || 'https://biddrop.us').trim();
 
 // 1 credit = $4.00 = 1 postcard mailed. Volume discounts at 100+ credits.
 const CREDIT_PACKS = {

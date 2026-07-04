@@ -5,7 +5,7 @@
  * 1. Sends warning emails to users whose trial ends in ~10 days (day 50) or ~2 days (day 58)
  * 2. Finds accounts whose trial has expired (trial_ends_at < now) and are still active.
  *    - Sets active = false on expired accounts
- *    - Sends an email notification to the admin (john@americashomeexperts.com)
+ *    - Sends an email notification to the admin (support@biddrop.io)
  *
  * Uses Resend as primary email provider (same as signup-webhook.js).
  * Falls back to SendGrid if RESEND_API_KEY is not set.
@@ -20,7 +20,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL || 'https://gtwbhxnrmfmdenogzuea.s
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
 const RESEND_KEY   = process.env.RESEND_API_KEY;
 const SENDGRID_KEY = process.env.SENDGRID_API_KEY;
-const ADMIN_EMAIL  = 'john@americashomeexperts.com';
+const ADMIN_EMAIL  = 'support@biddrop.io';
 const FROM_EMAIL   = 'BidDrop <noreply@biddrop.io>';
 
 function sbFetch(path, opts = {}) {
@@ -156,7 +156,7 @@ export default async function handler(req, res) {
               Log in to your account and click <strong>"Manage Subscription"</strong> in Settings to subscribe and keep your data.
             </p>
             <div style="text-align:center;margin:24px 0;">
-              <a href="https://biddrop.americashomeexperts.com" style="background:#F97316;color:#fff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:700;font-size:15px;display:inline-block;">
+              <a href="${(process.env.APP_URL || 'https://biddrop.us').trim()}" style="background:#F97316;color:#fff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:700;font-size:15px;display:inline-block;">
                 Log In &amp; Subscribe Now →
               </a>
             </div>
@@ -253,7 +253,7 @@ export default async function handler(req, res) {
           <div style="margin-top:24px;padding:16px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;">
             <p style="margin:0;font-size:14px;color:#9a3412;">
               <strong>Action needed:</strong> If any of these clients want to continue, 
-              reactivate them in the <a href="https://biddrop.americashomeexperts.com" style="color:#F97316;">Admin Panel</a> 
+              reactivate them in the <a href="${(process.env.APP_URL || 'https://biddrop.us').trim()}" style="color:#F97316;">Admin Panel</a> 
               and confirm their Stripe subscription is active.
             </p>
           </div>

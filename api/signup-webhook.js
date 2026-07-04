@@ -15,7 +15,7 @@
 //   SUPABASE_URL
 //   SUPABASE_SERVICE_KEY
 //   SENDGRID_API_KEY  (or use Resend — see below)
-//   APP_URL  (e.g. https://biddrop.americashomeexperts.com)
+//   APP_URL  (e.g. https://biddrop.us)
 
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
@@ -107,7 +107,7 @@ function generateSlug(companyName) {
 // Send welcome email via Resend (or swap for SendGrid)
 // Uses Resend API — add RESEND_API_KEY to Vercel env vars
 // Alternatively, set SENDGRID_API_KEY and swap the fetch call
-async function sendWelcomeEmail({ email, firstName, companyName, planName, tempPassword, loginUrl }) {
+async function sendWelcomeEmail({ email, firstName, companyName, planName, tempPassword, loginUrl, mailerCredits }) {
   const resendKey = process.env.RESEND_API_KEY;
   const sendgridKey = process.env.SENDGRID_API_KEY;
 
@@ -139,8 +139,8 @@ async function sendWelcomeEmail({ email, firstName, companyName, planName, tempP
 
         <!-- Credits Badge -->
         <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 14px 18px; margin-bottom: 28px;">
-          <p style="font-size: 14px; color: #16a34a; font-weight: 700; margin: 0 0 4px 0;">✓ 10 Free Mailer Credits Added</p>
-          <p style="font-size: 13px; color: #333333; margin: 0;">Your account has been loaded with 10 free mailer credits to get you started right away.</p>
+          <p style="font-size: 14px; color: #16a34a; font-weight: 700; margin: 0 0 4px 0;">✓ ${mailerCredits || 10} Free Mailer Credits Added</p>
+          <p style="font-size: 13px; color: #333333; margin: 0;">Your account has been loaded with ${mailerCredits || 10} free mailer credits to get you started right away.</p>
         </div>
 
         <!-- CTA Button -->
@@ -476,7 +476,7 @@ export default async function handler(req, res) {
     }
 
     // ---- 5. Send welcome email ----
-    const loginUrl = (process.env.APP_URL || 'https://biddrop.americashomeexperts.com').trim();
+    const loginUrl = (process.env.APP_URL || 'https://biddrop.us').trim();
     await sendWelcomeEmail({
       email: customerEmail,
       firstName: firstName || 'there',
@@ -484,6 +484,7 @@ export default async function handler(req, res) {
       planName: planConfig.name,
       tempPassword,
       loginUrl,
+      mailerCredits: planConfig.mailer_credits || 10,
     });
 
     // ---- 6. GHL — Create contact in BidDrop sub-account ----

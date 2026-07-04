@@ -216,7 +216,7 @@ async function doForgotPassword(){
   btn.textContent = 'Sending...'; btn.disabled = true; msg.textContent = '';
   try {
     const { error } = await sb.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://biddrop.americashomeexperts.com'
+      redirectTo: 'https://biddrop.us'
     });
     if(error) throw error;
     msg.style.color = '#1a7f4b';

@@ -88,7 +88,7 @@ async function sendScanNotification({ toEmail, repName, ownerName, ownerEmail, a
         </td></tr>
         <!-- Footer -->
         <tr><td style="background:#f9fafb;padding:16px 32px;border-top:1px solid #e5e7eb;">
-          <p style="margin:0;font-size:12px;color:#9ca3af;">BidDrop · <a href="https://biddrop.americashomeexperts.com" style="color:#9ca3af;">biddrop.americashomeexperts.com</a></p>
+          <p style="margin:0;font-size:12px;color:#9ca3af;">BidDrop · <a href="https://biddrop.us" style="color:#9ca3af;">biddrop.us</a></p>
         </td></tr>
       </table>
     </td></tr>
@@ -259,7 +259,7 @@ export default async function handler(req, res) {
   } else if (bookingUrl) {
     dest = bookingUrl;
   } else {
-    dest = 'https://biddrop.americashomeexperts.com';
+    dest = 'https://biddrop.us';
   }
 
   res.setHeader('Location', dest);

@@ -342,7 +342,7 @@ async function ghlEnsureEstimateUrlField(){
     const res = await ghlRequest('/locations/'+locationId+'/customFields', 'POST', {
       name:     'Estimate URL',
       dataType: 'TEXT',
-      placeholder: 'https://biddrop.americashomeexperts.com/e/...',
+      placeholder: 'https://biddrop.us/e/...',
       model:    'contact'
     });
     const fieldId = res.customField?.id || res.id;

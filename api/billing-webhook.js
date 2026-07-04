@@ -45,9 +45,9 @@ const SUPABASE_URL = process.env.SUPABASE_URL || 'https://gtwbhxnrmfmdenogzuea.s
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
 const RESEND_KEY   = process.env.RESEND_API_KEY;
 const SENDGRID_KEY = process.env.SENDGRID_API_KEY;
-const ADMIN_EMAIL  = 'john@americashomeexperts.com';
+const ADMIN_EMAIL  = 'support@biddrop.io';
 const FROM_EMAIL   = 'BidDrop <noreply@biddrop.io>';
-const APP_URL      = (process.env.APP_URL || 'https://biddrop.americashomeexperts.com').trim();
+const APP_URL      = (process.env.APP_URL || 'https://biddrop.us').trim();
 
 // Monthly credit allotments per plan (after trial, once billing starts)
 const PLAN_MONTHLY_CREDITS = {
