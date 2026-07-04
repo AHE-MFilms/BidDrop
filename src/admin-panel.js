@@ -567,7 +567,8 @@ function renderSuperAdminPanel(accounts, allProfiles){
       '<div id="migration-result" style="margin-top:10px;font-size:12px;"></div>'+
       '<hr style="border:none;border-top:1px solid var(--border);margin:20px 0 14px;">'+
       '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#F25C05;margin-bottom:8px;">🎨 Canvas Templates</div>'+
-      '<div style="font-size:11px;color:var(--muted);margin-bottom:12px;">Load the 6 built-in postcard templates (Storm, Solar, Gutters, Roofing, Alert, Estimate Ready) into the canvas editor. Safe to run once — skips if templates already exist.<      '<button onclick="seedCanvasTemplates()" style="background:linear-gradient(135deg,#F25C05,#c44a00);border:none;border-radius:8px;padding:10px 22px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">\uD83C\uDFA8 Load Default Templates</button>'+
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:12px;">Load the 6 built-in postcard templates (Storm, Solar, Gutters, Roofing, Alert, Estimate Ready) into the canvas editor. Safe to run once — skips if templates already exist.</div>'+
+      '<button onclick="seedCanvasTemplates()" style="background:linear-gradient(135deg,#F25C05,#c44a00);border:none;border-radius:8px;padding:10px 22px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">\uD83C\uDFA8 Load Default Templates</button>'+
       '<div id="seed-templates-result" style="margin-top:10px;font-size:12px;"></div>'+
       '<hr style="border:none;border-top:1px solid var(--border);margin:20px 0 14px;">'+
       '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#22C55E;margin-bottom:8px;">\uD83D\uDD25 Blitz Promo — Platform Sale Toggle</div>'+
