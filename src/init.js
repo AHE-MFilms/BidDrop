@@ -463,6 +463,8 @@ function addEstimateToMailQueueWithDripTag(est, stepNum){
   const mainStruct = (est.structures||[])[0] || {};
   const matMap = {'1.0':'3-Tab Shingle','1.3':'Architectural Shingle','1.8':'Designer Shingle','2.5':'Metal Roofing'};
   const qid = 'q_drip_'+est.id+'_s'+stepNum+'_'+Date.now();
+  // Resolve headline/subtext from the drip step data (stored at trigger time so cron uses correct sequence message)
+  const stepData = est.drip && est.drip.steps ? est.drip.steps[stepNum-1] : null;
   const qItem = {
     id: qid,
     owner: est.owner||'Homeowner', addr: est.addr||'', email: est.email||'',
@@ -472,7 +474,10 @@ function addEstimateToMailQueueWithDripTag(est, stepNum){
     photo_data: est.photo_data||null, photo_url: est.photo_url||(pin?pin.photo_url:null)||null,
     status: 'pending', lobId:null, mailedAt:null,
     at: new Date().toISOString(),
-    drip_step: stepNum, drip_est_id: est.id
+    drip_step: stepNum, drip_est_id: est.id,
+    drip_headline: stepData ? (stepData.headline||null) : null,
+    drip_subtext:  stepData ? (stepData.subtext||null)  : null,
+    drip_design_id: stepData ? (stepData.designId||null) : null
   };
   if(!S.queue) S.queue=[];
   S.queue.unshift(qItem);
@@ -483,6 +488,7 @@ function addEstimateToMailQueueWithDripTag(est, stepNum){
 
 function scheduleDripStep(est, step){
   // Store as a scheduled queue item (status='scheduled') — visible in queue but won't send until sendAt date
+  // headline/subtext/designId stored at schedule time so cron uses the correct named-sequence message
   const pin = (S.pins||[]).find(p=>p.id===est.pinId);
   const mainStruct = (est.structures||[])[0]||{};
   const matMap = {'1.0':'3-Tab Shingle','1.3':'Architectural Shingle','1.8':'Designer Shingle','2.5':'Metal Roofing'};
@@ -497,7 +503,10 @@ function scheduleDripStep(est, step){
     status: 'scheduled', lobId:null, mailedAt:null,
     at: step.sendAt,
     drip_step: step.step, drip_est_id: est.id,
-    scheduled_send_at: step.sendAt
+    scheduled_send_at: step.sendAt,
+    drip_headline: step.headline || null,
+    drip_subtext:  step.subtext  || null,
+    drip_design_id: step.designId || null
   };
   if(!S.queue) S.queue=[];
   S.queue.push(qItem);
@@ -556,12 +565,15 @@ async function sendDripPostcard(id){
   }
   if(!toZip) toZip='00000';
   toState = toStateAbbr(toState);
-  // Generate the front HTML using house photo + configurable step message
-  const msg = getDripStepMessage(item.drip_step);
+  // Generate the front HTML using stored headline/subtext (set at Blitz trigger time from named sequence)
+  // Fall back to getDripStepMessage for legacy queue items
+  const _fallbackMsg = getDripStepMessage(item.drip_step);
+  const _headline = item.drip_headline || _fallbackMsg.headline;
+  const _subtext  = item.drip_subtext  || _fallbackMsg.subtext;
   const frontHtml = buildDripPostcardFrontHtml({
     photoUrl: item.photo_url || item.photo_data || null,
-    headline: msg.headline,
-    subtext:  msg.subtext,
+    headline: _headline,
+    subtext:  _subtext,
     companyName: co,
     estimateTotal: item.total || 0,
     address: item.addr || '',
@@ -636,6 +648,79 @@ function processDripSchedule(){
 }
 
 // Cancel all pending drip steps for an estimate
+// ── Blitz Status Modal ──────────────────────────────────────────────────────
+let _blitzStatusEstId = null;
+
+function openBlitzStatus(estId){
+  const est = (S.estimates||[]).find(e=>e.id===estId);
+  if(!est||!est.drip) return;
+  _blitzStatusEstId = estId;
+  const drip = est.drip;
+  const seqName = drip.sequenceName || 'Default Sequence';
+  const startedAt = drip.startedAt ? new Date(drip.startedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
+  // Meta line
+  const meta = document.getElementById('blitz-status-meta');
+  if(meta) meta.innerHTML = escHtml(est.owner||'Homeowner')+' &mdash; '+escHtml((est.addr||'').split(',')[0])
+    +'<br><span style="color:var(--accent);font-weight:700;">'+escHtml(seqName)+'</span>'
+    +(startedAt?' &mdash; Started '+escHtml(startedAt):'');
+  // Build step rows
+  const stepsEl = document.getElementById('blitz-status-steps');
+  if(!stepsEl) return;
+  // Step 1 is auto (estimate postcard), steps 2+ are from sequence
+  const allSteps = drip.steps || [];
+  // Prepend auto Step 1 display entry
+  const displaySteps = [
+    { stepNum:1, label:'Estimate Postcard', headline:'Original estimate postcard', isAuto:true,
+      queueId: allSteps[0] ? allSteps[0].queueId : null,
+      sendAt: allSteps[0] ? allSteps[0].sendAt : null,
+      sentAt: allSteps[0] ? allSteps[0].sentAt : null }
+  ].concat(allSteps.slice(1).map((s,i)=>({
+    stepNum: i+2,
+    label: s.headline || ('Step '+(i+2)),
+    headline: s.headline||'',
+    subtext: s.subtext||'',
+    isAuto: false,
+    queueId: s.queueId,
+    sendAt: s.sendAt,
+    sentAt: s.sentAt
+  })));
+  stepsEl.innerHTML = displaySteps.map(s=>{
+    // Resolve live status from queue
+    const qItem = s.queueId ? (S.queue||[]).find(q=>q.id===s.queueId) : null;
+    let statusLabel, statusColor, statusBg;
+    if(qItem && (qItem.status==='sent'||qItem.status==='mailed'||qItem.mailedAt)){
+      statusLabel='✓ Sent'; statusColor='#4ade80'; statusBg='rgba(34,197,94,.12)';
+    } else if(qItem && qItem.status==='scheduled'){
+      const d = qItem.scheduled_send_at ? new Date(qItem.scheduled_send_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : 'Scheduled';
+      statusLabel='📅 '+d; statusColor='#60a5fa'; statusBg='rgba(96,165,250,.1)';
+    } else if(qItem && (qItem.status==='pending'||qItem.status==='approved')){
+      statusLabel='⏳ Pending'; statusColor='#fbbf24'; statusBg='rgba(251,191,36,.1)';
+    } else if(!s.queueId){
+      statusLabel='⚠ Not queued'; statusColor='#f87171'; statusBg='rgba(239,68,68,.1)';
+    } else {
+      statusLabel='—'; statusColor='var(--muted)'; statusBg='transparent';
+    }
+    const stepBg = (qItem&&(qItem.status==='sent'||qItem.status==='mailed'||qItem.mailedAt)) ? 'rgba(34,197,94,.05)' : 'var(--card2)';
+    return '<div style="background:'+stepBg+';border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;">'
+      +'<div style="background:#7C3AED;color:#fff;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:800;white-space:nowrap;">STEP '+s.stepNum+'</div>'
+      +'<div style="flex:1;min-width:0;">'
+        +'<div style="font-size:13px;font-weight:700;color:var(--text);">'+escHtml(s.label)+'</div>'
+        +(s.subtext?'<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+escHtml(s.subtext)+'</div>':'')
+      +'</div>'
+      +'<div style="background:'+statusBg+';color:'+statusColor+';border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;white-space:nowrap;">'+statusLabel+'</div>'
+    +'</div>';
+  }).join('');
+  openM('m-blitz-status');
+}
+
+function cancelBlitzFromStatus(){
+  if(!_blitzStatusEstId) return;
+  if(!confirm('Cancel this Blitz? All scheduled postcards will be removed.')) return;
+  cancelDrip(_blitzStatusEstId);
+  closeM('m-blitz-status');
+  _blitzStatusEstId = null;
+}
+
 function cancelDrip(estId){
   const est = (S.estimates||[]).find(e=>e.id===estId);
   if(!est||!est.drip) return;

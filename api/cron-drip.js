@@ -268,7 +268,15 @@ export default async function handler(req, res) {
       const { acct, freeToUse, paidToUse } = await deductCredit(accountId);
 
       // 4. Build postcard HTML
-      const msg = getDripStepMessage(step, cfg);
+      // Use headline/subtext stored on queue item at Blitz trigger time (named sequence message)
+      // Fall back to getDripStepMessage for legacy queue items that predate named sequences
+      const fallbackMsg = getDripStepMessage(step, cfg);
+      const storedHeadline = item.drip_headline || null;
+      const storedSubtext  = item.drip_subtext  || null;
+      const msg = {
+        headline: storedHeadline || fallbackMsg.headline,
+        subtext:  storedSubtext  || fallbackMsg.subtext
+      };
       const fromRaw = cfg.company_addr || '123 Main St, Detroit, MI, 48000';
       const fp = fromRaw.split(',').map(s => s.trim());
 

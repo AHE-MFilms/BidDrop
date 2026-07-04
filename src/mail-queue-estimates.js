@@ -300,7 +300,11 @@ function renderEstimatesTab(){
               ? `<button onclick="goTab('mailqueue')" title="Already in Mail Queue — click to view" style="background:#0e7490;border:none;border-radius:6px;padding:5px 10px;color:#fff;font-weight:700;cursor:pointer;white-space:nowrap;display:flex;flex-direction:column;align-items:center;line-height:1.2;"><span style="font-size:9px;opacity:.85;">&#10003; In</span><span style="font-size:12px;">Queue</span></button>`
               : `<button onclick="addEstimateToMailQueue('${eid}')" style="background:var(--accent);border:none;border-radius:6px;padding:5px 10px;color:#fff;font-weight:700;cursor:pointer;white-space:nowrap;display:flex;flex-direction:column;align-items:center;line-height:1.2;"><span style="font-size:9px;opacity:.85;">&#128228; Send to</span><span style="font-size:12px;">Mail Queue</span></button>`;
           })()
-            +(_pinUnlocked && S.cfg && S.cfg.dripEnabled ? `<button onclick="openDripModal('${eid}')" style="background:#7C3AED;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🔥 Blitz</button>` : '')
+            +(_pinUnlocked && S.cfg && S.cfg.dripEnabled
+              ? (est.drip
+                  ? `<button onclick="openBlitzStatus('${eid}')" style="background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.5);border-radius:6px;padding:6px 10px;color:#a78bfa;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🔥 Blitz Status</button>`
+                  : `<button onclick="openDripModal('${eid}')" style="background:#7C3AED;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🔥 Blitz</button>`)
+              : '')
             /* Estimate Card hidden — consolidated into Send Postcard flow */
           +(_pinUnlocked?`<button onclick="previewEstimatePostcard('${eid}')" style="background:#0e7490;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128247; Preview Postcard</button>`:'')
             /* Preview Letter hidden — letter visible in estimator panel */
