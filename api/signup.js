@@ -20,15 +20,13 @@ const PLAN_MAILER_CREDITS = {
   starter: 10,
   pro: 25,
   agency: 50,
-  enterprise: 100,
 };
 
-// Max reps per plan
+// Max users per plan — must match PLAN_MAX_REPS_INV in admin-users.js
 const PLAN_MAX_REPS = {
   starter: 1,
-  pro: 3,
-  agency: 10,
-  enterprise: 999,
+  pro: 10,
+  agency: 100,
 };
 
 export default async function handler(req, res) {

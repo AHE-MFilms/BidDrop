@@ -48,7 +48,7 @@ const PLAN_CONFIG = {
     name: 'Pro',
     price: 197,
     mailer_credits: 10,  // trial start credits (25/mo kicks in after trial)
-    max_reps: 3,
+    max_reps: 10,
     max_pins_per_month: 1000,
     offer_ghl: true,
     offer_estimate_pages: true,
@@ -61,7 +61,7 @@ const PLAN_CONFIG = {
     name: 'Agency',
     price: 397,
     mailer_credits: 10,  // trial start credits (50/mo kicks in after trial)
-    max_reps: 10,
+    max_reps: 100,
     max_pins_per_month: null, // unlimited
     offer_ghl: true,
     offer_estimate_pages: true,

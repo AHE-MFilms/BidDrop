@@ -1642,26 +1642,39 @@ function renderSubscriptionUI(){
     else{upgradeBtn.style.display='';upgradeBtn.textContent='⬆ Upgrade to '+(PLAN_INFO[planOrder[planIdx+1]]?.label||'Next Tier');}
   }
 }
-function subUpgrade(){
+async function subUpgrade(){
   const plan=(S.cfg&&S.cfg.plan)||'starter';
-  const planOrder=['starter','pro','agency','enterprise'];
-  const nextPlan=planOrder[planOrder.indexOf(plan)+1];
-  if(!nextPlan){toast('You are already on the highest plan','info');return;}
+  const planOrder=['starter','pro','agency'];
+  const idx=planOrder.indexOf(plan);
+  if(idx===-1||idx===planOrder.length-1){toast('You are already on the highest plan','info');return;}
+  const nextPlan=planOrder[idx+1];
   const info=PLAN_INFO[nextPlan];
-  if(confirm(`Upgrade to ${info.label} (${info.price})?
+  if(!confirm(`Upgrade to ${info.label} (${info.price})?
 
-This will open the billing portal to complete your upgrade.`)){
-    // Open Stripe billing portal or upgrade URL
-    const upgradeUrl='https://biddrop.us/upgrade?plan='+nextPlan;
-    window.open(upgradeUrl,'_blank');
+This will open the Stripe billing portal where you can complete your plan upgrade.`)){return;}
+  try{
+    const sess=(await sb.auth.getSession()).data.session;
+    if(!sess){toast('Please log in first.','error');return;}
+    const _vaId=(typeof currentAccount!=='undefined'&&currentAccount?.id)||null;
+    const r=await fetch('/api/credits?action=billing-portal',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+sess.access_token,'Content-Type':'application/json'},
+      body:JSON.stringify({viewingAccountId:_vaId})
+    });
+    const d=await r.json();
+    if(r.ok&&d.portal_url){window.open(d.portal_url,'_blank');}
+    else{toast(d.error||'Could not open billing portal. Please contact support@biddrop.io.','error');}
+  }catch(e){
+    toast('Error opening billing portal: '+e.message,'error');
   }
 }
 function subCancel(){
-  if(!confirm('Are you sure you want to cancel your subscription?\n\nYour access will continue until the end of your current billing period.')){return;}
-  adminAPI('cancel-stripe-subscription',{acctId:currentAccount?.id}).then(r=>{
-    if(r&&r.success){toast('Subscription cancelled. Access continues until end of billing period.','success');}
-    else{toast('Could not cancel automatically. Please contact support@biddrop.us','error');}
-  }).catch(()=>{toast('Could not cancel automatically. Please contact support@biddrop.us','error');});
+  // Delegate to the correct cancel flow already implemented in subscription.js
+  if(typeof confirmCancelSubscription==='function'){
+    confirmCancelSubscription();
+  } else {
+    toast('Could not open cancellation dialog. Please go to Account → Plan & Billing.','error');
+  }
 }
 // -- END TERRITORY INTEL + SUBSCRIPTION MODULE --------------------------------
 
