@@ -410,7 +410,7 @@ function refreshDripModal(){
 }
 
 function startDripSequence(){
-  if(!isPlanAtLeast('agency')){ showPlanUpgradePrompt('Follow-Up Blitz','agency'); return; }
+  if(!isPlanAtLeast('pro')){ showPlanUpgradePrompt('Follow-Up Blitz','pro'); return; }
   const est = (S.estimates||[]).find(e=>e.id===_dripEstId);
   if(!est){ toast('Estimate not found','error'); return; }
   // Get selected sequence from picker
