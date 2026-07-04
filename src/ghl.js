@@ -291,30 +291,46 @@ async function ghlOAuthDisconnect() {
 
 async function ghlFetchStages() {
   const btn = document.getElementById('btn-fetch-stages');
-  const sel = document.getElementById('s-ghl-stage');
+  const statusEl = document.getElementById('ghl-stages-status');
   const pipelineId = (document.getElementById('s-ghl-pipe')?.value || '').trim() || S.cfg.ghlPipelineId;
   const locId = (document.getElementById('s-ghl-loc')?.value || '').trim() || S.cfg.ghlLocationId;
   if(!locId){ toast('Enter a GHL Location ID first','error'); return; }
-  // GHL API key is stored server-side — no client-side check needed
   btn.textContent='Loading...'; btn.disabled=true;
+  if(statusEl) statusEl.textContent = 'Fetching…';
   try {
-    // Use list-all-pipelines endpoint (single-pipeline-by-ID requires OAuth scope not available with private keys)
     const data = await ghlRequest('/opportunities/pipelines?locationId='+locId);
     const pipelines = data.pipelines || [];
-    // Find the matching pipeline, or fall back to first
     const pipeline = pipelines.find(p => p.id === pipelineId) || pipelines[0];
     const stages = pipeline?.stages || [];
-    if(!stages.length){ toast('No stages found — check Pipeline ID','error'); return; }
-    sel.innerHTML = stages.map(s =>
-      '<option value="'+s.id+'">'+s.name+'</option>'
-    ).join('');
-    // Auto-select first stage
-    if(stages[0]) sel.value = stages[0].id;
-    toast('✅ '+stages.length+' stages loaded!','success');
+    if(!stages.length){ toast('No stages found — check Pipeline ID','error'); if(statusEl) statusEl.textContent='No stages found'; return; }
+    // Build options HTML
+    const blankOpt = '<option value="">— select —</option>';
+    const stageOpts = stages.map(s => '<option value="'+s.id+'">'+s.name+'</option>').join('');
+    const optsHtml = blankOpt + stageOpts;
+    // Populate all 5 stage selects
+    ['s-ghl-stage','s-ghl-stage-quoted','s-ghl-stage-bid-sent','s-ghl-stage-signed','s-ghl-stage-not-interested'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.innerHTML = optsHtml;
+    });
+    // Restore saved stage map values
+    const sm = S.cfg.ghlStageMap || {};
+    const restoreMap = {
+      's-ghl-stage':                S.cfg.ghlStageId || '',
+      's-ghl-stage-quoted':         sm.quoted || '',
+      's-ghl-stage-bid-sent':       sm.bid_sent || '',
+      's-ghl-stage-signed':         sm.signed || '',
+      's-ghl-stage-not-interested': sm.not_interested || ''
+    };
+    Object.entries(restoreMap).forEach(([id, val]) => {
+      if(val){ const el = document.getElementById(id); if(el) el.value = val; }
+    });
+    if(statusEl) statusEl.textContent = stages.length + ' stages loaded';
+    toast('\u2705 '+stages.length+' stages loaded!','success');
   } catch(e){
     toast('GHL Error: '+e.message,'error');
+    if(statusEl) statusEl.textContent = 'Error: '+e.message;
   } finally {
-    btn.textContent='⟳ Fetch'; btn.disabled=false;
+    btn.textContent='\u27f3 Fetch Stages'; btn.disabled=false;
   }
 }
 
@@ -649,16 +665,19 @@ async function ghlSyncPinStatus(pin){
     let wonLost = null;
     if(pin.status === 'converted') wonLost = 'won';
     if(pin.status === 'not_interested') wonLost = 'lost';
-    // Map BidDrop pin status to pipeline stage IDs
+    // Map BidDrop pin status to pipeline stage IDs using per-account dynamic stage map
+    const sm = S.cfg.ghlStageMap || {};
     const STAGE_MAP = {
-      'quoted':        '2d06ced7-0bcf-432a-b925-701daada9ef4', // Stage 2: Postcard Mailed
-      'bid_sent':      S.cfg.ghlStageId || '887131f7-39be-49c1-b5f3-f9b53d7b986e', // Stage 4: Estimate Viewed
-      'signed':        '62444bae-6e67-42c9-812b-7dbf1648e153', // Stage 6: Signed
-      'converted':     '62444bae-6e67-42c9-812b-7dbf1648e153', // Stage 6: Signed
-      'not_interested':'48091422-c19b-4eef-bdbd-488e3b45e10f', // Stage 7: Not Interested
+      'quoted':         sm.quoted || '',
+      'bid_sent':       sm.bid_sent || S.cfg.ghlStageId || '',
+      'signed':         sm.signed || '',
+      'converted':      sm.signed || '',
+      'not_interested': sm.not_interested || ''
     };
     const stageId = STAGE_MAP[pin.status] || null;
-    await ghlUpdateOpportunityStage(pin.ghlOpportunityId, stageId, wonLost);
+    // Skip stage update if no stage ID is configured for this status
+    if(!stageId && !wonLost) return;
+    await ghlUpdateOpportunityStage(pin.ghlOpportunityId, stageId||undefined, wonLost);
     console.log('BidDrop: GHL opportunity updated for', pin.address, '->', pin.status);
   } catch(e){
     console.warn('BidDrop: GHL status sync failed (non-blocking):', e.message);

@@ -296,7 +296,7 @@ function openSettings(){
   // QuickBooks settings
   if(typeof initQBSettings === 'function') initQBSettings();
   setTimeout(refreshAllIntStatuses, 150);
-  // Restore stage dropdown — if stages already fetched, keep selection
+  // Restore stage dropdowns — if stages already fetched, keep selection
   const stgSel=document.getElementById('s-ghl-stage');
   if(stgSel){
     if(c.ghlStageId && !Array.from(stgSel.options).find(o=>o.value===c.ghlStageId)){
@@ -306,6 +306,26 @@ function openSettings(){
     }
     if(c.ghlStageId) stgSel.value=c.ghlStageId;
   }
+  // Restore stage map dropdowns (s-ghl-stage-quoted, bid-sent, signed, not-interested)
+  const sm = c.ghlStageMap || {};
+  const _stageMapRestore = [
+    ['s-ghl-stage-quoted',         sm.quoted || ''],
+    ['s-ghl-stage-bid-sent',       sm.bid_sent || ''],
+    ['s-ghl-stage-signed',         sm.signed || ''],
+    ['s-ghl-stage-not-interested', sm.not_interested || '']
+  ];
+  _stageMapRestore.forEach(([id, val]) => {
+    if(!val) return;
+    const el = document.getElementById(id);
+    if(!el) return;
+    // If the saved value isn't in the dropdown yet, add a placeholder option
+    if(!Array.from(el.options).find(o=>o.value===val)){
+      const opt = document.createElement('option');
+      opt.value = val; opt.textContent = 'Saved stage ('+val.slice(0,8)+'...)';
+      el.appendChild(opt);
+    }
+    el.value = val;
+  });
   // Integrations card (GHL, JobNimbus) — visible to all admins; RentCast/Lob sub-sections remain super_admin only
   const intCard = document.getElementById('stab-integrations-card');
   if(intCard) intCard.style.display = isAdminOrAbove() ? 'block' : 'none';
@@ -653,6 +673,12 @@ function saveSettings(){
     ghlLocationId:v('s-ghl-loc'),
     ghlPipelineId:v('s-ghl-pipe'),
     ghlStageId:(document.getElementById('s-ghl-stage')||{}).value||'',
+    ghlStageMap:{
+      quoted:        (document.getElementById('s-ghl-stage-quoted')||{}).value||'',
+      bid_sent:      (document.getElementById('s-ghl-stage-bid-sent')||{}).value||'',
+      signed:        (document.getElementById('s-ghl-stage-signed')||{}).value||'',
+      not_interested:(document.getElementById('s-ghl-stage-not-interested')||{}).value||''
+    },
     ghlSmsTpl:v('s-ghl-sms-tpl')||DEFAULTS.ghlSmsTpl,
     ghlEmailTpl:v('s-ghl-email-tpl')||DEFAULTS.ghlEmailTpl,
     jnApiKey:(document.getElementById('s-jn-key')||{}).value||'',

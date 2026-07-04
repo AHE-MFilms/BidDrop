@@ -37,15 +37,35 @@
             <div class="fg"><label class="fl" for="s-ghl-loc">Location ID</label><input class="fi" id="s-ghl-loc" placeholder="gz85VU6SxGXS7lqHAQGx" oninput="updateIntStatus('ghl')"></div>
             <div class="fg"><label class="fl" for="s-ghl-pipe">Pipeline ID</label><input class="fi" id="s-ghl-pipe" placeholder="bxskBIBdbklHry0B63qx" value="bxskBIBdbklHry0B63qx"></div>
           </div>
-          <div class="fg" style="margin-bottom:10px;"><div class="fl">Default Stage</div>
-            <select class="fs" id="s-ghl-stage" style="font-size:12px;padding:10px 10px;">
-              <option value="">— select stage —</option>
-              <option value="new">New Lead</option>
-              <option value="contacted">Contacted</option>
-              <option value="qualified">Qualified</option>
-              <option value="proposal">Proposal Sent</option>
-              <option value="closed_won">Closed Won</option>
-            </select>
+          <div style="margin-bottom:10px;">
+            <div class="fl" style="margin-bottom:6px;">Pipeline Stage Mapping</div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Map each BidDrop status to the correct stage in your GHL pipeline. Click Fetch Stages first.</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+              <button id="btn-fetch-stages" onclick="ghlFetchStages()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 14px;color:var(--fg);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">⟳ Fetch Stages</button>
+              <span id="ghl-stages-status" style="font-size:11px;color:var(--muted);"></span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+              <div>
+                <div style="font-size:10px;color:var(--muted);margin-bottom:3px;">New Lead (default)</div>
+                <select class="fs" id="s-ghl-stage" style="font-size:11px;padding:7px 8px;width:100%;"><option value="">— select —</option></select>
+              </div>
+              <div>
+                <div style="font-size:10px;color:var(--muted);margin-bottom:3px;">Postcard Mailed</div>
+                <select class="fs" id="s-ghl-stage-quoted" style="font-size:11px;padding:7px 8px;width:100%;"><option value="">— select —</option></select>
+              </div>
+              <div>
+                <div style="font-size:10px;color:var(--muted);margin-bottom:3px;">Estimate Viewed</div>
+                <select class="fs" id="s-ghl-stage-bid-sent" style="font-size:11px;padding:7px 8px;width:100%;"><option value="">— select —</option></select>
+              </div>
+              <div>
+                <div style="font-size:10px;color:var(--muted);margin-bottom:3px;">Signed / Converted</div>
+                <select class="fs" id="s-ghl-stage-signed" style="font-size:11px;padding:7px 8px;width:100%;"><option value="">— select —</option></select>
+              </div>
+              <div>
+                <div style="font-size:10px;color:var(--muted);margin-bottom:3px;">Not Interested</div>
+                <select class="fs" id="s-ghl-stage-not-interested" style="font-size:11px;padding:7px 8px;width:100%;"><option value="">— select —</option></select>
+              </div>
+            </div>
           </div>
           <div style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
             <div style="font-size:11px;font-weight:700;color:#22C55E;margin-bottom:4px;">🔄 Sync Existing Leads</div>
