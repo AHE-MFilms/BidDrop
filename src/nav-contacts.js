@@ -1590,10 +1590,9 @@ function launchStormCampaignFromSuggest(lat,lng){
 
 // ── SUBSCRIPTION UI MODULE ─────────────────────────────────────────────────
 const PLAN_INFO={
-  starter:{label:'Starter',price:'$97/mo',credits:15,color:'#96B0C8',desc:'Perfect for solo reps getting started.'},
-  pro:{label:'Pro',price:'$197/mo',credits:40,color:'#F25C05',desc:'Full platform access for growing teams.'},
-  agency:{label:'Agency',price:'$397/mo',credits:100,color:'#A855F7',desc:'Multi-team management with Territory Intel.'},
-  enterprise:{label:'Enterprise',price:'Custom',credits:200,color:'#22C55E',desc:'White-label + custom integrations.'},
+  starter:{label:'Starter',price:'$97/mo',credits:15,color:'#96B0C8',desc:'Solo reps getting started with canvassing and digital estimates. 1 user.'},
+  pro:{label:'Pro',price:'$197/mo',credits:40,color:'#F25C05',desc:'Full platform access for growing teams. Up to 10 users.'},
+  agency:{label:'Agency',price:'$397/mo',credits:100,color:'#A855F7',desc:'Multi-team management with Territory Intel. Up to 100 users.'},
 };
 function renderSubscriptionUI(){
   const plan=(S.cfg&&S.cfg.plan)||'starter';

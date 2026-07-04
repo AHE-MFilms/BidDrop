@@ -417,7 +417,6 @@ function renderSuperAdminPanel(accounts, allProfiles){
         '<option value="starter">Starter</option>' +
         '<option value="pro">Pro</option>' +
         '<option value="agency">Agency</option>' +
-        '<option value="enterprise">Enterprise</option>' +
       '</select>' +
       '<select id="admin-filter-status" onchange="filterAdminAccounts()" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-family:var(--font-b);font-size:11px;cursor:pointer;">' +
         '<option value="all">All Status</option>' +
@@ -510,7 +509,6 @@ function renderSuperAdminPanel(accounts, allProfiles){
               '<option value="starter">Starter</option>' +
               '<option value="pro">Pro</option>' +
               '<option value="agency">Agency</option>' +
-              '<option value="enterprise">Enterprise</option>' +
             '</select>' +
           '</div>' +
 

@@ -90,7 +90,7 @@ function isRep(){
 }
 
 // ── Plan tier helpers ────────────────────────────────────────────────────────
-const PLAN_TIERS = { starter: 0, pro: 1, agency: 2, enterprise: 3 };
+const PLAN_TIERS = { starter: 0, pro: 1, agency: 2 };
 function currentPlanTier(){
   const plan = (S.cfg && S.cfg.plan) ? S.cfg.plan.toLowerCase() : 'starter';
   return PLAN_TIERS[plan] ?? 0;
@@ -102,7 +102,7 @@ function isPlanAtLeast(minPlan){
 }
 // Show an upgrade prompt when a feature is gated
 function showPlanUpgradePrompt(featureName, requiredPlan){
-  const planNames = { starter: 'Starter ($97/mo)', pro: 'Pro ($197/mo)', agency: 'Agency ($397/mo)', enterprise: 'Enterprise (Custom)' };
+  const planNames = { starter: 'Starter ($97/mo)', pro: 'Pro ($197/mo)', agency: 'Agency ($397/mo)' };
   const currentPlan = (S.cfg && S.cfg.plan) ? S.cfg.plan : 'starter';
   toast(
     `🔒 ${featureName} requires the ${planNames[requiredPlan] || requiredPlan} plan or higher. You are on ${planNames[currentPlan] || currentPlan}. Contact support to upgrade.`,
