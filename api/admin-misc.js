@@ -241,7 +241,8 @@ async function handle(action, req, res, ctx) {
           /* ── Per-step Blitz copy stored on queue items (Build 13b) ── */
           `ALTER TABLE queue ADD COLUMN IF NOT EXISTS drip_headline TEXT`,
           `ALTER TABLE queue ADD COLUMN IF NOT EXISTS drip_subtext TEXT`,
-          `ALTER TABLE queue ADD COLUMN IF NOT EXISTS drip_design_id TEXT`
+          `ALTER TABLE queue ADD COLUMN IF NOT EXISTS drip_design_id TEXT`,
+          `ALTER TABLE queue ADD COLUMN IF NOT EXISTS blitz_prepaid BOOLEAN DEFAULT FALSE`
         ].join('; ');
         const results = [];
         // Run each DDL statement individually via Supabase pg_meta API (uses SERVICE_KEY)
@@ -694,6 +695,43 @@ async function handle(action, req, res, ctx) {
         });
         if (!sbpRes.ok) { const e = await sbpRes.text(); res.status(500).json({ error: e }); return; }
         return res.json({ ok: true });
+      }
+
+    // ── Blitz upfront credit deduction ──────────────────────────────────────
+    // Called once when the user clicks "Start Blitz" — deducts ALL credits for
+    // the full sequence upfront. Each subsequent postcard send (step 1 manual +
+    // steps 2-N via cron) passes paid_by_unlock=true to skip per-postcard deduction.
+    case 'blitz-start-deduct': {
+        const { credits: bsdCredits, estimateId: bsdEstId } = req.body;
+        if (!bsdCredits || bsdCredits < 1) {
+          return res.status(400).json({ error: 'credits must be >= 1' });
+        }
+        // Fetch current balance
+        const bsdAcctRes = await sbFetch(`accounts?id=eq.${effectiveAccountId}&select=id,mailer_credits&limit=1`);
+        if (!bsdAcctRes.ok) return res.status(500).json({ error: 'Failed to fetch account' });
+        const bsdAcctRows = await bsdAcctRes.json();
+        if (!bsdAcctRows.length) return res.status(404).json({ error: 'Account not found' });
+        const bsdBalance = bsdAcctRows[0].mailer_credits || 0;
+        if (bsdBalance < bsdCredits) {
+          return res.status(402).json({
+            error: 'no_credits',
+            message: `Starting a Blitz requires ${bsdCredits} credits. You have ${bsdBalance}.`,
+            credits_needed: bsdCredits,
+            credits_available: bsdBalance
+          });
+        }
+        // Atomic deduction
+        const bsdPatchRes = await sbFetch(`accounts?id=eq.${effectiveAccountId}`, {
+          method: 'PATCH',
+          headers: { 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ mailer_credits: bsdBalance - bsdCredits })
+        });
+        if (!bsdPatchRes.ok) {
+          const e = await bsdPatchRes.text();
+          return res.status(500).json({ error: 'Credit deduction failed: ' + e });
+        }
+        console.log(`[blitz-start-deduct] Deducted ${bsdCredits} credits from account ${effectiveAccountId} for estimate ${bsdEstId || 'unknown'}`);
+        return res.json({ ok: true, credits_deducted: bsdCredits, new_balance: bsdBalance - bsdCredits });
       }
 
     default:

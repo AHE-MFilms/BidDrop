@@ -264,8 +264,18 @@ export default async function handler(req, res) {
       if (!cfgRows.length) throw new Error('Account not found');
       const cfg = cfgRows[0];
 
-      // 3. Deduct credit
-      const { acct, freeToUse, paidToUse } = await deductCredit(accountId);
+      // 3. Deduct credit (skip for Blitz items — credits were charged upfront at Blitz start)
+      let acct, freeToUse = 0, paidToUse = 0;
+      if (item.blitz_prepaid) {
+        // Credits already deducted upfront — just fetch account for config reference
+        const bpAcctRes = await sb(`accounts?id=eq.${accountId}&select=id,mailer_credits`);
+        const bpRows = bpAcctRes.ok ? await bpAcctRes.json() : [];
+        acct = bpRows[0] || { mailer_credits: 0 };
+        console.log(`[cron-drip] Skipping credit deduction for blitz_prepaid item ${item.id}`);
+      } else {
+        const deducted = await deductCredit(accountId);
+        acct = deducted.acct; freeToUse = deducted.freeToUse; paidToUse = deducted.paidToUse;
+      }
 
       // 4. Build postcard HTML
       // Use headline/subtext stored on queue item at Blitz trigger time (named sequence message)
@@ -357,8 +367,8 @@ export default async function handler(req, res) {
       const lobData = await lobRes.json();
 
       if (!lobRes.ok) {
-        // Refund credit on Lob failure
-        await refundCredit(accountId, acct, freeToUse, paidToUse);
+        // Refund credit on Lob failure (only if we actually deducted one — not for blitz_prepaid)
+        if (!item.blitz_prepaid) await refundCredit(accountId, acct, freeToUse, paidToUse);
         console.error(`[cron-drip] Lob failed for ${item.id}:`, lobData.error?.message);
         // Mark as failed so it doesn't retry endlessly
         await sb(`queue?id=eq.${item.id}`, {

@@ -11,20 +11,23 @@
  *
  *  POST { action:'dismiss', id }
  *    → Sets resolution_status = 'dismissed' on a hit.
+ *      Requires Authorization header; verifies hit belongs to caller's account.
  *
  *  POST { action:'queue_postcard', id }
- *    → Sets postcard_queued = true on a hit (actual postcard dispatch handled separately).
+ *    → Sets postcard_queued = true on a hit.
+ *      Requires Authorization header; verifies hit belongs to caller's account.
  *
  *  POST { action:'generate_pixel_id', accountId }
  *    → Generates and saves a new pixel_id for the account.
+ *      Requires Authorization header; verifies accountId matches caller's account.
  *
  *  POST { action:'save_resolution_key', accountId, key }
  *    → Saves the identity resolution API key for the account.
+ *      Requires Authorization header; verifies accountId matches caller's account.
  */
 
 const SUPABASE_URL  = process.env.SUPABASE_URL  || 'https://gtwbhxnrmfmdenogzuea.supabase.co';
 const SERVICE_KEY   = process.env.SUPABASE_SERVICE_KEY;
-const JWT_SECRET    = process.env.JWT_SECRET;
 
 // 1x1 transparent GIF
 const TRANSPARENT_GIF = Buffer.from(
@@ -78,6 +81,30 @@ function getClientIp(req) {
   );
 }
 
+/**
+ * Verify the caller's JWT and return their account_id from user_profiles.
+ * Returns null if the token is missing, expired, or the profile is not found.
+ */
+async function getCallerAccountId(req) {
+  const authHeader = req.headers['authorization'] || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
+  if (!token) return null;
+
+  const payload = decodeJwt(token);
+  if (!payload || !payload.sub) return null;
+
+  // Check token expiry
+  if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) return null;
+
+  // Look up the user's account_id in user_profiles
+  const profileRes = await sbFetch(
+    `user_profiles?id=eq.${encodeURIComponent(payload.sub)}&select=account_id&limit=1`
+  );
+  if (!profileRes.ok) return null;
+  const profiles = await profileRes.json();
+  return profiles?.[0]?.account_id || null;
+}
+
 module.exports = async function handler(req, res) {
   cors(res);
   if (req.method === 'OPTIONS') return res.status(204).end();
@@ -86,7 +113,7 @@ module.exports = async function handler(req, res) {
     ? req.query?.action
     : (req.body?.action || req.query?.action);
 
-  // ── HIT (pixel fire from homeowner browser) ──────────────────────────────
+  // ── HIT (pixel fire from homeowner browser — no auth required) ───────────
   if (action === 'hit' || !action) {
     const pixelId   = req.body?.pixelId || req.query?.p;
     const sessionSec = parseInt(req.body?.sessionSeconds || req.query?.s || '0', 10);
@@ -135,6 +162,12 @@ module.exports = async function handler(req, res) {
     return res.status(200).send(TRANSPARENT_GIF);
   }
 
+  // ── All actions below require a valid JWT ─────────────────────────────────
+  const callerAccountId = await getCallerAccountId(req);
+  if (!callerAccountId) {
+    return res.status(401).json({ error: 'Unauthorized — valid session required' });
+  }
+
   // ── LIST hits for an account (authenticated) ─────────────────────────────
   if (action === 'list') {
     const accountId = req.query?.accountId;
@@ -143,6 +176,11 @@ module.exports = async function handler(req, res) {
     const status = req.query?.status; // optional filter: pending|resolved|dismissed
 
     if (!accountId) return res.status(400).json({ error: 'accountId required' });
+
+    // Enforce ownership — caller can only list their own account's hits
+    if (accountId !== callerAccountId) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
 
     let path = `pixel_hits?account_id=eq.${encodeURIComponent(accountId)}&order=created_at.desc&limit=${limit}&offset=${offset}`;
     if (status) path += `&resolution_status=eq.${encodeURIComponent(status)}`;
@@ -159,6 +197,13 @@ module.exports = async function handler(req, res) {
   if (action === 'dismiss') {
     const { id } = req.body || {};
     if (!id) return res.status(400).json({ error: 'id required' });
+
+    // Verify the hit belongs to the caller's account before mutating
+    const hitRes = await sbFetch(`pixel_hits?id=eq.${encodeURIComponent(id)}&select=account_id&limit=1`);
+    const hits = hitRes.ok ? await hitRes.json() : [];
+    if (!hits.length) return res.status(404).json({ error: 'Hit not found' });
+    if (hits[0].account_id !== callerAccountId) return res.status(403).json({ error: 'Forbidden' });
+
     await sbFetch(`pixel_hits?id=eq.${encodeURIComponent(id)}`, {
       method: 'PATCH',
       body: JSON.stringify({ resolution_status: 'dismissed' })
@@ -170,6 +215,13 @@ module.exports = async function handler(req, res) {
   if (action === 'queue_postcard') {
     const { id } = req.body || {};
     if (!id) return res.status(400).json({ error: 'id required' });
+
+    // Verify the hit belongs to the caller's account before mutating
+    const hitRes = await sbFetch(`pixel_hits?id=eq.${encodeURIComponent(id)}&select=account_id&limit=1`);
+    const hits = hitRes.ok ? await hitRes.json() : [];
+    if (!hits.length) return res.status(404).json({ error: 'Hit not found' });
+    if (hits[0].account_id !== callerAccountId) return res.status(403).json({ error: 'Forbidden' });
+
     await sbFetch(`pixel_hits?id=eq.${encodeURIComponent(id)}`, {
       method: 'PATCH',
       body: JSON.stringify({ postcard_queued: true, resolution_status: 'queued' })
@@ -181,6 +233,10 @@ module.exports = async function handler(req, res) {
   if (action === 'generate_pixel_id') {
     const { accountId } = req.body || {};
     if (!accountId) return res.status(400).json({ error: 'accountId required' });
+
+    // Enforce ownership
+    if (accountId !== callerAccountId) return res.status(403).json({ error: 'Forbidden' });
+
     const newPixelId = pixelIdFromRandom();
     await sbFetch(`accounts?id=eq.${encodeURIComponent(accountId)}`, {
       method: 'PATCH',
@@ -193,6 +249,10 @@ module.exports = async function handler(req, res) {
   if (action === 'save_resolution_key') {
     const { accountId, key } = req.body || {};
     if (!accountId) return res.status(400).json({ error: 'accountId required' });
+
+    // Enforce ownership
+    if (accountId !== callerAccountId) return res.status(403).json({ error: 'Forbidden' });
+
     await sbFetch(`accounts?id=eq.${encodeURIComponent(accountId)}`, {
       method: 'PATCH',
       body: JSON.stringify({ pixel_resolution_key: key || null })

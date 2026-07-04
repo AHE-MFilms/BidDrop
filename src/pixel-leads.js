@@ -15,6 +15,15 @@ let _pixelOffset = 0;
 const PIXEL_PAGE_SIZE = 50;
 let _pixelFilter = 'pending'; // pending | resolved | queued | dismissed | all
 
+// Returns an Authorization header object with the current session JWT
+async function _pixelAuthHeader() {
+  try {
+    let { data: { session } } = await sb.auth.getSession();
+    if (!session) { const ref = await sb.auth.refreshSession(); session = ref.data.session; }
+    return session ? { 'Authorization': 'Bearer ' + session.access_token } : {};
+  } catch { return {}; }
+}
+
 async function loadPixelLeads(reset = true) {
   if (reset) { _pixelOffset = 0; _pixelHits = []; }
   const accountId = S.cfg?.accountId || S.cfg?.id;
@@ -23,7 +32,8 @@ async function loadPixelLeads(reset = true) {
   const status = _pixelFilter === 'all' ? '' : `&status=${encodeURIComponent(_pixelFilter)}`;
   const url = `/api/pixel?action=list&accountId=${encodeURIComponent(accountId)}&limit=${PIXEL_PAGE_SIZE}&offset=${_pixelOffset}${status}`;
   try {
-    const r = await fetch(url);
+    const authHdr = await _pixelAuthHeader();
+    const r = await fetch(url, { headers: authHdr });
     const data = await r.json();
     if (reset) {
       _pixelHits = data.hits || [];
@@ -108,9 +118,10 @@ function renderPixelLeads() {
 }
 
 async function pixelQueuePostcard(hitId) {
+  const authHdr = await _pixelAuthHeader();
   await fetch('/api/pixel', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHdr },
     body: JSON.stringify({ action: 'queue_postcard', id: hitId })
   });
   const hit = _pixelHits.find(h => h.id === hitId);
@@ -120,9 +131,10 @@ async function pixelQueuePostcard(hitId) {
 }
 
 async function pixelDismiss(hitId) {
+  const authHdr = await _pixelAuthHeader();
   await fetch('/api/pixel', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHdr },
     body: JSON.stringify({ action: 'dismiss', id: hitId })
   });
   const hit = _pixelHits.find(h => h.id === hitId);
@@ -149,9 +161,10 @@ async function generatePixelId() {
   const accountId = S.cfg?.accountId || S.cfg?.id;
   if (!accountId) return;
   bdConfirm('Generate a new Pixel ID? Your existing embed code will stop working.', async ()=>{
+    const authHdr = await _pixelAuthHeader();
     const r = await fetch('/api/pixel', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHdr },
       body: JSON.stringify({ action: 'generate_pixel_id', accountId })
     });
     const data = await r.json();
@@ -167,9 +180,10 @@ async function saveResolutionKey() {
   const accountId = S.cfg?.accountId || S.cfg?.id;
   const key = document.getElementById('px-resolution-key')?.value?.trim() || '';
   if (!accountId) return;
+  const authHdr = await _pixelAuthHeader();
   await fetch('/api/pixel', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHdr },
     body: JSON.stringify({ action: 'save_resolution_key', accountId, key })
   });
   showToast('Resolution API key saved ✓');

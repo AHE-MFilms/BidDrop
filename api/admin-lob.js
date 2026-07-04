@@ -15,7 +15,9 @@ async function handle(action, req, res, ctx) {
   switch (action) {
       case 'lob-postcard': {
         const POSTCARD_CREDITS = 1; // 1 credit = $4.00 = 1 postcard
-        const { payload, idempotency_key: pcIdemKey, paid_by_unlock: pcPaidByUnlock } = req.body;
+        const { payload, idempotency_key: pcIdemKey, paid_by_unlock: pcPaidByUnlock, blitz_prepaid: pcBlitzPrepaid } = req.body;
+        // Skip credit deduction if postcard was pre-paid (pin unlock OR Blitz upfront deduction)
+        const pcSkipCharge = pcPaidByUnlock || pcBlitzPrepaid;
         if (!payload) { res.status(400).json({ error: 'payload required' }); return; }
         // Rate limit: max 5 postcards per 10 seconds per account
         if (!_checkRate(`lob:${effectiveAccountId}`, 5, 10000)) {
@@ -34,8 +36,8 @@ async function handle(action, req, res, ctx) {
         if (!pcAcctRows.length) { res.status(404).json({ error: 'Account not found' }); return; }
         const pcAcct = pcAcctRows[0];
         const pcPaid  = pcAcct.mailer_credits || 0;
-        // paid_by_unlock: postcard was pre-paid when the pin was unlocked — no additional credit deduction
-        if (!pcPaidByUnlock) {
+        // paid_by_unlock / blitz_prepaid: postcard was pre-paid — no additional credit deduction
+        if (!pcSkipCharge) {
           if (pcPaid < POSTCARD_CREDITS) {
             res.status(402).json({
               error: 'no_credits',
@@ -102,7 +104,7 @@ async function handle(action, req, res, ctx) {
           }
         } catch (sendErr) {
           console.error('[Lob] send error:', sendErr.message);
-          if (!pcPaidByUnlock) {
+          if (!pcSkipCharge) {
             await sbFetch(`accounts?id=eq.${effectiveAccountId}`, {
               method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
               body: JSON.stringify({ mailer_credits: pcPaid })
@@ -115,13 +117,13 @@ async function handle(action, req, res, ctx) {
           console.error('[Lob] postcard error', lobRes.status, JSON.stringify(lobData).slice(0, 500));
         }
         // If Lob failed and we deducted a credit, refund it
-        if (!lobRes.ok && !pcPaidByUnlock) {
+        if (!lobRes.ok && !pcSkipCharge) {
           await sbFetch(`accounts?id=eq.${effectiveAccountId}`, {
             method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
             body: JSON.stringify({ mailer_credits: pcPaid })
           });
         }
-        const pcNewPaid = (lobRes.ok && !pcPaidByUnlock) ? pcPaid - POSTCARD_CREDITS : pcPaid;
+        const pcNewPaid = (lobRes.ok && !pcSkipCharge) ? pcPaid - POSTCARD_CREDITS : pcPaid;
         if (lobRes.ok) {
           res.status(200).json({
             ...lobData,

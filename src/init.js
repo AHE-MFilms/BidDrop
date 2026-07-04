@@ -409,7 +409,7 @@ function refreshDripModal(){
   if(btn) btn.textContent = '🔥 Start Blitz — '+BLITZ_BUNDLE_CREDITS+' Credits · '+totalPostcards+' Postcards Total';
 }
 
-function startDripSequence(){
+async function startDripSequence(){
   if(!isPlanAtLeast('pro')){ showPlanUpgradePrompt('Follow-Up Blitz','pro'); return; }
   const est = (S.estimates||[]).find(e=>e.id===_dripEstId);
   if(!est){ toast('Estimate not found','error'); return; }
@@ -420,18 +420,40 @@ function startDripSequence(){
   const seq = seqs.find(s=>s.id===selId) || seqs[0];
   const seqSteps = (seq && seq.steps && seq.steps.filter(s=>s.enabled!==false)) || [];
   if(!seqSteps.length){ toast('No enabled steps in this sequence','error'); return; }
-  const BLITZ_CREDITS = 3; // Bundle pricing: always 3 credits for a full Blitz sequence
+  // Credits = 1 per postcard step (all deducted upfront as a bundle)
+  const BLITZ_CREDITS = seqSteps.length;
   const paid = S.cfg.mailerCredits || 0;
   if(paid < BLITZ_CREDITS){
-    toast('Need '+BLITZ_CREDITS+' credits for this Blitz. You have '+paid+'.','error');
+    toast('Need '+BLITZ_CREDITS+' credits for this Blitz ('+seqSteps.length+' postcards). You have '+paid+'.','error');
     setTimeout(()=>showBuyCreditsModal(), 800);
     return;
+  }
+  // Deduct ALL credits upfront on the server before scheduling anything
+  // This prevents partial-sequence sends if credits run out mid-campaign
+  let deductResult;
+  try {
+    deductResult = await adminAPI('blitz-start-deduct', { credits: BLITZ_CREDITS, estimateId: est.id });
+  } catch(e) {
+    if(e.message && e.message.includes('no_credits')){
+      toast('Not enough credits to start Blitz. Please purchase more.','error');
+      setTimeout(()=>showBuyCreditsModal(), 800);
+    } else {
+      toast('Failed to start Blitz: '+e.message,'error');
+    }
+    return;
+  }
+  // Update local credit balance immediately
+  if(deductResult && typeof deductResult.new_balance === 'number'){
+    S.cfg.mailerCredits = deductResult.new_balance;
+    updateCreditBadge();
   }
   const now = new Date();
   const msDay = 86400000;
   est.drip = {
     startedAt: now.toISOString(),
     blitz: true,
+    blitz_prepaid: true,        // all credits already deducted — skip per-postcard charge
+    blitz_credits_paid: BLITZ_CREDITS,
     sequenceId: seq ? seq.id : null,
     sequenceName: seq ? seq.name : null,
     steps: seqSteps.map((s,i)=>({
@@ -446,16 +468,16 @@ function startDripSequence(){
       queueId: null
     }))
   };
-  // Step 1 sends immediately (today's postcard — included in the 3-credit bundle)
+  // Step 1 sends immediately — marked blitz_prepaid so admin-lob skips credit deduction
   addEstimateToMailQueueWithDripTag(est, 1);
-  // Schedule remaining steps (2 onward)
+  // Schedule remaining steps (2 onward) — also marked blitz_prepaid
   est.drip.steps.slice(1).forEach(step=>{
     scheduleDripStep(est, step);
   });
   save();
   closeM('m-drip');
   renderEstimatesTab();
-  toast('🔥 Follow-Up Blitz started! '+(seq?escHtml(seq.name)+' — ':'')+seqSteps.length+' step'+(seqSteps.length!==1?'s':'')+' scheduled.','success');
+  toast('🔥 Follow-Up Blitz started! '+(seq?escHtml(seq.name)+' — ':'')+seqSteps.length+' postcard'+(seqSteps.length!==1?'s':'')+' scheduled. '+BLITZ_CREDITS+' credits charged.','success');
 }
 
 function addEstimateToMailQueueWithDripTag(est, stepNum){
@@ -477,7 +499,9 @@ function addEstimateToMailQueueWithDripTag(est, stepNum){
     drip_step: stepNum, drip_est_id: est.id,
     drip_headline: stepData ? (stepData.headline||null) : null,
     drip_subtext:  stepData ? (stepData.subtext||null)  : null,
-    drip_design_id: stepData ? (stepData.designId||null) : null
+    drip_design_id: stepData ? (stepData.designId||null) : null,
+    // blitz_prepaid: credits were deducted upfront at Blitz start — skip per-postcard charge in admin-lob
+    blitz_prepaid: !!(est.drip && est.drip.blitz_prepaid)
   };
   if(!S.queue) S.queue=[];
   S.queue.unshift(qItem);
@@ -506,7 +530,9 @@ function scheduleDripStep(est, step){
     scheduled_send_at: step.sendAt,
     drip_headline: step.headline || null,
     drip_subtext:  step.subtext  || null,
-    drip_design_id: step.designId || null
+    drip_design_id: step.designId || null,
+    // blitz_prepaid: credits were deducted upfront at Blitz start — skip per-postcard charge in admin-lob
+    blitz_prepaid: !!(est.drip && est.drip.blitz_prepaid)
   };
   if(!S.queue) S.queue=[];
   S.queue.push(qItem);

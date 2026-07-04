@@ -22,6 +22,7 @@ const RESEND_KEY   = process.env.RESEND_API_KEY;
 const SENDGRID_KEY = process.env.SENDGRID_API_KEY;
 const ADMIN_EMAIL  = 'support@biddrop.io';
 const FROM_EMAIL   = 'BidDrop <noreply@biddrop.io>';
+const CRON_SECRET  = process.env.CRON_SECRET;
 
 function sbFetch(path, opts = {}) {
   return fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
@@ -89,6 +90,11 @@ export default async function handler(req, res) {
   // Only allow GET (Vercel cron) or POST with authorization
   if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+  // Verify cron secret — same pattern as cron-drip.js and cron-purge-trash.js
+  const authHeader = (req.headers['authorization'] || '').trim();
+  if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
   }
 
   const now    = new Date();
