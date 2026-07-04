@@ -261,6 +261,13 @@ async function handle(action, req, res, ctx) {
             results.push({ sql: stmt.substring(0, 80), status: 0, ok: false, body: sqlErr.message });
           }
         }
+        // Reload PostgREST schema cache so new columns are immediately queryable
+        try {
+          await fetch(`${SUPABASE_URL}/rest/v1/`, {
+            method: 'GET',
+            headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}`, 'Accept-Profile': 'public' }
+          });
+        } catch(_){}
         return res.json({ results });
       }
 
