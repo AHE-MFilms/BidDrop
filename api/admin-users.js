@@ -19,7 +19,7 @@ async function handle(action, req, res, ctx) {
         if (!invEmail || !invName) { res.status(400).json({ error: 'email and name required' }); return; }
         const repRole = ['rep', 'admin'].includes(invRole) ? invRole : 'rep';
         // Check plan rep limit
-        const PLAN_MAX_REPS_INV = { starter: 1, pro: 3, agency: 10 };
+        const PLAN_MAX_REPS_INV = { starter: 1, pro: 10, agency: 100 };
         const acctRespInv = await sbFetch(`accounts?id=eq.${effectiveAccountId}&select=plan,company_name`);
         const acctsInv = acctRespInv.ok ? await acctRespInv.json() : [];
         const acctInv = acctsInv[0] || {};
