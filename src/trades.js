@@ -1553,9 +1553,9 @@ function renderTradePostcardAccordion(){
 
 
 // ── Collapsible Sidebar Sections ──────────────────────────────────────────────
-const SB_SECTIONS = ['canvass','estimate','mailing','followup','results','account'];
-const SB_DEFAULTS_OPEN = ['canvass','estimate']; // open by default
-const SB_STORAGE_KEY = 'bd_sb_sections';
+const SB_SECTIONS = ['canvass','estimate','campaigns','followup','results','account'];
+const SB_DEFAULTS_OPEN = ['canvass']; // open by default — canvass only (entry point)
+const SB_STORAGE_KEY = 'bd_sb_sections_v2'; // v2: mailing→campaigns rename
 
 function _getSbState(){
   try{
