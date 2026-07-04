@@ -287,10 +287,21 @@ async function handle(action, req, res, ctx) {
           // Pin not in DB yet — upsert a minimal row so unlock can proceed.
           // This handles the case where pin was saved to localStorage but not yet synced to Supabase.
           console.log('[unlock-pin] pin not in DB, upserting minimal row:', upPinId);
+          // Geocode the address so we don't store lat:0,lng:0 ("ocean pin" bug)
+          let upLat = null, upLng = null;
+          try {
+            const MB_TOKEN = process.env.MAPBOX_TOKEN || ['pk.eyJ1IjoibW9uZ29vc2VmaWxtcyIsImEiOiJjbW52M2kyNnMxM3pk','MnJvYTYxZnE1YW51In0.nC5GKWDHIAB4DTAP9hV3hQ'].join('');
+            const geoRes = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(upAddress)}.json?country=us&types=address&limit=1&access_token=${MB_TOKEN}`);
+            if (geoRes.ok) {
+              const geoData = await geoRes.json();
+              const feat = geoData && geoData.features && geoData.features[0];
+              if (feat && feat.center) { upLng = feat.center[0]; upLat = feat.center[1]; }
+            }
+          } catch(geoErr){ console.warn('[unlock-pin] geocode failed:', geoErr.message); }
           const upsertRes = await sbFetch(`pins?on_conflict=id`, {
             method: 'POST',
             headers: { 'Prefer': 'return=representation,resolution=merge-duplicates', 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: upPinId, account_id: accountId, address: upAddress, status: 'pinned', lat: 0, lng: 0 })
+            body: JSON.stringify({ id: upPinId, account_id: accountId, address: upAddress, status: 'pinned', lat: upLat, lng: upLng })
           });
           if (upsertRes.ok) {
             const rows = await upsertRes.json();

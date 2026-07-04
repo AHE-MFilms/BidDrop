@@ -355,6 +355,33 @@ async function loadPinsFromSupabase(){
   refreshZoneOverlays();
   // Refresh the estimates tab if it's visible
   if(typeof renderEstimatesTab === 'function') renderEstimatesTab();
+  // Background: heal any pins with null/zero coordinates by re-geocoding from their address
+  healZeroPins();
+}
+
+// ── Heal pins with invalid (0,0 or null) coordinates ────────────────────────────────
+async function healZeroPins(){
+  const MB = window._mapboxToken || ['pk.eyJ1IjoibW9uZ29vc2VmaWxtcyIsImEiOiJjbW52M2kyNnMxM3pk','MnJvYTYxZnE1YW51In0.nC5GKWDHIAB4DTAP9hV3hQ'].join('');
+  const broken = S.pins.filter(p => !p.deleted_at && (!p.lat || !p.lng || (p.lat===0 && p.lng===0)) && p.address);
+  if(!broken.length) return;
+  console.log('[BidDrop] healZeroPins: found', broken.length, 'pin(s) with invalid coordinates — re-geocoding...');
+  for(const pin of broken){
+    try{
+      const r = await fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/'+encodeURIComponent(pin.address)+'.json?country=us&types=address&limit=1&access_token='+MB);
+      if(!r.ok) continue;
+      const d = await r.json();
+      const feat = d && d.features && d.features[0];
+      if(!feat || !feat.center) continue;
+      const [lng, lat] = feat.center;
+      // Update in memory
+      pin.lat = lat; pin.lng = lng;
+      // Update marker position on map
+      if(markers[pin.id]) markers[pin.id].setLatLng([lat, lng]);
+      // Persist to Supabase
+      await sb.from('pins').update({ lat, lng }).eq('id', pin.id);
+      console.log('[BidDrop] healZeroPins: fixed', pin.address, '->', lat, lng);
+    } catch(e){ console.warn('[BidDrop] healZeroPins: failed for', pin.address, e.message); }
+  }
 }
 
 // ── Viewport-based incremental pin loading ────────────────────────────────────
