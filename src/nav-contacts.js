@@ -939,31 +939,170 @@ function confirmDesignPick(){
 // DRIP AUTOMATIONS BUILDER
 // ═══════════════════════════════════════════════════════════════════════════
 
+// ── Named Blitz Sequences (Build 13) ─────────────────────────────────────────────
 function getDefaultDripSteps(){
   return [
-    {id:1,enabled:true,day:0,designId:null,headline:S.cfg.drip2Headline||'We assessed your roof.',subtext:S.cfg.drip2Subtext||'Your estimate is ready. Call us today.'},
-    {id:2,enabled:true,day:7,designId:null,headline:S.cfg.drip3Headline||'Still thinking it over?',subtext:S.cfg.drip3Subtext||"Your estimate is still valid. We'd love to help."},
-    {id:3,enabled:true,day:14,designId:null,headline:S.cfg.drip4Headline||'Storm season is coming.',subtext:S.cfg.drip4Subtext||"Now's the time to protect your home."},
-    {id:4,enabled:true,day:21,designId:null,headline:S.cfg.drip5Headline||'Final notice.',subtext:S.cfg.drip5Subtext||'Your estimate expires soon. Secure your spot.'},
+    {id:1,enabled:true,day:0, designId:null,headline:'Still thinking it over?',subtext:"Your estimate is still valid. We'd love to help."},
+    {id:2,enabled:true,day:7, designId:null,headline:'Storm season is coming.',subtext:"Now's the time to protect your home."},
+    {id:3,enabled:true,day:14,designId:null,headline:'Final notice.',subtext:'Your estimate expires soon. Secure your spot.'},
   ];
 }
+function _migrateToBlitzSequences(){
+  if(S.cfg.blitzSequences&&Array.isArray(S.cfg.blitzSequences)&&S.cfg.blitzSequences.length) return;
+  const legacy=S.cfg.dripStepsJson&&Array.isArray(S.cfg.dripStepsJson)&&S.cfg.dripStepsJson.length?S.cfg.dripStepsJson:getDefaultDripSteps();
+  const cleanSteps=legacy.map((s,i)=>({id:s.id||Date.now()+i,enabled:s.enabled!==false,day:s.day||0,designId:s.designId||null,headline:s.headline||'',subtext:s.subtext||''}));
+  S.cfg.blitzSequences=[{id:'seq_default',name:'Default Sequence',enabled:true,steps:cleanSteps}];
+  save();
+}
+function getBlitzSequences(){
+  _migrateToBlitzSequences();
+  return S.cfg.blitzSequences||[];
+}
+function getBlitzSequenceById(seqId){
+  return getBlitzSequences().find(s=>s.id===seqId)||null;
+}
+// Legacy compat: getDripSteps() returns steps from the first enabled sequence
 function getDripSteps(){
-  if(S.cfg.dripStepsJson&&Array.isArray(S.cfg.dripStepsJson)&&S.cfg.dripStepsJson.length) return S.cfg.dripStepsJson;
-  return getDefaultDripSteps();
+  const seqs=getBlitzSequences();
+  const first=seqs.find(s=>s.enabled)||seqs[0];
+  return (first&&first.steps&&first.steps.length)?first.steps:getDefaultDripSteps();
 }
-function renderDripBuilder(){
-  const tog=document.getElementById('drip-tab-toggle');
-  const knob=document.getElementById('drip-tab-knob');
-  if(tog&&knob){
-    const on=!!S.cfg.dripEnabled;
-    tog.style.background=on?'var(--accent)':'var(--border)';
-    knob.style.left=on?'21px':'3px';
+function renderDripBuilder(){ renderBlitzSequenceList(); }
+function renderBlitzSequenceList(){
+  const container=document.getElementById('blitz-seq-list');
+  if(!container) return;
+  const seqs=getBlitzSequences();
+  if(!seqs.length){
+    container.innerHTML='<div style="text-align:center;padding:32px;color:var(--muted);font-size:13px;">No sequences yet. Click <strong style="color:var(--text);">+ New Sequence</strong> to create one.</div>';
+    return;
   }
-  const trigger=(S.cfg.dripStepsJson&&S.cfg.dripStepsJson._trigger)||'manual';
-  const trigEl=document.getElementById('drip-trigger-'+trigger);
-  if(trigEl) trigEl.checked=true;
-  renderDripStepCards();
+  container.innerHTML=seqs.map((seq,si)=>_renderBlitzSeqCard(seq,si)).join('');
 }
+function _renderBlitzSeqCard(seq,si){
+  const designs=getDesigns();
+  const designOpts='<option value="">— Default design —</option>'+designs.map(d=>'<option value="'+d.id+'">'+escHtml(d.name||'')+'</option>').join('');
+  const stepsHtml=(seq.steps||[]).map((step,i)=>{
+    const selOpts=designOpts.replace('value="'+(step.designId||'')+'"','value="'+(step.designId||'')+'" selected');
+    const bc=step.enabled?'rgba(242,92,5,.3)':'var(--border)';
+    const nc=step.enabled?'var(--accent)':'var(--muted)';
+    return '<div style="background:var(--card);border:1px solid '+bc+';border-radius:12px;padding:14px 16px;display:flex;gap:14px;align-items:flex-start;">'
+      +'<div style="flex-shrink:0;text-align:center;min-width:44px;">'
+      +'<div style="font-family:var(--font-h);font-size:20px;font-weight:800;color:'+nc+';">'+( i+1)+'</div>'
+      +'<div onclick="toggleBlitzStep(\''+seq.id+'\','+i+')" style="width:30px;height:16px;border-radius:8px;background:'+(step.enabled?'var(--accent)':'var(--border)')+';cursor:pointer;position:relative;margin:5px auto 0;transition:background .2s;"><div style="position:absolute;top:2px;left:'+(step.enabled?'14px':'2px')+';width:12px;height:12px;border-radius:50%;background:#fff;transition:left .2s;"></div></div>'
+      +'</div>'
+      +'<div style="flex:1;min-width:0;">'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">'
+      +'<div><label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:3px;">Delay (days from trigger)</label>'
+      +'<input type="number" min="0" max="365" value="'+step.day+'" onchange="updateBlitzStepField(\''+seq.id+'\','+i+',\'day\',parseInt(this.value)||0)" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:6px 8px;color:var(--text);font-size:12px;width:100%;"></div>'
+      +'<div><label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:3px;">Design</label>'
+      +'<select onchange="updateBlitzStepField(\''+seq.id+'\','+i+',\'designId\',this.value||null)" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:6px 8px;color:var(--text);font-size:12px;width:100%;cursor:pointer;">'+selOpts+'</select></div>'
+      +'</div>'
+      +'<div style="margin-bottom:6px;"><label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:3px;">Headline (max 40 chars)</label>'
+      +'<input class="fi" value="'+(step.headline||'').replace(/"/g,'&quot;')+'" maxlength="40" oninput="updateBlitzStepField(\''+seq.id+'\','+i+',\'headline\',this.value)" placeholder="e.g. Still thinking it over?"></div>'
+      +'<div style="margin-bottom:8px;"><label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:3px;">Subtext (max 80 chars)</label>'
+      +'<input class="fi" value="'+(step.subtext||'').replace(/"/g,'&quot;')+'" maxlength="80" oninput="updateBlitzStepField(\''+seq.id+'\','+i+',\'subtext\',this.value)" placeholder="e.g. Your estimate is still valid."></div>'
+      +'<div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">'
+      +'<span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">\ud83d\udcec Postcard Preview</span>'
+      +'<button onclick="previewBlitzStepFullscreen(\''+seq.id+'\','+i+')" style="background:var(--accent);border:none;border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;color:#fff;cursor:pointer;">\ud83d\udc41 Preview</button></div>'
+      +'<div id="blitz-preview-'+seq.id+'-'+i+'" style="padding:6px;min-height:36px;display:flex;align-items:center;justify-content:center;">'
+      +'<div style="color:var(--muted);font-size:11px;text-align:center;">Click <strong style="color:var(--text);">Preview</strong> to see how this step will look</div></div></div>'
+      +'</div>'
+      +'<button onclick="removeBlitzStep(\''+seq.id+'\','+i+')" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;flex-shrink:0;padding:0;line-height:1;" title="Remove step">&#x2715;</button>'
+      +'</div>';
+  }).join('');
+  return '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;">'
+    +'<div style="display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border);background:var(--card2);">'
+    +'<div onclick="toggleBlitzSequence(\''+seq.id+'\')" style="width:36px;height:20px;border-radius:10px;background:'+(seq.enabled?'var(--accent)':'var(--border)')+';cursor:pointer;position:relative;flex-shrink:0;transition:background .2s;"><div style="position:absolute;top:3px;left:'+(seq.enabled?'17px':'3px')+';width:14px;height:14px;border-radius:50%;background:#fff;transition:left .2s;"></div></div>'
+    +'<input value="'+escHtml(seq.name||'Sequence '+(si+1))+'" oninput="updateBlitzSeqName(\''+seq.id+'\',this.value)" style="flex:1;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:var(--font-h);font-size:15px;font-weight:700;padding:2px 4px;outline:none;" placeholder="Sequence name">'
+    +'<span style="font-size:11px;color:var(--muted);white-space:nowrap;">'+(seq.steps||[]).length+' step'+((seq.steps||[]).length!==1?'s':'')+'</span>'
+    +'<button onclick="saveBlitzSequence(\''+seq.id+'\')" style="background:var(--accent);color:#fff;border:none;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">Save</button>'
+    +(si>0?'<button onclick="deleteBlitzSequence(\''+seq.id+'\')" style="background:none;border:1px solid rgba(239,68,68,.3);border-radius:7px;padding:6px 10px;font-size:12px;color:#EF4444;cursor:pointer;" title="Delete sequence">&#x2715;</button>':'')
+    +'</div>'
+    +'<div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px;">'
+    +stepsHtml
+    +'<button onclick="addBlitzStep(\''+seq.id+'\')" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 14px;font-size:12px;color:var(--text);cursor:pointer;font-weight:600;align-self:flex-start;">+ Add Step</button>'
+    +'</div></div>';
+}
+function addBlitzSequence(){
+  const seqs=getBlitzSequences();
+  seqs.push({id:'seq_'+Date.now(),name:'New Sequence',enabled:true,steps:getDefaultDripSteps()});
+  S.cfg.blitzSequences=seqs; save(); renderBlitzSequenceList();
+  toast('New sequence created — give it a name and save!','success');
+}
+function deleteBlitzSequence(seqId){
+  const seqs=getBlitzSequences();
+  if(seqs.length<=1){ toast('Need at least one sequence','error'); return; }
+  if(!confirm('Delete this sequence? This cannot be undone.')) return;
+  S.cfg.blitzSequences=seqs.filter(s=>s.id!==seqId); save(); renderBlitzSequenceList();
+  toast('Sequence deleted','success');
+}
+function toggleBlitzSequence(seqId){
+  const seqs=getBlitzSequences(); const seq=seqs.find(s=>s.id===seqId);
+  if(!seq) return; seq.enabled=!seq.enabled; S.cfg.blitzSequences=seqs; renderBlitzSequenceList();
+}
+function updateBlitzSeqName(seqId,name){
+  const seqs=getBlitzSequences(); const seq=seqs.find(s=>s.id===seqId);
+  if(seq){ seq.name=name; S.cfg.blitzSequences=seqs; }
+}
+function saveBlitzSequence(seqId){
+  S.cfg.blitzSequences=getBlitzSequences(); save(); toast('Sequence saved!','success');
+}
+function addBlitzStep(seqId){
+  const seqs=getBlitzSequences(); const seq=seqs.find(s=>s.id===seqId);
+  if(!seq) return;
+  const lastDay=(seq.steps&&seq.steps.length)?seq.steps[seq.steps.length-1].day:0;
+  seq.steps.push({id:Date.now(),enabled:true,day:lastDay+7,designId:null,headline:'',subtext:''});
+  S.cfg.blitzSequences=seqs; renderBlitzSequenceList();
+}
+function removeBlitzStep(seqId,idx){
+  const seqs=getBlitzSequences(); const seq=seqs.find(s=>s.id===seqId);
+  if(!seq||!seq.steps) return;
+  if(seq.steps.length<=1){ toast('Need at least one step','error'); return; }
+  seq.steps.splice(idx,1); S.cfg.blitzSequences=seqs; renderBlitzSequenceList();
+}
+function toggleBlitzStep(seqId,idx){
+  const seqs=getBlitzSequences(); const seq=seqs.find(s=>s.id===seqId);
+  if(!seq||!seq.steps) return;
+  seq.steps[idx].enabled=!seq.steps[idx].enabled; S.cfg.blitzSequences=seqs; renderBlitzSequenceList();
+}
+function updateBlitzStepField(seqId,idx,field,value){
+  const seqs=getBlitzSequences(); const seq=seqs.find(s=>s.id===seqId);
+  if(!seq||!seq.steps) return;
+  seq.steps[idx][field]=value; S.cfg.blitzSequences=seqs;
+}
+async function previewBlitzStepFullscreen(seqId,idx){
+  const seq=getBlitzSequenceById(seqId); if(!seq||!seq.steps) return;
+  const step=seq.steps[idx]; if(!step){ toast('Step not found','error'); return; }
+  const headline=step.headline||''; const subtext=step.subtext||'';
+  const companyName=(S.cfg&&S.cfg.companyName)||'Your Roofing Company';
+  const slug=companyName.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  const sampleAddr='123 Main Street, Anytown, MI 48188';
+  const MB=window._mapboxToken||['pk.eyJ1IjoibW9uZ29vc2VmaWxtcyIsImEiOiJjbW52M2kyNnMxM3pk','MnJvYTYxZnE1YW51In0.nC5GKWDHIAB4DTAP9hV3hQ'].join('');
+  let photoUrl=null;
+  try{
+    const geoRes=await fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/'+encodeURIComponent(sampleAddr)+'.json?country=us&types=address&limit=1&access_token='+MB);
+    const geoData=await geoRes.json();
+    if(geoData.features&&geoData.features[0]){const [lon,lat]=geoData.features[0].center;photoUrl=`https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/${lon},${lat},19,0/900x600@2x?access_token=${MB}`;}
+  }catch(e){}
+  const fakeItem={id:null,slug,addr:sampleAddr,owner:'Sample Homeowner',total:15000,structures:[],photo_url:photoUrl,photo_data:null,damage_photos:[],all_photos:null,headline,subtext,designId:step.designId||null};
+  const _o1=S.cfg&&S.cfg.postcardHeadline1,_o2=S.cfg&&S.cfg.postcardHeadline2,_os1=S.cfg&&S.cfg.postcardHl1Size,_os2=S.cfg&&S.cfg.postcardHl2Size;
+  if(S.cfg){S.cfg.postcardHeadline1=headline||'Your estimate is still valid.';S.cfg.postcardHeadline2=subtext||'';S.cfg.postcardHl1Size=90;S.cfg.postcardHl2Size=72;}
+  try{await _showPostcardCanvasModal('m-blitz-step-preview-'+seqId+'-'+idx,'Sample Homeowner',sampleAddr,fakeItem);}
+  finally{if(S.cfg){S.cfg.postcardHeadline1=_o1;S.cfg.postcardHeadline2=_o2;S.cfg.postcardHl1Size=_os1;S.cfg.postcardHl2Size=_os2;}}
+}
+function renderDripStepDesignSelects(){
+  const dripTab=document.getElementById('tab-drip');
+  if(dripTab&&dripTab.classList.contains('active')) renderBlitzSequenceList();
+}
+// Legacy compat stubs
+function toggleDripFromTab(){ }
+function addDripStep(){ }
+function removeDripStep(){ }
+function toggleDripStep(){ }
+function updateDripStepField(){ }
+function saveDripSequence(){ save(); toast('Sequences saved!','success'); }
+function renderDripStepCards(){ renderBlitzSequenceList(); }
 function renderDripStepCards(){
   const container=document.getElementById('drip-steps-builder');
   if(!container) return;

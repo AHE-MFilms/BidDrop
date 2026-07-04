@@ -170,78 +170,23 @@
 
 <!-- ── Follow-Up Blitz Modal ── -->
 <div id="m-drip" class="overlay" style="display:none;z-index:25500;align-items:flex-start;padding-top:max(env(safe-area-inset-top,0px),20px);overflow-y:auto;" onclick="if(event.target===this)closeM('m-drip')">
-  <div style="background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px;width:min(520px,96vw);margin:auto;box-shadow:0 24px 60px rgba(0,0,0,.6);">
+  <div style="background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px;width:min(540px,96vw);margin:auto;box-shadow:0 24px 60px rgba(0,0,0,.6);">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
       <div style="font-family:var(--font-h);font-size:18px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;">🔥 Follow-Up Blitz</div>
       <button onclick="closeM('m-drip')" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;">✕</button>
     </div>
-    <div id="drip-est-label" style="font-size:13px;color:var(--muted);margin-bottom:18px;"></div>
-    <!-- Steps -->
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
-      <!-- Step 1 -->
-      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div style="background:var(--accent);color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 1</div>
-          <div style="font-size:13px;font-weight:600;color:var(--text);">First Postcard <span style="font-size:11px;background:#22C55E22;color:#22C55E;border-radius:8px;padding:1px 7px;font-weight:700;">Covered by Unlock</span></div>
-          <div style="margin-left:auto;font-size:12px;color:var(--muted);">Sends immediately</div>
-        </div>
-        <div style="font-size:12px;color:var(--muted);margin-top:6px;">Already queued when you unlocked this lead — no extra credit needed.</div>
-      </div>
-      <!-- Step 2 -->
-      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div style="background:#7C3AED;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 2</div>
-          <div style="font-size:13px;font-weight:600;color:var(--text);">Follow-Up Postcard <span style="font-size:11px;color:var(--muted);">1 credit</span></div>
-          <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
-            <input type="number" id="drip-delay-2" value="7" min="1" max="90" style="width:52px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 6px;color:var(--text);font-size:12px;text-align:center;">
-            <span style="font-size:12px;color:var(--muted);">days after step 1</span>
-          </div>
-        </div>
-        <div style="font-size:12px;color:var(--muted);margin-top:6px);">Reminder — “Your estimate is still available.”</div>
-      </div>
-      <!-- Step 3 -->
-      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div style="background:#7C3AED;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 3</div>
-          <div style="font-size:13px;font-weight:600;color:var(--text);">Urgency Postcard <span style="font-size:11px;color:var(--muted);">1 credit</span></div>
-          <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
-            <input type="number" id="drip-delay-3" value="14" min="1" max="90" style="width:52px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 6px;color:var(--text);font-size:12px;text-align:center;">
-            <span style="font-size:12px;color:var(--muted);">days after step 1</span>
-          </div>
-        </div>
-        <div style="font-size:12px;color:var(--muted);margin-top:6px;">Urgency — “Roof damage doesn’t wait.”</div>
-      </div>
-      <!-- Step 4 -->
-      <div style="background:var(--card2);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:14px;">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div style="background:#16a34a;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 4</div>
-          <div style="font-size:13px;font-weight:600;color:var(--text);">Final Notice <span style="font-size:11px;background:#22C55E22;color:#22C55E;border-radius:8px;padding:1px 7px;font-weight:700;">FREE</span></div>
-          <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
-            <input type="number" id="drip-delay-4" value="21" min="1" max="90" style="width:52px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 6px;color:var(--text);font-size:12px;text-align:center;">
-            <span style="font-size:12px;color:var(--muted);">days after step 1</span>
-          </div>
-        </div>
-        <div style="font-size:12px;color:var(--muted);margin-top:6px;">Last chance — “We’d love to earn your business.”</div>
-      </div>
-      <!-- Step 5 -->
-      <div style="background:var(--card2);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:14px;">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div style="background:#16a34a;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">STEP 5</div>
-          <div style="font-size:13px;font-weight:600;color:var(--text);">Final Goodbye <span style="font-size:11px;background:#22C55E22;color:#22C55E;border-radius:8px;padding:1px 7px;font-weight:700;">FREE</span></div>
-          <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
-            <input type="number" id="drip-delay-5" value="30" min="1" max="180" style="width:52px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 6px;color:var(--text);font-size:12px;text-align:center;">
-            <span style="font-size:12px;color:var(--muted);">days after step 1</span>
-          </div>
-        </div>
-        <div style="font-size:12px;color:var(--muted);margin-top:6px;">Final goodbye — “One last thing. We’d love to earn your business.”</div>
-      </div>
+    <div id="drip-est-label" style="font-size:13px;color:var(--muted);margin-bottom:14px;"></div>
+    <!-- Sequence picker (shown when 2+ sequences exist) -->
+    <div id="drip-seq-picker-row" style="display:none;margin-bottom:16px;">
+      <label style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:6px;">Choose Sequence</label>
+      <select id="drip-seq-picker" onchange="refreshDripModal()" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;font-weight:600;cursor:pointer;"></select>
     </div>
-    <!-- Info note -->
-    <div style="background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:10px 14px;font-size:12px;color:#C4B5FD;margin-bottom:18px;">
-      <strong>🔥 Buy 3 Get 5!</strong> Unlock a lead (1 credit) + start the Blitz (2 credits) = <strong style="color:#4ade80;">5 postcards total — Steps 4 &amp; 5 are FREE.</strong> Steps 2–5 are scheduled automatically. Cancel anytime from the Estimates tab.
-    </div>
+    <!-- Dynamic steps list -->
+    <div id="drip-steps-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px;"></div>
+    <!-- Credit summary -->
+    <div id="drip-credit-note" style="background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:10px 14px;font-size:12px;color:#C4B5FD;margin-bottom:18px;"></div>
     <div style="display:flex;gap:10px;">
-      <button onclick="startDripSequence()" style="flex:1;background:#7C3AED;border:none;border-radius:8px;padding:14px;color:#fff;font-family:var(--font-b);font-size:14px;font-weight:700;cursor:pointer;">🔥 Start Follow-Up Blitz — 2 Credits · 5 Postcards Total</button>
+      <button id="drip-start-btn" onclick="startDripSequence()" style="flex:1;background:#7C3AED;border:none;border-radius:8px;padding:14px;color:#fff;font-family:var(--font-b);font-size:14px;font-weight:700;cursor:pointer;">🔥 Start Follow-Up Blitz</button>
       <button onclick="closeM('m-drip')" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:14px 20px;color:var(--muted);font-family:var(--font-b);font-size:14px;cursor:pointer;">Cancel</button>
     </div>
   </div>

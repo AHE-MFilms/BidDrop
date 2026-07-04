@@ -335,73 +335,125 @@ function openDripModal(estId){
   if(!est){ toast('Estimate not found','error'); return; }
   _dripEstId = estId;
   const lbl = document.getElementById('drip-est-label');
-  if(lbl) lbl.textContent = (est.addr||'Unknown address') + ' — ' + (est.owner||'Homeowner') + ' — $'+(est.total||0).toLocaleString();
-  // Show existing drip status if any
-  if(est.drip && est.drip.steps){
-    const active = est.drip.steps.filter(s=>!s.sentAt).length;
-    if(active > 0){
-      const lbl2 = document.getElementById('drip-est-label');
-      if(lbl2) lbl2.textContent += ' · ⚡ Drip active ('+active+' steps pending)';
+  if(lbl){
+    let txt = (est.addr||'Unknown address') + ' — ' + (est.owner||'Homeowner') + ' — $'+(est.total||0).toLocaleString();
+    if(est.drip && est.drip.steps){
+      const active = est.drip.steps.filter(s=>!s.sentAt).length;
+      if(active > 0) txt += ' · ⚡ Blitz active ('+active+' steps pending)';
+    }
+    lbl.textContent = txt;
+  }
+  refreshDripModal();
+  openM('m-drip');
+}
+function refreshDripModal(){
+  const seqs = (typeof getBlitzSequences==='function') ? getBlitzSequences() : [];
+  // Populate sequence picker
+  const pickerRow = document.getElementById('drip-seq-picker-row');
+  const picker = document.getElementById('drip-seq-picker');
+  if(pickerRow && picker){
+    if(seqs.length > 1){
+      pickerRow.style.display = 'block';
+      const cur = picker.value;
+      picker.innerHTML = seqs.map(s=>'<option value="'+s.id+'"'+(s.id===cur?' selected':'')+'>'+escHtml(s.name||'Sequence')+'</option>').join('');
+    } else {
+      pickerRow.style.display = 'none';
+      if(picker && seqs.length) picker.innerHTML = '<option value="'+seqs[0].id+'">'+escHtml(seqs[0].name)+'</option>';
     }
   }
-  refreshDripPostcardPreviews();
-  openM('m-drip');
+  // Get selected sequence
+  const selId = picker ? picker.value : (seqs[0]&&seqs[0].id);
+  const seq = seqs.find(s=>s.id===selId) || seqs[0];
+  const steps = (seq && seq.steps && seq.steps.filter(s=>s.enabled!==false)) || [];
+  // Render steps
+  const stepsEl = document.getElementById('drip-steps-list');
+  if(stepsEl){
+    stepsEl.innerHTML = steps.map((step,i)=>{
+      const isFirst = i===0;
+      const designName = (()=>{
+        if(!step.designId) return 'Default design';
+        const designs = (typeof getDesigns==='function') ? getDesigns() : [];
+        const d = designs.find(x=>x.id===step.designId);
+        return d ? (d.name||'Custom design') : 'Custom design';
+      })();
+      return '<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;">'
+        +'<div style="display:flex;align-items:center;gap:8px;">'
+        +'<div style="background:'+(isFirst?'var(--accent)':'#7C3AED')+';color:#fff;font-family:var(--font-h);font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;">STEP '+(i+1)+'</div>'
+        +'<div style="font-size:13px;font-weight:600;color:var(--text);flex:1;">'+escHtml(step.headline||('Step '+(i+1)))+'</div>'
+        +(isFirst?'<span style="font-size:11px;color:var(--muted);">Sends immediately</span>':'<span style="font-size:11px;color:var(--muted);">Day '+step.day+'</span>')
+        +'</div>'
+        +(step.subtext?'<div style="font-size:11px;color:var(--muted);margin-top:4px;padding-left:2px;">'+escHtml(step.subtext)+'</div>':'')
+        +'<div style="font-size:10px;color:var(--muted);margin-top:4px;padding-left:2px;">🎨 '+escHtml(designName)+'</div>'
+        +'</div>';
+    }).join('');
+  }
+  // Update credit note and button
+  const pin = _dripEstId ? (S.pins||[]).find(p=>{
+    const est=(S.estimates||[]).find(e=>e.id===_dripEstId); return est&&p.id===est.pinId;
+  }) : null;
+  const step1Queued = !!(pin && (pin.unlockQueuedPostcard || pin.unlocked));
+  const credits = step1Queued ? Math.max(0,steps.length-1) : steps.length;
+  const noteEl = document.getElementById('drip-credit-note');
+  if(noteEl){
+    noteEl.innerHTML = '🔥 <strong>'+(seq?escHtml(seq.name):'Sequence')+'</strong> — '+steps.length+' step'+( steps.length!==1?'s':'')+' over '+(steps.length>1?'Day 0 to Day '+(steps[steps.length-1].day):'Day 0')+'. '
+      +(step1Queued?'Step 1 already queued from unlock. ':'')+'<strong style="color:#4ade80;">'+credits+' credit'+(credits!==1?'s':'')+' needed.</strong> Steps are scheduled automatically.';
+  }
+  const btn = document.getElementById('drip-start-btn');
+  if(btn) btn.textContent = '🔥 Start Blitz — '+credits+' Credit'+(credits!==1?'s':'')+' · '+steps.length+' Postcard'+(steps.length!==1?'s':'');
 }
 
 function startDripSequence(){
   if(!isPlanAtLeast('agency')){ showPlanUpgradePrompt('Follow-Up Blitz','agency'); return; }
   const est = (S.estimates||[]).find(e=>e.id===_dripEstId);
   if(!est){ toast('Estimate not found','error'); return; }
-  // Credit pre-check:
-  // If the estimate is already unlocked (pin.unlockQueuedPostcard or pin.unlocked),
-  // Step 1 was already queued during unlock — Blitz only needs 2 more credits for Steps 2-5.
-  // If NOT already unlocked, Blitz needs 3 credits total (Step 1 + Steps 2-5).
+  // Get selected sequence from picker
+  const seqs = (typeof getBlitzSequences==='function') ? getBlitzSequences() : [];
+  const picker = document.getElementById('drip-seq-picker');
+  const selId = picker ? picker.value : (seqs[0]&&seqs[0].id);
+  const seq = seqs.find(s=>s.id===selId) || seqs[0];
+  const seqSteps = (seq && seq.steps && seq.steps.filter(s=>s.enabled!==false)) || [];
+  if(!seqSteps.length){ toast('No enabled steps in this sequence','error'); return; }
   const pin = (S.pins||[]).find(p=>p.id===est.pinId);
   const step1AlreadyQueued = !!(pin && (pin.unlockQueuedPostcard || pin.unlocked));
-  const BLITZ_CREDITS = step1AlreadyQueued ? 2 : 3;
+  const BLITZ_CREDITS = step1AlreadyQueued ? Math.max(0,seqSteps.length-1) : seqSteps.length;
   const paid = S.cfg.mailerCredits || 0;
   if(paid < BLITZ_CREDITS){
-    const msg = step1AlreadyQueued
-      ? `Need 2 more credits ($8.00) for Steps 2–5 of the Blitz. You have ${paid}. Step 1 is already queued from your unlock.`
-      : `Need 3 credits ($12.00) for the full 5-postcard Blitz. You have ${paid}.`;
-    toast(msg,'error');
+    toast('Need '+BLITZ_CREDITS+' credit'+(BLITZ_CREDITS!==1?'s':'')+' for this Blitz. You have '+paid+'.','error');
     setTimeout(()=>showBuyCreditsModal(), 800);
     return;
   }
-  const d2 = parseInt((document.getElementById('drip-delay-2')||{}).value)||7;
-  const d3 = parseInt((document.getElementById('drip-delay-3')||{}).value)||14;
-  const d4 = parseInt((document.getElementById('drip-delay-4')||{}).value)||21;
-  const d5 = parseInt((document.getElementById('drip-delay-5')||{}).value)||30;
   const now = new Date();
   const msDay = 86400000;
   est.drip = {
     startedAt: now.toISOString(),
     blitz: true,
+    sequenceId: seq ? seq.id : null,
+    sequenceName: seq ? seq.name : null,
     step1FromUnlock: step1AlreadyQueued,
-    steps: [
-      { step:1, type:'postcard', label:'First Postcard',     sendAt: now.toISOString(),                              sentAt: step1AlreadyQueued ? now.toISOString() : null, queueId:null },
-      { step:2, type:'postcard', label:'Follow-Up Postcard', sendAt: new Date(now.getTime()+d2*msDay).toISOString(), sentAt:null, queueId:null },
-      { step:3, type:'postcard', label:'Urgency Postcard',   sendAt: new Date(now.getTime()+d3*msDay).toISOString(), sentAt:null, queueId:null },
-      { step:4, type:'postcard', label:'Final Notice',       sendAt: new Date(now.getTime()+d4*msDay).toISOString(), sentAt:null, queueId:null },
-      { step:5, type:'postcard', label:'Final Goodbye',      sendAt: new Date(now.getTime()+d5*msDay).toISOString(), sentAt:null, queueId:null }
-    ]
+    steps: seqSteps.map((s,i)=>({
+      step: i+1,
+      type: 'postcard',
+      label: s.headline || ('Step '+(i+1)),
+      headline: s.headline||'',
+      subtext: s.subtext||'',
+      designId: s.designId||null,
+      sendAt: i===0 ? now.toISOString() : new Date(now.getTime()+(s.day||0)*msDay).toISOString(),
+      sentAt: (i===0 && step1AlreadyQueued) ? now.toISOString() : null,
+      queueId: null
+    }))
   };
   // Step 1: only queue if NOT already queued from unlock
   if(!step1AlreadyQueued){
     addEstimateToMailQueueWithDripTag(est, 1);
   }
-  // Schedule steps 2-5
-  [1,2,3,4].forEach(i=>{
-    const step = est.drip.steps[i];
+  // Schedule remaining steps
+  est.drip.steps.slice(step1AlreadyQueued?1:1).forEach(step=>{
     scheduleDripStep(est, step);
   });
   save();
   closeM('m-drip');
   renderEstimatesTab();
-  const creditMsg = step1AlreadyQueued
-    ? '🔥 Follow-Up Blitz started! Step 1 already queued from unlock. Steps 2–5 scheduled automatically.'
-    : '🔥 Follow-Up Blitz started! Step 1 added to Mail Queue. Steps 2–5 scheduled automatically.';
-  toast(creditMsg,'success');
+  toast('🔥 Follow-Up Blitz started! '+(seq?escHtml(seq.name)+' — ':'')+seqSteps.length+' step'+(seqSteps.length!==1?'s':'')+' scheduled.','success');
 }
 
 function addEstimateToMailQueueWithDripTag(est, stepNum){

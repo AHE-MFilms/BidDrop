@@ -131,6 +131,8 @@ async function syncAccountToSupabase(){
   if(cfg.canvasDesignBackJson !== undefined)  b10payload.canvas_design_back_json  = cfg.canvasDesignBackJson  ? JSON.stringify(cfg.canvasDesignBackJson)  : null;
   if(cfg.canvasTemplateId !== undefined)      b10payload.canvas_template_id       = cfg.canvasTemplateId||null;
   if(cfg.canvasTemplateName !== undefined)    b10payload.canvas_template_name     = cfg.canvasTemplateName||null;
+  // Named Blitz Sequences (Build 13)
+  if(cfg.blitzSequences !== undefined)        b10payload.blitz_sequences          = cfg.blitzSequences ? JSON.stringify(cfg.blitzSequences) : null;
   if(Object.keys(b10payload).length){
     const {error: b10Err} = await sb.from('accounts').update(b10payload).eq('id', currentAccount.id);
     if(b10Err) console.warn('[BidDrop] Build 10 columns not yet migrated (run Admin → Run Migration):', b10Err.message);
@@ -289,5 +291,7 @@ function accountRowToCfg(row){
     canvasDesignBackJson:  row.canvas_design_back_json  ? (typeof row.canvas_design_back_json==='string'  ? JSON.parse(row.canvas_design_back_json)  : row.canvas_design_back_json)  : null,
     canvasTemplateId:   row.canvas_template_id||null,
     canvasTemplateName: row.canvas_template_name||null,
+    // ── Named Blitz Sequences (Build 13) ──
+    blitzSequences: row.blitz_sequences ? (typeof row.blitz_sequences==='string' ? JSON.parse(row.blitz_sequences) : row.blitz_sequences) : null,
   };
 }

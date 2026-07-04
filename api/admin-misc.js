@@ -233,7 +233,11 @@ async function handle(action, req, res, ctx) {
           `ALTER TABLE queue ADD COLUMN IF NOT EXISTS campaign_label TEXT`,
           /* ── Blitz Promo (platform-wide sale toggle) ── */
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS blitz_promo_enabled BOOLEAN DEFAULT FALSE`,
-          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS blitz_promo_config JSONB DEFAULT '{"buy":3,"get":5,"label":"Buy 3 Get 5 Total!"}'::jsonb`
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS blitz_promo_config JSONB DEFAULT '{"buy":3,"get":5,"label":"Buy 3 Get 5 Total!"}'::jsonb`,
+          /* ── Named Blitz Sequences (Option B — Build 13) ── */
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS blitz_sequences JSONB`,
+          `ALTER TABLE queue ADD COLUMN IF NOT EXISTS blitz_sequence_id TEXT`,
+          `ALTER TABLE estimates ADD COLUMN IF NOT EXISTS blitz_sequence_id TEXT`
         ].join('; ');
         const results = [];
         // Run each DDL statement individually via Supabase pg_meta API (uses SERVICE_KEY)
