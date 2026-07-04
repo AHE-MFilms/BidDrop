@@ -230,7 +230,10 @@ async function handle(action, req, res, ctx) {
           `CREATE INDEX IF NOT EXISTS idx_mailer_log_account_sent ON mailer_log(account_id, sent_at DESC)`,
           /* ── Campaign send numbering (Build 12) ── */
           `ALTER TABLE queue ADD COLUMN IF NOT EXISTS send_num INTEGER DEFAULT 1`,
-          `ALTER TABLE queue ADD COLUMN IF NOT EXISTS campaign_label TEXT`
+          `ALTER TABLE queue ADD COLUMN IF NOT EXISTS campaign_label TEXT`,
+          /* ── Blitz Promo (platform-wide sale toggle) ── */
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS blitz_promo_enabled BOOLEAN DEFAULT FALSE`,
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS blitz_promo_config JSONB DEFAULT '{"buy":3,"get":5,"label":"Buy 3 Get 5 Total!"}'::jsonb`
         ].join('; ');
         const results = [];
         // Run each DDL statement individually via Supabase pg_meta API (uses SERVICE_KEY)

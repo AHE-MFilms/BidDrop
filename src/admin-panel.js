@@ -567,12 +567,43 @@ function renderSuperAdminPanel(accounts, allProfiles){
       '<div id="migration-result" style="margin-top:10px;font-size:12px;"></div>'+
       '<hr style="border:none;border-top:1px solid var(--border);margin:20px 0 14px;">'+
       '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#F25C05;margin-bottom:8px;">🎨 Canvas Templates</div>'+
-      '<div style="font-size:11px;color:var(--muted);margin-bottom:12px;">Load the 6 built-in postcard templates (Storm, Solar, Gutters, Roofing, Alert, Estimate Ready) into the canvas editor. Safe to run once — skips if templates already exist.</div>'+
-      '<button onclick="seedCanvasTemplates()" style="background:linear-gradient(135deg,#F25C05,#c44a00);border:none;border-radius:8px;padding:10px 22px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">🎨 Load Default Templates</button>'+
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:12px;">Load the 6 built-in postcard templates (Storm, Solar, Gutters, Roofing, Alert, Estimate Ready) into the canvas editor. Safe to run once — skips if templates already exist.<      '<button onclick="seedCanvasTemplates()" style="background:linear-gradient(135deg,#F25C05,#c44a00);border:none;border-radius:8px;padding:10px 22px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">\uD83C\uDFA8 Load Default Templates</button>'+
       '<div id="seed-templates-result" style="margin-top:10px;font-size:12px;"></div>'+
+      '<hr style="border:none;border-top:1px solid var(--border);margin:20px 0 14px;">'+
+      '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#22C55E;margin-bottom:8px;">\uD83D\uDD25 Blitz Promo — Platform Sale Toggle</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:14px;">When ON, all clients see the promo badge in the Send Postcard popup. Configure the buy/get numbers and badge label below.</div>'+
+      '<div id="blitz-promo-section" style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:16px;">'+
+        '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">'+
+          '<div id="bp-toggle" onclick="toggleBlitzPromo()" style="width:44px;height:24px;border-radius:12px;background:var(--border);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;">'+
+            '<div id="bp-knob" style="position:absolute;top:4px;left:4px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s;"></div>'+
+          '</div>'+
+          '<div>'+
+            '<div id="bp-status-label" style="font-size:13px;font-weight:700;color:var(--muted);">Promo OFF</div>'+
+            '<div style="font-size:10px;color:var(--muted);">Toggle to activate the sale for all clients</div>'+
+          '</div>'+
+        '</div>'+
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">'+
+          '<div>'+
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Buy (credits spent)</label>'+
+            '<input id="bp-buy" type="number" min="1" max="20" value="3" oninput="autoUpdateBlitzPromoLabel()" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:14px;font-weight:700;text-align:center;">'+
+          '</div>'+
+          '<div>'+
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Get (postcards total)</label>'+
+            '<input id="bp-get" type="number" min="1" max="20" value="5" oninput="autoUpdateBlitzPromoLabel()" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:14px;font-weight:700;text-align:center;">'+
+          '</div>'+
+        '</div>'+
+        '<div style="margin-bottom:12px;">'+
+          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Badge Label (shown to clients)</label>'+
+          '<input id="bp-label" type="text" maxlength="60" placeholder="Buy 3 Get 5 Total!" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
+        '</div>'+
+        '<div id="bp-preview" style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:7px;padding:8px 12px;font-size:12px;color:#22C55E;font-weight:700;margin-bottom:12px;">\uD83D\uDD25 Preview: Buy 3 Get 5 Total!</div>'+
+        '<button onclick="saveBlitzPromo()" style="width:100%;background:linear-gradient(135deg,#22C55E,#16A34A);border:none;border-radius:8px;padding:10px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">\uD83D\uDCBE Save Promo Settings</button>'+
+        '<div id="bp-result" style="margin-top:8px;font-size:12px;"></div>'+
+      '</div>'+
     '</div>' +
-    '</div>'
-  );
+    '</div>');
+  // Load current promo state from DB and populate the UI
+  loadBlitzPromoState();
 }
 
 async function seedCanvasTemplates(){
@@ -1145,3 +1176,83 @@ async function toggleTracerfy(accountId, accountName, currentlyEnabled){
   }
 }
 
+
+// ── BLITZ PROMO ADMIN FUNCTIONS ──────────────────────────────────────────────
+
+let _blitzPromoState = { enabled: false, buy: 3, get: 5, label: 'Buy 3 Get 5 Total!' };
+
+async function loadBlitzPromoState(){
+  try {
+    const { data, error } = await sb.from('accounts')
+      .select('blitz_promo_enabled, blitz_promo_config')
+      .eq('id', AGENCY_ACCOUNT_ID).single();
+    if(error || !data) return;
+    const cfg = data.blitz_promo_config || { buy: 3, get: 5, label: 'Buy 3 Get 5 Total!' };
+    _blitzPromoState = { enabled: !!data.blitz_promo_enabled, buy: cfg.buy||3, get: cfg.get||5, label: cfg.label||'Buy 3 Get 5 Total!' };
+    _applyBlitzPromoUI();
+  } catch(e){ console.warn('loadBlitzPromoState:', e.message); }
+}
+
+function _applyBlitzPromoUI(){
+  const toggle = document.getElementById('bp-toggle');
+  const knob   = document.getElementById('bp-knob');
+  const status = document.getElementById('bp-status-label');
+  const buyEl  = document.getElementById('bp-buy');
+  const getEl  = document.getElementById('bp-get');
+  const lblEl  = document.getElementById('bp-label');
+  const prev   = document.getElementById('bp-preview');
+  if(!toggle) return;
+  const on = _blitzPromoState.enabled;
+  toggle.style.background = on ? '#22C55E' : 'var(--border)';
+  if(knob) knob.style.left = on ? '24px' : '4px';
+  if(status){ status.textContent = on ? 'Promo ON 🟢' : 'Promo OFF'; status.style.color = on ? '#22C55E' : 'var(--muted)'; }
+  if(buyEl) buyEl.value = _blitzPromoState.buy;
+  if(getEl) getEl.value = _blitzPromoState.get;
+  if(lblEl) lblEl.value = _blitzPromoState.label;
+  if(prev) prev.textContent = '🔥 Preview: ' + _blitzPromoState.label;
+}
+
+function toggleBlitzPromo(){
+  _blitzPromoState.enabled = !_blitzPromoState.enabled;
+  _applyBlitzPromoUI();
+}
+
+function autoUpdateBlitzPromoLabel(){
+  const buy = parseInt(document.getElementById('bp-buy')?.value)||3;
+  const get = parseInt(document.getElementById('bp-get')?.value)||5;
+  const lblEl = document.getElementById('bp-label');
+  const prev  = document.getElementById('bp-preview');
+  const auto  = 'Buy '+buy+' Get '+get+' Total!';
+  if(lblEl && !lblEl.dataset.userEdited) lblEl.value = auto;
+  if(prev) prev.textContent = '🔥 Preview: ' + (lblEl?.value || auto);
+}
+
+async function saveBlitzPromo(){
+  if(!isSuperAdmin()){ toast('Permission denied','error'); return; }
+  const btn = document.querySelector('[onclick="saveBlitzPromo()"]');
+  const res = document.getElementById('bp-result');
+  if(btn){ btn.disabled=true; btn.textContent='Saving…'; }
+  if(res) res.innerHTML='';
+  try {
+    const buy   = parseInt(document.getElementById('bp-buy')?.value)||3;
+    const get   = parseInt(document.getElementById('bp-get')?.value)||5;
+    const label = (document.getElementById('bp-label')?.value||'').trim() || ('Buy '+buy+' Get '+get+' Total!');
+    const enabled = _blitzPromoState.enabled;
+    const { error } = await sb.from('accounts').update({
+      blitz_promo_enabled: enabled,
+      blitz_promo_config: { buy, get, label }
+    }).eq('id', AGENCY_ACCOUNT_ID);
+    if(error) throw new Error(error.message);
+    _blitzPromoState = { enabled, buy, get, label };
+    // Also update the live S.blitzPromo so the badge reflects immediately
+    window.S.blitzPromo = { enabled, config: { buy, get, label } };
+    updateBlitzPromoBadge();
+    if(res) res.innerHTML='<span style="color:#22c55e">✅ Promo settings saved!</span>';
+    toast(enabled ? '🔥 Blitz Promo is now LIVE for all clients!' : '✅ Blitz Promo turned OFF', enabled ? 'success' : 'info');
+  } catch(e){
+    if(res) res.innerHTML='<span style="color:var(--danger)">❌ '+escHtml(e.message)+'</span>';
+    toast('❌ Save failed: '+e.message,'error');
+  } finally {
+    if(btn){ btn.disabled=false; btn.textContent='💾 Save Promo Settings'; }
+  }
+}

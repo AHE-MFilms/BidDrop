@@ -62,6 +62,8 @@ async function onSignedIn(user){
     applyBrand();
     // Agency model: fetch master Lob key from AHE account (service role — clients cannot read this)
     await fetchMasterLobKey();
+    // Fetch platform-wide Blitz Promo config from agency account row
+    fetchBlitzPromo();
     initMap();
     setTimeout(restoreStormState, 1500);
     setTimeout(initStormNotifications, 2000);

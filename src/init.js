@@ -125,6 +125,37 @@ async function fetchMasterLobKey(){
 }
 
 
+// ── BLITZ PROMO ─────────────────────────────────────────────────────────────
+
+async function fetchBlitzPromo(){
+  try {
+    const { data, error } = await sb
+      .from('accounts')
+      .select('blitz_promo_enabled, blitz_promo_config')
+      .eq('id', AGENCY_ACCOUNT_ID)
+      .single();
+    if(error || !data) return;
+    window.S.blitzPromo = {
+      enabled: data.blitz_promo_enabled || false,
+      config: data.blitz_promo_config || { buy: 3, get: 5, label: 'Buy 3 Get 5 Total!' }
+    };
+    // Update the badge in the Send Postcard popup if it's already open
+    updateBlitzPromoBadge();
+  } catch(e){ console.warn('fetchBlitzPromo:', e.message); }
+}
+
+function updateBlitzPromoBadge(){
+  const promo = window.S?.blitzPromo;
+  const badge = document.getElementById('spm-blitz-promo-badge');
+  if(!badge) return;
+  if(promo && promo.enabled && promo.config){
+    badge.textContent = '🔥 ' + (promo.config.label || 'Buy '+promo.config.buy+' Get '+promo.config.get+' Total!');
+    badge.style.display = 'block';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
 // ── CANVASS AREAS ─────────────────────────────────────────────────────────────
 
 

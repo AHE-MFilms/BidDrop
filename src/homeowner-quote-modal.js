@@ -28,6 +28,8 @@ function openSendPostcardModal(queueId){
   if(btn){ btn.textContent='Select an option above'; btn.style.opacity='.4'; btn.style.pointerEvents='none'; btn.style.background='var(--accent)'; }
   // Reset design row to Standard
   _spmUpdateDesignRow(null);
+  // Show/hide promo badge based on platform promo config
+  updateBlitzPromoBadge();
   openM('m-send-postcard');
 }
 function _spmUpdateDesignRow(design){
