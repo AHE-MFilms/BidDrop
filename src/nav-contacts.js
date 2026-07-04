@@ -1081,7 +1081,7 @@ async function previewDripStepFullscreen(idx){
 }
 function toggleDripFromTab(){
   S.cfg.dripEnabled=!S.cfg.dripEnabled; save(); renderDripBuilder();
-  toast('Drip automations '+(S.cfg.dripEnabled?'enabled':'disabled'),'success');
+  toast('Blitz '+(S.cfg.dripEnabled?'enabled':'disabled'),'success');
 }
 function addDripStep(){
   const steps=getDripSteps();
