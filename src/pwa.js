@@ -40,28 +40,15 @@ function onPriceOverrideInput(){
 // ═══════════════════════════════
 //  OFFLINE PIN QUEUE & PWA
 // ═══════════════════════════════
-let _pwaInstallEvent = null;
-
-// Detect iOS Safari and standalone (installed) mode
+// PWA install prompts removed — app distributed via Apple/Google app stores
 const _isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
-// Check standalone at call-time (not parse-time) to avoid iOS timing issues
 function _isStandalone(){
   return !!navigator.standalone ||
     window.matchMedia('(display-mode: standalone)').matches ||
     window.matchMedia('(display-mode: fullscreen)').matches;
 }
-
-// Capture the browser's install prompt on Chrome/Edge/Android
-window.addEventListener('beforeinstallprompt', e=>{
-  e.preventDefault();
-  // Don't show if already running as installed app
-  if(_isStandalone()) return;
-  _pwaInstallEvent = e;
-  const btn = document.getElementById('pwa-hdr-btn');
-  if(btn) btn.style.display = 'flex';
-});
-
-// iOS Safari: show button only if NOT already in standalone mode
+window.addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); });
+// iOS Safari: (install prompt removed)
 // ── THEME TOGGLE ──────────────────────────────────────────────────────────
 function toggleTheme(){
   const isLight = document.body.classList.toggle('light');
@@ -77,47 +64,7 @@ function toggleTheme(){
     if(btn){ btn.textContent = '🌙'; btn.title = 'Switch to dark mode'; }
   }
 })();
-// Use DOMContentLoaded so the DOM is ready, and re-check standalone at that point
-document.addEventListener('DOMContentLoaded', ()=>{
-  if(_isIos && !_isStandalone()){
-    const btn = document.getElementById('pwa-hdr-btn');
-    if(btn) btn.style.display = 'flex';
-  }
-});
-
-// Hide the button once the app is installed
-window.addEventListener('appinstalled', ()=>{
-  const btn = document.getElementById('pwa-hdr-btn');
-  if(btn) btn.style.display = 'none';
-  _pwaInstallEvent = null;
-});
-
-function doPwaInstall(){
-  // Safety check: never show install UI if already running as installed app
-  if(_isStandalone()){
-    toast('BidDrop is already installed on your device.', 'info');
-    const btn = document.getElementById('pwa-hdr-btn');
-    if(btn) btn.style.display = 'none';
-    return;
-  }
-  if(_isIos){
-    // iOS Safari — show manual instructions
-    openM('m-ios-install');
-    return;
-  }
-  if(!_pwaInstallEvent){
-    toast('Install prompt not available. Try adding to home screen from your browser menu.', 'info');
-    return;
-  }
-  _pwaInstallEvent.prompt();
-  _pwaInstallEvent.userChoice.then(r=>{
-    if(r.outcome==='accepted'){
-      const btn = document.getElementById('pwa-hdr-btn');
-      if(btn) btn.style.display = 'none';
-    }
-    _pwaInstallEvent = null;
-  });
-}
+// doPwaInstall removed — install prompts disabled
 // Real connectivity probe — navigator.onLine is unreliable on some devices/networks
 async function checkRealConnectivity(){
   // First fast-path: if browser says online, do a quick probe to confirm
