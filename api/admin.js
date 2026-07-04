@@ -42,6 +42,18 @@ module.exports = async function handler(req, res) {
   cors(res);
   if (req.method === 'OPTIONS') { res.status(200).end(); return; }
   const { action } = req.query;
+
+  // Public actions — no auth required
+  if (action === 'get-blitz-promo') {
+    const { SUPABASE_URL, SERVICE_KEY, AGENCY_ACCT_ID } = require('./_admin-shared');
+    const gbpRes = await fetch(`${SUPABASE_URL}/rest/v1/accounts?id=eq.${AGENCY_ACCT_ID}&select=blitz_promo_enabled,blitz_promo_config&limit=1`,
+      { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } });
+    if (!gbpRes.ok) { return res.json({ enabled: false, config: { buy: 3, get: 5, label: 'Buy 3 Get 5 Total!' } }); }
+    const rows = await gbpRes.json();
+    const row = rows[0] || {};
+    return res.json({ enabled: row.blitz_promo_enabled || false, config: row.blitz_promo_config || { buy: 3, get: 5, label: 'Buy 3 Get 5 Total!' } });
+  }
+
   const caller = await verifyCallerJwt(req);
   if (!caller) { res.status(401).json({ error: 'Unauthorized' }); return; }
   const profile = await getCallerProfile(caller.id);
