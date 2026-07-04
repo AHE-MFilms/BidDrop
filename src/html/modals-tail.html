@@ -176,8 +176,8 @@
       <button onclick="closeM('m-drip')" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;">✕</button>
     </div>
     <div id="drip-est-label" style="font-size:13px;color:var(--muted);margin-bottom:14px;"></div>
-    <!-- Sequence picker (shown when 2+ sequences exist) -->
-    <div id="drip-seq-picker-row" style="display:none;margin-bottom:16px;">
+    <!-- Sequence picker (always shown) -->
+    <div id="drip-seq-picker-row" style="display:block;margin-bottom:16px;">
       <label style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:6px;">Choose Sequence</label>
       <select id="drip-seq-picker" onchange="refreshDripModal()" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;font-weight:600;cursor:pointer;"></select>
     </div>

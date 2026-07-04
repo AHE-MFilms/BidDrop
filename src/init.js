@@ -352,35 +352,38 @@ function refreshDripModal(){
   const pickerRow = document.getElementById('drip-seq-picker-row');
   const picker = document.getElementById('drip-seq-picker');
   if(pickerRow && picker){
-    if(seqs.length > 1){
-      pickerRow.style.display = 'block';
-      const cur = picker.value;
-      picker.innerHTML = seqs.map(s=>'<option value="'+s.id+'"'+(s.id===cur?' selected':'')+'>'+escHtml(s.name||'Sequence')+'</option>').join('');
-    } else {
-      pickerRow.style.display = 'none';
-      if(picker && seqs.length) picker.innerHTML = '<option value="'+seqs[0].id+'">'+escHtml(seqs[0].name)+'</option>';
-    }
+    // Always show the picker so the rep can choose which sequence to run
+    pickerRow.style.display = 'block';
+    const cur = picker.value;
+    picker.innerHTML = seqs.map(s=>'<option value="'+s.id+'"'+(s.id===cur?' selected':'')+'>'+escHtml(s.name||'Sequence')+'</option>').join('');
   }
   // Get selected sequence
   const selId = picker ? picker.value : (seqs[0]&&seqs[0].id);
   const seq = seqs.find(s=>s.id===selId) || seqs[0];
   const steps = (seq && seq.steps && seq.steps.filter(s=>s.enabled!==false)) || [];
+  // Determine if step 1 was already sent (initial pin postcard)
+  const _pin4steps = _dripEstId ? (S.pins||[]).find(p=>{ const _e=(S.estimates||[]).find(e=>e.id===_dripEstId); return _e&&p.id===_e.pinId; }) : null;
+  const _step1Sent = !!(_pin4steps && (_pin4steps.unlockQueuedPostcard || _pin4steps.unlocked));
   // Render steps
   const stepsEl = document.getElementById('drip-steps-list');
   if(stepsEl){
     stepsEl.innerHTML = steps.map((step,i)=>{
       const isFirst = i===0;
+      const alreadySent = isFirst && _step1Sent;
       const designName = (()=>{
         if(!step.designId) return 'Default design';
         const designs = (typeof getDesigns==='function') ? getDesigns() : [];
         const d = designs.find(x=>x.id===step.designId);
         return d ? (d.name||'Custom design') : 'Custom design';
       })();
-      return '<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;">'
+      const dayLabel = alreadySent
+        ? '<span style="font-size:11px;color:#4ade80;font-weight:600;">✓ Already sent</span>'
+        : (isFirst ? '<span style="font-size:11px;color:var(--muted);">Day 0 — sends now</span>' : '<span style="font-size:11px;color:var(--muted);">Day '+step.day+'</span>');
+      return '<div style="background:'+(alreadySent?'rgba(74,222,128,.06)':'var(--card2)')+';border:1px solid '+(alreadySent?'rgba(74,222,128,.25)':'var(--border)')+';border-radius:10px;padding:12px 14px;">'
         +'<div style="display:flex;align-items:center;gap:8px;">'
-        +'<div style="background:'+(isFirst?'var(--accent)':'#7C3AED')+';color:#fff;font-family:var(--font-h);font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;">STEP '+(i+1)+'</div>'
-        +'<div style="font-size:13px;font-weight:600;color:var(--text);flex:1;">'+escHtml(step.headline||('Step '+(i+1)))+'</div>'
-        +(isFirst?'<span style="font-size:11px;color:var(--muted);">Sends immediately</span>':'<span style="font-size:11px;color:var(--muted);">Day '+step.day+'</span>')
+        +'<div style="background:'+(alreadySent?'#166534':(isFirst?'var(--accent)':'#7C3AED'))+';color:#fff;font-family:var(--font-h);font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;">'+(alreadySent?'✓ SENT':'STEP '+(i+1))+'</div>'
+        +'<div style="font-size:13px;font-weight:600;color:'+(alreadySent?'#86efac':'var(--text)')+';flex:1;">'+escHtml(step.headline||('Step '+(i+1)))+'</div>'
+        +dayLabel
         +'</div>'
         +(step.subtext?'<div style="font-size:11px;color:var(--muted);margin-top:4px;padding-left:2px;">'+escHtml(step.subtext)+'</div>':'')
         +'<div style="font-size:10px;color:var(--muted);margin-top:4px;padding-left:2px;">🎨 '+escHtml(designName)+'</div>'
