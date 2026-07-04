@@ -111,6 +111,8 @@ async function onSignedIn(user){
     _appInitialized = true;
     // Always open on the canvas map after login
     goTab('map');
+    // Initialize onboarding checklist for new users (Build 14)
+    if(typeof initOnboarding === 'function') initOnboarding();
 
   } catch(e) {
     console.error('[onSignedIn] error:', e);

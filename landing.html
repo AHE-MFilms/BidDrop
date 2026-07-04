@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BidDrop — Close More Roofs. Follow Up Automatically.</title>
+<meta name="description" content="Drop a pin, build an estimate, mail a postcard — all from your phone. The canvassing platform built for roofing contractors.">
+<link rel="icon" href="/favicon.ico" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700;800&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#0F1623;--panel:#1A2333;--card:#1F2C3E;--border:#2E4060;
+  --accent:#F25C05;--accent2:#F97316;
+  --text:#F0F6FF;--mid:#C8D8E8;--muted:#96B0C8;
+  --font-h:'Oswald',sans-serif;--font-b:'Barlow',sans-serif;
+}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:16px;line-height:1.6;}
+a{color:inherit;text-decoration:none;}
+img{max-width:100%;display:block;}
+
+/* ── HEADER ── */
+.lp-nav{position:sticky;top:0;z-index:1000;background:rgba(15,22,35,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 24px;height:62px;display:flex;align-items:center;justify-content:space-between;}
+.lp-logo{font-family:var(--font-h);font-size:22px;font-weight:800;color:#fff;letter-spacing:1px;}
+.lp-logo span{color:var(--accent);}
+.lp-nav-cta{background:var(--accent);color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;letter-spacing:.8px;padding:10px 22px;border-radius:8px;border:none;cursor:pointer;transition:background .15s;}
+.lp-nav-cta:hover{background:#e05200;}
+
+/* ── HERO ── */
+.hero{min-height:90vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 24px 60px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(242,92,5,.18) 0%, transparent 70%);pointer-events:none;}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(242,92,5,.12);border:1px solid rgba(242,92,5,.3);border-radius:20px;padding:6px 16px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:28px;}
+.hero h1{font-family:var(--font-h);font-size:clamp(42px,7vw,82px);font-weight:800;line-height:1.05;letter-spacing:-1px;margin-bottom:24px;max-width:900px;}
+.hero h1 em{color:var(--accent);font-style:normal;}
+.hero-sub{font-size:clamp(17px,2.5vw,22px);color:var(--mid);max-width:600px;margin:0 auto 40px;font-weight:400;line-height:1.5;}
+.hero-ctas{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:20px;}
+.btn-primary{background:var(--accent);color:#fff;font-family:var(--font-h);font-size:16px;font-weight:700;letter-spacing:.8px;padding:16px 36px;border-radius:10px;border:none;cursor:pointer;transition:all .15s;box-shadow:0 8px 28px rgba(242,92,5,.4);}
+.btn-primary:hover{background:#e05200;transform:translateY(-1px);box-shadow:0 12px 36px rgba(242,92,5,.5);}
+.btn-secondary{background:transparent;color:var(--text);font-family:var(--font-h);font-size:16px;font-weight:700;letter-spacing:.8px;padding:16px 36px;border-radius:10px;border:1px solid var(--border);cursor:pointer;transition:all .15s;}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+.hero-note{font-size:13px;color:var(--muted);}
+
+/* ── VIDEO SECTION ── */
+.video-section{padding:60px 24px;max-width:900px;margin:0 auto;}
+.video-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--border);box-shadow:0 24px 80px rgba(0,0,0,.6);background:#000;}
+.video-wrap video,.video-wrap iframe{width:100%;display:block;aspect-ratio:16/9;}
+.video-placeholder{aspect-ratio:16/9;background:var(--panel);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;cursor:pointer;}
+.video-play-btn{width:72px;height:72px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 8px 28px rgba(242,92,5,.5);}
+.video-placeholder p{font-size:14px;color:var(--muted);}
+
+/* ── PROBLEM ── */
+.problem{padding:80px 24px;text-align:center;max-width:800px;margin:0 auto;}
+.section-label{font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:16px;}
+.problem h2{font-family:var(--font-h);font-size:clamp(32px,5vw,52px);font-weight:800;line-height:1.1;margin-bottom:20px;}
+.problem p{font-size:18px;color:var(--mid);line-height:1.7;}
+.stat-row{display:flex;gap:40px;justify-content:center;flex-wrap:wrap;margin-top:48px;}
+.stat-item{text-align:center;}
+.stat-num{font-family:var(--font-h);font-size:52px;font-weight:800;color:var(--accent);line-height:1;}
+.stat-label{font-size:14px;color:var(--muted);margin-top:6px;}
+
+/* ── HOW IT WORKS ── */
+.how{padding:80px 24px;max-width:1100px;margin:0 auto;}
+.how h2{font-family:var(--font-h);font-size:clamp(32px,5vw,52px);font-weight:800;text-align:center;margin-bottom:60px;}
+.steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;}
+@media(max-width:768px){.steps-grid{grid-template-columns:1fr;}}
+.step-card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:32px 28px;position:relative;overflow:hidden;}
+.step-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent);}
+.step-num{font-family:var(--font-h);font-size:64px;font-weight:800;color:rgba(242,92,5,.12);line-height:1;margin-bottom:16px;}
+.step-icon{font-size:36px;margin-bottom:12px;}
+.step-card h3{font-family:var(--font-h);font-size:22px;font-weight:700;margin-bottom:10px;}
+.step-card p{font-size:15px;color:var(--mid);line-height:1.6;}
+
+/* ── FEATURES ── */
+.features{padding:80px 24px;background:var(--panel);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.features-inner{max-width:1100px;margin:0 auto;}
+.features h2{font-family:var(--font-h);font-size:clamp(32px,5vw,52px);font-weight:800;text-align:center;margin-bottom:60px;}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+@media(max-width:900px){.features-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:560px){.features-grid{grid-template-columns:1fr;}}
+.feat-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;}
+.feat-icon{font-size:28px;margin-bottom:12px;}
+.feat-item h4{font-family:var(--font-h);font-size:17px;font-weight:700;margin-bottom:8px;}
+.feat-item p{font-size:14px;color:var(--mid);line-height:1.6;}
+.feat-badge{display:inline-block;background:rgba(242,92,5,.12);border:1px solid rgba(242,92,5,.3);color:var(--accent);font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;padding:2px 8px;border-radius:4px;margin-bottom:8px;}
+
+/* ── PRICING ── */
+.pricing{padding:80px 24px;max-width:1100px;margin:0 auto;}
+.pricing h2{font-family:var(--font-h);font-size:clamp(32px,5vw,52px);font-weight:800;text-align:center;margin-bottom:12px;}
+.pricing-sub{text-align:center;font-size:17px;color:var(--mid);margin-bottom:52px;}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;align-items:start;}
+@media(max-width:768px){.pricing-grid{grid-template-columns:1fr;max-width:420px;margin:0 auto;}}
+.plan-card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:32px 28px;position:relative;}
+.plan-card.popular{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 24px 60px rgba(242,92,5,.2);}
+.popular-badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-family:var(--font-h);font-size:11px;font-weight:700;letter-spacing:1px;padding:4px 16px;border-radius:20px;white-space:nowrap;}
+.plan-name{font-family:var(--font-h);font-size:22px;font-weight:700;margin-bottom:6px;}
+.plan-desc{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5;}
+.plan-price{display:flex;align-items:baseline;gap:4px;margin-bottom:6px;}
+.plan-price-num{font-family:var(--font-h);font-size:52px;font-weight:800;line-height:1;}
+.plan-price-sup{font-family:var(--font-h);font-size:22px;font-weight:700;color:var(--mid);}
+.plan-price-mo{font-size:14px;color:var(--muted);}
+.plan-trial{font-size:13px;color:#22c55e;font-weight:700;margin-bottom:24px;}
+.plan-features{list-style:none;margin-bottom:28px;}
+.plan-features li{display:flex;align-items:flex-start;gap:8px;font-size:14px;color:var(--mid);padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.plan-features li:last-child{border-bottom:none;}
+.plan-features li::before{content:'✓';color:#22c55e;font-weight:800;flex-shrink:0;margin-top:1px;}
+.plan-features li.no::before{content:'✗';color:var(--muted);}
+.plan-features li.no{color:rgba(150,176,200,.5);}
+.plan-btn{display:block;width:100%;background:var(--accent);color:#fff;font-family:var(--font-h);font-size:15px;font-weight:700;letter-spacing:.8px;padding:14px;border-radius:10px;border:none;cursor:pointer;text-align:center;transition:all .15s;}
+.plan-btn:hover{background:#e05200;}
+.plan-btn.outline{background:transparent;border:1px solid var(--border);color:var(--text);}
+.plan-btn.outline:hover{border-color:var(--accent);color:var(--accent);}
+
+/* ── FAQ ── */
+.faq{padding:80px 24px;max-width:760px;margin:0 auto;}
+.faq h2{font-family:var(--font-h);font-size:clamp(32px,5vw,52px);font-weight:800;text-align:center;margin-bottom:48px;}
+.faq-item{border-bottom:1px solid var(--border);padding:20px 0;}
+.faq-q{font-family:var(--font-h);font-size:18px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;}
+.faq-q::after{content:'+';font-size:22px;color:var(--accent);flex-shrink:0;transition:transform .2s;}
+.faq-item.open .faq-q::after{transform:rotate(45deg);}
+.faq-a{font-size:15px;color:var(--mid);line-height:1.7;max-height:0;overflow:hidden;transition:max-height .3s ease,padding .3s ease;}
+.faq-item.open .faq-a{max-height:300px;padding-top:12px;}
+
+/* ── FINAL CTA ── */
+.final-cta{padding:100px 24px;text-align:center;position:relative;overflow:hidden;}
+.final-cta::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 50%, rgba(242,92,5,.15) 0%, transparent 70%);pointer-events:none;}
+.final-cta h2{font-family:var(--font-h);font-size:clamp(36px,6vw,68px);font-weight:800;line-height:1.05;margin-bottom:20px;max-width:800px;margin-left:auto;margin-right:auto;}
+.final-cta h2 em{color:var(--accent);font-style:normal;}
+.final-cta p{font-size:18px;color:var(--mid);margin-bottom:40px;}
+.final-cta-note{font-size:14px;color:var(--muted);margin-top:16px;}
+
+/* ── FOOTER ── */
+.lp-footer{background:var(--panel);border-top:1px solid var(--border);padding:32px 24px;text-align:center;}
+.lp-footer-logo{font-family:var(--font-h);font-size:20px;font-weight:800;color:#fff;letter-spacing:1px;margin-bottom:8px;}
+.lp-footer-logo span{color:var(--accent);}
+.lp-footer p{font-size:13px;color:var(--muted);}
+.lp-footer a{color:var(--accent);}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="lp-nav">
+  <div class="lp-logo">Bid<span>Drop</span></div>
+  <a href="/signup" class="lp-nav-cta">Start Free Trial</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">🏠 Built for Roofing Contractors</div>
+  <h1>Close More Roofs.<br><em>Follow Up Automatically.</em></h1>
+  <p class="hero-sub">Drop a pin, build an estimate, mail a postcard — all from your phone. Turn every door knock into a trackable lead.</p>
+  <div class="hero-ctas">
+    <a href="/signup?plan=pro" class="btn-primary">Start 60-Day Free Trial</a>
+    <a href="#how-it-works" class="btn-secondary">See How It Works</a>
+  </div>
+  <p class="hero-note">No credit card risk · 60 days free · Cancel anytime</p>
+</section>
+
+<!-- VIDEO -->
+<section class="video-section">
+  <div class="video-wrap" id="demo-video-wrap">
+    <!-- Replace src with your actual video URL -->
+    <div class="video-placeholder" id="video-placeholder" onclick="playVideo()">
+      <div class="video-play-btn">▶</div>
+      <p>Watch BidDrop in Action (60 sec)</p>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section class="problem">
+  <p class="section-label">The Problem</p>
+  <h2>Most reps knock 50 doors a day.<br>They follow up with 3.</h2>
+  <p>The leads are there — on every roof you walk past. The problem is follow-up. Homeowners don't decide on the spot. They decide when they see your name again. BidDrop makes sure they do.</p>
+  <div class="stat-row">
+    <div class="stat-item">
+      <div class="stat-num">7x</div>
+      <div class="stat-label">More likely to close with<br>physical follow-up mail</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">60s</div>
+      <div class="stat-label">To drop a pin and<br>queue a postcard</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">$4</div>
+      <div class="stat-label">Per postcard sent<br>(vs $400+ per lead)</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how-it-works">
+  <h2>How BidDrop Works</h2>
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-num">01</div>
+      <div class="step-icon">📍</div>
+      <h3>Drop a Pin</h3>
+      <p>Tap any house on the map. BidDrop pulls the property data — owner name, address, square footage — instantly.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">02</div>
+      <div class="step-icon">📋</div>
+      <h3>Build the Estimate</h3>
+      <p>Generate a branded estimate page in seconds. Share it via QR code, text, or link. Track every view and click.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">03</div>
+      <div class="step-icon">📬</div>
+      <h3>Mail Automatically</h3>
+      <p>A real postcard with your logo, their address, and your estimate QR code ships to their door. No trips to the post office.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features">
+  <div class="features-inner">
+    <h2>Everything Your Team Needs</h2>
+    <div class="features-grid">
+      <div class="feat-item">
+        <div class="feat-icon">🗺️</div>
+        <h4>Canvass Map</h4>
+        <p>Pin every door knock. Filter by status. See your whole territory at a glance.</p>
+      </div>
+      <div class="feat-item">
+        <div class="feat-icon">📄</div>
+        <h4>Estimate Builder</h4>
+        <p>Branded estimate pages with QR scan tracking. Know exactly when a homeowner views their quote.</p>
+      </div>
+      <div class="feat-item">
+        <div class="feat-icon">✉️</div>
+        <h4>Mail Queue</h4>
+        <p>Queue postcards and letters from the field. Lob prints and mails them the same day.</p>
+      </div>
+      <div class="feat-item">
+        <div class="feat-badge">Pro</div>
+        <div class="feat-icon">🔥</div>
+        <h4>Follow-Up Blitz</h4>
+        <p>Automated 3–5 postcard sequences. Set it once, BidDrop follows up on schedule — no manual work.</p>
+      </div>
+      <div class="feat-item">
+        <div class="feat-badge">Pro</div>
+        <div class="feat-icon">🔗</div>
+        <h4>GHL Integration</h4>
+        <p>Every lead syncs to your GoHighLevel pipeline automatically. No copy-paste, no missed contacts.</p>
+      </div>
+      <div class="feat-item">
+        <div class="feat-icon">📊</div>
+        <h4>Analytics Dashboard</h4>
+        <p>Rep performance, scan rates, mail ROI. Know what's working before you scale it.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+  <h2>Simple, Transparent Pricing</h2>
+  <p class="pricing-sub">All plans include a 60-day free trial. No credit card risk.</p>
+  <div class="pricing-grid">
+
+    <!-- Starter -->
+    <div class="plan-card">
+      <div class="plan-name">Starter</div>
+      <div class="plan-desc">Solo reps getting started with canvassing and digital estimates.</div>
+      <div class="plan-price">
+        <span class="plan-price-sup">$</span>
+        <span class="plan-price-num">97</span>
+        <span class="plan-price-mo">/mo</span>
+      </div>
+      <div class="plan-trial">✓ FREE for 60 days</div>
+      <ul class="plan-features">
+        <li>1 User</li>
+        <li>10 free mailers to start</li>
+        <li>15 mailers/mo (after trial)</li>
+        <li>Unlimited pins</li>
+        <li>Map canvassing & pin drops</li>
+        <li>Estimate builder</li>
+        <li>Postcard & letter preview</li>
+        <li>Mail queue</li>
+        <li>Property lookups (free)</li>
+        <li class="no">GHL integration</li>
+        <li class="no">Follow-Up Blitz</li>
+      </ul>
+      <a href="/signup?plan=starter" class="plan-btn outline">Select Starter</a>
+    </div>
+
+    <!-- Pro -->
+    <div class="plan-card popular">
+      <div class="popular-badge">★ MOST POPULAR</div>
+      <div class="plan-name">Pro</div>
+      <div class="plan-desc">Growing roofing companies ready to automate follow-up and retargeting.</div>
+      <div class="plan-price">
+        <span class="plan-price-sup">$</span>
+        <span class="plan-price-num">197</span>
+        <span class="plan-price-mo">/mo</span>
+      </div>
+      <div class="plan-trial">✓ FREE for 60 days</div>
+      <ul class="plan-features">
+        <li>10 Users</li>
+        <li>10 free mailers to start</li>
+        <li>40 mailers/mo (after trial)</li>
+        <li>Unlimited pins</li>
+        <li>Everything in Starter</li>
+        <li>Estimate pages (biddrop.us)</li>
+        <li>GHL integration</li>
+        <li>Analytics dashboard</li>
+        <li>QR scan tracking</li>
+        <li>🔥 Follow-Up Blitz (5-postcard sequences)</li>
+      </ul>
+      <a href="/signup?plan=pro" class="plan-btn">Select Pro</a>
+    </div>
+
+    <!-- Agency -->
+    <div class="plan-card">
+      <div class="plan-name">Agency</div>
+      <div class="plan-desc">Multi-rep teams and roofing companies scaling their canvass operation.</div>
+      <div class="plan-price">
+        <span class="plan-price-sup">$</span>
+        <span class="plan-price-num">397</span>
+        <span class="plan-price-mo">/mo</span>
+      </div>
+      <div class="plan-trial">✓ FREE for 60 days</div>
+      <ul class="plan-features">
+        <li>100 Users</li>
+        <li>10 free mailers to start</li>
+        <li>100 mailers/mo (after trial)</li>
+        <li>Unlimited pins</li>
+        <li>Everything in Pro</li>
+        <li>Multi-rep management</li>
+        <li>Rep analytics & leaderboard</li>
+        <li>Custom postcard design</li>
+        <li>Priority support</li>
+      </ul>
+      <a href="/signup?plan=agency" class="plan-btn outline">Select Agency</a>
+    </div>
+
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq">
+  <h2>Common Questions</h2>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">Do I need a credit card to start?</div>
+    <div class="faq-a">No. You enter your card at signup, but you won't be charged until your 60-day free trial ends. Cancel anytime before then and you owe nothing.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">How does the postcard mailing work?</div>
+    <div class="faq-a">BidDrop integrates with Lob, a professional direct mail API. When you queue a postcard, Lob prints it and mails it via USPS — typically arriving within 5–7 business days. Each postcard costs 1 credit ($4 value).</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">What is Follow-Up Blitz?</div>
+    <div class="faq-a">Blitz is an automated postcard sequence. You set up 3–5 postcards with different messages, and BidDrop mails them on a schedule you define — 7 days, 14 days, 30 days after the initial knock. It runs automatically without any manual work.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">Does it work on mobile?</div>
+    <div class="faq-a">Yes. BidDrop is a Progressive Web App (PWA) — install it on your phone's home screen and it works like a native app, even in areas with spotty signal. The map, pin drops, and estimate builder all work on mobile.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">What is GHL integration?</div>
+    <div class="faq-a">GoHighLevel (GHL) is a popular CRM for contractors. BidDrop's Pro and Agency plans connect directly to your GHL account — every lead you create in BidDrop automatically appears as a contact in your GHL pipeline, with tags and custom fields.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">Can I upgrade or downgrade my plan?</div>
+    <div class="faq-a">Yes. You can change your plan at any time from the Plan & Billing page inside the app. Changes take effect immediately through the Stripe Customer Portal.</div>
+  </div>
+
+</section>
+
+<!-- FINAL CTA -->
+<section class="final-cta">
+  <h2>Ready to Close More Roofs?<br><em>Start Free Today.</em></h2>
+  <p>60 days free. No credit card risk. Cancel anytime.</p>
+  <a href="/signup?plan=pro" class="btn-primary" style="display:inline-block;">Start Your 60-Day Free Trial</a>
+  <p class="final-cta-note">Questions? Email us at <a href="mailto:support@biddrop.io" style="color:var(--accent);">support@biddrop.io</a></p>
+</section>
+
+<!-- FOOTER -->
+<footer class="lp-footer">
+  <div class="lp-footer-logo">Bid<span>Drop</span></div>
+  <p>© 2026 BidDrop. All rights reserved. &nbsp;·&nbsp; <a href="mailto:support@biddrop.io">support@biddrop.io</a></p>
+</footer>
+
+<script>
+function toggleFaq(el){
+  const item = el.closest('.faq-item');
+  item.classList.toggle('open');
+}
+function playVideo(){
+  // Replace VIDEO_URL with your actual video URL when ready
+  const VIDEO_URL = '';
+  if(!VIDEO_URL){ alert('Demo video coming soon!'); return; }
+  const wrap = document.getElementById('demo-video-wrap');
+  wrap.innerHTML = '<video autoplay controls style="width:100%;display:block;aspect-ratio:16/9;"><source src="'+VIDEO_URL+'" type="video/mp4"></video>';
+}
+</script>
+</body>
+</html>

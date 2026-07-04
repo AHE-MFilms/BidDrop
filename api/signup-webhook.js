@@ -143,10 +143,48 @@ async function sendWelcomeEmail({ email, firstName, companyName, planName, tempP
           <p style="font-size: 13px; color: #333333; margin: 0;">Your account has been loaded with ${mailerCredits || 10} free mailer credits to get you started right away.</p>
         </div>
 
+        <!-- 3-Step Getting Started -->
+        <div style="margin-bottom: 28px;">
+          <p style="font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #666666; margin: 0 0 14px 0;">3 Steps to Get Started</p>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="width: 36px; vertical-align: top; padding-bottom: 14px;">
+                <div style="width: 28px; height: 28px; background: #F97316; border-radius: 50%; text-align: center; line-height: 28px; color: #fff; font-weight: 800; font-size: 14px;">1</div>
+              </td>
+              <td style="vertical-align: top; padding-bottom: 14px; padding-left: 10px;">
+                <p style="margin: 0; font-size: 15px; font-weight: 700; color: #111111;">Set your password</p>
+                <p style="margin: 4px 0 0 0; font-size: 13px; color: #666666;">You'll be prompted on first login. Takes 30 seconds.</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="width: 36px; vertical-align: top; padding-bottom: 14px;">
+                <div style="width: 28px; height: 28px; background: #F97316; border-radius: 50%; text-align: center; line-height: 28px; color: #fff; font-weight: 800; font-size: 14px;">2</div>
+              </td>
+              <td style="vertical-align: top; padding-bottom: 14px; padding-left: 10px;">
+                <p style="margin: 0; font-size: 15px; font-weight: 700; color: #111111;">Upload your logo &amp; brand color</p>
+                <p style="margin: 4px 0 0 0; font-size: 13px; color: #666666;">Go to Settings → Brand. Your logo appears on every postcard.</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="width: 36px; vertical-align: top;">
+                <div style="width: 28px; height: 28px; background: #F97316; border-radius: 50%; text-align: center; line-height: 28px; color: #fff; font-weight: 800; font-size: 14px;">3</div>
+              </td>
+              <td style="vertical-align: top; padding-left: 10px;">
+                <p style="margin: 0; font-size: 15px; font-weight: 700; color: #111111;">Drop your first pin on the map</p>
+                <p style="margin: 4px 0 0 0; font-size: 13px; color: #666666;">Tap any house on the Canvass Map to start building an estimate.</p>
+              </td>
+            </tr>
+          </table>
+        </div>
+
         <!-- CTA Button -->
-        <a href="${loginUrl}" style="display: block; background: #F97316; color: #ffffff; text-decoration: none; text-align: center; padding: 16px 24px; border-radius: 8px; font-size: 17px; font-weight: 800; margin-bottom: 28px;">
+        <a href="${loginUrl}" style="display: block; background: #F97316; color: #ffffff; text-decoration: none; text-align: center; padding: 16px 24px; border-radius: 8px; font-size: 17px; font-weight: 800; margin-bottom: 20px;">
           Log In to BidDrop →
         </a>
+        <!-- Tutorial video link -->
+        <p style="text-align: center; font-size: 13px; color: #666666; margin: 0 0 28px 0;">
+          New to BidDrop? <a href="https://biddrop.us" style="color: #F97316; font-weight: 700;">Watch the Getting Started video →</a>
+        </p>
 
         <p style="font-size: 12px; color: #999999; line-height: 1.6; margin: 0; border-top: 1px solid #eeeeee; padding-top: 20px;">
           This is a no-reply email — please do not reply directly to this message.<br>

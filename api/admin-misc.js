@@ -242,7 +242,9 @@ async function handle(action, req, res, ctx) {
           `ALTER TABLE queue ADD COLUMN IF NOT EXISTS drip_headline TEXT`,
           `ALTER TABLE queue ADD COLUMN IF NOT EXISTS drip_subtext TEXT`,
           `ALTER TABLE queue ADD COLUMN IF NOT EXISTS drip_design_id TEXT`,
-          `ALTER TABLE queue ADD COLUMN IF NOT EXISTS blitz_prepaid BOOLEAN DEFAULT FALSE`
+          `ALTER TABLE queue ADD COLUMN IF NOT EXISTS blitz_prepaid BOOLEAN DEFAULT FALSE`,
+          /* ── Onboarding checklist progress (Build 14) ── */
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS onboarding_steps_json JSONB`
         ].join('; ');
         const results = [];
         // Run each DDL statement individually via Supabase pg_meta API (uses SERVICE_KEY)
