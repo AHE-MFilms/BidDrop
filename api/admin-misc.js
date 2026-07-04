@@ -244,6 +244,8 @@ async function handle(action, req, res, ctx) {
         const statements = batchSql.split('; ');
         // Append one-time data migration: backfill source='unlock' on existing unlock queue items
         statements.push(`UPDATE queue SET source = 'unlock' WHERE id LIKE 'mq_unlock_%' AND source IS NULL`);
+        // Drop the queue_status_check constraint so all status values (approved, needs_approval, scheduled, etc.) are accepted
+        statements.push(`ALTER TABLE queue DROP CONSTRAINT IF EXISTS queue_status_check`);
         for (const stmt of statements) {
           if (!stmt.trim()) continue;
           try {
