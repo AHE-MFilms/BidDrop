@@ -4,16 +4,28 @@
  *
  * Sends a polished HTML proposal to the homeowner via Resend.
  * Body: { to, subject, html, ownerName, accountId }
+ *
+ * Auth: requires a valid Supabase JWT in Authorization: Bearer <token>
  */
-const RESEND_KEY = process.env.RESEND_API_KEY;
+const RESEND_KEY    = process.env.RESEND_API_KEY;
+const SUPABASE_URL  = process.env.SUPABASE_URL  || 'https://gtwbhxnrmfmdenogzuea.supabase.co';
+const SERVICE_KEY   = process.env.SUPABASE_SERVICE_KEY;
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') { res.status(200).end(); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+
+  // ── Auth guard: require valid Supabase JWT ────────────────────────────────
+  const token = (req.headers['authorization'] || '').replace(/^Bearer\s+/i, '').trim();
+  if (!token) { res.status(401).json({ error: 'Unauthorized' }); return; }
+  const verifyR = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${token}` }
+  });
+  if (!verifyR.ok) { res.status(401).json({ error: 'Unauthorized' }); return; }
 
   const { to, subject, html, ownerName } = req.body || {};
 

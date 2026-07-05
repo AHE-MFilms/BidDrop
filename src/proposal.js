@@ -338,9 +338,11 @@ async function emailProposal() {
     const owner = (document.getElementById('e-owner')||{}).value||'Homeowner';
     const addr  = (document.getElementById('e-addr')||{}).value||'';
     const cfg   = S.cfg;
+    const { data: { session: _propSession } } = await sb.auth.getSession();
+    const _propToken = _propSession?.access_token || '';
     const res = await fetch('/api/send-proposal', {
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+_propToken},
       body: JSON.stringify({
         to: email,
         subject: `Your Roofing Proposal from ${cfg.companyName||'Your Roofer'} — ${addr}`,

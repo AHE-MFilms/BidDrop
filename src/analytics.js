@@ -9,7 +9,7 @@ async function deleteAnalyticsRow(estId, btn){
     btn.disabled = true;
     btn.textContent = '…';
     try{
-      const { error } = await sb.from('estimates').delete().eq('id', estId);
+      const { error } = await sb.from('estimates').delete().eq('id', estId).eq('account_id', currentAccount.id);
       if(error) throw error;
       const tr = btn.closest('tr');
       if(tr) tr.remove();
@@ -201,7 +201,7 @@ async function loadAnalytics(){
             '<td style="padding:9px 14px;text-align:center;color:'+(calls>0?'#A855F7':'var(--muted)')+';font-weight:'+(calls>0?'700':'400')+';">'+calls+'</td>'+
             '<td style="padding:9px 14px;text-align:center;color:var(--muted);font-size:11px;">'+firstViewed+'</td>'+
             '<td style="padding:9px 14px;text-align:center;">'+(e.id?'<a href="https://biddrop.us/'+(e.slug||'roofing')+'/'+encodeURIComponent(e.id)+'" target="_blank" style="color:var(--accent);font-size:11px;font-weight:700;text-decoration:none;">View ↗</a>':'—')+'</td>'+
-            '<td style="padding:9px 14px;text-align:center;">'+(e.id?'<button onclick="deleteAnalyticsRow(\''+e.id+'\',this)" style="background:transparent;border:1px solid #EF444455;border-radius:5px;padding:3px 8px;color:#EF4444;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">🗑</button>':'')+'</td>'+
+            '<td style="padding:9px 14px;text-align:center;">'+(e.id&&isAdminOrAbove()?'<button onclick="deleteAnalyticsRow(\''+e.id+'\',this)" style="background:transparent;border:1px solid #EF444455;border-radius:5px;padding:3px 8px;color:#EF4444;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">🗑</button>':'')+'</td>'+
           '</tr>';
         }).join('');
       } else {

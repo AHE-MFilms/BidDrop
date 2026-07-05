@@ -44,13 +44,35 @@ export default async function handler(req, res) {
       const slug = (req.query.slug || '').toLowerCase().trim();
       if (!slug) { res.status(400).json({ error: 'slug required' }); return; }
 
-      const r = await sbFetch(`accounts?slug=eq.${encodeURIComponent(slug)}&select=id,company_name,company_phone,company_addr,brand_color,logo_data,headshot,booking_url,diff1,diff2,diff3,diff4,diff5,diff6,ghl_api_key,ghl_location_id,ghl_pipeline_id,ghl_stage_id,cost_architectural,cost_3tab,cost_designer,cost_metal,cost_tearoff,cost_ice_water,cost_felts,cost_dumpster,overhead,margin,financing_enabled,financing_apr,financing_term,financing_down,years_in_business,warranty_years,rep_name,rep_title,active`);
+      const r = await sbFetch(`accounts?slug=eq.${encodeURIComponent(slug)}&select=id,company_name,company_phone,company_addr,brand_color,logo_data,headshot,booking_url,diff1,diff2,diff3,diff4,diff5,diff6,ghl_api_key,cost_architectural,cost_3tab,cost_designer,cost_metal,cost_tearoff,cost_ice_water,cost_felts,cost_dumpster,overhead,margin,financing_enabled,financing_apr,financing_term,financing_down,years_in_business,warranty_years,rep_name,rep_title,active`);
       const rows = await r.json();
       if (!rows || !rows.length) { res.status(404).json({ error: 'Account not found' }); return; }
       const acct = rows[0];
       if (!acct.active) { res.status(403).json({ error: 'Account inactive' }); return; }
 
-      // Return public-safe fields only (no GHL key in response)
+      // Server-side pricing helper — mirrors calcQuotePrice in homeowner-quote-page.js
+      // Raw cost fields are NEVER sent to the browser.
+      function serverCalcQuotePrice(sqft) {
+        if (!sqft) return 0;
+        const pitchMult = 1.118; // default 6/12 pitch
+        const complexity = 1.12;
+        const sq = sqft / 100 * 1.10 * pitchMult;
+        const matCost = parseFloat(acct.cost_architectural) || 450;
+        const tearoff = (parseFloat(acct.cost_tearoff) || 75) * sq;
+        const felts = (parseFloat(acct.cost_felts) || 22) * sq;
+        const dumpster = parseFloat(acct.cost_dumpster) || 450;
+        const labor = matCost * sq * complexity;
+        const sub = labor + tearoff + felts + dumpster;
+        const ovh = sub * (parseFloat(acct.overhead) || 15) / 100;
+        const mgn = (sub + ovh) * (parseFloat(acct.margin) || 20) / 100;
+        return Math.round(sub + ovh + mgn);
+      }
+
+      // If sqft was passed in the query, return a pre-computed price range
+      const qSqft = parseFloat(req.query.sqft) || 0;
+      const computedPrice = qSqft ? serverCalcQuotePrice(qSqft) : null;
+
+      // Return public-safe fields only — NO raw cost/overhead/margin sent to browser
       res.json({
         id: acct.id,
         companyName:   acct.company_name  || 'Your Roofing Co',
@@ -74,18 +96,9 @@ export default async function handler(req, res) {
         financingApr:  acct.financing_apr  || 9.99,
         financingTerm: acct.financing_term || 60,
         financingDown: acct.financing_down || 0,
-        // Pricing config for client-side estimate calc
-        costArchitectural: acct.cost_architectural || 450,
-        cost3Tab:          acct.cost_3tab           || 350,
-        costDesigner:      acct.cost_designer       || 620,
-        costMetal:         acct.cost_metal          || 950,
-        costTearoff:       acct.cost_tearoff        || 75,
-        costIceWater:      acct.cost_ice_water      || 42,
-        costFelts:         acct.cost_felts          || 22,
-        costDumpster:      acct.cost_dumpster       || 450,
-        overhead:          acct.overhead            || 15,
-        margin:            acct.margin              || 20,
         hasGhl: !!(acct.ghl_api_key),
+        // Pre-computed price (only present when sqft was provided)
+        ...(computedPrice ? { computedPrice } : {}),
       });
       return;
     }
@@ -95,12 +108,30 @@ export default async function handler(req, res) {
       const { slug, name, phone, email, address, sqft, total, lat, lon, mat } = req.body;
       if (!slug || !address) { res.status(400).json({ error: 'slug and address required' }); return; }
 
-      // Look up account
-      const acctR = await sbFetch(`accounts?slug=eq.${encodeURIComponent(slug.toLowerCase())}&select=id,ghl_api_key,ghl_location_id,ghl_pipeline_id,ghl_stage_id,company_name`);
+      // Look up account (include pricing fields to recompute total server-side)
+      const acctR = await sbFetch(`accounts?slug=eq.${encodeURIComponent(slug.toLowerCase())}&select=id,ghl_api_key,ghl_location_id,ghl_pipeline_id,ghl_stage_id,ghl_stage_map_json,company_name,cost_architectural,cost_tearoff,cost_felts,cost_dumpster,overhead,margin`);
       const acctRows = await acctR.json();
       if (!acctRows || !acctRows.length) { res.status(404).json({ error: 'Account not found' }); return; }
       const acct = acctRows[0];
       const accountId = acct.id;
+
+      // Recompute total server-side — never trust the browser-sent value
+      function serverCalcTotal(sqftVal) {
+        if (!sqftVal) return 0;
+        const pitchMult = 1.118;
+        const complexity = 1.12;
+        const sq = sqftVal / 100 * 1.10 * pitchMult;
+        const matCost = parseFloat(acct.cost_architectural) || 450;
+        const tearoffCost = (parseFloat(acct.cost_tearoff) || 75) * sq;
+        const feltsCost = (parseFloat(acct.cost_felts) || 22) * sq;
+        const dumpsterCost = parseFloat(acct.cost_dumpster) || 450;
+        const labor = matCost * sq * complexity;
+        const sub = labor + tearoffCost + feltsCost + dumpsterCost;
+        const ovh = sub * (parseFloat(acct.overhead) || 15) / 100;
+        const mgn = (sub + ovh) * (parseFloat(acct.margin) || 20) / 100;
+        return Math.round(sub + ovh + mgn);
+      }
+      const serverTotal = serverCalcTotal(parseFloat(sqft) || 0);
       const now = new Date().toISOString();
       const pinId = `web-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
 
@@ -129,7 +160,7 @@ export default async function handler(req, res) {
         owner: name || 'Homeowner',
         email: email || null,
         phone: phone || null,
-        total: total || 0,
+        total: serverTotal || 0,
         sqft: sqft || 0,
         mat: mat || '1.3',
         saved_at: now,
@@ -155,7 +186,7 @@ export default async function handler(req, res) {
             tags: ['web-quote', 'biddrop'],
             customFields: [
               { key: 'roof_sqft',    field_value: String(sqft  || '') },
-              { key: 'estimate_total', field_value: total ? `$${Number(total).toLocaleString()}` : '' },
+              { key: 'estimate_total', field_value: serverTotal ? `$${serverTotal.toLocaleString()}` : '' },
               { key: 'source',       field_value: 'BidDrop Web Quote' },
             ],
           };

@@ -70,8 +70,8 @@ async function handle(action, req, res, ctx) {
           return;
         }
 
-        // Resolve which account to use
-        const acctId = ghlAcctId || effectiveAccountId;
+        // Resolve which account to use — non-super-admins can only use their own account
+        const acctId = (isSuperAdmin && ghlAcctId) ? ghlAcctId : effectiveAccountId;
         if (!acctId) { res.status(400).json({ error: 'accountId required' }); return; }
 
         // Fetch the account's GHL credentials - prefer OAuth token, fall back to manual API key
@@ -87,8 +87,9 @@ async function handle(action, req, res, ctx) {
           const fiveMinFromNow = new Date(Date.now() + 5 * 60 * 1000);
           if (expiresAt < fiveMinFromNow && acct.ghl_oauth_refresh_token) {
             try {
-              const GHL_CLIENT_ID     = process.env.GHL_CLIENT_ID     || '69f796d2528efc733a30a9ab-moq4vxxq';
-              const GHL_CLIENT_SECRET = process.env.GHL_CLIENT_SECRET || 'dbc9f4c7-ca65-425d-800b-b43ec6a82643';
+              const GHL_CLIENT_ID     = process.env.GHL_CLIENT_ID;
+              const GHL_CLIENT_SECRET = process.env.GHL_CLIENT_SECRET;
+              if (!GHL_CLIENT_ID || !GHL_CLIENT_SECRET) { res.status(500).json({ error: 'GHL OAuth credentials not configured' }); return; }
               const refreshParams = new URLSearchParams({
                 client_id: GHL_CLIENT_ID, client_secret: GHL_CLIENT_SECRET,
                 grant_type: 'refresh_token', refresh_token: acct.ghl_oauth_refresh_token

@@ -628,10 +628,16 @@ async function initQuotePage(slug) {
   }
 
   // ── Step 1 → 2 ────────────────────────────────────────────────────────────
-  window.qStep1Next = function() {
+  window.qStep1Next = async function() {
     if (!qSelectedAddress) return;
-    // Calculate price
-    qTotal = calcQuotePrice(qSqft, cfg);
+    // Fetch server-computed price (overhead/margin never exposed to browser)
+    try {
+      const priceRes = await fetch(`/api/quote?action=account&slug=${encodeURIComponent(slug)}&sqft=${encodeURIComponent(qSqft)}`);
+      const priceData = await priceRes.json();
+      qTotal = priceData.computedPrice || calcQuotePrice(qSqft, cfg); // fallback to client calc
+    } catch (e) {
+      qTotal = calcQuotePrice(qSqft, cfg); // network fallback
+    }
     const low = Math.round(qTotal * 0.85 / 100) * 100;
     const high = Math.round(qTotal * 1.15 / 100) * 100;
     document.getElementById('q-price-range').textContent = `$${low.toLocaleString()} – $${high.toLocaleString()}`;

@@ -58,9 +58,11 @@ async function jnTestConnection(){
   if(!apiKey){ if(statusEl) statusEl.textContent='⚠️ Enter an API key first'; return; }
   if(statusEl){ statusEl.textContent='Testing…'; statusEl.style.color='var(--muted)'; }
   try{
+    const { data: { session: _jnTestSess } } = await sb.auth.getSession();
+    const _jnTestTok = _jnTestSess?.access_token || '';
     const res = await fetch('/api/jobnimbus', {
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+_jnTestTok},
       body: JSON.stringify({ action:'test_connection', apiKey })
     });
     const data = await res.json();
@@ -110,9 +112,11 @@ async function jnUpsertContact(pin){
     let jnContactId = pin.jnContactId || null;
     if(jnContactId){
       // Update existing contact
+      const { data: { session: _jnUpdSess } } = await sb.auth.getSession();
+      const _jnUpdTok = _jnUpdSess?.access_token || '';
       const res = await fetch('/api/jobnimbus', {
         method:'POST',
-        headers:{'Content-Type':'application/json'},
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+_jnUpdTok},
         body: JSON.stringify({ action:'update_contact', apiKey, jnid: jnContactId, contactBody })
       });
       const data = await res.json();
@@ -120,9 +124,11 @@ async function jnUpsertContact(pin){
       return jnContactId;
     } else {
       // Create new contact
+      const { data: { session: _jnCrSess } } = await sb.auth.getSession();
+      const _jnCrTok = _jnCrSess?.access_token || '';
       const res = await fetch('/api/jobnimbus', {
         method:'POST',
-        headers:{'Content-Type':'application/json'},
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+_jnCrTok},
         body: JSON.stringify({ action:'create_contact', apiKey, contactBody })
       });
       const data = await res.json();

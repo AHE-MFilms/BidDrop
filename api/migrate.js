@@ -20,9 +20,11 @@ async function sbFetch(path, opts = {}) {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   
-  // Security check - require a secret token
+  // Security check - require a secret token from env var (fail-closed if not set)
+  const MIGRATE_SECRET = process.env.MIGRATE_SECRET;
+  if (!MIGRATE_SECRET) { res.status(500).json({ error: 'MIGRATE_SECRET not configured' }); return; }
   const token = req.query.token || req.headers['x-migrate-token'];
-  if (token !== 'biddrop-migrate-2026') {
+  if (token !== MIGRATE_SECRET) {
     res.status(401).json({ error: 'Unauthorized' });
     return;
   }

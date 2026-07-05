@@ -12,7 +12,9 @@
  *     - Shading analysis per segment (sunshineHours, shadingFactor)
  *     - Individual roof segment breakdown
  */
-const GOOGLE_SOLAR_KEY = process.env.GOOGLE_SOLAR_KEY || 'AIzaSyAHE4rd0eFE-lQc9HbfObPq3virNnc9mRY';
+const GOOGLE_SOLAR_KEY = process.env.GOOGLE_SOLAR_KEY;
+const SUPABASE_URL     = process.env.SUPABASE_URL || 'https://gtwbhxnrmfmdenogzuea.supabase.co';
+const SERVICE_KEY      = process.env.SUPABASE_SERVICE_KEY;
 
 function cors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -57,6 +59,16 @@ export default async function handler(req, res) {
   cors(res);
   if (req.method === 'OPTIONS') { res.status(200).end(); return; }
   if (req.method !== 'GET') { res.status(405).json({ error: 'Method not allowed' }); return; }
+
+  // ── Auth guard: require valid Supabase JWT ──────────────────────────────────
+  const solarToken = (req.headers['authorization'] || '').replace(/^Bearer\s+/i, '').trim();
+  if (!solarToken) { res.status(401).json({ error: 'Unauthorized' }); return; }
+  const solarVerify = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${solarToken}` }
+  });
+  if (!solarVerify.ok) { res.status(401).json({ error: 'Unauthorized' }); return; }
+
+  if (!GOOGLE_SOLAR_KEY) { res.status(500).json({ status: 'unavailable', message: 'Solar API not configured' }); return; }
 
   const { lat, lng } = req.query;
   if (!lat || !lng) { res.status(400).json({ error: 'lat and lng are required' }); return; }

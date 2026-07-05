@@ -9,7 +9,7 @@ const RENTCAST_KEY   = process.env.RENTCAST_API_KEY;
 const AGENCY_ACCT_ID = process.env.AGENCY_ACCOUNT_ID;
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const SUPABASE_PAT   = process.env.SUPABASE_PAT;
-const TRACERFY_KEY   = process.env.TRACERFY_API_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjozMjUwNTk2MTEzLCJpYXQiOjE3ODE3OTYxMTMsImp0aSI6ImFhYmIyYjc1OWE2MzQ3NjViNDVhZWFjMTA3ZmFhYzI3IiwidXNlcl9pZCI6ODI2OH0.ymqyjLor60uQpotAKibSzV5XMYeOG_CsmkGzGMDARLo';
+const TRACERFY_KEY   = process.env.TRACERFY_API_KEY; // Must be set in Vercel env vars
 
 const _rateBuckets = new Map();
 function _checkRate(key, maxCalls, windowMs) {

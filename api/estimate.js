@@ -187,6 +187,40 @@ export default async function handler(req, res) {
         try { damagePhotos = JSON.parse(damagePhotos); } catch { damagePhotos = null; }
       }
 
+      // Compute per-material prices server-side — raw cost/overhead/margin never sent to browser
+      function serverComputePrice(structures, matKey) {
+        if (!structures || !structures.length) return 0;
+        const costMap = {
+          '1.0': parseFloat(acct.cost_3tab)          || 220,
+          '1.3': parseFloat(acct.cost_architectural) || 450,
+          '1.8': parseFloat(acct.cost_designer)      || 620,
+          '2.5': parseFloat(acct.cost_metal)         || 950,
+        };
+        const matCost  = costMap[matKey] || costMap['1.3'];
+        const tearoff  = parseFloat(acct.cost_tearoff)  || 75;
+        const iceWater = parseFloat(acct.cost_ice_water) || 42;
+        const felts    = parseFloat(acct.cost_felts)    || 22;
+        const dumpster = parseFloat(acct.cost_dumpster) || 450;
+        const overhead = (parseFloat(acct.overhead) || 15) / 100;
+        const margin   = (parseFloat(acct.margin)   || 20) / 100;
+        let subtotal = dumpster;
+        structures.forEach(s => {
+          const sqft = parseFloat(s.sqft) || 0; if (!sqft) return;
+          const pitchMult = parseFloat(s.pitch) || 1.15;
+          const complexity = parseFloat(s.complexity) || 1.12;
+          const sq = sqft / 100 * 1.12 * pitchMult;
+          subtotal += sq * (matCost + tearoff + iceWater + felts) * complexity;
+        });
+        return Math.round(subtotal * (1 + overhead) * (1 + margin));
+      }
+      const structuresForCalc = (typeof est.structures === 'string' ? JSON.parse(est.structures || '[]') : est.structures) || [];
+      const serverPrices = {
+        '1.0': serverComputePrice(structuresForCalc, '1.0'),
+        '1.3': serverComputePrice(structuresForCalc, '1.3'),
+        '1.8': serverComputePrice(structuresForCalc, '1.8'),
+        '2.5': serverComputePrice(structuresForCalc, '2.5'),
+      };
+
       res.json({
         estimate: {
           id:          est.id,
@@ -240,16 +274,8 @@ export default async function handler(req, res) {
           financingApr:  acct.financing_apr  || 9.99,
           financingTerm: acct.financing_term || 60,
           financingDown: acct.financing_down || 0,
-          costArchitectural: acct.cost_architectural || 450,
-          cost3Tab:          acct.cost_3tab           || 350,
-          costDesigner:      acct.cost_designer       || 620,
-          costMetal:         acct.cost_metal          || 950,
-          costTearoff:       acct.cost_tearoff        || 75,
-          costIceWater:      acct.cost_ice_water      || 42,
-          costFelts:         acct.cost_felts          || 22,
-          costDumpster:      acct.cost_dumpster       || 450,
-          overhead:          acct.overhead            || 15,
-          margin:            acct.margin              || 20,
+          // Server-computed per-material prices — raw cost/overhead/margin NOT sent to browser
+          prices:            serverPrices,
           estimatePageCountdown: acct.estimate_page_countdown || false,
           estimatePageExpiresDays: acct.estimate_page_expires_days || null,
           companyBio: acct.company_bio || '',

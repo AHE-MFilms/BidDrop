@@ -91,11 +91,10 @@ export default async function handler(req, res) {
   if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
-  // Verify cron secret — same pattern as cron-drip.js and cron-purge-trash.js
+  // Verify cron secret — fail-closed (reject if CRON_SECRET not configured)
+  if (!CRON_SECRET) { return res.status(500).json({ error: 'CRON_SECRET not configured' }); }
   const authHeader = (req.headers['authorization'] || '').trim();
-  if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}`) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+  if (authHeader !== `Bearer ${CRON_SECRET}`) { return res.status(401).json({ error: 'Unauthorized' }); }
 
   const now    = new Date();
   const nowIso = now.toISOString();

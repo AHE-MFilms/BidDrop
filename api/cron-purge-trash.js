@@ -26,11 +26,10 @@ function sbFetch(path, opts = {}) {
 }
 
 export default async function handler(req, res) {
-  // Verify cron secret
+  // Verify cron secret — fail-closed (reject if CRON_SECRET not configured)
+  if (!CRON_SECRET) { return res.status(500).json({ error: 'CRON_SECRET not configured' }); }
   const auth = req.headers['authorization'] || '';
-  if (CRON_SECRET && auth !== `Bearer ${CRON_SECRET}`) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+  if (auth !== `Bearer ${CRON_SECRET}`) { return res.status(401).json({ error: 'Unauthorized' }); }
 
   const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
   const log = [];

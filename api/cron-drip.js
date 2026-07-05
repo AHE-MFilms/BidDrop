@@ -214,14 +214,11 @@ async function refundCredit(accountId, acct, freeToUse, paidToUse) {
 
 // ── Main cron handler ─────────────────────────────────────────────────────────
 export default async function handler(req, res) {
-  // Security: verify cron secret
-  if (CRON_SECRET) {
-    const authHeader = req.headers['authorization'] || '';
-    const token = authHeader.replace(/^Bearer\s+/i, '').trim();
-    if (token !== CRON_SECRET) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-  }
+  // Security: verify cron secret — fail-closed (reject if CRON_SECRET not configured)
+  if (!CRON_SECRET) { return res.status(500).json({ error: 'CRON_SECRET not configured' }); }
+  const authHeader = req.headers['authorization'] || '';
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+  if (token !== CRON_SECRET) { return res.status(401).json({ error: 'Unauthorized' }); }
 
   console.log('[cron-drip] Starting drip cron at', new Date().toISOString());
 

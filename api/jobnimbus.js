@@ -5,14 +5,14 @@
  * Uses the JobNimbus legacy REST API: https://app.jobnimbus.com/api1
  *
  * POST /api/jobnimbus
+ *   headers: Authorization: Bearer <supabase_jwt>
  *   body: { action, apiKey, ...params }
  *
  * Actions:
  *   create_contact  — POST /contacts
  *   update_contact  — PUT  /contacts/:jnid
  *   get_contact     — GET  /contacts/:jnid
- *
- * Auth: Bearer token in Authorization header (JobNimbus API key)
+ *   test_connection — GET  /contacts?size=1
  *
  * Required contact fields for POST:
  *   - first_name OR last_name OR display_name OR company (at least one)
@@ -23,18 +23,28 @@
  *                  source_name, tags, geo { lat, lon }
  */
 
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://gtwbhxnrmfmdenogzuea.supabase.co';
+const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
+const JN_BASE      = 'https://app.jobnimbus.com/api1';
+
 function cors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
 
-const JN_BASE = 'https://app.jobnimbus.com/api1';
-
 export default async function handler(req, res) {
   cors(res);
   if (req.method === 'OPTIONS') { res.status(200).end(); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+
+  // ── Auth guard: require valid Supabase JWT ────────────────────────────────
+  const jnToken = (req.headers['authorization'] || '').replace(/^Bearer\s+/i, '').trim();
+  if (!jnToken) { res.status(401).json({ error: 'Unauthorized' }); return; }
+  const jnVerify = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${jnToken}` }
+  });
+  if (!jnVerify.ok) { res.status(401).json({ error: 'Unauthorized' }); return; }
 
   const { action, apiKey, jnid, contactBody } = req.body || {};
 

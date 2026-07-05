@@ -52,6 +52,16 @@ export default async function handler(req, res) {
 
   const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
 
+  // ── AUTH GUARD for all write actions (save/delete/publish/unpublish/reorder/seed) ──
+  if (['save', 'delete', 'publish', 'unpublish', 'reorder', 'seed'].includes(action)) {
+    const authToken = (req.headers['authorization'] || '').replace(/^Bearer /i, '').trim();
+    if (!authToken) return res.status(403).json({ error: 'forbidden: no token' });
+    const verifyR = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${authToken}` }
+    });
+    if (!verifyR.ok) return res.status(403).json({ error: 'forbidden: invalid token' });
+  }
+
   // ── SAVE: POST /api/canvas { action:'save', template:{...} } ──────────────
   if (action === 'save') {
     const { template } = body;

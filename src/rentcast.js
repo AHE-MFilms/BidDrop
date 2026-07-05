@@ -294,7 +294,11 @@ async function fetchSolarData(lat, lng){
   // 3. Call Google Solar API (costs $0.005)
   _solarFetchInFlight[key] = (async () => {
     try{
-      const res = await fetch('/api/solar?lat='+lat+'&lng='+lng);
+      const { data: { session: _solarSession } } = await sb.auth.getSession();
+      const _solarToken = _solarSession?.access_token || '';
+      const res = await fetch('/api/solar?lat='+lat+'&lng='+lng, {
+        headers: { 'Authorization': 'Bearer ' + _solarToken }
+      });
       if(!res.ok) return null;
       const data = await res.json();
       // 4. Persist result to Supabase so future calls are free
