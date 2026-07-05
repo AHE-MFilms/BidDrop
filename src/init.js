@@ -328,12 +328,16 @@ function openBlitzFromQueue(queueId){
     (item.addr && e.addr && e.addr.trim().toLowerCase()===item.addr.trim().toLowerCase())
   );
   if(!est){ toast('Estimate not found — please open the estimate directly and use the Follow-Up Blitz button there.','error'); return; }
-  openDripModal(est.id);
+  // Pass paidByUnlock flag so the Blitz modal shows/charges 2 credits instead of 3
+  const paidByUnlock = !!(item.source === 'unlock' || (item.id && item.id.startsWith('mq_unlock_')));
+  openDripModal(est.id, paidByUnlock);
 }
-function openDripModal(estId){
+let _dripPaidByUnlock = false;
+function openDripModal(estId, paidByUnlock){
   const est = (S.estimates||[]).find(e=>e.id===estId);
   if(!est){ toast('Estimate not found','error'); return; }
   _dripEstId = estId;
+  _dripPaidByUnlock = !!paidByUnlock;
   const lbl = document.getElementById('drip-est-label');
   if(lbl){
     let txt = (est.addr||'Unknown address') + ' — ' + (est.owner||'Homeowner') + ' — $'+(est.total||0).toLocaleString();
@@ -399,11 +403,12 @@ function refreshDripModal(){
     }).join('');
     stepsEl.innerHTML = step1Card + followUpCards;
   }
-  // Blitz is always 3 credits for the full sequence (bundle pricing)
-  const BLITZ_BUNDLE_CREDITS = 3;
+  // Credits: 2 if today's postcard is already covered by unlock, 3 for a fresh start
+  const BLITZ_BUNDLE_CREDITS = _dripPaidByUnlock ? 2 : 3;
   const noteEl = document.getElementById('drip-credit-note');
   if(noteEl){
-    noteEl.innerHTML = '🔥 <strong>'+(seq?escHtml(seq.name):'Sequence')+'</strong> — '+totalPostcards+' postcards total (Step 1 sends today + '+steps.length+' follow-ups over '+lastDay+' days). <strong style="color:#4ade80;">'+BLITZ_BUNDLE_CREDITS+' credits total.</strong> All steps scheduled automatically.';
+    const unlockNote = _dripPaidByUnlock ? ' (Step 1 included with unlock — free)' : '';
+    noteEl.innerHTML = '🔥 <strong>'+(seq?escHtml(seq.name):'Sequence')+'</strong> — '+totalPostcards+' postcards total (Step 1 sends today + '+steps.length+' follow-ups over '+lastDay+' days). <strong style="color:#4ade80;">'+BLITZ_BUNDLE_CREDITS+' credits total'+unlockNote+'.</strong> All steps scheduled automatically.';
   }
   const btn = document.getElementById('drip-start-btn');
   if(btn) btn.textContent = '🔥 Start Blitz — '+BLITZ_BUNDLE_CREDITS+' Credits · '+totalPostcards+' Postcards Total';
@@ -420,11 +425,12 @@ async function startDripSequence(){
   const seq = seqs.find(s=>s.id===selId) || seqs[0];
   const seqSteps = (seq && seq.steps && seq.steps.filter(s=>s.enabled!==false)) || [];
   if(!seqSteps.length){ toast('No enabled steps in this sequence','error'); return; }
-  // Credits = 1 per postcard step (all deducted upfront as a bundle)
-  const BLITZ_CREDITS = seqSteps.length;
+  // Credits: 2 if today's postcard is already covered by unlock, otherwise 1 per step
+  // _dripPaidByUnlock is set when the Blitz is triggered from the Send Postcard modal on an unlocked pin
+  const BLITZ_CREDITS = _dripPaidByUnlock ? 2 : seqSteps.length;
   const paid = S.cfg.mailerCredits || 0;
   if(paid < BLITZ_CREDITS){
-    toast('Need '+BLITZ_CREDITS+' credits for this Blitz ('+seqSteps.length+' postcards). You have '+paid+'.','error');
+    toast('Need '+BLITZ_CREDITS+' credits for this Blitz. You have '+paid+'.','error');
     setTimeout(()=>showBuyCreditsModal(), 800);
     return;
   }
@@ -477,7 +483,8 @@ async function startDripSequence(){
   save();
   closeM('m-drip');
   renderEstimatesTab();
-  toast('🔥 Follow-Up Blitz started! '+(seq?escHtml(seq.name)+' — ':'')+seqSteps.length+' postcard'+(seqSteps.length!==1?'s':'')+' scheduled. '+BLITZ_CREDITS+' credits charged.','success');
+  const unlockMsg = _dripPaidByUnlock ? ' (Step 1 free with unlock)' : '';
+  toast('🔥 Follow-Up Blitz started! '+(seq?escHtml(seq.name)+' — ':'')+seqSteps.length+' postcard'+(seqSteps.length!==1?'s':'')+' scheduled. '+BLITZ_CREDITS+' credits charged'+unlockMsg+'.','success');
 }
 
 function addEstimateToMailQueueWithDripTag(est, stepNum){

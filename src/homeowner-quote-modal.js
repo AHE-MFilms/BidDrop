@@ -19,6 +19,11 @@ function openSendPostcardModal(queueId){
   }
   // Store for use in spmSelect
   window._spmPaidByUnlock = paidByUnlock;
+  // Update blitz cost display — 2 credits if unlock covers today's postcard, 3 otherwise
+  const blitzCostEl = document.getElementById('spm-blitz-cost');
+  if(blitzCostEl){
+    blitzCostEl.textContent = paidByUnlock ? '2 credits' : '3 credits';
+  }
   // Reset selection state
   ['single','blitz'].forEach(k=>{
     const el = document.getElementById('spm-opt-'+k);
@@ -80,7 +85,9 @@ function spmSelect(choice){
       btn.textContent = window._spmPaidByUnlock ? '🏠 Send Postcard — FREE (included with unlock)' : '🏠 Send 1 Postcard — 1 Credit';
       btn.style.background='var(--accent)';
     } else {
-      btn.textContent='🔥 Start Follow-Up Blitz — 3 Credits (5 Postcards Total)';
+      btn.textContent = window._spmPaidByUnlock
+        ? '🔥 Start Follow-Up Blitz — 2 Credits (5 Postcards Total)'
+        : '🔥 Start Follow-Up Blitz — 3 Credits (5 Postcards Total)';
       btn.style.background='#7C3AED';
     }
     btn.style.opacity='1'; btn.style.pointerEvents='auto';
