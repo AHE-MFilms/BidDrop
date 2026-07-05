@@ -237,7 +237,7 @@ async function doSetNewPassword(){
   const pw2  = document.getElementById('new-pw-confirm').value;
   const btn  = document.getElementById('set-pw-btn');
   const msg  = document.getElementById('set-pw-msg');
-  if(!pw1 || pw1.length < 6){ msg.style.color='var(--danger)'; msg.textContent='Password must be at least 6 characters.'; return; }
+  if(!pw1 || pw1.length < 8){ msg.style.color='var(--danger)'; msg.textContent='Password must be at least 8 characters.'; return; }
   if(pw1 !== pw2){ msg.style.color='var(--danger)'; msg.textContent='Passwords do not match.'; return; }
   btn.textContent = 'Updating...'; btn.disabled = true; msg.textContent = '';
   try {

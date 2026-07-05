@@ -64,6 +64,10 @@ async function handle(action, req, res, ctx) {
       case 'ghl': {
         const { path, method: ghlMethod = 'GET', body: ghlBody, accountId: ghlAcctId } = req.body;
         if (!path) { res.status(400).json({ error: 'path required' }); return; }
+        // SSRF guard: path must be a relative GHL API path (no protocol, no host injection)
+        if (typeof path !== 'string' || !path.startsWith('/') || /[\r\n]|:\/\//.test(path)) {
+          res.status(400).json({ error: 'Invalid path: must be a relative GHL API path starting with /' }); return;
+        }
         // Safety guard: BidDrop must never delete anything in GHL
         if (ghlMethod && ghlMethod.toUpperCase() === 'DELETE') {
           res.status(403).json({ error: 'DELETE operations are not permitted via the BidDrop GHL proxy.' });

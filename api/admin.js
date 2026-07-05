@@ -60,6 +60,17 @@ module.exports = async function handler(req, res) {
   if (!profile) { res.status(403).json({ error: 'No profile found' }); return; }
   const isSuperAdmin = profile.role === 'super_admin';
   const isAdmin      = profile.role === 'admin' || isSuperAdmin;
+  // Server-side account active check — prevents deactivated accounts from using the API
+  // even if they somehow retain a valid JWT. Super admins are exempt.
+  if (!isSuperAdmin && profile.account_id) {
+    const acctActiveR = await sbFetch(`accounts?id=eq.${profile.account_id}&select=active&limit=1`);
+    if (acctActiveR.ok) {
+      const acctRows = await acctActiveR.json();
+      if (acctRows[0] && acctRows[0].active === false) {
+        res.status(403).json({ error: 'Account deactivated' }); return;
+      }
+    }
+  }
   const viewingAccountId = req.body?.viewingAccountId || null;
   const effectiveAccountId = (isSuperAdmin && viewingAccountId) ? viewingAccountId : profile.account_id;
   const ctx = { profile, isSuperAdmin, isAdmin, effectiveAccountId, caller };

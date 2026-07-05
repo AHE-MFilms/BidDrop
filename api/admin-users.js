@@ -265,6 +265,16 @@ async function handle(action, req, res, ctx) {
         if (!isSuperAdmin && effectiveAccountId !== accountId) {
           res.status(403).json({ error: 'Cannot modify another account' }); return;
         }
+        // Field allowlist — non-super-admins cannot escalate plan, credits, or active status
+        const SUPER_ONLY_FIELDS = ['plan', 'active', 'mailer_credits', 'mailer_rate', 'tracerfy_enabled',
+          'blitz_promo_enabled', 'blitz_promo_config', 'onboarding_steps_json', 'blitz_prepaid'];
+        if (!isSuperAdmin) {
+          for (const field of SUPER_ONLY_FIELDS) {
+            if (field in updates) {
+              res.status(403).json({ error: `Field '${field}' can only be modified by super admins` }); return;
+            }
+          }
+        }
         const r = await sbFetch(`accounts?id=eq.${accountId}`, {
           method: 'PATCH',
           headers: { 'Prefer': 'return=representation' },
