@@ -101,10 +101,11 @@ function calcP(){
   if(document.getElementById('a-chim')&&document.getElementById('a-chim').checked)
     grand+=(parseFloat(c.costChimney)||295);
   if(document.getElementById('a-gut')&&document.getElementById('a-gut').checked)
-    grand+=(parseFloat(c.costGutter)||9)*(parseInt(document.getElementById('a-gut-q')?.value||'120')||120);
+    grand+=Math.round((parseFloat(c.costGutter)||9)*(parseInt(document.getElementById('a-gut-q')?.value||'120')||120));
   if(document.getElementById('a-iws')&&document.getElementById('a-iws').checked)
-    grand+=(parseFloat(c.costIceWater)||42)*structures.reduce(function(sum,s){var sqft=parseFloat(s.sqft)||0;var pitchMult=parseFloat(s.pitch)||1.118;return sum+(sqft/100*1.10*pitchMult);},0);
+    grand+=Math.round((parseFloat(c.costIceWater)||42)*structures.reduce(function(sum,s){var sqft=parseFloat(s.sqft)||0;var pitchMult=parseFloat(s.pitch)||1.118;return sum+(sqft/100*1.10*pitchMult);},0));
   grand+=getSolarPrice();
+  grand=Math.round(grand); // ensure no floating point cents bleed through
   // Show override price in the display if active
   const overrideVal = window._priceOverrideOn ? (parseFloat((document.getElementById('e-price-override')||{}).value)||0) : 0;
   const displayTotal = (window._priceOverrideOn && overrideVal > 0) ? overrideVal : grand;
