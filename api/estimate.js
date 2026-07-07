@@ -163,7 +163,7 @@ export default async function handler(req, res) {
       }
 
       // Fetch account config
-      const acctR = await sbFetch(`accounts?id=eq.${encodeURIComponent(est.account_id)}&select=id,company_name,company_phone,company_addr,brand_color,logo_data,headshot,rep_name,rep_title,booking_url,diff1,diff2,diff3,diff4,diff5,diff6,years_in_business,warranty_years,financing_enabled,financing_apr,financing_term,financing_down,cost_architectural,cost_3tab,cost_designer,cost_impact,cost_metal,cost_flat,cost_tile,cost_tearoff,cost_ice_water,cost_felts,cost_dumpster,overhead,margin,estimate_page_expires_days,estimate_page_countdown,active,company_bio,pricing_config_json`);
+      const acctR = await sbFetch(`accounts?id=eq.${encodeURIComponent(est.account_id)}&select=id,company_name,company_phone,company_addr,brand_color,logo_data,headshot,rep_name,rep_title,booking_url,diff1,diff2,diff3,diff4,diff5,diff6,years_in_business,warranty_years,financing_enabled,financing_apr,financing_term,financing_down,cost_architectural,cost_3tab,cost_designer,cost_tearoff,cost_ice_water,cost_felts,cost_dumpster,overhead,margin,estimate_page_expires_days,estimate_page_countdown,active,company_bio,pricing_config_json`);
       const acctRows = await acctR.json();
       if (!acctRows || !acctRows.length) { res.status(404).json({ error: 'Account not found' }); return; }
       const acct = acctRows[0];
