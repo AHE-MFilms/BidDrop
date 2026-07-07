@@ -417,7 +417,6 @@ async function ghlUpsertContact(name, address, email, existingContactId, pinId, 
   if(phone){
     const digits = phone.replace(/\D/g,'');
     postBody.phone = digits.length===10 ? '+1'+digits : (digits.length===11&&digits[0]==='1' ? '+'+digits : phone);
-    putBody.phone = postBody.phone;
   }
   // PUT body must NOT include locationId — GHL returns 422 if it's present on update
   const putBody = {
@@ -430,6 +429,8 @@ async function ghlUpsertContact(name, address, email, existingContactId, pinId, 
     country:    'US',
     tags:       ['biddrop-lead','canvass']
   };
+  // Sync phone to putBody now that it's declared
+  if(postBody.phone) putBody.phone = postBody.phone;
   // NOTE: email NOT in putBody — sent separately to avoid GHL 400 on first-time email add
 
   // Helper: try PUT update; if GHL returns 400/404 (stale/deleted contact), fall through to POST
