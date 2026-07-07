@@ -136,6 +136,39 @@ async function syncAccountToSupabase(){
   if(cfg.blitzSequences !== undefined)        b10payload.blitz_sequences          = cfg.blitzSequences ? JSON.stringify(cfg.blitzSequences) : null;
   // Onboarding checklist (Build 14)
   if(cfg.onboardingSteps !== undefined)       b10payload.onboarding_steps_json    = cfg.onboardingSteps ? JSON.stringify(cfg.onboardingSteps) : null;
+  // Pricing config (Build 16) — pricingMode, per-square rates, GBB settings, material checkboxes
+  b10payload.pricing_config_json = JSON.stringify({
+    pricingMode: cfg.pricingMode||'detailed',
+    pricePerSquare: cfg.pricePerSquare||450,
+    ppsArchitectural: cfg.ppsArchitectural||450,
+    ppsDesigner: cfg.ppsDesigner||580,
+    ppsImpact: cfg.ppsImpact||520,
+    ppsMetal: cfg.ppsMetal||950,
+    ppsFlat: cfg.ppsFlat||400,
+    ppsTile: cfg.ppsTile||1400,
+    matArch: cfg.matArch!==false,
+    matDes: !!cfg.matDes,
+    matImpact: !!cfg.matImpact,
+    matMetal: !!cfg.matMetal,
+    matFlat: !!cfg.matFlat,
+    matTile: !!cfg.matTile,
+    gbbGoodLabel: cfg.gbbGoodLabel||'Good',
+    gbbGoodMatKey: cfg.gbbGoodMatKey||'1.3',
+    gbbGoodMat: cfg.gbbGoodMat||'Architectural Shingle',
+    gbbGoodColor: cfg.gbbGoodColor||'#22C55E',
+    gbbGoodDesc: cfg.gbbGoodDesc||'Standard performance, 25-yr warranty',
+    gbbBetterLabel: cfg.gbbBetterLabel||'Better',
+    gbbBetterMatKey: cfg.gbbBetterMatKey||'1.5',
+    gbbBetterMat: cfg.gbbBetterMat||'Impact-Resistant (Class 4)',
+    gbbBetterColor: cfg.gbbBetterColor||'#F25C05',
+    gbbBetterDesc: cfg.gbbBetterDesc||'Hail protection, insurance discount',
+    gbbBestLabel: cfg.gbbBestLabel||'Best',
+    gbbBestMatKey: cfg.gbbBestMatKey||'1.8',
+    gbbBestMat: cfg.gbbBestMat||'Designer / Premium',
+    gbbBestColor: cfg.gbbBestColor||'#A855F7',
+    gbbBestDesc: cfg.gbbBestDesc||'Lifetime warranty, premium curb appeal',
+    gbbDefault: cfg.gbbDefault||'better'
+  });
   if(Object.keys(b10payload).length){
     const {error: b10Err} = await sb.from('accounts').update(b10payload).eq('id', currentAccount.id);
     if(b10Err) console.warn('[BidDrop] Build 10 columns not yet migrated (run Admin → Run Migration):', b10Err.message);
@@ -299,5 +332,44 @@ function accountRowToCfg(row){
     blitzSequences: row.blitz_sequences ? (typeof row.blitz_sequences==='string' ? JSON.parse(row.blitz_sequences) : row.blitz_sequences) : null,
     // ── Onboarding checklist (Build 14) ──
     onboardingSteps: row.onboarding_steps_json ? (typeof row.onboarding_steps_json==='string' ? JSON.parse(row.onboarding_steps_json) : row.onboarding_steps_json) : null,
+    // ── Pricing config (Build 16) ──
+    ...((()=>{
+      try{
+        const pc = row.pricing_config_json ? (typeof row.pricing_config_json==='string' ? JSON.parse(row.pricing_config_json) : row.pricing_config_json) : null;
+        if(!pc) return {};
+        return {
+          pricingMode: pc.pricingMode||'detailed',
+          pricePerSquare: pc.pricePerSquare||450,
+          ppsArchitectural: pc.ppsArchitectural||450,
+          ppsDesigner: pc.ppsDesigner||580,
+          ppsImpact: pc.ppsImpact||520,
+          ppsMetal: pc.ppsMetal||950,
+          ppsFlat: pc.ppsFlat||400,
+          ppsTile: pc.ppsTile||1400,
+          matArch: pc.matArch!==false,
+          matDes: !!pc.matDes,
+          matImpact: !!pc.matImpact,
+          matMetal: !!pc.matMetal,
+          matFlat: !!pc.matFlat,
+          matTile: !!pc.matTile,
+          gbbGoodLabel: pc.gbbGoodLabel||'Good',
+          gbbGoodMatKey: pc.gbbGoodMatKey||'1.3',
+          gbbGoodMat: pc.gbbGoodMat||'Architectural Shingle',
+          gbbGoodColor: pc.gbbGoodColor||'#22C55E',
+          gbbGoodDesc: pc.gbbGoodDesc||'Standard performance, 25-yr warranty',
+          gbbBetterLabel: pc.gbbBetterLabel||'Better',
+          gbbBetterMatKey: pc.gbbBetterMatKey||'1.5',
+          gbbBetterMat: pc.gbbBetterMat||'Impact-Resistant (Class 4)',
+          gbbBetterColor: pc.gbbBetterColor||'#F25C05',
+          gbbBetterDesc: pc.gbbBetterDesc||'Hail protection, insurance discount',
+          gbbBestLabel: pc.gbbBestLabel||'Best',
+          gbbBestMatKey: pc.gbbBestMatKey||'1.8',
+          gbbBestMat: pc.gbbBestMat||'Designer / Premium',
+          gbbBestColor: pc.gbbBestColor||'#A855F7',
+          gbbBestDesc: pc.gbbBestDesc||'Lifetime warranty, premium curb appeal',
+          gbbDefault: pc.gbbDefault||'better'
+        };
+      }catch(e){ return {}; }
+    })()),
   };
 }

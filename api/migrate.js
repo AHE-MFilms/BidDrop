@@ -340,6 +340,9 @@ export default async function handler(req, res) {
     { name: 'idx.pixel_hits_status',     sql: "CREATE INDEX IF NOT EXISTS idx_pixel_hits_resolution_status ON pixel_hits(resolution_status)" },
     // mailer_log — audit queries by account_id
     { name: 'idx.mailer_log_account_id', sql: "CREATE INDEX IF NOT EXISTS idx_mailer_log_account_id ON mailer_log(account_id) WHERE account_id IS NOT NULL" },
+
+    // ── Build 16: Pricing config persistence (pricingMode, per-square rates, GBB, material checkboxes) ──
+    { name: 'accounts.pricing_config_json', sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS pricing_config_json jsonb" },
   ];
 
   // Try to run DDL via rpc/exec_sql
