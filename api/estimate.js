@@ -163,7 +163,7 @@ export default async function handler(req, res) {
       }
 
       // Fetch account config
-      const acctR = await sbFetch(`accounts?id=eq.${encodeURIComponent(est.account_id)}&select=id,company_name,company_phone,company_addr,brand_color,logo_data,headshot,rep_name,rep_title,booking_url,diff1,diff2,diff3,diff4,diff5,diff6,years_in_business,warranty_years,financing_enabled,financing_apr,financing_term,financing_down,cost_architectural,cost_3tab,cost_designer,cost_metal,cost_tearoff,cost_ice_water,cost_felts,cost_dumpster,overhead,margin,estimate_page_expires_days,estimate_page_countdown,active,company_bio`);
+      const acctR = await sbFetch(`accounts?id=eq.${encodeURIComponent(est.account_id)}&select=id,company_name,company_phone,company_addr,brand_color,logo_data,headshot,rep_name,rep_title,booking_url,diff1,diff2,diff3,diff4,diff5,diff6,years_in_business,warranty_years,financing_enabled,financing_apr,financing_term,financing_down,cost_architectural,cost_3tab,cost_designer,cost_impact,cost_metal,cost_flat,cost_tile,cost_tearoff,cost_ice_water,cost_felts,cost_dumpster,overhead,margin,estimate_page_expires_days,estimate_page_countdown,active,company_bio,pricing_config_json`);
       const acctRows = await acctR.json();
       if (!acctRows || !acctRows.length) { res.status(404).json({ error: 'Account not found' }); return; }
       const acct = acctRows[0];
@@ -187,29 +187,60 @@ export default async function handler(req, res) {
         try { damagePhotos = JSON.parse(damagePhotos); } catch { damagePhotos = null; }
       }
 
+      // Unpack pricing_config_json (saved by Settings → Pricing) into acct fields
+      const pcfg = (typeof acct.pricing_config_json === 'string'
+        ? JSON.parse(acct.pricing_config_json || '{}')
+        : acct.pricing_config_json) || {};
+      // Merge: pricing_config_json takes priority over individual columns
+      const pricingMode  = pcfg.pricingMode  || 'detailed';
+      const ppsArch      = parseFloat(pcfg.ppsArchitectural) || parseFloat(acct.cost_architectural) || 450;
+      const ppsDes       = parseFloat(pcfg.ppsDesigner)      || parseFloat(acct.cost_designer)      || 580;
+      const ppsImpact    = parseFloat(pcfg.ppsImpact)        || parseFloat(acct.cost_impact)        || 520;
+      const ppsMetal     = parseFloat(pcfg.ppsMetal)         || parseFloat(acct.cost_metal)         || 950;
+      const ppsFlat      = parseFloat(pcfg.ppsFlat)          || parseFloat(acct.cost_flat)          || 400;
+      const ppsTile      = parseFloat(pcfg.ppsTile)          || parseFloat(acct.cost_tile)          || 1400;
+      const ppsMap = { '1.0': ppsArch, '1.3': ppsArch, '1.8': ppsDes, '1.5': ppsImpact, '2.5': ppsMetal, '0.9': ppsFlat, '3.2': ppsTile };
+
       // Compute per-material prices server-side — raw cost/overhead/margin never sent to browser
       function serverComputePrice(structures, matKey) {
         if (!structures || !structures.length) return 0;
+        const stMult = 1; // stories multiplier (default 1 for homeowner page)
+        if (pricingMode === 'per_square') {
+          // Per-square mode: Squares × $/sq (matches estimator exactly)
+          let total = 0;
+          structures.forEach(s => {
+            const sqft = parseFloat(s.sqft) || 0; if (!sqft) return;
+            const pitchMult = parseFloat(s.pitch) || 1.118;
+            const complexity = parseFloat(s.complexity) || 1.12;
+            const sq = sqft / 100 * 1.10 * pitchMult;
+            const pps = ppsMap[matKey] || ppsArch;
+            total += Math.round(sq * pps * stMult * complexity);
+          });
+          return total;
+        }
+        // Detailed line-item mode
         const costMap = {
-          '1.0': parseFloat(acct.cost_3tab)          || 220,
-          '1.3': parseFloat(acct.cost_architectural) || 450,
-          '1.8': parseFloat(acct.cost_designer)      || 620,
-          '2.5': parseFloat(acct.cost_metal)         || 950,
+          '1.0': parseFloat(pcfg.cost3Tab)          || parseFloat(acct.cost_3tab)          || 220,
+          '1.3': parseFloat(pcfg.costArchitectural) || parseFloat(acct.cost_architectural) || 300,
+          '1.8': parseFloat(pcfg.costDesigner)      || parseFloat(acct.cost_designer)      || 420,
+          '1.5': parseFloat(pcfg.costImpact)        || parseFloat(acct.cost_impact)        || 380,
+          '2.5': parseFloat(pcfg.costMetal)         || parseFloat(acct.cost_metal)         || 680,
+          '0.9': parseFloat(pcfg.costFlat)          || parseFloat(acct.cost_flat)          || 320,
+          '3.2': parseFloat(pcfg.costTile)          || parseFloat(acct.cost_tile)          || 950,
         };
         const matCost  = costMap[matKey] || costMap['1.3'];
-        const tearoff  = parseFloat(acct.cost_tearoff)  || 75;
-        const iceWater = parseFloat(acct.cost_ice_water) || 42;
-        const felts    = parseFloat(acct.cost_felts)    || 22;
-        const dumpster = parseFloat(acct.cost_dumpster) || 450;
-        const overhead = (parseFloat(acct.overhead) || 15) / 100;
-        const margin   = (parseFloat(acct.margin)   || 20) / 100;
+        const tearoff  = parseFloat(pcfg.costTearoff)  || parseFloat(acct.cost_tearoff)  || 75;
+        const felts    = parseFloat(pcfg.costFelts)    || parseFloat(acct.cost_felts)    || 22;
+        const dumpster = parseFloat(pcfg.costDumpster) || parseFloat(acct.cost_dumpster) || 450;
+        const overhead = (parseFloat(pcfg.overhead) || parseFloat(acct.overhead) || 15) / 100;
+        const margin   = (parseFloat(pcfg.margin)   || parseFloat(acct.margin)   || 20) / 100;
         let subtotal = dumpster;
         structures.forEach(s => {
           const sqft = parseFloat(s.sqft) || 0; if (!sqft) return;
-          const pitchMult = parseFloat(s.pitch) || 1.15;
+          const pitchMult = parseFloat(s.pitch) || 1.118;
           const complexity = parseFloat(s.complexity) || 1.12;
-          const sq = sqft / 100 * 1.12 * pitchMult;
-          subtotal += sq * (matCost + tearoff + iceWater + felts) * complexity;
+          const sq = sqft / 100 * 1.10 * pitchMult;
+          subtotal += sq * (matCost + tearoff + felts) * complexity;
         });
         return Math.round(subtotal * (1 + overhead) * (1 + margin));
       }
@@ -217,8 +248,11 @@ export default async function handler(req, res) {
       const serverPrices = {
         '1.0': serverComputePrice(structuresForCalc, '1.0'),
         '1.3': serverComputePrice(structuresForCalc, '1.3'),
+        '1.5': serverComputePrice(structuresForCalc, '1.5'),
         '1.8': serverComputePrice(structuresForCalc, '1.8'),
         '2.5': serverComputePrice(structuresForCalc, '2.5'),
+        '0.9': serverComputePrice(structuresForCalc, '0.9'),
+        '3.2': serverComputePrice(structuresForCalc, '3.2'),
       };
 
       res.json({
