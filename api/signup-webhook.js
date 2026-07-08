@@ -125,7 +125,7 @@ async function sendWelcomeEmail({ email, firstName, companyName, planName, tempP
         </h1>
         <p style="font-size: 16px; color: #333333; line-height: 1.6; margin: 0 0 28px 0;">
           Your BidDrop account for <strong style="color: #111111;">${companyName}</strong> is ready to go.
-          You're on the <strong style="color: #F97316;">${planName} Plan</strong> with a 60-day free trial —
+          You're on the <strong style="color: #F97316;">${planName} Plan</strong> with your first month free —
           no charge until your trial ends.
         </p>
 
@@ -262,7 +262,7 @@ async function createGHLContact({ firstName, lastName, email, phone, companyName
         phone: phone || '',
         companyName: companyName || '',
         locationId: GHL_LOCATION_ID,
-        tags: ['biddrop - signup', `plan-${planName.toLowerCase()}`, 'trial-60-day'],
+        tags: ['biddrop - signup', `plan-${planName.toLowerCase()}`, 'trial-30-day'],
         source: 'BidDrop Signup Page',
       }),
     });

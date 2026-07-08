@@ -241,7 +241,7 @@ export default async function handler(req, res) {
         <div style="padding:32px;border:1px solid #e5e5e5;border-top:none;border-radius:0 0 10px 10px;">
           <h2 style="color:#111;margin:0 0 12px 0;">⏰ Trial Expiry Report</h2>
           <p style="color:#333;margin:0 0 20px 0;">
-            <strong>${locked.length} account${locked.length > 1 ? 's' : ''}</strong> had their 60-day trial expire and 
+            <strong>${locked.length} account${locked.length > 1 ? 's' : ''}</strong> had their 30-day trial expire and 
             ${locked.length > 1 ? 'have' : 'has'} been automatically <strong style="color:#dc2626;">deactivated</strong>.
           </p>
           <table style="width:100%;border-collapse:collapse;font-size:14px;">

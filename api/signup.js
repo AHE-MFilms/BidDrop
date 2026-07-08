@@ -1,6 +1,6 @@
 // /api/signup.js
 // Creates a Stripe Checkout session for new BidDrop signups.
-// 60-day free trial — $0 due today, card charged after trial ends.
+// 30-day free trial — $0 due today, card charged after trial ends.
 // Stores customer info in Stripe metadata for webhook to use.
 
 import Stripe from 'stripe';
@@ -132,7 +132,7 @@ export default async function handler(req, res) {
     }
 
     // Create Stripe Checkout Session
-    // trial_period_days = 60 means $0 today, first charge in 60 days
+    // trial_period_days = 30 means $0 today, first charge after first month
     // IMPORTANT: When `customer` is set, `customer_email` must be completely omitted
     // (not just undefined) — Stripe rejects requests that include both.
     const sessionParams = {
@@ -145,7 +145,7 @@ export default async function handler(req, res) {
         },
       ],
       subscription_data: {
-        trial_period_days: 60,
+        trial_period_days: 30,
         metadata: {
           company_name: companyName,
           first_name: firstName,
