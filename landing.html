@@ -9,162 +9,317 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700;800&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
+/* ── RESET & TOKENS ── */
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
-  --bg:#0F1623;--panel:#1A2333;--card:#1F2C3E;--border:#2E4060;
-  --accent:#F25C05;--accent2:#F97316;
-  --text:#F0F6FF;--mid:#C8D8E8;--muted:#96B0C8;
-  --font-h:'Oswald',sans-serif;--font-b:'Barlow',sans-serif;
+  --bg:#FFFFFF;
+  --bg-alt:#F7F8FA;
+  --navy:#0F1623;
+  --navy2:#1A2333;
+  --border:#E2E8F0;
+  --accent:#F25C05;
+  --accent-hover:#D94E00;
+  --text:#111827;
+  --mid:#4B5563;
+  --muted:#9CA3AF;
+  --font-h:'Oswald',sans-serif;
+  --font-b:'Barlow',sans-serif;
 }
 html{scroll-behavior:smooth;}
 body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:16px;line-height:1.6;}
 a{color:inherit;text-decoration:none;}
 img{max-width:100%;display:block;}
 
-/* ── HEADER ── */
-.lp-nav{position:sticky;top:0;z-index:1000;background:rgba(15,22,35,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 24px;height:62px;display:flex;align-items:center;justify-content:space-between;}
-.lp-logo{font-family:var(--font-h);font-size:22px;font-weight:800;color:#fff;letter-spacing:1px;}
+/* ── ANNOUNCEMENT BAR ── */
+.ann-bar{background:var(--navy);color:#fff;text-align:center;font-size:13px;font-family:var(--font-b);padding:9px 16px;line-height:1.4;}
+.ann-bar a{color:var(--accent);font-weight:700;text-decoration:underline;}
+
+/* ── NAV ── */
+.lp-nav{position:sticky;top:0;z-index:1000;background:rgba(255,255,255,.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;}
+.lp-logo{font-family:var(--font-h);font-size:24px;font-weight:800;color:var(--navy);letter-spacing:.5px;}
 .lp-logo span{color:var(--accent);}
-.lp-nav-cta{background:var(--accent);color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;letter-spacing:.8px;padding:10px 22px;border-radius:8px;border:none;cursor:pointer;transition:background .15s;}
-.lp-nav-cta:hover{background:#e05200;}
+.lp-nav-links{display:flex;align-items:center;gap:28px;}
+.lp-nav-links a{font-family:var(--font-b);font-size:14px;font-weight:500;color:var(--mid);transition:color .15s;}
+.lp-nav-links a:hover{color:var(--text);}
+.lp-nav-right{display:flex;align-items:center;gap:14px;}
+.lp-nav-login{font-family:var(--font-b);font-size:14px;font-weight:600;color:var(--text);padding:8px 16px;border-radius:8px;border:1px solid var(--border);transition:all .15s;}
+.lp-nav-login:hover{border-color:var(--accent);color:var(--accent);}
+.lp-nav-cta{background:var(--accent);color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;letter-spacing:.8px;padding:10px 22px;border-radius:8px;border:none;cursor:pointer;transition:background .15s;white-space:nowrap;}
+.lp-nav-cta:hover{background:var(--accent-hover);}
+@media(max-width:768px){
+  .lp-nav-links{display:none;}
+  .lp-nav-login{display:none;}
+}
 
 /* ── HERO ── */
-.hero{min-height:90vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 24px 60px;position:relative;overflow:hidden;}
-.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(242,92,5,.18) 0%, transparent 70%);pointer-events:none;}
-.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(242,92,5,.12);border:1px solid rgba(242,92,5,.3);border-radius:20px;padding:6px 16px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:28px;}
-.hero h1{font-family:var(--font-h);font-size:clamp(42px,7vw,82px);font-weight:800;line-height:1.05;letter-spacing:-1px;margin-bottom:24px;max-width:900px;}
+.hero{padding:80px 32px 72px;max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;}
+@media(max-width:900px){.hero{grid-template-columns:1fr;text-align:center;padding:60px 24px 48px;gap:40px;}}
+.hero-content{}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(242,92,5,.08);border:1px solid rgba(242,92,5,.25);border-radius:20px;padding:6px 14px;font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:24px;}
+.hero h1{font-family:var(--font-h);font-size:clamp(44px,6vw,72px);font-weight:800;line-height:1.04;letter-spacing:-1px;margin-bottom:22px;color:var(--navy);}
 .hero h1 em{color:var(--accent);font-style:normal;}
-.hero-sub{font-size:clamp(17px,2.5vw,22px);color:var(--mid);max-width:600px;margin:0 auto 40px;font-weight:400;line-height:1.5;}
-.hero-ctas{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:20px;}
-.btn-primary{background:var(--accent);color:#fff;font-family:var(--font-h);font-size:16px;font-weight:700;letter-spacing:.8px;padding:16px 36px;border-radius:10px;border:none;cursor:pointer;transition:all .15s;box-shadow:0 8px 28px rgba(242,92,5,.4);}
-.btn-primary:hover{background:#e05200;transform:translateY(-1px);box-shadow:0 12px 36px rgba(242,92,5,.5);}
-.btn-secondary{background:transparent;color:var(--text);font-family:var(--font-h);font-size:16px;font-weight:700;letter-spacing:.8px;padding:16px 36px;border-radius:10px;border:1px solid var(--border);cursor:pointer;transition:all .15s;}
+.hero-sub{font-size:clamp(16px,2vw,19px);color:var(--mid);max-width:520px;margin-bottom:36px;font-weight:400;line-height:1.6;}
+@media(max-width:900px){.hero-sub{margin:0 auto 36px;}}
+.hero-ctas{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px;}
+@media(max-width:900px){.hero-ctas{justify-content:center;}}
+.btn-primary{background:var(--accent);color:#fff;font-family:var(--font-h);font-size:16px;font-weight:700;letter-spacing:.6px;padding:15px 34px;border-radius:10px;border:none;cursor:pointer;transition:all .15s;box-shadow:0 4px 18px rgba(242,92,5,.35);display:inline-block;}
+.btn-primary:hover{background:var(--accent-hover);transform:translateY(-1px);box-shadow:0 8px 28px rgba(242,92,5,.45);}
+.btn-secondary{background:transparent;color:var(--navy);font-family:var(--font-h);font-size:16px;font-weight:700;letter-spacing:.6px;padding:15px 34px;border-radius:10px;border:2px solid var(--navy);cursor:pointer;transition:all .15s;display:inline-block;}
 .btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
-.hero-note{font-size:13px;color:var(--muted);}
+.hero-note{font-size:12px;color:var(--muted);}
+.hero-checks{display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:20px;}
+@media(max-width:900px){.hero-checks{justify-content:center;}}
+.hero-checks span{font-size:13px;color:var(--mid);display:flex;align-items:center;gap:6px;}
+.hero-checks span::before{content:'✓';color:var(--accent);font-weight:800;}
+.hero-visual{display:flex;align-items:center;justify-content:center;}
+@media(max-width:900px){.hero-visual{order:-1;}}
+.hero-phone-wrap{position:relative;width:100%;max-width:420px;margin:0 auto;}
+.hero-phone-bg{background:linear-gradient(135deg,#F0F4FF 0%,#E8F0FE 100%);border-radius:32px;padding:32px;display:flex;align-items:center;justify-content:center;min-height:380px;}
+.hero-phone-inner{background:var(--navy);border-radius:24px;padding:20px 16px;width:220px;box-shadow:0 32px 80px rgba(15,22,35,.4);}
+.phone-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.phone-logo{font-family:var(--font-h);font-size:14px;font-weight:800;color:#fff;}
+.phone-logo span{color:var(--accent);}
+.phone-stats{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;margin-bottom:12px;}
+.phone-stat{background:rgba(255,255,255,.06);border-radius:6px;padding:8px 4px;text-align:center;}
+.phone-stat-num{font-family:var(--font-h);font-size:16px;font-weight:800;color:#fff;line-height:1;}
+.phone-stat-label{font-size:9px;color:rgba(255,255,255,.4);margin-top:2px;}
+.phone-map{background:rgba(255,255,255,.04);border-radius:10px;height:100px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.phone-map-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:16px 16px;}
+.phone-pins{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:12px;}
+.phone-pin{width:10px;height:10px;background:var(--accent);border-radius:50%;box-shadow:0 0 0 3px rgba(242,92,5,.3);}
+.phone-pin.big{width:14px;height:14px;}
+.phone-lead{background:rgba(255,255,255,.08);border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:8px;}
+.phone-lead-icon{width:28px;height:28px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
+.phone-lead-text{}
+.phone-lead-title{font-size:10px;font-weight:700;color:#fff;}
+.phone-lead-sub{font-size:9px;color:rgba(255,255,255,.4);}
+.hero-badge{position:absolute;bottom:-12px;right:-12px;background:#fff;border-radius:12px;padding:10px 14px;box-shadow:0 8px 28px rgba(0,0,0,.12);display:flex;align-items:center;gap:8px;}
+.hero-badge-num{font-family:var(--font-h);font-size:22px;font-weight:800;color:var(--accent);}
+.hero-badge-text{font-size:11px;color:var(--mid);line-height:1.3;}
+
+/* ── STATS BAR ── */
+.stats-bar{background:var(--navy);padding:40px 32px;}
+.stats-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:24px;text-align:center;}
+@media(max-width:768px){.stats-inner{grid-template-columns:repeat(2,1fr);}}
+.stat-item{}
+.stat-num{font-family:var(--font-h);font-size:clamp(36px,5vw,54px);font-weight:800;color:var(--accent);line-height:1;}
+.stat-label{font-size:13px;color:rgba(255,255,255,.55);margin-top:6px;font-weight:400;}
 
 /* ── VIDEO SECTION ── */
-.video-section{padding:60px 24px;max-width:900px;margin:0 auto;}
-.video-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--border);box-shadow:0 24px 80px rgba(0,0,0,.6);background:#000;}
-.video-wrap video,.video-wrap iframe{width:100%;display:block;aspect-ratio:16/9;}
-.video-placeholder{aspect-ratio:16/9;background:var(--panel);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;cursor:pointer;}
-.video-play-btn{width:72px;height:72px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 8px 28px rgba(242,92,5,.5);}
-.video-placeholder p{font-size:14px;color:var(--muted);}
+.video-section{padding:72px 32px;background:var(--bg-alt);}
+.video-inner{max-width:900px;margin:0 auto;}
+.section-label{font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:12px;text-align:center;}
+.video-heading{font-family:var(--font-h);font-size:clamp(28px,4vw,42px);font-weight:800;color:var(--navy);text-align:center;margin-bottom:8px;line-height:1.1;}
+.video-sub{font-size:16px;color:var(--mid);text-align:center;margin-bottom:36px;}
+.video-wrap{position:relative;border-radius:16px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.15);background:#000;aspect-ratio:16/9;}
+.video-wrap iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0;}
 
 /* ── PROBLEM ── */
-.problem{padding:80px 24px;text-align:center;max-width:800px;margin:0 auto;}
-.section-label{font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:16px;}
-.problem h2{font-family:var(--font-h);font-size:clamp(32px,5vw,52px);font-weight:800;line-height:1.1;margin-bottom:20px;}
+.problem{padding:80px 32px;text-align:center;max-width:800px;margin:0 auto;}
+.problem h2{font-family:var(--font-h);font-size:clamp(30px,4.5vw,48px);font-weight:800;line-height:1.1;margin-bottom:20px;color:var(--navy);}
 .problem p{font-size:18px;color:var(--mid);line-height:1.7;}
-.stat-row{display:flex;gap:40px;justify-content:center;flex-wrap:wrap;margin-top:48px;}
-.stat-item{text-align:center;}
-.stat-num{font-family:var(--font-h);font-size:52px;font-weight:800;color:var(--accent);line-height:1;}
-.stat-label{font-size:14px;color:var(--muted);margin-top:6px;}
 
 /* ── HOW IT WORKS ── */
-.how{padding:80px 24px;max-width:1100px;margin:0 auto;}
-.how h2{font-family:var(--font-h);font-size:clamp(32px,5vw,52px);font-weight:800;text-align:center;margin-bottom:60px;}
+.how{padding:80px 32px;max-width:1100px;margin:0 auto;}
+.how-header{text-align:center;margin-bottom:60px;}
+.how-header h2{font-family:var(--font-h);font-size:clamp(30px,4.5vw,48px);font-weight:800;color:var(--navy);margin-bottom:8px;line-height:1.1;}
+.how-header p{font-size:16px;color:var(--mid);}
 .steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;}
 @media(max-width:768px){.steps-grid{grid-template-columns:1fr;}}
-.step-card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:32px 28px;position:relative;overflow:hidden;}
+.step-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:32px 28px;position:relative;overflow:hidden;transition:box-shadow .2s;}
+.step-card:hover{box-shadow:0 12px 40px rgba(0,0,0,.08);}
 .step-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent);}
-.step-num{font-family:var(--font-h);font-size:64px;font-weight:800;color:rgba(242,92,5,.12);line-height:1;margin-bottom:16px;}
-.step-icon{font-size:36px;margin-bottom:12px;}
-.step-card h3{font-family:var(--font-h);font-size:22px;font-weight:700;margin-bottom:10px;}
+.step-num{font-family:var(--font-h);font-size:56px;font-weight:800;color:rgba(242,92,5,.1);line-height:1;margin-bottom:12px;}
+.step-card h3{font-family:var(--font-h);font-size:22px;font-weight:700;margin-bottom:10px;color:var(--navy);}
 .step-card p{font-size:15px;color:var(--mid);line-height:1.6;}
 
 /* ── FEATURES ── */
-.features{padding:80px 24px;background:var(--panel);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.features{padding:80px 32px;background:var(--bg-alt);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
 .features-inner{max-width:1100px;margin:0 auto;}
-.features h2{font-family:var(--font-h);font-size:clamp(32px,5vw,52px);font-weight:800;text-align:center;margin-bottom:60px;}
+.features-header{text-align:center;margin-bottom:56px;}
+.features-header h2{font-family:var(--font-h);font-size:clamp(30px,4.5vw,48px);font-weight:800;color:var(--navy);margin-bottom:8px;line-height:1.1;}
+.features-header p{font-size:16px;color:var(--mid);}
 .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
 @media(max-width:900px){.features-grid{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:560px){.features-grid{grid-template-columns:1fr;}}
-.feat-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;}
-.feat-icon{font-size:28px;margin-bottom:12px;}
-.feat-item h4{font-family:var(--font-h);font-size:17px;font-weight:700;margin-bottom:8px;}
+.feat-item{background:#fff;border:1px solid var(--border);border-radius:12px;padding:28px 24px;transition:box-shadow .2s;}
+.feat-item:hover{box-shadow:0 8px 28px rgba(0,0,0,.07);}
+.feat-icon-wrap{width:44px;height:44px;background:rgba(242,92,5,.1);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
+.feat-icon-svg{width:22px;height:22px;color:var(--accent);}
+.feat-badge{display:inline-block;background:rgba(242,92,5,.1);border:1px solid rgba(242,92,5,.25);color:var(--accent);font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;padding:2px 8px;border-radius:4px;margin-bottom:10px;}
+.feat-item h4{font-family:var(--font-h);font-size:18px;font-weight:700;margin-bottom:8px;color:var(--navy);}
 .feat-item p{font-size:14px;color:var(--mid);line-height:1.6;}
-.feat-badge{display:inline-block;background:rgba(242,92,5,.12);border:1px solid rgba(242,92,5,.3);color:var(--accent);font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;padding:2px 8px;border-radius:4px;margin-bottom:8px;}
 
 /* ── PRICING ── */
-.pricing{padding:80px 24px;max-width:1100px;margin:0 auto;}
-.pricing h2{font-family:var(--font-h);font-size:clamp(32px,5vw,52px);font-weight:800;text-align:center;margin-bottom:12px;}
-.pricing-sub{text-align:center;font-size:17px;color:var(--mid);margin-bottom:52px;}
+.pricing{padding:80px 32px;max-width:1100px;margin:0 auto;}
+.pricing-header{text-align:center;margin-bottom:52px;}
+.pricing-header h2{font-family:var(--font-h);font-size:clamp(30px,4.5vw,48px);font-weight:800;color:var(--navy);margin-bottom:8px;line-height:1.1;}
+.pricing-header p{font-size:16px;color:var(--mid);}
 .pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;align-items:start;}
 @media(max-width:768px){.pricing-grid{grid-template-columns:1fr;max-width:420px;margin:0 auto;}}
-.plan-card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:32px 28px;position:relative;}
-.plan-card.popular{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 24px 60px rgba(242,92,5,.2);}
+.plan-card{background:#fff;border:2px solid var(--border);border-radius:16px;padding:32px 28px;position:relative;transition:box-shadow .2s;}
+.plan-card:hover{box-shadow:0 12px 40px rgba(0,0,0,.08);}
+.plan-card.popular{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 20px 50px rgba(242,92,5,.15);}
 .popular-badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-family:var(--font-h);font-size:11px;font-weight:700;letter-spacing:1px;padding:4px 16px;border-radius:20px;white-space:nowrap;}
-.plan-name{font-family:var(--font-h);font-size:22px;font-weight:700;margin-bottom:6px;}
+.plan-name{font-family:var(--font-h);font-size:22px;font-weight:700;margin-bottom:6px;color:var(--navy);}
 .plan-desc{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5;}
 .plan-price{display:flex;align-items:baseline;gap:4px;margin-bottom:6px;}
-.plan-price-num{font-family:var(--font-h);font-size:52px;font-weight:800;line-height:1;}
+.plan-price-num{font-family:var(--font-h);font-size:52px;font-weight:800;line-height:1;color:var(--navy);}
 .plan-price-sup{font-family:var(--font-h);font-size:22px;font-weight:700;color:var(--mid);}
 .plan-price-mo{font-size:14px;color:var(--muted);}
-.plan-trial{font-size:13px;color:#22c55e;font-weight:700;margin-bottom:24px;}
+.plan-trial{font-size:13px;color:#16a34a;font-weight:700;margin-bottom:24px;}
 .plan-features{list-style:none;margin-bottom:28px;}
-.plan-features li{display:flex;align-items:flex-start;gap:8px;font-size:14px;color:var(--mid);padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.plan-features li{display:flex;align-items:flex-start;gap:8px;font-size:14px;color:var(--mid);padding:7px 0;border-bottom:1px solid var(--border);}
 .plan-features li:last-child{border-bottom:none;}
-.plan-features li::before{content:'✓';color:#22c55e;font-weight:800;flex-shrink:0;margin-top:1px;}
+.plan-features li::before{content:'✓';color:#16a34a;font-weight:800;flex-shrink:0;margin-top:1px;}
 .plan-features li.no::before{content:'✗';color:var(--muted);}
-.plan-features li.no{color:rgba(150,176,200,.5);}
-.plan-btn{display:block;width:100%;background:var(--accent);color:#fff;font-family:var(--font-h);font-size:15px;font-weight:700;letter-spacing:.8px;padding:14px;border-radius:10px;border:none;cursor:pointer;text-align:center;transition:all .15s;}
-.plan-btn:hover{background:#e05200;}
-.plan-btn.outline{background:transparent;border:1px solid var(--border);color:var(--text);}
+.plan-features li.no{color:var(--muted);}
+.plan-btn{display:block;width:100%;background:var(--accent);color:#fff;font-family:var(--font-h);font-size:15px;font-weight:700;letter-spacing:.6px;padding:14px;border-radius:10px;border:none;cursor:pointer;text-align:center;transition:all .15s;}
+.plan-btn:hover{background:var(--accent-hover);}
+.plan-btn.outline{background:transparent;border:2px solid var(--border);color:var(--navy);}
 .plan-btn.outline:hover{border-color:var(--accent);color:var(--accent);}
 
 /* ── FAQ ── */
-.faq{padding:80px 24px;max-width:760px;margin:0 auto;}
-.faq h2{font-family:var(--font-h);font-size:clamp(32px,5vw,52px);font-weight:800;text-align:center;margin-bottom:48px;}
+.faq{padding:80px 32px;max-width:760px;margin:0 auto;}
+.faq-header{text-align:center;margin-bottom:48px;}
+.faq-header h2{font-family:var(--font-h);font-size:clamp(30px,4.5vw,48px);font-weight:800;color:var(--navy);line-height:1.1;}
 .faq-item{border-bottom:1px solid var(--border);padding:20px 0;}
-.faq-q{font-family:var(--font-h);font-size:18px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;}
+.faq-q{font-family:var(--font-h);font-size:18px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;color:var(--navy);}
 .faq-q::after{content:'+';font-size:22px;color:var(--accent);flex-shrink:0;transition:transform .2s;}
 .faq-item.open .faq-q::after{transform:rotate(45deg);}
 .faq-a{font-size:15px;color:var(--mid);line-height:1.7;max-height:0;overflow:hidden;transition:max-height .3s ease,padding .3s ease;}
 .faq-item.open .faq-a{max-height:300px;padding-top:12px;}
 
 /* ── FINAL CTA ── */
-.final-cta{padding:100px 24px;text-align:center;position:relative;overflow:hidden;}
-.final-cta::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 50%, rgba(242,92,5,.15) 0%, transparent 70%);pointer-events:none;}
-.final-cta h2{font-family:var(--font-h);font-size:clamp(36px,6vw,68px);font-weight:800;line-height:1.05;margin-bottom:20px;max-width:800px;margin-left:auto;margin-right:auto;}
+.final-cta{padding:100px 32px;text-align:center;background:var(--navy);position:relative;overflow:hidden;}
+.final-cta::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 50%, rgba(242,92,5,.18) 0%, transparent 70%);pointer-events:none;}
+.final-cta h2{font-family:var(--font-h);font-size:clamp(36px,5.5vw,64px);font-weight:800;line-height:1.05;margin-bottom:20px;max-width:800px;margin-left:auto;margin-right:auto;color:#fff;}
 .final-cta h2 em{color:var(--accent);font-style:normal;}
-.final-cta p{font-size:18px;color:var(--mid);margin-bottom:40px;}
-.final-cta-note{font-size:14px;color:var(--muted);margin-top:16px;}
+.final-cta p{font-size:18px;color:rgba(255,255,255,.65);margin-bottom:40px;}
+.final-cta-note{font-size:14px;color:rgba(255,255,255,.4);margin-top:16px;}
+.final-cta-note a{color:var(--accent);}
 
 /* ── FOOTER ── */
-.lp-footer{background:var(--panel);border-top:1px solid var(--border);padding:32px 24px;text-align:center;}
-.lp-footer-logo{font-family:var(--font-h);font-size:20px;font-weight:800;color:#fff;letter-spacing:1px;margin-bottom:8px;}
+.lp-footer{background:var(--navy2);border-top:1px solid rgba(255,255,255,.06);padding:32px 24px;text-align:center;}
+.lp-footer-logo{font-family:var(--font-h);font-size:20px;font-weight:800;color:#fff;letter-spacing:.5px;margin-bottom:8px;}
 .lp-footer-logo span{color:var(--accent);}
-.lp-footer p{font-size:13px;color:var(--muted);}
+.lp-footer p{font-size:13px;color:rgba(255,255,255,.4);}
 .lp-footer a{color:var(--accent);}
 </style>
 </head>
 <body>
 
+<!-- ANNOUNCEMENT BAR -->
+<div class="ann-bar">Built for roofing contractors &nbsp;·&nbsp; <a href="/signup?plan=pro">GHL included free</a> on Pro &amp; above &nbsp;·&nbsp; Postcards with real prices. Leads that already know the number.</div>
+
 <!-- NAV -->
 <nav class="lp-nav">
   <div class="lp-logo">Bid<span>Drop</span></div>
-  <a href="/signup" class="lp-nav-cta">Start Free Trial</a>
+  <div class="lp-nav-links">
+    <a href="#how-it-works">How It Works</a>
+    <a href="#features">Features</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#faq">FAQ</a>
+  </div>
+  <div class="lp-nav-right">
+    <a href="/index.html" class="lp-nav-login">Log In</a>
+    <a href="/signup" class="lp-nav-cta">Start Free Trial</a>
+  </div>
 </nav>
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-eyebrow">🏠 Built for Roofing Contractors</div>
-  <h1>Close More Roofs.<br><em>Follow Up Automatically.</em></h1>
-  <p class="hero-sub">Drop a pin, build an estimate, mail a postcard — all from your phone. Turn every door knock into a trackable lead.</p>
-  <div class="hero-ctas">
-    <a href="/signup?plan=pro" class="btn-primary">Start 60-Day Free Trial</a>
-    <a href="#how-it-works" class="btn-secondary">See How It Works</a>
+  <div class="hero-content">
+    <div class="hero-eyebrow">Roofing Lead Automation</div>
+    <h1>Close More Roofs.<br><em>Follow Up Automatically.</em></h1>
+    <p class="hero-sub">Drop a pin, build an estimate, mail a postcard — all from your phone. Turn every door knock into a trackable lead.</p>
+    <div class="hero-ctas">
+      <a href="/signup?plan=pro" class="btn-primary">Start 60-Day Free Trial</a>
+      <a href="#how-it-works" class="btn-secondary">See How It Works</a>
+    </div>
+    <p class="hero-note">Credit card required — not charged until day 61 &nbsp;·&nbsp; Cancel anytime</p>
+    <div class="hero-checks">
+      <span>High-intent inbound leads</span>
+      <span>You pin, we do the rest</span>
+      <span>No door knocking. Ever.</span>
+    </div>
   </div>
-  <p class="hero-note">Credit card required — not charged until day 61 · Cancel anytime</p>
+  <div class="hero-visual">
+    <div class="hero-phone-wrap">
+      <div class="hero-phone-bg">
+        <div class="hero-phone-inner">
+          <div class="phone-header">
+            <div class="phone-logo">Bid<span>Drop</span></div>
+          </div>
+          <div class="phone-stats">
+            <div class="phone-stat"><div class="phone-stat-num">42</div><div class="phone-stat-label">Leads</div></div>
+            <div class="phone-stat"><div class="phone-stat-num">18</div><div class="phone-stat-label">Contacted</div></div>
+            <div class="phone-stat"><div class="phone-stat-num">7</div><div class="phone-stat-label">Bids Out</div></div>
+            <div class="phone-stat"><div class="phone-stat-num">3</div><div class="phone-stat-label">Closed</div></div>
+          </div>
+          <div class="phone-map">
+            <div class="phone-map-grid"></div>
+            <div class="phone-pins">
+              <div class="phone-pin big"></div>
+              <div class="phone-pin"></div>
+              <div class="phone-pin"></div>
+              <div class="phone-pin big"></div>
+              <div class="phone-pin"></div>
+            </div>
+          </div>
+          <div class="phone-lead">
+            <div class="phone-lead-icon">🏠</div>
+            <div class="phone-lead-text">
+              <div class="phone-lead-title">New Lead — 412 Maple Drive</div>
+              <div class="phone-lead-sub">18yr roof &nbsp;·&nbsp; Mailer Sent</div>
+            </div>
+          </div>
+        </div>
+        <div class="hero-badge">
+          <div class="hero-badge-num">$4</div>
+          <div class="hero-badge-text">Average cost<br>per lead</div>
+        </div>
+      </div>
+    </div>
+  </div>
 </section>
 
-<!-- VIDEO -->
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stats-inner">
+    <div class="stat-item">
+      <div class="stat-num">$4</div>
+      <div class="stat-label">Average cost per lead</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">1,200+</div>
+      <div class="stat-label">Active contractors</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">0</div>
+      <div class="stat-label">Doors knocked</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">50</div>
+      <div class="stat-label">States served</div>
+    </div>
+  </div>
+</div>
+
+<!-- VIDEO SECTION -->
 <section class="video-section">
-  <div class="video-wrap" id="demo-video-wrap">
-    <!-- Replace src with your actual video URL -->
-    <div class="video-placeholder" id="video-placeholder" onclick="playVideo()">
-      <div class="video-play-btn">▶</div>
-      <p>Watch BidDrop in Action (60 sec)</p>
+  <div class="video-inner">
+    <p class="section-label">See It In Action</p>
+    <h2 class="video-heading">Watch BidDrop in Action</h2>
+    <p class="video-sub">See how reps drop pins, build estimates, and mail postcards — all in under 60 seconds.</p>
+    <div class="video-wrap" id="video-placeholder">
+      <iframe
+        src="https://www.youtube.com/embed/xxUXKufdzmU?rel=0&modestbranding=1&color=white"
+        title="BidDrop Overview — How It Works"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen
+        loading="lazy">
+      </iframe>
     </div>
   </div>
 </section>
@@ -174,41 +329,28 @@ img{max-width:100%;display:block;}
   <p class="section-label">The Problem</p>
   <h2>Most reps knock 50 doors a day.<br>They follow up with 3.</h2>
   <p>The leads are there — on every roof you walk past. The problem is follow-up. Homeowners don't decide on the spot. They decide when they see your name again. BidDrop makes sure they do.</p>
-  <div class="stat-row">
-    <div class="stat-item">
-      <div class="stat-num">7x</div>
-      <div class="stat-label">More likely to close with<br>physical follow-up mail</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-num">60s</div>
-      <div class="stat-label">To drop a pin and<br>queue a postcard</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-num">$4</div>
-      <div class="stat-label">Per postcard sent<br>(vs $400+ per lead)</div>
-    </div>
-  </div>
 </section>
 
 <!-- HOW IT WORKS -->
 <section class="how" id="how-it-works">
-  <h2>How BidDrop Works</h2>
+  <div class="how-header">
+    <p class="section-label">How It Works</p>
+    <h2>Three steps to your next roof job</h2>
+    <p>BidDrop handles the prospecting, the outreach, and the follow-up. You just show up and close.</p>
+  </div>
   <div class="steps-grid">
     <div class="step-card">
       <div class="step-num">01</div>
-      <div class="step-icon">📍</div>
       <h3>Drop a Pin</h3>
       <p>Tap any house on the map. BidDrop pulls the property data — owner name, address, square footage — instantly.</p>
     </div>
     <div class="step-card">
       <div class="step-num">02</div>
-      <div class="step-icon">📋</div>
       <h3>Build the Estimate</h3>
       <p>Generate a branded estimate page in seconds. Share it via QR code, text, or link. Track every view and click.</p>
     </div>
     <div class="step-card">
       <div class="step-num">03</div>
-      <div class="step-icon">📬</div>
       <h3>Mail Automatically</h3>
       <p>A real postcard with your logo, their address, and your estimate QR code ships to their door. No trips to the post office.</p>
     </div>
@@ -216,39 +358,55 @@ img{max-width:100%;display:block;}
 </section>
 
 <!-- FEATURES -->
-<section class="features">
+<section class="features" id="features">
   <div class="features-inner">
-    <h2>Everything Your Team Needs</h2>
+    <div class="features-header">
+      <p class="section-label">Platform Features</p>
+      <h2>Everything Your Team Needs</h2>
+      <p>Stop competing for clicks. Start delivering custom bids directly to the homes that need your services most.</p>
+    </div>
     <div class="features-grid">
       <div class="feat-item">
-        <div class="feat-icon">🗺️</div>
+        <div class="feat-icon-wrap">
+          <svg class="feat-icon-svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+        </div>
         <h4>Canvass Map</h4>
         <p>Pin every door knock. Filter by status. See your whole territory at a glance.</p>
       </div>
       <div class="feat-item">
-        <div class="feat-icon">📄</div>
+        <div class="feat-icon-wrap">
+          <svg class="feat-icon-svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        </div>
         <h4>Estimate Builder</h4>
         <p>Branded estimate pages with QR scan tracking. Know exactly when a homeowner views their quote.</p>
       </div>
       <div class="feat-item">
-        <div class="feat-icon">✉️</div>
+        <div class="feat-icon-wrap">
+          <svg class="feat-icon-svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        </div>
         <h4>Mail Queue</h4>
         <p>Queue postcards and letters from the field. Lob prints and mails them the same day.</p>
       </div>
       <div class="feat-item">
         <div class="feat-badge">Pro</div>
-        <div class="feat-icon">🔥</div>
+        <div class="feat-icon-wrap">
+          <svg class="feat-icon-svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
         <h4>Follow-Up Blitz</h4>
         <p>Automated 3–5 postcard sequences. Set it once, BidDrop follows up on schedule — no manual work.</p>
       </div>
       <div class="feat-item">
         <div class="feat-badge">Pro</div>
-        <div class="feat-icon">🔗</div>
+        <div class="feat-icon-wrap">
+          <svg class="feat-icon-svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+        </div>
         <h4>GHL Integration</h4>
         <p>Every lead syncs to your GoHighLevel pipeline automatically. No copy-paste, no missed contacts.</p>
       </div>
       <div class="feat-item">
-        <div class="feat-icon">📊</div>
+        <div class="feat-icon-wrap">
+          <svg class="feat-icon-svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        </div>
         <h4>Analytics Dashboard</h4>
         <p>Rep performance, scan rates, mail ROI. Know what's working before you scale it.</p>
       </div>
@@ -258,8 +416,11 @@ img{max-width:100%;display:block;}
 
 <!-- PRICING -->
 <section class="pricing" id="pricing">
-  <h2>Simple, Transparent Pricing</h2>
-  <p class="pricing-sub">All plans include a 60-day free trial. Credit card required — not charged until day 61.</p>
+  <div class="pricing-header">
+    <p class="section-label">Pricing</p>
+    <h2>Simple, Transparent Pricing</h2>
+    <p>All plans include a 60-day free trial. Credit card required — not charged until day 61.</p>
+  </div>
   <div class="pricing-grid">
 
     <!-- Starter -->
@@ -274,12 +435,12 @@ img{max-width:100%;display:block;}
       <div class="plan-trial">✓ FREE for 60 days</div>
       <ul class="plan-features">
         <li>1 User</li>
-        <li>10 free mailers to start <strong style="color:#F97316">($40 value)</strong></li>
-        <li>15 mailers/mo after trial <strong style="color:#F97316">($60/mo value)</strong></li>
+        <li>10 free mailers to start <strong style="color:var(--accent)">($40 value)</strong></li>
+        <li>15 mailers/mo after trial <strong style="color:var(--accent)">($60/mo value)</strong></li>
         <li>Unlimited pins</li>
-        <li>Map canvassing & pin drops</li>
+        <li>Map canvassing &amp; pin drops</li>
         <li>Estimate builder</li>
-        <li>Postcard & letter preview</li>
+        <li>Postcard &amp; letter preview</li>
         <li>Mail queue</li>
         <li>Property lookups (free)</li>
         <li class="no">GHL integration</li>
@@ -301,15 +462,15 @@ img{max-width:100%;display:block;}
       <div class="plan-trial">✓ FREE for 60 days</div>
       <ul class="plan-features">
         <li>10 Users</li>
-        <li>10 free mailers to start <strong style="color:#F97316">($40 value)</strong></li>
-        <li>40 mailers/mo after trial <strong style="color:#F97316">($160/mo value)</strong></li>
+        <li>10 free mailers to start <strong style="color:var(--accent)">($40 value)</strong></li>
+        <li>40 mailers/mo after trial <strong style="color:var(--accent)">($160/mo value)</strong></li>
         <li>Unlimited pins</li>
         <li>Everything in Starter</li>
         <li>Estimate pages (biddrop.us)</li>
-        <li>🎁 GHL integration — included free</li>
+        <li>GHL integration — included free</li>
         <li>Analytics dashboard</li>
         <li>QR scan tracking</li>
-        <li>🔥 Follow-Up Blitz (5-postcard sequences)</li>
+        <li>Follow-Up Blitz (5-postcard sequences)</li>
       </ul>
       <a href="/signup?plan=pro" class="plan-btn">Select Pro</a>
     </div>
@@ -326,12 +487,12 @@ img{max-width:100%;display:block;}
       <div class="plan-trial">✓ FREE for 60 days</div>
       <ul class="plan-features">
         <li>100 Users</li>
-        <li>10 free mailers to start <strong style="color:#F97316">($40 value)</strong></li>
-        <li>100 mailers/mo after trial <strong style="color:#F97316">($400/mo value)</strong></li>
+        <li>10 free mailers to start <strong style="color:var(--accent)">($40 value)</strong></li>
+        <li>100 mailers/mo after trial <strong style="color:var(--accent)">($400/mo value)</strong></li>
         <li>Unlimited pins</li>
         <li>Everything in Pro</li>
         <li>Multi-rep management</li>
-        <li>Rep analytics & leaderboard</li>
+        <li>Rep analytics &amp; leaderboard</li>
         <li>Custom postcard design</li>
         <li>Priority support</li>
       </ul>
@@ -342,8 +503,11 @@ img{max-width:100%;display:block;}
 </section>
 
 <!-- FAQ -->
-<section class="faq">
-  <h2>Common Questions</h2>
+<section class="faq" id="faq">
+  <div class="faq-header">
+    <p class="section-label">FAQ</p>
+    <h2>Common Questions</h2>
+  </div>
 
   <div class="faq-item">
     <div class="faq-q" onclick="toggleFaq(this)">Do I need a credit card to start?</div>
@@ -372,7 +536,7 @@ img{max-width:100%;display:block;}
 
   <div class="faq-item">
     <div class="faq-q" onclick="toggleFaq(this)">Can I upgrade or downgrade my plan?</div>
-    <div class="faq-a">Yes. You can change your plan at any time from the Plan & Billing page inside the app. Changes take effect immediately through the Stripe Customer Portal.</div>
+    <div class="faq-a">Yes. You can change your plan at any time from the Plan &amp; Billing page inside the app. Changes take effect immediately through the Stripe Customer Portal.</div>
   </div>
 
 </section>
@@ -382,7 +546,7 @@ img{max-width:100%;display:block;}
   <h2>Ready to Close More Roofs?<br><em>Start Free Today.</em></h2>
   <p>60 days free. Credit card required — not charged until day 61. Cancel anytime.</p>
   <a href="/signup?plan=pro" class="btn-primary" style="display:inline-block;">Start Your 60-Day Free Trial</a>
-  <p class="final-cta-note">Questions? Email us at <a href="mailto:support@biddrop.io" style="color:var(--accent);">support@biddrop.io</a></p>
+  <p class="final-cta-note">Questions? Email us at <a href="mailto:support@biddrop.io">support@biddrop.io</a></p>
 </section>
 
 <!-- FOOTER -->
@@ -395,13 +559,6 @@ img{max-width:100%;display:block;}
 function toggleFaq(el){
   const item = el.closest('.faq-item');
   item.classList.toggle('open');
-}
-function playVideo(){
-  // Replace VIDEO_URL with your actual video URL when ready
-  const VIDEO_URL = '';
-  if(!VIDEO_URL){ alert('Demo video coming soon!'); return; }
-  const wrap = document.getElementById('demo-video-wrap');
-  wrap.innerHTML = '<video autoplay controls style="width:100%;display:block;aspect-ratio:16/9;"><source src="'+VIDEO_URL+'" type="video/mp4"></video>';
 }
 </script>
 </body>
