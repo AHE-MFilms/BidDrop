@@ -18,7 +18,7 @@ const PRICE_IDS = {
 // Monthly mailer credits per plan (given on signup as bonus)
 const PLAN_MAILER_CREDITS = {
   starter: 10,
-  pro: 25,
+  pro: 50,
   agency: 50,
 };
 

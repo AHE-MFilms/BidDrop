@@ -19,7 +19,7 @@
  *
  * Monthly credit allotments (once billing starts):
  *   Starter:    15 credits/mo
- *   Pro:        40 credits/mo
+ *   Pro:        50 credits/mo
  *   Agency:     100 credits/mo
  *   Enterprise: 200 credits/mo
  *
@@ -52,7 +52,7 @@ const APP_URL      = (process.env.APP_URL || 'https://biddrop.us').trim();
 // Monthly credit allotments per plan (after trial, once billing starts)
 const PLAN_MONTHLY_CREDITS = {
   starter:    15,
-  pro:        40,
+  pro:        50,
   agency:     100,
   enterprise: 200,
 };

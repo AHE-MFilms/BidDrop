@@ -47,7 +47,7 @@ const PLAN_CONFIG = {
   pro: {
     name: 'Pro',
     price: 197,
-    mailer_credits: 10,  // trial start credits (25/mo kicks in after trial)
+    mailer_credits: 10,  // trial start credits (50/mo kicks in after trial)
     max_reps: 10,
     max_pins_per_month: 1000,
     offer_ghl: true,
