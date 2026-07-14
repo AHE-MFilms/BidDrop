@@ -12,10 +12,10 @@
 //
 // Required env vars:
 //   SUPABASE_URL
-//   SUPABASE_ANON_KEY  (read-only, safe for this endpoint)
+//   SUPABASE_SERVICE_KEY  (already set in Vercel)
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://gtwbhxnrmfmdenogzuea.supabase.co';
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const TABLE = 'mrms_hail_events';
 
 // Max rows to return per request (prevents massive payloads)
@@ -49,8 +49,8 @@ export default async function handler(req, res) {
   cutoff.setDate(cutoff.getDate() - daysBack);
   const cutoffStr = cutoff.toISOString().slice(0, 10); // YYYY-MM-DD
 
-  if (!SUPABASE_ANON_KEY) {
-    return res.status(500).json({ error: 'SUPABASE_ANON_KEY not configured' });
+  if (!SUPABASE_KEY) {
+    return res.status(500).json({ error: 'SUPABASE_SERVICE_KEY not configured' });
   }
 
   // Build Supabase REST query
@@ -75,8 +75,8 @@ export default async function handler(req, res) {
   try {
     const resp = await fetch(url, {
       headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
         Accept: 'application/json',
       },
     });
