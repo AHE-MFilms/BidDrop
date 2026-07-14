@@ -1,0 +1,54 @@
+name: MRMS Nightly Hail Ingestion
+
+on:
+  schedule:
+    # Run at 06:00 UTC daily — NOAA typically publishes previous day's data by then
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+    inputs:
+      days_ago:
+        description: "How many days ago to ingest (default: 1 = yesterday)"
+        required: false
+        default: "1"
+
+jobs:
+  ingest:
+    name: Ingest MRMS MESH Hail Data
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install \
+            boto3 \
+            cfgrib \
+            xarray \
+            numpy \
+            requests \
+            eccodes
+
+      - name: Run MRMS ingestion
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
+        run: |
+          DAYS_AGO="${{ github.event.inputs.days_ago || '1' }}"
+          echo "Ingesting MRMS data for $DAYS_AGO day(s) ago..."
+          python3 scripts/mrms_ingest.py "$DAYS_AGO"
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::MRMS ingestion failed. Check logs above."
+          # Optional: add Slack/email notification here

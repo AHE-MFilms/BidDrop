@@ -84,9 +84,11 @@ function toggleHailLayer(){
   _syncHailToggleUI();
   if(_hailLayerOn){
     loadStormEvents();
+    if(typeof loadMrmsLayer === 'function') loadMrmsLayer();
   } else {
     clearStormMarkers();
     _stormData = [];
+    if(typeof clearMrmsLayer === 'function') clearMrmsLayer();
     const s = document.getElementById('storm-status'); if(s) s.textContent='';
   }
   _saveStormState();
