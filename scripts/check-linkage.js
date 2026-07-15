@@ -37,10 +37,13 @@ const defined = new Set();
 
 function extractFunctions(src) {
   // Matches: function name(  |  async function name(
-  // Also matches: name = function(  |  name = async function(  |  name = (  (arrow)
   const defRe = /(?:^|[\n;{(,])\s*(?:async\s+)?function\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(/gm;
   let dm;
   while ((dm = defRe.exec(src)) !== null) defined.add(dm[1]);
+  // Also matches: window.name = function(  |  window.name = async function(
+  const winRe = /window\.([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*(?:async\s+)?function\s*\(/gm;
+  let wm;
+  while ((wm = winRe.exec(src)) !== null) defined.add(wm[1]);
 }
 
 // Scan src/*.js
