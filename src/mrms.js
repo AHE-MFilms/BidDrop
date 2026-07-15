@@ -18,8 +18,9 @@ let _mrmsData   = [];       // raw fetched rows
 let _mrmsLoaded = false;    // whether data has been fetched for current settings
 let _mrmsVisible = false;   // whether the MRMS layer is currently shown
 
-// Grid cell half-size in degrees (~0.5km at CONUS latitudes)
-const CELL_HALF = 0.0005;
+// Grid cell half-size in degrees (~1km at CONUS latitudes)
+// MRMS data is on a 0.01° grid; use 0.005° half-size so cells tile edge-to-edge
+const CELL_HALF = 0.005;
 
 /**
  * Called by the MRMS toggle button — independent of SPC hail toggle.
@@ -71,7 +72,7 @@ function clearMrmsLayerOnly() {
   _mrmsLayers = [];
 }
 
-const MRMS_MIN_ZOOM = 8; // county level — below this, 1km cells are sub-pixel
+const MRMS_MIN_ZOOM = 6; // state/regional level — cells are ~1km, visible from zoom 6+
 
 async function fetchMrmsData() {
   const statusEl = document.getElementById('mrms-status');
