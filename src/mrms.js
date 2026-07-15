@@ -203,6 +203,84 @@ function hailColor(sizeIn) {
   return                     { color: '#FEF08A', label: 'Dime'      };
 }
 
+// ── Address-level hail history lookup ──────────────────────────────────────
+window.lookupHailAddress = async function() {
+  const input   = document.getElementById('hail-lookup-input');
+  const statusEl = document.getElementById('hail-lookup-status');
+  const resultsEl = document.getElementById('hail-lookup-results');
+  const address = (input?.value || '').trim();
+  if (!address) {
+    if (statusEl) statusEl.textContent = 'Enter an address above.';
+    return;
+  }
+  if (statusEl) statusEl.textContent = '🔍 Looking up hail history…';
+  if (resultsEl) resultsEl.style.display = 'none';
+
+  try {
+    const params = new URLSearchParams({ address, days: '1825', minSize: '0.5' });
+    const resp = await fetch(`/api/mrms-address-lookup?${params}`);
+    const data = await resp.json();
+    if (!resp.ok) {
+      if (statusEl) statusEl.textContent = data.error || 'Lookup failed.';
+      return;
+    }
+    if (!data.events || data.events.length === 0) {
+      if (statusEl) statusEl.textContent = '✅ No hail ≥ 0.5" detected at this address in the last 5 years.';
+      if (resultsEl) resultsEl.style.display = 'none';
+      return;
+    }
+    if (statusEl) statusEl.textContent = '';
+    _renderHailLookupResults(data, resultsEl);
+    // Pan map to the address
+    try { map.setView([data.lat, data.lon], Math.max(map.getZoom(), 13)); } catch(e) {}
+  } catch(e) {
+    if (statusEl) statusEl.textContent = 'Network error. Try again.';
+  }
+};
+
+function _renderHailLookupResults(data, el) {
+  const { address, events } = data;
+  const sizeLabel = s => {
+    if (s >= 2.00) return { label: 'Baseball+', color: '#EF4444' };
+    if (s >= 1.50) return { label: 'Golf Ball', color: '#F97316' };
+    if (s >= 1.00) return { label: 'Quarter',   color: '#F59E0B' };
+    if (s >= 0.75) return { label: 'Penny',     color: '#FBBF24' };
+    return             { label: 'Dime',      color: '#FEF08A' };
+  };
+  const rows = events.slice(0, 20).map(ev => {
+    const { label, color } = sizeLabel(ev.hail_size_in);
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--text);">${ev.event_date}</div>
+        <div style="font-size:10px;color:var(--mid);">${ev.distance_km} km from address</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:12px;font-weight:700;color:${color};">${ev.hail_size_in.toFixed(2)}"</div>
+        <div style="font-size:9px;color:${color};">${label}</div>
+      </div>
+    </div>`;
+  }).join('');
+  const more = events.length > 20 ? `<div style="font-size:10px;color:var(--mid);text-align:center;padding-top:6px;">+${events.length - 20} more events</div>` : '';
+  el.innerHTML = `
+    <div style="font-size:10px;color:var(--mid);margin-bottom:6px;word-break:break-word;">${address?.split(',').slice(0,2).join(',') || 'Address'}</div>
+    <div style="font-size:11px;font-weight:700;color:#f59e0b;margin-bottom:6px;">${events.length} hail event${events.length !== 1 ? 's' : ''} found (last 5 yrs)</div>
+    ${rows}
+    ${more}
+    <button onclick="_hailLookupDropPin(${data.lat},${data.lon})"
+      style="width:100%;margin-top:8px;background:#F25C05;color:#fff;border:none;border-radius:6px;padding:7px;font-size:11px;font-weight:700;cursor:pointer;">
+      📍 Drop Pin at This Address
+    </button>
+  `;
+  el.style.display = 'block';
+}
+
+window._hailLookupDropPin = function(lat, lon) {
+  try {
+    const addr = document.getElementById('hail-lookup-input')?.value || '';
+    stormDropPin(lat, lon, encodeURIComponent(addr || `${lat.toFixed(3)}, ${lon.toFixed(3)}`));
+  } catch(e) { console.warn('[MRMS] dropPin error:', e); }
+};
+
 // Re-fetch when map is panned/zoomed (debounced) so we always show
 // the current viewport's data
 let _mrmsDebounce = null;

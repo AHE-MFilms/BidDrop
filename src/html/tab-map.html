@@ -92,6 +92,22 @@
         </label>
       </div>
       <div id="wind-status" style="font-size:10px;color:var(--mid);text-align:center;min-height:14px;"></div>
+
+      <div style="border-top:1px solid var(--border);margin:10px 0;"></div>
+
+      <!-- Hail Address Lookup -->
+      <div style="margin-bottom:4px;">
+        <div style="font-size:12px;font-weight:700;color:#f59e0b;margin-bottom:8px;">🔎 Hail History by Address</div>
+        <div style="display:flex;gap:6px;margin-bottom:6px;">
+          <input id="hail-lookup-input" type="text" placeholder="Enter any address…"
+            style="flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:6px 10px;font-size:12px;outline:none;"
+            onkeydown="if(event.key==='Enter')lookupHailAddress()"
+          />
+          <button onclick="lookupHailAddress()" style="background:#f59e0b;color:#000;border:none;border-radius:7px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">Check</button>
+        </div>
+        <div id="hail-lookup-status" style="font-size:10px;color:var(--mid);text-align:center;min-height:14px;"></div>
+        <div id="hail-lookup-results" style="display:none;margin-top:8px;"></div>
+      </div>
     </div>
     <div class="measure-hud" id="measure-hud">
       <!-- Row 1: Footprint + Actual Roof Area side by side -->
