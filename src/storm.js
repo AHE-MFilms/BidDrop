@@ -180,7 +180,7 @@ async function loadStormEvents(){
       for(let i = 1; i < lines.length; i++){
         const parts = lines[i].split(',');
         if(parts.length < 7) continue;
-        const size = parseFloat(parts[1]);
+        const size = parseFloat(parts[1]) / 100; // SPC reports in hundredths of inches
         const lat = parseFloat(parts[5]);
         const lon = parseFloat(parts[6]);
         if(isNaN(lat)||isNaN(lon)||isNaN(size)) continue;
@@ -260,11 +260,11 @@ function renderStormMarkers(){
     const popupHtml = `
       <div style="font-family:sans-serif;min-width:210px;">
         <div style="font-weight:700;font-size:14px;color:#fff;margin-bottom:6px;">\u26c8 Hail Report</div>
-        <div style="font-size:12px;color:#e5e7eb;margin-bottom:4px;"><b style='color:#fff;'>Size:</b> ${sizeInches}\" (${label})</div>
-        <div style="font-size:12px;color:#e5e7eb;margin-bottom:4px;"><b style='color:#fff;'>Location:</b> ${r.location}, ${r.county}, ${r.state}</div>
-        <div style="font-size:12px;color:#e5e7eb;margin-bottom:4px;"><b style='color:#fff;'>Date:</b> ${dateFormatted}</div>
-        ${r.comment ? `<div style="font-size:11px;color:#9ca3af;margin-bottom:6px;font-style:italic;">${r.comment}</div>` : ''}
-        <div style="font-size:10px;color:#6b7280;background:rgba(255,255,255,.06);border-radius:4px;padding:5px 7px;margin-bottom:8px;">\u26a0\ufe0f Hail observed at this location. Impact area typically extends <b style='color:#9ca3af;'>1\u20132 miles</b> from this point.</div>
+            <div style="font-size:14px;color:#fff;margin-bottom:4px;"><b>Size:</b> ${sizeInches}\" (${label})</div>
+        <div style="font-size:14px;color:#fff;margin-bottom:4px;"><b>Location:</b> ${r.location}, ${r.county}, ${r.state}</div>
+        <div style="font-size:14px;color:#fff;margin-bottom:4px;"><b>Date:</b> ${dateFormatted}</div>
+        ${r.comment ? `<div style="font-size:12px;color:#d1d5db;margin-bottom:6px;font-style:italic;">${r.comment}</div>` : ''}
+        <div style="font-size:11px;color:#d1d5db;background:rgba(255,255,255,.08);border-radius:4px;padding:6px 8px;margin-bottom:8px;">⚠️ Hail observed at this location. Impact area typically extends <b style='color:#fff;'>1–2 miles</b> from this point.</div>
         <button onclick="stormDropPin(${r.lat},${r.lon},encodeURIComponent('${r.location}, ${r.county}, ${r.state}'))" 
           style="width:100%;background:#F25C05;color:#fff;border:none;border-radius:6px;padding:8px;font-weight:700;font-size:12px;cursor:pointer;">
           \uD83D\uDCCD Drop Pin Here
@@ -391,11 +391,11 @@ function renderWindMarkers(){
     const popupHtml = `
       <div style="font-family:sans-serif;min-width:210px;">
         <div style="font-weight:700;font-size:14px;color:#fff;margin-bottom:6px;">💨 Wind Report</div>
-        <div style="font-size:12px;color:#e5e7eb;margin-bottom:4px;"><b style='color:#fff;'>Speed:</b> ${r.speed} MPH</div>
-        <div style="font-size:12px;color:#e5e7eb;margin-bottom:4px;"><b style='color:#fff;'>Location:</b> ${r.location}, ${r.county}, ${r.state}</div>
-        <div style="font-size:12px;color:#e5e7eb;margin-bottom:4px;"><b style='color:#fff;'>Date:</b> ${dateFormatted}</div>
-        ${r.comment ? `<div style="font-size:11px;color:#9ca3af;margin-bottom:6px;font-style:italic;">${r.comment}</div>` : ''}
-        <div style="font-size:10px;color:#6b7280;background:rgba(255,255,255,.06);border-radius:4px;padding:5px 7px;margin-bottom:8px;">⚠️ Wind observed at this location. Impact area typically extends <b style='color:#9ca3af;'>1–2 miles</b> from this point.</div>
+        <div style="font-size:14px;color:#fff;margin-bottom:4px;"><b>Speed:</b> ${r.speed} MPH</div>
+        <div style="font-size:14px;color:#fff;margin-bottom:4px;"><b>Location:</b> ${r.location}, ${r.county}, ${r.state}</div>
+        <div style="font-size:14px;color:#fff;margin-bottom:4px;"><b>Date:</b> ${dateFormatted}</div>
+        ${r.comment ? `<div style="font-size:12px;color:#d1d5db;margin-bottom:6px;font-style:italic;">${r.comment}</div>` : ''}
+        <div style="font-size:11px;color:#d1d5db;background:rgba(255,255,255,.08);border-radius:4px;padding:6px 8px;margin-bottom:8px;">⚠️ Wind observed at this location. Impact area typically extends <b style='color:#fff;'>1–2 miles</b> from this point.</div>
         <button onclick="stormDropPin(${r.lat},${r.lon},encodeURIComponent('${r.location} ${r.county} ${r.state}'))" 
           style="width:100%;background:#F25C05;color:#fff;border:none;border-radius:6px;padding:8px;font-weight:700;font-size:12px;cursor:pointer;">
           📍 Drop Pin Here
