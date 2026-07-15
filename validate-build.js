@@ -139,9 +139,14 @@ if (missingFns.length > 0) {
   // Collect definitions from all src/*.js and src/html/*.html script blocks
   const definedFns = new Set();
   function _extractFns(src) {
+    // Match: function foo( or async function foo(
     const defRe = /(?:^|[\n;{(,])\s*(?:async\s+)?function\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(/gm;
     let dm;
     while ((dm = defRe.exec(src)) !== null) definedFns.add(dm[1]);
+    // Match: window.foo = function( or window.foo = async function(
+    const winRe = /window\.([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*(?:async\s+)?function/gm;
+    let wm;
+    while ((wm = winRe.exec(src)) !== null) definedFns.add(wm[1]);
   }
   for (const fname of jsFiles) _extractFns(fs.readFileSync(path.join(SRC_JS, fname), 'utf8'));
   for (const fname of fs.readdirSync(SRC_HTML).filter(f => f.endsWith('.html'))) {
