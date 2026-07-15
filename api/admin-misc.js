@@ -738,6 +738,131 @@ async function handle(action, req, res, ctx) {
         return res.json({ ok: true, credits_deducted: bsdCredits, new_balance: bsdBalance - bsdCredits });
       }
 
+      case 'storm-leads-swath': {
+        // Pull Single Family homes in a hail swath bounding box (free — no credit cost)
+        const { swLat, swLng, neLat, neLng, stormDate, stormCity } = req.body;
+        if (!swLat || !swLng || !neLat || !neLng) {
+          return res.status(400).json({ error: 'swLat, swLng, neLat, neLng required' });
+        }
+        if (!RENTCAST_KEY) return res.status(500).json({ error: 'RENTCAST_KEY not configured' });
+        const SL_MAX = 200;
+        const slCenterLat = (parseFloat(swLat) + parseFloat(neLat)) / 2;
+        const slCenterLng = (parseFloat(swLng) + parseFloat(neLng)) / 2;
+        const slLatDiff = parseFloat(neLat) - parseFloat(swLat);
+        const slLngDiff = parseFloat(neLng) - parseFloat(swLng);
+        const slRadiusDeg = Math.sqrt(slLatDiff * slLatDiff + slLngDiff * slLngDiff) / 2;
+        const slRadiusMiles = Math.min(slRadiusDeg * 69, 5);
+        try {
+          const slCtrl = new AbortController();
+          const slTmo = setTimeout(() => slCtrl.abort(), 12000);
+          const slRcRes = await fetch(
+            `https://api.rentcast.io/v1/properties?latitude=${slCenterLat}&longitude=${slCenterLng}&radius=${slRadiusMiles.toFixed(2)}&propertyType=Single+Family&limit=${SL_MAX}`,
+            { headers: { 'X-Api-Key': RENTCAST_KEY }, signal: slCtrl.signal }
+          );
+          clearTimeout(slTmo);
+          if (!slRcRes.ok) {
+            const slErr = await slRcRes.text();
+            return res.status(slRcRes.status).json({ error: 'RentCast error', detail: slErr.substring(0, 200) });
+          }
+          const slRcData = await slRcRes.json();
+          const slProperties = Array.isArray(slRcData) ? slRcData : (slRcData.properties || []);
+          const sl_sw_lat = parseFloat(swLat), sl_ne_lat = parseFloat(neLat);
+          const sl_sw_lng = parseFloat(swLng), sl_ne_lng = parseFloat(neLng);
+          const slInBox = slProperties.filter(p =>
+            p.latitude >= sl_sw_lat && p.latitude <= sl_ne_lat &&
+            p.longitude >= sl_sw_lng && p.longitude <= sl_ne_lng
+          );
+          // Check which are already unlocked
+          const slUnlocked = new Set();
+          if (slInBox.length > 0) {
+            const slPinRes = await sbFetch(`pins?account_id=eq.${effectiveAccountId}&storm_lead=eq.true&select=address&limit=500`);
+            if (slPinRes.ok) { (await slPinRes.json()).forEach(p => slUnlocked.add((p.address||'').toLowerCase())); }
+          }
+          // Find or create storm campaign
+          const slCampName = stormDate && stormCity ? `${stormCity} Hail — ${stormDate}` : `Storm Leads — ${new Date().toISOString().slice(0,10)}`;
+          let slCampId = null;
+          const slCampRes = await sbFetch(`campaign_targets?account_id=eq.${effectiveAccountId}&source_address=eq.${encodeURIComponent(slCampName)}&limit=1`);
+          if (slCampRes.ok) { const slCamps = await slCampRes.json(); if (slCamps.length > 0) slCampId = slCamps[0].id; }
+          if (!slCampId) {
+            slCampId = 'storm-' + Date.now();
+            await sbFetch('campaign_targets', {
+              method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates' },
+              body: JSON.stringify({ id: slCampId, account_id: effectiveAccountId, source_address: slCampName,
+                campaign_date: new Date().toISOString(), rep_email: caller.email||'',
+                pin_ids: [], home_count: 0, postcards_sent: 0, ghl_pushed: 0, status: 'active', storm_lead: true }),
+            }).catch(()=>{});
+          }
+          const slHomes = slInBox.map(p => ({
+            id: p.id||null, address: p.formattedAddress||p.address||'',
+            lat: p.latitude, lon: p.longitude, owner: p.ownerName||null,
+            yearBuilt: p.yearBuilt||null, sqft: p.squareFootage||null,
+            unlocked: slUnlocked.has((p.formattedAddress||p.address||'').toLowerCase()),
+          }));
+          return res.status(200).json({ homes: slHomes, campaignId: slCampId, campaignName: slCampName, total: slHomes.length });
+        } catch (e) {
+          if (e.name === 'AbortError') return res.status(408).json({ error: 'RentCast timed out' });
+          throw e;
+        }
+      }
+
+      case 'storm-leads-unlock': {
+        // Deduct 1 credit, save pin, add to storm campaign
+        const { lat: ulLat, lon: ulLon, address: ulAddr, campaignId: ulCampId,
+                hailSize: ulHailSize, hailDate: ulHailDate } = req.body;
+        if (!ulLat || !ulLon || !ulAddr) return res.status(400).json({ error: 'lat, lon, address required' });
+        // 1. Check balance
+        const ulAcctRes = await sbFetch(`accounts?id=eq.${effectiveAccountId}&select=id,mailer_credits&limit=1`);
+        if (!ulAcctRes.ok) return res.status(500).json({ error: 'Failed to fetch account' });
+        const ulAccts = await ulAcctRes.json();
+        if (!ulAccts.length) return res.status(404).json({ error: 'Account not found' });
+        const ulCredits = ulAccts[0].mailer_credits || 0;
+        if (ulCredits < 1) return res.status(402).json({ error: 'insufficient_credits', creditsRemaining: 0 });
+        // 2. Deduct 1 credit
+        const ulDeductRes = await sbFetch(`accounts?id=eq.${effectiveAccountId}`, {
+          method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ mailer_credits: ulCredits - 1 }),
+        });
+        if (!ulDeductRes.ok) return res.status(500).json({ error: 'Credit deduction failed' });
+        // 3. Save pin
+        const ulPinId = 'p' + Date.now() + Math.floor(Math.random() * 1000);
+        const ulPin = {
+          id: ulPinId, account_id: effectiveAccountId,
+          lat: parseFloat(ulLat), lng: parseFloat(ulLon), address: ulAddr,
+          status: 'pinned',
+          notes: `Storm lead — ${ulHailSize ? ulHailSize + '" hail on ' + ulHailDate : 'MRMS radar hail'}`,
+          rep: profile.name || caller.email || 'Storm Lead',
+          at: new Date().toISOString(),
+          storm_lead: true, campaign_id: ulCampId||null,
+          campaign_target: ulCampId ? true : false, paid_by_unlock: true,
+        };
+        const ulPinRes = await sbFetch('pins', {
+          method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates' },
+          body: JSON.stringify(ulPin),
+        });
+        if (!ulPinRes.ok) {
+          await sbFetch(`accounts?id=eq.${effectiveAccountId}`, {
+            method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ mailer_credits: ulCredits }),
+          }).catch(()=>{});
+          const ulErr = await ulPinRes.text();
+          return res.status(500).json({ error: 'Pin save failed', detail: ulErr.substring(0,200) });
+        }
+        // 4. Update campaign (best-effort)
+        if (ulCampId) {
+          const ulCRes = await sbFetch(`campaign_targets?id=eq.${ulCampId}&select=pin_ids,home_count&limit=1`);
+          if (ulCRes.ok) {
+            const ulCs = await ulCRes.json();
+            if (ulCs.length > 0) {
+              await sbFetch(`campaign_targets?id=eq.${ulCampId}`, {
+                method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
+                body: JSON.stringify({ pin_ids: [...(ulCs[0].pin_ids||[]), ulPinId], home_count: (ulCs[0].home_count||0)+1 }),
+              }).catch(()=>{});
+            }
+          }
+        }
+        return res.status(200).json({ ok: true, pin: ulPin, creditsRemaining: ulCredits - 1 });
+      }
+
     default:
       return false;
   }

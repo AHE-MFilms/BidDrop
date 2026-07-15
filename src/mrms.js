@@ -190,8 +190,24 @@ function renderMrmsLayerFromData() {
     _mrmsLayers.push(rect);
   });
 
+  // Track last MRMS context for storm-leads.js
+  if (filtered.length > 0) {
+    const mostRecent = filtered.reduce((a, b) => a.event_date > b.event_date ? a : b);
+    window._mrmsLastDate = mostRecent.event_date;
+    window._mrmsLastSize = parseFloat(mostRecent.hail_size_in);
+    // Derive city from map center (best effort)
+    try {
+      const c = map.getCenter();
+      window._mrmsLastCity = `${c.lat.toFixed(2)},${c.lng.toFixed(2)}`;
+    } catch(e) {}
+  }
+
   if (statusEl) {
-    statusEl.textContent = `${filtered.length.toLocaleString()} MRMS radar cells shown`;
+    statusEl.innerHTML = `${filtered.length.toLocaleString()} MRMS radar cells shown
+      <br><button id="btn-storm-leads" onclick="stormLeadsGetAddresses()"
+        style="margin-top:6px;width:100%;background:#F25C05;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;">
+        🏠 Get Addresses in This Area
+      </button>`;
   }
 }
 
