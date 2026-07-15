@@ -58,8 +58,20 @@ function clearMrmsLayerOnly() {
   _mrmsLayers = [];
 }
 
+const MRMS_MIN_ZOOM = 8; // county level — below this, 1km cells are sub-pixel
+
 async function fetchMrmsData() {
   const statusEl = document.getElementById('storm-status');
+
+  // Gate: only render MRMS when zoomed in enough to see 1km cells
+  let currentZoom = 0;
+  try { currentZoom = map.getZoom(); } catch(e) {}
+  if (currentZoom < MRMS_MIN_ZOOM) {
+    clearMrmsLayerOnly();
+    if (statusEl) statusEl.textContent = '🔍 Zoom in to a city to see MRMS radar hail swaths';
+    return;
+  }
+
   if (statusEl) statusEl.textContent = 'Loading MRMS radar data…';
 
   const days    = parseInt(document.getElementById('storm-days')?.value || '30') || 30;
@@ -146,10 +158,10 @@ function renderMrmsLayerFromData() {
     const popupHtml = `
       <div style="font-family:sans-serif;min-width:200px;">
         <div style="font-weight:700;font-size:14px;color:#fff;margin-bottom:6px;">🧊 MRMS Radar Hail</div>
-        <div style="font-size:12px;color:#e5e7eb;margin-bottom:4px;"><b style="color:#fff;">Size:</b> ${size.toFixed(2)}" (${label})</div>
-        <div style="font-size:12px;color:#e5e7eb;margin-bottom:4px;"><b style="color:#fff;">Date:</b> ${date}</div>
-        <div style="font-size:12px;color:#e5e7eb;margin-bottom:8px;"><b style="color:#fff;">Grid:</b> ${lat.toFixed(3)}°, ${lon.toFixed(3)}°</div>
-        <div style="font-size:10px;color:#6b7280;background:rgba(255,255,255,.06);border-radius:4px;padding:5px 7px;margin-bottom:8px;">
+        <div style="font-size:14px;color:#fff;margin-bottom:4px;"><b>Size:</b> ${size.toFixed(2)}" (${label})</div>
+        <div style="font-size:14px;color:#fff;margin-bottom:4px;"><b>Date:</b> ${date}</div>
+        <div style="font-size:14px;color:#fff;margin-bottom:8px;"><b>Grid:</b> ${lat.toFixed(3)}°, ${lon.toFixed(3)}°</div>
+        <div style="font-size:11px;color:#d1d5db;background:rgba(255,255,255,.08);border-radius:4px;padding:6px 8px;margin-bottom:8px;">
           📡 Radar-estimated hail size. 1km grid cell from NOAA MRMS MESH.
         </div>
         <button onclick="stormDropPin(${lat},${lon},encodeURIComponent('${lat.toFixed(3)}, ${lon.toFixed(3)}'))"
