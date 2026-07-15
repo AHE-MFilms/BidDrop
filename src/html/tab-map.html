@@ -22,9 +22,9 @@
       </div>
       <div style="font-size:10px;color:var(--muted);margin-bottom:12px;">Source: <span id="storm-source-label">NOAA MRMS Radar</span> · Free</div>
 
-      <!-- Hail Layer Toggle -->
+      <!-- Hail Layer Toggle (SPC) -->
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-        <div style="font-size:12px;font-weight:700;color:#60a5fa;">🧊 Hail Strikes <span id="mrms-badge" style="font-size:9px;background:#1d4ed8;color:#bfdbfe;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:600;">RADAR</span></div>
+        <div style="font-size:12px;font-weight:700;color:#60a5fa;">🌩️ Hail Reports <span style="font-size:9px;background:#1e3a5f;color:#93c5fd;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:600;">SPC</span></div>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
           <span style="font-size:10px;color:var(--muted);" id="hail-toggle-lbl">OFF</span>
           <div onclick="toggleHailLayer()" id="hail-toggle-track" style="width:36px;height:20px;border-radius:10px;background:#374151;cursor:pointer;position:relative;transition:background .2s;">
@@ -64,6 +64,20 @@
         </div>
         <div id="storm-status" style="font-size:10px;color:var(--mid);text-align:center;min-height:14px;"></div>
       </div>
+
+      <div style="border-top:1px solid var(--border);margin:10px 0;"></div>
+
+      <!-- MRMS Radar Swaths Toggle (separate) -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <div style="font-size:12px;font-weight:700;color:#818cf8;">🧊 Radar Swaths <span style="font-size:9px;background:#312e81;color:#c7d2fe;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:600;">MRMS</span></div>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <span style="font-size:10px;color:var(--muted);" id="mrms-toggle-lbl">OFF</span>
+          <div onclick="toggleMrmsLayer()" id="mrms-toggle-track" style="width:36px;height:20px;border-radius:10px;background:#374151;cursor:pointer;position:relative;transition:background .2s;">
+            <div id="mrms-toggle-thumb" style="position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#9ca3af;transition:all .2s;"></div>
+          </div>
+        </label>
+      </div>
+      <div id="mrms-status" style="font-size:10px;color:var(--mid);text-align:center;min-height:14px;margin-bottom:8px;">🔍 Zoom into a city to see 1km radar hail swaths</div>
 
       <div style="border-top:1px solid var(--border);margin:10px 0;"></div>
 

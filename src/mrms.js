@@ -22,26 +22,39 @@ let _mrmsVisible = false;   // whether the MRMS layer is currently shown
 const CELL_HALF = 0.0005;
 
 /**
- * Called by toggleHailLayer() in storm.js after the existing SPC toggle.
- * Loads MRMS data if not already loaded, then renders.
+ * Called by the MRMS toggle button — independent of SPC hail toggle.
  */
-window.loadMrmsLayer = async function() {
-  _mrmsVisible = true;
-  if (!_mrmsLoaded) {
-    await fetchMrmsData();
+window.toggleMrmsLayer = function() {
+  _mrmsVisible = !_mrmsVisible;
+  const track = document.getElementById('mrms-toggle-track');
+  const thumb = document.getElementById('mrms-toggle-thumb');
+  const lbl   = document.getElementById('mrms-toggle-lbl');
+  if (_mrmsVisible) {
+    if (track) track.style.background = '#6366f1';
+    if (thumb) { thumb.style.background = '#fff'; thumb.style.left = '19px'; }
+    if (lbl)   lbl.textContent = 'ON';
+    _mrmsLoaded = false;
+    fetchMrmsData();
   } else {
-    renderMrmsLayer();
+    if (track) track.style.background = '#374151';
+    if (thumb) { thumb.style.background = '#9ca3af'; thumb.style.left = '3px'; }
+    if (lbl)   lbl.textContent = 'OFF';
+    clearMrmsLayerOnly();
+    const statusEl = document.getElementById('mrms-status');
+    if (statusEl) statusEl.textContent = '🔍 Zoom into a city to see 1km radar hail swaths';
   }
 };
 
 /**
- * Called when hail layer is turned off.
+ * Called by toggleHailLayer() in storm.js — kept for backward compat but MRMS
+ * is now independent. This is a no-op so SPC toggle doesn’t auto-load MRMS.
  */
-window.clearMrmsLayer = function() {
-  _mrmsVisible = false;
-  _mrmsLayers.forEach(l => { try { map.removeLayer(l); } catch(e){} });
-  _mrmsLayers = [];
-};
+window.loadMrmsLayer = async function() {};
+
+/**
+ * Called when hail layer is turned off — kept for backward compat.
+ */
+window.clearMrmsLayer = function() {};
 
 /**
  * Called when storm-days or storm-min-size changes — refetch and re-render.
@@ -61,7 +74,7 @@ function clearMrmsLayerOnly() {
 const MRMS_MIN_ZOOM = 8; // county level — below this, 1km cells are sub-pixel
 
 async function fetchMrmsData() {
-  const statusEl = document.getElementById('storm-status');
+  const statusEl = document.getElementById('mrms-status');
 
   // Gate: only render MRMS when zoomed in enough to see 1km cells
   let currentZoom = 0;
@@ -124,7 +137,7 @@ async function fetchMrmsData() {
 
 function renderMrmsLayerFromData() {
   clearMrmsLayerOnly();
-  const statusEl = document.getElementById('storm-status');
+  const statusEl = document.getElementById('mrms-status');
   const minSize = parseFloat(document.getElementById('storm-min-size')?.value || '0.75') || 0.75;
 
   const filtered = _mrmsData.filter(r => parseFloat(r.hail_size_in) >= minSize);
