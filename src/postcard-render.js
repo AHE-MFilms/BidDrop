@@ -440,7 +440,7 @@ async function renderPostcard6x9BackCanvas(item){
   let finMo=0;
   if(finEnabled&&total){const loan=total*(1-finDown/100);const r=finApr/100/12;finMo=r===0?Math.round(loan/finTerm):Math.round(loan*r*Math.pow(1+r,finTerm)/(Math.pow(1+r,finTerm)-1));}
   const hook=cfg.postcardHook||'We tapped your roof on the map. Satellite data measured it. Your price was built before this arrived \u2014 no appointment needed, no one coming to your door.';
-  const why=cfg.postcardWhy||'We used satellite imagery to measure your roof remotely — square footage, pitch, and condition indicators — and built a real price based on your home’s actual data. No guessing. No inspection required to get started.';
+  const why=cfg.postcardWhy||'Public property records show your roof is likely past the 20-year mark. Recent hail or high-wind activity was logged in your ZIP code. Neighbors on your street have pulled roofing permits recently. Satellite imagery flagged wear consistent with aging shingles. No obligation — this is just your number, ready when you are.';
   const pcQuote=cfg.postcardQuote||'"They replaced our roof in one day, no mess, no drama." \u2014 Mike D., Canton MI';
   const guarantee=cfg.postcardGuarantee||'Your price. Built by satellite. No visit required.';
   const badges=[cfg.diff1||'Licensed, Bonded & Insured',cfg.diff2||'Manufacturer Certified',cfg.diff3||'Itemized Pricing'].filter(Boolean).slice(0,3);
@@ -870,7 +870,7 @@ function buildPostcard6x9BackHtml(item){
   let finMo=0;
   if(finEnabled&&total){const loan=total*(1-finDown/100);const r=finApr/100/12;finMo=r===0?Math.round(loan/finTerm):Math.round(loan*r*Math.pow(1+r,finTerm)/(Math.pow(1+r,finTerm)-1));}
   const hook=cfg.postcardHook||'We tapped your roof on the map. Satellite data measured it. Your price was built before this arrived — no appointment needed, no one coming to your door.';
-  const why=cfg.postcardWhy||'We used satellite imagery to measure your roof remotely — square footage, pitch, and condition indicators — and built a real price based on your home’s actual data. No guessing. No inspection required to get started.';
+  const why=cfg.postcardWhy||'Public property records show your roof is likely past the 20-year mark. Recent hail or high-wind activity was logged in your ZIP code. Neighbors on your street have pulled roofing permits recently. Satellite imagery flagged wear consistent with aging shingles. No obligation — this is just your number, ready when you are.';
   const pcQuote=cfg.postcardQuote||'';
   const guarantee=cfg.postcardGuarantee||'Your price. Built by satellite. No visit required.';
   const headshotData=(cfg.headshot&&!cfg.headshot.startsWith('data:'))?cfg.headshot:'';
@@ -1332,7 +1332,7 @@ async function renderDesignBackCanvas(cfg, overrides){
   const backBadgeTxt   = ov('postcardBackBadgeText')  || 'YOUR PRICE IS ALREADY BUILT';
   const backBadgeColor = ov('postcardBackBadgeColor') || color;
   const hook           = ov('postcardHook')           || 'We tapped your roof on the map. Satellite data measured it. Your price was built before this arrived \u2014 no appointment needed, no one coming to your door.';
-  const why            = ov('postcardWhy')            || 'We used satellite imagery to measure your roof remotely — square footage, pitch, and condition indicators — and built a real price based on your home’s actual data. No guessing. No inspection required to get started.';
+  const why            = ov('postcardWhy')            || 'Public property records show your roof is likely past the 20-year mark. Recent hail or high-wind activity was logged in your ZIP code. Neighbors on your street have pulled roofing permits recently. Satellite imagery flagged wear consistent with aging shingles. No obligation — this is just your number, ready when you are.';
   const pcQuote        = ov('postcardQuote')          || '"They replaced our roof in one day, no mess, no drama." \u2014 Mike D., Canton MI';
   const guarantee      = ov('postcardGuarantee')      || 'Your price. Built by satellite. No visit required.';
   const scanCta        = ov('postcardScanCta')        || 'SCAN TO BOOK';

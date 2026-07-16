@@ -77,10 +77,10 @@ const DEFAULTS = {
   ghlEmailTpl:'Hi {name},\n\nI hope this message finds you well! I\'m {rep} from {company}. I recently visited your property at {address} and noticed your roof may need attention.\n\nWe\'re offering free storm damage assessments this week. Would you like to schedule a time?\n\nBest,\n{rep}\n{company}',
   // Letter & pitch
   repName:'', repVideoUrl:'', licenseNum:'', yearsInBusiness:'5+', warrantyYears:'10',
-  hookLetter:'We tapped your address on a satellite map, measured your roof remotely, and built this estimate before we ever reached out. You’re not getting a sales pitch — you’re getting a real number, built from real data, with no visit required to get it.',
-  whyReceived:'We used satellite imagery to measure your roof remotely — square footage, pitch, and condition indicators — and built a real price based on your home’s actual data. No guessing. No inspection required to get started.',
+  hookLetter:'We took a look at the roof at your address using satellite imagery and current property data, and put together a real estimate for you — no guessing, no “call for a quote.” Your number is printed right here so you can see it before you talk to anyone. No runaround — your price is right here.',
+  whyReceived:'Public property records show your roof is likely past the 20-year mark. Recent hail or high-wind activity was logged in your ZIP code. Neighbors on your street have pulled roofing permits recently. Satellite imagery flagged wear consistent with aging shingles. No obligation — this is just your number, ready when you are.',
   postcardHook:'We tapped your roof on the map. Satellite data measured it. Your price was built before this arrived — no appointment needed, no one coming to your door.',
-  postcardWhy:'We used satellite imagery to measure your roof remotely — square footage, pitch, and condition indicators — and built a real price based on your home’s actual data. No guessing. No inspection required to get started.',
+  postcardWhy:'Public property records show your roof is likely past the 20-year mark. Recent hail or high-wind activity was logged in your ZIP code. Neighbors on your street have pulled roofing permits recently. Satellite imagery flagged wear consistent with aging shingles. No obligation — this is just your number, ready when you are.',
   postcardQuote:'"They replaced our roof in one day, no mess, no drama." — Mike D., Canton MI',
   postcardGuarantee:'Your price. Built by satellite. No visit required.',
   financingEnabled:true, financingApr:9.99, financingTerm:60, financingDown:0,
