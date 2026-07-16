@@ -439,7 +439,7 @@ async function renderPostcard6x9BackCanvas(item){
   const finDown=parseFloat(cfg.financingDown)||0;
   let finMo=0;
   if(finEnabled&&total){const loan=total*(1-finDown/100);const r=finApr/100/12;finMo=r===0?Math.round(loan/finTerm):Math.round(loan*r*Math.pow(1+r,finTerm)/(Math.pow(1+r,finTerm)-1));}
-  const hook=cfg.postcardHook||'Most homeowners dread the pushy roofing salesman. I do things differently \u2014 I lead with my price, no pressure, no games. Your estimate is ready.';
+  const hook=cfg.postcardHook||'Your roof estimate is already built. No sales visit required, no pressure, no surprises \u2014 just a real number for your home.';
   const why=cfg.postcardWhy||'We assessed your neighborhood and identified your home as a candidate for roof replacement. We look for things like missing shingles, moss, algae, buckling, granule loss, and age. The average roof lasts 18\u201320 years.';
   const pcQuote=cfg.postcardQuote||'"They replaced our roof in one day, no mess, no drama." \u2014 Mike D., Canton MI';
   const guarantee=cfg.postcardGuarantee||'No door-knocking. No pressure. Just your price.';
@@ -869,7 +869,7 @@ function buildPostcard6x9BackHtml(item){
   const finDown=parseFloat(cfg.financingDown)||0;
   let finMo=0;
   if(finEnabled&&total){const loan=total*(1-finDown/100);const r=finApr/100/12;finMo=r===0?Math.round(loan/finTerm):Math.round(loan*r*Math.pow(1+r,finTerm)/(Math.pow(1+r,finTerm)-1));}
-  const hook=cfg.postcardHook||'I lead with my price — no pressure, no games. Your estimate is ready.';
+  const hook=cfg.postcardHook||'Your estimate is ready and waiting. No pressure, no games — just a real price for your roof.';
   const why=cfg.postcardWhy||'We assessed your neighborhood and identified your home as a candidate for roof replacement based on age, condition, and storm history.';
   const pcQuote=cfg.postcardQuote||'';
   const guarantee=cfg.postcardGuarantee||'No door-knocking. No pressure. Just your price.';
@@ -969,7 +969,7 @@ function buildLobMailerHtml(item){
   const lic    = cfg.licenseNum    || '';
   const yrs    = cfg.yearsInBusiness || '5+';
   const warr   = cfg.warrantyYears || '10';
-  const hook   = cfg.hookLetter    || 'Most homeowners are tired of door-knockers, pushy salespeople, and high prices when it comes to getting a new roof. I skip the hassle and lead with my price.';
+  const hook   = cfg.hookLetter    || 'Most homeowners want a straight answer on price without the back-and-forth. That\'s exactly what BidDrop delivers \u2014 your personalized roof estimate, built and ready before we ever show up.';
   const why    = cfg.whyReceived   || 'We assessed your neighborhood and identified your home as a candidate for roof replacement. We look for things like missing shingles, moss, algae, buckling, and granule loss.';
 
   // Financing
@@ -1326,7 +1326,7 @@ async function renderDesignBackCanvas(cfg, overrides){
   const repTitle   = ov('repTitle')               || '';
   const backBadgeTxt   = ov('postcardBackBadgeText')  || 'YOUR ROOF ESTIMATE IS READY';
   const backBadgeColor = ov('postcardBackBadgeColor') || color;
-  const hook           = ov('postcardHook')           || 'Most homeowners dread the pushy roofing salesman. I do things differently \u2014 I lead with my price, no pressure, no games. Your estimate is ready.';
+  const hook           = ov('postcardHook')           || 'Your roof estimate is already built. No sales visit required, no pressure, no surprises \u2014 just a real number for your home.';
   const why            = ov('postcardWhy')            || 'We assessed your neighborhood and identified your home as a candidate for roof replacement. We look for things like missing shingles, moss, algae, buckling, granule loss, and age. The average roof lasts 18\u201320 years.';
   const pcQuote        = ov('postcardQuote')          || '"They replaced our roof in one day, no mess, no drama." \u2014 Mike D., Canton MI';
   const guarantee      = ov('postcardGuarantee')      || 'No door-knocking. No pressure. Just your price.';

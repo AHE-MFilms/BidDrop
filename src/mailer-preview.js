@@ -19,7 +19,7 @@ function updatePreview(){
   const lic    = cfg.licenseNum    || '';
   const yrs    = cfg.yearsInBusiness || '5+';
   const warr   = cfg.warrantyYears || '10';
-  const hook   = cfg.hookLetter    || 'Most homeowners are tired of door-knockers, pushy salespeople, and high prices when it comes to getting a new roof. I skip the hassle and lead with my price.';
+  const hook   = cfg.hookLetter    || 'Most homeowners want a straight answer on price without the back-and-forth. That\'s exactly what BidDrop delivers \u2014 your personalized roof estimate, built and ready before we ever show up.';
   const why    = cfg.whyReceived   || 'We assessed your neighborhood and identified your home as a candidate for roof replacement. We look for things like missing shingles, moss, algae, buckling, and granule loss.';
   // Auto-calculate financing
   const finEnabled = cfg.financingEnabled !== false;
@@ -112,9 +112,9 @@ function updatePreview(){
     solar:"Most homeowners don't realize how much they're overpaying for electricity. I skip the sales pitch and lead with real numbers — here's exactly what solar would cost and save for your home.",
     fencing:"Most homeowners get overcharged for fencing because contractors don't lead with their pricing. I do things differently — here's your upfront, itemized fence estimate with no surprises.",
     siding:"Most homeowners are surprised by how much new siding can transform a home — and by how affordable it can be when you work with a contractor who leads with transparent pricing.",
-    gutters:"Most homeowners don't think about gutters until there's a problem. I identify homes that need attention before damage occurs — and I lead with my price, no door-knocking required.",
+    gutters:"Most homeowners don't think about gutters until there's a problem. We identify homes that need attention before damage occurs and send your estimate directly — no door-knocking required.",
     insulation:"Most homeowners are losing hundreds of dollars a year through poor insulation without knowing it. I skip the energy audit sales pitch and lead directly with what it would cost to fix it.",
-    paint:"Most homeowners are tired of pushy painters who won't give a price until after a long sales visit. I lead with my price upfront so you can make an informed decision.",
+    paint:"Most homeowners are tired of waiting through a long sales visit just to get a number. We build your estimate upfront and send it directly, so you can decide on your own terms.",
     doors:"Most homeowners don't realize how much a new door can improve their home's security, energy efficiency, and curb appeal. I lead with transparent pricing so you can decide without pressure.",
     windows:"Most homeowners are overpaying for heating and cooling because of old, inefficient windows. I skip the sales pitch and lead with a real number — here's what new windows would cost for your home."
   };

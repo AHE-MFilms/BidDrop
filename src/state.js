@@ -77,9 +77,9 @@ const DEFAULTS = {
   ghlEmailTpl:'Hi {name},\n\nI hope this message finds you well! I\'m {rep} from {company}. I recently visited your property at {address} and noticed your roof may need attention.\n\nWe\'re offering free storm damage assessments this week. Would you like to schedule a time?\n\nBest,\n{rep}\n{company}',
   // Letter & pitch
   repName:'', repVideoUrl:'', licenseNum:'', yearsInBusiness:'5+', warrantyYears:'10',
-  hookLetter:'Most homeowners are tired of door-knockers, pushy salespeople, and high prices when it comes to getting a new roof. I won\'t bother you by knocking on the door — instead, I skip the hassle and lead with my price.',
+  hookLetter:'Most homeowners want a straight answer on price without the back-and-forth. That\'s exactly what BidDrop delivers — your personalized roof estimate, built and ready before we ever show up.',
   whyReceived:'We assessed your neighborhood and identified your home as a candidate for roof replacement. We look for things like missing shingles, moss, algae, buckling, granule loss, and age. The average roof lasts 18–20 years.',
-  postcardHook:'Most homeowners dread the pushy roofing salesman. I do things differently — I lead with my price, no pressure, no games. Your estimate is ready.',
+  postcardHook:'Your roof estimate is already built. No sales visit required, no pressure, no surprises — just a real number for your home.',
   postcardWhy:'We assessed your neighborhood and identified your home as a candidate for roof replacement. We look for things like missing shingles, moss, algae, buckling, granule loss, and age. The average roof lasts 18–20 years.',
   postcardQuote:'"They replaced our roof in one day, no mess, no drama." — Mike D., Canton MI',
   postcardGuarantee:'No door-knocking. No pressure. Just your price.',
