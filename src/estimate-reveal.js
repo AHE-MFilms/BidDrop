@@ -93,12 +93,12 @@ function _renderErPreview(est) {
       </div>` : ''}
       <!-- Main content center-left -->
       <div style="position:absolute;left:18px;right:${contentRight};top:50%;transform:translateY(-52%);">
-        <div style="font-size:9px;color:${accent};font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">WE ASSESSED YOUR ROOF</div>
+        <div style="font-size:9px;color:${accent};font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">YOUR PRICE IS ALREADY BUILT</div>
         <div style="font-size:clamp(11px,3vw,15px);font-weight:900;color:#fff;line-height:1.1;text-transform:uppercase;letter-spacing:-.3px;margin-bottom:6px;">
           ${escHtml(owner)},<br>Your Estimate Is Ready.
         </div>
         <div style="font-size:9px;color:rgba(255,255,255,.55);margin-bottom:10px;line-height:1.4;">
-          No door-knocking. No pressure. Just your price.
+          Your price. Built by satellite. No visit required.
         </div>
         <!-- Price reveal box -->
         <div style="display:inline-block;background:${accent};border-radius:5px;padding:6px 14px;">

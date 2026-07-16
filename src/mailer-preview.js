@@ -19,8 +19,8 @@ function updatePreview(){
   const lic    = cfg.licenseNum    || '';
   const yrs    = cfg.yearsInBusiness || '5+';
   const warr   = cfg.warrantyYears || '10';
-  const hook   = cfg.hookLetter    || 'We tapped your house on a map, built your estimate from satellite data, and mailed it \u2014 so you already have our price before we ever show up. No door knocking, no pressure, just your number.';
-  const why    = cfg.whyReceived   || 'We use satellite imagery and property data to identify homes in your area that are due for a roof evaluation. Your property came up based on age, condition indicators, and neighborhood activity in our system.';
+  const hook   = cfg.hookLetter    || 'We tapped your address on a satellite map, measured your roof remotely, and built this estimate before we ever reached out. You\u2019re not getting a sales pitch \u2014 you\u2019re getting a real number, built from real data, with no visit required to get it.';
+  const why    = cfg.whyReceived   || 'We used satellite imagery to measure your roof remotely — square footage, pitch, and condition indicators — and built a real price based on your home’s actual data. No guessing. No inspection required to get started.';
   // Auto-calculate financing
   const finEnabled = cfg.financingEnabled !== false;
   const finApr  = parseFloat(cfg.financingApr)  || 9.99;
@@ -112,7 +112,7 @@ function updatePreview(){
     solar:"Most homeowners don't realize how much they're overpaying for electricity. I skip the sales pitch and lead with real numbers — here's exactly what solar would cost and save for your home.",
     fencing:"Most homeowners get overcharged for fencing because contractors don't lead with their pricing. I do things differently — here's your upfront, itemized fence estimate with no surprises.",
     siding:"Most homeowners are surprised by how much new siding can transform a home — and by how affordable it can be when you work with a contractor who leads with transparent pricing.",
-    gutters:"Most homeowners don't think about gutters until there's a problem. We identify homes that need attention before damage occurs and send your estimate directly — no door-knocking required.",
+    gutters:"Most homeowners don't think about gutters until there's a problem. We identify homes that need attention before damage occurs and send your estimate directly — no visit required.",
     insulation:"Most homeowners are losing hundreds of dollars a year through poor insulation without knowing it. I skip the energy audit sales pitch and lead directly with what it would cost to fix it.",
     paint:"Most homeowners are tired of waiting through a long sales visit just to get a number. We build your estimate upfront and send it directly, so you can decide on your own terms.",
     doors:"Most homeowners don't realize how much a new door can improve their home's security, energy efficiency, and curb appeal. I lead with transparent pricing so you can decide without pressure.",
@@ -259,7 +259,7 @@ function updatePreview(){
         '<div style="flex:1;padding:11px 18px;border-right:1px solid rgba(255,255,255,.1);">'+
         '<div style="font-size:8px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:2px;">Call or Text to Schedule</div>'+
         '<div style="font-family:Oswald,sans-serif;font-size:26px;font-weight:700;color:#fff;white-space:nowrap;line-height:1;">'+escHtml(ph)+'</div>'+
-        '<div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:3px;">Estimate locked 30 days &nbsp;·&nbsp; No door-knock &nbsp;·&nbsp; No pressure</div>'+
+        '<div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:3px;">Estimate locked 30 days &nbsp;·&nbsp; Built by satellite &nbsp;·&nbsp; No visit required</div>'+
         '</div>'+
         '<div style="flex:0 0 auto;padding:10px 16px;display:flex;flex-direction:column;align-items:center;gap:3px;">'+
         (qrUrl

@@ -44,9 +44,9 @@ async function pcPreviewRefresh(){
     postcardDesign:(document.querySelector('input[name="pc-design"]:checked')||{value:'1'}).value,
     postcardHeadline1:v('s-pc-headline1')||'We Assessed',
     postcardHeadline2:v('s-pc-headline2')||'Your Roof.',
-    postcardBadgeText:v('s-pc-badge-text')||'YOUR ROOF ESTIMATE IS READY',
+    postcardBadgeText:v('s-pc-badge-text')||'YOUR PRICE IS ALREADY BUILT',
     postcardBadgeColor:v('s-pc-badge-color')||S.cfg?.brandColor||'#F25C05',
-    postcardBackBadgeText:v('s-pc-back-badge-text')||'YOUR ROOF ESTIMATE IS READY',
+    postcardBackBadgeText:v('s-pc-back-badge-text')||'YOUR PRICE IS ALREADY BUILT',
     postcardBackBadgeColor:v('s-pc-back-badge-color')||S.cfg?.brandColor||'#F25C05',
     postcardHook:v('s-pc-hook'),
     postcardWhy:v('s-pc-why'),
@@ -132,7 +132,7 @@ async function renderPostcard6x9FrontCanvas(item){
   // New designer config fields
   const hl1Txt=cfg.postcardHeadline1||'We Assessed';
   const hl2Txt=cfg.postcardHeadline2||'Your Roof.';
-  const badgeTxtCfg=cfg.postcardBadgeText||'YOUR ROOF ESTIMATE IS READY';
+  const badgeTxtCfg=cfg.postcardBadgeText||'YOUR PRICE IS ALREADY BUILT';
   const badgeColorCfg=cfg.postcardBadgeColor||color;
   const hl1Size=cfg.postcardHl1Size||160;
   const hl2Size=cfg.postcardHl2Size||160;
@@ -439,13 +439,13 @@ async function renderPostcard6x9BackCanvas(item){
   const finDown=parseFloat(cfg.financingDown)||0;
   let finMo=0;
   if(finEnabled&&total){const loan=total*(1-finDown/100);const r=finApr/100/12;finMo=r===0?Math.round(loan/finTerm):Math.round(loan*r*Math.pow(1+r,finTerm)/(Math.pow(1+r,finTerm)-1));}
-  const hook=cfg.postcardHook||'We tapped your house on the map. Your estimate is already built \u2014 no sales visit, no pressure, just your price.';
-  const why=cfg.postcardWhy||'We use satellite imagery and property data to identify homes in your area that are due for a roof evaluation. Your property came up based on age, condition indicators, and neighborhood activity in our system.';
+  const hook=cfg.postcardHook||'We tapped your roof on the map. Satellite data measured it. Your price was built before this arrived \u2014 no appointment needed, no one coming to your door.';
+  const why=cfg.postcardWhy||'We used satellite imagery to measure your roof remotely — square footage, pitch, and condition indicators — and built a real price based on your home’s actual data. No guessing. No inspection required to get started.';
   const pcQuote=cfg.postcardQuote||'"They replaced our roof in one day, no mess, no drama." \u2014 Mike D., Canton MI';
-  const guarantee=cfg.postcardGuarantee||'Tap a house. We build the bid. You close the deal.';
+  const guarantee=cfg.postcardGuarantee||'Your price. Built by satellite. No visit required.';
   const badges=[cfg.diff1||'Licensed, Bonded & Insured',cfg.diff2||'Manufacturer Certified',cfg.diff3||'Itemized Pricing'].filter(Boolean).slice(0,3);
   // Designer font sizes
-  const backBadgeTxt=cfg.postcardBackBadgeText||'YOUR ROOF ESTIMATE IS READY';
+  const backBadgeTxt=cfg.postcardBackBadgeText||'YOUR PRICE IS ALREADY BUILT';
   const backBadgeColor=cfg.postcardBackBadgeColor||color;
   const hookSize=cfg.postcardHookSize||36;
   const whySize=cfg.postcardWhySize||30;
@@ -869,10 +869,10 @@ function buildPostcard6x9BackHtml(item){
   const finDown=parseFloat(cfg.financingDown)||0;
   let finMo=0;
   if(finEnabled&&total){const loan=total*(1-finDown/100);const r=finApr/100/12;finMo=r===0?Math.round(loan/finTerm):Math.round(loan*r*Math.pow(1+r,finTerm)/(Math.pow(1+r,finTerm)-1));}
-  const hook=cfg.postcardHook||'We tapped your house on the map. Your estimate is already built — no sales visit, no pressure, just your price.';
-  const why=cfg.postcardWhy||'We use satellite imagery and property data to identify homes in your area that are due for a roof evaluation. Your property came up based on age, condition indicators, and neighborhood activity in our system.';
+  const hook=cfg.postcardHook||'We tapped your roof on the map. Satellite data measured it. Your price was built before this arrived — no appointment needed, no one coming to your door.';
+  const why=cfg.postcardWhy||'We used satellite imagery to measure your roof remotely — square footage, pitch, and condition indicators — and built a real price based on your home’s actual data. No guessing. No inspection required to get started.';
   const pcQuote=cfg.postcardQuote||'';
-  const guarantee=cfg.postcardGuarantee||'Tap a house. We build the bid. You close the deal.';
+  const guarantee=cfg.postcardGuarantee||'Your price. Built by satellite. No visit required.';
   const headshotData=(cfg.headshot&&!cfg.headshot.startsWith('data:'))?cfg.headshot:'';
   const repName=cfg.repName||'';
   const repTitle=cfg.repTitle||'Owner';
@@ -969,8 +969,8 @@ function buildLobMailerHtml(item){
   const lic    = cfg.licenseNum    || '';
   const yrs    = cfg.yearsInBusiness || '5+';
   const warr   = cfg.warrantyYears || '10';
-  const hook   = cfg.hookLetter    || 'We tapped your house on a map, built your estimate from satellite data, and mailed it \u2014 so you already have our price before we ever show up. No door knocking, no pressure, just your number.';
-  const why    = cfg.whyReceived   || 'We use satellite imagery and property data to identify homes in your area that are due for a roof evaluation. Your property came up based on age, condition indicators, and neighborhood activity in our system.';
+  const hook   = cfg.hookLetter    || 'We tapped your address on a satellite map, measured your roof remotely, and built this estimate before we ever reached out. You\u2019re not getting a sales pitch \u2014 you\u2019re getting a real number, built from real data, with no visit required to get it.';
+  const why    = cfg.whyReceived   || 'We used satellite imagery to measure your roof remotely — square footage, pitch, and condition indicators — and built a real price based on your home’s actual data. No guessing. No inspection required to get started.';
 
   // Financing
   const finEnabled = cfg.financingEnabled !== false;
@@ -1099,7 +1099,7 @@ function buildLobMailerHtml(item){
     '<div style="flex:1;padding:11px 18px;border-right:1px solid rgba(255,255,255,.1);">'+
     '<div style="font-size:8px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:2px;">Call or Text to Schedule</div>'+
     '<div style="font-family:Oswald,sans-serif;font-size:26px;font-weight:700;color:#fff;white-space:nowrap;line-height:1;">'+escHtml(ph)+'</div>'+
-    '<div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:3px;">Estimate locked 30 days &nbsp;·&nbsp; No door-knock &nbsp;·&nbsp; No pressure</div>'+
+    '<div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:3px;">Estimate locked 30 days &nbsp;·&nbsp; Built by satellite &nbsp;·&nbsp; No visit required</div>'+
     '</div>'+
     '<div style="flex:0 0 auto;padding:10px 16px;display:flex;flex-direction:column;align-items:center;gap:3px;">'+
     (qrUrl
@@ -1324,12 +1324,12 @@ async function renderDesignBackCanvas(cfg, overrides){
   const ph         = ov('companyPhone')           || '(000) 000-0000';
   const repName    = ov('repName')                || '';
   const repTitle   = ov('repTitle')               || '';
-  const backBadgeTxt   = ov('postcardBackBadgeText')  || 'YOUR ROOF ESTIMATE IS READY';
+  const backBadgeTxt   = ov('postcardBackBadgeText')  || 'YOUR PRICE IS ALREADY BUILT';
   const backBadgeColor = ov('postcardBackBadgeColor') || color;
-  const hook           = ov('postcardHook')           || 'We tapped your house on the map. Your estimate is already built \u2014 no sales visit, no pressure, just your price.';
-  const why            = ov('postcardWhy')            || 'We use satellite imagery and property data to identify homes in your area that are due for a roof evaluation. Your property came up based on age, condition indicators, and neighborhood activity in our system.';
+  const hook           = ov('postcardHook')           || 'We tapped your roof on the map. Satellite data measured it. Your price was built before this arrived \u2014 no appointment needed, no one coming to your door.';
+  const why            = ov('postcardWhy')            || 'We used satellite imagery to measure your roof remotely — square footage, pitch, and condition indicators — and built a real price based on your home’s actual data. No guessing. No inspection required to get started.';
   const pcQuote        = ov('postcardQuote')          || '"They replaced our roof in one day, no mess, no drama." \u2014 Mike D., Canton MI';
-  const guarantee      = ov('postcardGuarantee')      || 'Tap a house. We build the bid. You close the deal.';
+  const guarantee      = ov('postcardGuarantee')      || 'Your price. Built by satellite. No visit required.';
   const scanCta        = ov('postcardScanCta')        || 'SCAN TO BOOK';
   const scanSub        = ov('postcardScanSub')        || 'No-pressure booking';
   const whyLabel       = ov('postcardWhyLabel')       || 'WHY WAS THIS SENT TO YOU?';

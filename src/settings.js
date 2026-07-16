@@ -25,9 +25,9 @@ function openSettings(){
   // New designer fields
   const _pcH1=document.getElementById('s-pc-headline1'); if(_pcH1) _pcH1.value=c.postcardHeadline1||'We Assessed';
   const _pcH2=document.getElementById('s-pc-headline2'); if(_pcH2) _pcH2.value=c.postcardHeadline2||'Your Roof.';
-  const _pcBadgeTxt=document.getElementById('s-pc-badge-text'); if(_pcBadgeTxt) _pcBadgeTxt.value=c.postcardBadgeText||'YOUR ROOF ESTIMATE IS READY';
+  const _pcBadgeTxt=document.getElementById('s-pc-badge-text'); if(_pcBadgeTxt) _pcBadgeTxt.value=c.postcardBadgeText||'YOUR PRICE IS ALREADY BUILT';
   const _pcBadgeClr=document.getElementById('s-pc-badge-color'); if(_pcBadgeClr) _pcBadgeClr.value=c.postcardBadgeColor||c.brandColor||'#F25C05';
-  const _pcBackBadgeTxt=document.getElementById('s-pc-back-badge-text'); if(_pcBackBadgeTxt) _pcBackBadgeTxt.value=c.postcardBackBadgeText||'YOUR ROOF ESTIMATE IS READY';
+  const _pcBackBadgeTxt=document.getElementById('s-pc-back-badge-text'); if(_pcBackBadgeTxt) _pcBackBadgeTxt.value=c.postcardBackBadgeText||'YOUR PRICE IS ALREADY BUILT';
   const _pcBackBadgeClr=document.getElementById('s-pc-back-badge-color'); if(_pcBackBadgeClr) _pcBackBadgeClr.value=c.postcardBackBadgeColor||c.brandColor||'#F25C05';
   const _pcScanCta=document.getElementById('s-pc-scan-cta'); if(_pcScanCta) _pcScanCta.value=c.postcardScanCta||'SCAN TO BOOK';
   const _pcScanSub=document.getElementById('s-pc-scan-sub'); if(_pcScanSub) _pcScanSub.value=c.postcardScanSub||'No-pressure booking';
@@ -495,9 +495,9 @@ function saveSettings(){
     // New designer fields
     postcardHeadline1:v('s-pc-headline1')||'We Assessed',
     postcardHeadline2:v('s-pc-headline2')||'Your Roof.',
-    postcardBadgeText:v('s-pc-badge-text')||'YOUR ROOF ESTIMATE IS READY',
+    postcardBadgeText:v('s-pc-badge-text')||'YOUR PRICE IS ALREADY BUILT',
     postcardBadgeColor:v('s-pc-badge-color')||'#F25C05',
-    postcardBackBadgeText:v('s-pc-back-badge-text')||'YOUR ROOF ESTIMATE IS READY',
+    postcardBackBadgeText:v('s-pc-back-badge-text')||'YOUR PRICE IS ALREADY BUILT',
     postcardBackBadgeColor:v('s-pc-back-badge-color')||'#F25C05',
     postcardScanCta:v('s-pc-scan-cta')||'SCAN TO BOOK',
     postcardScanSub:v('s-pc-scan-sub')||'No-pressure booking',
