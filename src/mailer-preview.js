@@ -7,654 +7,286 @@
 
 function updatePreview(){
   const owner  = document.getElementById('e-owner').value || 'Homeowner';
-  const addr   = document.getElementById('e-addr').value  || '—';
+  const addr   = document.getElementById('e-addr').value  || '';
   const cfg    = S.cfg;
   const co     = cfg.companyName   || 'Your Roofing Co';
   const coAddr = cfg.companyAddr   || '';
   const ph     = cfg.companyPhone  || '(000) 000-0000';
-  const color  = cfg.brandColor    || '#F25C05';
+  const accent = cfg.brandColor    || '#F25C05';
   const rep    = cfg.repName       || co;
-  const repTitle= cfg.repTitle      || '';
-  const hsPos  = cfg.headshotPos   || '30';
+  const repTitle = cfg.repTitle    || 'Roofing Consultant';
   const lic    = cfg.licenseNum    || '';
   const yrs    = cfg.yearsInBusiness || '5+';
   const warr   = cfg.warrantyYears || '10';
-  const hook   = cfg.hookLetter    || 'We tapped your address on a satellite map, measured your roof remotely, and built this estimate before we ever reached out. You\u2019re not getting a sales pitch \u2014 you\u2019re getting a real number, built from real data, with no visit required to get it.';
-  const why    = cfg.whyReceived   || 'We used satellite imagery to measure your roof remotely — square footage, pitch, and condition indicators — and built a real price based on your home’s actual data. No guessing. No inspection required to get started.';
-  // Auto-calculate financing
+  const logoUrl = (cfg.logoData && cfg.logoData.startsWith('http')) ? cfg.logoData : '';
+  const hsUrl   = (cfg.headshotData && cfg.headshotData.startsWith('http')) ? cfg.headshotData : '';
+  const bookUrl = cfg.bookingUrl || 'https://biddrop.us';
+
+  // QR code
+  const _previewEstId = window._editingEstimateId || null;
+  const _previewSlug = co.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=4&data=' + encodeURIComponent(
+    _previewEstId ? 'https://biddrop.us/'+_previewSlug+'/'+encodeURIComponent(_previewEstId) : bookUrl
+  );
+
+  // Financing
   const finEnabled = cfg.financingEnabled !== false;
   const finApr  = parseFloat(cfg.financingApr)  || 9.99;
   const finTerm = parseInt(cfg.financingTerm)   || 60;
   const finDown = parseFloat(cfg.financingDown) || 0;
   function calcMonthly(total){
     const loan = total * (1 - finDown/100);
-    if(!loan) return 0;
-    const r = finApr / 100 / 12;
-    if(r === 0) return Math.round(loan / finTerm);
-    return Math.round(loan * r * Math.pow(1+r,finTerm) / (Math.pow(1+r,finTerm)-1));
-  }
-  // finMo/finTrm computed after grandTotal below
-
-  const logoImg = cfg.logoData
-    ? '<img src="'+cfg.logoData+'" style="max-height:46px;max-width:150px;object-fit:contain;display:block;">'
-    : '<div style="font-family:\'Oswald\',sans-serif;font-size:20px;font-weight:700;color:'+color+';">'+escHtml(co)+'</div>';
-
-  const _letterFrontPhoto = ((window._allPhotos && window._allPhotos.front)||[])[0] || window._homePhotoData || null;
-  const homePhoto = _letterFrontPhoto
-    ? '<img src="'+_letterFrontPhoto+'" style="width:100%;max-height:200px;object-fit:cover;border-radius:6px;margin-bottom:16px;display:block;">'
-    : '';
-  // Damage photos section for estimate/PDF
-  const dmgPhotos = (window._damagePhotos && window._damagePhotos.length) ? window._damagePhotos : [];
-  // Collect all per-structure photos
-  const structPhotoBlocks = structures.filter(s=>s.photos&&s.photos.length).map((s,si)=>{
-    const cols = Math.min(s.photos.length, 3);
-    return '<div style="margin-bottom:12px;">'+
-      '<div style="font-size:9px;font-weight:700;color:#F25C05;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;">Bldg '+(si+1)+' — '+escHtml(s.name||'Structure '+(si+1))+'</div>'+
-      '<div style="display:grid;grid-template-columns:repeat('+cols+',1fr);gap:6px;">'+
-      s.photos.slice(0,3).map((src,pi)=>'<div><img src="'+src+'" style="width:100%;height:110px;object-fit:cover;border-radius:6px;display:block;"><div style="font-size:9px;color:#888;text-align:center;margin-top:2px;">Photo '+(pi+1)+'</div></div>').join('')+
-      '</div></div>';
-  }).join('');
-  const hasAnyPhotos = dmgPhotos.length >= 1 || structPhotoBlocks.length > 0;
-  const damageSection = hasAnyPhotos
-    ? '<div style="margin:18px 0;padding:14px;background:#f8f8f8;border-radius:8px;border:1px solid #e0e0e0;">'+
-        '<div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#F25C05;margin-bottom:10px;">DAMAGE ASSESSMENT — PHOTOS</div>'+
-        (dmgPhotos.length >= 1
-          ? '<div style="display:grid;grid-template-columns:repeat('+Math.min(dmgPhotos.length,3)+',1fr);gap:8px;margin-bottom:'+(structPhotoBlocks.length?'14px':'0')+';">'+
-            dmgPhotos.slice(0,3).map((src,i)=>'<div><img src="'+src+'" style="width:100%;height:120px;object-fit:cover;border-radius:6px;display:block;"><div style="font-size:9px;color:#888;text-align:center;margin-top:3px;">Photo '+(i+1)+'</div></div>').join('')+
-            '</div>' : '')+
-        structPhotoBlocks+
-        '<div style="font-size:10px;color:#666;margin-top:8px;font-style:italic;">Photos taken at time of assessment. Damage visible includes missing/broken shingles, granule loss, and structural wear.</div>'+
-      '</div>'
-    : '';
-  // Damage photos for the mailer letter
-  const damageMailerSection = hasAnyPhotos
-    ? '<div style="margin:14px 0;padding:10px;background:#f9f9f9;border-radius:6px;border:1px solid #e8e8e8;">'+
-        '<div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#F25C05;margin-bottom:8px;">DAMAGE ASSESSMENT PHOTOS</div>'+
-        (dmgPhotos.length >= 1
-          ? '<div style="display:grid;grid-template-columns:repeat('+Math.min(dmgPhotos.length,3)+',1fr);gap:6px;margin-bottom:'+(structPhotoBlocks.length?'10px':'0')+';">'+
-            dmgPhotos.slice(0,3).map(src=>'<img src="'+src+'" style="width:100%;height:100px;object-fit:cover;border-radius:4px;display:block;">').join('')+
-            '</div>' : '')+
-        structures.filter(s=>s.photos&&s.photos.length).map((s,si)=>{
-          return '<div style="margin-bottom:8px;"><div style="font-size:8px;font-weight:700;color:#F25C05;margin-bottom:4px;">Bldg '+(si+1)+' — '+escHtml(s.name||'Structure '+(si+1))+'</div>'+
-            '<div style="display:grid;grid-template-columns:repeat('+Math.min(s.photos.length,3)+',1fr);gap:4px;">'+
-            s.photos.slice(0,3).map(src=>'<img src="'+src+'" style="width:100%;height:80px;object-fit:cover;border-radius:4px;display:block;">').join('')+
-            '</div></div>';
-        }).join('')+
-      '</div>'
-    : '';
-  const headshot    = cfg.headshot    || null;
-  const review1     = cfg.review1     || null;
-  const review2     = cfg.review2     || null;
-  const bookingUrl  = cfg.bookingUrl  || '';
-  // QR: always point to homeowner estimate page; fall back to booking URL if no ID
-  const _previewEstId = window._editingEstimateId || null;
-  const _previewSlug = cfg.companyName ? cfg.companyName.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') : 'roofing';
-  const _previewEstUrl = _previewEstId
-    ? 'https://biddrop.us/'+_previewSlug+'/'+encodeURIComponent(_previewEstId)
-    : (bookingUrl || 'https://biddrop.us');
-  const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&margin=6&data='+encodeURIComponent(_previewEstUrl);
-
-  // ── Calc totals ────────────────────────────────────────────
-  // Trade-aware variables
-  const _activeTr = window._activeTrade;
-  const _isNonRoofing = _activeTr && _activeTr !== 'roofing';
-  const TRADE_WHY_MAP = {
-    solar:"We analyzed your roof's solar potential and identified your home as an excellent candidate for solar panels. Your roof orientation, pitch, and sun exposure make it ideal for generating clean energy and reducing your monthly utility bills.",
-    fencing:"We identified your property as a great candidate for a new fence installation. Whether for privacy, security, or curb appeal, we can provide a professional installation with quality materials built to last.",
-    siding:"We tapped your home on the map and built this estimate based on your property data. New siding improves energy efficiency, protects against moisture, and dramatically boosts curb appeal.",
-    gutters:"We inspected your home's drainage system and identified your gutters as a candidate for replacement or upgrade. Properly functioning gutters protect your foundation, landscaping, and siding from water damage.",
-    insulation:"We tapped your home on the map and built this estimate based on your property data. Improved insulation can reduce heating and cooling costs by up to 20% and improve year-round comfort.",
-    paint:"We tapped your home on the map and built this estimate based on your property data. Exterior painting protects against weather damage, prevents wood rot, and significantly improves curb appeal.",
-    doors:"We identified your home as a candidate for door replacement or upgrade. New entry and interior doors improve energy efficiency, security, and the overall aesthetic of your home.",
-    windows:"We identified your home as a candidate for window replacement. New energy-efficient windows can reduce heating and cooling costs by up to 15% and eliminate drafts and condensation issues."
-  };
-  const TRADE_HOOK_MAP = {
-    solar:"Most homeowners don't realize how much they're overpaying for electricity. I skip the sales pitch and lead with real numbers — here's exactly what solar would cost and save for your home.",
-    fencing:"Most homeowners get overcharged for fencing because contractors don't lead with their pricing. I do things differently — here's your upfront, itemized fence estimate with no surprises.",
-    siding:"Most homeowners are surprised by how much new siding can transform a home — and by how affordable it can be when you work with a contractor who leads with transparent pricing.",
-    gutters:"Most homeowners don't think about gutters until there's a problem. We identify homes that need attention before damage occurs and send your estimate directly — no visit required.",
-    insulation:"Most homeowners are losing hundreds of dollars a year through poor insulation without knowing it. I skip the energy audit sales pitch and lead directly with what it would cost to fix it.",
-    paint:"Most homeowners are tired of waiting through a long sales visit just to get a number. We build your estimate upfront and send it directly, so you can decide on your own terms.",
-    doors:"Most homeowners don't realize how much a new door can improve their home's security, energy efficiency, and curb appeal. I lead with transparent pricing so you can decide without pressure.",
-    windows:"Most homeowners are overpaying for heating and cooling because of old, inefficient windows. I skip the sales pitch and lead with a real number — here's what new windows would cost for your home."
-  };
-  const _tradeWhy = _isNonRoofing ? (TRADE_WHY_MAP[_activeTr] || why) : why;
-  const _tradeHook = _isNonRoofing ? (TRADE_HOOK_MAP[_activeTr] || hook) : hook;
-  let grandTotal = 0;
-  let structSectionsP2 = '';  // page 2 detail boxes
-  if(structures.length){
-    structures.forEach((s,i)=>{
-      const sp = calcStructPrice(s);
-      grandTotal += sp;
-      const sq = ((parseFloat(s.sqft)||0)/100*1.12*(parseFloat(s.pitch)||1.118)).toFixed(1);
-      const col = i===0 ? color : '#444';
-      structSectionsP2 +=
-        '<div class="ml-box" style="border:2px solid '+col+';margin-bottom:14px;">'+
-        '<div class="ml-box-hdr" style="background:'+col+';">'+escHtml((s.name||'Structure '+(i+1)).toUpperCase())+'</div>'+
-        '<div class="ml-rows">'+
-        '<div class="ml-row"><span class="rl">Roof Area</span><span class="rv">'+(s.sqft?Number(s.sqft).toLocaleString()+' sq ft':'—')+' ('+sq+' sq)</span></div>'+
-        '<div class="ml-row"><span class="rl">Pitch</span><span class="rv">'+(PITCHLBL[s.pitch]||s.pitch)+'</span></div>'+
-        '<div class="ml-row"><span class="rl">Material</span><span class="rv">'+(MATLBL[s.mat]||s.mat)+'</span></div>'+
-        '<div class="ml-row"><span class="rl">Stories</span><span class="rv">'+s.stories+'</span></div>'+
-        '<div class="ml-row"><span class="rl">Tear-off & Disposal</span><span class="rv">Included</span></div>'+
-        '<div class="ml-row"><span class="rl">Felt / Synthetic Underlayment</span><span class="rv">Included</span></div>'+
-        '</div>'+
-        '<div class="ml-subtotal" style="background:'+col+';">'+
-        '<span class="ml-subtotal-lbl">'+escHtml((s.name||'Structure').toUpperCase())+' SUBTOTAL</span>'+
-        '<span class="ml-subtotal-amt">$'+sp.toLocaleString()+'</span>'+
-        '</div></div>';
-    });
-
-    // Add-ons
-    let addsTotal=0; let addRows='';
-    const c2=S.cfg;
-    if(document.getElementById('a-sky')&&document.getElementById('a-sky').checked){
-      const q=parseInt(document.getElementById('a-sky-q').value)||1;
-      const amt=(parseFloat(c2.costSkylight)||375)*q;
-      addsTotal+=amt;
-      addRows+='<div class="ml-row"><span class="rl">Skylights (×'+q+')</span><span class="rv">$'+amt.toLocaleString()+'</span></div>';
-    }
-    if(document.getElementById('a-chim')&&document.getElementById('a-chim').checked){
-      const amt=parseFloat(c2.costChimney)||295; addsTotal+=amt;
-      addRows+='<div class="ml-row"><span class="rl">Chimney Flashing</span><span class="rv">$'+amt+'</span></div>';
-    }
-    if(document.getElementById('a-gut')&&document.getElementById('a-gut').checked){
-      const lf=parseInt(document.getElementById('a-gut-q').value)||120;
-      const amt=(parseFloat(c2.costGutter)||9)*lf; addsTotal+=amt;
-      addRows+='<div class="ml-row"><span class="rl">Gutters ('+lf+' lf)</span><span class="rv">$'+amt.toLocaleString()+'</span></div>';
-    }
-    if(document.getElementById('a-iws')&&document.getElementById('a-iws').checked){
-      const iwsAmt=(parseFloat(c2.costIceWater)||42)*structures.reduce(function(sum,s){var sqft=parseFloat(s.sqft)||0;var pitchMult=parseFloat(s.pitch)||1.118;return sum+(sqft/100*1.10*pitchMult);},0);
-      addsTotal+=iwsAmt;
-      addRows+='<div class="ml-row"><span class="rl">Ice & Water Shield</span><span class="rv">$'+iwsAmt.toLocaleString()+'</span></div>';
-    }
-    const solarAmt=getSolarPrice();
-    if(solarAmt>0){
-      addsTotal+=solarAmt;
-      const solarKw=parseFloat((document.getElementById('a-solar-kw')||{}).value||0);
-      const solarLabel=solarKw>0?'Solar ('+solarKw+' kW)':'Solar Add-On';
-      addRows+='<div class="ml-row"><span class="rl">&#9728;&#65039; '+solarLabel+'</span><span class="rv">$'+solarAmt.toLocaleString()+'</span></div>';
-    }
-    if(addsTotal){
-      grandTotal+=addsTotal;
-      structSectionsP2+='<div class="ml-box" style="border:2px solid #888;margin-bottom:14px;">'+
-        '<div class="ml-box-hdr" style="background:#666;">ADD-ONS</div>'+
-        '<div class="ml-rows">'+addRows+'</div>'+
-        '<div class="ml-subtotal" style="background:#555;"><span class="ml-subtotal-lbl">ADD-ONS SUBTOTAL</span><span class="ml-subtotal-amt">$'+addsTotal.toLocaleString()+'</span></div>'+
-        '</div>';
-    }
-  } else {
-    structSectionsP2='<div style="padding:20px;text-align:center;color:#999;font-style:italic;">No structures added yet.</div>';
+    const r = finApr/100/12;
+    return r===0 ? Math.round(loan/finTerm) : Math.round(loan*r*Math.pow(1+r,finTerm)/(Math.pow(1+r,finTerm)-1));
   }
 
-  // If non-roofing trade is active, override grandTotal with trade total
-  if(_isNonRoofing){
-    const _bundleItems = window._tradeBundle || [];
-    const _bundleTotal = _bundleItems.reduce((s,b)=>s+b.total,0);
-    const _currentTotal = window._currentTradeTotal || 0;
-    const _alreadyInBundle = _bundleItems.some(b=>b.trade===_activeTr);
-    const _tradeGrand = _bundleTotal > 0
-      ? (_bundleTotal + (!_alreadyInBundle && _currentTotal > 0 ? _currentTotal : 0))
-      : _currentTotal;
-    if(_tradeGrand > 0) grandTotal = _tradeGrand;
-  }
-  // Compute finMo now that grandTotal is final
-  const finMo  = (finEnabled && grandTotal) ? calcMonthly(grandTotal) : 0;
-  const finTrm = finApr+'% APR · '+finTerm+' mo · $0 down';
+  // Structures & totals
+  const structures = (window._structures || []).filter(s=>s && s.price > 0);
+  const grandTotal = structures.reduce((a,s)=>a+(s.price||0),0);
+  const finMo = (finEnabled && grandTotal) ? calcMonthly(grandTotal) : 0;
   const finDisc = 'Financing estimate based on '+finApr+'% APR, '+finTerm+'-month term, subject to credit approval.';
 
+  // Copy fields
+  const hookTxt  = cfg.hookLetter   || 'We looked up your address, measured your roof using satellite data, and put together a real price — before we ever reached out. No appointment needed. No one coming to your door. Your number is right here.';
+  const aboutCo  = cfg.aboutCompany || 'We are a local roofing company that believes in straight answers. No runaround, no pressure — just honest work from a crew that stands behind every job.';
+  const diff1    = cfg.diff1 || 'Licensed, Bonded & Insured';
+  const diff2    = cfg.diff2 || 'Manufacturer Certified';
+  const diff3    = cfg.diff3 || 'Workmanship Warranty';
+  const diff4    = cfg.diff4 || 'Financing Available';
+  const diff5    = cfg.diff5 || 'Local Crews';
 
-  const pageHdr = (pageNum) =>
-    '<div class="ml-hdr">'+
-    '<div>'+logoImg+'<div class="ml-co-info" style="margin-top:4px;">'+escHtml(coAddr).replace(/,/g,'<br>')+'<br>'+escHtml(ph)+(lic?'<br>'+escHtml(lic):'')+'</div></div>'+
-    '<div class="ml-addr-blk"><strong>'+escHtml(owner)+'</strong><br>'+escHtml(addr).split(',').join('<br>')+'<br><span style="font-size:9px;color:#aaa;margin-top:3px;display:block;">Page '+pageNum+' of 4</span></div>'+
-    '</div>'+
-    '<div class="ml-stripe" style="background:'+color+';"></div>';
+  // Photos
+  const _letterFrontPhoto = ((window._allPhotos && window._allPhotos.front)||[])[0] || window._homePhotoData || null;
+  const dmgPhotos = (window._damagePhotos && window._damagePhotos.length) ? window._damagePhotos.slice(0,3) : [];
 
-  const pageFooter = () =>
-    '<div class="ml-footer" style="display:flex;align-items:center;justify-content:space-between;gap:10px;">'+
-    '<span>'+escHtml(co)+' · '+escHtml(ph)+(lic?' · '+escHtml(lic):'')+' · Licensed &amp; Insured · '+new Date().getFullYear()+'</span>'+
-    '<img src="'+AHE_LOGO+'" style="height:22px;opacity:.7;object-fit:contain;flex-shrink:0;">'+
-    '</div>';
+  function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-  // ── Differentiators ──────────────────────────
-  const diffs = [
-    cfg.diff1||'Licensed, Bonded & Insured',
-    cfg.diff2||'Manufacturer Certified',
-    cfg.diff3||'Itemized Pricing for Transparency',
-    cfg.diff4||'Workmanship Warranty',
-    cfg.diff5||'Financing Available',
-    cfg.diff6||'Local Crews'
-  ].filter(d=>d.trim());
-  const competitorNegs = ['Insufficient','Rarely','No','State Minimum','No','Outside Crews'];
+  const addrParts = addr.split(',').map(s=>s.trim()).filter(Boolean);
+  const ownerFirst = owner.split(' ')[0] || owner;
 
-  // ── Services for Page 4 ──────────────────────
-  const svcDefs = [];
-  if(cfg.offerSiding) svcDefs.push({icon:'🏠',name:'SIDING',bullets:['James Hardie Install','30 Year Warranty','Fiber Cement Strength']});
-  if(cfg.offerWindows) svcDefs.push({icon:'🪟',name:'WINDOWS',bullets:['Energy Efficient','100% Virgin Vinyl','Low-E Glass']});
-  if(cfg.offerGutters) svcDefs.push({icon:'🌊',name:'GUTTERS',bullets:['Seamless Gutters','Hidden Fasteners','Rust-Free Aluminum']});
-  if(cfg.offerSolar) svcDefs.push({icon:'☀️',name:'SOLAR',bullets:['Reduce Energy Bills','Federal Tax Credit','Increase Home Value']});
-  if(cfg.offerCustom&&cfg.offerCustom.trim()) svcDefs.push({icon:'⭐',name:cfg.offerCustom.toUpperCase(),bullets:[]});
+  // ── Shared styles ──────────────────────────────────────────────────────────
+  const sharedStyles = `
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      .bd-page{width:100%;background:#fff;margin-bottom:0;font-family:'Inter',sans-serif;color:#111;page-break-after:always}
+      .bd-top-bar{display:flex;justify-content:space-between;align-items:flex-start;padding:28px 40px 0}
+      .bd-logo{max-height:40px;max-width:160px;object-fit:contain}
+      .bd-co-name{font-family:'DM Serif Display',serif;font-size:22px;color:${accent}}
+      .bd-co-meta{font-size:11px;color:#888;margin-top:3px}
+      .bd-addr-block{text-align:right}
+      .bd-addr-name{font-size:13px;font-weight:700;color:#111}
+      .bd-addr-line{font-size:12px;color:#555}
+      .bd-page-label{font-size:12px;color:#888;font-weight:500}
+      .bd-rule{height:3px;background:${accent};margin:16px 40px 0}
+      .bd-body{flex:1;padding:28px 40px}
+      .bd-salutation{font-family:'DM Serif Display',serif;font-size:28px;color:#111;margin-bottom:12px}
+      .bd-hook{font-size:14px;line-height:1.75;color:#333;margin-bottom:28px;max-width:580px}
+      .bd-estimate-box{border:2px solid ${accent};padding:20px 28px;margin-bottom:28px;display:inline-block;min-width:300px}
+      .bd-est-label{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:${accent};font-weight:700;margin-bottom:6px}
+      .bd-est-amount{font-family:'DM Serif Display',serif;font-size:52px;color:#111;line-height:1}
+      .bd-est-fin{font-size:12px;color:#555;margin-top:8px}
+      .bd-two-col{display:flex;gap:40px}
+      .bd-col-left{flex:1}
+      .bd-col-right{width:180px;text-align:center}
+      .bd-section-head{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#888;font-weight:700;margin-bottom:10px}
+      .bd-about-text{font-size:13px;line-height:1.65;color:#333;margin-bottom:14px}
+      .bd-cred-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+      .bd-cred{font-size:11px;color:#333;border:1px solid #ccc;padding:3px 9px;white-space:nowrap}
+      .bd-headshot{width:100px;height:100px;border-radius:50%;object-fit:cover;border:2px solid ${accent};margin-bottom:8px}
+      .bd-rep-name{font-size:14px;font-weight:700;color:#111}
+      .bd-rep-title{font-size:12px;color:#666;margin-bottom:4px}
+      .bd-rep-phone{font-size:13px;color:${accent};font-weight:600}
+      .bd-footer-bar{background:#111;display:flex;justify-content:space-between;align-items:center;padding:16px 40px}
+      .bd-footer-phone{font-family:'DM Serif Display',serif;font-size:22px;color:#fff}
+      .bd-footer-sub{font-size:10px;color:#aaa;margin-top:2px}
+      .bd-footer-co{font-size:13px;font-weight:600;color:#fff}
+      .bd-footer-meta{font-size:10px;color:#aaa;margin-top:2px}
+      .bd-qr{width:52px;height:52px;display:block;margin:0 auto}
+      .bd-qr-label{font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:1px;margin-top:3px;text-align:center}
+      .bd-table{width:100%;border-collapse:collapse;font-size:13px}
+      .bd-table th{text-align:left;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#888;font-weight:600;padding:8px 0;border-bottom:2px solid #eee}
+      .bd-table td{padding:10px 0;border-bottom:1px solid #f0f0f0;color:#333}
+      .bd-total-row td{font-size:15px;color:#111;border-top:2px solid #111;border-bottom:none;padding-top:14px;font-weight:700}
+      .bd-fin-row td{font-size:12px;color:#666;border-bottom:none}
+      .bd-notice{font-size:11px;color:#999;margin-top:14px;line-height:1.5}
+      .bd-included-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px}
+      .bd-inc-item{font-size:13px;color:#333;padding:4px 0}
+      .bd-steps{display:flex;flex-direction:column;gap:24px;margin-bottom:32px}
+      .bd-step{display:flex;gap:20px;align-items:flex-start}
+      .bd-step-num{width:36px;height:36px;border-radius:50%;color:#fff;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:${accent}}
+      .bd-step-title{font-size:15px;font-weight:700;color:#111;margin-bottom:4px}
+      .bd-step-desc{font-size:13px;color:#555;line-height:1.6}
+      .bd-cta-box{border:2px solid ${accent};padding:24px 28px;text-align:center;margin-top:8px}
+      .bd-cta-phone{font-family:'DM Serif Display',serif;font-size:36px;color:${accent}}
+      .bd-cta-sub{font-size:13px;color:#666;margin-top:4px}
+      .bd-photo{width:100%;max-height:200px;object-fit:cover;display:block;margin-bottom:20px}
+      .bd-dmg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+      .bd-dmg-photo{width:100%;height:110px;object-fit:cover;display:block}
+    </style>`;
 
-  const servicesHtml = svcDefs.length
-    ? '<div class="ml-services-grid">'+
-        svcDefs.map(s=>
-          '<div class="ml-svc-card" style="border-color:'+color+'33;">'+
-          '<div class="ml-svc-icon">'+s.icon+'</div>'+
-          '<div class="ml-svc-name" style="color:'+color+';">'+escHtml(s.name)+'</div>'+
-          '</div>'
-        ).join('')+
-      '</div>'
-    : '';
+  // ── PAGE 1 ─────────────────────────────────────────────────────────────────
+  const page1 = `<div class="bd-page">
+  ${sharedStyles}
+  <div class="bd-top-bar">
+    <div>
+      ${logoUrl ? '<img src="'+esc(logoUrl)+'" class="bd-logo" alt="'+esc(co)+'">' : '<span class="bd-co-name">'+esc(co)+'</span>'}
+      <div class="bd-co-meta">${esc(coAddr)}${lic ? ' &nbsp;&bull;&nbsp; Lic. '+esc(lic) : ''}</div>
+    </div>
+    <div class="bd-addr-block">
+      <div class="bd-addr-name">${esc(owner)}</div>
+      ${addrParts.map(l=>'<div class="bd-addr-line">'+esc(l)+'</div>').join('')}
+    </div>
+  </div>
+  <div class="bd-rule"></div>
+  <div class="bd-body">
+    ${_letterFrontPhoto ? '<img src="'+_letterFrontPhoto+'" class="bd-photo">' : ''}
+    <div class="bd-salutation">Dear ${esc(ownerFirst)},</div>
+    <div class="bd-hook">${esc(hookTxt)}</div>
+    <div class="bd-estimate-box">
+      <div class="bd-est-label">Your Estimate</div>
+      <div class="bd-est-amount">$${grandTotal ? grandTotal.toLocaleString() : '—'}</div>
+      ${finMo ? '<div class="bd-est-fin">or as low as <strong>$'+finMo.toLocaleString()+'/mo</strong> &nbsp;&middot;&nbsp; '+finApr+'% APR &nbsp;&middot;&nbsp; '+finTerm+' mo &nbsp;&middot;&nbsp; $0 down</div>' : ''}
+    </div>
+    <div class="bd-two-col">
+      <div class="bd-col-left">
+        <div class="bd-section-head">About ${esc(co)}</div>
+        <div class="bd-about-text">${esc(aboutCo)}</div>
+        <div class="bd-cred-row">
+          <span class="bd-cred">${esc(diff1)}</span>
+          <span class="bd-cred">${esc(diff2)}</span>
+          <span class="bd-cred">${esc(diff3)}</span>
+          <span class="bd-cred">${esc(diff4)}</span>
+          <span class="bd-cred">${esc(diff5)}</span>
+        </div>
+      </div>
+      <div class="bd-col-right">
+        <div class="bd-section-head">Your Rep</div>
+        ${hsUrl ? '<img src="'+esc(hsUrl)+'" class="bd-headshot" alt="'+esc(rep)+'">' : ''}
+        <div class="bd-rep-name">${esc(rep)}</div>
+        <div class="bd-rep-title">${esc(repTitle)}</div>
+        <div class="bd-rep-phone">${esc(ph)}</div>
+      </div>
+    </div>
+  </div>
+  <div class="bd-footer-bar">
+    <div>
+      <div class="bd-footer-phone">${esc(ph)}</div>
+      <div class="bd-footer-sub">Call or text to schedule</div>
+    </div>
+    <div style="text-align:center">
+      <img src="${esc(qrUrl)}" class="bd-qr" alt="QR">
+      <div class="bd-qr-label">Scan to Book</div>
+    </div>
+    <div style="text-align:right">
+      <div class="bd-footer-co">${esc(co)}</div>
+      <div class="bd-footer-meta">${esc(coAddr)}</div>
+      ${lic ? '<div class="bd-footer-meta">Lic. '+esc(lic)+'</div>' : ''}
+    </div>
+  </div>
+</div>`;
 
-  const refAmt  = cfg.referralAmt  || '250';
-  const refText = cfg.referralText || 'For every customer you send our way who moves forward with a project, we\'ll send you a Visa gift card as a thank you.';
+  // ── PAGE 2 — Estimate Detail ───────────────────────────────────────────────
+  const structRows = structures.length
+    ? structures.map(s=>'<tr><td>'+esc(s.name||s.label||'Roof')+'</td><td>'+(s.sqft?(s.sqft.toLocaleString()+' sq ft'):'—')+'</td><td>'+esc(s.material||'—')+'</td><td>$'+(s.price||0).toLocaleString()+'</td></tr>').join('')
+    : '<tr><td colspan="4" style="text-align:center;color:#aaa;padding:20px 0">No structures added yet</td></tr>';
 
-  // ════════════════════════════════════════════
-  //  PAGE 1 — Hook + Price
-  // ════════════════════════════════════════════
-  const ctaBand =
-        // Dark CTA strip with strong contrast
-        '<div style="background:#1a1a1a;display:flex;align-items:center;gap:0;">'+
-        '<div style="flex:1;padding:11px 18px;border-right:1px solid rgba(255,255,255,.1);">'+
-        '<div style="font-size:8px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:2px;">Call or Text to Schedule</div>'+
-        '<div style="font-family:Oswald,sans-serif;font-size:26px;font-weight:700;color:#fff;white-space:nowrap;line-height:1;">'+escHtml(ph)+'</div>'+
-        '<div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:3px;">Estimate locked 30 days &nbsp;·&nbsp; Built by satellite &nbsp;·&nbsp; No visit required</div>'+
-        '</div>'+
-        '<div style="flex:0 0 auto;padding:10px 16px;display:flex;flex-direction:column;align-items:center;gap:3px;">'+
-        (qrUrl
-          ? '<img src="'+qrUrl+'" style="width:68px;height:68px;border-radius:5px;background:#fff;display:block;">'+
-            '<div style="font-size:7px;color:rgba(255,255,255,.45);letter-spacing:.8px;text-transform:uppercase;margin-top:2px;">Scan to Book</div>'
-          : '<div style="width:68px;height:68px;border:1px dashed rgba(255,255,255,.2);border-radius:5px;display:flex;align-items:center;justify-content:center;">'+
-            '<div style="font-size:8px;color:rgba(255,255,255,.25);text-align:center;line-height:1.4;">Add URL<br>for QR</div>'+
-            '</div>'+
-            '<div style="font-size:7px;color:rgba(255,255,255,.25);letter-spacing:.8px;text-transform:uppercase;margin-top:2px;">Scan to Book</div>'
-        )+
-        '</div>'+
-        '</div>';
+  const page2 = `<div class="bd-page" style="padding-top:0">
+  <div class="bd-top-bar">
+    <div>
+      ${logoUrl ? '<img src="'+esc(logoUrl)+'" class="bd-logo" alt="'+esc(co)+'">' : '<span class="bd-co-name">'+esc(co)+'</span>'}
+    </div>
+    <span class="bd-page-label">Estimate Detail &nbsp;&middot;&nbsp; Page 2 of 3</span>
+  </div>
+  <div class="bd-rule"></div>
+  <div class="bd-body">
+    ${dmgPhotos.length ? '<div class="bd-section-head" style="margin-bottom:10px">Assessment Photos</div><div class="bd-dmg-grid">'+dmgPhotos.map(src=>'<img src="'+src+'" class="bd-dmg-photo">').join('')+'</div>' : ''}
+    <div class="bd-section-head" style="margin-bottom:14px">Price Breakdown</div>
+    <table class="bd-table">
+      <thead><tr><th>Structure</th><th>Size</th><th>Material</th><th>Price</th></tr></thead>
+      <tbody>
+        ${structRows}
+        <tr class="bd-total-row">
+          <td colspan="3">Total Investment</td>
+          <td>$${grandTotal ? grandTotal.toLocaleString() : '—'}</td>
+        </tr>
+        ${finMo ? '<tr class="bd-fin-row"><td colspan="3">Monthly Financing ('+finApr+'% APR, '+finTerm+' mo, $0 down)</td><td>$'+finMo.toLocaleString()+'/mo</td></tr>' : ''}
+      </tbody>
+    </table>
+    ${finMo ? '<div class="bd-notice">'+esc(finDisc)+'</div>' : ''}
+    <div class="bd-section-head" style="margin-top:28px;margin-bottom:14px">What&rsquo;s Included</div>
+    <div class="bd-included-grid">
+      <div class="bd-inc-item">&bull; Full tear-off of existing materials</div>
+      <div class="bd-inc-item">&bull; Deck inspection &amp; repair</div>
+      <div class="bd-inc-item">&bull; Ice &amp; water shield</div>
+      <div class="bd-inc-item">&bull; Synthetic underlayment</div>
+      <div class="bd-inc-item">&bull; New shingles (manufacturer spec)</div>
+      <div class="bd-inc-item">&bull; Ridge cap &amp; ventilation</div>
+      <div class="bd-inc-item">&bull; Flashing at all penetrations</div>
+      <div class="bd-inc-item">&bull; Full cleanup &amp; haul-away</div>
+    </div>
+  </div>
+  <div class="bd-footer-bar">
+    <div><div class="bd-footer-phone">${esc(ph)}</div></div>
+    <div style="text-align:right"><div class="bd-footer-co">${esc(co)}</div><div class="bd-footer-meta">${esc(coAddr)}</div></div>
+  </div>
+</div>`;
 
-    const page1 =
-    '<div class="ml-page" data-page="1">'+
-    pageHdr(1)+
-    '<div class="ml-body">'+
-    // Photo + greeting side by side
-    '<div style="display:table;width:100%;border-collapse:separate;border-spacing:12px 0;margin:0 -12px 10px;">'+
-    '<div style="display:table-cell;width:160px;vertical-align:top;">'+
-    (_letterFrontPhoto
-      ? '<div style="width:160px;height:130px;border-radius:6px;overflow:hidden;border:1px solid #e8e8e8;">'+
-        '<img src="'+_letterFrontPhoto+'" style="width:100%;height:100%;object-fit:cover;display:block;">'+
-        '</div>'
-      : '<div style="width:160px;height:130px;border-radius:6px;border:1px dashed #ddd;"></div>'
-    )+
-    '</div>'+
-    '<div style="display:table-cell;vertical-align:top;">'+
-    '<div class="ml-greeting">Dear '+escHtml(owner)+',</div>'+
-    '<p style="font-size:11px;line-height:1.6;color:#333;margin:5px 0 0;">'+escHtml(_tradeHook||hook)+'</p>'+
-    '</div>'+
-    '</div>'+
+  // ── PAGE 3 — Next Steps ────────────────────────────────────────────────────
+  const page3 = `<div class="bd-page" style="padding-top:0">
+  <div class="bd-top-bar">
+    <div>
+      ${logoUrl ? '<img src="'+esc(logoUrl)+'" class="bd-logo" alt="'+esc(co)+'">' : '<span class="bd-co-name">'+esc(co)+'</span>'}
+    </div>
+    <span class="bd-page-label">Next Steps &nbsp;&middot;&nbsp; Page 3 of 3</span>
+  </div>
+  <div class="bd-rule"></div>
+  <div class="bd-body">
+    <div class="bd-section-head" style="margin-bottom:24px">Ready to Move Forward?</div>
+    <div class="bd-steps">
+      <div class="bd-step">
+        <div class="bd-step-num">1</div>
+        <div>
+          <div class="bd-step-title">Call or Text Us</div>
+          <div class="bd-step-desc">Reach out to ${esc(rep)} directly at ${esc(ph)}. We&rsquo;ll answer any questions and schedule a time that works for you.</div>
+        </div>
+      </div>
+      <div class="bd-step">
+        <div class="bd-step-num">2</div>
+        <div>
+          <div class="bd-step-title">We Come to You</div>
+          <div class="bd-step-desc">A member of our crew visits the property to confirm measurements and walk you through the scope of work in person.</div>
+        </div>
+      </div>
+      <div class="bd-step">
+        <div class="bd-step-num">3</div>
+        <div>
+          <div class="bd-step-title">We Get to Work</div>
+          <div class="bd-step-desc">Once you sign off, we schedule your job and complete the installation. Most roofs are done in a single day.</div>
+        </div>
+      </div>
+    </div>
+    <div class="bd-cta-box">
+      <div class="bd-cta-phone">${esc(ph)}</div>
+      <div class="bd-cta-sub">${esc(rep)}${repTitle ? ', '+esc(repTitle) : ''}</div>
+      <div style="margin-top:16px;display:flex;align-items:center;justify-content:center;gap:16px">
+        <img src="${esc(qrUrl)}" style="width:80px;height:80px" alt="QR">
+        <div style="font-size:12px;color:#555;text-align:left">Scan to book online<br>No phone call required</div>
+      </div>
+    </div>
+  </div>
+  <div class="bd-footer-bar">
+    <div><div class="bd-footer-phone">${esc(ph)}</div></div>
+    <div style="text-align:right">
+      <div class="bd-footer-co">${esc(co)}</div>
+      <div class="bd-footer-meta">${esc(coAddr)}${lic ? ' &nbsp;&bull;&nbsp; Lic. '+esc(lic) : ''}</div>
+    </div>
+  </div>
+</div>`;
 
-    // Two-column: Why Received (left) + How We Stand Out (right)
-    '<div style="display:table;width:100%;border-collapse:separate;border-spacing:10px 0;margin:0 -10px;">'+
-    '<div style="display:table-cell;width:50%;vertical-align:top;">'+
-    '<div class="ml-section-hdr" style="background:'+color+';display:block;">Why Was This Sent to You?</div>'+
-    '<p style="font-size:10px;line-height:1.6;color:#555;margin:4px 0 0;">'+escHtml(_tradeWhy||why)+'</p>'+damageMailerSection+
-    '</div>'+
-    '<div style="display:table-cell;width:50%;vertical-align:top;">'+
-    '<div class="ml-section-hdr" style="background:#222;display:block;">How We Stand Out</div>'+
-    '<ul class="ml-diff-list" style="margin:4px 0 0;">'+
-    diffs.map(d=>'<li><span class="ml-diff-check" style="color:'+color+';">✓</span><span>'+escHtml(d)+'</span></li>').join('')+
-    '</ul>'+
-    '</div>'+
-    '</div>'+
-
-    // Hero band
-    (headshot
-      ? // HEADSHOT: price left, circle rep right
-        '<div style="position:relative;overflow:hidden;background:'+color+';padding:18px 20px 18px 20px;">'+
-        // Subtle geometric SVG overlay
-        '<svg style="position:absolute;right:0;top:0;width:55%;height:100%;opacity:.08;" viewBox="0 0 200 120" preserveAspectRatio="xMidYMid slice">'+
-        '<polygon points="0,0 200,0 200,120" fill="#fff"/>'+
-        '<circle cx="160" cy="20" r="70" fill="none" stroke="#fff" stroke-width="18"/>'+
-        '<circle cx="160" cy="20" r="100" fill="none" stroke="#fff" stroke-width="10"/>'+
-        '</svg>'+
-        // Left: price stack
-        '<div style="position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;">'+
-        '<div>'+
-        '<div style="font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:4px;">Your Total Investment</div>'+
-        '<div style="font-family:Oswald,sans-serif;font-size:44px;font-weight:700;line-height:1;color:#fff;">$'+(grandTotal?grandTotal.toLocaleString():'—')+'</div>'+
-        (finMo
-          ? '<div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;background:rgba(0,0,0,.25);border-radius:20px;padding:4px 12px;">'+
-            '<span style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.7);">Financing</span>'+
-            '<span style="font-family:Oswald,sans-serif;font-size:16px;font-weight:700;color:#fff;">$'+finMo.toLocaleString()+'/mo</span>'+
-            '<span style="font-size:9px;color:rgba(255,255,255,.6);">'+escHtml(finTrm)+'</span>'+
-            '</div>'
-          : ''
-        )+
-        '</div>'+
-        // Right: rep circle
-        '<div style="display:flex;flex-direction:column;align-items:center;gap:5px;">'+
-        '<div style="width:80px;height:80px;border-radius:50%;overflow:hidden;border:3px solid rgba(255,255,255,.9);box-shadow:0 0 0 4px rgba(255,255,255,.2);">'+
-        '<img src="'+headshot+'" style="width:100%;height:100%;object-fit:cover;object-position:center '+hsPos+'%;">'+
-        '</div>'+
-        '<div style="text-align:center;">'+
-        '<div style="font-family:Oswald,sans-serif;font-size:12px;font-weight:700;color:#fff;letter-spacing:.3px;">'+escHtml(rep)+'</div>'+
-        (repTitle?'<div style="font-size:8px;color:rgba(255,255,255,.7);letter-spacing:.6px;text-transform:uppercase;">'+escHtml(repTitle)+'</div>':'')+
-        '</div>'+
-        '</div>'+
-        '</div>'+
-        '</div>'+
-        ctaBand
-      : // NO HEADSHOT: centered price
-        '<div style="position:relative;overflow:hidden;background:'+color+';padding:18px 20px 18px 20px;">'+
-        // Subtle geometric SVG overlay
-        '<svg style="position:absolute;right:0;top:0;width:55%;height:100%;opacity:.08;" viewBox="0 0 200 120" preserveAspectRatio="xMidYMid slice">'+
-        '<polygon points="0,0 200,0 200,120" fill="#fff"/>'+
-        '<circle cx="160" cy="20" r="70" fill="none" stroke="#fff" stroke-width="18"/>'+
-        '<circle cx="160" cy="20" r="100" fill="none" stroke="#fff" stroke-width="10"/>'+
-        '</svg>'+
-        // Left: price stack
-        '<div style="position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;">'+
-        '<div>'+
-        '<div style="font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:4px;">Your Total Investment</div>'+
-        '<div style="font-family:Oswald,sans-serif;font-size:44px;font-weight:700;line-height:1;color:#fff;">$'+(grandTotal?grandTotal.toLocaleString():'—')+'</div>'+
-        (finMo
-          ? '<div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;background:rgba(0,0,0,.25);border-radius:20px;padding:4px 12px;">'+
-            '<span style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.7);">Financing</span>'+
-            '<span style="font-family:Oswald,sans-serif;font-size:16px;font-weight:700;color:#fff;">$'+finMo.toLocaleString()+'/mo</span>'+
-            '<span style="font-size:9px;color:rgba(255,255,255,.6);">'+escHtml(finTrm)+'</span>'+
-            '</div>'
-          : ''
-        )+
-        '</div>'+
-        '</div>'+
-        '</div>'+
-        ctaBand
-    )+
-    '</div>'+
-    (finMo?'<div style="padding:5px 24px 0;font-size:8px;color:#aaa;font-style:italic;">'+finDisc+'</div>':'')+
-    pageFooter()+
-    '</div>';
-
-  // ════════════════════════════════════════════
-  //  PAGE 2 — Estimate Detail
-  // ════════════════════════════════════════════
-  const page2 =
-    '<div class="ml-page" data-page="2">'+
-    pageHdr(2)+
-    '<div class="ml-body">'+
-    '<div style="font-family:Oswald,sans-serif;font-size:18px;font-weight:700;letter-spacing:.5px;margin-bottom:2px;color:#1a1a1a;">ROOF ESTIMATE</div>'+
-    '<div style="font-size:10px;color:#888;margin-bottom:10px;">Detailed breakdown for '+escHtml(addr)+'</div>'+
-    structSectionsP2+
-    '<div class="ml-grand">'+
-    '<span class="ml-grand-lbl">TOTAL INVESTMENT</span>'+
-    '<span class="ml-grand-amt">$'+(grandTotal?grandTotal.toLocaleString():'0')+'</span>'+
-    '</div>'+
-    (finMo?'<div style="text-align:center;margin-top:7px;font-size:11px;color:#555;">Est. Financing: <strong style="color:'+color+';">$'+finMo.toLocaleString()+'/mo</strong> · '+escHtml(finTrm)+'</div>':'')+
-    '<div style="margin-top:10px;padding:9px 12px;background:#f8f8f8;border-radius:6px;font-size:9px;color:#888;line-height:1.65;">'+
-    '<strong style="color:#555;display:block;margin-bottom:3px;">Every installation includes:</strong>'+
-    'Complete tear-off &amp; disposal · Synthetic underlayment · Ice &amp; water shield · Drip edge flashing · Ridge cap shingles · Workmanship warranty · Licensed &amp; insured crews'+
-    '</div>'+
-    '<div style="margin-top:7px;font-size:8px;color:#bbb;line-height:1.5;">Estimates are created using satellite imagery. Final pricing confirmed at assessment. Factors that may affect price include skylights, chimneys, special vents, plywood decking, and manufacturer price increases.</div>'+
-    '</div>'+
-    pageFooter()+
-    '</div>';
-
-  // ════════════════════════════════════════════
-  //  PAGE 2 — PROPOSAL: Good / Better / Best
-  // ════════════════════════════════════════════
-  // Compute tax
-  const taxRate = parseFloat(S.cfg.taxRate)||0;
-  const taxAmt  = Math.round(grandTotal * taxRate / 100);
-  const totalWithTax = grandTotal + taxAmt;
-  // GBB tier pricing — driven by material $/sq keys from S.cfg (Settings → Pricing → Proposal Tiers)
-  const _gbbCfg = S.cfg || {};
-  const gbbLabelGood   = _gbbCfg.gbbGoodLabel   || 'Good';
-  const gbbLabelBetter = _gbbCfg.gbbBetterLabel || 'Better';
-  const gbbLabelBest   = _gbbCfg.gbbBestLabel   || 'Best';
-  const gbbSubGood     = _gbbCfg.gbbGoodMat     || 'Architectural Shingle';
-  const gbbSubBetter   = _gbbCfg.gbbBetterMat   || 'Impact-Resistant Class 4';
-  const gbbSubBest     = _gbbCfg.gbbBestMat     || 'Designer / Premium';
-  const gbbDescGood    = _gbbCfg.gbbGoodDesc    || '25-yr warranty · Standard performance · Great value';
-  const gbbDescBetter  = _gbbCfg.gbbBetterDesc  || 'Hail protection · Insurance discount · 30-yr warranty';
-  const gbbDescBest    = _gbbCfg.gbbBestDesc    || 'Lifetime warranty · Premium curb appeal · Top-tier';
-  const gbbColorGood   = _gbbCfg.gbbGoodColor   || '#22C55E';
-  const gbbColorBetter = _gbbCfg.gbbBetterColor || color; // uses brand color
-  const gbbColorBest   = _gbbCfg.gbbBestColor   || '#A855F7';
-  // Calculate tier totals by re-running calcStructPrice with each tier's material key
-  // This gives exact $/sq prices, not an approximation
-  const gbbMatGood   = String(_gbbCfg.gbbGoodMatKey   || '1.3');
-  const gbbMatBetter = String(_gbbCfg.gbbBetterMatKey || '1.5');
-  const gbbMatBest   = String(_gbbCfg.gbbBestMatKey   || '1.8');
-  function gbbTotalForMat(matKey) {
-    if (!window.structures || !window.calcStructPrice) return grandTotal;
-    let t = 0;
-    structures.forEach(s => {
-      const orig = s.mat;
-      s.mat = matKey;
-      t += calcStructPrice(s);
-      s.mat = orig;
-    });
-    // Add non-material add-ons (solar, skylights, etc.) from grandTotal minus current structure total
-    const structOnly = structures.reduce((a,s)=>{ const o=s.mat; s.mat=gbbMatBetter; const v=calcStructPrice(s); s.mat=o; return a+v; }, 0);
-    const addons = Math.max(0, grandTotal - structOnly);
-    return Math.round(t + addons);
-  }
-  const totGood   = gbbTotalForMat(gbbMatGood);
-  const totBetter = grandTotal; // Better = current estimate (already uses Better mat)
-  const totBest   = gbbTotalForMat(gbbMatBest);
-  const taxGood   = Math.round(totGood   * taxRate / 100);
-  const taxBetter = Math.round(totBetter * taxRate / 100);
-  const taxBest   = Math.round(totBest   * taxRate / 100);
-  const finGood   = (finEnabled && totGood)   ? calcMonthly(totGood)   : 0;
-  const finBetter = (finEnabled && totBetter) ? calcMonthly(totBetter) : 0;
-  const finBest   = (finEnabled && totBest)   ? calcMonthly(totBest)   : 0;
   const isProposalMode = (window._previewMode === 'proposal');
-  const page2Proposal =
-    '<div class="ml-page" data-page="2">'+
-    pageHdr(2)+
-    '<div class="ml-body">'+
-    '<div style="font-family:Oswald,sans-serif;font-size:18px;font-weight:700;letter-spacing:.5px;margin-bottom:2px;color:#1a1a1a;">YOUR ROOFING PROPOSAL</div>'+
-    '<div style="font-size:10px;color:#888;margin-bottom:12px;">Choose the option that fits your needs — '+escHtml(addr)+'</div>'+
-    // GBB cards — labels/colors/descriptions driven by S.cfg (Settings → Pricing → Proposal Tiers)
-    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;">'+
-    // GOOD
-    '<div style="border:2px solid '+gbbColorGood+';border-radius:8px;overflow:hidden;">'+
-    '<div style="background:'+gbbColorGood+';color:#fff;font-family:Oswald,sans-serif;font-size:13px;font-weight:700;padding:7px 10px;text-align:center;letter-spacing:.5px;">🟢 '+escHtml(gbbLabelGood.toUpperCase())+'</div>'+
-    '<div style="padding:10px;background:#f9fdf9;">'+
-    '<div style="font-size:9px;color:#555;font-weight:700;margin-bottom:4px;">'+escHtml(gbbSubGood)+'</div>'+
-    '<div style="font-size:8px;color:#777;margin-bottom:8px;line-height:1.5;">'+escHtml(gbbDescGood)+'</div>'+
-    '<div style="font-size:18px;font-weight:700;color:#1a1a1a;font-family:Oswald,sans-serif;">$'+(totGood+taxGood).toLocaleString()+'</div>'+
-    (taxRate>0?'<div style="font-size:8px;color:#888;">incl. '+taxRate+'% tax ($'+taxGood.toLocaleString()+')</div>':'')+
-    (finGood?'<div style="font-size:9px;color:'+gbbColorGood+';font-weight:700;margin-top:4px;">~$'+finGood.toLocaleString()+'/mo</div>':'')+
-    '</div></div>'+
-    // BETTER
-    '<div style="border:2px solid '+gbbColorBetter+';border-radius:8px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.12);">'+
-    '<div style="background:'+gbbColorBetter+';color:#fff;font-family:Oswald,sans-serif;font-size:13px;font-weight:700;padding:7px 10px;text-align:center;letter-spacing:.5px;">⭐ '+escHtml(gbbLabelBetter.toUpperCase())+' — POPULAR</div>'+
-    '<div style="padding:10px;background:#fffdf9;">'+
-    '<div style="font-size:9px;color:#555;font-weight:700;margin-bottom:4px;">'+escHtml(gbbSubBetter)+'</div>'+
-    '<div style="font-size:8px;color:#777;margin-bottom:8px;line-height:1.5;">'+escHtml(gbbDescBetter)+'</div>'+
-    '<div style="font-size:18px;font-weight:700;color:#1a1a1a;font-family:Oswald,sans-serif;">$'+(totBetter+taxBetter).toLocaleString()+'</div>'+
-    (taxRate>0?'<div style="font-size:8px;color:#888;">incl. '+taxRate+'% tax ($'+taxBetter.toLocaleString()+')</div>':'')+
-    (finBetter?'<div style="font-size:9px;color:'+gbbColorBetter+';font-weight:700;margin-top:4px;">~$'+finBetter.toLocaleString()+'/mo</div>':'')+
-    '</div></div>'+
-    // BEST
-    '<div style="border:2px solid '+gbbColorBest+';border-radius:8px;overflow:hidden;">'+
-    '<div style="background:'+gbbColorBest+';color:#fff;font-family:Oswald,sans-serif;font-size:13px;font-weight:700;padding:7px 10px;text-align:center;letter-spacing:.5px;">🟣 '+escHtml(gbbLabelBest.toUpperCase())+'</div>'+
-    '<div style="padding:10px;background:#fdf9ff;">'+
-    '<div style="font-size:9px;color:#555;font-weight:700;margin-bottom:4px;">'+escHtml(gbbSubBest)+'</div>'+
-    '<div style="font-size:8px;color:#777;margin-bottom:8px;line-height:1.5;">'+escHtml(gbbDescBest)+'</div>'+
-    '<div style="font-size:18px;font-weight:700;color:#1a1a1a;font-family:Oswald,sans-serif;">$'+(totBest+taxBest).toLocaleString()+'</div>'+
-    (taxRate>0?'<div style="font-size:8px;color:#888;">incl. '+taxRate+'% tax ($'+taxBest.toLocaleString()+')</div>':'')+
-    (finBest?'<div style="font-size:9px;color:'+gbbColorBest+';font-weight:700;margin-top:4px;">~$'+finBest.toLocaleString()+'/mo</div>':'')+
-    '</div></div>'+
-    '</div>'+
-    // Line items
-    '<div style="border:1px solid #e5e5e5;border-radius:6px;overflow:hidden;margin-bottom:10px;">'+
-    '<div style="background:#1a1a1a;color:#fff;font-family:Oswald,sans-serif;font-size:11px;font-weight:700;padding:6px 12px;letter-spacing:.5px;">SCOPE OF WORK — SELECTED OPTION</div>'+
-    structSectionsP2+
-    (taxRate>0?'<div class="ml-row" style="border-top:1px solid #e5e5e5;"><span class="rl" style="font-weight:700;">Sales Tax ('+taxRate+'%)</span><span class="rv" style="font-weight:700;">$'+taxBetter.toLocaleString()+'</span></div>':'')+
-    '</div>'+
-    '<div class="ml-grand">'+
-    '<span class="ml-grand-lbl">TOTAL INVESTMENT</span>'+
-    '<span class="ml-grand-amt">$'+(totBetter+taxBetter).toLocaleString()+'</span>'+
-    '</div>'+
-    (finBetter?'<div style="text-align:center;margin-top:7px;font-size:11px;color:#555;">Est. Financing: <strong style="color:'+color+';">$'+finBetter.toLocaleString()+'/mo</strong> · '+escHtml(finTrm)+'</div>':'')+
-    '<div style="margin-top:7px;font-size:8px;color:#bbb;line-height:1.5;">Estimates are created using satellite imagery. Final pricing confirmed at assessment. Factors that may affect price include skylights, chimneys, special vents, plywood decking, and manufacturer price increases.</div>'+
-    '</div>'+
-    pageFooter()+
-    '</div>';
-  // ════════════════════════════════════════════
-  //  PAGE 3 — The Company Difference
-  // ════════════════════════════════════════════
-  const compareRows = diffs.map((d,i)=>{
-    const neg = competitorNegs[i] || 'Rarely';
-    return '<tr>'+
-      '<td class="ct-feat">'+escHtml(d)+'</td>'+
-      '<td class="ct-us" style="background:'+color+';">✓</td>'+
-      '<td class="ct-them">'+escHtml(neg)+'</td>'+
-      '</tr>';
-  });
-  // Add static rows
-  const staticRows = [
-    ['Years in Business', yrs, '1–2 Years'],
-    ['Workmanship Warranty', warr+' Years', 'State Minimum'],
-  ].map(([feat,us,them])=>
-    '<tr><td class="ct-feat">'+escHtml(feat)+'</td>'+
-    '<td class="ct-us" style="background:'+color+';">'+escHtml(us)+'</td>'+
-    '<td class="ct-them">'+escHtml(them)+'</td></tr>'
-  );
-
-  const page3 =
-    '<div class="ml-page" data-page="3">'+
-    '<div class="ml-p3-banner" style="background:'+color+';">'+
-    '<div class="ml-p3-title">THE '+escHtml(co.toUpperCase())+' DIFFERENCE</div>'+
-    '<div class="ml-p3-sub">We protect what matters most. Selecting the right contractor is crucial.</div>'+
-    '</div>'+
-    '<div class="ml-body" style="padding-top:10px;">'+
-    '<p style="font-size:10px;line-height:1.6;color:#555;margin-bottom:10px;">Your roof is one of the most important investments you\'ll make for your home and family. It\'s important to us that your questions are answered and that you have all the information necessary to make the best decision.</p>'+
-    '<table class="ml-compare-table">'+
-    '<thead><tr>'+
-    '<th style="text-align:left;background:#f8f8f8;color:#777;"></th>'+
-    '<th style="background:'+color+';color:#fff;border-radius:4px 4px 0 0;">'+escHtml(co)+'</th>'+
-    '<th style="background:#eee;color:#888;">Typical Contractor</th>'+
-    '</tr></thead>'+
-    '<tbody>'+staticRows.join('')+compareRows.join('')+'</tbody>'+
-    '</table>'+
-    '</div>'+
-    pageFooter()+
-    '</div>';
-
-  // ════════════════════════════════════════════
-  //  PAGE 4 — We Also Offer + Referral
-  // ════════════════════════════════════════════
-  const page4 =
-    '<div class="ml-page" data-page="4">'+
-    pageHdr(4)+
-    '<div class="ml-body">'+
-    (svcDefs.length>0
-      ? '<div class="ml-p4-title">WE ALSO OFFER</div>'+servicesHtml
-      : '')+
-    // Review images grid
-    ((review1||review2)
-      ? '<div style="margin-top:16px;">'+
-        '<div class="ml-section-hdr" style="background:#1a1a1a;margin-bottom:10px;">What Our Customers Say</div>'+
-        '<div class="ml-reviews-grid">'+
-        (review1?'<img src="'+review1+'" class="ml-review-img" alt="Customer Review">':'<div class="ml-review-slot">Review image 1</div>')+
-        (review2?'<img src="'+review2+'" class="ml-review-img" alt="Customer Review">':'<div class="ml-review-slot">Review image 2</div>')+
-        '</div>'+
-        '</div>'
-      : ''
-    )+
-
-    '<div style="margin-top:'+(svcDefs.length||review1||review2?'10':'0')+'px;">'+
-    '<div class="ml-section-hdr" style="background:'+color+';">Referral Program</div>'+
-    '<div class="ml-referral-box" style="background:#f8f8f8;border:2px solid '+color+'22;">'+
-    '<div class="ml-ref-badge"><div class="ref-amt">$'+escHtml(refAmt)+'</div>VISA GIFT CARD</div>'+
-    '<div class="ml-ref-content">'+
-    '<div class="ml-ref-title">Share &amp; Get Rewarded</div>'+
-    '<div class="ml-ref-body">'+escHtml(refText)+'</div>'+
-    '<div style="margin-top:8px;font-size:11px;font-weight:700;color:'+color+';">Call '+escHtml(ph)+' and mention this mailer</div>'+
-    '</div></div></div>'+
-    '</div>'+
-    pageFooter()+
-    '</div>';
-
-  // ════════════════════════════════════════════
-  //  PAGE 4 — PROPOSAL: E-Sign / Acceptance
-  // ════════════════════════════════════════════
-  const page4Proposal =
-    '<div class="ml-page" data-page="4">'+
-    pageHdr(4)+
-    '<div class="ml-body">'+
-    '<div style="font-family:Oswald,sans-serif;font-size:16px;font-weight:700;letter-spacing:.5px;margin-bottom:4px;color:#1a1a1a;">PROPOSAL ACCEPTANCE</div>'+
-    '<div style="font-size:10px;color:#888;margin-bottom:14px;">Review and sign below to accept this proposal. Your signature is legally binding under the U.S. ESIGN Act.</div>'+
-    // Summary box
-    '<div style="border:2px solid '+color+';border-radius:8px;padding:12px;margin-bottom:14px;background:#fffdf9;">'+
-    '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">'+
-    '<div>'+
-    '<div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Property</div>'+
-    '<div style="font-size:11px;font-weight:700;color:#1a1a1a;">'+escHtml(addr)+'</div>'+
-    '<div style="font-size:10px;color:#555;margin-top:6px;">'+escHtml(owner)+'</div>'+
-    '</div>'+
-    '<div style="text-align:right;">'+
-    '<div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Accepted Total</div>'+
-    '<div style="font-family:Oswald,sans-serif;font-size:22px;font-weight:700;color:'+color+';">$'+(totBetter+taxBetter).toLocaleString()+'</div>'+
-    (taxRate>0?'<div style="font-size:8px;color:#aaa;">incl. '+taxRate+'% tax</div>':'')+
-    '</div>'+
-    '</div>'+
-    '</div>'+
-    // Terms
-    '<div style="font-size:8.5px;color:#555;line-height:1.6;margin-bottom:14px;padding:10px;background:#f8f8f8;border-radius:6px;">'+
-    '<strong style="color:#333;display:block;margin-bottom:4px;">Terms & Conditions</strong>'+
-    'This proposal is valid for 30 days from the date of issue. A 50% deposit is required to schedule work. Final pricing is subject to confirmation upon physical inspection. '+
-    'All work will be performed in accordance with local building codes. Manufacturer warranties apply to materials; workmanship warranty as stated. '+
-    'Homeowner is responsible for HOA approvals where applicable. Payment in full is due upon project completion.'+
-    '</div>'+
-    // Signature block
-    '<div style="border:2px solid #1a1a1a;border-radius:8px;padding:14px;margin-bottom:10px;">'+
-    '<div style="font-size:10px;font-weight:700;color:#1a1a1a;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;">&#9997; Customer Acceptance</div>'+
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px;">'+
-    '<div>'+
-    '<div style="font-size:8px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;">Print Full Name</div>'+
-    '<div style="border-bottom:1.5px solid #1a1a1a;height:28px;"></div>'+
-    '</div>'+
-    '<div>'+
-    '<div style="font-size:8px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;">Date</div>'+
-    '<div style="border-bottom:1.5px solid #1a1a1a;height:28px;"></div>'+
-    '</div>'+
-    '</div>'+
-    '<div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;">'+
-    '<div>'+
-    '<div style="font-size:8px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;">Signature</div>'+
-    '<div style="border-bottom:1.5px solid #1a1a1a;height:36px;"></div>'+
-    '<div style="font-size:7.5px;color:#aaa;margin-top:3px;">By signing, I agree this constitutes my legal electronic/written signature</div>'+
-    '</div>'+
-    '<div>'+
-    '<div style="font-size:8px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;">Option Selected</div>'+
-    '<div style="border-bottom:1.5px solid #1a1a1a;height:36px;"></div>'+
-    '</div>'+
-    '</div>'+
-    '</div>'+
-    // Contractor signature
-    '<div style="border:1px solid #e5e5e5;border-radius:6px;padding:10px;display:flex;justify-content:space-between;align-items:center;gap:10px;">'+
-    '<div>'+
-    '<div style="font-size:8px;color:#888;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;">Authorized by</div>'+
-    '<div style="font-size:11px;font-weight:700;color:#1a1a1a;">'+escHtml(rep)+'</div>'+
-    '<div style="font-size:9px;color:#555;">'+escHtml(co)+' · '+escHtml(ph)+(lic?' · Lic# '+escHtml(lic):'')+'</div>'+
-    '</div>'+
-    '<div style="text-align:right;">'+
-    '<div style="font-size:8px;color:#888;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;">Proposal Date</div>'+
-    '<div style="font-size:10px;font-weight:700;color:#1a1a1a;">'+new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})+'</div>'+
-    '</div>'+
-    '</div>'+
-    '</div>'+
-    pageFooter()+
-    '</div>';
-  document.getElementById('mailer-preview').innerHTML = isProposalMode ? (page1 + page2Proposal + page3 + page4Proposal) : (page1 + page2 + page3 + page4);
-
-  // If postcard mode is active, also refresh the postcard preview
-  if(window._previewMode === 'postcard') _refreshPostcardPreview();
+  document.getElementById('mailer-preview').innerHTML = page1 + page2 + page3;
 }
+
 
 // ── Preview mode toggle (Letter / Postcard) ──────────────────────────────────
 let _previewMode = 'letter';
