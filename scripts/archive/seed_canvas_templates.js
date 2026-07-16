@@ -337,7 +337,7 @@ function buildBackCard(accentColor = '#F25C05') {
         bdLock:'editable', bdZoneLabel:'website',
       }),
       // Left column: copy
-      lockedText('"Most homeowners dread the pushy salesman. I do things differently — I lead with my price, no pressure, no games."', {
+      lockedText('"Your roof estimate is already built. No sales visit, no pressure, no surprises — just a real number for your home."', {
         left:30, top:105, width:390, fontSize:15, fontFamily:'Barlow', fontStyle:'italic', fontWeight:'400',
         fill:'#1F2C3E', lineHeight:1.6,
         bdLock:'editable', bdZoneLabel:'headline1',
