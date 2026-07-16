@@ -78,7 +78,7 @@ const stormFront = {
       bdLock:'editable', bdZoneLabel:'headline1',
     }),
     // Subtext
-    lockedText('We assessed your neighborhood and identified your home as a candidate for roof replacement.', {
+    lockedText('We tapped your home on the map and built this estimate based on your property data.', {
       left:40, top:175, width:420, fontSize:15, fontFamily:'Barlow', fontWeight:'400',
       fill:'#C8D8E8', lineHeight:1.5,
       bdLock:'editable', bdZoneLabel:'subtext',
@@ -342,7 +342,7 @@ function buildBackCard(accentColor = '#F25C05') {
         fill:'#1F2C3E', lineHeight:1.6,
         bdLock:'editable', bdZoneLabel:'headline1',
       }),
-      lockedText('We assessed your neighborhood and identified your home as a candidate for roof replacement. We look for missing shingles, moss, algae, buckling, granule loss, and age. The average roof lasts 18-20 years.', {
+      lockedText('We tapped your home on the map and built this estimate based on your property data. We look for missing shingles, moss, algae, buckling, granule loss, and age. The average roof lasts 18-20 years.', {
         left:30, top:210, width:390, fontSize:13, fontFamily:'Barlow', fontWeight:'400',
         fill:'#3D5269', lineHeight:1.6,
         bdLock:'editable', bdZoneLabel:'subtext',

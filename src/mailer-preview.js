@@ -101,10 +101,10 @@ function updatePreview(){
   const TRADE_WHY_MAP = {
     solar:"We analyzed your roof's solar potential and identified your home as an excellent candidate for solar panels. Your roof orientation, pitch, and sun exposure make it ideal for generating clean energy and reducing your monthly utility bills.",
     fencing:"We identified your property as a great candidate for a new fence installation. Whether for privacy, security, or curb appeal, we can provide a professional installation with quality materials built to last.",
-    siding:"We assessed your home's exterior and identified your siding as a candidate for replacement or upgrade. New siding improves energy efficiency, protects against moisture, and dramatically boosts curb appeal.",
+    siding:"We tapped your home on the map and built this estimate based on your property data. New siding improves energy efficiency, protects against moisture, and dramatically boosts curb appeal.",
     gutters:"We inspected your home's drainage system and identified your gutters as a candidate for replacement or upgrade. Properly functioning gutters protect your foundation, landscaping, and siding from water damage.",
-    insulation:"We assessed your home's energy profile and identified your attic insulation as a candidate for upgrade. Improved insulation can reduce heating and cooling costs by up to 20% and improve year-round comfort.",
-    paint:"We assessed your home's exterior and identified it as a candidate for a fresh coat of paint. Exterior painting protects against weather damage, prevents wood rot, and significantly improves curb appeal.",
+    insulation:"We tapped your home on the map and built this estimate based on your property data. Improved insulation can reduce heating and cooling costs by up to 20% and improve year-round comfort.",
+    paint:"We tapped your home on the map and built this estimate based on your property data. Exterior painting protects against weather damage, prevents wood rot, and significantly improves curb appeal.",
     doors:"We identified your home as a candidate for door replacement or upgrade. New entry and interior doors improve energy efficiency, security, and the overall aesthetic of your home.",
     windows:"We identified your home as a candidate for window replacement. New energy-efficient windows can reduce heating and cooling costs by up to 15% and eliminate drafts and condensation issues."
   };
