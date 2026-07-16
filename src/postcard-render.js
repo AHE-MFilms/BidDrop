@@ -956,310 +956,303 @@ ${addr.split(',').map(l=>`<div>${escHtml(l.trim())}</div>`).join('')}
 </body></html>`;
 }
 function buildLobMailerHtml(item){
-  const cfg    = S.cfg;
-  const owner  = item.owner || 'Homeowner';
-  const addr   = item.addr  || '';
-  const co     = cfg.companyName   || 'Your Roofing Co';
-  const coAddr = cfg.companyAddr   || '';
-  const ph     = cfg.companyPhone  || '(000) 000-0000';
-  const color  = cfg.brandColor    || '#F25C05';
-  const rep    = cfg.repName       || co;
-  const repTitle= cfg.repTitle     || 'Roofing Consultant';
-  const lic    = cfg.licenseNum    || '';
-  const yrs    = cfg.yearsInBusiness || '5+';
-  const warr   = cfg.warrantyYears || '10';
-  const hook   = cfg.hookLetter    || 'We took a look at the roof at your address using satellite imagery and current property data, and put together a real estimate for you \u2014 no guessing, no \u201ccall for a quote.\u201d Your number is printed right here so you can see it before you talk to anyone. No runaround \u2014 your price is right here.';
-  const why    = cfg.whyReceived   || 'Public property records show your roof is likely past the 20-year mark. Recent hail or high-wind activity was logged in your ZIP code. Neighbors on your street have pulled roofing permits recently. Satellite imagery flagged wear consistent with aging shingles. No obligation \u2014 this is just your number, ready when you are.';
-  // Financing
+  const cfg      = S.cfg;
+  const owner    = item.owner || 'Homeowner';
+  const addr     = item.addr  || '';
+  const co       = cfg.companyName   || 'Your Roofing Co';
+  const coAddr   = cfg.companyAddr   || '';
+  const ph       = cfg.companyPhone  || '(000) 000-0000';
+  const accent   = cfg.brandColor    || '#F25C05';
+  const rep      = cfg.repName       || co;
+  const repTitle = cfg.repTitle      || 'Roofing Consultant';
+  const lic      = cfg.licenseNum    || '';
+  const yrs      = cfg.yearsInBusiness || '5+';
+  const warr     = cfg.warrantyYears || '10';
+  const logoUrl  = (cfg.logoData && cfg.logoData.startsWith('http')) ? cfg.logoData : '';
+  const hsUrl    = (cfg.headshotData && cfg.headshotData.startsWith('http')) ? cfg.headshotData : '';
+  const bookUrl  = cfg.bookingUrl || 'https://biddrop.us';
+  const qrSrc    = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=4&data=' + encodeURIComponent(bookUrl);
+
+  const total    = item.total || 0;
   const finEnabled = cfg.financingEnabled !== false;
-  const finApr  = parseFloat(cfg.financingApr)  || 9.99;
-  const finTerm = parseInt(cfg.financingTerm)   || 60;
-  const finDown = parseFloat(cfg.financingDown) || 0;
-  function calcMo(total){
+  const finApr   = parseFloat(cfg.financingApr) || 9.99;
+  const finTerm  = parseInt(cfg.financingTerm) || 60;
+  const finDown  = parseFloat(cfg.financingDown) || 0;
+  let finMo = 0;
+  if(finEnabled && total){
     const loan = total * (1 - finDown/100);
-    if(!loan) return 0;
-    const r = finApr / 100 / 12;
-    if(r === 0) return Math.round(loan / finTerm);
-    return Math.round(loan * r * Math.pow(1+r,finTerm) / (Math.pow(1+r,finTerm)-1));
-  }
-  const homePhotoSrc = item.photo_url || item.photo_data || null;
-  const headshot     = cfg.headshot  || null;
-  const bookingUrl   = cfg.bookingUrl || '';
-  const _lobEstId    = item.id || item._id || null;
-  const _lobSlug     = co ? co.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') : 'roofing';
-  const _lobEstUrl   = _lobEstId
-    ? 'https://biddrop.us/'+_lobSlug+'/'+encodeURIComponent(_lobEstId)
-    : (bookingUrl || 'https://biddrop.us');
-  const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=6&data='+encodeURIComponent(_lobEstUrl);
-  // Logo
-  const logoImg = cfg.logoData
-    ? '<img src="'+cfg.logoData+'" style="max-height:44px;max-width:140px;object-fit:contain;display:block;">'
-    : '<span style="font-family:\'Playfair Display\',Georgia,serif;font-size:26px;font-weight:900;color:#111;letter-spacing:-0.5px;">'+escHtml(co)+'</span>';
-  // Structures & totals
-  const iStructures = Array.isArray(item.structures) ? item.structures : [];
-  let grandTotal = item.total || 0;
-  let structRows = '';
-  if(iStructures.length){
-    iStructures.forEach((s,i)=>{
-      const sp = calcStructPrice ? calcStructPrice(s) : (s.price||0);
-      const sq = ((parseFloat(s.sqft)||0)/100*1.12*(parseFloat(s.pitch)||1.118)).toFixed(1);
-      structRows +=
-        '<tr style="border-bottom:1px solid #f0f0f0;">'+
-        '<td style="padding:8px 12px;font-size:11px;color:#444;">'+escHtml(s.name||('Structure '+(i+1)))+
-          '<div style="font-size:9px;color:#aaa;margin-top:2px;">'+(s.sqft?Number(s.sqft).toLocaleString()+' sq ft':'')+
-          (s.mat?' \u00b7 '+(MATLBL[s.mat]||s.mat):'')+
-          (s.pitch?' \u00b7 '+(PITCHLBL[s.pitch]||s.pitch):'')+
-          '</div></td>'+
-        '<td style="padding:8px 12px;text-align:right;font-size:12px;font-weight:700;color:#1a1a1a;white-space:nowrap;">$'+sp.toLocaleString()+'</td>'+
-        '</tr>';
-    });
-  }
-  const finMo  = (finEnabled && grandTotal) ? calcMo(grandTotal) : 0;
-  const finTrm = finApr+'% APR \u00b7 '+finTerm+' mo \u00b7 $0 down';
-  const finDisc = 'Financing estimate based on '+finApr+'% APR, '+finTerm+'-month term, subject to credit approval.';
-  // Differentiators
-  const diffs = [
-    cfg.diff1||'Licensed, Bonded & Insured',
-    cfg.diff2||'Manufacturer Certified',
-    cfg.diff3||'Itemized Pricing for Transparency',
-    cfg.diff4||warr+'-Year Workmanship Warranty',
-    cfg.diff5||'Financing Available',
-    cfg.diff6||'Local Crews'
-  ].filter(d=>d.trim()).slice(0,6);
-  // Services
-  const svcDefs = [];
-  if(cfg.offerSiding)  svcDefs.push('Siding');
-  if(cfg.offerWindows) svcDefs.push('Windows');
-  if(cfg.offerGutters) svcDefs.push('Gutters');
-  if(cfg.offerCustom&&cfg.offerCustom.trim()) svcDefs.push(cfg.offerCustom);
-  // Referral
-  const refAmt  = cfg.referralAmt  || '250';
-  const refText = cfg.referralText || "For every customer you refer who moves forward, we\u2019ll send you a Visa gift card as a thank you.";
-  // Damage photos
-  const dmgPhotos = Array.isArray(item.damage_photos) ? item.damage_photos : [];
-  const hasPhotos = dmgPhotos.length > 0;
-  const dmgSection = hasPhotos
-    ? '<div style="margin:16px 0;">'+
-        '<div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin-bottom:8px;font-family:Helvetica,Arial,sans-serif;">DAMAGE PHOTOS</div>'+
-        '<div style="display:grid;grid-template-columns:repeat('+Math.min(dmgPhotos.length,3)+',1fr);gap:8px;">'+
-        dmgPhotos.slice(0,3).map(src=>'<img src="'+src+'" style="width:100%;height:110px;object-fit:cover;border-radius:4px;display:block;">').join('')+
-        '</div></div>'
-    : '';
-
-  // ── BROADSHEET HELPERS ─────────────────────────────────────────────────
-  // Black header bar
-  function bsHeader(){
-    return '<div style="background:#111;padding:22px 44px;display:flex;justify-content:space-between;align-items:center;">'+
-      '<div>'+logoImg+'</div>'+
-      '<div style="text-align:right;">'+
-        '<div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#888;margin-bottom:3px;">Prepared for</div>'+
-        '<div style="font-size:14px;font-weight:700;color:#fff;font-family:Helvetica,Arial,sans-serif;">'+escHtml(owner)+'</div>'+
-        '<div style="font-size:11px;color:#aaa;margin-top:2px;font-family:Helvetica,Arial,sans-serif;">'+escHtml(addr)+'</div>'+
-      '</div>'+
-    '</div>'+
-    '<div style="height:4px;background:'+color+';"></div>';
-  }
-  // Footer
-  function bsFooter(n){
-    return '<div style="padding:10px 44px;border-top:1px solid #e8e8e8;display:flex;justify-content:space-between;align-items:center;">'+
-      '<div style="font-size:9px;color:#bbb;font-family:Helvetica,Arial,sans-serif;">'+escHtml(co)+(lic?' \u00b7 Lic# '+escHtml(lic):'')+' \u00b7 Licensed & Insured \u00b7 '+new Date().getFullYear()+'</div>'+
-      '<div style="font-size:9px;color:#bbb;font-family:Helvetica,Arial,sans-serif;">Page '+n+' of 4</div>'+
-    '</div>';
-  }
-  // Section heading
-  function secHead(txt){
-    return '<div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:'+color+';font-weight:700;margin-bottom:10px;border-bottom:2px solid '+color+';padding-bottom:5px;font-family:Helvetica,Arial,sans-serif;">'+escHtml(txt)+'</div>';
+    const r = finApr/100/12;
+    finMo = r===0 ? Math.round(loan/finTerm) : Math.round(loan*r*Math.pow(1+r,finTerm)/(Math.pow(1+r,finTerm)-1));
   }
 
-  // ── PAGE 1 ─────────────────────────────────────────────────────────────
-  const page1 =
-    '<div style="background:#fff;overflow:hidden;width:7.5in;min-height:10in;max-height:10in;box-sizing:border-box;page-break-after:always;font-family:Georgia,serif;">'+
-    bsHeader()+
-    '<div style="padding:36px 44px 0;">'+
-      // Hero row: greeting left, price box right
-      '<div style="display:flex;gap:32px;align-items:flex-start;margin-bottom:28px;">'+
-        '<div style="flex:1;">'+
-          '<div style="font-family:\'Playfair Display\',Georgia,serif;font-size:26px;font-weight:700;color:#111;margin-bottom:14px;">Dear <span style="color:'+color+';">'+escHtml(owner)+',</span></div>'+
-          '<p style="font-size:14px;color:#444;line-height:1.8;margin:0;">'+escHtml(hook)+'</p>'+
-        '</div>'+
-        '<div style="width:185px;flex-shrink:0;">'+
-          '<div style="border:2.5px solid #111;padding:18px;text-align:center;">'+
-            '<div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#888;margin-bottom:6px;font-family:Helvetica,Arial,sans-serif;">Your Estimate</div>'+
-            '<div style="font-family:\'Playfair Display\',Georgia,serif;font-size:38px;font-weight:900;color:#111;line-height:1;">'+(grandTotal?'$'+grandTotal.toLocaleString():'$0')+'</div>'+
-            (finMo?'<div style="font-size:12px;color:'+color+';font-weight:700;margin-top:7px;font-family:Helvetica,Arial,sans-serif;">$'+finMo+'/mo financing</div>':'') +
-            (finMo?'<div style="font-size:9px;color:#aaa;margin-top:4px;font-family:Helvetica,Arial,sans-serif;">'+finTrm+'</div>':'')+
-          '</div>'+
-        '</div>'+
-      '</div>'+
-      '<hr style="border:none;border-top:1px solid #ddd;margin:0 0 24px;">'+
-      // Company intro paragraph
-      '<p style="font-size:13.5px;color:#555;line-height:1.85;margin-bottom:24px;font-family:Helvetica,Arial,sans-serif;">'+escHtml(cfg.aboutCompany||'We are a local roofing company that believes you deserve a straight answer before you ever have to talk to a salesperson. Honest work, honest pricing, from a crew that stands behind every job.')+'</p>'+
-      // Credential tags — square bordered, no bullets
-      '<div style="margin-bottom:28px;">'+
-        '<div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#888;font-weight:700;margin-bottom:12px;font-family:Helvetica,Arial,sans-serif;">'+escHtml(co)+' at a Glance</div>'+
-        '<div style="display:flex;flex-wrap:wrap;gap:8px;">'+
-        diffs.map(d=>'<div style="border:1.5px solid #111;padding:7px 14px;font-size:11px;font-weight:700;color:#111;font-family:Helvetica,Arial,sans-serif;letter-spacing:.3px;">'+escHtml(d)+'</div>').join('')+
-        '</div>'+
-      '</div>'+
-    '</div>'+
-    // Contact footer bar
-    '<div style="background:#111;padding:22px 44px;display:flex;justify-content:space-between;align-items:center;margin-top:auto;">'+
-      '<div>'+
-        '<div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#888;font-family:Helvetica,Arial,sans-serif;">Call or Text to Schedule</div>'+
-        '<div style="font-family:\'Playfair Display\',Georgia,serif;font-size:26px;font-weight:700;color:#fff;margin-top:4px;">'+escHtml(ph)+'</div>'+
-        '<div style="font-size:10px;color:#888;margin-top:3px;font-family:Helvetica,Arial,sans-serif;">Estimate locked 30 days \u00b7 Built by satellite \u00b7 No visit required</div>'+
-      '</div>'+
-      (headshot
-        ? '<div style="text-align:center;"><img src="'+headshot+'" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid '+color+';display:block;margin:0 auto 6px;"><div style="font-size:12px;font-weight:700;color:#fff;font-family:Helvetica,Arial,sans-serif;">'+escHtml(rep)+'</div><div style="font-size:10px;color:#888;font-family:Helvetica,Arial,sans-serif;">'+escHtml(repTitle)+'</div></div>'
-        : '<div style="text-align:center;"><div style="width:56px;height:56px;border-radius:50%;background:#333;border:2px solid '+color+';display:flex;align-items:center;justify-content:center;margin:0 auto 6px;"><span style="font-size:20px;color:#888;">&#128100;</span></div><div style="font-size:12px;font-weight:700;color:#fff;font-family:Helvetica,Arial,sans-serif;">'+escHtml(rep)+'</div><div style="font-size:10px;color:#888;font-family:Helvetica,Arial,sans-serif;">'+escHtml(repTitle)+'</div></div>'
-      )+
-      '<div style="width:80px;height:80px;background:#fff;border-radius:4px;display:flex;align-items:center;justify-content:center;padding:4px;">'+
-        (qrUrl
-          ? '<img src="'+qrUrl+'" style="width:72px;height:72px;display:block;">'
-          : '<div style="font-size:8px;color:#999;text-align:center;">Add booking URL for QR</div>'
-        )+
-      '</div>'+
-    '</div>'+
-    '</div>';
+  const hookTxt  = cfg.hookLetter || 'We looked up your address, measured your roof using satellite data, and put together a real price \u2014 before we ever reached out. No appointment needed. No one coming to your door. Your number is right here.';
+  const aboutCo  = cfg.aboutCompany || 'We are a local roofing company that believes in straight answers. No runaround, no pressure \u2014 just honest work from a crew that stands behind every job.';
+  const diff1    = cfg.diff1 || 'Licensed, Bonded & Insured';
+  const diff2    = cfg.diff2 || 'Manufacturer Certified';
+  const diff3    = cfg.diff3 || 'Workmanship Warranty';
+  const diff4    = cfg.diff4 || 'Financing Available';
+  const diff5    = cfg.diff5 || 'Local Crews';
 
-  // ── PAGE 2 — Estimate Detail ───────────────────────────────────────────
-  const page2 =
-    '<div style="background:#fff;overflow:hidden;width:7.5in;min-height:10in;max-height:10in;box-sizing:border-box;page-break-after:always;font-family:Georgia,serif;">'+
-    bsHeader()+
-    '<div style="padding:32px 44px 0;">'+
-      '<div style="font-family:\'Playfair Display\',Georgia,serif;font-size:22px;font-weight:700;color:#111;margin-bottom:20px;">Estimate Detail</div>'+
-      // Structure table
-      (iStructures.length
-        ? '<table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-family:Helvetica,Arial,sans-serif;">'+
-            '<thead><tr style="background:#111;"><th style="padding:10px 12px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#fff;font-weight:700;">Structure</th><th style="padding:10px 12px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#fff;font-weight:700;">Price</th></tr></thead>'+
-            '<tbody>'+structRows+'</tbody>'+
-          '</table>'
-        : '<div style="padding:20px;text-align:center;color:#aaa;font-style:italic;font-size:12px;font-family:Helvetica,Arial,sans-serif;">No structures added.</div>'
-      )+
-      // Total row
-      '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 12px;background:#111;margin-bottom:12px;">'+
-        '<span style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#aaa;font-family:Helvetica,Arial,sans-serif;">Total Investment</span>'+
-        '<span style="font-family:\'Playfair Display\',Georgia,serif;font-size:28px;font-weight:900;color:#fff;">'+(grandTotal?'$'+grandTotal.toLocaleString():'$0')+'</span>'+
-      '</div>'+
-      (finMo
-        ? '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#f9f9f9;border:1px solid #eee;margin-bottom:12px;font-family:Helvetica,Arial,sans-serif;">'+
-            '<div style="font-size:11px;color:#888;">Financing Available</div>'+
-            '<div style="font-size:14px;font-weight:700;color:'+color+';">Est. $'+finMo+'/mo &nbsp;<span style="font-size:10px;font-weight:400;color:#aaa;">'+finTrm+'</span></div>'+
-          '</div>'+
-          '<div style="font-size:9px;color:#bbb;font-style:italic;margin-bottom:16px;font-family:Helvetica,Arial,sans-serif;">'+escHtml(finDisc)+'</div>'
-        : ''
-      )+
-      // Pricing notes
-      '<div style="padding:14px;background:#f9f9f9;border-left:3px solid '+color+';margin-bottom:20px;font-family:Helvetica,Arial,sans-serif;">'+
-        '<div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin-bottom:6px;">Pricing Notes</div>'+
-        '<div style="font-size:10px;color:#888;line-height:1.7;">Estimates are created using satellite imagery. Final pricing confirmed at assessment. Factors that may affect price include skylights, chimneys, special vents, plywood decking, and manufacturer price increases.</div>'+
-      '</div>'+
-      dmgSection+
-    '</div>'+
-    bsFooter(2)+
-    '</div>';
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-  // ── PAGE 3 — About the Company ─────────────────────────────────────────
-  const aboutCo = cfg.aboutCompany || 'We\u2019re a local roofing company that believes you deserve a straight answer before you ever have to talk to a salesperson. Honest work from a crew that stands behind it.';
-  const page3 =
-    '<div style="background:#fff;overflow:hidden;width:7.5in;min-height:10in;max-height:10in;box-sizing:border-box;page-break-after:always;font-family:Georgia,serif;">'+
-    bsHeader()+
-    '<div style="padding:32px 44px 0;">'+
-      '<div style="font-family:\'Playfair Display\',Georgia,serif;font-size:22px;font-weight:700;color:#111;margin-bottom:8px;">About '+escHtml(co)+'</div>'+
-      '<p style="font-size:14px;color:#555;line-height:1.8;margin-bottom:24px;">'+escHtml(aboutCo)+'</p>'+
-      '<hr style="border:none;border-top:1px solid #ddd;margin:0 0 24px;">'+
-      // Stats row
-      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:24px;">'+
-        [['Years in Business',yrs+'+'],['Warranty',warr+' Years'],['Financing','Available']].map(([lbl,val])=>
-          '<div style="border:1.5px solid #eee;padding:16px;text-align:center;">'+
-            '<div style="font-family:\'Playfair Display\',Georgia,serif;font-size:28px;font-weight:900;color:'+color+';">'+escHtml(val)+'</div>'+
-            '<div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#888;margin-top:4px;font-family:Helvetica,Arial,sans-serif;">'+escHtml(lbl)+'</div>'+
-          '</div>'
-        ).join('')+
-      '</div>'+
-      // Why us full list
-      '<div style="margin-bottom:24px;">'+
-        secHead('What You Can Expect')+
-        '<ul style="list-style:none;margin:0;padding:0;columns:2;gap:20px;">'+
-        diffs.map(d=>'<li style="font-size:13px;color:#333;padding:7px 0;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:9px;font-family:Helvetica,Arial,sans-serif;break-inside:avoid;"><span style="width:7px;height:7px;background:'+color+';border-radius:50%;flex-shrink:0;display:inline-block;"></span>'+escHtml(d)+'</li>').join('')+
-        '</ul>'+
-      '</div>'+
-      // Additional services
-      (svcDefs.length
-        ? '<div style="padding:14px;background:#f9f9f9;border-left:3px solid '+color+';margin-bottom:20px;font-family:Helvetica,Arial,sans-serif;">'+
-            '<div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin-bottom:8px;">We Also Offer</div>'+
-            '<div style="display:flex;flex-wrap:wrap;gap:8px;">'+
-            svcDefs.map(s=>'<div style="border:1.5px solid '+color+'55;padding:5px 14px;font-size:11px;font-weight:700;color:'+color+';">'+escHtml(s)+'</div>').join('')+
-            '</div></div>'
-        : ''
-      )+
-    '</div>'+
-    bsFooter(3)+
-    '</div>';
+  const addrParts = addr.split(',').map(s=>s.trim()).filter(Boolean);
+  const ownerFirst = owner.split(' ')[0] || owner;
 
-  // ── PAGE 4 — Next Steps ────────────────────────────────────────────────
-  const page4 =
-    '<div style="background:#fff;overflow:hidden;width:7.5in;min-height:10in;max-height:10in;box-sizing:border-box;font-family:Georgia,serif;">'+
-    bsHeader()+
-    '<div style="padding:32px 44px 0;">'+
-      '<div style="font-family:\'Playfair Display\',Georgia,serif;font-size:22px;font-weight:700;color:#111;margin-bottom:20px;">Ready to Move Forward?</div>'+
-      // Steps
-      '<div style="margin-bottom:28px;">'+
-        ['Call or text us at '+ph+' to confirm your appointment.',
-         'We\u2019ll walk the roof with you, confirm measurements, and answer any questions.',
-         'You approve the scope. We schedule the crew. Done.'].map((step,i)=>
-          '<div style="display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid #eee;">'+
-            '<div style="width:30px;height:30px;background:'+color+';flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;font-family:Helvetica,Arial,sans-serif;">'+(i+1)+'</div>'+
-            '<div style="font-size:13px;color:#333;line-height:1.7;padding-top:5px;font-family:Helvetica,Arial,sans-serif;">'+escHtml(step)+'</div>'+
-          '</div>'
-        ).join('')+
-      '</div>'+
-      // Contact + QR
-      '<div style="display:flex;gap:20px;align-items:stretch;margin-bottom:24px;">'+
-        '<div style="flex:1;border:1.5px solid #eee;padding:18px;">'+
-          secHead('Get in Touch')+
-          '<div style="font-family:\'Playfair Display\',Georgia,serif;font-size:24px;font-weight:700;color:'+color+';margin-bottom:6px;">'+escHtml(ph)+'</div>'+
-          '<div style="font-size:12px;color:#555;font-family:Helvetica,Arial,sans-serif;">'+escHtml(rep)+'</div>'+
-          '<div style="font-size:10px;color:#aaa;font-family:Helvetica,Arial,sans-serif;">'+escHtml(repTitle)+' \u00b7 '+escHtml(co)+'</div>'+
-          (lic?'<div style="font-size:9px;color:#bbb;margin-top:4px;font-family:Helvetica,Arial,sans-serif;">Lic# '+escHtml(lic)+'</div>':'')+
-        '</div>'+
-        '<div style="flex:0 0 auto;border:1.5px solid #eee;padding:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;">'+
-          (qrUrl
-            ? '<img src="'+qrUrl+'" style="width:90px;height:90px;display:block;">'+
-              '<div style="font-size:9px;color:#aaa;letter-spacing:.5px;text-align:center;font-family:Helvetica,Arial,sans-serif;">Scan to Book Online</div>'
-            : '<div style="width:90px;height:90px;border:1px dashed #ddd;display:flex;align-items:center;justify-content:center;font-size:9px;color:#ccc;text-align:center;">Add booking URL<br>for QR code</div>'
-          )+
-        '</div>'+
-      '</div>'+
-      // Referral
-      '<div style="border:1.5px solid '+color+'33;padding:16px;display:flex;gap:14px;align-items:flex-start;margin-bottom:20px;">'+
-        '<div style="width:64px;height:52px;background:linear-gradient(135deg,#1a5276,#2e86c1);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-family:Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;text-align:center;line-height:1.3;">'+
-          '<div style="font-size:18px;">$'+escHtml(refAmt)+'</div>VISA GIFT'+
-        '</div>'+
-        '<div>'+
-          '<div style="font-family:\'Playfair Display\',Georgia,serif;font-size:16px;font-weight:700;margin-bottom:4px;color:#1a1a1a;">Know Someone Who Needs a Roof?</div>'+
-          '<div style="font-size:11px;color:#555;line-height:1.6;font-family:Helvetica,Arial,sans-serif;">'+escHtml(refText)+'</div>'+
-          '<div style="margin-top:6px;font-size:11px;font-weight:700;color:'+color+';font-family:Helvetica,Arial,sans-serif;">Call '+escHtml(ph)+' and mention this estimate</div>'+
-        '</div>'+
-      '</div>'+
-    '</div>'+
-    bsFooter(4)+
-    '</div>';
+  // ── PAGE 1 ──────────────────────────────────────────────────────────────────
+  const p1 = `
+<div class="bd-page">
+  <div class="bd-top-bar">
+    <div class="bd-top-left">
+      ${logoUrl ? `<img src="${esc(logoUrl)}" class="bd-logo" alt="${esc(co)}">` : `<span class="bd-co-name">${esc(co)}</span>`}
+      <div class="bd-co-meta">${esc(coAddr)}${lic ? ' &nbsp;&bull;&nbsp; Lic. '+esc(lic) : ''}</div>
+    </div>
+    <div class="bd-top-right">
+      <div class="bd-addr-block">
+        <div class="bd-addr-name">${esc(owner)}</div>
+        ${addrParts.map(l=>`<div class="bd-addr-line">${esc(l)}</div>`).join('')}
+      </div>
+    </div>
+  </div>
+  <div class="bd-rule"></div>
 
-  // ── Assemble ───────────────────────────────────────────────────────────
-  const mailerCss = `
-    *{margin:0;padding:0;box-sizing:border-box;}
-    @page{size:letter;margin:0;}
-    body{background:#fff;font-family:Georgia,serif;color:#1a1a1a;}
-    .lob-wrap{width:7.5in;margin:0 auto;}
-  `;
-  return '<!DOCTYPE html><html><head><meta charset="UTF-8">'+
-    '<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">'+
-    '<style>'+mailerCss+'</style>'+
-    '</head><body>'+
-    '<div class="lob-wrap">'+page1+page2+page3+page4+'</div>'+
-    '</body></html>';
+  <div class="bd-body">
+    <div class="bd-salutation">Dear ${esc(ownerFirst)},</div>
+    <div class="bd-hook">${esc(hookTxt)}</div>
+
+    <div class="bd-estimate-box">
+      <div class="bd-est-label">YOUR ESTIMATE</div>
+      <div class="bd-est-amount">$${total.toLocaleString()}</div>
+      ${finMo ? `<div class="bd-est-fin">or as low as <strong>$${finMo.toLocaleString()}/mo</strong> &nbsp;&middot;&nbsp; ${finApr}% APR &nbsp;&middot;&nbsp; ${finTerm} mo &nbsp;&middot;&nbsp; $0 down</div>` : ''}
+    </div>
+
+    <div class="bd-two-col">
+      <div class="bd-col-left">
+        <div class="bd-section-head">About ${esc(co)}</div>
+        <div class="bd-about-text">${esc(aboutCo)}</div>
+        <div class="bd-cred-row">
+          <span class="bd-cred">${esc(diff1)}</span>
+          <span class="bd-cred">${esc(diff2)}</span>
+          <span class="bd-cred">${esc(diff3)}</span>
+          <span class="bd-cred">${esc(diff4)}</span>
+          <span class="bd-cred">${esc(diff5)}</span>
+        </div>
+      </div>
+      <div class="bd-col-right">
+        <div class="bd-section-head">Your Rep</div>
+        ${hsUrl ? `<img src="${esc(hsUrl)}" class="bd-headshot" alt="${esc(rep)}">` : ''}
+        <div class="bd-rep-name">${esc(rep)}</div>
+        <div class="bd-rep-title">${esc(repTitle)}</div>
+        <div class="bd-rep-phone">${esc(ph)}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bd-footer-bar">
+    <div class="bd-footer-left">
+      <div class="bd-footer-phone">${esc(ph)}</div>
+      <div class="bd-footer-sub">Call or text to schedule</div>
+    </div>
+    <div class="bd-footer-center">
+      <img src="${esc(qrSrc)}" class="bd-qr" alt="Scan to book">
+      <div class="bd-qr-label">Scan to Book</div>
+    </div>
+    <div class="bd-footer-right">
+      <div class="bd-footer-co">${esc(co)}</div>
+      <div class="bd-footer-meta">${esc(coAddr)}</div>
+      ${lic ? `<div class="bd-footer-meta">Lic. ${esc(lic)}</div>` : ''}
+      <div class="bd-footer-meta">${new Date().getFullYear()}</div>
+    </div>
+  </div>
+</div>`;
+
+  // ── PAGE 2 — Estimate Detail ─────────────────────────────────────────────────
+  const structs = item.structures || [];
+  const structRows = structs.length ? structs.map(s=>`
+    <tr>
+      <td>${esc(s.label||'Roof')}</td>
+      <td>${s.sqft ? s.sqft.toLocaleString()+' sq ft' : '\u2014'}</td>
+      <td>${esc(s.material||'\u2014')}</td>
+      <td>$${(s.price||0).toLocaleString()}</td>
+    </tr>`).join('') : `<tr><td colspan="4" style="text-align:center;color:#888">No structures added yet</td></tr>`;
+
+  const p2 = `
+<div class="bd-page">
+  <div class="bd-top-bar">
+    <div class="bd-top-left">
+      ${logoUrl ? `<img src="${esc(logoUrl)}" class="bd-logo" alt="${esc(co)}">` : `<span class="bd-co-name">${esc(co)}</span>`}
+    </div>
+    <div class="bd-top-right">
+      <span class="bd-page-label">Estimate Detail &nbsp;&middot;&nbsp; Page 2 of 3</span>
+    </div>
+  </div>
+  <div class="bd-rule"></div>
+
+  <div class="bd-body">
+    <div class="bd-section-head" style="margin-bottom:16px">Price Breakdown</div>
+    <table class="bd-table">
+      <thead>
+        <tr>
+          <th>Structure</th>
+          <th>Size</th>
+          <th>Material</th>
+          <th>Price</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${structRows}
+        <tr class="bd-total-row">
+          <td colspan="3"><strong>Total Investment</strong></td>
+          <td><strong>$${total.toLocaleString()}</strong></td>
+        </tr>
+        ${finMo ? `<tr class="bd-fin-row"><td colspan="3">Monthly Financing (${finApr}% APR, ${finTerm} mo, $0 down)</td><td>$${finMo.toLocaleString()}/mo</td></tr>` : ''}
+      </tbody>
+    </table>
+
+    <div class="bd-notice">Financing estimate based on ${finApr}% APR, ${finTerm}-month term, subject to credit approval. Actual rate may vary.</div>
+
+    <div class="bd-section-head" style="margin-top:32px;margin-bottom:16px">What&rsquo;s Included</div>
+    <div class="bd-included-grid">
+      <div class="bd-inc-item">&bull; Full tear-off of existing materials</div>
+      <div class="bd-inc-item">&bull; Deck inspection &amp; repair</div>
+      <div class="bd-inc-item">&bull; Ice &amp; water shield</div>
+      <div class="bd-inc-item">&bull; Synthetic underlayment</div>
+      <div class="bd-inc-item">&bull; New shingles (manufacturer spec)</div>
+      <div class="bd-inc-item">&bull; Ridge cap &amp; ventilation</div>
+      <div class="bd-inc-item">&bull; Flashing at all penetrations</div>
+      <div class="bd-inc-item">&bull; Full cleanup &amp; haul-away</div>
+    </div>
+  </div>
+
+  <div class="bd-footer-bar">
+    <div class="bd-footer-left"><div class="bd-footer-phone">${esc(ph)}</div></div>
+    <div class="bd-footer-right"><div class="bd-footer-co">${esc(co)} &nbsp;&bull;&nbsp; ${esc(coAddr)}</div></div>
+  </div>
+</div>`;
+
+  // ── PAGE 3 — Next Steps ──────────────────────────────────────────────────────
+  const p3 = `
+<div class="bd-page">
+  <div class="bd-top-bar">
+    <div class="bd-top-left">
+      ${logoUrl ? `<img src="${esc(logoUrl)}" class="bd-logo" alt="${esc(co)}">` : `<span class="bd-co-name">${esc(co)}</span>`}
+    </div>
+    <div class="bd-top-right">
+      <span class="bd-page-label">Next Steps &nbsp;&middot;&nbsp; Page 3 of 3</span>
+    </div>
+  </div>
+  <div class="bd-rule"></div>
+
+  <div class="bd-body">
+    <div class="bd-section-head" style="margin-bottom:24px">Ready to Move Forward?</div>
+    <div class="bd-steps">
+      <div class="bd-step">
+        <div class="bd-step-num" style="background:${esc(accent)}">1</div>
+        <div class="bd-step-body">
+          <div class="bd-step-title">Call or Text Us</div>
+          <div class="bd-step-desc">Reach out to ${esc(rep)} directly at ${esc(ph)}. We&rsquo;ll answer any questions and schedule a time that works for you.</div>
+        </div>
+      </div>
+      <div class="bd-step">
+        <div class="bd-step-num" style="background:${esc(accent)}">2</div>
+        <div class="bd-step-body">
+          <div class="bd-step-title">We Come to You</div>
+          <div class="bd-step-desc">A member of our crew visits the property to confirm measurements and walk you through the scope of work in person.</div>
+        </div>
+      </div>
+      <div class="bd-step">
+        <div class="bd-step-num" style="background:${esc(accent)}">3</div>
+        <div class="bd-step-body">
+          <div class="bd-step-title">We Get to Work</div>
+          <div class="bd-step-desc">Once you sign off, we schedule your job and complete the installation. Most roofs are done in a single day.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bd-cta-box" style="border-color:${esc(accent)}">
+      <div class="bd-cta-phone" style="color:${esc(accent)}">${esc(ph)}</div>
+      <div class="bd-cta-sub">Call or text &nbsp;&bull;&nbsp; ${esc(rep)}, ${esc(repTitle)}</div>
+      <div style="margin-top:16px;display:flex;align-items:center;gap:16px">
+        <img src="${esc(qrSrc)}" style="width:80px;height:80px;border-radius:4px" alt="Scan to book">
+        <div style="font-size:12px;color:#555">Scan to book online &mdash; no phone call required</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bd-footer-bar">
+    <div class="bd-footer-left"><div class="bd-footer-phone">${esc(ph)}</div></div>
+    <div class="bd-footer-right">
+      <div class="bd-footer-co">${esc(co)}</div>
+      <div class="bd-footer-meta">${esc(coAddr)}${lic ? ' &nbsp;&bull;&nbsp; Lic. '+esc(lic) : ''} &nbsp;&bull;&nbsp; ${new Date().getFullYear()}</div>
+    </div>
+  </div>
+</div>`;
+
+  // ── WRAPPER ──────────────────────────────────────────────────────────────────
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f4f4f4;color:#111}
+.bd-page{width:816px;min-height:1056px;background:#fff;margin:0 auto 40px;display:flex;flex-direction:column;page-break-after:always}
+.bd-top-bar{display:flex;justify-content:space-between;align-items:flex-start;padding:28px 40px 0}
+.bd-logo{max-height:40px;max-width:160px;object-fit:contain}
+.bd-co-name{font-family:'DM Serif Display',serif;font-size:22px;color:${accent}}
+.bd-co-meta{font-size:11px;color:#888;margin-top:3px}
+.bd-addr-block{text-align:right}
+.bd-addr-name{font-size:13px;font-weight:700;color:#111}
+.bd-addr-line{font-size:12px;color:#555}
+.bd-page-label{font-size:12px;color:#888;font-weight:500}
+.bd-rule{height:3px;background:${accent};margin:16px 40px 0}
+.bd-body{flex:1;padding:32px 40px}
+.bd-salutation{font-family:'DM Serif Display',serif;font-size:26px;color:#111;margin-bottom:12px}
+.bd-hook{font-size:14px;line-height:1.7;color:#333;margin-bottom:28px;max-width:600px}
+.bd-estimate-box{border:2px solid ${accent};border-radius:4px;padding:20px 28px;margin-bottom:28px;display:inline-block;min-width:320px}
+.bd-est-label{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:${accent};font-weight:700;margin-bottom:6px}
+.bd-est-amount{font-family:'DM Serif Display',serif;font-size:48px;color:#111;line-height:1}
+.bd-est-fin{font-size:12px;color:#555;margin-top:8px}
+.bd-two-col{display:flex;gap:40px}
+.bd-col-left{flex:1}
+.bd-col-right{width:180px;text-align:center}
+.bd-section-head{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#888;font-weight:700;margin-bottom:10px}
+.bd-about-text{font-size:13px;line-height:1.65;color:#333;margin-bottom:14px}
+.bd-cred-row{display:flex;flex-wrap:wrap;gap:6px}
+.bd-cred{font-size:11px;color:#333;border:1px solid #ccc;border-radius:2px;padding:3px 8px;white-space:nowrap}
+.bd-headshot{width:100px;height:100px;border-radius:50%;object-fit:cover;border:2px solid ${accent};margin-bottom:8px}
+.bd-rep-name{font-size:14px;font-weight:700;color:#111}
+.bd-rep-title{font-size:12px;color:#666;margin-bottom:4px}
+.bd-rep-phone{font-size:13px;color:${accent};font-weight:600}
+.bd-footer-bar{background:#111;display:flex;justify-content:space-between;align-items:center;padding:16px 40px;margin-top:auto}
+.bd-footer-left{}
+.bd-footer-center{text-align:center}
+.bd-footer-right{text-align:right}
+.bd-footer-phone{font-family:'DM Serif Display',serif;font-size:22px;color:#fff}
+.bd-footer-sub{font-size:10px;color:#aaa;margin-top:2px}
+.bd-footer-co{font-size:13px;font-weight:600;color:#fff}
+.bd-footer-meta{font-size:10px;color:#aaa;margin-top:2px}
+.bd-qr{width:52px;height:52px;border-radius:3px;display:block;margin:0 auto}
+.bd-qr-label{font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:1px;margin-top:3px;text-align:center}
+.bd-table{width:100%;border-collapse:collapse;font-size:13px}
+.bd-table th{text-align:left;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#888;font-weight:600;padding:8px 0;border-bottom:2px solid #eee}
+.bd-table td{padding:10px 0;border-bottom:1px solid #f0f0f0;color:#333}
+.bd-total-row td{font-size:15px;color:#111;border-top:2px solid #111;border-bottom:none;padding-top:14px}
+.bd-fin-row td{font-size:12px;color:#666;border-bottom:none}
+.bd-notice{font-size:11px;color:#999;margin-top:16px;line-height:1.5}
+.bd-included-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px}
+.bd-inc-item{font-size:13px;color:#333;padding:4px 0}
+.bd-steps{display:flex;flex-direction:column;gap:24px;margin-bottom:32px}
+.bd-step{display:flex;gap:20px;align-items:flex-start}
+.bd-step-num{width:36px;height:36px;border-radius:50%;color:#fff;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.bd-step-title{font-size:15px;font-weight:700;color:#111;margin-bottom:4px}
+.bd-step-desc{font-size:13px;color:#555;line-height:1.6}
+.bd-cta-box{border:2px solid;border-radius:4px;padding:24px 28px;text-align:center}
+.bd-cta-phone{font-family:'DM Serif Display',serif;font-size:36px}
+.bd-cta-sub{font-size:13px;color:#666;margin-top:4px}
+@media print{.bd-page{margin:0;page-break-after:always}}
+</style></head><body>
+${p1}${p2}${p3}
+</body></html>`;
 }
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // renderDesignBackCanvas(cfg, overrides)
