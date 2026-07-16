@@ -968,9 +968,8 @@ function buildLobMailerHtml(item){
   const lic    = cfg.licenseNum    || '';
   const yrs    = cfg.yearsInBusiness || '5+';
   const warr   = cfg.warrantyYears || '10';
-  const hook   = cfg.hookLetter    || 'We noticed your roof may be due for an evaluation. We used satellite imagery to measure your home and put together a real estimate \u2014 no guessing, no visit required to get the number.';
-  const why    = cfg.whyReceived   || 'We used satellite imagery to measure your roof remotely \u2014 square footage, pitch, and condition indicators \u2014 and built a real price based on your home\u2019s actual data. No guessing. No inspection required to get started.';
-  const aboutCo = cfg.aboutCompany || 'We\u2019re a local roofing company that believes you deserve a straight answer before you ever have to talk to a salesperson. No pressure, no games \u2014 just honest work from a crew that stands behind it.';
+  const hook   = cfg.hookLetter    || 'We took a look at the roof at your address using satellite imagery and current property data, and put together a real estimate for you \u2014 no guessing, no \u201ccall for a quote.\u201d Your number is printed right here so you can see it before you talk to anyone. No runaround \u2014 your price is right here.';
+  const why    = cfg.whyReceived   || 'Public property records show your roof is likely past the 20-year mark. Recent hail or high-wind activity was logged in your ZIP code. Neighbors on your street have pulled roofing permits recently. Satellite imagery flagged wear consistent with aging shingles. No obligation \u2014 this is just your number, ready when you are.';
   // Financing
   const finEnabled = cfg.financingEnabled !== false;
   const finApr  = parseFloat(cfg.financingApr)  || 9.99;
@@ -983,24 +982,19 @@ function buildLobMailerHtml(item){
     if(r === 0) return Math.round(loan / finTerm);
     return Math.round(loan * r * Math.pow(1+r,finTerm) / (Math.pow(1+r,finTerm)-1));
   }
-  // Images
   const homePhotoSrc = item.photo_url || item.photo_data || null;
-  const dmgPhotos    = Array.isArray(item.damage_photos) ? item.damage_photos : [];
   const headshot     = cfg.headshot  || null;
-  const review1      = cfg.review1   || null;
-  const review2      = cfg.review2   || null;
   const bookingUrl   = cfg.bookingUrl || '';
-  // QR
-  const _lobEstId  = item.estId || item.estimate_id || null;
-  const _lobSlug   = cfg.companyName ? cfg.companyName.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') : 'roofing';
-  const _lobEstUrl = _lobEstId
+  const _lobEstId    = item.id || item._id || null;
+  const _lobSlug     = co ? co.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') : 'roofing';
+  const _lobEstUrl   = _lobEstId
     ? 'https://biddrop.us/'+_lobSlug+'/'+encodeURIComponent(_lobEstId)
     : (bookingUrl || 'https://biddrop.us');
   const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=6&data='+encodeURIComponent(_lobEstUrl);
   // Logo
   const logoImg = cfg.logoData
-    ? '<img src="'+cfg.logoData+'" style="max-height:52px;max-width:160px;object-fit:contain;display:block;">'
-    : '<div style="font-family:Oswald,sans-serif;font-size:22px;font-weight:800;color:'+color+';">'+escHtml(co)+'</div>';
+    ? '<img src="'+cfg.logoData+'" style="max-height:44px;max-width:140px;object-fit:contain;display:block;">'
+    : '<span style="font-family:\'Playfair Display\',Georgia,serif;font-size:26px;font-weight:900;color:#111;letter-spacing:-0.5px;">'+escHtml(co)+'</span>';
   // Structures & totals
   const iStructures = Array.isArray(item.structures) ? item.structures : [];
   let grandTotal = item.total || 0;
@@ -1013,8 +1007,8 @@ function buildLobMailerHtml(item){
         '<tr style="border-bottom:1px solid #f0f0f0;">'+
         '<td style="padding:8px 12px;font-size:11px;color:#444;">'+escHtml(s.name||('Structure '+(i+1)))+
           '<div style="font-size:9px;color:#aaa;margin-top:2px;">'+(s.sqft?Number(s.sqft).toLocaleString()+' sq ft':'')+
-          (s.mat?' &middot; '+(MATLBL[s.mat]||s.mat):'')+
-          (s.pitch?' &middot; '+(PITCHLBL[s.pitch]||s.pitch):'')+
+          (s.mat?' \u00b7 '+(MATLBL[s.mat]||s.mat):'')+
+          (s.pitch?' \u00b7 '+(PITCHLBL[s.pitch]||s.pitch):'')+
           '</div></td>'+
         '<td style="padding:8px 12px;text-align:right;font-size:12px;font-weight:700;color:#1a1a1a;white-space:nowrap;">$'+sp.toLocaleString()+'</td>'+
         '</tr>';
@@ -1042,254 +1036,218 @@ function buildLobMailerHtml(item){
   const refAmt  = cfg.referralAmt  || '250';
   const refText = cfg.referralText || "For every customer you refer who moves forward, we\u2019ll send you a Visa gift card as a thank you.";
   // Damage photos
+  const dmgPhotos = Array.isArray(item.damage_photos) ? item.damage_photos : [];
   const hasPhotos = dmgPhotos.length > 0;
   const dmgSection = hasPhotos
     ? '<div style="margin:16px 0;">'+
-        '<div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin-bottom:8px;">DAMAGE PHOTOS</div>'+
+        '<div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin-bottom:8px;font-family:Helvetica,Arial,sans-serif;">DAMAGE PHOTOS</div>'+
         '<div style="display:grid;grid-template-columns:repeat('+Math.min(dmgPhotos.length,3)+',1fr);gap:8px;">'+
-        dmgPhotos.slice(0,3).map(src=>'<img src="'+src+'" style="width:100%;height:110px;object-fit:cover;border-radius:6px;display:block;">').join('')+
+        dmgPhotos.slice(0,3).map(src=>'<img src="'+src+'" style="width:100%;height:110px;object-fit:cover;border-radius:4px;display:block;">').join('')+
         '</div></div>'
     : '';
 
-  // ── SHARED HELPERS ─────────────────────────────────────────────────────
-  function pageHdr(n){
-    return '<div style="padding:20px 32px 16px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid '+color+';">'+
+  // ── BROADSHEET HELPERS ─────────────────────────────────────────────────
+  // Black header bar
+  function bsHeader(){
+    return '<div style="background:#111;padding:22px 44px;display:flex;justify-content:space-between;align-items:center;">'+
       '<div>'+logoImg+'</div>'+
       '<div style="text-align:right;">'+
-        '<div style="font-size:10px;color:#999;margin-bottom:2px;">Page '+n+' of 4</div>'+
-        '<div style="font-size:11px;font-weight:600;color:#1a1a1a;">'+escHtml(owner)+'</div>'+
-        '<div style="font-size:10px;color:#666;">'+escHtml(addr).split(',').join('<br>')+'</div>'+
+        '<div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#888;margin-bottom:3px;">Prepared for</div>'+
+        '<div style="font-size:14px;font-weight:700;color:#fff;font-family:Helvetica,Arial,sans-serif;">'+escHtml(owner)+'</div>'+
+        '<div style="font-size:11px;color:#aaa;margin-top:2px;font-family:Helvetica,Arial,sans-serif;">'+escHtml(addr)+'</div>'+
       '</div>'+
+    '</div>'+
+    '<div style="height:4px;background:'+color+';"></div>';
+  }
+  // Footer
+  function bsFooter(n){
+    return '<div style="padding:10px 44px;border-top:1px solid #e8e8e8;display:flex;justify-content:space-between;align-items:center;">'+
+      '<div style="font-size:9px;color:#bbb;font-family:Helvetica,Arial,sans-serif;">'+escHtml(co)+(lic?' \u00b7 Lic# '+escHtml(lic):'')+' \u00b7 Licensed & Insured \u00b7 '+new Date().getFullYear()+'</div>'+
+      '<div style="font-size:9px;color:#bbb;font-family:Helvetica,Arial,sans-serif;">Page '+n+' of 4</div>'+
     '</div>';
   }
-  function pageFooter(){
-    return '<div style="padding:10px 32px;border-top:1px solid #eee;display:flex;justify-content:space-between;align-items:center;">'+
-      '<div style="font-size:9px;color:#bbb;">'+escHtml(co)+(lic?' &middot; Lic# '+escHtml(lic):'')+' &middot; Licensed &amp; Insured</div>'+
-      '<div style="font-size:9px;color:#bbb;">'+escHtml(ph)+' &middot; '+new Date().getFullYear()+'</div>'+
-    '</div>';
+  // Section heading
+  function secHead(txt){
+    return '<div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:'+color+';font-weight:700;margin-bottom:10px;border-bottom:2px solid '+color+';padding-bottom:5px;font-family:Helvetica,Arial,sans-serif;">'+escHtml(txt)+'</div>';
   }
 
-  // ── PAGE 1 — The Leave-Behind ──────────────────────────────────────────
+  // ── PAGE 1 ─────────────────────────────────────────────────────────────
   const page1 =
     '<div style="background:#fff;overflow:hidden;width:7.5in;min-height:10in;max-height:10in;box-sizing:border-box;page-break-after:always;font-family:Georgia,serif;">'+
-    pageHdr(1)+
-    // Date line
-    '<div style="padding:14px 32px 0;font-size:10px;color:#999;letter-spacing:.3px;">'+new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})+'</div>'+
-    // Salutation
-    '<div style="padding:16px 32px 0;">'+
-      '<div style="font-size:14px;color:#1a1a1a;margin-bottom:12px;">Dear '+escHtml(owner)+',</div>'+
-      '<p style="font-size:12px;line-height:1.8;color:#333;margin:0 0 14px;">'+escHtml(hook)+'</p>'+
-    '</div>'+
-    // Estimate box — the centrepiece
-    '<div style="margin:0 32px;border:2px solid '+color+';border-radius:10px;overflow:hidden;">'+
-      '<div style="background:'+color+';padding:12px 20px;display:flex;justify-content:space-between;align-items:center;">'+
+    bsHeader()+
+    '<div style="padding:36px 44px 0;">'+
+      // Hero row: greeting left, price box right
+      '<div style="display:flex;gap:32px;align-items:flex-start;margin-bottom:28px;">'+
+        '<div style="flex:1;">'+
+          '<div style="font-family:\'Playfair Display\',Georgia,serif;font-size:26px;font-weight:700;color:#111;margin-bottom:14px;">Dear <span style="color:'+color+';">'+escHtml(owner)+',</span></div>'+
+          '<p style="font-size:14px;color:#444;line-height:1.8;margin:0;">'+escHtml(hook)+'</p>'+
+        '</div>'+
+        '<div style="width:185px;flex-shrink:0;">'+
+          '<div style="border:2.5px solid #111;padding:18px;text-align:center;">'+
+            '<div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#888;margin-bottom:6px;font-family:Helvetica,Arial,sans-serif;">Your Estimate</div>'+
+            '<div style="font-family:\'Playfair Display\',Georgia,serif;font-size:38px;font-weight:900;color:#111;line-height:1;">'+(grandTotal?'$'+grandTotal.toLocaleString():'$0')+'</div>'+
+            (finMo?'<div style="font-size:12px;color:'+color+';font-weight:700;margin-top:7px;font-family:Helvetica,Arial,sans-serif;">$'+finMo+'/mo financing</div>':'') +
+            (finMo?'<div style="font-size:9px;color:#aaa;margin-top:4px;font-family:Helvetica,Arial,sans-serif;">'+finTrm+'</div>':'')+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+      '<hr style="border:none;border-top:1px solid #ddd;margin:0 0 24px;">'+
+      // Two-col: why received + why us
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-bottom:28px;">'+
         '<div>'+
-          '<div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.75);margin-bottom:2px;">Your Estimate</div>'+
-          '<div style="font-size:9px;color:rgba(255,255,255,.6);">'+escHtml(addr)+'</div>'+
+          secHead('Why You Received This')+
+          '<p style="font-size:13px;color:#555;line-height:1.8;margin:0;">'+escHtml(why)+'</p>'+
         '</div>'+
-        '<div style="text-align:right;">'+
-          '<div style="font-family:Oswald,sans-serif;font-size:42px;font-weight:800;color:#fff;line-height:1;">$'+(grandTotal?grandTotal.toLocaleString():'—')+'</div>'+
-          (finMo?'<div style="font-size:10px;color:rgba(255,255,255,.8);margin-top:2px;">or est. $'+finMo.toLocaleString()+'/mo financing</div>':'')+
+        '<div>'+
+          secHead('Why '+co)+
+          '<ul style="list-style:none;margin:0;padding:0;">'+
+          diffs.map(d=>'<li style="font-size:13px;color:#333;padding:6px 0;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:9px;font-family:Helvetica,Arial,sans-serif;"><span style="width:7px;height:7px;background:'+color+';border-radius:50%;flex-shrink:0;display:inline-block;"></span>'+escHtml(d)+'</li>').join('')+
+          '</ul>'+
         '</div>'+
       '</div>'+
-      (structRows
-        ? '<table style="width:100%;border-collapse:collapse;background:#fff;">'+
-            '<thead><tr style="background:#f8f8f8;"><th style="padding:7px 12px;text-align:left;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;font-family:Helvetica,Arial,sans-serif;">Scope of Work</th><th style="padding:7px 12px;text-align:right;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;font-family:Helvetica,Arial,sans-serif;">Price</th></tr></thead>'+
-            '<tbody>'+structRows+'</tbody>'+
-          '</table>'
-        : '<div style="padding:14px 20px;font-size:11px;color:#999;font-style:italic;">Estimate details on file.</div>'
-      )+
-      '<div style="background:#1a1a1a;padding:8px 20px;display:flex;justify-content:space-between;align-items:center;">'+
-        '<span style="font-family:Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.6);">Total Investment</span>'+
-        '<span style="font-family:Oswald,sans-serif;font-size:20px;font-weight:700;color:#fff;">$'+(grandTotal?grandTotal.toLocaleString():'—')+'</span>'+
-      '</div>'+
     '</div>'+
-    (finMo?'<div style="padding:6px 32px;font-size:8px;color:#bbb;font-style:italic;">'+finDisc+'</div>':'')+
-    dmgSection.replace(/margin:16px 0/,'margin:14px 32px')+
-    // Includes note
-    '<div style="margin:14px 32px 0;padding:10px 14px;background:#f9f9f9;border-left:3px solid '+color+';border-radius:0 6px 6px 0;">'+
-      '<div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#888;margin-bottom:5px;font-family:Helvetica,Arial,sans-serif;">Every Installation Includes</div>'+
-      '<div style="font-size:10px;color:#555;line-height:1.7;">Complete tear-off &amp; disposal &nbsp;&middot;&nbsp; Synthetic underlayment &nbsp;&middot;&nbsp; Ice &amp; water shield &nbsp;&middot;&nbsp; Drip edge flashing &nbsp;&middot;&nbsp; Ridge cap shingles &nbsp;&middot;&nbsp; '+warr+'-year workmanship warranty &nbsp;&middot;&nbsp; Licensed &amp; insured crews</div>'+
-    '</div>'+
-    // Rep sign-off
-    '<div style="margin:20px 32px 0;display:flex;align-items:flex-start;gap:18px;">'+
-      (headshot
-        ? '<img src="'+headshot+'" style="width:64px;height:64px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #eee;">'
-        : '<div style="width:64px;height:64px;border-radius:50%;background:#f0f0f0;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;color:#ccc;">&#128100;</div>'
-      )+
+    // Contact footer bar
+    '<div style="background:#111;padding:22px 44px;display:flex;justify-content:space-between;align-items:center;margin-top:auto;">'+
       '<div>'+
-        '<div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:2px;">'+escHtml(rep)+'</div>'+
-        '<div style="font-size:10px;color:#888;margin-bottom:6px;">'+escHtml(repTitle||'Roofing Consultant')+' &middot; '+escHtml(co)+'</div>'+
-        '<div style="font-size:11px;color:#555;">'+escHtml(ph)+'</div>'+
-        (lic?'<div style="font-size:9px;color:#bbb;margin-top:2px;">Lic# '+escHtml(lic)+'</div>':'')+
+        '<div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#888;font-family:Helvetica,Arial,sans-serif;">Call or Text to Schedule</div>'+
+        '<div style="font-family:\'Playfair Display\',Georgia,serif;font-size:26px;font-weight:700;color:#fff;margin-top:4px;">'+escHtml(ph)+'</div>'+
+        '<div style="font-size:10px;color:#888;margin-top:3px;font-family:Helvetica,Arial,sans-serif;">Estimate locked 30 days \u00b7 Built by satellite \u00b7 No visit required</div>'+
       '</div>'+
-      '<div style="margin-left:auto;text-align:center;">'+
+      (headshot
+        ? '<div style="text-align:center;"><img src="'+headshot+'" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid '+color+';display:block;margin:0 auto 6px;"><div style="font-size:12px;font-weight:700;color:#fff;font-family:Helvetica,Arial,sans-serif;">'+escHtml(rep)+'</div><div style="font-size:10px;color:#888;font-family:Helvetica,Arial,sans-serif;">'+escHtml(repTitle)+'</div></div>'
+        : '<div style="text-align:center;"><div style="width:56px;height:56px;border-radius:50%;background:#333;border:2px solid '+color+';display:flex;align-items:center;justify-content:center;margin:0 auto 6px;"><span style="font-size:20px;color:#888;">&#128100;</span></div><div style="font-size:12px;font-weight:700;color:#fff;font-family:Helvetica,Arial,sans-serif;">'+escHtml(rep)+'</div><div style="font-size:10px;color:#888;font-family:Helvetica,Arial,sans-serif;">'+escHtml(repTitle)+'</div></div>'
+      )+
+      '<div style="width:80px;height:80px;background:#fff;border-radius:4px;display:flex;align-items:center;justify-content:center;padding:4px;">'+
         (qrUrl
-          ? '<img src="'+qrUrl+'" style="width:64px;height:64px;border-radius:6px;display:block;border:1px solid #eee;">'+
-            '<div style="font-size:8px;color:#aaa;margin-top:3px;letter-spacing:.5px;">Scan to Book</div>'
-          : ''
+          ? '<img src="'+qrUrl+'" style="width:72px;height:72px;display:block;">'
+          : '<div style="font-size:8px;color:#999;text-align:center;">Add booking URL for QR</div>'
         )+
       '</div>'+
     '</div>'+
-    pageFooter()+
     '</div>';
 
-  // ── PAGE 2 — About the Company ─────────────────────────────────────────
+  // ── PAGE 2 — Estimate Detail ───────────────────────────────────────────
   const page2 =
     '<div style="background:#fff;overflow:hidden;width:7.5in;min-height:10in;max-height:10in;box-sizing:border-box;page-break-after:always;font-family:Georgia,serif;">'+
-    pageHdr(2)+
-    '<div style="padding:24px 32px;">'+
-      // Company intro
-      '<div style="font-family:Oswald,sans-serif;font-size:26px;font-weight:800;color:#1a1a1a;margin-bottom:6px;letter-spacing:-.3px;">About '+escHtml(co)+'</div>'+
-      '<p style="font-size:12px;line-height:1.8;color:#444;margin:0 0 20px;max-width:5.5in;">'+escHtml(aboutCo)+'</p>'+
-      // Two-column: why us + stats
-      '<div style="display:table;width:100%;border-collapse:separate;border-spacing:20px 0;margin:0 -20px;">'+
-        '<div style="display:table-cell;width:60%;vertical-align:top;">'+
-          '<div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin-bottom:10px;font-family:Helvetica,Arial,sans-serif;">Why Homeowners Choose Us</div>'+
-          '<div style="display:flex;flex-direction:column;gap:0;">'+
-          diffs.map(d=>
-            '<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid #f0f0f0;">'+
-              '<div style="width:18px;height:18px;border-radius:50%;background:'+color+';flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px;">'+
-                '<span style="color:#fff;font-size:10px;font-weight:700;font-family:Helvetica,Arial,sans-serif;">&#10003;</span>'+
-              '</div>'+
-              '<div style="font-size:11px;color:#333;line-height:1.5;">'+escHtml(d)+'</div>'+
-            '</div>'
-          ).join('')+
-          '</div>'+
-        '</div>'+
-        '<div style="display:table-cell;width:40%;vertical-align:top;">'+
-          '<div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin-bottom:10px;font-family:Helvetica,Arial,sans-serif;">By the Numbers</div>'+
-          '<div style="display:flex;flex-direction:column;gap:10px;">'+
-            '<div style="padding:14px;border:1px solid #eee;border-radius:8px;text-align:center;">'+
-              '<div style="font-family:Oswald,sans-serif;font-size:36px;font-weight:800;color:'+color+';line-height:1;">'+escHtml(yrs)+'</div>'+
-              '<div style="font-size:10px;color:#888;margin-top:3px;">Years in Business</div>'+
-            '</div>'+
-            '<div style="padding:14px;border:1px solid #eee;border-radius:8px;text-align:center;">'+
-              '<div style="font-family:Oswald,sans-serif;font-size:36px;font-weight:800;color:'+color+';line-height:1;">'+escHtml(warr)+'</div>'+
-              '<div style="font-size:10px;color:#888;margin-top:3px;">Year Warranty</div>'+
-            '</div>'+
-          '</div>'+
-        '</div>'+
+    bsHeader()+
+    '<div style="padding:32px 44px 0;">'+
+      '<div style="font-family:\'Playfair Display\',Georgia,serif;font-size:22px;font-weight:700;color:#111;margin-bottom:20px;">Estimate Detail</div>'+
+      // Structure table
+      (iStructures.length
+        ? '<table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-family:Helvetica,Arial,sans-serif;">'+
+            '<thead><tr style="background:#111;"><th style="padding:10px 12px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#fff;font-weight:700;">Structure</th><th style="padding:10px 12px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#fff;font-weight:700;">Price</th></tr></thead>'+
+            '<tbody>'+structRows+'</tbody>'+
+          '</table>'
+        : '<div style="padding:20px;text-align:center;color:#aaa;font-style:italic;font-size:12px;font-family:Helvetica,Arial,sans-serif;">No structures added.</div>'
+      )+
+      // Total row
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 12px;background:#111;margin-bottom:12px;">'+
+        '<span style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#aaa;font-family:Helvetica,Arial,sans-serif;">Total Investment</span>'+
+        '<span style="font-family:\'Playfair Display\',Georgia,serif;font-size:28px;font-weight:900;color:#fff;">'+(grandTotal?'$'+grandTotal.toLocaleString():'$0')+'</span>'+
       '</div>'+
-      // Reviews
-      (review1||review2
-        ? '<div style="margin-top:20px;">'+
-            '<div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin-bottom:10px;font-family:Helvetica,Arial,sans-serif;">What Our Customers Say</div>'+
-            '<div style="display:grid;grid-template-columns:'+(review1&&review2?'1fr 1fr':'1fr')+';gap:12px;">'+
-            (review1?'<img src="'+review1+'" style="width:100%;border-radius:8px;display:block;border:1px solid #eee;">':'<div style="border:1px dashed #e0e0e0;border-radius:8px;padding:20px;text-align:center;color:#ccc;font-size:11px;font-style:italic;">Review image 1</div>')+
-            (review2?'<img src="'+review2+'" style="width:100%;border-radius:8px;display:block;border:1px solid #eee;">':'')+
+      (finMo
+        ? '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#f9f9f9;border:1px solid #eee;margin-bottom:12px;font-family:Helvetica,Arial,sans-serif;">'+
+            '<div style="font-size:11px;color:#888;">Financing Available</div>'+
+            '<div style="font-size:14px;font-weight:700;color:'+color+';">Est. $'+finMo+'/mo &nbsp;<span style="font-size:10px;font-weight:400;color:#aaa;">'+finTrm+'</span></div>'+
+          '</div>'+
+          '<div style="font-size:9px;color:#bbb;font-style:italic;margin-bottom:16px;font-family:Helvetica,Arial,sans-serif;">'+escHtml(finDisc)+'</div>'
+        : ''
+      )+
+      // Pricing notes
+      '<div style="padding:14px;background:#f9f9f9;border-left:3px solid '+color+';margin-bottom:20px;font-family:Helvetica,Arial,sans-serif;">'+
+        '<div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin-bottom:6px;">Pricing Notes</div>'+
+        '<div style="font-size:10px;color:#888;line-height:1.7;">Estimates are created using satellite imagery. Final pricing confirmed at assessment. Factors that may affect price include skylights, chimneys, special vents, plywood decking, and manufacturer price increases.</div>'+
+      '</div>'+
+      dmgSection+
+    '</div>'+
+    bsFooter(2)+
+    '</div>';
+
+  // ── PAGE 3 — About the Company ─────────────────────────────────────────
+  const aboutCo = cfg.aboutCompany || 'We\u2019re a local roofing company that believes you deserve a straight answer before you ever have to talk to a salesperson. Honest work from a crew that stands behind it.';
+  const page3 =
+    '<div style="background:#fff;overflow:hidden;width:7.5in;min-height:10in;max-height:10in;box-sizing:border-box;page-break-after:always;font-family:Georgia,serif;">'+
+    bsHeader()+
+    '<div style="padding:32px 44px 0;">'+
+      '<div style="font-family:\'Playfair Display\',Georgia,serif;font-size:22px;font-weight:700;color:#111;margin-bottom:8px;">About '+escHtml(co)+'</div>'+
+      '<p style="font-size:14px;color:#555;line-height:1.8;margin-bottom:24px;">'+escHtml(aboutCo)+'</p>'+
+      '<hr style="border:none;border-top:1px solid #ddd;margin:0 0 24px;">'+
+      // Stats row
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:24px;">'+
+        [['Years in Business',yrs+'+'],['Warranty',warr+' Years'],['Financing','Available']].map(([lbl,val])=>
+          '<div style="border:1.5px solid #eee;padding:16px;text-align:center;">'+
+            '<div style="font-family:\'Playfair Display\',Georgia,serif;font-size:28px;font-weight:900;color:'+color+';">'+escHtml(val)+'</div>'+
+            '<div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#888;margin-top:4px;font-family:Helvetica,Arial,sans-serif;">'+escHtml(lbl)+'</div>'+
+          '</div>'
+        ).join('')+
+      '</div>'+
+      // Why us full list
+      '<div style="margin-bottom:24px;">'+
+        secHead('What You Can Expect')+
+        '<ul style="list-style:none;margin:0;padding:0;columns:2;gap:20px;">'+
+        diffs.map(d=>'<li style="font-size:13px;color:#333;padding:7px 0;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:9px;font-family:Helvetica,Arial,sans-serif;break-inside:avoid;"><span style="width:7px;height:7px;background:'+color+';border-radius:50%;flex-shrink:0;display:inline-block;"></span>'+escHtml(d)+'</li>').join('')+
+        '</ul>'+
+      '</div>'+
+      // Additional services
+      (svcDefs.length
+        ? '<div style="padding:14px;background:#f9f9f9;border-left:3px solid '+color+';margin-bottom:20px;font-family:Helvetica,Arial,sans-serif;">'+
+            '<div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin-bottom:8px;">We Also Offer</div>'+
+            '<div style="display:flex;flex-wrap:wrap;gap:8px;">'+
+            svcDefs.map(s=>'<div style="border:1.5px solid '+color+'55;padding:5px 14px;font-size:11px;font-weight:700;color:'+color+';">'+escHtml(s)+'</div>').join('')+
             '</div></div>'
         : ''
       )+
     '</div>'+
-    pageFooter()+
+    bsFooter(3)+
     '</div>';
 
-  // ── PAGE 3 — Estimate Detail ───────────────────────────────────────────
-  const page3 =
-    '<div style="background:#fff;overflow:hidden;width:7.5in;min-height:10in;max-height:10in;box-sizing:border-box;page-break-after:always;font-family:Georgia,serif;">'+
-    pageHdr(3)+
-    '<div style="padding:24px 32px;">'+
-      '<div style="font-family:Oswald,sans-serif;font-size:22px;font-weight:800;color:#1a1a1a;margin-bottom:4px;letter-spacing:-.2px;">Estimate Breakdown</div>'+
-      '<div style="font-size:10px;color:#aaa;margin-bottom:16px;font-family:Helvetica,Arial,sans-serif;">Prepared for '+escHtml(addr)+'</div>'+
-      (iStructures.length
-        ? iStructures.map((s,i)=>{
-            const sp = calcStructPrice ? calcStructPrice(s) : (s.price||0);
-            const sq = ((parseFloat(s.sqft)||0)/100*1.12*(parseFloat(s.pitch)||1.118)).toFixed(1);
-            const col = i===0 ? color : '#444';
-            return '<div style="border:1.5px solid #e8e8e8;border-radius:8px;overflow:hidden;margin-bottom:14px;">'+
-              '<div style="background:'+col+';padding:9px 16px;display:flex;justify-content:space-between;align-items:center;">'+
-                '<span style="font-family:Oswald,sans-serif;font-size:13px;font-weight:700;letter-spacing:.5px;color:#fff;">'+escHtml((s.name||'Structure '+(i+1)).toUpperCase())+'</span>'+
-                '<span style="font-family:Oswald,sans-serif;font-size:18px;font-weight:700;color:#fff;">$'+sp.toLocaleString()+'</span>'+
-              '</div>'+
-              '<table style="width:100%;border-collapse:collapse;font-family:Helvetica,Arial,sans-serif;">'+
-                '<tr style="background:#fafafa;"><td style="padding:6px 16px;font-size:10px;color:#666;border-bottom:1px solid #f0f0f0;">Roof Area</td><td style="padding:6px 16px;text-align:right;font-size:10px;font-weight:600;color:#1a1a1a;border-bottom:1px solid #f0f0f0;">'+(s.sqft?Number(s.sqft).toLocaleString()+' sq ft ('+sq+' sq)':'—')+'</td></tr>'+
-                '<tr><td style="padding:6px 16px;font-size:10px;color:#666;border-bottom:1px solid #f0f0f0;">Pitch</td><td style="padding:6px 16px;text-align:right;font-size:10px;font-weight:600;color:#1a1a1a;border-bottom:1px solid #f0f0f0;">'+(PITCHLBL[s.pitch]||s.pitch||'—')+'</td></tr>'+
-                '<tr style="background:#fafafa;"><td style="padding:6px 16px;font-size:10px;color:#666;border-bottom:1px solid #f0f0f0;">Material</td><td style="padding:6px 16px;text-align:right;font-size:10px;font-weight:600;color:#1a1a1a;border-bottom:1px solid #f0f0f0;">'+(MATLBL[s.mat]||s.mat||'—')+'</td></tr>'+
-                '<tr><td style="padding:6px 16px;font-size:10px;color:#666;border-bottom:1px solid #f0f0f0;">Stories</td><td style="padding:6px 16px;text-align:right;font-size:10px;font-weight:600;color:#1a1a1a;border-bottom:1px solid #f0f0f0;">'+(s.stories||'—')+'</td></tr>'+
-                '<tr style="background:#fafafa;"><td style="padding:6px 16px;font-size:10px;color:#666;border-bottom:1px solid #f0f0f0;">Tear-off &amp; Disposal</td><td style="padding:6px 16px;text-align:right;font-size:10px;font-weight:600;color:#1a1a1a;border-bottom:1px solid #f0f0f0;">Included</td></tr>'+
-                '<tr><td style="padding:6px 16px;font-size:10px;color:#666;">Underlayment &amp; Flashing</td><td style="padding:6px 16px;text-align:right;font-size:10px;font-weight:600;color:#1a1a1a;">Included</td></tr>'+
-              '</table>'+
-            '</div>';
-          }).join('')
-        : '<div style="padding:20px;text-align:center;color:#999;font-style:italic;font-size:11px;">No structures added.</div>'
-      )+
-      '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#1a1a1a;border-radius:8px;margin-top:4px;">'+
-        '<span style="font-family:Oswald,sans-serif;font-size:13px;font-weight:700;letter-spacing:.5px;color:rgba(255,255,255,.7);">TOTAL INVESTMENT</span>'+
-        '<span style="font-family:Oswald,sans-serif;font-size:26px;font-weight:800;color:#fff;">$'+(grandTotal?grandTotal.toLocaleString():'0')+'</span>'+
-      '</div>'+
-      (finMo
-        ? '<div style="margin-top:8px;padding:10px 16px;background:#f8f8f8;border-radius:8px;display:flex;justify-content:space-between;align-items:center;font-family:Helvetica,Arial,sans-serif;">'+
-            '<div style="font-size:10px;color:#666;">Financing Available</div>'+
-            '<div style="font-size:13px;font-weight:700;color:'+color+';">Est. $'+finMo.toLocaleString()+'/mo &nbsp;<span style="font-size:9px;font-weight:400;color:#999;">'+finTrm+'</span></div>'+
-          '</div>'+
-          '<div style="padding:5px 0;font-size:8px;color:#bbb;font-style:italic;font-family:Helvetica,Arial,sans-serif;">'+finDisc+'</div>'
-        : ''
-      )+
-      '<div style="margin-top:14px;padding:10px 14px;background:#f9f9f9;border-left:3px solid '+color+';border-radius:0 6px 6px 0;font-family:Helvetica,Arial,sans-serif;">'+
-        '<div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#888;margin-bottom:5px;">Pricing Notes</div>'+
-        '<div style="font-size:9px;color:#888;line-height:1.7;">Estimates are created using satellite imagery. Final pricing confirmed at assessment. Factors that may affect price include skylights, chimneys, special vents, plywood decking, and manufacturer price increases.</div>'+
-      '</div>'+
-    '</div>'+
-    pageFooter()+
-    '</div>';
-
-  // ── PAGE 4 — Next Steps + Referral ────────────────────────────────────
+  // ── PAGE 4 — Next Steps ────────────────────────────────────────────────
   const page4 =
     '<div style="background:#fff;overflow:hidden;width:7.5in;min-height:10in;max-height:10in;box-sizing:border-box;font-family:Georgia,serif;">'+
-    pageHdr(4)+
-    '<div style="padding:24px 32px;">'+
-      '<div style="font-family:Oswald,sans-serif;font-size:22px;font-weight:800;color:#1a1a1a;margin-bottom:16px;letter-spacing:-.2px;">Ready to Move Forward?</div>'+
+    bsHeader()+
+    '<div style="padding:32px 44px 0;">'+
+      '<div style="font-family:\'Playfair Display\',Georgia,serif;font-size:22px;font-weight:700;color:#111;margin-bottom:20px;">Ready to Move Forward?</div>'+
       // Steps
-      '<div style="display:flex;flex-direction:column;gap:0;margin-bottom:24px;">'+
+      '<div style="margin-bottom:28px;">'+
         ['Call or text us at '+ph+' to confirm your appointment.',
          'We\u2019ll walk the roof with you, confirm measurements, and answer any questions.',
          'You approve the scope. We schedule the crew. Done.'].map((step,i)=>
-          '<div style="display:flex;align-items:flex-start;gap:14px;padding:12px 0;border-bottom:1px solid #f0f0f0;">'+
-            '<div style="width:28px;height:28px;border-radius:50%;background:'+color+';flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:Oswald,sans-serif;font-size:14px;font-weight:700;color:#fff;">'+(i+1)+'</div>'+
-            '<div style="font-size:12px;color:#333;line-height:1.6;padding-top:4px;">'+escHtml(step)+'</div>'+
+          '<div style="display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid #eee;">'+
+            '<div style="width:30px;height:30px;background:'+color+';flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;font-family:Helvetica,Arial,sans-serif;">'+(i+1)+'</div>'+
+            '<div style="font-size:13px;color:#333;line-height:1.7;padding-top:5px;font-family:Helvetica,Arial,sans-serif;">'+escHtml(step)+'</div>'+
           '</div>'
         ).join('')+
       '</div>'+
       // Contact + QR
       '<div style="display:flex;gap:20px;align-items:stretch;margin-bottom:24px;">'+
-        '<div style="flex:1;border:1.5px solid #eee;border-radius:10px;padding:16px;">'+
-          '<div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin-bottom:10px;font-family:Helvetica,Arial,sans-serif;">Get in Touch</div>'+
-          '<div style="font-family:Oswald,sans-serif;font-size:22px;font-weight:700;color:'+color+';margin-bottom:6px;">'+escHtml(ph)+'</div>'+
-          '<div style="font-size:11px;color:#555;margin-bottom:4px;">'+escHtml(rep)+'</div>'+
-          '<div style="font-size:10px;color:#aaa;">'+escHtml(repTitle||'Roofing Consultant')+' &middot; '+escHtml(co)+'</div>'+
-          (lic?'<div style="font-size:9px;color:#bbb;margin-top:4px;">Lic# '+escHtml(lic)+'</div>':'')+
+        '<div style="flex:1;border:1.5px solid #eee;padding:18px;">'+
+          secHead('Get in Touch')+
+          '<div style="font-family:\'Playfair Display\',Georgia,serif;font-size:24px;font-weight:700;color:'+color+';margin-bottom:6px;">'+escHtml(ph)+'</div>'+
+          '<div style="font-size:12px;color:#555;font-family:Helvetica,Arial,sans-serif;">'+escHtml(rep)+'</div>'+
+          '<div style="font-size:10px;color:#aaa;font-family:Helvetica,Arial,sans-serif;">'+escHtml(repTitle)+' \u00b7 '+escHtml(co)+'</div>'+
+          (lic?'<div style="font-size:9px;color:#bbb;margin-top:4px;font-family:Helvetica,Arial,sans-serif;">Lic# '+escHtml(lic)+'</div>':'')+
         '</div>'+
-        '<div style="flex:0 0 auto;border:1.5px solid #eee;border-radius:10px;padding:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;">'+
+        '<div style="flex:0 0 auto;border:1.5px solid #eee;padding:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;">'+
           (qrUrl
-            ? '<img src="'+qrUrl+'" style="width:90px;height:90px;border-radius:6px;display:block;">'+
+            ? '<img src="'+qrUrl+'" style="width:90px;height:90px;display:block;">'+
               '<div style="font-size:9px;color:#aaa;letter-spacing:.5px;text-align:center;font-family:Helvetica,Arial,sans-serif;">Scan to Book Online</div>'
-            : '<div style="width:90px;height:90px;border:1px dashed #ddd;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#ccc;text-align:center;">Add booking URL<br>for QR code</div>'
+            : '<div style="width:90px;height:90px;border:1px dashed #ddd;display:flex;align-items:center;justify-content:center;font-size:9px;color:#ccc;text-align:center;">Add booking URL<br>for QR code</div>'
           )+
         '</div>'+
       '</div>'+
       // Referral
-      '<div style="border:1.5px solid '+color+'33;border-radius:10px;padding:16px;display:flex;gap:14px;align-items:flex-start;">'+
-        '<div style="width:64px;height:52px;background:linear-gradient(135deg,#1a5276,#2e86c1);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-family:Oswald,sans-serif;font-size:10px;font-weight:700;text-align:center;line-height:1.3;">'+
+      '<div style="border:1.5px solid '+color+'33;padding:16px;display:flex;gap:14px;align-items:flex-start;margin-bottom:20px;">'+
+        '<div style="width:64px;height:52px;background:linear-gradient(135deg,#1a5276,#2e86c1);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-family:Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;text-align:center;line-height:1.3;">'+
           '<div style="font-size:18px;">$'+escHtml(refAmt)+'</div>VISA GIFT'+
         '</div>'+
         '<div>'+
-          '<div style="font-family:Oswald,sans-serif;font-size:15px;font-weight:700;margin-bottom:4px;color:#1a1a1a;">Know Someone Who Needs a Roof?</div>'+
-          '<div style="font-size:11px;color:#555;line-height:1.6;">'+escHtml(refText)+'</div>'+
-          '<div style="margin-top:6px;font-size:11px;font-weight:700;color:'+color+';">Call '+escHtml(ph)+' and mention this estimate</div>'+
+          '<div style="font-family:\'Playfair Display\',Georgia,serif;font-size:16px;font-weight:700;margin-bottom:4px;color:#1a1a1a;">Know Someone Who Needs a Roof?</div>'+
+          '<div style="font-size:11px;color:#555;line-height:1.6;font-family:Helvetica,Arial,sans-serif;">'+escHtml(refText)+'</div>'+
+          '<div style="margin-top:6px;font-size:11px;font-weight:700;color:'+color+';font-family:Helvetica,Arial,sans-serif;">Call '+escHtml(ph)+' and mention this estimate</div>'+
         '</div>'+
       '</div>'+
-      // Additional services
-      (svcDefs.length
-        ? '<div style="margin-top:16px;padding:12px 14px;background:#f9f9f9;border-radius:8px;font-family:Helvetica,Arial,sans-serif;">'+
-            '<div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin-bottom:8px;">We Also Offer</div>'+
-            '<div style="display:flex;flex-wrap:wrap;gap:6px;">'+
-            svcDefs.map(s=>'<div style="border:1.5px solid '+color+'44;border-radius:20px;padding:4px 12px;font-size:10px;font-weight:600;color:'+color+';">'+escHtml(s)+'</div>').join('')+
-            '</div></div>'
-        : ''
-      )+
     '</div>'+
-    pageFooter()+
+    bsFooter(4)+
     '</div>';
 
   // ── Assemble ───────────────────────────────────────────────────────────
@@ -1300,7 +1258,7 @@ function buildLobMailerHtml(item){
     .lob-wrap{width:7.5in;margin:0 auto;}
   `;
   return '<!DOCTYPE html><html><head><meta charset="UTF-8">'+
-    '<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700;800&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">'+
+    '<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">'+
     '<style>'+mailerCss+'</style>'+
     '</head><body>'+
     '<div class="lob-wrap">'+page1+page2+page3+page4+'</div>'+
