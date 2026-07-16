@@ -20,7 +20,7 @@ function updatePreview(){
   const yrs    = cfg.yearsInBusiness || '5+';
   const warr   = cfg.warrantyYears || '10';
   const hook   = cfg.hookLetter    || 'Most homeowners want a straight answer on price without the back-and-forth. That\'s exactly what BidDrop delivers \u2014 your personalized roof estimate, built and ready before we ever show up.';
-  const why    = cfg.whyReceived   || 'We assessed your neighborhood and identified your home as a candidate for roof replacement. We look for things like missing shingles, moss, algae, buckling, and granule loss.';
+  const why    = cfg.whyReceived   || 'We use satellite imagery and property data to identify homes in your area that are due for a roof evaluation. Your property came up based on age, condition indicators, and neighborhood activity in our system.';
   // Auto-calculate financing
   const finEnabled = cfg.financingEnabled !== false;
   const finApr  = parseFloat(cfg.financingApr)  || 9.99;
@@ -296,7 +296,7 @@ function updatePreview(){
     // Two-column: Why Received (left) + How We Stand Out (right)
     '<div style="display:table;width:100%;border-collapse:separate;border-spacing:10px 0;margin:0 -10px;">'+
     '<div style="display:table-cell;width:50%;vertical-align:top;">'+
-    '<div class="ml-section-hdr" style="background:'+color+';display:block;">Why Did You Receive This?</div>'+
+    '<div class="ml-section-hdr" style="background:'+color+';display:block;">Why Was This Sent to You?</div>'+
     '<p style="font-size:10px;line-height:1.6;color:#555;margin:4px 0 0;">'+escHtml(_tradeWhy||why)+'</p>'+damageMailerSection+
     '</div>'+
     '<div style="display:table-cell;width:50%;vertical-align:top;">'+

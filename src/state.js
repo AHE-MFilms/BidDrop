@@ -78,9 +78,9 @@ const DEFAULTS = {
   // Letter & pitch
   repName:'', repVideoUrl:'', licenseNum:'', yearsInBusiness:'5+', warrantyYears:'10',
   hookLetter:'Most homeowners want a straight answer on price without the back-and-forth. That\'s exactly what BidDrop delivers — your personalized roof estimate, built and ready before we ever show up.',
-  whyReceived:'We assessed your neighborhood and identified your home as a candidate for roof replacement. We look for things like missing shingles, moss, algae, buckling, granule loss, and age. The average roof lasts 18–20 years.',
+  whyReceived:'We use satellite imagery and property data to identify homes in your area that are due for a roof evaluation. Your property came up based on age, condition indicators, and neighborhood activity in our system.',
   postcardHook:'Your roof estimate is already built. No sales visit required, no pressure, no surprises — just a real number for your home.',
-  postcardWhy:'We assessed your neighborhood and identified your home as a candidate for roof replacement. We look for things like missing shingles, moss, algae, buckling, granule loss, and age. The average roof lasts 18–20 years.',
+  postcardWhy:'We use satellite imagery and property data to identify homes in your area that are due for a roof evaluation. Your property came up based on age, condition indicators, and neighborhood activity in our system.',
   postcardQuote:'"They replaced our roof in one day, no mess, no drama." — Mike D., Canton MI',
   postcardGuarantee:'No door-knocking. No pressure. Just your price.',
   financingEnabled:true, financingApr:9.99, financingTerm:60, financingDown:0,

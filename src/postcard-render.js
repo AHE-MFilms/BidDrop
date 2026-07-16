@@ -440,7 +440,7 @@ async function renderPostcard6x9BackCanvas(item){
   let finMo=0;
   if(finEnabled&&total){const loan=total*(1-finDown/100);const r=finApr/100/12;finMo=r===0?Math.round(loan/finTerm):Math.round(loan*r*Math.pow(1+r,finTerm)/(Math.pow(1+r,finTerm)-1));}
   const hook=cfg.postcardHook||'Your roof estimate is already built. No sales visit required, no pressure, no surprises \u2014 just a real number for your home.';
-  const why=cfg.postcardWhy||'We assessed your neighborhood and identified your home as a candidate for roof replacement. We look for things like missing shingles, moss, algae, buckling, granule loss, and age. The average roof lasts 18\u201320 years.';
+  const why=cfg.postcardWhy||'We use satellite imagery and property data to identify homes in your area that are due for a roof evaluation. Your property came up based on age, condition indicators, and neighborhood activity in our system.';
   const pcQuote=cfg.postcardQuote||'"They replaced our roof in one day, no mess, no drama." \u2014 Mike D., Canton MI';
   const guarantee=cfg.postcardGuarantee||'No door-knocking. No pressure. Just your price.';
   const badges=[cfg.diff1||'Licensed, Bonded & Insured',cfg.diff2||'Manufacturer Certified',cfg.diff3||'Itemized Pricing'].filter(Boolean).slice(0,3);
@@ -627,9 +627,9 @@ async function renderPostcard6x9BackCanvas(item){
 
   let by=BOTTOM_Y+SAFE;
 
-  // WHY DID YOU RECEIVE THIS?
+  // WHY WAS THIS SENT TO YOU?
   ctx.font='bold 34px Arial';ctx.fillStyle=color;
-  ctx.fillText('WHY DID YOU RECEIVE THIS?',SAFE,by+34);by+=52;
+  ctx.fillText('WHY WAS THIS SENT TO YOU?',SAFE,by+34);by+=52;
   const whyLineH=Math.round(whySize*1.4);
   ctx.font=whySize+'px Arial';ctx.fillStyle='#374151';
   const whyLines=wrapText(ctx,why,LEFT_COL_W-SAFE);
@@ -870,7 +870,7 @@ function buildPostcard6x9BackHtml(item){
   let finMo=0;
   if(finEnabled&&total){const loan=total*(1-finDown/100);const r=finApr/100/12;finMo=r===0?Math.round(loan/finTerm):Math.round(loan*r*Math.pow(1+r,finTerm)/(Math.pow(1+r,finTerm)-1));}
   const hook=cfg.postcardHook||'Your estimate is ready and waiting. No pressure, no games — just a real price for your roof.';
-  const why=cfg.postcardWhy||'We assessed your neighborhood and identified your home as a candidate for roof replacement based on age, condition, and storm history.';
+  const why=cfg.postcardWhy||'We use satellite imagery and property data to identify homes in your area that are due for a roof evaluation. Your property came up based on age, condition indicators, and neighborhood activity in our system.';
   const pcQuote=cfg.postcardQuote||'';
   const guarantee=cfg.postcardGuarantee||'No door-knocking. No pressure. Just your price.';
   const headshotData=(cfg.headshot&&!cfg.headshot.startsWith('data:'))?cfg.headshot:'';
@@ -920,7 +920,7 @@ html,body{width:864px;height:576px;font-family:Arial,sans-serif;background:#fff;
 ${headshotData?`<img src="${headshotData}" class="hs" alt="${escHtml(repName)}"><div class="ri"><strong>${escHtml(repName||co)}</strong>${escHtml(repTitle)}</div>`:''}
 </div>
 <div class="hook">${escHtml(hook)}</div>
-<div class="wh">Why Did You Receive This?</div>
+<div class="wh">Why Was This Sent to You?</div>
 <div class="why">${escHtml(why)}</div>
 ${pcQuote?`<div class="sq"><div class="sr">&#9733;&#9733;&#9733;&#9733;&#9733;</div>${escHtml(pcQuote)}</div>`:''}
 <div class="bdg">${badges.map(b=>`<span class="b">&#10003; ${escHtml(b)}</span>`).join('')}</div>
@@ -970,7 +970,7 @@ function buildLobMailerHtml(item){
   const yrs    = cfg.yearsInBusiness || '5+';
   const warr   = cfg.warrantyYears || '10';
   const hook   = cfg.hookLetter    || 'Most homeowners want a straight answer on price without the back-and-forth. That\'s exactly what BidDrop delivers \u2014 your personalized roof estimate, built and ready before we ever show up.';
-  const why    = cfg.whyReceived   || 'We assessed your neighborhood and identified your home as a candidate for roof replacement. We look for things like missing shingles, moss, algae, buckling, and granule loss.';
+  const why    = cfg.whyReceived   || 'We use satellite imagery and property data to identify homes in your area that are due for a roof evaluation. Your property came up based on age, condition indicators, and neighborhood activity in our system.';
 
   // Financing
   const finEnabled = cfg.financingEnabled !== false;
@@ -1134,7 +1134,7 @@ function buildLobMailerHtml(item){
     '</div>'+
     '<div style="display:table;width:100%;border-collapse:separate;border-spacing:10px 0;margin:0 -10px;">'+
     '<div style="display:table-cell;width:50%;vertical-align:top;">'+
-    '<div style="font-weight:700;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#fff;padding:5px 11px;border-radius:4px;margin:10px 0 6px;display:block;background:'+color+';">Why Did You Receive This?</div>'+
+    '<div style="font-weight:700;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#fff;padding:5px 11px;border-radius:4px;margin:10px 0 6px;display:block;background:'+color+';">Why Was This Sent to You?</div>'+
     '<p style="font-size:10px;line-height:1.6;color:#555;margin:4px 0 0;">'+escHtml(_tradeWhy||why)+'</p>'+damageMailerSection+
     '</div>'+
     '<div style="display:table-cell;width:50%;vertical-align:top;">'+
@@ -1327,12 +1327,12 @@ async function renderDesignBackCanvas(cfg, overrides){
   const backBadgeTxt   = ov('postcardBackBadgeText')  || 'YOUR ROOF ESTIMATE IS READY';
   const backBadgeColor = ov('postcardBackBadgeColor') || color;
   const hook           = ov('postcardHook')           || 'Your roof estimate is already built. No sales visit required, no pressure, no surprises \u2014 just a real number for your home.';
-  const why            = ov('postcardWhy')            || 'We assessed your neighborhood and identified your home as a candidate for roof replacement. We look for things like missing shingles, moss, algae, buckling, granule loss, and age. The average roof lasts 18\u201320 years.';
+  const why            = ov('postcardWhy')            || 'We use satellite imagery and property data to identify homes in your area that are due for a roof evaluation. Your property came up based on age, condition indicators, and neighborhood activity in our system.';
   const pcQuote        = ov('postcardQuote')          || '"They replaced our roof in one day, no mess, no drama." \u2014 Mike D., Canton MI';
   const guarantee      = ov('postcardGuarantee')      || 'No door-knocking. No pressure. Just your price.';
   const scanCta        = ov('postcardScanCta')        || 'SCAN TO BOOK';
   const scanSub        = ov('postcardScanSub')        || 'No-pressure booking';
-  const whyLabel       = ov('postcardWhyLabel')       || 'WHY DID YOU RECEIVE THIS?';
+  const whyLabel       = ov('postcardWhyLabel')       || 'WHY WAS THIS SENT TO YOU?';
   const badges = [
     ov('diff1') || 'Licensed, Bonded & Insured',
     ov('diff2') || 'Manufacturer Certified',
