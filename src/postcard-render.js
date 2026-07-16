@@ -440,7 +440,7 @@ async function renderPostcard6x9BackCanvas(item){
   let finMo=0;
   if(finEnabled&&total){const loan=total*(1-finDown/100);const r=finApr/100/12;finMo=r===0?Math.round(loan/finTerm):Math.round(loan*r*Math.pow(1+r,finTerm)/(Math.pow(1+r,finTerm)-1));}
   const hook=cfg.postcardHook||'We tapped your roof on the map. Satellite data measured it. Your price was built before this arrived \u2014 no appointment needed, no one coming to your door.';
-  const why=cfg.postcardWhy||'Public property records show your roof is likely past the 20-year mark. Recent hail or high-wind activity was logged in your ZIP code. Neighbors on your street have pulled roofing permits recently. Satellite imagery flagged wear consistent with aging shingles. No obligation — this is just your number, ready when you are.';
+  const why=cfg.postcardWhy||'We specialize in fast, accurate roofing estimates built from satellite data — so you have a real number in hand before any conversation starts. No pressure, no surprises. Just honest pricing from a local crew that stands behind its work.';
   const pcQuote=cfg.postcardQuote||'"They replaced our roof in one day, no mess, no drama." \u2014 Mike D., Canton MI';
   const guarantee=cfg.postcardGuarantee||'Your price. Built by satellite. No visit required.';
   const badges=[cfg.diff1||'Licensed, Bonded & Insured',cfg.diff2||'Manufacturer Certified',cfg.diff3||'Itemized Pricing'].filter(Boolean).slice(0,3);
@@ -629,7 +629,7 @@ async function renderPostcard6x9BackCanvas(item){
 
   // WHY WAS THIS SENT TO YOU?
   ctx.font='bold 34px Arial';ctx.fillStyle=color;
-  ctx.fillText('WHY WAS THIS SENT TO YOU?',SAFE,by+34);by+=52;
+  ctx.fillText('HOW WE CAN HELP',SAFE,by+34);by+=52;
   const whyLineH=Math.round(whySize*1.4);
   ctx.font=whySize+'px Arial';ctx.fillStyle='#374151';
   const whyLines=wrapText(ctx,why,LEFT_COL_W-SAFE);
@@ -870,7 +870,7 @@ function buildPostcard6x9BackHtml(item){
   let finMo=0;
   if(finEnabled&&total){const loan=total*(1-finDown/100);const r=finApr/100/12;finMo=r===0?Math.round(loan/finTerm):Math.round(loan*r*Math.pow(1+r,finTerm)/(Math.pow(1+r,finTerm)-1));}
   const hook=cfg.postcardHook||'We tapped your roof on the map. Satellite data measured it. Your price was built before this arrived — no appointment needed, no one coming to your door.';
-  const why=cfg.postcardWhy||'Public property records show your roof is likely past the 20-year mark. Recent hail or high-wind activity was logged in your ZIP code. Neighbors on your street have pulled roofing permits recently. Satellite imagery flagged wear consistent with aging shingles. No obligation — this is just your number, ready when you are.';
+  const why=cfg.postcardWhy||'We specialize in fast, accurate roofing estimates built from satellite data — so you have a real number in hand before any conversation starts. No pressure, no surprises. Just honest pricing from a local crew that stands behind its work.';
   const pcQuote=cfg.postcardQuote||'';
   const guarantee=cfg.postcardGuarantee||'Your price. Built by satellite. No visit required.';
   const headshotData=(cfg.headshot&&!cfg.headshot.startsWith('data:'))?cfg.headshot:'';
@@ -920,7 +920,7 @@ html,body{width:864px;height:576px;font-family:Arial,sans-serif;background:#fff;
 ${headshotData?`<img src="${headshotData}" class="hs" alt="${escHtml(repName)}"><div class="ri"><strong>${escHtml(repName||co)}</strong>${escHtml(repTitle)}</div>`:''}
 </div>
 <div class="hook">${escHtml(hook)}</div>
-<div class="wh">Why Was This Sent to You?</div>
+<div class="wh">How We Can Help</div>
 <div class="why">${escHtml(why)}</div>
 ${pcQuote?`<div class="sq"><div class="sr">&#9733;&#9733;&#9733;&#9733;&#9733;</div>${escHtml(pcQuote)}</div>`:''}
 <div class="bdg">${badges.map(b=>`<span class="b">&#10003; ${escHtml(b)}</span>`).join('')}</div>
@@ -1291,7 +1291,7 @@ async function renderDesignBackCanvas(cfg, overrides){
   const guarantee      = ov('postcardGuarantee')      || 'Your price. Built by satellite. No visit required.';
   const scanCta        = ov('postcardScanCta')        || 'SCAN TO BOOK';
   const scanSub        = ov('postcardScanSub')        || 'No-pressure booking';
-  const whyLabel       = ov('postcardWhyLabel')       || 'WHY WAS THIS SENT TO YOU?';
+  const whyLabel       = ov('postcardWhyLabel')       || 'HOW WE CAN HELP';
   const badges = [
     ov('diff1') || 'Licensed, Bonded & Insured',
     ov('diff2') || 'Manufacturer Certified',
