@@ -1164,7 +1164,7 @@ const TRADE_STATUS_DEFAULTS = {
 
 // ── Default trade-specific postcard copy ──────────────────────────────────────
 const TRADE_POSTCARD_COPY_DEFAULTS = {
-  roofing:    { headline1:'We Assessed', headline2:'Your Roof.', hook:'We tapped your roof on the map. Satellite data measured it. Your price was built before this arrived — no appointment needed, no one coming to your door.', why:'We used satellite imagery to measure your roof remotely — square footage, pitch, and condition indicators — and built a real price based on your home’s actual data. No guessing. No inspection required to get started.', quote:'"They replaced our roof in one day, no mess, no drama." — Mike D.', guarantee:'Your price. Built by satellite. No visit required.' },
+  roofing:    { headline1:'We noticed it might be time for a new roof.', headline2:'But don\'t worry, we can help!', hook:'We tapped your roof on the map. Satellite data measured it. Your price was built before this arrived — no appointment needed, no one coming to your door.', why:'We used satellite imagery to measure your roof remotely — square footage, pitch, and condition indicators — and built a real price based on your home’s actual data. No guessing. No inspection required to get started.', quote:'"They replaced our roof in one day, no mess, no drama." — Mike D.', guarantee:'Your price. Built by satellite. No visit required.' },
   solar:      { headline1:'Go Solar,', headline2:'Save More.', hook:'The average homeowner saves $1,400/year with solar. We make it simple — no games, just your custom proposal.', why:'We used satellite imagery to analyze your roof’s orientation and sun exposure. Your property shows strong potential for solar generation.', quote:'"Our electric bill dropped to almost zero." — Sarah T.', guarantee:'Free solar assessment. No visit required.' },
   gutters:    { headline1:'Protect', headline2:'Your Home.', hook:'Clogged or damaged gutters cause foundation damage, basement flooding, and rot. We\'ll give you a straight price — no games.', why:'We use property data to identify homes in your area where gutters may need attention. Your property came up based on age and condition indicators.', quote:'"Fast install, great price, no mess left behind." — Tom R.', guarantee:'Free gutter assessment. No visit required.' },
   siding:     { headline1:'New Siding,', headline2:'New Look.', hook:'We tapped your house on the map. Your siding estimate is already built — no back-and-forth, no visit required.', why:'We used satellite imagery to assess your home’s exterior condition. Your property showed indicators that siding may need attention.', quote:'"Our home looks brand new. Neighbors keep asking who did it." — Lisa M.', guarantee:'Free siding assessment. No visit required.' },
@@ -1507,8 +1507,8 @@ function renderTradePostcardAccordion(){
   const enabledTrades = ALL_TRADES.filter(t => t === 'roofing' ? et.roofing !== false : !!et[t]);
 
   const COPY_FIELDS = [
-    { key:'headline1', label:'Headline Line 1', placeholder:'e.g. We Assessed', type:'input' },
-    { key:'headline2', label:'Headline Line 2', placeholder:'e.g. Your Roof.', type:'input' },
+    { key:'headline1', label:'Headline Line 1', placeholder:'e.g. We noticed it might be time for a new roof.', type:'input' },
+    { key:'headline2', label:'Headline Line 2', placeholder:'e.g. But don\'t worry, we can help!', type:'input' },
     { key:'hook', label:'Hook / Intro Copy', placeholder:'Main hook paragraph', type:'textarea' },
     { key:'why', label:'Why We\'re Here', placeholder:'Why this homeowner received the card', type:'textarea' },
     { key:'quote', label:'Customer Quote', placeholder:'"Great work!" — Name, City', type:'input' },

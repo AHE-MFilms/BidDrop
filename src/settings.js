@@ -23,8 +23,8 @@ function openSettings(){
   document.getElementById('s-pc-quote').value=c.postcardQuote||'';
   document.getElementById('s-pc-guarantee').value=c.postcardGuarantee||'';
   // New designer fields
-  const _pcH1=document.getElementById('s-pc-headline1'); if(_pcH1) _pcH1.value=c.postcardHeadline1||'We Assessed';
-  const _pcH2=document.getElementById('s-pc-headline2'); if(_pcH2) _pcH2.value=c.postcardHeadline2||'Your Roof.';
+  const _pcH1=document.getElementById('s-pc-headline1'); if(_pcH1) _pcH1.value=c.postcardHeadline1||'We noticed it might be time for a new roof.';
+  const _pcH2=document.getElementById('s-pc-headline2'); if(_pcH2) _pcH2.value=c.postcardHeadline2||'But don\'t worry, we can help!';
   const _pcBadgeTxt=document.getElementById('s-pc-badge-text'); if(_pcBadgeTxt) _pcBadgeTxt.value=c.postcardBadgeText||'YOUR PRICE IS ALREADY BUILT';
   const _pcBadgeClr=document.getElementById('s-pc-badge-color'); if(_pcBadgeClr) _pcBadgeClr.value=c.postcardBadgeColor||c.brandColor||'#F25C05';
   const _pcBackBadgeTxt=document.getElementById('s-pc-back-badge-text'); if(_pcBackBadgeTxt) _pcBackBadgeTxt.value=c.postcardBackBadgeText||'YOUR PRICE IS ALREADY BUILT';
@@ -493,8 +493,8 @@ function saveSettings(){
     postcardGuarantee:v('s-pc-guarantee'),
     postcardDesign:(document.querySelector('input[name="pc-design"]:checked')||{value:'1'}).value,
     // New designer fields
-    postcardHeadline1:v('s-pc-headline1')||'We Assessed',
-    postcardHeadline2:v('s-pc-headline2')||'Your Roof.',
+    postcardHeadline1:v('s-pc-headline1')||'We noticed it might be time for a new roof.',
+    postcardHeadline2:v('s-pc-headline2')||'But don\'t worry, we can help!',
     postcardBadgeText:v('s-pc-badge-text')||'YOUR PRICE IS ALREADY BUILT',
     postcardBadgeColor:v('s-pc-badge-color')||'#F25C05',
     postcardBackBadgeText:v('s-pc-back-badge-text')||'YOUR PRICE IS ALREADY BUILT',
