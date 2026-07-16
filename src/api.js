@@ -193,7 +193,7 @@ function accountRowToCfg(row){
     postcardWhy: row.postcard_why||DEFAULTS.postcardWhy,
     postcardQuote: row.postcard_quote||DEFAULTS.postcardQuote,
     postcardGuarantee: row.postcard_guarantee||DEFAULTS.postcardGuarantee,
-    postcardHeadline1: row.postcard_headline1||'We noticed it might be time for a new roof.',
+    postcardHeadline1: row.postcard_headline1||'It might be time for a new roof.',
     postcardHeadline2: row.postcard_headline2||'But don\'t worry, we can help!',
     postcardBadgeText: row.postcard_badge_text||'YOUR PRICE IS ALREADY BUILT',
     postcardBadgeColor: row.postcard_badge_color||row.brand_color||'#F25C05',

@@ -42,7 +42,7 @@ async function pcPreviewRefresh(){
   const v=id=>{ const el=document.getElementById(id); return el?(el.value||''):''; };
   const tmpCfg=Object.assign({},S.cfg||{},{
     postcardDesign:(document.querySelector('input[name="pc-design"]:checked')||{value:'1'}).value,
-    postcardHeadline1:v('s-pc-headline1')||'We noticed it might be time for a new roof.',
+    postcardHeadline1:v('s-pc-headline1')||'It might be time for a new roof.',
     postcardHeadline2:v('s-pc-headline2')||'But don\'t worry, we can help!',
     postcardBadgeText:v('s-pc-badge-text')||'YOUR PRICE IS ALREADY BUILT',
     postcardBadgeColor:v('s-pc-badge-color')||S.cfg?.brandColor||'#F25C05',
@@ -130,7 +130,7 @@ async function renderPostcard6x9FrontCanvas(item){
   const housePhotoUrl=item.photo_url||(item.photo_data&&item.photo_data.startsWith('http')?item.photo_data:null);
   const logoUrl=(cfg.logoData&&cfg.logoData.startsWith('http'))?cfg.logoData:null;
   // New designer config fields
-  const hl1Txt=cfg.postcardHeadline1||'We noticed it might be time for a new roof.';
+  const hl1Txt=cfg.postcardHeadline1||'It might be time for a new roof.';
   const hl2Txt=cfg.postcardHeadline2||'But don\'t worry, we can help!';
   const badgeTxtCfg=cfg.postcardBadgeText||'YOUR PRICE IS ALREADY BUILT';
   const badgeColorCfg=cfg.postcardBadgeColor||color;
@@ -749,7 +749,7 @@ ${housePhoto?`<img class="bg-img" src="${housePhoto}" alt="">`:''}
 <div class="bge">Your Roof Estimate Is Ready</div>
 </div>
 <div>
-<div class="hl">We noticed it might be time for a new roof.<br>But don't worry, we can help!</div>
+<div class="hl">It might be time for a new roof.<br>But don't worry, we can help!</div>
 <div class="al">&#128205; ${escHtml(shortAddr)}${cityState?', '+escHtml(cityState):''}</div>
 <div class="ps">
 <div><div class="pl">Estimated Total</div><div class="pm">$${total.toLocaleString()}</div></div>
