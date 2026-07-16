@@ -439,10 +439,10 @@ async function renderPostcard6x9BackCanvas(item){
   const finDown=parseFloat(cfg.financingDown)||0;
   let finMo=0;
   if(finEnabled&&total){const loan=total*(1-finDown/100);const r=finApr/100/12;finMo=r===0?Math.round(loan/finTerm):Math.round(loan*r*Math.pow(1+r,finTerm)/(Math.pow(1+r,finTerm)-1));}
-  const hook=cfg.postcardHook||'Your roof estimate is already built. No sales visit required, no pressure, no surprises \u2014 just a real number for your home.';
+  const hook=cfg.postcardHook||'We tapped your house on the map. Your estimate is already built \u2014 no sales visit, no pressure, just your price.';
   const why=cfg.postcardWhy||'We use satellite imagery and property data to identify homes in your area that are due for a roof evaluation. Your property came up based on age, condition indicators, and neighborhood activity in our system.';
   const pcQuote=cfg.postcardQuote||'"They replaced our roof in one day, no mess, no drama." \u2014 Mike D., Canton MI';
-  const guarantee=cfg.postcardGuarantee||'No door-knocking. No pressure. Just your price.';
+  const guarantee=cfg.postcardGuarantee||'Tap a house. We build the bid. You close the deal.';
   const badges=[cfg.diff1||'Licensed, Bonded & Insured',cfg.diff2||'Manufacturer Certified',cfg.diff3||'Itemized Pricing'].filter(Boolean).slice(0,3);
   // Designer font sizes
   const backBadgeTxt=cfg.postcardBackBadgeText||'YOUR ROOF ESTIMATE IS READY';
@@ -869,10 +869,10 @@ function buildPostcard6x9BackHtml(item){
   const finDown=parseFloat(cfg.financingDown)||0;
   let finMo=0;
   if(finEnabled&&total){const loan=total*(1-finDown/100);const r=finApr/100/12;finMo=r===0?Math.round(loan/finTerm):Math.round(loan*r*Math.pow(1+r,finTerm)/(Math.pow(1+r,finTerm)-1));}
-  const hook=cfg.postcardHook||'Your estimate is ready and waiting. No pressure, no games — just a real price for your roof.';
+  const hook=cfg.postcardHook||'We tapped your house on the map. Your estimate is already built — no sales visit, no pressure, just your price.';
   const why=cfg.postcardWhy||'We use satellite imagery and property data to identify homes in your area that are due for a roof evaluation. Your property came up based on age, condition indicators, and neighborhood activity in our system.';
   const pcQuote=cfg.postcardQuote||'';
-  const guarantee=cfg.postcardGuarantee||'No door-knocking. No pressure. Just your price.';
+  const guarantee=cfg.postcardGuarantee||'Tap a house. We build the bid. You close the deal.';
   const headshotData=(cfg.headshot&&!cfg.headshot.startsWith('data:'))?cfg.headshot:'';
   const repName=cfg.repName||'';
   const repTitle=cfg.repTitle||'Owner';
@@ -969,7 +969,7 @@ function buildLobMailerHtml(item){
   const lic    = cfg.licenseNum    || '';
   const yrs    = cfg.yearsInBusiness || '5+';
   const warr   = cfg.warrantyYears || '10';
-  const hook   = cfg.hookLetter    || 'Most homeowners want a straight answer on price without the back-and-forth. That\'s exactly what BidDrop delivers \u2014 your personalized roof estimate, built and ready before we ever show up.';
+  const hook   = cfg.hookLetter    || 'We tapped your house on a map, built your estimate from satellite data, and mailed it \u2014 so you already have our price before we ever show up. No door knocking, no pressure, just your number.';
   const why    = cfg.whyReceived   || 'We use satellite imagery and property data to identify homes in your area that are due for a roof evaluation. Your property came up based on age, condition indicators, and neighborhood activity in our system.';
 
   // Financing
@@ -1326,10 +1326,10 @@ async function renderDesignBackCanvas(cfg, overrides){
   const repTitle   = ov('repTitle')               || '';
   const backBadgeTxt   = ov('postcardBackBadgeText')  || 'YOUR ROOF ESTIMATE IS READY';
   const backBadgeColor = ov('postcardBackBadgeColor') || color;
-  const hook           = ov('postcardHook')           || 'Your roof estimate is already built. No sales visit required, no pressure, no surprises \u2014 just a real number for your home.';
+  const hook           = ov('postcardHook')           || 'We tapped your house on the map. Your estimate is already built \u2014 no sales visit, no pressure, just your price.';
   const why            = ov('postcardWhy')            || 'We use satellite imagery and property data to identify homes in your area that are due for a roof evaluation. Your property came up based on age, condition indicators, and neighborhood activity in our system.';
   const pcQuote        = ov('postcardQuote')          || '"They replaced our roof in one day, no mess, no drama." \u2014 Mike D., Canton MI';
-  const guarantee      = ov('postcardGuarantee')      || 'No door-knocking. No pressure. Just your price.';
+  const guarantee      = ov('postcardGuarantee')      || 'Tap a house. We build the bid. You close the deal.';
   const scanCta        = ov('postcardScanCta')        || 'SCAN TO BOOK';
   const scanSub        = ov('postcardScanSub')        || 'No-pressure booking';
   const whyLabel       = ov('postcardWhyLabel')       || 'WHY WAS THIS SENT TO YOU?';

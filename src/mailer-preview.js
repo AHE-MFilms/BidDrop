@@ -19,7 +19,7 @@ function updatePreview(){
   const lic    = cfg.licenseNum    || '';
   const yrs    = cfg.yearsInBusiness || '5+';
   const warr   = cfg.warrantyYears || '10';
-  const hook   = cfg.hookLetter    || 'Most homeowners want a straight answer on price without the back-and-forth. That\'s exactly what BidDrop delivers \u2014 your personalized roof estimate, built and ready before we ever show up.';
+  const hook   = cfg.hookLetter    || 'We tapped your house on a map, built your estimate from satellite data, and mailed it \u2014 so you already have our price before we ever show up. No door knocking, no pressure, just your number.';
   const why    = cfg.whyReceived   || 'We use satellite imagery and property data to identify homes in your area that are due for a roof evaluation. Your property came up based on age, condition indicators, and neighborhood activity in our system.';
   // Auto-calculate financing
   const finEnabled = cfg.financingEnabled !== false;

@@ -77,12 +77,12 @@ const DEFAULTS = {
   ghlEmailTpl:'Hi {name},\n\nI hope this message finds you well! I\'m {rep} from {company}. I recently visited your property at {address} and noticed your roof may need attention.\n\nWe\'re offering free storm damage assessments this week. Would you like to schedule a time?\n\nBest,\n{rep}\n{company}',
   // Letter & pitch
   repName:'', repVideoUrl:'', licenseNum:'', yearsInBusiness:'5+', warrantyYears:'10',
-  hookLetter:'Most homeowners want a straight answer on price without the back-and-forth. That\'s exactly what BidDrop delivers — your personalized roof estimate, built and ready before we ever show up.',
+  hookLetter:'We tapped your house on a map, built your estimate from satellite data, and mailed it — so you already have our price before we ever show up. No door knocking, no pressure, just your number.',
   whyReceived:'We use satellite imagery and property data to identify homes in your area that are due for a roof evaluation. Your property came up based on age, condition indicators, and neighborhood activity in our system.',
-  postcardHook:'Your roof estimate is already built. No sales visit required, no pressure, no surprises — just a real number for your home.',
+  postcardHook:'We tapped your house on the map. Your estimate is already built — no sales visit, no pressure, just your price.',
   postcardWhy:'We use satellite imagery and property data to identify homes in your area that are due for a roof evaluation. Your property came up based on age, condition indicators, and neighborhood activity in our system.',
   postcardQuote:'"They replaced our roof in one day, no mess, no drama." — Mike D., Canton MI',
-  postcardGuarantee:'No door-knocking. No pressure. Just your price.',
+  postcardGuarantee:'Tap a house. We build the bid. You close the deal.',
   financingEnabled:true, financingApr:9.99, financingTerm:60, financingDown:0,
   // Comparison table (company values; competitor col is hardcoded)
   diff1:'Licensed, Bonded & Insured', diff2:'Manufacturer Certified', diff3:'Itemized Pricing', diff4:'Workmanship Warranty', diff5:'Financing Available', diff6:'Local Crews',
