@@ -1092,17 +1092,13 @@ function buildLobMailerHtml(item){
         '</div>'+
       '</div>'+
       '<hr style="border:none;border-top:1px solid #ddd;margin:0 0 24px;">'+
-      // Two-col: why received + why us
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-bottom:28px;">'+
-        '<div>'+
-          secHead('Why You Received This')+
-          '<p style="font-size:13px;color:#555;line-height:1.8;margin:0;">'+escHtml(why)+'</p>'+
-        '</div>'+
-        '<div>'+
-          secHead('Why '+co)+
-          '<ul style="list-style:none;margin:0;padding:0;">'+
-          diffs.map(d=>'<li style="font-size:13px;color:#333;padding:6px 0;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:9px;font-family:Helvetica,Arial,sans-serif;"><span style="width:7px;height:7px;background:'+color+';border-radius:50%;flex-shrink:0;display:inline-block;"></span>'+escHtml(d)+'</li>').join('')+
-          '</ul>'+
+      // Company intro paragraph
+      '<p style="font-size:13.5px;color:#555;line-height:1.85;margin-bottom:24px;font-family:Helvetica,Arial,sans-serif;">'+escHtml(cfg.aboutCompany||'We are a local roofing company that believes you deserve a straight answer before you ever have to talk to a salesperson. Honest work, honest pricing, from a crew that stands behind every job.')+'</p>'+
+      // Credential tags — square bordered, no bullets
+      '<div style="margin-bottom:28px;">'+
+        '<div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#888;font-weight:700;margin-bottom:12px;font-family:Helvetica,Arial,sans-serif;">'+escHtml(co)+' at a Glance</div>'+
+        '<div style="display:flex;flex-wrap:wrap;gap:8px;">'+
+        diffs.map(d=>'<div style="border:1.5px solid #111;padding:7px 14px;font-size:11px;font-weight:700;color:#111;font-family:Helvetica,Arial,sans-serif;letter-spacing:.3px;">'+escHtml(d)+'</div>').join('')+
         '</div>'+
       '</div>'+
     '</div>'+
