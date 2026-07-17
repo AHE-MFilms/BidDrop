@@ -73,15 +73,42 @@ const PLAN_CONFIG = {
   enterprise: {
     name: 'Enterprise',
     price: 797,
-    mailer_credits: 10,  // trial start credits (100/mo kicks in after trial)
-    max_reps: null, // unlimited
-    max_pins_per_month: null, // unlimited
+    mailer_credits: 10,
+    max_reps: null,
+    max_pins_per_month: null,
     offer_ghl: true,
     offer_estimate_pages: true,
     offer_analytics: true,
     offer_solar: true,
     offer_multi_rep: true,
     offer_white_label: true,
+  },
+  // ── New two-plan system (2026-07-17) ──
+  monthly: {
+    name: 'Monthly',
+    price: 99,
+    mailer_credits: 40,  // 40 credits included per month
+    max_reps: 10,
+    max_pins_per_month: null, // unlimited
+    offer_ghl: true,
+    offer_estimate_pages: true,
+    offer_analytics: true,
+    offer_solar: true,
+    offer_multi_rep: true,
+    offer_white_label: false,
+  },
+  payg: {
+    name: 'Pay-as-you-go',
+    price: 0,
+    mailer_credits: 0,
+    max_reps: 1,
+    max_pins_per_month: null, // unlimited
+    offer_ghl: false,
+    offer_estimate_pages: false,
+    offer_analytics: false,
+    offer_solar: false,
+    offer_multi_rep: false,
+    offer_white_label: false,
   },
 };
 
