@@ -109,6 +109,7 @@ const PLAN_CONFIG = {
     offer_solar: false,
     offer_multi_rep: false,
     offer_white_label: false,
+    offer_blitz: true, // Follow-Up Sequences available on all plans
   },
 };
 
@@ -501,7 +502,7 @@ export default async function handler(req, res) {
     const slug = generateSlug(companyName || `${firstName}-${lastName}`);
 
     // mailer_rate by plan (cost per mailer to the account)
-    const mailerRateByPlan = { starter: 2.50, pro: 2.50, agency: 2.50, enterprise: 2.50 };
+    const mailerRateByPlan = { starter: 2.50, pro: 2.50, agency: 2.50, enterprise: 2.50, monthly: 2.50, payg: 2.50 };
 
     const stripeCustomerId = fullSession.customer?.id || session.customer || null;
     const stripeSubscriptionId = fullSession.subscription?.id || fullSession.subscription || null;
@@ -526,6 +527,7 @@ export default async function handler(req, res) {
       ...(pricePerSquare ? { cost_architectural: pricePerSquare }  : {}),
       ...(costGutter    ? { cost_gutter: costGutter }              : {}),
       offer_gutters: offerGutters,
+      drip_enabled: true, // Follow-Up Blitz available on all plans
     };
 
     const { data: newAccount, error: accountError } = await supabase

@@ -415,7 +415,7 @@ function refreshDripModal(){
 }
 
 async function startDripSequence(){
-  if(!isPlanAtLeast('pro')){ showPlanUpgradePrompt('Follow-Up Blitz','pro'); return; }
+  // Follow-Up Blitz is available on all plans (monthly and pay-as-you-go)
   const est = (S.estimates||[]).find(e=>e.id===_dripEstId);
   if(!est){ toast('Estimate not found','error'); return; }
   // Get selected sequence from picker
