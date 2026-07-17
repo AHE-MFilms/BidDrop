@@ -137,6 +137,10 @@ function calcP(){
   if(typeof calcInsuranceTotals==='function') calcInsuranceTotals();
   // Update accordion trade summary
   if(typeof _accOnTotalUpdated==='function') _accOnTotalUpdated('$'+_calcDisplayFinal.toLocaleString());
+  // Expose structures to window so mailer-preview.js can read the price
+  window._structures = structures.map(s=>({ id:s.id, price: calcStructPrice(s), sqft: s.sqft, pitch: s.pitch }));
+  // Also expose the final display total for non-roofing trades
+  window._calcDisplayFinal = _calcDisplayFinal;
   return grand;
 }
 

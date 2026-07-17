@@ -41,8 +41,11 @@ function updatePreview(){
   }
 
   // Structures & totals
+  // window._structures is populated by calcP() in estimates-calc.js
   const structures = (window._structures || []).filter(s=>s && s.price > 0);
-  const grandTotal = structures.reduce((a,s)=>a+(s.price||0),0);
+  const grandTotal = (window._calcDisplayFinal && window._calcDisplayFinal > 0)
+    ? window._calcDisplayFinal
+    : structures.reduce((a,s)=>a+(s.price||0),0);
   const finMo = (finEnabled && grandTotal) ? calcMonthly(grandTotal) : 0;
   const finDisc = 'Financing estimate based on '+finApr+'% APR, '+finTerm+'-month term, subject to credit approval.';
 
