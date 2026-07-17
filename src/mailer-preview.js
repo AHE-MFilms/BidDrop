@@ -292,7 +292,8 @@ function updatePreview(){
 
 
 // ── Preview mode toggle (Letter / Postcard) ──────────────────────────────────
-let _previewMode = 'letter';
+// Letter hidden — postcard is the default mode
+let _previewMode = 'postcard';
 
 function setPreviewMode(mode){
   _previewMode = mode;

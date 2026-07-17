@@ -915,9 +915,10 @@
     <div class="est-preview" id="est-preview" style="flex-direction:column;align-items:center;">
       <!-- Preview mode toggle tabs (sticky inside panel) -->
       <div id="preview-mode-bar" style="width:100%;max-width:680px;display:flex;gap:0;margin-bottom:20px;border-radius:8px;overflow:hidden;border:1px solid var(--border);flex-shrink:0;">
-        <button id="preview-tab-letter" onclick="setPreviewMode('letter')" style="flex:1;padding:10px 0;font-family:var(--font-b);font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--accent);color:#fff;letter-spacing:.4px;">&#128228; Letter</button>
-        <button id="preview-tab-proposal" onclick="setPreviewMode('proposal')" style="flex:1;padding:10px 0;font-family:var(--font-b);font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--card2);color:var(--muted);letter-spacing:.4px;display:none;">&#128203; Proposal</button>
-        <button id="preview-tab-postcard" onclick="previewEstimatorPostcardFullscreen()" style="flex:1;padding:10px 0;font-family:var(--font-b);font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--card2);color:var(--muted);letter-spacing:.4px;">&#127968; Postcard</button>
+        <!-- Letter tab hidden — postcard only for now -->
+        <button id="preview-tab-letter" onclick="setPreviewMode('letter')" style="display:none;">&#128228; Letter</button>
+        <button id="preview-tab-proposal" onclick="setPreviewMode('proposal')" style="display:none;">&#128203; Proposal</button>
+        <button id="preview-tab-postcard" onclick="previewEstimatorPostcardFullscreen()" style="flex:1;padding:10px 0;font-family:var(--font-b);font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--accent);color:#fff;letter-spacing:.4px;">&#127968; Postcard Preview</button>
       </div>
       <!-- Letter preview -->
       <div class="mailer" id="mailer-preview"></div>

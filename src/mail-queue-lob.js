@@ -79,7 +79,7 @@ function renderQueue(){
         (i.status==='sent'?'<span style="font-size:10px;color:var(--muted);">'+fmtDate(i.mailedAt)+'</span>':'')+
         (i.status==='failed' && S.cfg.enablePostcard!==false?'<button class="btn-xs" data-id="'+qid+'" onclick="sendLobPostcard6x9(this.dataset.id)" style="background:#0e7490;border-color:#0e7490;color:#fff;">Retry Card</button>':'')+
         (i.status==='pending'?'<button class="btn-xs" data-id="'+qid+'" onclick="editEstimate(this.dataset.id)">&#9999;&#65039; Edit</button>':'')+
-        '<button class="btn-xs" data-id="'+qid+'" onclick="previewQueueItem(this.dataset.id)">Preview Letter</button>'+
+        /* Preview Letter hidden — postcard only for now */
         '<button class="btn-xs" data-id="'+qid+'" onclick="previewPostcard6x9(this.dataset.id)" style="background:#0e749022;border-color:#0e7490;color:#0e7490;" title="Preview postcard front & back">Preview Card</button>'+
         '<button class="btn-xs danger" data-id="'+qid+'" onclick="rmQ(this.dataset.id)" title="Delete">&#128465; Delete</button>'+
         '</td></tr>'
