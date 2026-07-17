@@ -441,7 +441,7 @@ async function renderPostcard6x9BackCanvas(item){
   const finDown=parseFloat(cfg.financingDown)||0;
   let finMo=0;
   if(finEnabled&&total){const loan=total*(1-finDown/100);const r=finApr/100/12;finMo=r===0?Math.round(loan/finTerm):Math.round(loan*r*Math.pow(1+r,finTerm)/(Math.pow(1+r,finTerm)-1));}
-  const hook=cfg.postcardHook||'We prepared a project estimate for your home using satellite imagery and current pricing data. This is a starting point to help you plan — your contractor will verify the details before any work begins.';
+  const hook=cfg.postcardHook||'We built a project estimate for your home using satellite measurements and current pricing. Review it on your own time — no appointment, no pressure.';
   const why=cfg.postcardWhy||'We specialize in fast, accurate roofing estimates built from satellite data — so you have a real number in hand before any conversation starts. No pressure, no surprises. Just honest pricing from a local crew that stands behind its work.';
   const pcQuote=cfg.postcardQuote||'';
   const guarantee=cfg.postcardGuarantee||'Prepared from satellite data. Your contractor will verify details on-site.';
@@ -888,7 +888,7 @@ function buildPostcard6x9BackHtml(item){
   const finDown=parseFloat(cfg.financingDown)||0;
   let finMo=0;
   if(finEnabled&&total){const loan=total*(1-finDown/100);const r=finApr/100/12;finMo=r===0?Math.round(loan/finTerm):Math.round(loan*r*Math.pow(1+r,finTerm)/(Math.pow(1+r,finTerm)-1));}
-  const hook=cfg.postcardHook||'We prepared a project estimate for your home using satellite imagery and current pricing data. This is a starting point to help you plan — your contractor will verify the details before any work begins.';
+  const hook=cfg.postcardHook||'We built a project estimate for your home using satellite measurements and current pricing. Review it on your own time — no appointment, no pressure.';
   const why=cfg.postcardWhy||'We specialize in fast, accurate roofing estimates built from satellite data — so you have a real number in hand before any conversation starts. No pressure, no surprises. Just honest pricing from a local crew that stands behind its work.';
   const pcQuote=cfg.postcardQuote||'';
   const guarantee=cfg.postcardGuarantee||'Prepared from satellite data. Your contractor will verify details on-site.';
@@ -1004,7 +1004,7 @@ function buildLobMailerHtml(item){
     finMo = r===0 ? Math.round(loan/finTerm) : Math.round(loan*r*Math.pow(1+r,finTerm)/(Math.pow(1+r,finTerm)-1));
   }
 
-  const hookTxt  = cfg.hookLetter || 'We prepared a project estimate for your home using satellite imagery and current pricing data. This gives you a realistic starting point before scheduling an inspection — so you can review your options on your own time, with no pressure.';
+  const hookTxt  = cfg.hookLetter || 'We put together a project estimate for your home based on satellite measurements and current material pricing. This gives you a real number to work with before we ever meet — so you can review your options on your own time, ask questions, and decide if it makes sense to move forward. No pressure, no obligation.';
   const aboutCo  = cfg.aboutCompany || 'We are a local roofing company that believes in straight answers. No runaround, no pressure \u2014 just honest work from a crew that stands behind every job.';
   const diff1    = cfg.diff1 || 'Licensed, Bonded & Insured';
   const diff2    = cfg.diff2 || 'Manufacturer Certified';
@@ -1297,8 +1297,8 @@ async function renderDesignBackCanvas(cfg, overrides){
   const repTitle   = ov('repTitle')               || '';
   const backBadgeTxt   = ov('postcardBackBadgeText')  || '';
   const backBadgeColor = ov('postcardBackBadgeColor') || color;
-  const hook           = ov('postcardHook')           || 'We prepared a project estimate for your home using satellite imagery and current pricing data. This is a starting point to help you plan — your contractor will verify the details before any work begins.';
-  const why            = ov('postcardWhy')            || 'We specialize in accurate roofing estimates built from satellite data, so you have a realistic number before any conversation starts. No pressure, no surprises — just transparent pricing from a local crew that stands behind its work.';
+  const hook           = ov('postcardHook')           || 'We built a project estimate for your home using satellite measurements and current pricing. Review it on your own time — no appointment, no pressure.';
+  const why            = ov('postcardWhy')            || 'We prepare estimates before we reach out so you have real numbers to work with from the start. No guessing, no runaround — just a straightforward starting point from a local crew.';
   const pcQuote        = ov('postcardQuote')          || '';
   const guarantee      = ov('postcardGuarantee')      || 'Prepared from satellite data. Your contractor will verify details on-site.';
   const scanCta        = ov('postcardScanCta')        || 'SCAN TO BOOK';
