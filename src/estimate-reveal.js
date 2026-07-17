@@ -98,7 +98,7 @@ function _renderErPreview(est) {
           ${escHtml(owner)},<br>Your Estimate Is Ready.
         </div>
         <div style="font-size:9px;color:rgba(255,255,255,.55);margin-bottom:10px;line-height:1.4;">
-          Your price. Built by satellite. No visit required.
+          Prepared from satellite data. Your contractor will verify details on-site.
         </div>
         <!-- Price reveal box -->
         <div style="display:inline-block;background:${accent};border-radius:5px;padding:6px 14px;">

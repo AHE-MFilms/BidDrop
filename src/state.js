@@ -77,12 +77,12 @@ const DEFAULTS = {
   ghlEmailTpl:'Hi {name},\n\nI hope this message finds you well! I\'m {rep} from {company}. I recently visited your property at {address} and noticed your roof may need attention.\n\nWe\'re offering free storm damage assessments this week. Would you like to schedule a time?\n\nBest,\n{rep}\n{company}',
   // Letter & pitch
   repName:'', repVideoUrl:'', licenseNum:'', yearsInBusiness:'5+', warrantyYears:'10',
-  hookLetter:'We took a look at the roof at your address using satellite imagery and current property data, and put together a real estimate for you — no guessing, no “call for a quote.” Your number is printed right here so you can see it before you talk to anyone. No runaround — your price is right here.',
-  whyReceived:'Public property records show your roof is likely past the 20-year mark. Recent hail or high-wind activity was logged in your ZIP code. Neighbors on your street have pulled roofing permits recently. Satellite imagery flagged wear consistent with aging shingles. No obligation — this is just your number, ready when you are.',
-  postcardHook:'We tapped your roof on the map. Satellite data measured it. Your price was built before this arrived — no appointment needed, no one coming to your door.',
-  postcardWhy:'Public property records show your roof is likely past the 20-year mark. Recent hail or high-wind activity was logged in your ZIP code. Neighbors on your street have pulled roofing permits recently. Satellite imagery flagged wear consistent with aging shingles. No obligation — this is just your number, ready when you are.',
+  hookLetter:'We prepared a project estimate for your home using satellite imagery and current pricing data. This gives you a realistic starting point before scheduling an inspection — so you can review your options on your own time, with no pressure.',
+  whyReceived:'We use satellite imagery and current pricing data to prepare project estimates for homeowners in your area. This estimate is a starting point to help you understand your options before scheduling an inspection. No obligation — review it on your own time.',
+  postcardHook:'We prepared a project estimate for your home using satellite imagery and current pricing data. This is a starting point to help you plan — your contractor will verify the details before any work begins.',
+  postcardWhy:'We specialize in accurate roofing estimates built from satellite data, so you have a realistic number before any conversation starts. No pressure, no surprises — just transparent pricing from a local crew that stands behind its work.',
   postcardQuote:'',
-  postcardGuarantee:'Your price. Built by satellite. No visit required.',
+  postcardGuarantee:'Prepared from satellite data. Your contractor will verify details on-site.',
   financingEnabled:true, financingApr:9.99, financingTerm:60, financingDown:0,
   // Comparison table (company values; competitor col is hardcoded)
   diff1:'Licensed, Bonded & Insured', diff2:'Manufacturer Certified', diff3:'Itemized Pricing', diff4:'Workmanship Warranty', diff5:'Financing Available', diff6:'Local Crews',

@@ -52,7 +52,7 @@ function updatePreview(){
   const finDisc = 'Financing estimate based on '+finApr+'% APR, '+finTerm+'-month term, subject to credit approval.';
 
   // Copy fields
-  const hookTxt  = cfg.hookLetter   || 'We looked up your address, measured your roof using satellite data, and put together a real price — before we ever reached out. No appointment needed. No one coming to your door. Your number is right here.';
+  const hookTxt  = cfg.hookLetter   || 'We prepared a project estimate for your home using satellite imagery and current pricing data. This gives you a realistic starting point before scheduling an inspection — so you can review your options on your own time, with no pressure.';
   const aboutCo  = cfg.aboutCompany || 'We are a local roofing company that believes in straight answers. No runaround, no pressure — just honest work from a crew that stands behind every job.';
   const diff1    = cfg.diff1 || 'Licensed, Bonded & Insured';
   const diff2    = cfg.diff2 || 'Manufacturer Certified';
