@@ -5,8 +5,9 @@ function updateCreditBadge(){
   const badge = document.getElementById('credit-badge-label');
   if(!badge) return;
   // Use mailerCredits (new model: 1 credit = $4 = 1 postcard)
-  const plan = (S.cfg.plan||'starter').toLowerCase();
-  const planFreeMap = {starter:0,pro:0,agency:0,enterprise:0};
+  const plan = (S.cfg.plan||'payg').toLowerCase();
+  // New plan system: monthly/payg. Legacy names kept for backwards compat.
+  const planFreeMap = {payg:0,starter:0,monthly:0,pro:0,agency:0,enterprise:0};
   const freeLimit = planFreeMap[plan] || 0;
   const freeLeft = Math.max(0, freeLimit - (S.cfg.freeMailerCreditsUsed||0));
   const paid     = S.cfg.mailerCredits || 0;

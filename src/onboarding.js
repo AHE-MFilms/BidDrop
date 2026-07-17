@@ -61,8 +61,8 @@ function markMailerStepComplete() {
 // Check if all applicable steps are done (respecting plan gates)
 function isOnboardingComplete() {
   const steps = autoDetectCompletedSteps();
-  const plan = (S.cfg.plan||'starter').toLowerCase();
-  const isPro = ['pro','agency','enterprise'].includes(plan);
+  const plan = (S.cfg.plan||'payg').toLowerCase();
+  const isPro = ['monthly','pro','agency','enterprise'].includes(plan);
   return ONBOARDING_STEPS
     .filter(s => !s.planGate || (s.planGate === 'pro' && isPro))
     .every(s => steps[s.id]);
@@ -103,8 +103,8 @@ function renderOnboardingChecklist() {
   if (isOnboardingComplete()) return;
 
   const steps = autoDetectCompletedSteps();
-  const plan = (S.cfg.plan||'starter').toLowerCase();
-  const isPro = ['pro','agency','enterprise'].includes(plan);
+  const plan = (S.cfg.plan||'payg').toLowerCase();
+  const isPro = ['monthly','pro','agency','enterprise'].includes(plan);
 
   const applicableSteps = ONBOARDING_STEPS.filter(s => !s.planGate || (s.planGate === 'pro' && isPro));
   const completedCount  = applicableSteps.filter(s => steps[s.id]).length;

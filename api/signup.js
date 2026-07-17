@@ -47,6 +47,14 @@ export default async function handler(req, res) {
     plan,
     planName,
     planPrice,
+    // Brand & Pricing (Step 3 — all optional)
+    brandColor,
+    licenseNum,
+    tradeType,
+    pricePerSquare,
+    costGutter,
+    offerGutters,
+    // Logo is base64 — too large for Stripe metadata, handled post-account-creation
   } = req.body;
 
   // Basic validation
@@ -108,6 +116,12 @@ export default async function handler(req, res) {
           plan_name: planName,
           plan_price: String(planPrice),
           signup_source: 'signup_page',
+          brand_color: brandColor || '',
+          license_num: licenseNum || '',
+          trade_type: tradeType || 'roofing',
+          price_per_square: pricePerSquare ? String(pricePerSquare) : '',
+          cost_gutter: costGutter ? String(costGutter) : '',
+          offer_gutters: offerGutters ? '1' : '0',
         },
       });
     } else {
@@ -127,6 +141,12 @@ export default async function handler(req, res) {
           plan_name: planName,
           plan_price: String(planPrice),
           signup_source: 'signup_page',
+          brand_color: brandColor || '',
+          license_num: licenseNum || '',
+          trade_type: tradeType || 'roofing',
+          price_per_square: pricePerSquare ? String(pricePerSquare) : '',
+          cost_gutter: costGutter ? String(costGutter) : '',
+          offer_gutters: offerGutters ? '1' : '0',
         },
       });
     }
@@ -161,6 +181,12 @@ export default async function handler(req, res) {
           plan_price: String(planPrice),
           mailer_credits: String(PLAN_MAILER_CREDITS[plan] || 10),
           max_reps: String(PLAN_MAX_REPS[plan] || 1),
+          brand_color: brandColor || '',
+          license_num: licenseNum || '',
+          trade_type: tradeType || 'roofing',
+          price_per_square: pricePerSquare ? String(pricePerSquare) : '',
+          cost_gutter: costGutter ? String(costGutter) : '',
+          offer_gutters: offerGutters ? '1' : '0',
         },
       },
       success_url: `${(process.env.APP_URL || 'https://biddrop.us').trim()}/signup?success=1`,

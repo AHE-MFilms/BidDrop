@@ -14,8 +14,14 @@ const CREDIT_COST_POSTCARD = 1;
 /** Cost per homeowner name lookup in credits */
 const CREDIT_COST_LOOKUP = 0.25;
 
-/** Plan → free monthly credits map */
+/** Plan → free monthly credits map
+ * New system: monthly ($99/mo, 40 credits via mailerCredits top-up) vs payg ($0/mo, 0 free)
+ * Legacy plan names kept for backwards compatibility.
+ */
 const PLAN_FREE_CREDITS = {
+  payg:       0,
+  monthly:    0,
+  // legacy
   starter:    0,
   pro:        0,
   agency:     0,
@@ -28,7 +34,7 @@ const PLAN_FREE_CREDITS = {
  * @returns {{ freeLeft: number, paid: number, total: number }}
  */
 function calcAvailableCredits(cfg) {
-  const plan = (cfg.plan || 'starter').toLowerCase();
+  const plan = (cfg.plan || 'payg').toLowerCase();
   const freeLimit = PLAN_FREE_CREDITS[plan] ?? 0;
   const freeLeft = Math.max(0, freeLimit - (cfg.freeMailerCreditsUsed || 0));
   const paid = cfg.mailerCredits || 0;
@@ -57,7 +63,7 @@ function hasEnoughCredits(cfg, count) {
  */
 function deductCredits(cfg, count) {
   const n = count ?? 1;
-  const plan = (cfg.plan || 'starter').toLowerCase();
+  const plan = (cfg.plan || 'payg').toLowerCase();
   const freeLimit = PLAN_FREE_CREDITS[plan] ?? 0;
   let freeUsed = cfg.freeMailerCreditsUsed || 0;
   let paid = cfg.mailerCredits || 0;

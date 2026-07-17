@@ -343,8 +343,8 @@ function _nearbyFiltersChanged(){
     if(costCount) costCount.textContent = filtered.length;
     if(costCredits) costCredits.textContent = filtered.length+' credit'+(filtered.length>1?'s':'');
     const balance = (S.cfg.mailerCredits||0) + Math.max(0,({
-      starter:0,pro:0,agency:0,enterprise:0
-    }[(S.cfg.plan||'starter').toLowerCase()]||0) - (S.cfg.freeMailerCreditsUsed||0));
+      payg:0,starter:0,monthly:0,pro:0,agency:0,enterprise:0
+    }[(S.cfg.plan||'payg').toLowerCase()]||0) - (S.cfg.freeMailerCreditsUsed||0));
     if(costBalance){
       costBalance.textContent = balance+' credits';
       costBalance.style.color = balance >= filtered.length ? '#4ade80' : '#ef4444';

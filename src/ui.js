@@ -90,22 +90,33 @@ function isRep(){
 }
 
 // ── Plan tier helpers ────────────────────────────────────────────────────────
-const PLAN_TIERS = { starter: 0, pro: 1, agency: 2 };
+// New two-plan system: monthly (full access) vs payg (free tier, 1 user, no GHL)
+// Legacy plan names mapped for backwards compatibility
+const PLAN_TIERS = {
+  payg: 0,
+  // legacy free/starter
+  starter: 0,
+  // legacy paid tiers — all treated as full access (monthly)
+  pro: 1, agency: 1, enterprise: 1,
+  // new plan names
+  monthly: 1
+};
 function currentPlanTier(){
-  const plan = (S.cfg && S.cfg.plan) ? S.cfg.plan.toLowerCase() : 'starter';
+  const plan = (S.cfg && S.cfg.plan) ? S.cfg.plan.toLowerCase() : 'payg';
   return PLAN_TIERS[plan] ?? 0;
 }
 function isPlanAtLeast(minPlan){
   // super_admin bypasses all plan gates
   if(isSuperAdmin()) return true;
+  // 'pro' gate = tier 1 = monthly plan (or legacy pro/agency/enterprise)
   return currentPlanTier() >= (PLAN_TIERS[minPlan.toLowerCase()] ?? 0);
 }
 // Show an upgrade prompt when a feature is gated
 function showPlanUpgradePrompt(featureName, requiredPlan){
-  const planNames = { starter: 'Starter ($97/mo)', pro: 'Pro ($197/mo)', agency: 'Agency ($397/mo)' };
-  const currentPlan = (S.cfg && S.cfg.plan) ? S.cfg.plan : 'starter';
+  const planNames = { payg: 'Pay-as-you-go (Free)', monthly: 'Monthly ($99/mo)', starter: 'Pay-as-you-go (Free)', pro: 'Monthly ($99/mo)', agency: 'Monthly ($99/mo)' };
+  const currentPlan = (S.cfg && S.cfg.plan) ? S.cfg.plan : 'payg';
   toast(
-    `🔒 ${featureName} requires the ${planNames[requiredPlan] || requiredPlan} plan or higher. You are on ${planNames[currentPlan] || currentPlan}. Contact support to upgrade.`,
+    `🔒 ${featureName} requires the Monthly Plan ($99/mo). You are on ${planNames[currentPlan] || currentPlan}. Contact support@biddrop.io to upgrade.`,
     'error',
     6000
   );

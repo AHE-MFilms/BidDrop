@@ -456,6 +456,11 @@
     <div class="step-line"></div>
     <div class="step" id="stepInd3">
       <div class="step-num">3</div>
+      <div class="step-label">Brand &amp; Pricing</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step" id="stepInd4">
+      <div class="step-num">4</div>
       <div class="step-label">Review &amp; Pay</div>
     </div>
   </div>
@@ -677,9 +682,95 @@
       </div>
     </div><!-- end panel2 -->
 
-    <!-- STEP 3: REVIEW & PAY -->
+    <!-- STEP 3: BRAND & PRICING -->
     <div class="step-panel" id="panel3">
       <button class="btn-back" onclick="goToStep(2)">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back
+      </button>
+      <div class="form-section">
+        <h2>Set Up Your Brand &amp; Pricing</h2>
+        <p class="subtitle">Takes 60 seconds — your postcards and estimates will be ready on day one. All fields optional.</p>
+
+        <!-- LOGO UPLOAD -->
+        <div class="form-row single">
+          <div class="form-group">
+            <label>Company Logo <span style="color:#888;font-weight:400;">(optional)</span></label>
+            <div id="logoDropZone" onclick="document.getElementById('logoFileInput').click()" style="border:2px dashed rgba(255,255,255,0.15);border-radius:10px;padding:28px;text-align:center;cursor:pointer;transition:border-color 0.2s;background:rgba(255,255,255,0.03);">
+              <div id="logoPreviewWrap" style="display:none;">
+                <img id="logoPreviewImg" style="max-height:80px;max-width:200px;object-fit:contain;border-radius:6px;" />
+                <div style="margin-top:8px;font-size:12px;color:#888;">Click to change</div>
+              </div>
+              <div id="logoPlaceholder">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" style="margin:0 auto 8px;display:block;"><rect x="2" y="6" width="28" height="20" rx="3" stroke="#555" stroke-width="1.5"/><circle cx="11" cy="13" r="3" stroke="#555" stroke-width="1.5"/><path d="M2 22l7-6 5 5 4-4 7 7" stroke="#555" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <div style="font-size:14px;color:#888;">Click to upload your logo</div>
+                <div style="font-size:12px;color:#555;margin-top:4px;">PNG, JPG, SVG — max 2MB</div>
+              </div>
+            </div>
+            <input type="file" id="logoFileInput" accept="image/*" style="display:none;" onchange="handleLogoFile(this)" />
+          </div>
+        </div>
+
+        <!-- BRAND COLOR -->
+        <div class="form-row">
+          <div class="form-group">
+            <label>Brand Color <span style="color:#888;font-weight:400;">(optional)</span></label>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <input type="color" id="brandColor" value="#F97316" style="width:48px;height:40px;border:none;border-radius:8px;cursor:pointer;background:none;padding:2px;" onchange="document.getElementById('brandColorHex').textContent=this.value" />
+              <span id="brandColorHex" style="font-size:14px;color:#888;font-family:monospace;">#F97316</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>License Number <span style="color:#888;font-weight:400;">(optional)</span></label>
+            <input type="text" id="licenseNum" placeholder="e.g. ROC-123456" />
+          </div>
+        </div>
+
+        <!-- TRADE TYPE -->
+        <div class="form-row single">
+          <div class="form-group">
+            <label>Primary Trade <span style="color:#888;font-weight:400;">(optional)</span></label>
+            <select id="tradeType" onchange="toggleGutterPricing()">
+              <option value="roofing">Roofing</option>
+              <option value="roofing_gutters">Roofing &amp; Gutters</option>
+              <option value="solar">Solar</option>
+              <option value="siding">Siding</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- PRICING -->
+        <div style="margin-top:8px;padding:16px;background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.2);border-radius:10px;">
+          <div style="font-size:13px;font-weight:700;color:#F97316;margin-bottom:12px;">💰 Default Pricing</div>
+          <div style="font-size:12px;color:#888;margin-bottom:16px;">Set your default rates so estimates are ready to go. You can change these anytime in Settings.</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Price Per Square (Roofing) <span style="color:#888;font-weight:400;">(optional)</span></label>
+              <div style="position:relative;">
+                <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#888;font-size:15px;">$</span>
+                <input type="number" id="pricePerSquare" placeholder="450" min="100" max="5000" style="padding-left:26px;" />
+              </div>
+              <div style="font-size:11px;color:#555;margin-top:4px;">1 square = 100 sq ft of roof area</div>
+            </div>
+            <div class="form-group" id="gutterPriceGroup" style="display:none;">
+              <label>Gutter Price Per Linear Foot <span style="color:#888;font-weight:400;">(optional)</span></label>
+              <div style="position:relative;">
+                <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#888;font-size:15px;">$</span>
+                <input type="number" id="costGutter" placeholder="9" min="1" max="100" style="padding-left:26px;" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-primary" style="margin-top:24px;" onclick="submitBrandStep()">Continue to Review →</button>
+        <button style="background:none;border:none;color:#888;font-size:14px;cursor:pointer;margin-top:12px;width:100%;text-align:center;" onclick="skipBrandStep()">Skip this step →</button>
+      </div>
+    </div><!-- end panel3 -->
+
+    <!-- STEP 4: REVIEW & PAY -->
+    <div class="step-panel" id="panel4">
+      <button class="btn-back" onclick="goToStep(3)">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Back
       </button>
@@ -754,7 +845,9 @@
 
     let selectedPlan = null; // { plan, price, name }
     let formData = {};
+    let brandData = {}; // logo, color, license, trade, pricing
     let currentStep = 1;
+    const TOTAL_STEPS = 4;
 
     // ---- PLAN SELECTION ----
     function selectPlan(card) {
@@ -778,11 +871,15 @@
         document.getElementById('panel2').classList.add('active');
       }
       else if (step === 3) {
-        updateReview();
         document.getElementById('panel3').classList.add('active');
       }
-      for (let i = 1; i <= 3; i++) {
+      else if (step === 4) {
+        updateReview();
+        document.getElementById('panel4').classList.add('active');
+      }
+      for (let i = 1; i <= TOTAL_STEPS; i++) {
         const ind = document.getElementById('stepInd' + i);
+        if (!ind) continue;
         ind.classList.remove('active', 'done');
         if (i < step) ind.classList.add('done');
         else if (i === step) ind.classList.add('active');
@@ -872,6 +969,43 @@
       goToStep(3);
     }
 
+    // ---- BRAND STEP ----
+    function handleLogoFile(input) {
+      const file = input.files[0];
+      if (!file) return;
+      if (file.size > 2 * 1024 * 1024) { showToast('Logo file must be under 2MB'); return; }
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        brandData.logoData = e.target.result; // base64 data URL
+        document.getElementById('logoPreviewImg').src = e.target.result;
+        document.getElementById('logoPreviewWrap').style.display = 'block';
+        document.getElementById('logoPlaceholder').style.display = 'none';
+        document.getElementById('logoDropZone').style.borderColor = '#22c55e';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function toggleGutterPricing() {
+      const trade = document.getElementById('tradeType').value;
+      const group = document.getElementById('gutterPriceGroup');
+      group.style.display = (trade === 'roofing_gutters') ? 'block' : 'none';
+    }
+
+    function submitBrandStep() {
+      brandData.brandColor   = document.getElementById('brandColor').value || '#F97316';
+      brandData.licenseNum   = document.getElementById('licenseNum').value.trim();
+      brandData.tradeType    = document.getElementById('tradeType').value;
+      brandData.pricePerSquare = parseInt(document.getElementById('pricePerSquare').value) || null;
+      brandData.costGutter   = parseInt(document.getElementById('costGutter').value) || null;
+      brandData.offerGutters = brandData.tradeType === 'roofing_gutters';
+      goToStep(4);
+    }
+
+    function skipBrandStep() {
+      brandData = {}; // clear any partial data
+      goToStep(4);
+    }
+
     // ---- CHECKOUT ----
     async function startCheckout() {
       const btn = document.getElementById('checkoutBtn');
@@ -879,10 +1013,21 @@
       btn.innerHTML = '<span class="spinner"></span>Setting up your account...';
 
       try {
+        // Merge brand/pricing data into payload (logo excluded — too large for Stripe metadata)
+        const payload = Object.assign({}, formData, {
+          brandColor:    brandData.brandColor   || null,
+          licenseNum:    brandData.licenseNum   || null,
+          tradeType:     brandData.tradeType    || null,
+          pricePerSquare: brandData.pricePerSquare || null,
+          costGutter:    brandData.costGutter   || null,
+          offerGutters:  brandData.offerGutters || false,
+          // Logo is base64 — too large for Stripe metadata, stored separately after account creation
+          logoData:      brandData.logoData     || null,
+        });
         const res = await fetch('/api/signup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData)
+          body: JSON.stringify(payload)
         });
 
         const data = await res.json();

@@ -369,6 +369,13 @@ export default async function handler(req, res) {
   const zip          = meta.zip || '';
   const plan        = meta.plan;
   const planName    = meta.plan_name;
+  // Brand & Pricing (Step 3 — all optional)
+  const brandColor    = meta.brand_color    || null;
+  const licenseNum    = meta.license_num    || null;
+  const tradeType     = meta.trade_type     || 'roofing';
+  const pricePerSquare = meta.price_per_square ? parseInt(meta.price_per_square) : null;
+  const costGutter    = meta.cost_gutter    ? parseInt(meta.cost_gutter) : null;
+  const offerGutters  = meta.offer_gutters  === '1';
 
   // Fallback to customer email if metadata email missing
   const customerEmail = email || fullSession.customer_details?.email || fullSession.customer?.email;
@@ -486,6 +493,12 @@ export default async function handler(req, res) {
       stripe_subscription_id: stripeSubscriptionId,
       trial_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       notes: `Signed up via BidDrop signup page. Plan: ${planConfig.name}. Stripe customer: ${stripeCustomerId}. Trial ends: ${new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}.`,
+      // Brand & Pricing from Step 3 (all optional — null if skipped)
+      ...(brandColor    ? { brand_color: brandColor }              : {}),
+      ...(licenseNum    ? { license_num: licenseNum }              : {}),
+      ...(pricePerSquare ? { cost_architectural: pricePerSquare }  : {}),
+      ...(costGutter    ? { cost_gutter: costGutter }              : {}),
+      offer_gutters: offerGutters,
     };
 
     const { data: newAccount, error: accountError } = await supabase
