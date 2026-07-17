@@ -267,7 +267,7 @@ function renderEstimatesTab(){
     const mailedBadge = _mailedItem
       ? '<div style="margin-top:4px;"><span style="background:rgba(14,116,144,.15);color:#22d3ee;border:1px solid rgba(14,116,144,.6);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;">📬 MAILED</span>'+(_mailedItem.mailedAt?'<div style="font-size:10px;color:var(--muted);margin-top:2px;">'+new Date(_mailedItem.mailedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+'</div>':'')+'</div>'
       : '';
-    const eid = escHtml(est.id);
+    const eid = escHtml(String(est.id||''));
     // Unlock check: find the linked pin and see if it has been unlocked
     const _estPinForUnlock = est.pinId ? (S.pins||[]).find(p=>p.id===est.pinId) : (S.pins||[]).find(p=>p.address===est.addr);
     const _pinUnlocked = _estPinForUnlock ? (isSuperAdmin() || !!_estPinForUnlock.unlockedAt) : false;
@@ -364,7 +364,7 @@ function renderEstimatesTab(){
     const date = pin.deleted_at ? new Date(pin.deleted_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
     const addr = pin.address || '—';
     const shortAddr = addr.split(',')[0];
-    const pid = escHtml(pin.id);
+    const pid = escHtml(String(pin.id||''));
     const pinActionBtns = '<button data-pid="' + pid + '" onclick="restorePin(this.dataset.pid)" style="background:#1a7f4b;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#8629; Restore Pin</button>'
       + (isAdminOrAbove() ? '<button data-pid="' + pid + '" onclick="hardDeletePin(this.dataset.pid)" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">&#10005; Purge</button>' : '');
     return '<tr style="border-bottom:1px solid var(--border);opacity:.75;">'
@@ -382,7 +382,7 @@ function renderEstimatesTab(){
     const addr = pin.address || '—';
     const shortAddr = addr.split(',')[0];
     const cityState = addr.split(',').slice(1).join(',').trim();
-    const pid = escHtml(pin.id);
+    const pid = escHtml(String(pin.id||''));
     const ownerName = (pin.estimate && pin.estimate.owner) || (pin.contactData && pin.contactData.ownerName) || '';
     const statusColors = {pinned:'#64748B',contacted:'#3B82F6',quoted:'#0EA5E9',interested:'#22C55E',signed:'#A855F7',sold:'#F59E0B',lost:'#EF4444'};
     const statusColor = statusColors[pin.status] || '#64748B';
