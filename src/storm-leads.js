@@ -290,6 +290,13 @@ window.stormLeadsAddToCampaign = async function() {
   toast(`📋 ${lockedCount} homes saved to "${_slCampaignName || 'Storm Campaign'}" — tap any pin to unlock when ready`, 'success');
   // Update popup text to reflect campaign mode
   _renderStormLeadMarkers();
+  // Auto-navigate to Campaigns tab so user can see the new campaign
+  setTimeout(() => {
+    if (typeof goTab === 'function') {
+      goTab('campaigns');
+      if (typeof loadCampaignsTab === 'function') loadCampaignsTab();
+    }
+  }, 1200);
 };
 
 window.stormLeadsUnlockAll = async function() {
