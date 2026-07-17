@@ -44,9 +44,9 @@ async function pcPreviewRefresh(){
     postcardDesign:(document.querySelector('input[name="pc-design"]:checked')||{value:'1'}).value,
     postcardHeadline1:v('s-pc-headline1')||'It might be time for a new roof.',
     postcardHeadline2:v('s-pc-headline2')||'But don\'t worry, we can help!',
-    postcardBadgeText:v('s-pc-badge-text')||'YOUR PRICE IS ALREADY BUILT',
+    postcardBadgeText:v('s-pc-badge-text')||'',
     postcardBadgeColor:v('s-pc-badge-color')||S.cfg?.brandColor||'#F25C05',
-    postcardBackBadgeText:v('s-pc-back-badge-text')||'YOUR PRICE IS ALREADY BUILT',
+    postcardBackBadgeText:v('s-pc-back-badge-text')||'',
     postcardBackBadgeColor:v('s-pc-back-badge-color')||S.cfg?.brandColor||'#F25C05',
     postcardHook:v('s-pc-hook'),
     postcardWhy:v('s-pc-why'),
@@ -132,7 +132,7 @@ async function renderPostcard6x9FrontCanvas(item){
   // New designer config fields
   const hl1Txt=cfg.postcardHeadline1||'It might be time for a new roof.';
   const hl2Txt=cfg.postcardHeadline2||'But don\'t worry, we can help!';
-  const badgeTxtCfg=cfg.postcardBadgeText||'YOUR PRICE IS ALREADY BUILT';
+  const badgeTxtCfg=cfg.postcardBadgeText||'';
   const badgeColorCfg=cfg.postcardBadgeColor||color;
   const hl1Size=cfg.postcardHl1Size||160;
   const hl2Size=cfg.postcardHl2Size||160;
@@ -192,15 +192,17 @@ async function renderPostcard6x9FrontCanvas(item){
     ctx.fillStyle='#fff';ctx.font='bold 70px Arial';
     ctx.fillText(co,PAD,topY+70);
   }
-  // Badge pill
-  ctx.font='bold 42px Arial';
-  const btw=ctx.measureText(badgeTxtCfg).width;
-  const bx=W-PAD-btw-56,by=topY,bw=btw+56,bh=72,br=36;
-  ctx.fillStyle=badgeColorCfg;
-  roundRect(ctx,bx,by,bw,bh,br);ctx.fill();
-  ctx.fillStyle='#fff';ctx.textBaseline='middle';
-  ctx.fillText(badgeTxtCfg,bx+28,by+bh/2);
-  ctx.textBaseline='alphabetic';
+  // Badge pill (only render if text is set)
+  if(badgeTxtCfg){
+    ctx.font='bold 42px Arial';
+    const btw=ctx.measureText(badgeTxtCfg).width;
+    const bx=W-PAD-btw-56,by=topY,bw=btw+56,bh=72,br=36;
+    ctx.fillStyle=badgeColorCfg;
+    roundRect(ctx,bx,by,bw,bh,br);ctx.fill();
+    ctx.fillStyle='#fff';ctx.textBaseline='middle';
+    ctx.fillText(badgeTxtCfg,bx+28,by+bh/2);
+    ctx.textBaseline='alphabetic';
+  }
   // HEADLINE (bottom-left area) — truncate with ellipsis if too wide
   function fitText(ctx,text,maxW){
     if(!text) return '';
@@ -441,11 +443,11 @@ async function renderPostcard6x9BackCanvas(item){
   if(finEnabled&&total){const loan=total*(1-finDown/100);const r=finApr/100/12;finMo=r===0?Math.round(loan/finTerm):Math.round(loan*r*Math.pow(1+r,finTerm)/(Math.pow(1+r,finTerm)-1));}
   const hook=cfg.postcardHook||'We tapped your roof on the map. Satellite data measured it. Your price was built before this arrived \u2014 no appointment needed, no one coming to your door.';
   const why=cfg.postcardWhy||'We specialize in fast, accurate roofing estimates built from satellite data — so you have a real number in hand before any conversation starts. No pressure, no surprises. Just honest pricing from a local crew that stands behind its work.';
-  const pcQuote=cfg.postcardQuote||'"They replaced our roof in one day, no mess, no drama." \u2014 Mike D., Canton MI';
+  const pcQuote=cfg.postcardQuote||'';
   const guarantee=cfg.postcardGuarantee||'Your price. Built by satellite. No visit required.';
   const badges=[cfg.diff1||'Licensed, Bonded & Insured',cfg.diff2||'Manufacturer Certified',cfg.diff3||'Itemized Pricing'].filter(Boolean).slice(0,3);
   // Designer font sizes
-  const backBadgeTxt=cfg.postcardBackBadgeText||'YOUR PRICE IS ALREADY BUILT';
+  const backBadgeTxt=cfg.postcardBackBadgeText||'';
   const backBadgeColor=cfg.postcardBackBadgeColor||color;
   const hookSize=cfg.postcardHookSize||36;
   const whySize=cfg.postcardWhySize||30;
@@ -559,14 +561,15 @@ async function renderPostcard6x9BackCanvas(item){
     ctx.fillText(co,HR_X,hy+52);hy+=76;
   }
 
-  // Badge pill
-  ctx.font='bold 36px Arial';
-  const pillLabel=backBadgeTxt;
-  const pillW=ctx.measureText(pillLabel).width+48;
-  ctx.fillStyle=backBadgeColor;
-  roundRect(ctx,HR_X,hy,pillW,60,10);ctx.fill();
-  ctx.fillStyle='#fff';ctx.fillText(pillLabel,HR_X+24,hy+42);
-  hy+=80;
+  // Badge pill (only render if text is set)
+  if(backBadgeTxt){
+    ctx.font='bold 36px Arial';
+    const pillW=ctx.measureText(backBadgeTxt).width+48;
+    ctx.fillStyle=backBadgeColor;
+    roundRect(ctx,HR_X,hy,pillW,60,10);ctx.fill();
+    ctx.fillStyle='#fff';ctx.fillText(backBadgeTxt,HR_X+24,hy+42);
+    hy+=80;
+  }
   // Hook quote
   const hookLineH=Math.round(hookSize*1.38);
   ctx.font='italic '+hookSize+'px Georgia, serif';ctx.fillStyle='rgba(255,255,255,0.88)';
@@ -600,10 +603,10 @@ async function renderPostcard6x9BackCanvas(item){
   hy+=PB_H+24;
   } // end showPriceBack
 
-  // Stars + review
-  ctx.font='46px Arial';ctx.fillStyle='#f59e0b';
-  ctx.fillText('\u2605\u2605\u2605\u2605\u2605',HR_X,hy+46);hy+=64;
+  // Stars + review (only render if a real customer quote is provided)
   if(pcQuote){
+    ctx.font='46px Arial';ctx.fillStyle='#f59e0b';
+    ctx.fillText('\u2605\u2605\u2605\u2605\u2605',HR_X,hy+46);hy+=64;
     const qLineH=Math.round(quoteSize*1.36);
     ctx.font='italic '+quoteSize+'px Georgia, serif';ctx.fillStyle='rgba(255,255,255,0.80)';
     const qLines=wrapText(ctx,pcQuote,HR_W);
@@ -699,6 +702,22 @@ async function renderPostcard6x9BackCanvas(item){
       ctx.globalAlpha=1.0;
     }
   }
+  // ── FINE PRINT: satellite disclaimer + Reg Z disclosure ────────────────────
+  // Placed in bottom-left white section above safe margin
+  const FINE_MAX_W=W-LOB_ADDR_W-SAFE*2;
+  ctx.font='18px Arial';ctx.fillStyle='#9ca3af';
+  const satDisclaimer='Estimate based on satellite imagery. Subject to on-site verification.';
+  if(finMo>0){
+    const loan=Math.round(total*(1-(parseFloat(cfg.financingDown)||0)/100));
+    const regZ='*Monthly payment based on $'+loan.toLocaleString()+' financed at '+(parseFloat(cfg.financingApr)||9.99)+'% APR for '+(parseInt(cfg.financingTerm)||60)+' months with $0 down. Subject to credit approval.';
+    const regZLines=wrapText(ctx,regZ,FINE_MAX_W);
+    const regZStartY=H-SAFE-22-(regZLines.length>1?22:0)-26;
+    regZLines.slice(0,2).forEach((l,i)=>{ctx.fillText(l,SAFE,regZStartY+i*22);});
+    ctx.fillText(satDisclaimer,SAFE,H-SAFE-22);
+  } else {
+    ctx.fillText(satDisclaimer,SAFE,H-SAFE-22);
+  }
+
   // ── LOB ADDRESS ZONE: pure white ──────────────────────────────
   ctx.fillStyle='#ffffff';
   ctx.fillRect(W-LOB_ADDR_W, H-LOB_ADDR_H, LOB_ADDR_W, LOB_ADDR_H);
@@ -1276,11 +1295,11 @@ async function renderDesignBackCanvas(cfg, overrides){
   const ph         = ov('companyPhone')           || '(000) 000-0000';
   const repName    = ov('repName')                || '';
   const repTitle   = ov('repTitle')               || '';
-  const backBadgeTxt   = ov('postcardBackBadgeText')  || 'YOUR PRICE IS ALREADY BUILT';
+  const backBadgeTxt   = ov('postcardBackBadgeText')  || '';
   const backBadgeColor = ov('postcardBackBadgeColor') || color;
   const hook           = ov('postcardHook')           || 'We tapped your roof on the map. Satellite data measured it. Your price was built before this arrived \u2014 no appointment needed, no one coming to your door.';
   const why            = ov('postcardWhy')            || 'Public property records show your roof is likely past the 20-year mark. Recent hail or high-wind activity was logged in your ZIP code. Neighbors on your street have pulled roofing permits recently. Satellite imagery flagged wear consistent with aging shingles. No obligation — this is just your number, ready when you are.';
-  const pcQuote        = ov('postcardQuote')          || '"They replaced our roof in one day, no mess, no drama." \u2014 Mike D., Canton MI';
+  const pcQuote        = ov('postcardQuote')          || '';
   const guarantee      = ov('postcardGuarantee')      || 'Your price. Built by satellite. No visit required.';
   const scanCta        = ov('postcardScanCta')        || 'SCAN TO BOOK';
   const scanSub        = ov('postcardScanSub')        || 'No-pressure booking';
@@ -1341,18 +1360,20 @@ async function renderDesignBackCanvas(cfg, overrides){
   let hy = SAFE;
   ctx.font = 'bold 62px Arial'; ctx.fillStyle = '#fff';
   ctx.fillText(co, HR_X, hy + 62); hy += 80;
-  ctx.font = 'bold 36px Arial';
-  const pillW = ctx.measureText(backBadgeTxt).width + 48;
-  ctx.fillStyle = backBadgeColor; roundRect(ctx, HR_X, hy, pillW, 60, 10); ctx.fill();
-  ctx.fillStyle = '#fff'; ctx.fillText(backBadgeTxt, HR_X + 24, hy + 42); hy += 80;
+  if(backBadgeTxt){
+    ctx.font = 'bold 36px Arial';
+    const pillW = ctx.measureText(backBadgeTxt).width + 48;
+    ctx.fillStyle = backBadgeColor; roundRect(ctx, HR_X, hy, pillW, 60, 10); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.fillText(backBadgeTxt, HR_X + 24, hy + 42); hy += 80;
+  }
   const hookLineH = Math.round(hookSize * 1.38);
   ctx.font = 'italic ' + hookSize + 'px Georgia, serif'; ctx.fillStyle = 'rgba(255,255,255,0.88)';
   const hookLines = wrapText(ctx, hook, HR_W);
   hookLines.slice(0, 3).forEach((l, i) => { ctx.fillText(l, HR_X, hy + hookSize + i * hookLineH); });
   hy += Math.min(hookLines.length, 3) * hookLineH + 28;
-  ctx.font = '46px Arial'; ctx.fillStyle = '#f59e0b';
-  ctx.fillText('\u2605\u2605\u2605\u2605\u2605', HR_X, hy + 46); hy += 64;
   if(pcQuote){
+    ctx.font = '46px Arial'; ctx.fillStyle = '#f59e0b';
+    ctx.fillText('\u2605\u2605\u2605\u2605\u2605', HR_X, hy + 46); hy += 64;
     const qLineH = Math.round(quoteSize * 1.36);
     ctx.font = 'italic ' + quoteSize + 'px Georgia, serif'; ctx.fillStyle = 'rgba(255,255,255,0.80)';
     const qLines = wrapText(ctx, pcQuote, HR_W);
@@ -1412,6 +1433,11 @@ async function renderDesignBackCanvas(cfg, overrides){
       if(lineY < BOTTOM_SAFE){ ctx.fillText(l, RIGHT_COL_X, lineY); }
     });
   }
+  // ── FINE PRINT: satellite disclaimer (secondary renderer) ────────────────────
+  const FINE_MAX_W2 = W - LOB_ADDR_W - SAFE * 2;
+  ctx.font = '18px Arial'; ctx.fillStyle = '#9ca3af';
+  ctx.fillText('Estimate based on satellite imagery. Subject to on-site verification.', SAFE, H - SAFE - 22);
+
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(W - LOB_ADDR_W, H - LOB_ADDR_H, LOB_ADDR_W, LOB_ADDR_H);
   return canvas.toDataURL('image/jpeg', 0.92);

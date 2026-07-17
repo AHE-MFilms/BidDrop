@@ -81,7 +81,7 @@ const DEFAULTS = {
   whyReceived:'Public property records show your roof is likely past the 20-year mark. Recent hail or high-wind activity was logged in your ZIP code. Neighbors on your street have pulled roofing permits recently. Satellite imagery flagged wear consistent with aging shingles. No obligation — this is just your number, ready when you are.',
   postcardHook:'We tapped your roof on the map. Satellite data measured it. Your price was built before this arrived — no appointment needed, no one coming to your door.',
   postcardWhy:'Public property records show your roof is likely past the 20-year mark. Recent hail or high-wind activity was logged in your ZIP code. Neighbors on your street have pulled roofing permits recently. Satellite imagery flagged wear consistent with aging shingles. No obligation — this is just your number, ready when you are.',
-  postcardQuote:'"They replaced our roof in one day, no mess, no drama." — Mike D., Canton MI',
+  postcardQuote:'',
   postcardGuarantee:'Your price. Built by satellite. No visit required.',
   financingEnabled:true, financingApr:9.99, financingTerm:60, financingDown:0,
   // Comparison table (company values; competitor col is hardcoded)

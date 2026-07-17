@@ -93,7 +93,7 @@ function _renderErPreview(est) {
       </div>` : ''}
       <!-- Main content center-left -->
       <div style="position:absolute;left:18px;right:${contentRight};top:50%;transform:translateY(-52%);">
-        <div style="font-size:9px;color:${accent};font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">YOUR PRICE IS ALREADY BUILT</div>
+        <div style="font-size:9px;color:${accent};font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Satellite Estimate Ready</div>
         <div style="font-size:clamp(11px,3vw,15px);font-weight:900;color:#fff;line-height:1.1;text-transform:uppercase;letter-spacing:-.3px;margin-bottom:6px;">
           ${escHtml(owner)},<br>Your Estimate Is Ready.
         </div>
