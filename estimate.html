@@ -466,7 +466,7 @@ body{font-family:'Open Sans',sans-serif;background:var(--cream-soft);color:var(-
     </div>
     <div class="ep-sticky-actions">
       <a class="ep-sticky-phone" id="ep-sticky-phone" href="#">📞 <span id="ep-sticky-phone-num">Call Now</span></a>
-      <a class="ep-sticky-cta" id="ep-sticky-cta" href="#">Schedule Assessment</a>
+      <a class="ep-sticky-cta" id="ep-sticky-cta" href="#">Schedule a Free Visit</a>
     </div>
   </div>
   <!-- ── HERO ── -->
@@ -934,8 +934,8 @@ function buildPage(firstName,lastName,email,phone){
   const propItems=[
     {icon:'🏠',val:est.addr||'Property Address',lbl:'Property Address'},
     {icon:'📋',val:_estId.replace('est_','EST-'),lbl:'Estimate Number'},
-    estDate?{icon:'📅',val:estDate,lbl:'Assessment Date'}:null,
-    repName?{icon:'👷',val:repName,lbl:'Assigned Estimator'}:null,
+    estDate?{icon:'📅',val:estDate,lbl:'Estimate Date'}:null,
+    repName?{icon:'👷',val:repName,lbl:'Your Rep'}:null,
     expDate?{icon:'⏱️',val:(est.expiresAt&&new Date(est.expiresAt)<new Date()?'Expired — ':'Valid Through ')+expDate,lbl:'Estimate Expiration'}:null,
   ].filter(Boolean);
   $('ep-prop-row').innerHTML=propItems.map(p=>`
@@ -1004,10 +1004,10 @@ function buildPage(firstName,lastName,email,phone){
     const fn=firstName||est.homeownerFirstName||'';
     const addr=est.addr?est.addr.split(',')[0]:'';
     const coName=acct.companyName||'our team';
-    let p1=fn?`<strong>${esc(fn)}</strong>, we reviewed your home`:`We reviewed the property`;
+    let p1=fn?`<strong>${esc(fn)}</strong>, we looked at your home via satellite`:`We analyzed the property via satellite`;
     if(addr) p1+=` at <strong>${esc(addr)}</strong>`;
-    p1+=`\u2014and it may be time for a roof replacement. So we created a clear, no-obligation estimate you can view right here.`;
-    const p2=`We believe in upfront, honest pricing. Using satellite measurements and a visual assessment, this gives you a realistic number\u2014no hidden fees, no surprises.`;
+    p1+=` \u2014 and based on the satellite imagery and property data, it may be time for a roof replacement. We built this estimate so you have a real number before anyone knocks on your door.`;
+    const p2=`We used satellite imagery and property data to build this estimate — no appointment needed, no guessing. Your number is right here.`;
     const p3=`Questions? ${esc(coName)} is here to help.`;
     greetingText.innerHTML=`<p class="ep-greeting-text">${p1}</p><p class="ep-greeting-text">${p2}</p><p class="ep-greeting-text">${p3}</p>`;
     greetingEl.style.display='block';
@@ -1035,7 +1035,7 @@ function buildPage(firstName,lastName,email,phone){
     if(embedHtml){
       $('ep-video-section').style.display='block';
       $('ep-video-inner').innerHTML=embedHtml;
-      $('ep-video-title').textContent='A personal message from '+(repName||acct.companyName||'your estimator');
+      $('ep-video-title').textContent='A personal message from '+(repName||acct.companyName||'your rep');
     }
   }
 
@@ -1048,7 +1048,7 @@ function buildPage(firstName,lastName,email,phone){
   if(est.inspectionNote){
     $('ep-repbio-notes').textContent=est.inspectionNote;
   } else {
-    $('ep-repbio-notes').textContent='Using satellite measurements and a visual assessment of your property, we put together this clear, no-obligation estimate so you have a realistic number — no hidden fees, no surprises.';
+    $('ep-repbio-notes').textContent='We used satellite imagery and property data to build this estimate — no appointment needed, no guessing. Your number is right here so you can see it before you talk to anyone.';
   }
   if(acct.headshot){
     $('ep-repbio-avatar').outerHTML=`<img class="ep-repbio-avatar" src="${acct.headshot}" alt="${esc(repDisplayName)}">`;
@@ -1068,7 +1068,7 @@ function buildPage(firstName,lastName,email,phone){
   $('ep-owner-title').textContent=ownerTitle+' · '+(acct.companyName||'');
   let ownerLinks='';
   if(acct.companyPhone)ownerLinks+=`<a href="tel:${acct.companyPhone}" class="ep-owner-link"><span class="contact-icon">📞</span>${esc(acct.companyPhone)}</a>`;
-  if(acct.bookingUrl)ownerLinks+=`<a href="${acct.bookingUrl}" target="_blank" class="ep-owner-link"><span class="contact-icon">📅</span>Schedule Appointment</a>`;
+  if(acct.bookingUrl)ownerLinks+=`<a href="${acct.bookingUrl}" target="_blank" class="ep-owner-link"><span class="contact-icon">📅</span>Schedule a Free Visit</a>`;
   $('ep-owner-links').innerHTML=ownerLinks;
 
   $('ep-about-stats').innerHTML=[
@@ -1078,7 +1078,7 @@ function buildPage(firstName,lastName,email,phone){
   ].map(s=>`<div class="ep-stat-box"><div class="ep-stat-num">${esc(s.num)}</div><div class="ep-stat-label">${esc(s.lbl)}</div></div>`).join('');
 
   if(acct.companyBio)$('ep-about-body').textContent=acct.companyBio;
-  else $('ep-about-body').textContent='We are a locally owned and operated roofing company committed to delivering exceptional craftsmanship and honest pricing. Our team of certified professionals handles every project with care — from the first assessment to the final cleanup.';
+  else $('ep-about-body').textContent='We are a locally owned and operated roofing company committed to delivering exceptional craftsmanship and straightforward pricing. Our team of certified professionals handles every project with care — from the first call to the final cleanup.';
 
   const diffs=[acct.diff1,acct.diff2,acct.diff3,acct.diff4,acct.diff5,acct.diff6].filter(Boolean);
   $('ep-creds').innerHTML=diffs.map(d=>`<li><div class="ep-check">✓</div>${esc(d)}</li>`).join('');
@@ -1090,13 +1090,13 @@ function buildPage(firstName,lastName,email,phone){
   // ── CTA ──
   let ctaBtns='';
   if(acct.companyPhone)ctaBtns+=`<a href="tel:${acct.companyPhone}" class="ep-btn-primary">📞 Call Now</a>`;
-  if(acct.bookingUrl)ctaBtns+=`<a href="${acct.bookingUrl}" target="_blank" class="ep-btn-secondary">📅 Schedule Assessment</a>`;
+  if(acct.bookingUrl)ctaBtns+=`<a href="${acct.bookingUrl}" target="_blank" class="ep-btn-secondary">📅 Schedule a Free Visit</a>`;
   ctaBtns+=`<button class="ep-btn-secondary" onclick="shareEst()">🔗 Share Estimate</button>`;
   $('ep-cta-btns').innerHTML=ctaBtns;
 
   let strip='';
   if(acct.companyPhone)strip+=`<a href="tel:${acct.companyPhone}" class="ep-contact-item"><span class="ep-contact-icon">📞</span><div class="ep-contact-label">Call Us</div><div class="ep-contact-value">${esc(acct.companyPhone)}</div></a>`;
-  if(acct.bookingUrl)strip+=`<a href="${acct.bookingUrl}" target="_blank" class="ep-contact-item"><span class="ep-contact-icon">📅</span><div class="ep-contact-label">Schedule</div><div class="ep-contact-value">Book Online</div></a>`;
+  if(acct.bookingUrl)strip+=`<a href="${acct.bookingUrl}" target="_blank" class="ep-contact-item"><span class="ep-contact-icon">📅</span><div class="ep-contact-label">Schedule</div><div class="ep-contact-value">Free Visit</div></a>`;
   if(acct.companyAddr)strip+=`<div class="ep-contact-item"><span class="ep-contact-icon">📍</span><div class="ep-contact-label">Office</div><div class="ep-contact-value">${esc(acct.companyAddr)}</div></div>`;
   $('ep-contact-strip').innerHTML=strip;
 
