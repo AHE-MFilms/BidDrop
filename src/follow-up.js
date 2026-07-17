@@ -284,7 +284,7 @@ function goEstFromPin(id){
   // Try to restore draft for this pin
   const hadDraft = restoreDraft(id);
   if(!hadDraft) clearDraftBanner();
-  renderStructures();calcP();updatePreview();
+  renderStructures();calcP();if(typeof setPreviewMode==='function') setPreviewMode('postcard'); else updatePreview();
   if(p.equityData) showEquityBadge(p.equityData); else hideEquityBadge();
   toast('📋 '+p.address.split(',')[0],'info');
   // Fetch satellite roof measurement from Google Solar API (non-blocking)

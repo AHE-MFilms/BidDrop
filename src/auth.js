@@ -68,7 +68,8 @@ async function onSignedIn(user){
     setTimeout(restoreStormState, 1500);
     setTimeout(initStormNotifications, 2000);
     renderStructures();
-    updatePreview();
+    // Postcard is the default preview — load inline on init
+    if(typeof setPreviewMode === 'function') setPreviewMode('postcard'); else updatePreview();
     applyRoleUI();
     if(isSuperAdmin()) initCoSwitcher();
     // Load data from Supabase

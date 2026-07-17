@@ -928,7 +928,7 @@ function loadEstimateIntoEstimator(estId){
   if(sel && est.pinId) sel.value = est.pinId;
   // Mark this as editing the existing record so Save updates it
   window._editingEstimateId = estId;
-  renderStructures(); calcP(); updatePreview();
+  renderStructures(); calcP(); if(typeof setPreviewMode==='function') setPreviewMode('postcard'); else updatePreview();
   goTab('estimate');
   toast('📋 Loaded into Estimator — edit and save to update','info');
   // Refresh unlock/Look Up button state for the loaded pin
@@ -1077,7 +1077,7 @@ function clearEst(){
   ['a-sky','a-chim','a-gut'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
   structures=[];
   _resetPriceOverride();
-  renderStructures();clearHomePhoto();calcP();updatePreview();
+  renderStructures();clearHomePhoto();calcP();if(typeof setPreviewMode==='function') setPreviewMode('postcard'); else updatePreview();
   window._editingQueueId=null;
   window._editingEstimateId=null;
   document.getElementById('add-queue-btn').textContent='📬 Add to Mail Queue';

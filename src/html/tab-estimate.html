@@ -918,7 +918,7 @@
         <!-- Letter tab hidden — postcard only for now -->
         <button id="preview-tab-letter" onclick="setPreviewMode('letter')" style="display:none;">&#128228; Letter</button>
         <button id="preview-tab-proposal" onclick="setPreviewMode('proposal')" style="display:none;">&#128203; Proposal</button>
-        <button id="preview-tab-postcard" onclick="previewEstimatorPostcardFullscreen()" style="flex:1;padding:10px 0;font-family:var(--font-b);font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--accent);color:#fff;letter-spacing:.4px;">&#127968; Postcard Preview</button>
+        <button id="preview-tab-postcard" onclick="setPreviewMode('postcard')" style="flex:1;padding:10px 0;font-family:var(--font-b);font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--accent);color:#fff;letter-spacing:.4px;">&#127968; Postcard Preview</button>
       </div>
       <!-- Letter preview — hidden (postcard only mode) -->
       <div class="mailer" id="mailer-preview" style="display:none;"></div>
@@ -935,7 +935,7 @@
         </div>
       </div>
       <!-- Postcard preview (6x9 front + back) using scaled iframes -->
-      <div id="postcard-preview-wrap" style="display:none;width:100%;max-width:680px;">
+      <div id="postcard-preview-wrap" style="display:block;width:100%;max-width:680px;">
         <div style="font-size:11px;color:var(--muted);margin-bottom:12px;text-align:center;">6&times;9 postcard &mdash; front on top, back below. Actual print size: 9&quot;&times;6&quot;.</div>
         <div style="margin-bottom:18px;">
           <div style="font-size:10px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Front &mdash; House Photo</div>

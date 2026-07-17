@@ -5,9 +5,9 @@ async function printNow(){
   if(!isPlanAtLeast('pro')){ showPlanUpgradePrompt('Print Now','pro'); return; }
   const _unlocked = await requirePinUnlocked(currentEstPinId);
   if(!_unlocked) return;
-  // Letter is hidden — open postcard fullscreen preview instead
-  if(typeof previewEstimatorPostcardFullscreen === 'function'){
-    previewEstimatorPostcardFullscreen();
+  // Letter is hidden — show inline postcard preview instead
+  if(typeof setPreviewMode === 'function'){
+    setPreviewMode('postcard');
     return;
   }
   // Fallback: Build full print window and immediately trigger print
