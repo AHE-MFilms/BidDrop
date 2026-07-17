@@ -5,7 +5,12 @@ async function printNow(){
   if(!isPlanAtLeast('pro')){ showPlanUpgradePrompt('Print Now','pro'); return; }
   const _unlocked = await requirePinUnlocked(currentEstPinId);
   if(!_unlocked) return;
-  // Build full print window and immediately trigger print
+  // Letter is hidden — open postcard fullscreen preview instead
+  if(typeof previewEstimatorPostcardFullscreen === 'function'){
+    previewEstimatorPostcardFullscreen();
+    return;
+  }
+  // Fallback: Build full print window and immediately trigger print
   const _mpEl = document.getElementById('mailer-preview'); if(!_mpEl){toast('Mailer preview not loaded','warn');return;} const content = _mpEl.innerHTML;
   const win = window.open('','_blank','width=900,height=1100');
   win.document.write(`<!DOCTYPE html>

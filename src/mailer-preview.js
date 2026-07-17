@@ -6,6 +6,8 @@
 // Extracted from index.html — Tier 5 modularization
 
 function updatePreview(){
+  // Letter is hidden — skip rendering to avoid showing letter content
+  if(_previewMode !== 'letter') return;
   const owner  = document.getElementById('e-owner').value || 'Homeowner';
   const addr   = document.getElementById('e-addr').value  || '';
   const cfg    = S.cfg;
