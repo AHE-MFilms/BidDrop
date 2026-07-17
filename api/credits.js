@@ -32,18 +32,19 @@ const STRIPE_API_VERSION = '2023-10-16';
 const APP_URL        = (process.env.APP_URL || 'https://biddrop.us').trim();
 
 // 1 credit = $4.00 = 1 postcard mailed. Volume discounts at 100+ credits.
+// stripe_price_id: live Stripe Price IDs created 2026-07-17
 const CREDIT_PACKS = {
-  pack_10:  { credits:    10, amount_cents:   4000, label: '10 Credits',    description: '10 postcards — $4.00 each',                              savings: null   },
-  pack_50:  { credits:    50, amount_cents:  20000, label: '50 Credits',    description: '50 postcards — $4.00 each',                              savings:     0  },
-  pack_100: { credits:   100, amount_cents:  38000, label: '100 Credits',   description: '100 postcards — $3.80 each — Save $20 (5% off)',         savings:  2000  },
-  pack_500: { credits:   500, amount_cents: 180000, label: '500 Credits',   description: '500 postcards — $3.60 each — Save $200 (10% off)',       savings: 20000  },
-  pack_1k:  { credits:  1000, amount_cents: 360000, label: '1,000 Credits', description: '1,000 postcards — $3.60 each — Save $400 (10% off)',     savings: 40000  },
+  pack_10:  { credits:    10, amount_cents:   4000, label: '10 Credits',    description: '10 postcards — $4.00 each',                              savings: null,  stripe_price_id: process.env.STRIPE_PRICE_PACK_10  || 'price_1TuE9ZACMaED04opg79I3eDE' },
+  pack_50:  { credits:    50, amount_cents:  20000, label: '50 Credits',    description: '50 postcards — $4.00 each',                              savings:     0, stripe_price_id: process.env.STRIPE_PRICE_PACK_50  || 'price_1TuE9ZACMaED04opMxDHRsVG' },
+  pack_100: { credits:   100, amount_cents:  38000, label: '100 Credits',   description: '100 postcards — $3.80 each — Save $20 (5% off)',         savings:  2000, stripe_price_id: process.env.STRIPE_PRICE_PACK_100 || 'price_1TuE9aACMaED04opllbE3h77' },
+  pack_500: { credits:   500, amount_cents: 180000, label: '500 Credits',   description: '500 postcards — $3.60 each — Save $200 (10% off)',       savings: 20000, stripe_price_id: process.env.STRIPE_PRICE_PACK_500 || 'price_1TuE9aACMaED04opQ1p79PAe' },
+  pack_1k:  { credits:  1000, amount_cents: 360000, label: '1,000 Credits', description: '1,000 postcards — $3.60 each — Save $400 (10% off)',     savings: 40000, stripe_price_id: process.env.STRIPE_PRICE_PACK_1K  || 'price_1TuE9aACMaED04opas0ZjCqD' },
   // Follow-Up Blitz Sale: Buy 3 Get 5 — unlock covers step 1, blitz covers steps 2-5
-  pack_blitz_sale: { credits: 5, amount_cents: 1200, label: '🔥 Follow-Up Blitz — Buy 3 Get 5', description: '5 postcards for $12 — 2 FREE (unlock covers step 1, blitz adds steps 2–5)', savings: 800, sale_expires: '2026-08-26' },
+  pack_blitz_sale: { credits: 5, amount_cents: 1200, label: '🔥 Follow-Up Blitz — Buy 3 Get 5', description: '5 postcards for $12 — 2 FREE (unlock covers step 1, blitz adds steps 2–5)', savings: 800, sale_expires: '2026-08-26', stripe_price_id: process.env.STRIPE_PRICE_CREDIT_1 || 'price_1TuE9ZACMaED04opur5U8q7M' },
 };
 
 // Free mailer credits per month by plan
-const PLAN_FREE_CREDITS = { starter: 0, pro: 0, agency: 0, enterprise: 0 };
+const PLAN_FREE_CREDITS = { monthly: 40, payg: 0, starter: 0, pro: 0, agency: 0, enterprise: 0 };
 
 function cors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
