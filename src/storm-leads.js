@@ -201,7 +201,7 @@ window.stormLeadsUnlock = async function(lat, lon, address, owner, yearBuilt) {
   }
 };
 
-// ── Bulk unlock bar ───────────────────────────────────────────────────────────
+// ── Bulk unlock bar (two-path: Add to Campaign vs Unlock & Mail All) ──────────
 function _renderBulkUnlockBar(lockedCount) {
   let bar = document.getElementById('storm-leads-bulk-bar');
   if (!bar) {
@@ -215,26 +215,86 @@ function _renderBulkUnlockBar(lockedCount) {
     return;
   }
   const credits = S.cfg.mailerCredits || 0;
-  const canUnlock = Math.min(lockedCount, credits);
   bar.style.display = 'flex';
   bar.innerHTML = `
     <div style="font-size:12px;color:var(--text,#fff);">
-      <strong style="color:#F25C05;">${lockedCount}</strong> locked homes · <strong style="color:#22C55E;">${credits}</strong> credits
+      <strong style="color:#F25C05;">${lockedCount}</strong> homes found
     </div>
-    ${canUnlock > 0
-      ? `<button onclick="stormLeadsUnlockAll()" style="background:#F25C05;color:#fff;border:none;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">
-           🔓 Unlock All (${canUnlock} credits)
-         </button>`
-      : `<button onclick="openCreditsModal()" style="background:#3B82F6;color:#fff;border:none;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">
-           Buy Credits
-         </button>`
-    }
+    <button onclick="stormLeadsShowChoiceModal()" style="background:#F25C05;color:#fff;border:none;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">
+      📋 Work This Area
+    </button>
     <button onclick="clearStormLeadMarkers()" style="background:none;border:1px solid var(--border,#2d3748);color:var(--mid,#9ca3af);border-radius:7px;padding:6px 10px;font-size:11px;cursor:pointer;">Clear</button>
   `;
 }
 
+// ── Two-path choice modal ─────────────────────────────────────────────────────
+window.stormLeadsShowChoiceModal = function() {
+  const lockedCount = _slHomes.filter(h => !h.unlocked).length;
+  const credits = S.cfg.mailerCredits || 0;
+  const canAffordAll = credits >= lockedCount;
+
+  // Remove existing modal if any
+  const existing = document.getElementById('sl-choice-modal');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'sl-choice-modal';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.innerHTML = `
+    <div style="background:#1a2332;border:1px solid #2d3748;border-radius:14px;padding:28px;max-width:480px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.6);">
+      <div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:6px;">How do you want to work this area?</div>
+      <div style="font-size:13px;color:#9CA3AF;margin-bottom:24px;">${lockedCount} homes found in this storm area</div>
+
+      <!-- Option 1: Add to Campaign -->
+      <div onclick="stormLeadsAddToCampaign()" style="cursor:pointer;border:2px solid #2d3748;border-radius:10px;padding:16px;margin-bottom:12px;transition:border-color 0.2s;" onmouseover="this.style.borderColor='#F25C05'" onmouseout="this.style.borderColor='#2d3748'">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+          <span style="font-size:22px;">📋</span>
+          <div>
+            <div style="font-size:14px;font-weight:700;color:#fff;">Add to Campaign</div>
+            <div style="font-size:11px;color:#22C55E;font-weight:600;">0 credits now</div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:#9CA3AF;line-height:1.5;">Save all ${lockedCount} addresses to a campaign. Work through them in the field — unlock and mail each one individually as you confirm it needs a roof. Pay only for what you send.</div>
+      </div>
+
+      <!-- Option 2: Unlock & Mail All -->
+      <div onclick="${canAffordAll ? 'stormLeadsUnlockAll()' : 'openCreditsModal()'}" style="cursor:pointer;border:2px solid #2d3748;border-radius:10px;padding:16px;margin-bottom:20px;transition:border-color 0.2s;" onmouseover="this.style.borderColor='#3B82F6'" onmouseout="this.style.borderColor='#2d3748'">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+          <span style="font-size:22px;">🚀</span>
+          <div>
+            <div style="font-size:14px;font-weight:700;color:#fff;">Unlock & Mail All</div>
+            <div style="font-size:11px;color:${canAffordAll ? '#F25C05' : '#EF4444'};font-weight:600;">${lockedCount} credits${canAffordAll ? ` (${credits - lockedCount} remaining)` : ` needed — you have ${credits}`}</div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:#9CA3AF;line-height:1.5;">Unlock all ${lockedCount} addresses now and queue them for mailing automatically. Best for volume campaigns where the satellite data is enough signal.</div>
+        ${!canAffordAll ? '<div style="font-size:11px;color:#EF4444;margin-top:6px;font-weight:600;">⚠️ Not enough credits — click to buy more</div>' : ''}
+      </div>
+
+      <button onclick="document.getElementById('sl-choice-modal').remove()" style="width:100%;background:none;border:1px solid #2d3748;color:#9CA3AF;border-radius:8px;padding:10px;font-size:13px;cursor:pointer;">Cancel</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  // Close on backdrop click
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) overlay.remove();
+  });
+};
+
 // ── Bulk unlock all locked homes (up to credit balance) ──────────────────────
+// ── Add to Campaign (no credits charged) ─────────────────────────────────────
+window.stormLeadsAddToCampaign = async function() {
+  const modal = document.getElementById('sl-choice-modal');
+  if (modal) modal.remove();
+  const lockedCount = _slHomes.filter(h => !h.unlocked).length;
+  // Campaign already created by storm-leads-swath API — just confirm to user
+  toast(`📋 ${lockedCount} homes saved to "${_slCampaignName || 'Storm Campaign'}" — tap any pin to unlock when ready`, 'success');
+  // Update popup text to reflect campaign mode
+  _renderStormLeadMarkers();
+};
+
 window.stormLeadsUnlockAll = async function() {
+  const modal = document.getElementById('sl-choice-modal');
+  if (modal) modal.remove();
   const locked = _slHomes.filter(h => !h.unlocked);
   const credits = S.cfg.mailerCredits || 0;
   if (credits < 1) { toast('No credits remaining.', 'error'); return; }
