@@ -707,14 +707,18 @@ async function renderPostcard6x9BackCanvas(item){
   const FINE_MAX_W=W-LOB_ADDR_W-SAFE*2;
   ctx.font='18px Arial';ctx.fillStyle='#9ca3af';
   const satDisclaimer='Estimate based on satellite imagery. Subject to on-site verification.';
+  const priceDisclaimer='This estimate does not reflect a final project price. Actual cost may vary after on-site inspection.';
   if(finMo>0){
     const loan=Math.round(total*(1-(parseFloat(cfg.financingDown)||0)/100));
     const regZ='*Monthly payment based on $'+loan.toLocaleString()+' financed at '+(parseFloat(cfg.financingApr)||9.99)+'% APR for '+(parseInt(cfg.financingTerm)||60)+' months with $0 down. Subject to credit approval.';
     const regZLines=wrapText(ctx,regZ,FINE_MAX_W);
-    const regZStartY=H-SAFE-22-(regZLines.length>1?22:0)-26;
+    // Stack: regZ (top) → priceDisclaimer → satDisclaimer (bottom)
+    const regZStartY=H-SAFE-22-(regZLines.length>1?22:0)-26-22;
     regZLines.slice(0,2).forEach((l,i)=>{ctx.fillText(l,SAFE,regZStartY+i*22);});
+    ctx.fillText(priceDisclaimer,SAFE,H-SAFE-22-22);
     ctx.fillText(satDisclaimer,SAFE,H-SAFE-22);
   } else {
+    ctx.fillText(priceDisclaimer,SAFE,H-SAFE-22-22);
     ctx.fillText(satDisclaimer,SAFE,H-SAFE-22);
   }
 
@@ -1436,6 +1440,7 @@ async function renderDesignBackCanvas(cfg, overrides){
   // ── FINE PRINT: satellite disclaimer (secondary renderer) ────────────────────
   const FINE_MAX_W2 = W - LOB_ADDR_W - SAFE * 2;
   ctx.font = '18px Arial'; ctx.fillStyle = '#9ca3af';
+  ctx.fillText('This estimate does not reflect a final project price. Actual cost may vary after on-site inspection.', SAFE, H - SAFE - 22 - 22);
   ctx.fillText('Estimate based on satellite imagery. Subject to on-site verification.', SAFE, H - SAFE - 22);
 
   ctx.fillStyle = '#ffffff';
