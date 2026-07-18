@@ -15,7 +15,7 @@ const PRICE_IDS = {
 };
 
 // Monthly mailer credits per plan (given on signup as bonus)
-// Monthly accounts also receive their 40 included credits on first billing cycle via webhook.
+// Monthly accounts also receive their 20 included credits on first billing cycle via webhook.
 const PLAN_MAILER_CREDITS = {
   monthly: 40,
   payg: 0,

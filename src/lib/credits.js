@@ -15,7 +15,7 @@ const CREDIT_COST_POSTCARD = 1;
 const CREDIT_COST_LOOKUP = 0.25;
 
 /** Plan → free monthly credits map
- * New system: monthly ($99/mo, 40 credits via mailerCredits top-up) vs payg ($0/mo, 0 free)
+ * New system: monthly ($99/mo, 20 credits via mailerCredits top-up) vs payg ($0/mo, 0 free)
  * Legacy plan names kept for backwards compatibility.
  */
 const PLAN_FREE_CREDITS = {

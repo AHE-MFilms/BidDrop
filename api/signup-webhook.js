@@ -87,7 +87,7 @@ const PLAN_CONFIG = {
   monthly: {
     name: 'Monthly',
     price: 99,
-    mailer_credits: 40,  // 40 credits included per month
+    mailer_credits: 20,  // 20 credits included per month
     max_reps: 10,
     max_pins_per_month: null, // unlimited
     offer_ghl: true,

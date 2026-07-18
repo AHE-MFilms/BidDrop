@@ -481,7 +481,7 @@
             <span class="amount"><sup>$</sup>99</span>
             <span class="period">/mo</span>
           </div>
-          <div class="plan-note">✓ 40 mailer credits included every month</div>
+          <div class="plan-note">✓ 20 mailer credits included every month</div>
           <div class="plan-divider"></div>
           <div class="plan-features">
             <div class="plan-feature included">
@@ -583,7 +583,7 @@
         <div class="selected-plan-summary" id="planSummary">
           <div class="plan-info">
             <strong id="summaryPlanName">Monthly Plan</strong>
-            <span id="summaryPlanPrice">$99/mo — 40 credits included</span>
+            <span id="summaryPlanPrice">$99/mo — 20 credits included</span>
           </div>
           <button class="change-plan" onclick="goToStep(1)">Change Plan</button>
         </div>
@@ -791,7 +791,7 @@
         </div>
         <div class="order-line" id="reviewCreditsLine">
           <span class="label">Included Credits</span>
-          <span class="value green" id="reviewCredits">40 credits/month</span>
+          <span class="value green" id="reviewCredits">20 credits/month</span>
         </div>
         <div class="order-line" id="reviewGHLLine">
           <span class="label">GoHighLevel Sub-Account</span>
@@ -803,7 +803,7 @@
         </div>
 
         <div id="reviewMonthlyBox" class="trial-box" style="display:none;">
-          <strong>Billed monthly at $99.</strong> Your 40 included credits renew each billing cycle. Additional credits are $4 each. Cancel anytime.
+          <strong>Billed monthly at $99.</strong> Your 20 included credits renew each billing cycle. Additional credits are $4 each. Cancel anytime.
         </div>
         <div id="reviewPaygBox" class="payg-note" style="display:none;">
           <strong>No monthly charge.</strong> Add a card to activate your account — you won't be charged until you buy credits. <strong style="color:var(--orange)">2 free credits included on signup</strong> (an $8 value). Additional credits are $4 each.
@@ -850,7 +850,7 @@
   <script>
     // =============================================
     // BIDDROP SIGNUP — Two-plan system
-    // Plans: monthly ($99/mo, 40 credits, GHL) vs payg ($0/mo, no credits, no GHL)
+    // Plans: monthly ($99/mo, 20 credits, GHL) vs payg ($0/mo, no credits, no GHL)
     // =============================================
 
     let selectedPlan = null; // { plan, price, name }
@@ -902,7 +902,7 @@
       if (!selectedPlan) return;
       document.getElementById('summaryPlanName').textContent = selectedPlan.name + ' Plan';
       if (selectedPlan.plan === 'monthly') {
-        document.getElementById('summaryPlanPrice').textContent = '$99/mo — 40 credits included';
+        document.getElementById('summaryPlanPrice').textContent = '$99/mo — 20 credits included';
       } else {
         document.getElementById('summaryPlanPrice').textContent = '$0/mo — credits at $4 each';
       }
