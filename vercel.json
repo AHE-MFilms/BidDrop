@@ -7,6 +7,14 @@
       "destination": "/landing.html"
     },
     {
+      "source": "/terms",
+      "destination": "/terms.html"
+    },
+    {
+      "source": "/30day",
+      "destination": "/30day.html"
+    },
+    {
       "source": "/privacy",
       "destination": "/privacy.html"
     },
