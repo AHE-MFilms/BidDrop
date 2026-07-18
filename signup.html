@@ -721,22 +721,26 @@
             </div>
           </div>
           <div class="form-group">
-            <label>License Number <span style="color:#888;font-weight:400;">(optional)</span></label>
+            <label>License Number <span style="color:#EF4444;font-weight:700;">*</span></label>
             <input type="text" id="licenseNum" placeholder="e.g. ROC-123456" />
+            <div id="licenseNumError" style="display:none;font-size:12px;color:#EF4444;margin-top:4px;">&#9888; License number is required to continue.</div>
           </div>
         </div>
 
         <!-- TRADE TYPE -->
         <div class="form-row single">
           <div class="form-group">
-            <label>Primary Trade <span style="color:#888;font-weight:400;">(optional)</span></label>
-            <select id="tradeType" onchange="toggleGutterPricing()">
-              <option value="roofing">Roofing</option>
-              <option value="roofing_gutters">Roofing &amp; Gutters</option>
-              <option value="solar">Solar</option>
-              <option value="siding">Siding</option>
-              <option value="other">Other</option>
-            </select>
+            <label>Trades You Offer <span style="color:#888;font-weight:400;">(select all that apply)</span></label>
+            <div id="tradeCheckboxes" style="display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;margin-top:10px;">
+              <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:400;cursor:pointer;"><input type="checkbox" value="roofing" id="trade_roofing" onchange="updateGutterPricing()" style="width:16px;height:16px;accent-color:#F97316;cursor:pointer;"> Roofing</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:400;cursor:pointer;"><input type="checkbox" value="siding" id="trade_siding" style="width:16px;height:16px;accent-color:#F97316;cursor:pointer;"> Siding</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:400;cursor:pointer;"><input type="checkbox" value="windows" id="trade_windows" style="width:16px;height:16px;accent-color:#F97316;cursor:pointer;"> Windows</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:400;cursor:pointer;"><input type="checkbox" value="gutters" id="trade_gutters" onchange="updateGutterPricing()" style="width:16px;height:16px;accent-color:#F97316;cursor:pointer;"> Gutters</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:400;cursor:pointer;"><input type="checkbox" value="concrete" id="trade_concrete" style="width:16px;height:16px;accent-color:#F97316;cursor:pointer;"> Concrete</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:400;cursor:pointer;"><input type="checkbox" value="fencing" id="trade_fencing" style="width:16px;height:16px;accent-color:#F97316;cursor:pointer;"> Fencing</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:400;cursor:pointer;"><input type="checkbox" value="solar" id="trade_solar" style="width:16px;height:16px;accent-color:#F97316;cursor:pointer;"> Solar</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:400;cursor:pointer;"><input type="checkbox" value="other" id="trade_other" style="width:16px;height:16px;accent-color:#F97316;cursor:pointer;"> Other</label>
+            </div>
           </div>
         </div>
 
@@ -995,19 +999,34 @@
       reader.readAsDataURL(file);
     }
 
-    function toggleGutterPricing() {
-      const trade = document.getElementById('tradeType').value;
+    function updateGutterPricing() {
+      const hasGutters = document.getElementById('trade_gutters') && document.getElementById('trade_gutters').checked;
       const group = document.getElementById('gutterPriceGroup');
-      group.style.display = (trade === 'roofing_gutters') ? 'block' : 'none';
+      if (group) group.style.display = hasGutters ? 'block' : 'none';
     }
 
     function submitBrandStep() {
-      brandData.brandColor   = document.getElementById('brandColor').value || '#F97316';
-      brandData.licenseNum   = document.getElementById('licenseNum').value.trim();
-      brandData.tradeType    = document.getElementById('tradeType').value;
+      // Validate: license number is required
+      const licenseVal = document.getElementById('licenseNum').value.trim();
+      const licenseErr = document.getElementById('licenseNumError');
+      if (!licenseVal) {
+        licenseErr.style.display = 'block';
+        document.getElementById('licenseNum').style.borderColor = '#EF4444';
+        document.getElementById('licenseNum').focus();
+        return;
+      }
+      licenseErr.style.display = 'none';
+      document.getElementById('licenseNum').style.borderColor = '';
+      // Collect selected trades
+      const checked = document.querySelectorAll('#tradeCheckboxes input[type=checkbox]:checked');
+      const selectedTrades = Array.from(checked).map(cb => cb.value);
+      brandData.brandColor     = document.getElementById('brandColor').value || '#F97316';
+      brandData.licenseNum     = licenseVal;
+      brandData.tradeType      = selectedTrades.length > 0 ? selectedTrades[0] : 'roofing';
+      brandData.trades         = selectedTrades;
       brandData.pricePerSquare = parseInt(document.getElementById('pricePerSquare').value) || null;
-      brandData.costGutter   = parseInt(document.getElementById('costGutter').value) || null;
-      brandData.offerGutters = brandData.tradeType === 'roofing_gutters';
+      brandData.costGutter     = parseInt(document.getElementById('costGutter').value) || null;
+      brandData.offerGutters   = selectedTrades.includes('gutters');
       goToStep(4);
     }
 
@@ -1034,6 +1053,7 @@
           brandColor:    brandData.brandColor   || null,
           licenseNum:    brandData.licenseNum   || null,
           tradeType:     brandData.tradeType    || null,
+          trades:        brandData.trades        || [],
           pricePerSquare: brandData.pricePerSquare || null,
           costGutter:    brandData.costGutter   || null,
           offerGutters:  brandData.offerGutters || false,
