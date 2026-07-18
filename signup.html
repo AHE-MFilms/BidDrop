@@ -852,6 +852,31 @@
   <!-- ERROR TOAST -->
   <div class="toast" id="errorToast"></div>
 
+  <!-- EMAIL VERIFICATION MODAL -->
+  <div id="verifyModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:#1a1a1a;border:1px solid #333;border-radius:16px;max-width:420px;width:100%;padding:40px 36px;text-align:center;">
+      <div style="font-size:48px;margin-bottom:16px;">📧</div>
+      <h2 style="font-size:22px;font-weight:800;color:#fff;margin:0 0 10px;">Check your email</h2>
+      <p id="verifyModalDesc" style="font-size:14px;color:#aaa;line-height:1.6;margin:0 0 28px;">We sent a 6-digit code to <strong id="verifyEmailDisplay" style="color:#fff;"></strong>. Enter it below to continue.</p>
+      <div style="display:flex;gap:10px;justify-content:center;margin-bottom:16px;">
+        <input type="text" id="verifyCode" maxlength="6" placeholder="000000"
+          style="width:160px;text-align:center;font-size:28px;font-weight:900;letter-spacing:8px;font-family:monospace;padding:14px 10px;border:2px solid #444;border-radius:10px;background:#111;color:#fff;outline:none;"
+          oninput="this.value=this.value.replace(/[^0-9]/g,'');if(this.value.length===6)submitVerifyCode();"
+          onkeydown="if(event.key==='Enter')submitVerifyCode();" />
+      </div>
+      <div id="verifyError" style="display:none;font-size:13px;color:#EF4444;margin-bottom:14px;"></div>
+      <button onclick="submitVerifyCode()" id="verifyBtn"
+        style="width:100%;padding:14px;background:#F97316;color:#fff;font-size:16px;font-weight:800;border:none;border-radius:10px;cursor:pointer;margin-bottom:14px;">
+        Verify Email →
+      </button>
+      <button onclick="resendVerifyCode()" id="resendBtn"
+        style="background:none;border:none;color:#888;font-size:13px;cursor:pointer;text-decoration:underline;">
+        Resend code
+      </button>
+      <div id="resendMsg" style="display:none;font-size:12px;color:#22c55e;margin-top:8px;">✓ New code sent!</div>
+    </div>
+  </div>
+
   <script>
     // =============================================
     // BIDDROP SIGNUP — Two-plan system
@@ -981,7 +1006,95 @@
         agreedAt:      new Date().toISOString()
       };
 
-      goToStep(3);
+      // Send verification code and show modal
+      sendVerificationCode(formData.email, formData.firstName + ' ' + formData.lastName);
+    }
+
+    // ---- EMAIL VERIFICATION ----
+    let emailVerified = false;
+
+    async function sendVerificationCode(email, name) {
+      document.getElementById('verifyEmailDisplay').textContent = email;
+      document.getElementById('verifyCode').value = '';
+      document.getElementById('verifyError').style.display = 'none';
+      document.getElementById('resendMsg').style.display = 'none';
+      const modal = document.getElementById('verifyModal');
+      modal.style.display = 'flex';
+      setTimeout(() => document.getElementById('verifyCode').focus(), 100);
+      try {
+        const r = await fetch('/api/verify-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'send', email, name })
+        });
+        const data = await r.json();
+        if (!r.ok || !data.sent) {
+          document.getElementById('verifyError').textContent = data.error || 'Failed to send code. Please try again.';
+          document.getElementById('verifyError').style.display = 'block';
+        }
+      } catch (e) {
+        document.getElementById('verifyError').textContent = 'Network error. Please try again.';
+        document.getElementById('verifyError').style.display = 'block';
+      }
+    }
+
+    async function submitVerifyCode() {
+      const code = document.getElementById('verifyCode').value.trim();
+      if (code.length !== 6) return;
+      const btn = document.getElementById('verifyBtn');
+      btn.disabled = true;
+      btn.textContent = 'Verifying...';
+      document.getElementById('verifyError').style.display = 'none';
+      try {
+        const r = await fetch('/api/verify-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'check', email: formData.email, code })
+        });
+        const data = await r.json();
+        if (data.valid) {
+          emailVerified = true;
+          document.getElementById('verifyModal').style.display = 'none';
+          goToStep(3);
+        } else {
+          document.getElementById('verifyError').textContent = data.reason || 'Incorrect code. Please try again.';
+          document.getElementById('verifyError').style.display = 'block';
+          btn.disabled = false;
+          btn.textContent = 'Verify Email →';
+        }
+      } catch (e) {
+        document.getElementById('verifyError').textContent = 'Network error. Please try again.';
+        document.getElementById('verifyError').style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Verify Email →';
+      }
+    }
+
+    async function resendVerifyCode() {
+      const btn = document.getElementById('resendBtn');
+      btn.disabled = true;
+      document.getElementById('resendMsg').style.display = 'none';
+      document.getElementById('verifyError').style.display = 'none';
+      document.getElementById('verifyCode').value = '';
+      try {
+        const r = await fetch('/api/verify-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'send', email: formData.email, name: formData.firstName + ' ' + formData.lastName })
+        });
+        const data = await r.json();
+        if (r.ok && data.sent) {
+          document.getElementById('resendMsg').style.display = 'block';
+          setTimeout(() => { document.getElementById('resendMsg').style.display = 'none'; }, 4000);
+        } else {
+          document.getElementById('verifyError').textContent = data.error || 'Failed to resend. Please try again.';
+          document.getElementById('verifyError').style.display = 'block';
+        }
+      } catch (e) {
+        document.getElementById('verifyError').textContent = 'Network error.';
+        document.getElementById('verifyError').style.display = 'block';
+      }
+      setTimeout(() => { btn.disabled = false; }, 30000); // 30s cooldown
     }
 
     // ---- BRAND STEP ----
