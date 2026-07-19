@@ -32,7 +32,17 @@ async function onSignedIn(user){
       const {data:account, error:acctErr} = await sb.from('accounts').select('*').eq('id', currentProfile.account_id).single();
       if(acctErr) throw new Error('Could not load account: '+acctErr.message);
       currentAccount = account;
-      if(account) S.cfg = accountRowToCfg(account);
+      if(account){
+        // Fetch SuperAdmin global postcard defaults and merge as fallback layer
+        // Priority: roofer's own saved value > global default > hardcoded DEFAULTS
+        let globalPcDefaults = {};
+        try {
+          const gpData = await adminAPI('get-global-postcard-defaults');
+          if(gpData && gpData.defaults) globalPcDefaults = gpData.defaults;
+        } catch(e) { /* non-fatal — fall back to hardcoded DEFAULTS */ }
+        window._globalPostcardDefaults = globalPcDefaults;
+        S.cfg = accountRowToCfg(account, globalPcDefaults);
+      }
     }
 
     // Block access if account is deactivated (trial expired, manually deactivated, etc.)

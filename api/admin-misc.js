@@ -246,7 +246,9 @@ async function handle(action, req, res, ctx) {
           /* ── Onboarding checklist progress (Build 14) ── */
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS onboarding_steps_json JSONB`,
           /* ── Per-account GHL stage mapping (Build 15) ── */
-          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS ghl_stage_map_json TEXT`
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS ghl_stage_map_json TEXT`,
+          /* ── SuperAdmin global postcard defaults (Build 16) ── */
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS global_postcard_defaults JSONB`
         ].join('; ');
         const results = [];
         // Run each DDL statement individually via Supabase pg_meta API (uses SERVICE_KEY)
@@ -675,6 +677,27 @@ async function handle(action, req, res, ctx) {
         if (!gcdPin) { res.status(404).json({ error: 'pin not found' }); return; }
         if (!gcdPin.unlocked_at) { res.status(403).json({ error: 'pin not unlocked' }); return; }
         return res.json({ ok: true, contact_data: gcdPin.contact_data || null });
+      }
+
+    /* ── Global Postcard Defaults (SuperAdmin site-wide template editor) ── */
+    case 'get-global-postcard-defaults': {
+        const gpRes = await sbFetch(`accounts?id=eq.${AGENCY_ACCT_ID}&select=global_postcard_defaults&limit=1`);
+        if (!gpRes.ok) return res.json({ ok: true, defaults: {} });
+        const gpRows = await gpRes.json();
+        return res.json({ ok: true, defaults: (gpRows[0] && gpRows[0].global_postcard_defaults) || {} });
+      }
+
+    case 'save-global-postcard-defaults': {
+        if (!isSuperAdmin) { res.status(403).json({ error: 'Super admin only' }); return; }
+        const { defaults: gpd } = req.body;
+        if (!gpd || typeof gpd !== 'object') { res.status(400).json({ error: 'defaults object required' }); return; }
+        const gpPatchRes = await sbFetch(`accounts?id=eq.${AGENCY_ACCT_ID}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ global_postcard_defaults: gpd })
+        });
+        if (!gpPatchRes.ok) { const e = await gpPatchRes.text(); res.status(500).json({ error: e }); return; }
+        return res.json({ ok: true });
       }
 
     case 'get-blitz-promo': {

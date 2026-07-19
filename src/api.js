@@ -175,7 +175,10 @@ async function syncAccountToSupabase(){
   }
 }
 
-function accountRowToCfg(row){
+function accountRowToCfg(row, globalDefaults){
+  // Three-tier fallback: roofer's own saved value > SuperAdmin global default > hardcoded DEFAULTS
+  const gd = globalDefaults || window._globalPostcardDefaults || {};
+  function pcFallback(rowVal, gdKey, hardDefault){ return rowVal || gd[gdKey] || hardDefault; }
   return {
     companyName: row.company_name||'Your Roofing Co',
     companyPhone: row.company_phone||'',
@@ -187,20 +190,20 @@ function accountRowToCfg(row){
     brandColor: row.brand_color||'#F25C05',
     bookingUrl: row.booking_url||'',
     leadAlertEmail: row.lead_alert_email||'',
-    hookLetter: row.hook_letter||DEFAULTS.hookLetter,
-    whyReceived: row.why_received||DEFAULTS.whyReceived,
-    postcardHook: row.postcard_hook||DEFAULTS.postcardHook,
-    postcardWhy: row.postcard_why||DEFAULTS.postcardWhy,
-    postcardQuote: row.postcard_quote||DEFAULTS.postcardQuote,
-    postcardGuarantee: row.postcard_guarantee||DEFAULTS.postcardGuarantee,
-    postcardHeadline1: row.postcard_headline1||'It might be time for a new roof.',
-    postcardHeadline2: row.postcard_headline2||'But don\'t worry, we can help!',
-    postcardBadgeText: row.postcard_badge_text||'',
+    hookLetter: pcFallback(row.hook_letter, 'hookLetter', DEFAULTS.hookLetter),
+    whyReceived: pcFallback(row.why_received, 'whyReceived', DEFAULTS.whyReceived),
+    postcardHook: pcFallback(row.postcard_hook, 'postcardHook', DEFAULTS.postcardHook),
+    postcardWhy: pcFallback(row.postcard_why, 'postcardWhy', DEFAULTS.postcardWhy),
+    postcardQuote: pcFallback(row.postcard_quote, 'postcardQuote', DEFAULTS.postcardQuote),
+    postcardGuarantee: pcFallback(row.postcard_guarantee, 'postcardGuarantee', DEFAULTS.postcardGuarantee),
+    postcardHeadline1: pcFallback(row.postcard_headline1, 'postcardHeadline1', 'It might be time for a new roof.'),
+    postcardHeadline2: pcFallback(row.postcard_headline2, 'postcardHeadline2', 'But don\'t worry, we can help!'),
+    postcardBadgeText: pcFallback(row.postcard_badge_text, 'postcardBadgeText', ''),
     postcardBadgeColor: row.postcard_badge_color||row.brand_color||'#F25C05',
-    postcardBackBadgeText: row.postcard_back_badge_text||'',
+    postcardBackBadgeText: pcFallback(row.postcard_back_badge_text, 'postcardBackBadgeText', ''),
     postcardBackBadgeColor: row.postcard_back_badge_color||row.brand_color||'#F25C05',
-    postcardScanCta: row.postcard_scan_cta||'SCAN TO BOOK',
-    postcardScanSub: row.postcard_scan_sub||'No-pressure booking',
+    postcardScanCta: pcFallback(row.postcard_scan_cta, 'postcardScanCta', 'SCAN TO BOOK'),
+    postcardScanSub: pcFallback(row.postcard_scan_sub, 'postcardScanSub', 'No-pressure booking'),
     postcardPhotoLayout: row.postcard_photo_layout||'single',
     postcardShowPrice: row.postcard_show_price!==false,
     postcardShowMonthly: row.postcard_show_monthly!==false,

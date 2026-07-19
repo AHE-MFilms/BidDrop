@@ -599,10 +599,65 @@ function renderSuperAdminPanel(accounts, allProfiles){
         '<button onclick="saveBlitzPromo()" style="width:100%;background:linear-gradient(135deg,#22C55E,#16A34A);border:none;border-radius:8px;padding:10px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">\uD83D\uDCBE Save Promo Settings</button>'+
         '<div id="bp-result" style="margin-top:8px;font-size:12px;"></div>'+
       '</div>'+
+      '<hr style="border:none;border-top:1px solid var(--border);margin:20px 0 14px;">'+
+      '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#F97316;margin-bottom:4px;">\uD83D\uDCDD Global Postcard Defaults</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Set site-wide default text for all postcard fields. Individual roofers can override these in their own Settings. Leave blank to use the built-in hardcoded defaults.</div>'+
+      '<div id="gpd-section" style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:16px;">'+
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">'+
+          '<div>'+
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Headline 1 (Front — large text)</label>'+
+            '<input id="gpd-headline1" type="text" placeholder="It might be time for a new roof." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
+          '</div>'+
+          '<div>'+
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Headline 2 (Front — sub-headline)</label>'+
+            '<input id="gpd-headline2" type="text" placeholder="But don&#39;t worry, we can help!" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
+          '</div>'+
+        '</div>'+
+        '<div style="margin-bottom:12px;">'+
+          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Hook / Intro (Back — main body paragraph)</label>'+
+          '<textarea id="gpd-hook" rows="3" placeholder="We built a project estimate for your home using satellite measurements and current pricing..." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>'+
+        '</div>'+
+        '<div style="margin-bottom:12px;">'+
+          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Why We Reached Out (Back — secondary paragraph)</label>'+
+          '<textarea id="gpd-why" rows="3" placeholder="We prepare estimates before we reach out so you have real numbers to work with from the start..." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>'+
+        '</div>'+
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">'+
+          '<div>'+
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Quote / Testimonial (Back — optional)</label>'+
+            '<textarea id="gpd-quote" rows="2" placeholder="Leave blank to hide" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>'+
+          '</div>'+
+          '<div>'+
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Guarantee / Disclaimer (Back — small print)</label>'+
+            '<textarea id="gpd-guarantee" rows="2" placeholder="Prepared from satellite data. Your contractor will verify details on-site." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>'+
+          '</div>'+
+        '</div>'+
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">'+
+          '<div>'+
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">QR Scan CTA (e.g. SCAN TO BOOK)</label>'+
+            '<input id="gpd-scan-cta" type="text" placeholder="SCAN TO BOOK" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
+          '</div>'+
+          '<div>'+
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">QR Scan Sub-label</label>'+
+            '<input id="gpd-scan-sub" type="text" placeholder="No-pressure booking" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
+          '</div>'+
+        '</div>'+
+        '<div style="margin-bottom:12px;">'+
+          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Letter Hook / Intro (Estimate letter body)</label>'+
+          '<textarea id="gpd-hook-letter" rows="3" placeholder="We put together a project estimate for your home based on satellite measurements..." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>'+
+        '</div>'+
+        '<div style="margin-bottom:14px;">'+
+          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Letter Why Received (Estimate letter — why they got this)</label>'+
+          '<textarea id="gpd-why-received" rows="3" placeholder="We use satellite imagery and current pricing data to build project estimates for homeowners in our service area..." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>'+
+        '</div>'+
+        '<button onclick="saveGlobalPostcardDefaults()" style="width:100%;background:linear-gradient(135deg,#F97316,#c44a00);border:none;border-radius:8px;padding:10px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">\uD83D\uDCBE Save Global Postcard Defaults</button>'+
+        '<div id="gpd-result" style="margin-top:8px;font-size:12px;"></div>'+
+      '</div>'+
     '</div>' +
     '</div>');
   // Load current promo state from DB and populate the UI
   loadBlitzPromoState();
+  // Load current global postcard defaults
+  loadGlobalPostcardDefaults();
 }
 
 async function seedCanvasTemplates(){
@@ -1253,5 +1308,68 @@ async function saveBlitzPromo(){
     toast('❌ Save failed: '+e.message,'error');
   } finally {
     if(btn){ btn.disabled=false; btn.textContent='💾 Save Promo Settings'; }
+  }
+}
+
+// ── Global Postcard Defaults (SuperAdmin) ─────────────────────────────────────
+async function loadGlobalPostcardDefaults(){
+  try {
+    const r = await fetch('/api/admin?action=get-global-postcard-defaults', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    if(!r.ok) return;
+    const data = await r.json();
+    const d = data.defaults || {};
+    const set = (id, val) => { const el = document.getElementById(id); if(el && val) el.value = val; };
+    set('gpd-headline1',   d.postcardHeadline1);
+    set('gpd-headline2',   d.postcardHeadline2);
+    set('gpd-hook',        d.postcardHook);
+    set('gpd-why',         d.postcardWhy);
+    set('gpd-quote',       d.postcardQuote);
+    set('gpd-guarantee',   d.postcardGuarantee);
+    set('gpd-scan-cta',    d.postcardScanCta);
+    set('gpd-scan-sub',    d.postcardScanSub);
+    set('gpd-hook-letter', d.hookLetter);
+    set('gpd-why-received',d.whyReceived);
+  } catch(e){ console.warn('[GPD] load error:', e); }
+}
+
+async function saveGlobalPostcardDefaults(){
+  if(!isSuperAdmin()){ toast('Permission denied','error'); return; }
+  const btn = document.querySelector('[onclick="saveGlobalPostcardDefaults()"]');
+  const res = document.getElementById('gpd-result');
+  if(btn){ btn.disabled=true; btn.textContent='Saving…'; }
+  if(res) res.innerHTML='';
+  const v = id => (document.getElementById(id)?.value||'').trim();
+  const defaults = {};
+  const assign = (key, id) => { const val = v(id); if(val) defaults[key] = val; };
+  assign('postcardHeadline1', 'gpd-headline1');
+  assign('postcardHeadline2', 'gpd-headline2');
+  assign('postcardHook',      'gpd-hook');
+  assign('postcardWhy',       'gpd-why');
+  assign('postcardQuote',     'gpd-quote');
+  assign('postcardGuarantee', 'gpd-guarantee');
+  assign('postcardScanCta',   'gpd-scan-cta');
+  assign('postcardScanSub',   'gpd-scan-sub');
+  assign('hookLetter',        'gpd-hook-letter');
+  assign('whyReceived',       'gpd-why-received');
+  try {
+    const r = await fetch('/api/admin?action=save-global-postcard-defaults', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ defaults })
+    });
+    if(!r.ok){ const e = await r.json(); throw new Error(e.error||'Save failed'); }
+    // Update in-memory global defaults so new accounts loaded in this session pick them up
+    window._globalPostcardDefaults = defaults;
+    if(res) res.innerHTML='<span style="color:#22c55e">✅ Global postcard defaults saved! New roofers will see these immediately. Existing roofers who haven\'t customized their text will also see the new defaults on next login.</span>';
+    toast('✅ Global postcard defaults saved!','success');
+  } catch(e){
+    if(res) res.innerHTML='<span style="color:var(--danger)">❌ '+escHtml(e.message)+'</span>';
+    toast('❌ Save failed: '+e.message,'error');
+  } finally {
+    if(btn){ btn.disabled=false; btn.textContent='💾 Save Global Postcard Defaults'; }
   }
 }
