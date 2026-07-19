@@ -653,11 +653,122 @@ function renderSuperAdminPanel(accounts, allProfiles){
         '<div id="gpd-result" style="margin-top:8px;font-size:12px;"></div>'+
       '</div>'+
     '</div>' +
+    // ── Global Default Content (CMS) ─────────────────────────────────────────
+    '<hr style="border:none;border-top:1px solid var(--border);margin:20px 0 14px;">'+
+    '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#F97316;margin-bottom:4px;">🌐 Global Default Content</div>'+
+    '<div style="font-size:11px;color:var(--muted);margin-bottom:14px;">CMS for all client-facing copy on the homeowner project report page. Individual roofers can override in their Settings. Leave blank to use the built-in defaults. Changes take effect immediately for all accounts that haven\'t customized that field.</div>'+
+    '<div id="gcd-section" style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:16px;">'+
+      // ── Gate Screen ──
+      '<div style="font-size:10px;font-weight:700;color:#F97316;letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">GATE SCREEN (Lead Capture)</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">'+
+        '<div>'+
+          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Gate Title</label>'+
+          '<input id="gcd-gate-title" type="text" placeholder="Your Project Report Is Ready" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
+        '</div>'+
+        '<div>'+
+          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Gate Button Text</label>'+
+          '<input id="gcd-gate-btn" type="text" placeholder="View My Report →" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
+        '</div>'+
+      '</div>'+
+      '<div style="margin-bottom:12px;">'+
+        '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Gate Subtitle</label>'+
+        '<textarea id="gcd-gate-sub" rows="2" placeholder="This report was prepared for your property using remote property analysis and current project data. Enter your information to continue." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>'+
+      '</div>'+
+      '<div style="margin-bottom:16px;">'+
+        '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Privacy Notice</label>'+
+        '<input id="gcd-gate-privacy" type="text" placeholder="We only share your information with the contractor who requested this report." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
+      '</div>'+
+      // ── Hero ──
+      '<div style="font-size:10px;font-weight:700;color:#F97316;letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">HERO SECTION</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">'+
+        '<div>'+
+          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Hero Tag (eyebrow label)</label>'+
+          '<input id="gcd-hero-tag" type="text" placeholder="Roofing Project Report" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
+        '</div>'+
+        '<div>'+
+          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Hero Headline (use \\n for line breaks)</label>'+
+          '<input id="gcd-hero-headline" type="text" placeholder="Your Roofing Project, Organized." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
+        '</div>'+
+      '</div>'+
+      // ── Rep Bio ──
+      '<div style="font-size:10px;font-weight:700;color:#F97316;letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">REP / ADVISOR BIO</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">'+
+        '<div>'+
+          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Default Rep Title</label>'+
+          '<input id="gcd-rep-title" type="text" placeholder="Project Advisor" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
+        '</div>'+
+        '<div>'+
+          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Video Section Label</label>'+
+          '<input id="gcd-video-title" type="text" placeholder="A message from your contractor" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
+        '</div>'+
+      '</div>'+
+      '<div style="margin-bottom:16px;">'+
+        '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Default Rep Bio (shown when roofer hasn\'t set an inspection note)</label>'+
+        '<textarea id="gcd-rep-bio" rows="3" placeholder="Welcome! This report was prepared to give you a clear starting point for your roofing project. When you\'re ready, we\'ll review the details with you, answer your questions, and confirm everything during an on-site visit." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>'+
+      '</div>'+
+      // ── About / Reviews / CTA ──
+      '<div style="font-size:10px;font-weight:700;color:#F97316;letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">ABOUT, REVIEWS & CTA SECTIONS</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">'+
+        '<div>'+
+          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">About Section Title</label>'+
+          '<input id="gcd-about-title" type="text" placeholder="Meet Your Contractor." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
+        '</div>'+
+        '<div>'+
+          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Reviews Section Title</label>'+
+          '<input id="gcd-reviews-title" type="text" placeholder="What Customers Are Saying." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
+        '</div>'+
+      '</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">'+
+        '<div>'+
+          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">CTA Headline</label>'+
+          '<input id="gcd-cta-title" type="text" placeholder="Ready When You Are." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
+        '</div>'+
+        '<div>'+
+          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Sticky Bar Tag (e.g. Licensed &amp; Insured)</label>'+
+          '<input id="gcd-sticky-tag" type="text" placeholder="Licensed &amp; Insured" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
+        '</div>'+
+      '</div>'+
+      '<div style="margin-bottom:12px;">'+
+        '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">CTA Subheading</label>'+
+        '<textarea id="gcd-cta-sub" rows="2" placeholder="If you\'d like to move forward, schedule a convenient inspection and we\'ll verify the project details together." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>'+
+      '</div>'+
+      // ── Disclaimers ──
+      '<div style="font-size:10px;font-weight:700;color:#F97316;letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">DISCLAIMERS & FOOTER</div>'+
+      '<div style="margin-bottom:12px;">'+
+        '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Footer Disclaimer (bottom of page)</label>'+
+        '<textarea id="gcd-footer-disclaimer" rows="2" placeholder="This project report was created for you by the contractor listed above. By viewing this page, you acknowledge that your interaction may be tracked for advertising purposes..." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>'+
+      '</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">'+
+        '<div>'+
+          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Property / Pricing Disclaimer</label>'+
+          '<textarea id="gcd-property-disclaimer" rows="2" placeholder="Pricing is an estimate based on property data. Final cost confirmed during on-site inspection." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>'+
+        '</div>'+
+        '<div>'+
+          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Material Disclaimer</label>'+
+          '<textarea id="gcd-material-disclaimer" rows="2" placeholder="Material pricing reflects current market rates and may change. Your contractor will confirm at time of project." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>'+
+        '</div>'+
+      '</div>'+
+      // ── SMS / Email Templates ──
+      '<div style="font-size:10px;font-weight:700;color:#F97316;letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">SMS & EMAIL TEMPLATES</div>'+
+      '<div style="margin-bottom:12px;">'+
+        '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Default SMS Template (sent to homeowner — use {{name}}, {{url}})</label>'+
+        '<textarea id="gcd-sms-template" rows="3" placeholder="Hi {{name}}, your roofing project report is ready. View it here: {{url}}" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>'+
+      '</div>'+
+      '<div style="margin-bottom:16px;">'+
+        '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Default Email Subject</label>'+
+        '<input id="gcd-email-subject" type="text" placeholder="Your Roofing Project Report Is Ready" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
+      '</div>'+
+      '<button onclick="saveGlobalContentDefaults()" style="width:100%;background:linear-gradient(135deg,#F97316,#c44a00);border:none;border-radius:8px;padding:10px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">💾 Save Global Content Defaults</button>'+
+      '<div id="gcd-result" style="margin-top:8px;font-size:12px;"></div>'+
+    '</div>'+
+    '</div>' +
     '</div>');
   // Load current promo state from DB and populate the UI
   loadBlitzPromoState();
   // Load current global postcard defaults
   loadGlobalPostcardDefaults();
+  // Load current global content defaults
+  loadGlobalContentDefaults();
 }
 
 async function seedCanvasTemplates(){
@@ -1371,5 +1482,85 @@ async function saveGlobalPostcardDefaults(){
     toast('❌ Save failed: '+e.message,'error');
   } finally {
     if(btn){ btn.disabled=false; btn.textContent='💾 Save Global Postcard Defaults'; }
+  }
+}
+
+// ── Global Content Defaults (CMS) ────────────────────────────────────────────
+
+async function loadGlobalContentDefaults(){
+  try {
+    const r = await fetch('/api/admin?action=get-global-content-defaults', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    if(!r.ok) return;
+    const data = await r.json();
+    const d = data.defaults || {};
+    const set = (id, val) => { const el = document.getElementById(id); if(el && val) el.value = val; };
+    set('gcd-gate-title',          d.gateTitle);
+    set('gcd-gate-sub',            d.gateSub);
+    set('gcd-gate-btn',            d.gateBtn);
+    set('gcd-gate-privacy',        d.gatePrivacy);
+    set('gcd-hero-tag',            d.heroTag);
+    set('gcd-hero-headline',       d.heroHeadline);
+    set('gcd-rep-title',           d.repTitle);
+    set('gcd-rep-bio',             d.repBio);
+    set('gcd-video-title',         d.videoTitle);
+    set('gcd-about-title',         d.aboutTitle);
+    set('gcd-reviews-title',       d.reviewsTitle);
+    set('gcd-cta-title',           d.ctaTitle);
+    set('gcd-cta-sub',             d.ctaSub);
+    set('gcd-sticky-tag',          d.stickyTag);
+    set('gcd-footer-disclaimer',   d.footerDisclaimer);
+    set('gcd-property-disclaimer', d.propertyDisclaimer);
+    set('gcd-material-disclaimer', d.materialDisclaimer);
+    set('gcd-sms-template',        d.smsTemplate);
+    set('gcd-email-subject',       d.emailSubject);
+  } catch(e){ console.warn('[GCD] load error:', e); }
+}
+
+async function saveGlobalContentDefaults(){
+  if(!isSuperAdmin()){ toast('Permission denied','error'); return; }
+  const btn = document.querySelector('[onclick="saveGlobalContentDefaults()"]');
+  const res = document.getElementById('gcd-result');
+  if(btn){ btn.disabled=true; btn.textContent='Saving…'; }
+  if(res) res.innerHTML='';
+  const v = id => (document.getElementById(id)?.value||'').trim();
+  const defaults = {};
+  const assign = (key, id) => { const val = v(id); if(val) defaults[key] = val; };
+  assign('gateTitle',          'gcd-gate-title');
+  assign('gateSub',            'gcd-gate-sub');
+  assign('gateBtn',            'gcd-gate-btn');
+  assign('gatePrivacy',        'gcd-gate-privacy');
+  assign('heroTag',            'gcd-hero-tag');
+  assign('heroHeadline',       'gcd-hero-headline');
+  assign('repTitle',           'gcd-rep-title');
+  assign('repBio',             'gcd-rep-bio');
+  assign('videoTitle',         'gcd-video-title');
+  assign('aboutTitle',         'gcd-about-title');
+  assign('reviewsTitle',       'gcd-reviews-title');
+  assign('ctaTitle',           'gcd-cta-title');
+  assign('ctaSub',             'gcd-cta-sub');
+  assign('stickyTag',          'gcd-sticky-tag');
+  assign('footerDisclaimer',   'gcd-footer-disclaimer');
+  assign('propertyDisclaimer', 'gcd-property-disclaimer');
+  assign('materialDisclaimer', 'gcd-material-disclaimer');
+  assign('smsTemplate',        'gcd-sms-template');
+  assign('emailSubject',       'gcd-email-subject');
+  try {
+    const r = await fetch('/api/admin?action=save-global-content-defaults', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ defaults })
+    });
+    if(!r.ok){ const e = await r.json(); throw new Error(e.error||'Save failed'); }
+    if(res) res.innerHTML='<span style="color:#22c55e">✅ Global content defaults saved! All homeowner project report pages will reflect these changes immediately for accounts that haven\'t customized their own copy.</span>';
+    toast('✅ Global content defaults saved!','success');
+  } catch(e){
+    if(res) res.innerHTML='<span style="color:var(--danger)">❌ '+escHtml(e.message)+'</span>';
+    toast('❌ Save failed: '+e.message,'error');
+  } finally {
+    if(btn){ btn.disabled=false; btn.textContent='💾 Save Global Content Defaults'; }
   }
 }

@@ -248,7 +248,9 @@ async function handle(action, req, res, ctx) {
           /* ── Per-account GHL stage mapping (Build 15) ── */
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS ghl_stage_map_json TEXT`,
           /* ── SuperAdmin global postcard defaults (Build 16) ── */
-          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS global_postcard_defaults JSONB`
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS global_postcard_defaults JSONB`,
+          /* ── SuperAdmin global content defaults / CMS (Build 17) ── */
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS global_content_defaults JSONB`
         ].join('; ');
         const results = [];
         // Run each DDL statement individually via Supabase pg_meta API (uses SERVICE_KEY)
@@ -697,6 +699,27 @@ async function handle(action, req, res, ctx) {
           body: JSON.stringify({ global_postcard_defaults: gpd })
         });
         if (!gpPatchRes.ok) { const e = await gpPatchRes.text(); res.status(500).json({ error: e }); return; }
+        return res.json({ ok: true });
+      }
+
+    /* ── Global Content Defaults (SuperAdmin CMS — estimate page & all client-facing copy) ── */
+    case 'get-global-content-defaults': {
+        const gcdRes = await sbFetch(`accounts?id=eq.${AGENCY_ACCT_ID}&select=global_content_defaults&limit=1`);
+        if (!gcdRes.ok) return res.json({ ok: true, defaults: {} });
+        const gcdRows = await gcdRes.json();
+        return res.json({ ok: true, defaults: (gcdRows[0] && gcdRows[0].global_content_defaults) || {} });
+      }
+
+    case 'save-global-content-defaults': {
+        if (!isSuperAdmin) { res.status(403).json({ error: 'Super admin only' }); return; }
+        const { defaults: gcd } = req.body;
+        if (!gcd || typeof gcd !== 'object') { res.status(400).json({ error: 'defaults object required' }); return; }
+        const gcdPatchRes = await sbFetch(`accounts?id=eq.${AGENCY_ACCT_ID}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ global_content_defaults: gcd })
+        });
+        if (!gcdPatchRes.ok) { const e = await gcdPatchRes.text(); res.status(500).json({ error: e }); return; }
         return res.json({ ok: true });
       }
 

@@ -9,8 +9,9 @@
  *  POST { action:'track_event', id, event, data } → logs mat_click / share / call events
  */
 
-const SUPABASE_URL  = process.env.SUPABASE_URL  || 'https://gtwbhxnrmfmdenogzuea.supabase.co';
-const SERVICE_KEY   = process.env.SUPABASE_SERVICE_KEY;
+const SUPABASE_URL      = process.env.SUPABASE_URL  || 'https://gtwbhxnrmfmdenogzuea.supabase.co';
+const SERVICE_KEY       = process.env.SUPABASE_SERVICE_KEY;
+const AGENCY_ACCOUNT_ID = process.env.AGENCY_ACCOUNT_ID;
 
 function cors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -164,6 +165,18 @@ export default async function handler(req, res) {
 
       // Fetch account config
       const acctR = await sbFetch(`accounts?id=eq.${encodeURIComponent(est.account_id)}&select=id,company_name,company_phone,company_addr,brand_color,logo_data,headshot,rep_name,rep_title,booking_url,diff1,diff2,diff3,diff4,diff5,diff6,years_in_business,warranty_years,financing_enabled,financing_apr,financing_term,financing_down,cost_architectural,cost_3tab,cost_designer,cost_tearoff,cost_ice_water,cost_felts,cost_dumpster,overhead,margin,estimate_page_expires_days,estimate_page_countdown,active,company_bio,pricing_config_json`);
+
+      // Fetch global content defaults from agency account (SuperAdmin CMS)
+      let globalContent = {};
+      if (AGENCY_ACCOUNT_ID) {
+        try {
+          const gcdR = await sbFetch(`accounts?id=eq.${encodeURIComponent(AGENCY_ACCOUNT_ID)}&select=global_content_defaults&limit=1`);
+          if (gcdR.ok) {
+            const gcdRows = await gcdR.json();
+            globalContent = (gcdRows[0] && gcdRows[0].global_content_defaults) || {};
+          }
+        } catch (e) { /* non-fatal — fall back to built-in defaults */ }
+      }
       const acctRows = await acctR.json();
       if (!acctRows || !acctRows.length) { res.status(404).json({ error: 'Account not found' }); return; }
       const acct = acctRows[0];
@@ -313,7 +326,9 @@ export default async function handler(req, res) {
           estimatePageCountdown: acct.estimate_page_countdown || false,
           estimatePageExpiresDays: acct.estimate_page_expires_days || null,
           companyBio: acct.company_bio || '',
-        }
+        },
+        // Global content defaults from SuperAdmin CMS — estimate page uses these as site-wide fallbacks
+        globalContent,
       });
       return;
     }

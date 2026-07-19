@@ -397,11 +397,11 @@ body{font-family:'Open Sans',sans-serif;background:var(--cream-soft);color:var(-
     <div class="ep-gate-box">
       <!-- Badge -->
       <div style="text-align:center;margin-bottom:20px;">
-        <span class="ep-gate-badge">🏠 Your Roof Estimate Is Ready</span>
+        <span class="ep-gate-badge">📋 Your Project Report Is Ready</span>
       </div>
       <!-- Title -->
-      <h2 class="ep-gate-title">Claim Your Free Estimate</h2>
-      <p class="ep-gate-sub">One of our reps personally prepared this estimate for your home. Enter your info below to view it.</p>
+      <h2 class="ep-gate-title" id="ep-gate-title">Your Project Report Is Ready</h2>
+      <p class="ep-gate-sub" id="ep-gate-sub">This report was prepared for your property using remote property analysis and current project data. Enter your information to continue.</p>
       <!-- Address box (filled by JS) -->
       <div class="ep-gate-address-box" id="ep-gate-address-box" style="display:none;">
         <span class="ep-gate-address-icon">📍</span>
@@ -440,11 +440,11 @@ body{font-family:'Open Sans',sans-serif;background:var(--cream-soft);color:var(-
       <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;">
         <input type="checkbox" id="g-consent" style="margin-top:3px;width:16px;height:16px;flex-shrink:0;accent-color:#C97D2E;cursor:pointer;">
         <label for="g-consent" style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.5;cursor:pointer;">
-          I agree to receive calls or texts about my estimate from the roofing company above. &nbsp;<a href="https://biddrop.us/privacy" target="_blank" rel="noopener" style="color:rgba(201,125,46,.7);text-decoration:none;">Privacy Policy</a>
+          I agree to receive calls or texts about my project from the contractor above. &nbsp;<a href="https://biddrop.us/privacy" target="_blank" rel="noopener" style="color:rgba(201,125,46,.7);text-decoration:none;">Privacy Policy</a>
         </label>
       </div>
-      <button class="ep-gate-btn" onclick="submitGate()">View My Estimate →</button>
-      <p class="ep-gate-privacy">🔒 Your information stays private and secure.</p>
+      <button class="ep-gate-btn" onclick="submitGate()" id="ep-gate-btn">View My Report →</button>
+      <p class="ep-gate-privacy" id="ep-gate-privacy">🔒 We only share your information with the contractor who requested this report.</p>
     </div>
   </div>
 </div>
@@ -489,9 +489,9 @@ body{font-family:'Open Sans',sans-serif;background:var(--cream-soft);color:var(-
       <div>
         <div class="ep-hero-tag">
           <div class="ep-hero-tag-dot"></div>
-          <span>Roof Replacement Estimate</span>
+          <span id="ep-hero-tag-text">Roofing Project Report</span>
         </div>
-        <h1 class="ep-hero-headline">Your<br><em>personalized</em><br>roof estimate.</h1>
+        <h1 class="ep-hero-headline" id="ep-hero-headline">Your Roofing<br><em>Project,</em><br>Organized.</h1>
         <!-- ── HOMEOWNER GREETING ── -->
         <div class="ep-greeting" id="ep-greeting" style="display:none;">
           <div id="ep-greeting-text"></div>
@@ -507,8 +507,8 @@ body{font-family:'Open Sans',sans-serif;background:var(--cream-soft);color:var(-
         <div class="ep-repbio-initials" id="ep-repbio-avatar">JF</div>
         <div class="ep-repbio-info">
           <div class="ep-repbio-name" id="ep-repbio-name">Your Estimator</div>
-          <div class="ep-repbio-title" id="ep-repbio-title">Roofing Specialist</div>
-          <p class="ep-repbio-notes" id="ep-repbio-notes">During our assessment we found damage consistent with recent storm activity. I’ve prepared this estimate to walk you through your options.</p>
+          <div class="ep-repbio-title" id="ep-repbio-title">Project Advisor</div>
+          <p class="ep-repbio-notes" id="ep-repbio-notes">Welcome! This report was prepared to give you a clear starting point for your roofing project. When you’re ready, we’ll review the details with you, answer your questions, and confirm everything during an on-site visit.</p>
         </div>
       </div>
       <div class="ep-prop-card ep-fade" style="background:rgba(255,255,255,.04);border-color:var(--border-light);">
@@ -554,7 +554,7 @@ body{font-family:'Open Sans',sans-serif;background:var(--cream-soft);color:var(-
       </div>
       <div class="ep-video-info">
         <span class="ep-section-label">Personal Message</span>
-        <h3 id="ep-video-title">A message from your estimator</h3>
+        <h3 id="ep-video-title">A message from your contractor</h3>
         <p id="ep-video-body">We recorded a short walkthrough of your assessment findings and what we recommend — watch it to understand exactly what's happening with your roof and why we made these recommendations.</p>
         <div class="ep-video-badge">🎥 Recorded just for you</div>
       </div>
@@ -563,8 +563,8 @@ body{font-family:'Open Sans',sans-serif;background:var(--cream-soft);color:var(-
 
   <!-- ── ABOUT ── -->
   <section class="ep-about-section ep-fade">
-    <span class="ep-section-label">About Your Contractor</span>
-    <h2 class="ep-section-title" style="color:#fff;">The team behind<br><em style="font-style:italic;color:var(--amber-lt);">your estimate.</em></h2>
+    <span class="ep-section-label" id="ep-about-label">About Your Contractor</span>
+    <h2 class="ep-section-title" style="color:#fff;" id="ep-about-title">Meet Your<br><em style="font-style:italic;color:var(--amber-lt);">Contractor.</em></h2>
     <div class="ep-divider"></div>
     <div class="ep-about-layout">
       <div class="ep-owner-card">
@@ -593,8 +593,8 @@ body{font-family:'Open Sans',sans-serif;background:var(--cream-soft);color:var(-
   <section class="ep-reviews-section ep-fade" id="ep-reviews-section">
     <div class="ep-reviews-hdr">
       <div>
-        <span class="ep-section-label">What Homeowners Say</span>
-        <h2 class="ep-section-title">Real reviews from<br><em style="font-style:italic;color:var(--amber);">real customers.</em></h2>
+        <span class="ep-section-label" id="ep-reviews-label">What Customers Say</span>
+        <h2 class="ep-section-title" id="ep-reviews-title">What Customers<br><em style="font-style:italic;color:var(--amber);">Are Saying.</em></h2>
         <div class="ep-divider"></div>
       </div>
       <div class="ep-google-rating" id="ep-google-rating" style="display:none;">
@@ -613,8 +613,8 @@ body{font-family:'Open Sans',sans-serif;background:var(--cream-soft);color:var(-
 
   <!-- ── CTA ── -->
   <section class="ep-cta-section">
-    <h2 class="ep-cta-title ep-fade">Ready to protect<br><em style="font-style:italic;color:var(--amber-lt);">your home?</em></h2>
-    <p class="ep-cta-sub ep-fade-d1">This estimate is valid for a limited time. Lock in your price today — no pressure, no obligation.</p>
+    <h2 class="ep-cta-title ep-fade" id="ep-cta-title">Ready When<br><em style="font-style:italic;color:var(--amber-lt);">You Are.</em></h2>
+    <p class="ep-cta-sub ep-fade-d1" id="ep-cta-sub">If you’d like to move forward, schedule a convenient inspection and we’ll verify the project details together.</p>
     <div class="ep-cta-btns ep-fade-d2" id="ep-cta-btns"></div>
     <div class="ep-contact-strip ep-fade-d2" id="ep-contact-strip"></div>
   </section>
@@ -633,7 +633,7 @@ body{font-family:'Open Sans',sans-serif;background:var(--cream-soft);color:var(-
   <!-- ── PRIVACY DISCLOSURE ── -->
   <div style="background:#040810;padding:12px 24px;text-align:center;border-top:1px solid rgba(255,255,255,.07);">
     <p style="font-size:11px;color:rgba(255,255,255,.45);line-height:1.6;max-width:680px;margin:0 auto;">
-      This page was created for you by the roofing company listed above. By viewing this page, you acknowledge that your interaction may be tracked for advertising purposes, including Meta Pixel and Google Tag. Your information is never sold.
+      This project report was created for you by the contractor listed above. By viewing this page, you acknowledge that your interaction may be tracked for advertising purposes, including Meta Pixel and Google Tag. Your information is never sold.
       &nbsp;<a href="https://biddrop.us/privacy" target="_blank" rel="noopener" style="color:rgba(255,255,255,.55);text-decoration:underline;">Privacy Policy</a>
     </p>
   </div>
@@ -706,7 +706,46 @@ function computePrice(structures,matKey,acct){
 // ── Config ─────────────────────────────────────────────────────────────────
 const API_BASE=window.location.origin;
 // ── State ──────────────────────────────────────────────────────────────────
-let _estId='',_est=null,_acct=null,_prices={};
+let _estId='',_est=null,_acct=null,_prices={},_gcd={};
+
+// ── Apply Global Content Defaults (SuperAdmin CMS) ────────────────────────────
+// Sets static copy from DB. Called once after API response. Roofer-specific
+// overrides happen later in renderPage() and take precedence over these.
+function applyGlobalContent(){
+  const g=_gcd;
+  if(!g||!Object.keys(g).length)return;
+  // Gate screen
+  const setTxt=(id,val)=>{const el=document.getElementById(id);if(el&&val)el.textContent=val;};
+  const setInner=(id,val)=>{const el=document.getElementById(id);if(el&&val)el.innerHTML=val;};
+  setTxt('ep-gate-title',   g.gateTitle);
+  setTxt('ep-gate-sub',     g.gateSub);
+  setTxt('ep-gate-privacy', g.gatePrivacy);
+  if(g.gateBtn){const b=document.getElementById('ep-gate-btn');if(b)b.textContent=g.gateBtn;}
+  // Hero
+  setTxt('ep-hero-tag-text', g.heroTag);
+  if(g.heroHeadline){
+    const h=document.getElementById('ep-hero-headline');
+    if(h)h.innerHTML=g.heroHeadline.replace(/\n/g,'<br>');
+  }
+  // Rep bio
+  setTxt('ep-repbio-title', g.repTitle);
+  setTxt('ep-repbio-notes', g.repBio);
+  setTxt('ep-video-title',  g.videoTitle);
+  // About / Reviews / CTA
+  if(g.aboutTitle){
+    const el=document.getElementById('ep-about-title');
+    if(el)el.innerHTML=g.aboutTitle.replace(/\n/g,'<br>');
+  }
+  if(g.reviewsTitle){
+    const el=document.getElementById('ep-reviews-title');
+    if(el)el.innerHTML=g.reviewsTitle.replace(/\n/g,'<br>');
+  }
+  if(g.ctaTitle){
+    const el=document.getElementById('ep-cta-title');
+    if(el)el.innerHTML=g.ctaTitle.replace(/\n/g,'<br>');
+  }
+  setTxt('ep-cta-sub', g.ctaSub);
+}
 
 // ── Init ───────────────────────────────────────────────────────────────────
 function init(){
@@ -718,6 +757,9 @@ function init(){
     .then(d=>{
       if(!d||!d.estimate){showError();return;}
       _est=d.estimate;_acct=d.account;
+      // Apply global content defaults from SuperAdmin CMS (site-wide fallbacks)
+      _gcd=d.globalContent||{};
+      applyGlobalContent();
       // ── Expiration check (non-blocking — page stays live, just shows a notice) ──
       if(_est.expiresAt){
         const expiry=new Date(_est.expiresAt);
@@ -1035,20 +1077,23 @@ function buildPage(firstName,lastName,email,phone){
     if(embedHtml){
       $('ep-video-section').style.display='block';
       $('ep-video-inner').innerHTML=embedHtml;
-      $('ep-video-title').textContent='A personal message from '+(repName||acct.companyName||'your rep');
+      $('ep-video-title').textContent=(_gcd.videoTitle||'A message from your contractor').replace(/your (estimator|rep)/i,'your contractor');
     }
   }
 
   // ── Rep Bio Row (top of page) — always use acct.repName (company owner from settings) ──
   const repDisplayName=acct.repName||acct.companyName||'Your Estimator';
-  const repDisplayTitle=(acct.repTitle||'Owner');
+  // Rep title: roofer setting > global CMS default > hardcoded
+  const repDisplayTitle=(acct.repTitle||_gcd.repTitle||'Project Advisor');
   const ini=initials(repDisplayName);
   $('ep-repbio-name').textContent=repDisplayName;
   $('ep-repbio-title').textContent=repDisplayTitle+' · '+(acct.companyName||'');
   if(est.inspectionNote){
+    // Roofer wrote a custom note for this specific estimate — always use it
     $('ep-repbio-notes').textContent=est.inspectionNote;
   } else {
-    $('ep-repbio-notes').textContent='We used satellite imagery and property data to build this estimate — no appointment needed, no guessing. Your number is right here so you can see it before you talk to anyone.';
+    // Fall back: global CMS default > hardcoded default
+    $('ep-repbio-notes').textContent=_gcd.repBio||'Welcome! This report was prepared to give you a clear starting point for your roofing project. When you’re ready, we’ll review the details with you, answer your questions, and confirm everything during an on-site visit.';
   }
   if(acct.headshot){
     $('ep-repbio-avatar').outerHTML=`<img class="ep-repbio-avatar" src="${acct.headshot}" alt="${esc(repDisplayName)}">`;
