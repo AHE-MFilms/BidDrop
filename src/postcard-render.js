@@ -678,18 +678,7 @@ async function renderPostcard6x9BackCanvas(item){
   }
   ctx.font='bold '+phoneSize+'px Arial';ctx.fillStyle='#111827';
   ctx.fillText(ph,RIGHT_COL_X,ry2+phoneSize);ry2+=phoneSize+16;
-  // Guarantee — clamp to RIGHT_COL_W so it never bleeds into Lob address zone
-  if(ry2+50 < BOTTOM_SAFE){
-    const gLineH=Math.round(guarSize*1.4);
-    ctx.font='bold '+guarSize+'px Arial';ctx.fillStyle=color;
-    // Split on ✓ bullets — each bullet on its own line
-    const rawBullets=guarantee.split(/✓/).filter(Boolean).map(b=>'✓ '+b.trim());
-    const gLines=rawBullets.length>1?rawBullets:wrapText(ctx,guarantee,RIGHT_COL_W);
-    gLines.forEach((l,i)=>{
-      const lineY=ry2+guarSize+i*gLineH;
-      if(lineY < BOTTOM_SAFE){ctx.fillText(l,RIGHT_COL_X,lineY);}
-    });
-  }
+  // Guarantee checkmarks removed per design update
   // LEFT COLUMN: logo in remaining white space below urgency
   if(logoImg){
     const logoMaxH=140;const logoMaxW=500;
@@ -958,7 +947,7 @@ ${finMo?`<div class="pd"></div><div><div class="pl">As Low As</div><div class="p
 </div>
 <div style="display:flex;align-items:center;gap:8px;margin-top:5px">
 ${qrUrl?`<div style="text-align:center;flex-shrink:0"><img src="${qrUrl}" style="width:38px;height:38px;border-radius:3px;display:block"><div style="font-size:6px;color:#888;text-transform:uppercase;margin-top:1px">Scan to Book</div></div>`:''}
-<div><div class="phl">&#128222; ${escHtml(ph)}</div>${guarantee?`<div class="gt">${guarantee.split('✓').filter(Boolean).map(b=>'✓ '+b.trim()).join('<br>')}</div>`:''}</div>
+<div><div class="phl">&#128222; ${escHtml(ph)}</div></div>
 </div>
 </div>
 </div>
@@ -1430,17 +1419,7 @@ async function renderDesignBackCanvas(cfg, overrides){
   }
   ctx.font = 'bold ' + phoneSize + 'px Arial'; ctx.fillStyle = '#111827';
   ctx.fillText(ph, RIGHT_COL_X, ry2 + phoneSize); ry2 += phoneSize + 16;
-  if(ry2 + 50 < BOTTOM_SAFE){
-    const gLineH = Math.round(guarSize * 1.4);
-    ctx.font = 'bold ' + guarSize + 'px Arial'; ctx.fillStyle = color;
-    // Split on ✓ bullets — each bullet on its own line
-    const rawBullets2=guarantee.split(/✓/).filter(Boolean).map(b=>'✓ '+b.trim());
-    const gLines = rawBullets2.length>1?rawBullets2:wrapText(ctx, guarantee, RIGHT_COL_W);
-    gLines.forEach((l, i) => {
-      const lineY = ry2 + guarSize + i * gLineH;
-      if(lineY < BOTTOM_SAFE){ ctx.fillText(l, RIGHT_COL_X, lineY); }
-    });
-  }
+  // Guarantee checkmarks removed per design update
   // ── FINE PRINT: satellite disclaimer (secondary renderer) ────────────────────
   const FINE_MAX_W2 = W - LOB_ADDR_W - SAFE * 2;
   ctx.font = '18px Arial'; ctx.fillStyle = '#9ca3af';
