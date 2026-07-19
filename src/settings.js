@@ -748,6 +748,9 @@ function saveSettings(){
     }
   }
   toast('Settings saved!','success');
+  // Refresh license banner — dismiss if license was just added
+  if (typeof renderLicenseBanner === 'function') renderLicenseBanner();
+  if (typeof renderOnboardingChecklist === 'function') renderOnboardingChecklist();
 }
 
 function applyBrand(){

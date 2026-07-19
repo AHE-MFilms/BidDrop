@@ -682,7 +682,9 @@ async function renderPostcard6x9BackCanvas(item){
   if(ry2+50 < BOTTOM_SAFE){
     const gLineH=Math.round(guarSize*1.4);
     ctx.font='bold '+guarSize+'px Arial';ctx.fillStyle=color;
-    const gLines=wrapText(ctx,guarantee,RIGHT_COL_W);
+    // Split on ✓ bullets — each bullet on its own line
+    const rawBullets=guarantee.split(/✓/).filter(Boolean).map(b=>'✓ '+b.trim());
+    const gLines=rawBullets.length>1?rawBullets:wrapText(ctx,guarantee,RIGHT_COL_W);
     gLines.forEach((l,i)=>{
       const lineY=ry2+guarSize+i*gLineH;
       if(lineY < BOTTOM_SAFE){ctx.fillText(l,RIGHT_COL_X,lineY);}
@@ -927,7 +929,7 @@ html,body{width:864px;height:576px;font-family:Arial,sans-serif;background:#fff;
 .pl{font-size:7.5px;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.4px}
 .pd{width:1px;height:20px;background:rgba(255,255,255,.3)}
 .phl{font-size:9px;color:#555;font-weight:700}
-.gt{font-size:7.5px;font-weight:700;color:#555;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gt{font-size:7.5px;font-weight:700;color:#555;margin-top:2px;line-height:1.6;}
 .ra{font-size:8px;color:#333;line-height:1.5}
 .ra .rc{font-weight:700;font-size:9px}
 .pb{border:1.5px solid #333;padding:4px 7px;text-align:center;font-size:8px;color:#333;line-height:1.4;width:96px;align-self:flex-end}
@@ -956,7 +958,7 @@ ${finMo?`<div class="pd"></div><div><div class="pl">As Low As</div><div class="p
 </div>
 <div style="display:flex;align-items:center;gap:8px;margin-top:5px">
 ${qrUrl?`<div style="text-align:center;flex-shrink:0"><img src="${qrUrl}" style="width:38px;height:38px;border-radius:3px;display:block"><div style="font-size:6px;color:#888;text-transform:uppercase;margin-top:1px">Scan to Book</div></div>`:''}
-<div><div class="phl">&#128222; ${escHtml(ph)}</div>${guarantee?`<div class="gt">${escHtml(guarantee)}</div>`:''}</div>
+<div><div class="phl">&#128222; ${escHtml(ph)}</div>${guarantee?`<div class="gt">${guarantee.split('✓').filter(Boolean).map(b=>'✓ '+b.trim()).join('<br>')}</div>`:''}</div>
 </div>
 </div>
 </div>
@@ -1431,7 +1433,9 @@ async function renderDesignBackCanvas(cfg, overrides){
   if(ry2 + 50 < BOTTOM_SAFE){
     const gLineH = Math.round(guarSize * 1.4);
     ctx.font = 'bold ' + guarSize + 'px Arial'; ctx.fillStyle = color;
-    const gLines = wrapText(ctx, guarantee, RIGHT_COL_W);
+    // Split on ✓ bullets — each bullet on its own line
+    const rawBullets2=guarantee.split(/✓/).filter(Boolean).map(b=>'✓ '+b.trim());
+    const gLines = rawBullets2.length>1?rawBullets2:wrapText(ctx, guarantee, RIGHT_COL_W);
     gLines.forEach((l, i) => {
       const lineY = ry2 + guarSize + i * gLineH;
       if(lineY < BOTTOM_SAFE){ ctx.fillText(l, RIGHT_COL_X, lineY); }

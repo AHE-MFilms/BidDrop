@@ -14,6 +14,7 @@ const ONBOARDING_STEPS = [
   { id: 'estimate', label: 'Build your first estimate',         icon: '📋',  action: ()=>goTab('estimate'), actionLabel: 'Open Estimator' },
   { id: 'mailer',   label: 'Send your first mailer',            icon: '✉️',  action: ()=>goTab('mailqueue'),actionLabel: 'Open Mail Queue' },
   { id: 'ghl',      label: 'Connect GHL integration',           icon: '🔗',  action: ()=>goTab('settings'), actionLabel: 'Go to Settings', planGate: 'pro' },
+  { id: 'license',  label: 'Add your contractor license #',      icon: '📜',  action: ()=>goTab('settings'), actionLabel: 'Go to Settings' },
 ];
 
 // Track collapsed state in memory (not persisted — resets on reload)
@@ -37,6 +38,7 @@ function autoDetectCompletedSteps() {
   if (!steps.pin      && S.pins && S.pins.filter(p=>!p.deleted_at).length > 0)                   { steps.pin      = true; changed = true; }
   if (!steps.estimate && S.estimates && S.estimates.length > 0)                                   { steps.estimate = true; changed = true; }
   if (!steps.ghl      && (S.cfg.ghlOauthLocationId || S.cfg.ghlLocationId))                      { steps.ghl      = true; changed = true; }
+  if (!steps.license  && S.cfg.licenseNum && S.cfg.licenseNum.trim())                            { steps.license  = true; changed = true; }
 
   if (changed) save();
   return steps;
@@ -159,6 +161,24 @@ function renderOnboardingChecklist() {
   }
 }
 
+// Show a persistent yellow warning banner if the roofer has no license number
+function renderLicenseBanner() {
+  const existing = document.getElementById('bd-license-banner');
+  if (existing) existing.remove();
+  // Only show to admins who are missing their license number
+  if (!isAdminOrAbove()) return;
+  if (S.cfg.licenseNum && S.cfg.licenseNum.trim()) return; // already set
+  const banner = document.createElement('div');
+  banner.id = 'bd-license-banner';
+  banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#f59e0b;color:#1c1917;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;padding:9px 16px;box-shadow:0 -2px 12px rgba(0,0,0,.25);';
+  banner.innerHTML = `
+    <span>⚠️ Your contractor license number is missing — required for postcards and estimate pages.</span>
+    <button onclick="goTab('settings');document.getElementById('bd-license-banner')?.remove()" style="background:#1c1917;color:#fbbf24;border:none;border-radius:6px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;">Add License →</button>
+    <button onclick="document.getElementById('bd-license-banner')?.remove()" style="background:none;border:none;color:#1c1917;font-size:18px;cursor:pointer;line-height:1;opacity:.6;">×</button>
+  `;
+  document.body.appendChild(banner);
+}
+
 // Called from auth.js after account loads — initialize the checklist
 function initOnboarding() {
   // Only show to admins (not reps)
@@ -166,5 +186,6 @@ function initOnboarding() {
   // Slight delay to let S.pins / S.estimates load
   setTimeout(() => {
     renderOnboardingChecklist();
+    renderLicenseBanner();
   }, 1200);
 }
