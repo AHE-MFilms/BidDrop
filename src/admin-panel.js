@@ -1425,9 +1425,11 @@ async function saveBlitzPromo(){
 // ── Global Postcard Defaults (SuperAdmin) ─────────────────────────────────────
 async function loadGlobalPostcardDefaults(){
   try {
+    const _sess = (await sb.auth.getSession()).data.session;
+    if(!_sess) return;
     const r = await fetch('/api/admin?action=get-global-postcard-defaults', {
-      method: 'POST', credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _sess.access_token },
       body: JSON.stringify({})
     });
     if(!r.ok) return;
@@ -1467,9 +1469,11 @@ async function saveGlobalPostcardDefaults(){
   assign('hookLetter',        'gpd-hook-letter');
   assign('whyReceived',       'gpd-why-received');
   try {
+    const _sess2 = (await sb.auth.getSession()).data.session;
+    if(!_sess2){ throw new Error('Not signed in'); }
     const r = await fetch('/api/admin?action=save-global-postcard-defaults', {
-      method: 'POST', credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _sess2.access_token },
       body: JSON.stringify({ defaults })
     });
     if(!r.ok){ const e = await r.json(); throw new Error(e.error||'Save failed'); }
@@ -1489,9 +1493,11 @@ async function saveGlobalPostcardDefaults(){
 
 async function loadGlobalContentDefaults(){
   try {
+    const _sessC = (await sb.auth.getSession()).data.session;
+    if(!_sessC) return;
     const r = await fetch('/api/admin?action=get-global-content-defaults', {
-      method: 'POST', credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _sessC.access_token },
       body: JSON.stringify({})
     });
     if(!r.ok) return;
@@ -1549,9 +1555,11 @@ async function saveGlobalContentDefaults(){
   assign('smsTemplate',        'gcd-sms-template');
   assign('emailSubject',       'gcd-email-subject');
   try {
+    const _sessC2 = (await sb.auth.getSession()).data.session;
+    if(!_sessC2){ throw new Error('Not signed in'); }
     const r = await fetch('/api/admin?action=save-global-content-defaults', {
-      method: 'POST', credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _sessC2.access_token },
       body: JSON.stringify({ defaults })
     });
     if(!r.ok){ const e = await r.json(); throw new Error(e.error||'Save failed'); }
