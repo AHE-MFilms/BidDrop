@@ -630,6 +630,9 @@ body{font-family:'Open Sans',sans-serif;background:var(--cream-soft);color:var(-
       </a>
     </div>
   </footer>
+  <!-- ── LEGAL DISCLAIMERS ── -->
+  <div id="ep-legal-block" style="background:#040810;padding:20px 24px 4px;border-top:1px solid rgba(255,255,255,.07);"></div>
+
   <!-- ── PRIVACY DISCLOSURE ── -->
   <div style="background:#040810;padding:12px 24px;text-align:center;border-top:1px solid rgba(255,255,255,.07);">
     <p style="font-size:11px;color:rgba(255,255,255,.45);line-height:1.6;max-width:680px;margin:0 auto;">
@@ -1147,6 +1150,22 @@ function buildPage(firstName,lastName,email,phone){
 
   // ── Footer ──
   $('ep-footer-co').textContent='© '+new Date().getFullYear()+' '+(acct.companyName||'Your Roofing Company');
+
+  // ── Legal disclaimers ──
+  (function(){
+    const legalEl = $('ep-legal-block');
+    if(!legalEl) return;
+    const lines = [];
+    // Estimate disclaimer
+    lines.push('This project report is a preliminary estimate based on satellite-derived property measurements and current regional material pricing. It is not a contract, guarantee, or final bid. Actual costs may vary based on roof pitch, structural complexity, local labor rates, material availability, and findings from an on-site inspection. A licensed contractor must perform a physical assessment before any final pricing is confirmed.');
+    // Financing disclaimer
+    if(acct.financingEnabled !== false && acct.financingApr && acct.financingTerm){
+      lines.push('Monthly payment estimates are for illustrative purposes only. Example: a loan of the estimated project amount at ' + (acct.financingApr||9.99) + '% APR for ' + (acct.financingTerm||60) + ' months with $0 down. Actual rate, term, and monthly payment will vary based on creditworthiness and lender approval. Financing is subject to credit approval by a third-party lender. BidDrop and the contractor listed above are not lenders and do not guarantee financing availability.');
+    }
+    // Satellite / AI disclaimer
+    lines.push('Roof measurements are generated using aerial imagery and AI-assisted analysis. Results are estimates only and may differ from field measurements. BidDrop makes no warranty, express or implied, as to the accuracy of satellite-derived measurements.');
+    legalEl.innerHTML = lines.map((t,i) => `<p style="font-size:10.5px;color:rgba(255,255,255,.38);line-height:1.65;max-width:760px;margin:0 auto ${i<lines.length-1?'12px':'16px'};text-align:center;">${t}</p>`).join('');
+  })();
 
   // ── Show page ──
   $('ep-page').style.display='block';
