@@ -523,12 +523,13 @@ body{font-family:'Open Sans',sans-serif;background:var(--cream-soft);color:var(-
     <div class="ep-est-hero ep-fade">
       <div class="ep-est-left">
         <p class="ep-est-eyebrow">Total Replacement Cost Estimate</p>
-        <div class="ep-est-big"><span class="dollar">$</span><span id="ep-price">0</span></div>
+        <div class="ep-est-big"><span class="dollar">$</span><span id="ep-price">0</span><sup style="font-size:18px;font-weight:600;color:rgba(255,255,255,.5);vertical-align:super;margin-left:2px;">*</sup></div>
       </div>
       <div class="ep-est-divider"></div>
       <div class="ep-est-right">
         <p class="ep-est-note">Includes all materials, labor, disposal &amp; cleanup</p>
         <p class="ep-est-mo" id="ep-monthly"></p>
+        <p id="ep-monthly-dagger" style="display:none;font-size:11px;color:rgba(255,255,255,.35);margin-top:2px;">†</p>
       </div>
     </div>
 
@@ -538,6 +539,12 @@ body{font-family:'Open Sans',sans-serif;background:var(--cream-soft);color:var(-
     </div>
 
     <div class="ep-detail-grid" id="ep-detail-grid"></div>
+
+    <!-- Inline fine print -->
+    <div id="ep-inline-disclaimer" style="margin-top:14px;padding:12px 16px;background:rgba(0,0,0,.04);border-radius:10px;border:1px solid rgba(0,0,0,.07);">
+      <p style="font-size:11px;color:#888888;line-height:1.65;margin:0 0 4px;">* Estimate based on satellite-derived measurements and current material pricing. Not a contract or guarantee. Final pricing confirmed after on-site inspection by a licensed contractor.</p>
+      <p id="ep-fin-inline-disc" style="font-size:11px;color:#888888;line-height:1.65;margin:0;display:none;">† Monthly payment shown is an illustrative example only. Subject to credit approval by a third-party lender. Actual rate and term will vary.</p>
+    </div>
   </section>
 
   <!-- ── PHOTO GALLERY ── -->
@@ -1010,6 +1017,7 @@ function buildPage(firstName,lastName,email,phone){
     if(matSec) matSec.style.display='none';
     $('ep-price').textContent=Math.round(est.priceOverride).toLocaleString();
     $('ep-monthly').textContent=acct.financingEnabled!==false?fmtMo(est.priceOverride,acct.financingApr,acct.financingTerm):'';
+    if(acct.financingEnabled!==false&&acct.financingApr){const _d=$('ep-monthly-dagger');const _d2=$('ep-fin-inline-disc');if(_d)_d.style.display='block';if(_d2)_d2.style.display='block';}
   } else {
     const avail=MATS.filter(m=>(_prices[m.key]||0)>0);
     if(!avail.length){$('ep-mat-grid').closest('section').style.display='none';}
@@ -1034,6 +1042,7 @@ function buildPage(firstName,lastName,email,phone){
     const sp=_prices[selMat?.key||'1.3']||0;
     $('ep-price').textContent=Math.round(sp).toLocaleString();
     $('ep-monthly').textContent=acct.financingEnabled!==false?fmtMo(sp,acct.financingApr,acct.financingTerm):'';
+    if(acct.financingEnabled!==false&&acct.financingApr){const _d=$('ep-monthly-dagger');const _d2=$('ep-fin-inline-disc');if(_d)_d.style.display='block';if(_d2)_d2.style.display='block';}
   }
 
   // ── Roof Details ──
