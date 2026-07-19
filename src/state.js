@@ -77,12 +77,12 @@ const DEFAULTS = {
   ghlEmailTpl:'Hi {name},\n\nI hope this message finds you well! I\'m {rep} from {company}. I recently visited your property at {address} and noticed your roof may need attention.\n\nWe\'re offering free storm damage assessments this week. Would you like to schedule a time?\n\nBest,\n{rep}\n{company}',
   // Letter & pitch
   repName:'', repVideoUrl:'', licenseNum:'', yearsInBusiness:'5+', warrantyYears:'10',
-  hookLetter:'We put together a project estimate for your home based on satellite measurements and current material pricing. This gives you a real number to work with before we ever meet — so you can review your options on your own time, ask questions, and decide if it makes sense to move forward. No pressure, no obligation.',
-  whyReceived:'We use satellite imagery and current pricing data to build project estimates for homeowners in our service area. This is a starting point — not a final price. Your contractor will verify measurements and conditions on-site before any work begins.',
-  postcardHook:'We built a project estimate for your home using satellite measurements and current pricing. Review it on your own time — no appointment, no pressure.',
-  postcardWhy:'We prepare estimates before we reach out so you have real numbers to work with from the start. No guessing, no runaround — just a straightforward starting point from a local crew.',
+  hookLetter:'Every roof tells a story. Yours says it\'s time for new shingles. That\'s why we measured your home from satellite imagery — to give you an exact price before we ever knock on your door. You control the next step — no contractor showing up unannounced.',
+  whyReceived:'We identified your home because your roof shows signs of age or damage. This estimate was built from satellite imagery of your specific property — not a template quote. Your contractor will verify details on-site before any work begins.',
+  postcardHook:'Every roof tells a story. Yours says it\'s time for new shingles. That\'s why we measured your home from satellite imagery — to give you an exact price before we ever knock on your door.',
+  postcardWhy:'We identified your home because your roof shows signs of age or damage. You control the next step — scan the QR code, call us, or ignore. No contractor showing up unannounced.',
   postcardQuote:'',
-  postcardGuarantee:'Prepared from satellite data. Your contractor will verify details on-site.',
+  postcardGuarantee:'\u2713 Your specific roof was measured — not a template quote  \u2713 Real price. Real numbers. Real timeline.  \u2713 You decide what happens next',
   financingEnabled:true, financingApr:9.99, financingTerm:60, financingDown:0,
   // Comparison table (company values; competitor col is hardcoded)
   diff1:'Licensed, Bonded & Insured', diff2:'Manufacturer Certified', diff3:'Itemized Pricing', diff4:'Workmanship Warranty', diff5:'Financing Available', diff6:'Local Crews',
