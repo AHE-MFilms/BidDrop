@@ -85,7 +85,7 @@ const DEFAULTS = {
   postcardGuarantee:'\u2713 Your specific roof was measured — not a template quote  \u2713 Real price. Real numbers. Real timeline.  \u2713 You decide what happens next',
   financingEnabled:true, financingApr:9.99, financingTerm:60, financingDown:0,
   // Comparison table (company values; competitor col is hardcoded)
-  diff1:'Licensed, Bonded & Insured', diff2:'Manufacturer Certified', diff3:'Itemized Pricing', diff4:'Workmanship Warranty', diff5:'Financing Available', diff6:'Local Crews',
+  diff1:'Fully Licensed & Fully Insured', diff2:'Factory-Certified Installers', diff3:'Clear, Line-by-Line Estimates', diff4:'Long-Term Craftsmanship Guarantee', diff5:'Flexible Payment Plans Available', diff6:'Local Team, Not Subcontracted',
   // Services for page 4
   offerSiding:true, offerWindows:false, offerGutters:true, offerSolar:false, offerCustom:'',
   costSolarPerWatt:3.50,

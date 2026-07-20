@@ -1061,7 +1061,7 @@ function buildPage(firstName,lastName,email,phone){
     let p1=fn?`<strong>${esc(fn)}</strong>, we looked at your home via satellite`:`We analyzed the property via satellite`;
     if(addr) p1+=` at <strong>${esc(addr)}</strong>`;
     p1+=` \u2014 and based on the satellite imagery and property data, it may be time for a roof replacement. We built this estimate so you have a real number before anyone knocks on your door.`;
-    const p2=`We used satellite imagery and property data to build this estimate — no appointment needed, no guessing. Your number is right here.`;
+    const p2=`We used satellite imagery and property data to build this estimate — no scheduled inspection required, no surprises. Your number is right here.`;
     const p3=`Questions? ${esc(coName)} is here to help.`;
     greetingText.innerHTML=`<p class="ep-greeting-text">${p1}</p><p class="ep-greeting-text">${p2}</p><p class="ep-greeting-text">${p3}</p>`;
     greetingEl.style.display='block';
@@ -1135,7 +1135,7 @@ function buildPage(firstName,lastName,email,phone){
   ].map(s=>`<div class="ep-stat-box"><div class="ep-stat-num">${esc(s.num)}</div><div class="ep-stat-label">${esc(s.lbl)}</div></div>`).join('');
 
   if(acct.companyBio)$('ep-about-body').textContent=acct.companyBio;
-  else $('ep-about-body').textContent='We are a locally owned and operated roofing company committed to delivering exceptional craftsmanship and straightforward pricing. Our team of certified professionals handles every project with care — from the first call to the final cleanup.';
+  else $('ep-about-body').textContent='We're a family-run roofing company serving [YOUR REGION]. Every project we take on is handled with care, honest pricing, and long-term workmanship you can count on.';
 
   const diffs=[acct.diff1,acct.diff2,acct.diff3,acct.diff4,acct.diff5,acct.diff6].filter(Boolean);
   $('ep-creds').innerHTML=diffs.map(d=>`<li><div class="ep-check">✓</div>${esc(d)}</li>`).join('');
