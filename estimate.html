@@ -1135,7 +1135,7 @@ function buildPage(firstName,lastName,email,phone){
   ].map(s=>`<div class="ep-stat-box"><div class="ep-stat-num">${esc(s.num)}</div><div class="ep-stat-label">${esc(s.lbl)}</div></div>`).join('');
 
   if(acct.companyBio)$('ep-about-body').textContent=acct.companyBio;
-  else $('ep-about-body').textContent='We're a family-run roofing company serving [YOUR REGION]. Every project we take on is handled with care, honest pricing, and long-term workmanship you can count on.';
+  else $('ep-about-body').textContent='We\'re a family-run roofing company serving [YOUR REGION]. Every project we take on is handled with care, honest pricing, and long-term workmanship you can count on.';
 
   const diffs=[acct.diff1,acct.diff2,acct.diff3,acct.diff4,acct.diff5,acct.diff6].filter(Boolean);
   $('ep-creds').innerHTML=diffs.map(d=>`<li><div class="ep-check">✓</div>${esc(d)}</li>`).join('');
