@@ -441,11 +441,11 @@ async function renderPostcard6x9BackCanvas(item){
   const finDown=parseFloat(cfg.financingDown)||0;
   let finMo=0;
   if(finEnabled&&total){const loan=total*(1-finDown/100);const r=finApr/100/12;finMo=r===0?Math.round(loan/finTerm):Math.round(loan*r*Math.pow(1+r,finTerm)/(Math.pow(1+r,finTerm)-1));}
-  const hook=cfg.postcardHook||'Every roof tells a story. Yours says it\'s time for new shingles. That\'s why we measured your home from satellite imagery — to give you an exact price before we ever knock on your door.';
-  const why=cfg.postcardWhy||'We identified your home because your roof shows signs of age or damage. You control the next step — scan the QR code, call us, or ignore. No contractor showing up unannounced.';
+  const hook=cfg.postcardHook||'Every roof tells a story. Yours says it might be time for new shingles. We measured your home from satellite imagery to give you an accurate starting estimate \u2014 no scheduled visit required.';
+  const why=cfg.postcardWhy||'We identified your home because your roof shows possible signs of age or wear. This estimate is based on satellite measurements and may vary after an on-site inspection. You control the next step \u2014 scan the QR code to schedule your free in-home inspection now.';
   const pcQuote=cfg.postcardQuote||'';
   const guarantee=cfg.postcardGuarantee||'\u2713 Your specific roof was measured — not a template quote  \u2713 Real price. Real numbers. Real timeline.  \u2713 You decide what happens next';
-  const badges=[cfg.diff1||'Licensed, Bonded & Insured',cfg.diff2||'Manufacturer Certified',cfg.diff3||'Itemized Pricing'].filter(Boolean).slice(0,3);
+  const badges=[cfg.diff1||'Fully Licensed & Fully Insured',cfg.diff2||'Factory-Certified Installers',cfg.diff3||'Clear, Line-by-Line Estimates'].filter(Boolean).slice(0,3);
   // Designer font sizes
   const backBadgeTxt=cfg.postcardBackBadgeText||'';
   const backBadgeColor=cfg.postcardBackBadgeColor||color;
@@ -636,8 +636,8 @@ async function renderPostcard6x9BackCanvas(item){
   const whyLineH=Math.round(whySize*1.4);
   ctx.font=whySize+'px Arial';ctx.fillStyle='#374151';
   const whyLines=wrapText(ctx,why,LEFT_COL_W-SAFE);
-  whyLines.slice(0,4).forEach((l,i)=>{ctx.fillText(l,SAFE,by+whySize+i*whyLineH);});
-  by+=Math.min(whyLines.length,4)*whyLineH+24;
+  whyLines.slice(0,6).forEach((l,i)=>{ctx.fillText(l,SAFE,by+whySize+i*whyLineH);});
+  by+=Math.min(whyLines.length,6)*whyLineH+24;
 
   // Badges
   ctx.font='bold 28px Arial';
@@ -883,8 +883,8 @@ function buildPostcard6x9BackHtml(item){
   const finDown=parseFloat(cfg.financingDown)||0;
   let finMo=0;
   if(finEnabled&&total){const loan=total*(1-finDown/100);const r=finApr/100/12;finMo=r===0?Math.round(loan/finTerm):Math.round(loan*r*Math.pow(1+r,finTerm)/(Math.pow(1+r,finTerm)-1));}
-  const hook=cfg.postcardHook||'Every roof tells a story. Yours says it\'s time for new shingles. That\'s why we measured your home from satellite imagery — to give you an exact price before we ever knock on your door.';
-  const why=cfg.postcardWhy||'We identified your home because your roof shows signs of age or damage. You control the next step — scan the QR code, call us, or ignore. No contractor showing up unannounced.';
+  const hook=cfg.postcardHook||'Every roof tells a story. Yours says it might be time for new shingles. We measured your home from satellite imagery to give you an accurate starting estimate \u2014 no scheduled visit required.';
+  const why=cfg.postcardWhy||'We identified your home because your roof shows possible signs of age or wear. This estimate is based on satellite measurements and may vary after an on-site inspection. You control the next step \u2014 scan the QR code to schedule your free in-home inspection now.';
   const pcQuote=cfg.postcardQuote||'';
   const guarantee=cfg.postcardGuarantee||'\u2713 Your specific roof was measured — not a template quote  \u2713 Real price. Real numbers. Real timeline.  \u2713 You decide what happens next';
   const headshotData=(cfg.headshot&&!cfg.headshot.startsWith('data:'))?cfg.headshot:'';
@@ -906,7 +906,7 @@ html,body{width:864px;height:576px;font-family:Arial,sans-serif;background:#fff;
 .ri strong{display:block;font-size:10px;color:#111;font-weight:800}
 .hook{font-size:9.5px;color:#333;line-height:1.4;margin-bottom:4px;font-style:italic;border-left:3px solid ${color};padding-left:7px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .wh{font-size:7.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:${color};margin-bottom:2px}
-.why{font-size:8.5px;color:#444;line-height:1.4;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.why{font-size:8.5px;color:#444;line-height:1.4;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
 .sq{font-size:8.5px;color:#333;font-style:italic;background:#fffbf0;border:1px solid #f0e0b0;border-radius:4px;padding:3px 6px;margin-bottom:4px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .sr{color:#f59e0b;font-size:9px;letter-spacing:1px;margin-bottom:1px}
 .bdg{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:4px}
@@ -1387,8 +1387,8 @@ async function renderDesignBackCanvas(cfg, overrides){
   const whyLineH = Math.round(whySize * 1.4);
   ctx.font = whySize + 'px Arial'; ctx.fillStyle = '#374151';
   const whyLines = wrapText(ctx, why, LEFT_COL_W - SAFE);
-  whyLines.slice(0, 4).forEach((l, i) => { ctx.fillText(l, SAFE, by + whySize + i * whyLineH); });
-  by += Math.min(whyLines.length, 4) * whyLineH + 24;
+  whyLines.slice(0, 6).forEach((l, i) => { ctx.fillText(l, SAFE, by + whySize + i * whyLineH); });
+  by += Math.min(whyLines.length, 6) * whyLineH + 24;
   ctx.font = 'bold 28px Arial';
   let bx2 = SAFE;
   badges.forEach(b => {
