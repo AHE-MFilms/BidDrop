@@ -164,7 +164,7 @@ export default async function handler(req, res) {
       }
 
       // Fetch account config
-      const acctR = await sbFetch(`accounts?id=eq.${encodeURIComponent(est.account_id)}&select=id,company_name,company_phone,company_addr,brand_color,logo_data,headshot,rep_name,rep_title,booking_url,diff1,diff2,diff3,diff4,diff5,diff6,years_in_business,warranty_years,financing_enabled,financing_apr,financing_term,financing_down,cost_architectural,cost_3tab,cost_designer,cost_tearoff,cost_ice_water,cost_felts,cost_dumpster,overhead,margin,estimate_page_expires_days,estimate_page_countdown,active,company_bio,pricing_config_json`);
+      const acctR = await sbFetch(`accounts?id=eq.${encodeURIComponent(est.account_id)}&select=id,company_name,company_phone,company_addr,brand_color,logo_data,headshot,rep_name,rep_title,booking_url,diff1,diff2,diff3,diff4,diff5,diff6,years_in_business,warranty_years,financing_enabled,financing_apr,financing_term,financing_down,cost_architectural,cost_3tab,cost_designer,cost_tearoff,cost_ice_water,cost_felts,cost_dumpster,overhead,margin,estimate_page_expires_days,estimate_page_countdown,active,company_bio,pricing_config_json,hook_letter,postcard_hook,postcard_why,why_received`);
 
       // Fetch global content defaults from agency account (SuperAdmin CMS)
       let globalContent = {};
@@ -311,12 +311,12 @@ export default async function handler(req, res) {
           bookingUrl:    acct.booking_url   || '',
           yearsInBusiness: acct.years_in_business || '5+',
           warrantyYears: acct.warranty_years || '10',
-          diff1: acct.diff1 || 'Licensed, Bonded & Insured',
-          diff2: acct.diff2 || 'Manufacturer Certified',
-          diff3: acct.diff3 || 'Itemized Pricing',
-          diff4: acct.diff4 || 'Workmanship Warranty',
-          diff5: acct.diff5 || 'Financing Available',
-          diff6: acct.diff6 || 'Local Crews',
+          diff1: acct.diff1 || 'Fully Licensed & Fully Insured',
+          diff2: acct.diff2 || 'Factory-Certified Installers',
+          diff3: acct.diff3 || 'Clear, Line-by-Line Estimates',
+          diff4: acct.diff4 || 'Long-Term Craftsmanship Guarantee',
+          diff5: acct.diff5 || 'Flexible Payment Plans Available',
+          diff6: acct.diff6 || 'Local Team, Not Subcontracted',
           financingEnabled: acct.financing_enabled !== false,
           financingApr:  acct.financing_apr  || 9.99,
           financingTerm: acct.financing_term || 60,
@@ -325,7 +325,11 @@ export default async function handler(req, res) {
           prices:            serverPrices,
           estimatePageCountdown: acct.estimate_page_countdown || false,
           estimatePageExpiresDays: acct.estimate_page_expires_days || null,
-          companyBio: acct.company_bio || '',
+          companyBio:    acct.company_bio    || '',
+          hookLetter:    acct.hook_letter    || '',
+          postcardHook:  acct.postcard_hook  || '',
+          postcardWhy:   acct.postcard_why   || '',
+          whyReceived:   acct.why_received   || '',
         },
         // Global content defaults from SuperAdmin CMS — estimate page uses these as site-wide fallbacks
         globalContent,
