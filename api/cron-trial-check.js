@@ -20,7 +20,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL || 'https://gtwbhxnrmfmdenogzuea.s
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
 const RESEND_KEY   = process.env.RESEND_API_KEY;
 const SENDGRID_KEY = process.env.SENDGRID_API_KEY;
-const ADMIN_EMAIL  = 'support@biddrop.io';
+const ADMIN_EMAIL  = 'john@mongoosefilms.com';
 const FROM_EMAIL   = 'BidDrop <noreply@biddrop.io>';
 const CRON_SECRET  = process.env.CRON_SECRET;
 

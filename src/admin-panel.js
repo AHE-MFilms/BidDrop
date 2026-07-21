@@ -386,7 +386,8 @@ function filterAdminAccounts(){
         '<button onclick="openAddUserModal(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\')" style="background:rgba(242,92,5,.12);border:1px solid rgba(242,92,5,.4);border-radius:5px;padding:3px 10px;color:var(--accent);font-size:10px;cursor:pointer;font-weight:700;">➕ Add User</button>'+
         '<button onclick="setAccountSlug(\''+a.id+'\',\''+escHtml(a.slug||'')+'\')" style="background:none;border:1px solid var(--border);border-radius:5px;padding:3px 10px;color:var(--muted);font-size:10px;cursor:pointer;font-weight:600;">🔗 Set Slug</button>'+
         (a.slug?'<a href="/q/'+a.slug+'" target="_blank" style="background:rgba(242,92,5,.1);border:1px solid rgba(242,92,5,.3);border-radius:5px;padding:3px 10px;color:var(--accent);font-size:10px;font-weight:600;text-decoration:none;">↗ /q/'+a.slug+'</a>':'') +
-        '<button onclick="toggleAccountActive(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\','  +(a.active!==false)+')'  +' style="background:none;border:1px solid '+(a.active!==false?'#22C55E':'#6B7280')+';border-radius:5px;padding:3px 10px;color:'+(a.active!==false?'#22C55E':'#9CA3AF')+';font-size:10px;cursor:pointer;font-weight:600;">'+(a.active!==false?'⏸ Deactivate':'▶ Reactivate')+'</button>'+
+                '<button onclick="adminChangePlan(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\',\''+escJs((a.plan||'payg').toLowerCase())+'\')" style="background:none;border:1px solid #F97316;border-radius:5px;padding:3px 10px;color:#F97316;font-size:10px;cursor:pointer;font-weight:600;" title="Change subscription plan">💳 Change Plan</button>'+
+        '<button onclick="toggleAccountActive(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\',' +(a.active!==false)+')' +' style="background:none;border:1px solid '+(a.active!==false?'#22C55E':'#6B7280')+';border-radius:5px;padding:3px 10px;color:'+(a.active!==false?'#22C55E':'#9CA3AF')+';font-size:10px;cursor:pointer;font-weight:600;">'+(a.active!==false?'⏸ Deactivate':'▶ Reactivate')+'</button>'+
         '<button onclick="toggleTracerfy(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\',' +(a.tracerfy_enabled?'true':'false')+')" style="background:none;border:1px solid '+(a.tracerfy_enabled?'#A78BFA':'#4B5563')+';border-radius:5px;padding:3px 10px;color:'+(a.tracerfy_enabled?'#A78BFA':'#9CA3AF')+';font-size:10px;cursor:pointer;font-weight:600;" title="Toggle Tracerfy skip-trace">'+(a.tracerfy_enabled?'📞 ON':'📞 OFF')+'</button>'+
         '<button onclick="deleteClientAccount(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\')" style="background:none;border:1px solid var(--danger);border-radius:5px;padding:3px 10px;color:var(--danger);font-size:10px;cursor:pointer;font-weight:600;margin-left:auto;">🗑 Delete</button>'+
       '</div>'+
@@ -466,7 +467,8 @@ function renderSuperAdminPanel(accounts, allProfiles){
           '<button onclick="openAddUserModal(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\')" style="background:rgba(242,92,5,.12);border:1px solid rgba(242,92,5,.4);border-radius:5px;padding:3px 10px;color:var(--accent);font-size:10px;cursor:pointer;font-weight:700;" title="Add user to this account">➕ Add User</button>'+
           '<button onclick="setAccountSlug(\''+a.id+'\',\''+escHtml(a.slug||'')+'\')" style="background:none;border:1px solid var(--border);border-radius:5px;padding:3px 10px;color:var(--muted);font-size:10px;cursor:pointer;font-weight:600;" title="Set quote page slug">🔗 Set Slug</button>'+
           (a.slug?'<a href="/q/'+a.slug+'" target="_blank" style="background:rgba(242,92,5,.1);border:1px solid rgba(242,92,5,.3);border-radius:5px;padding:3px 10px;color:var(--accent);font-size:10px;font-weight:600;text-decoration:none;">↗ /q/'+a.slug+'</a>':'') +
-          '<button onclick="toggleAccountActive(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\',' +(a.active!==false)+'" style="background:none;border:1px solid '+(a.active!==false?'#22C55E':'#6B7280')+';border-radius:5px;padding:3px 10px;color:'+(a.active!==false?'#22C55E':'#9CA3AF')+';font-size:10px;cursor:pointer;font-weight:600;" title="'+(a.active!==false?'Deactivate account':'Reactivate account')+'">'+(a.active!==false?'⏸ Deactivate':'▶ Reactivate')+'</button>'+
+                    '<button onclick="adminChangePlan(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\',\''+escJs((a.plan||'payg').toLowerCase())+'\')" style="background:none;border:1px solid #F97316;border-radius:5px;padding:3px 10px;color:#F97316;font-size:10px;cursor:pointer;font-weight:600;" title="Change subscription plan">💳 Change Plan</button>'+
+          '<button onclick="toggleAccountActive(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\','  +(a.active!==false)+'" style="background:none;border:1px solid '+(a.active!==false?'#22C55E':'#6B7280')+';border-radius:5px;padding:3px 10px;color:'+(a.active!==false?'#22C55E':'#9CA3AF')+';font-size:10px;cursor:pointer;font-weight:600;" title="'+(a.active!==false?'Deactivate account':'Reactivate account')+'">'+(a.active!==false?'⏸ Deactivate':'▶ Reactivate')+'</button>'+
         '<button onclick="toggleTracerfy(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\','  +(a.tracerfy_enabled?'true':'false')+')" style="background:none;border:1px solid '+(a.tracerfy_enabled?'#A78BFA':'#4B5563')+';border-radius:5px;padding:3px 10px;color:'+(a.tracerfy_enabled?'#A78BFA':'#9CA3AF')+';font-size:10px;cursor:pointer;font-weight:600;" title="Toggle Tracerfy skip-trace">'+(a.tracerfy_enabled?'📞 ON':'📞 OFF')+'</button>'+
         '<button onclick="deleteClientAccount(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\')" style="background:none;border:1px solid var(--danger);border-radius:5px;padding:3px 10px;color:var(--danger);font-size:10px;cursor:pointer;font-weight:600;margin-left:auto;" title="Delete account">🗑 Delete</button>'+
         '</div>'+
@@ -1571,4 +1573,37 @@ async function saveGlobalContentDefaults(){
   } finally {
     if(btn){ btn.disabled=false; btn.textContent='💾 Save Global Content Defaults'; }
   }
+}
+
+// ═══════════════════════════════
+//  ADMIN CHANGE PLAN
+// ═══════════════════════════════
+async function adminChangePlan(accountId, accountName, currentPlan) {
+  if(!isSuperAdmin()){ toast('Permission denied','error'); return; }
+  const otherPlan = currentPlan === 'monthly' ? 'payg' : 'monthly';
+  const otherLabel = otherPlan === 'monthly' ? 'Monthly ($99/mo)' : 'Pay-as-you-go (Free)';
+  const currentLabel = currentPlan === 'monthly' ? 'Monthly ($99/mo)' : 'Pay-as-you-go (Free)';
+  const confirmMsg = 'Change plan for "'+accountName+'"?\n\nCurrent: '+currentLabel+'\nNew: '+otherLabel+'\n\n'+(otherPlan==='payg'?'⚠️ This will IMMEDIATELY cancel their Stripe subscription.\nIf they have a GHL sub-account, cancel it manually.':'This will create a new Stripe subscription for $99/mo.')+'\n\nContinue?';
+  bdConfirm(confirmMsg, async () => {
+    try {
+      const sess = (await sb.auth.getSession()).data.session;
+      if (!sess) { toast('Please log in first.', 'error'); return; }
+      const r = await fetch('/api/credits?action=change-plan', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + sess.access_token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ viewingAccountId: accountId, newPlan: otherPlan })
+      });
+      const d = await r.json();
+      if (!r.ok) { toast(d.error || 'Could not change plan.', 'error'); return; }
+      toast('✅ Plan changed to '+otherLabel+' for '+accountName, 'success');
+      // Update local cache
+      if(_adminPanelData && _adminPanelData.clientAccounts){
+        const acct = _adminPanelData.clientAccounts.find(a=>a.id===accountId);
+        if(acct) acct.plan = otherPlan;
+      }
+      renderAdminPanel();
+    } catch(e) {
+      toast('❌ '+(e.message||'Could not change plan.'),'error');
+    }
+  });
 }

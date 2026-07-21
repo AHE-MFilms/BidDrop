@@ -46,6 +46,23 @@ const CREDIT_PACKS = {
 // Free mailer credits per month by plan
 const PLAN_FREE_CREDITS = { monthly: 40, payg: 0, starter: 0, pro: 0, agency: 0, enterprise: 0 };
 
+const RESEND_KEY = process.env.RESEND_API_KEY;
+const JOHN_EMAIL = 'john@mongoosefilms.com';
+
+async function notifyJohn(subject, html) {
+  if (!RESEND_KEY) return;
+  await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: 'BidDrop Alerts <alerts@biddrop.io>',
+      to: [JOHN_EMAIL],
+      subject,
+      html: `<div style="font-family:sans-serif;max-width:600px;">${html}</div>`,
+    }),
+  });
+}
+
 function cors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
@@ -298,6 +315,91 @@ module.exports = async function handler(req, res) {
           headers: { 'Prefer': 'return=minimal' },
           body: JSON.stringify({ cancel_at_period_end: false })
         });
+        res.status(200).json({ ok: true });
+        break;
+      }
+      case 'change-plan': {
+        // Immediately switch between monthly ($99) and payg ($0) plans
+        if (!STRIPE_KEY) { res.status(500).json({ error: 'Stripe not configured' }); return; }
+        const stripe = new Stripe(STRIPE_KEY, { apiVersion: STRIPE_API_VERSION });
+        const { newPlan } = req.body || {};
+        if (!['monthly', 'payg'].includes(newPlan)) {
+          res.status(400).json({ error: 'newPlan must be "monthly" or "payg"' }); return;
+        }
+        const cpAcctRes = await sbFetch(
+          `accounts?id=eq.${effectiveAccountId}&select=stripe_subscription_id,stripe_customer_id,company_name,plan,email`
+        );
+        if (!cpAcctRes.ok) { res.status(500).json({ error: 'Failed to fetch account' }); return; }
+        const cpAccts = await cpAcctRes.json();
+        if (!cpAccts.length) { res.status(404).json({ error: 'Account not found' }); return; }
+        const cpAcct = cpAccts[0];
+        const currentPlan = (cpAcct.plan || 'payg').toLowerCase();
+        if (currentPlan === newPlan) {
+          res.status(400).json({ error: `Already on the ${newPlan} plan.` }); return;
+        }
+        const MONTHLY_PRICE_ID = process.env.STRIPE_PRICE_MONTHLY || 'price_1TuE9ZACMaED04opUcqpS98m';
+        let stripeResult = null;
+        if (newPlan === 'monthly') {
+          // Upgrade: payg → monthly — create a new subscription
+          if (!cpAcct.stripe_customer_id) {
+            res.status(400).json({ error: 'No Stripe customer on file. Please contact support@biddrop.io.' }); return;
+          }
+          const newSub = await stripe.subscriptions.create({
+            customer: cpAcct.stripe_customer_id,
+            items: [{ price: MONTHLY_PRICE_ID }],
+            payment_behavior: 'default_incomplete',
+            expand: ['latest_invoice.payment_intent'],
+          });
+          stripeResult = newSub;
+          await sbFetch(`accounts?id=eq.${effectiveAccountId}`, {
+            method: 'PATCH',
+            headers: { 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ plan: 'monthly', stripe_subscription_id: newSub.id, cancel_at_period_end: false })
+          });
+        } else {
+          // Downgrade: monthly → payg — cancel subscription immediately
+          if (cpAcct.stripe_subscription_id) {
+            stripeResult = await stripe.subscriptions.cancel(cpAcct.stripe_subscription_id);
+          }
+          await sbFetch(`accounts?id=eq.${effectiveAccountId}`, {
+            method: 'PATCH',
+            headers: { 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ plan: 'payg', stripe_subscription_id: null, cancel_at_period_end: false })
+          });
+        }
+        // Notify John
+        const eventLabel = newPlan === 'monthly' ? '⬆️ UPGRADED to Monthly' : '⬇️ DOWNGRADED to Pay-as-you-go';
+        await notifyJohn(
+          `${eventLabel} — ${cpAcct.company_name}`,
+          `<p><strong>${cpAcct.company_name}</strong> just changed their plan.</p><p><strong>From:</strong> ${currentPlan}<br><strong>To:</strong> ${newPlan}</p><p>Account ID: ${effectiveAccountId}</p>`
+        ).catch(e => console.warn('[change-plan] notify failed:', e.message));
+        res.status(200).json({ ok: true, newPlan, stripeResult });
+        break;
+      }
+      case 'cancel-now': {
+        // Immediately cancel subscription (no waiting for period end)
+        if (!STRIPE_KEY) { res.status(500).json({ error: 'Stripe not configured' }); return; }
+        const stripe = new Stripe(STRIPE_KEY, { apiVersion: STRIPE_API_VERSION });
+        const cnAcctRes = await sbFetch(
+          `accounts?id=eq.${effectiveAccountId}&select=stripe_subscription_id,company_name,plan`
+        );
+        if (!cnAcctRes.ok) { res.status(500).json({ error: 'Failed to fetch account' }); return; }
+        const cnAccts = await cnAcctRes.json();
+        if (!cnAccts.length) { res.status(404).json({ error: 'Account not found' }); return; }
+        const cnAcct = cnAccts[0];
+        if (cnAcct.stripe_subscription_id) {
+          await stripe.subscriptions.cancel(cnAcct.stripe_subscription_id);
+        }
+        await sbFetch(`accounts?id=eq.${effectiveAccountId}`, {
+          method: 'PATCH',
+          headers: { 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ plan: 'payg', stripe_subscription_id: null, cancel_at_period_end: false, active: true })
+        });
+        // Notify John
+        await notifyJohn(
+          `🔴 CANCELLED — ${cnAcct.company_name}`,
+          `<p><strong>${cnAcct.company_name}</strong> just cancelled their subscription.</p><p>Was on: <strong>${cnAcct.plan}</strong></p><p>Account ID: ${effectiveAccountId}</p><p style="color:#ef4444;">⚠️ If they had a GHL sub-account, you may need to cancel it manually.</p>`
+        ).catch(e => console.warn('[cancel-now] notify failed:', e.message));
         res.status(200).json({ ok: true });
         break;
       }

@@ -578,6 +578,29 @@ export default async function handler(req, res) {
       mailerCredits: planConfig.mailer_credits || 10,
     });
 
+    // ---- 5b. Notify John of new signup ----
+    const resendKeyAdmin = process.env.RESEND_API_KEY;
+    if (resendKeyAdmin) {
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${resendKeyAdmin}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from: 'BidDrop Alerts <alerts@biddrop.io>',
+          to: ['john@mongoosefilms.com'],
+          subject: `🟢 NEW SIGNUP — ${companyName || customerEmail} (${planConfig.name})`,
+          html: `<div style="font-family:sans-serif;max-width:600px;">
+            <h2 style="color:#22c55e;">🟢 New BidDrop Signup</h2>
+            <p><strong>Company:</strong> ${companyName || '—'}</p>
+            <p><strong>Name:</strong> ${firstName || ''} ${lastName || ''}</p>
+            <p><strong>Email:</strong> ${customerEmail}</p>
+            <p><strong>Phone:</strong> ${phone || '—'}</p>
+            <p><strong>Plan:</strong> ${planConfig.name}</p>
+            <p style="color:#6b7280;font-size:12px;">Account ID: ${newAccount?.id || '—'}</p>
+          </div>`,
+        }),
+      }).catch(e => console.warn('[signup-webhook] John notify failed:', e.message));
+    }
+
     // ---- 6. GHL — Create contact in BidDrop sub-account ----
     const ghlContactId = await createGHLContact({
       firstName,

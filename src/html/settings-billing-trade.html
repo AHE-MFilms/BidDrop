@@ -9,14 +9,36 @@
       </div>
       <div class="stab-card-body" id="stab-body-billing">
         <div id="billing-status-row" style="margin-bottom:14px;"></div>
-        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
-          <button id="btn-manage-subscription" onclick="openBillingPortal()" style="background:var(--accent);border:none;border-radius:8px;padding:10px 20px;color:#fff;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">&#128179; Manage Subscription</button>
-          <button id="btn-cancel-subscription" onclick="confirmCancelSubscription()" style="background:none;border:1px solid var(--danger);border-radius:8px;padding:10px 18px;color:var(--danger);font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;">Cancel Plan</button>
-          <button id="btn-reactivate-subscription" onclick="reactivateSubscription()" style="display:none;background:none;border:1px solid #22C55E;border-radius:8px;padding:10px 18px;color:#22C55E;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;">&#9989; Undo Cancellation</button>
+
+        <!-- Plan cards -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;">
+          <!-- Pay-as-you-go -->
+          <div id="plan-card-payg" style="border:2px solid var(--border);border-radius:10px;padding:16px;position:relative;">
+            <div style="font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Pay-as-you-go</div>
+            <div style="font-size:26px;font-weight:900;color:var(--fg);">$0<span style="font-size:13px;font-weight:400;color:var(--muted);">/mo</span></div>
+            <div style="font-size:12px;color:var(--muted);margin:6px 0 12px;">Credits at $4 each &mdash; no monthly charge</div>
+            <button id="btn-switch-payg" onclick="switchPlan('payg')" style="width:100%;background:none;border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--fg);font-family:var(--font-b);font-size:12px;font-weight:700;cursor:pointer;">Switch to Free</button>
+          </div>
+          <!-- Monthly -->
+          <div id="plan-card-monthly" style="border:2px solid var(--accent);border-radius:10px;padding:16px;position:relative;background:var(--accent-dim);">
+            <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:10px;font-weight:800;padding:2px 10px;border-radius:20px;letter-spacing:.06em;">BEST VALUE</div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--accent);text-transform:uppercase;margin-bottom:4px;">Monthly</div>
+            <div style="font-size:26px;font-weight:900;color:var(--fg);">$99<span style="font-size:13px;font-weight:400;color:var(--muted);">/mo</span></div>
+            <div style="font-size:12px;color:var(--muted);margin:6px 0 12px;">20 credits included &bull; Up to 10 users &bull; GHL included</div>
+            <button id="btn-switch-monthly" onclick="switchPlan('monthly')" style="width:100%;background:var(--accent);border:none;border-radius:7px;padding:8px;color:#fff;font-family:var(--font-b);font-size:12px;font-weight:700;cursor:pointer;">Upgrade to Monthly</button>
+          </div>
         </div>
-        <div style="margin-top:12px;font-size:15px;color:var(--muted);line-height:1.6;">
-          <strong>Manage Subscription</strong> opens the Stripe billing portal where you can upgrade, downgrade, update your payment method, or view invoices.<br>
-          <strong>Cancel Plan</strong> will cancel your subscription at the end of the current billing period &mdash; your account stays active until then.
+
+        <!-- Current plan badge -->
+        <div id="current-plan-badge" style="background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--mid);margin-bottom:14px;">Loading plan...</div>
+
+        <!-- Action row -->
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+          <button id="btn-manage-subscription" onclick="openBillingPortal()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:9px 16px;color:var(--fg);font-family:var(--font-b);font-size:12px;font-weight:700;cursor:pointer;">&#128179; Manage Payment Method</button>
+          <button id="btn-cancel-subscription" onclick="confirmCancelNow()" style="background:none;border:1px solid var(--danger);border-radius:8px;padding:9px 16px;color:var(--danger);font-family:var(--font-b);font-size:12px;font-weight:700;cursor:pointer;">&#10005; Cancel Subscription</button>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--muted);line-height:1.6;">
+          Cancellation takes effect <strong>immediately</strong>. Your account stays active on the free plan. If you have a GHL sub-account, contact support to cancel it separately.
         </div>
       </div>
     </div>
