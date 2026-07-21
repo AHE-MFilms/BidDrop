@@ -141,14 +141,14 @@ async function handle(action, req, res, ctx) {
           res.status(200).json({ success: true, message: 'No Stripe subscription found — nothing to cancel.' });
           return;
         }
-        // Cancel the subscription at period end (client keeps access until billing cycle ends)
+        // Cancel the subscription IMMEDIATELY
         const stripeRes = await fetch(`https://api.stripe.com/v1/subscriptions/${subId}`, {
-          method: 'POST',
+          method: 'DELETE',
           headers: {
             'Authorization': `Basic ${Buffer.from(STRIPE_SECRET_KEY + ':').toString('base64')}`,
             'Content-Type': 'application/x-www-form-urlencoded'
           },
-          body: 'cancel_at_period_end=true'
+          body: 'invoice_now=false&prorate=false'
         });
         const stripeData = await stripeRes.json();
         if (!stripeRes.ok) {
@@ -156,7 +156,61 @@ async function handle(action, req, res, ctx) {
           res.status(stripeRes.status).json({ error: stripeData.error?.message || 'Stripe cancellation failed' });
           return;
         }
-        console.log(`[cancel-stripe-subscription] Cancelled sub ${subId} for ${acct.company_name}`);
+        console.log(`[cancel-stripe-subscription] Cancelled sub ${subId} immediately for ${acct.company_name}`);
+        // Update DB: clear stripe_subscription_id and set plan to payg
+        await sbFetch(`accounts?id=eq.${cancelAcctId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+          body: JSON.stringify({ stripe_subscription_id: null, plan: 'payg', cancel_at_period_end: false })
+        });
+        // Fetch account owner email to send cancellation confirmation
+        const ownerRes = await sbFetch(`user_profiles?account_id=eq.${cancelAcctId}&role=eq.admin&select=email,name&limit=1`);
+        const owners = ownerRes.ok ? await ownerRes.json() : [];
+        const ownerEmail = owners[0]?.email;
+        const ownerName = owners[0]?.name || 'there';
+        const resendKey = process.env.RESEND_API_KEY;
+        const adminEmail = 'john@mongoosefilms.com';
+        if (resendKey && ownerEmail) {
+          // Email to account owner
+          await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              from: 'BidDrop <noreply@biddrop.io>',
+              to: [ownerEmail],
+              subject: 'Your BidDrop subscription has been cancelled',
+              html: `<div style="font-family:sans-serif;max-width:600px;padding:24px;">
+                <img src="https://biddrop.us/logo.png" alt="BidDrop" style="height:36px;margin-bottom:20px;" />
+                <h2 style="color:#111;">Your subscription has been cancelled</h2>
+                <p>Hi ${ownerName},</p>
+                <p>Your BidDrop <strong>Monthly ($99/mo)</strong> subscription has been <strong>cancelled effective immediately</strong>.</p>
+                <p>Your account has been moved to the free <strong>Pay-as-you-go</strong> plan. You can still log in, view your data, and purchase credits at $4 each.</p>
+                <p>If you believe this was a mistake or would like to reactivate, reply to this email or contact us at <a href="mailto:support@biddrop.io">support@biddrop.io</a>.</p>
+                <hr style="border:none;border-top:1px solid #eee;margin:24px 0;" />
+                <p style="font-size:12px;color:#999;">BidDrop &mdash; Roofing leads without knocking doors.</p>
+              </div>`
+            })
+          }).catch(e => console.warn('[cancel-stripe-subscription] Client email failed:', e.message));
+        }
+        if (resendKey) {
+          // Notify John
+          await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              from: 'BidDrop Alerts <alerts@biddrop.io>',
+              to: [adminEmail],
+              subject: `🔴 ACCOUNT DEACTIVATED — ${acct.company_name}`,
+              html: `<div style="font-family:sans-serif;max-width:600px;">
+                <h2 style="color:#dc2626;">🔴 Account Deactivated</h2>
+                <p><strong>Company:</strong> ${acct.company_name}</p>
+                <p><strong>Owner Email:</strong> ${ownerEmail || '—'}</p>
+                <p><strong>Stripe Sub:</strong> ${subId} (cancelled immediately)</p>
+                <p style="color:#f97316;"><strong>⚠️ If this account had a GHL sub-account, cancel it manually.</strong></p>
+              </div>`
+            })
+          }).catch(e => console.warn('[cancel-stripe-subscription] John notify failed:', e.message));
+        }
         res.status(200).json({ success: true, subscription_id: subId, status: stripeData.status });
         break;
       }
