@@ -1,0 +1,293 @@
+</head>
+<body>
+
+<!-- Loading -->
+<div id="ep-loading">
+  <div class="ep-spinner"></div>
+  <div class="ep-loading-text">Loading your estimate…</div>
+</div>
+
+<!-- Error -->
+<div id="ep-error">
+  <div style="font-size:40px;">🏚️</div>
+  <div>This estimate is no longer available.</div>
+  <div style="font-size:13px;margin-top:4px;">Please contact your roofing contractor for assistance.</div>
+</div>
+
+
+<!-- Lead Gate -->
+<div id="ep-gate">
+  <div class="ep-gate-inner">
+    <!-- Logo -->
+    <div class="ep-gate-logo" id="ep-gate-logo">
+      <div class="ep-gate-logo-text">BidDrop</div>
+    </div>
+    <!-- Card -->
+    <div class="ep-gate-box">
+      <!-- Badge -->
+      <div style="text-align:center;margin-bottom:20px;">
+        <span class="ep-gate-badge">📋 Your Project Report Is Ready</span>
+      </div>
+      <!-- Title -->
+      <h2 class="ep-gate-title" id="ep-gate-title">Your Project Report Is Ready</h2>
+      <p class="ep-gate-sub" id="ep-gate-sub">This report was prepared for your property using remote property analysis and current project data. Enter your information to continue.</p>
+      <!-- Address box (filled by JS) -->
+      <div class="ep-gate-address-box" id="ep-gate-address-box" style="display:none;">
+        <span class="ep-gate-address-icon">📍</span>
+        <span class="ep-gate-address-text" id="ep-gate-address-text"></span>
+      </div>
+      <!-- Divider -->
+      <div class="ep-gate-divider">
+        <div class="ep-gate-divider-line"></div>
+        <span class="ep-gate-divider-text">Enter your details</span>
+        <div class="ep-gate-divider-line"></div>
+      </div>
+      <!-- Name row -->
+      <div class="ep-gate-row">
+        <div class="ep-gate-field">
+          <label for="g-first">First Name</label>
+          <input id="g-first" type="text" placeholder="Jane" autocomplete="given-name">
+        </div>
+        <div class="ep-gate-field">
+          <label for="g-last">Last Name</label>
+          <input id="g-last" type="text" placeholder="Smith" autocomplete="family-name">
+        </div>
+      </div>
+      <!-- Phone (required) -->
+      <div class="ep-gate-field" style="margin-bottom:14px;">
+        <label for="g-phone">Phone Number <span style="color:#ef4444;">*</span></label>
+        <input id="g-phone" type="tel" placeholder="(555) 000-0000" autocomplete="tel" oninput="onGatePhoneInput(this)" inputmode="numeric">
+        <div class="ep-gate-required" id="ep-err-phone">Please enter your phone number</div>
+      </div>
+      <!-- Email (required) -->
+      <div class="ep-gate-field" style="margin-bottom:20px;">
+        <label for="g-email">Email Address <span style="color:#ef4444;">*</span></label>
+        <input id="g-email" type="email" placeholder="jane@email.com" autocomplete="email">
+        <div class="ep-gate-required" id="ep-err-email">Please enter a valid email address</div>
+      </div>
+      <!-- Consent -->
+      <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;">
+        <input type="checkbox" id="g-consent" style="margin-top:3px;width:16px;height:16px;flex-shrink:0;accent-color:#C97D2E;cursor:pointer;">
+        <label for="g-consent" style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.5;cursor:pointer;">
+          I agree to receive calls or texts about my project from the contractor above. &nbsp;<a href="https://biddrop.us/privacy" target="_blank" rel="noopener" style="color:rgba(201,125,46,.7);text-decoration:none;">Privacy Policy</a>
+        </label>
+      </div>
+      <button class="ep-gate-btn" onclick="submitGate()" id="ep-gate-btn">View My Report →</button>
+      <p class="ep-gate-privacy" id="ep-gate-privacy">🔒 We only share your information with the contractor who requested this report.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Main Page -->
+<div id="ep-page">
+  <!-- ── EXPIRED NOTICE (injected by JS when past expiresAt) ── -->
+  <div id="ep-expired-banner" style="display:none;background:#7c2d12;border-bottom:2px solid #ea580c;padding:10px 24px;text-align:center;position:sticky;top:0;z-index:1001;">
+    <span id="ep-expired-banner-msg" style="font-size:13px;color:#fff;font-weight:600;"></span>
+  </div>
+  <!-- ── STICKY CONTACT BAR ── -->
+  <div class="ep-sticky-bar" id="ep-sticky-bar">
+    <div class="ep-sticky-co">
+      <div class="ep-sticky-logo" id="ep-sticky-logo"><span class="ep-sticky-logo-init" id="ep-sticky-logo-init">RC</span></div>
+      <div>
+        <div class="ep-sticky-name" id="ep-sticky-name">Roofing Company</div>
+        <div class="ep-sticky-tag" id="ep-sticky-tag">Licensed &amp; Insured</div>
+      </div>
+    </div>
+    <div class="ep-sticky-actions">
+      <a class="ep-sticky-phone" id="ep-sticky-phone" href="#">📞 <span id="ep-sticky-phone-num">Call Now</span></a>
+      <a class="ep-sticky-cta" id="ep-sticky-cta" href="#">Schedule Free Visit</a>
+    </div>
+  </div>
+
+  <!-- ── HERO ── -->
+  <section class="ep-hero">
+    <!-- Topbar -->
+    <div class="ep-topbar">
+      <a class="bd-logo" href="https://biddrop.us" target="_blank" rel="noopener">
+        <div class="bd-logo-icon">BD</div>
+        <span class="bd-logo-text">Bid<span>Drop</span></span>
+      </a>
+      <div class="co-slot">
+        <div class="co-badge" id="ep-co-badge">RC</div>
+        <div class="co-name-wrap">
+          <strong id="ep-co-name">Your Roofing Company</strong>
+          <small id="ep-co-tagline">Licensed &amp; Insured</small>
+        </div>
+      </div>
+    </div>
+    <!-- Hero main -->
+    <div class="ep-hero-main">
+      <div>
+        <div class="ep-hero-tag">
+          <div class="ep-hero-tag-dot"></div>
+          <span id="ep-hero-tag-text">Roofing Estimate</span>
+        </div>
+        <h1 class="ep-hero-headline" id="ep-hero-headline">Your Roof<br><em>Estimate.</em></h1>
+        <p class="ep-hero-sub" id="ep-hero-sub"></p>
+        <div class="ep-greeting" id="ep-greeting" style="display:none;">
+          <div id="ep-greeting-text"></div>
+        </div>
+      </div>
+      <div class="ep-hero-photo-col" id="ep-hero-photo-wrap"></div>
+    </div>
+  </section>
+  <!-- Rep bio + property details row -->
+  <div class="ep-repbio-section">
+    <div class="ep-repbio-grid">
+      <div class="ep-repbio-card" id="ep-repbio-card">
+        <div class="ep-repbio-initials" id="ep-repbio-avatar">JF</div>
+        <div class="ep-repbio-info">
+          <div class="ep-repbio-name" id="ep-repbio-name">Your Estimator</div>
+          <div class="ep-repbio-title" id="ep-repbio-title">Project Advisor</div>
+          <p class="ep-repbio-notes" id="ep-repbio-notes">Welcome! This report was prepared to give you a clear starting point for your roofing project. When you're ready, we'll review the details with you, answer your questions, and confirm everything during an on-site visit.</p>
+        </div>
+      </div>
+      <div class="ep-prop-card ep-fade" style="background:rgba(255,255,255,.04);border-color:var(--border-light);">
+        <p class="ep-prop-label">Property Details</p>
+        <div class="ep-prop-row" id="ep-prop-row"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ESTIMATE NUMBERS ── -->
+  <section class="ep-est-section">
+    <div class="ep-est-hero ep-fade">
+      <div class="ep-est-left">
+        <p class="ep-est-eyebrow">Total Replacement Cost Estimate</p>
+        <div class="ep-est-big"><span class="dollar">$</span><span id="ep-price">0</span><sup style="font-size:18px;font-weight:600;color:rgba(255,255,255,.5);vertical-align:super;margin-left:2px;">*</sup></div>
+      </div>
+      <div class="ep-est-divider"></div>
+      <div class="ep-est-right">
+        <p class="ep-est-note">Includes all materials, labor, disposal &amp; cleanup</p>
+        <p class="ep-est-mo" id="ep-monthly"></p>
+        <p id="ep-monthly-dagger" style="display:none;font-size:11px;color:rgba(255,255,255,.35);margin-top:2px;">†</p>
+      </div>
+    </div>
+
+    <div id="ep-mat-section">
+      <span class="ep-mat-label">Choose Your Material</span>
+      <div class="ep-mat-grid" id="ep-mat-grid"></div>
+    </div>
+
+    <div class="ep-detail-grid" id="ep-detail-grid"></div>
+
+    <!-- Inline fine print -->
+    <div id="ep-inline-disclaimer" style="margin-top:14px;padding:12px 16px;background:rgba(0,0,0,.04);border-radius:10px;border:1px solid rgba(0,0,0,.07);">
+      <p style="font-size:11px;color:#888888;line-height:1.65;margin:0 0 4px;">* Estimate based on satellite-derived measurements and current material pricing. Not a contract or guarantee. Final pricing confirmed after on-site inspection by a licensed contractor.</p>
+      <p id="ep-fin-inline-disc" style="font-size:11px;color:#888888;line-height:1.65;margin:0;display:none;">† Monthly payment shown is an illustrative example only. Subject to credit approval by a third-party lender. Actual rate and term will vary.</p>
+    </div>
+  </section>
+
+  <!-- ── PHOTO GALLERY ── -->
+  <section class="ep-gallery-section" id="ep-gallery-section" style="display:none;">
+    <span class="ep-gallery-label">Assessment Photos</span>
+    <div class="ep-photo-cats" id="ep-photo-cats"></div>
+  </section>
+
+  <!-- ── VIDEO ── -->
+  <section class="ep-video-section" id="ep-video-section" style="display:none;">
+    <div class="ep-video-layout">
+      <div style="position:relative;width:100%;padding-top:56.25%;border-radius:16px;overflow:hidden;background:var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.15);">
+        <div id="ep-video-inner" style="position:absolute;inset:0;"></div>
+      </div>
+      <div class="ep-video-info">
+        <span class="ep-section-label">Personal Message</span>
+        <h3 id="ep-video-title">A message from your contractor</h3>
+        <p id="ep-video-body">We recorded a short walkthrough of your assessment findings and what we recommend — watch it to understand exactly what's happening with your roof and why we made these recommendations.</p>
+        <div class="ep-video-badge">🎥 Recorded just for you</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ABOUT ── -->
+  <section class="ep-about-section ep-fade">
+    <span class="ep-section-label" id="ep-about-label">About Your Contractor</span>
+    <h2 class="ep-section-title" style="color:#fff;" id="ep-about-title">Meet Your<br><em style="font-style:italic;color:var(--amber-lt);">Contractor.</em></h2>
+    <div class="ep-divider"></div>
+    <div class="ep-about-layout">
+      <div class="ep-owner-card">
+        <div id="ep-owner-photo-wrap">
+          <div class="ep-owner-placeholder">
+            <div class="ep-owner-avatar" id="ep-owner-initials">RC</div>
+            <p>Rep Photo</p>
+          </div>
+        </div>
+        <div class="ep-owner-footer">
+          <div class="ep-owner-name" id="ep-owner-name">Your Estimator</div>
+          <div class="ep-owner-title" id="ep-owner-title">Roofing Specialist</div>
+          <div class="ep-owner-links" id="ep-owner-links"></div>
+        </div>
+      </div>
+      <div>
+        <div class="ep-about-stats" id="ep-about-stats"></div>
+        <p class="ep-about-body" id="ep-about-body"></p>
+        <ul class="ep-creds" id="ep-creds"></ul>
+        <div class="ep-service-badges" id="ep-service-badges"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── REVIEWS ── -->
+  <section class="ep-reviews-section ep-fade" id="ep-reviews-section">
+    <div class="ep-reviews-hdr">
+      <div>
+        <span class="ep-section-label" id="ep-reviews-label">What Customers Say</span>
+        <h2 class="ep-section-title" id="ep-reviews-title">What Customers<br><em style="font-style:italic;color:var(--amber);">Are Saying.</em></h2>
+        <div class="ep-divider"></div>
+      </div>
+      <div class="ep-google-rating" id="ep-google-rating" style="display:none;">
+        <div class="ep-google-brand">
+          <div class="ep-google-g">G</div>
+          <span>Google Reviews</span>
+        </div>
+        <div class="ep-rating-score" id="ep-rating-score">5.0</div>
+        <div class="ep-rating-stars" id="ep-rating-stars">★★★★★</div>
+        <div class="ep-rating-count" id="ep-rating-count"></div>
+      </div>
+    </div>
+    <div class="ep-reviews-grid" id="ep-reviews-grid"></div>
+    <div class="ep-review-cta" id="ep-review-cta"></div>
+  </section>
+
+  <!-- ── CTA ── -->
+  <section class="ep-cta-section">
+    <h2 class="ep-cta-title ep-fade" id="ep-cta-title">Ready When<br><em style="font-style:italic;color:var(--amber-lt);">You Are.</em></h2>
+    <p class="ep-cta-sub ep-fade-d1" id="ep-cta-sub">If you'd like to move forward, schedule a convenient inspection and we'll verify the project details together.</p>
+    <div class="ep-cta-btns ep-fade-d2" id="ep-cta-btns"></div>
+    <div class="ep-contact-strip ep-fade-d2" id="ep-contact-strip"></div>
+  </section>
+
+  <!-- ── FOOTER ── -->
+  <footer class="ep-footer">
+    <p id="ep-footer-co">© 2025 Your Roofing Company</p>
+    <div class="ep-powered">
+      <span>Powered by</span>
+      <a class="ep-powered-logo" href="https://biddrop.us" target="_blank" rel="noopener">
+        <div class="ep-powered-dot">BD</div>
+        <span class="ep-powered-name">BidDrop</span>
+      </a>
+    </div>
+  </footer>
+  <!-- ── LEGAL DISCLAIMERS ── -->
+  <div id="ep-legal-block" style="background:#040810;padding:20px 24px 4px;border-top:1px solid rgba(255,255,255,.07);"></div>
+
+  <!-- ── PRIVACY DISCLOSURE ── -->
+  <div style="background:#040810;padding:12px 24px;text-align:center;border-top:1px solid rgba(255,255,255,.07);">
+    <p style="font-size:11px;color:rgba(255,255,255,.45);line-height:1.6;max-width:680px;margin:0 auto;">
+      This project report was created for you by the contractor listed above. By viewing this page, you acknowledge that your interaction may be tracked for advertising purposes, including Meta Pixel and Google Tag. Your information is never sold.
+      &nbsp;<a href="https://biddrop.us/privacy" target="_blank" rel="noopener" style="color:rgba(255,255,255,.55);text-decoration:underline;">Privacy Policy</a>
+    </p>
+  </div>
+
+</div><!-- /ep-page -->
+
+<!-- Photo lightbox -->
+<div id="ep-lightbox">
+  <button id="ep-lightbox-close" onclick="closeLightbox()">✕</button>
+  <div id="ep-lightbox-label"></div>
+  <button id="ep-lightbox-prev" onclick="lbNav(-1)">‹</button>
+  <img id="ep-lightbox-img" src="" alt="">
+  <button id="ep-lightbox-next" onclick="lbNav(1)">›</button>
+  <div id="ep-lightbox-counter"></div>
+</div>
+

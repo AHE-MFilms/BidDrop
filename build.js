@@ -37,6 +37,73 @@ const API_OPTIONS = { ...BASE_OPTIONS, target: 'node' };
 const HTML_FILES = ['index.html', 'estimate.html', 'signup.html', 'open.html', 'privacy.html'];
 const API_SKIP = new Set(['test-ghl.js', 'migrate.js']);
 
+// ─── Pre-assemble trade estimator pages from src/estimate-{trade}/ modules ──────
+// Each trade has its own src/estimate-{trade}/ directory with:
+//   head.html       — <head> section (no noindex — pages are indexable)
+//   styles.css      — all CSS (wrapped in <style> tag)
+//   template.html   — static HTML skeleton
+//   utils.js        — helper functions, state vars, pricing
+//   data.js         — applyGlobalContent, init, showGate, submitGate
+//   build-page.js   — buildPage() and all section renderers
+//   photos.js       — renderPhotos, lightbox
+//   reviews.js      — loadReviews, renderReviews, fallback
+//   materials.js    — selectMat
+//   tracking.js     — trackView, firePixels, shareEst, initFade, showError, init()
+//   schema.js       — dynamic JSON-LD + SEO injection (injectSEO)
+// The assembled output replaces the top-level estimate.html BEFORE obfuscation.
+const TRADE_ESTIMATORS = ['roofing']; // add 'siding', 'solar', etc. as new trades launch
+for (const trade of TRADE_ESTIMATORS) {
+  const tradeDir = path.join(__dirname, 'src', `estimate-${trade}`);
+  const outFile  = path.join(__dirname, `estimate.html`);
+  if (!fs.existsSync(tradeDir)) {
+    console.log(`  ⚠️  src/estimate-${trade}/ not found — skipping assembly`);
+    continue;
+  }
+  console.log(`\n🔧 Assembling estimate-${trade} from src/estimate-${trade}/...`);
+
+  // Read each module in order
+  const readMod = (f) => {
+    const p = path.join(tradeDir, f);
+    return fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : '';
+  };
+
+  const headHtml     = readMod('head.html');
+  const stylesCSS    = readMod('styles.css');
+  const templateHtml = readMod('template.html');
+  const utilsJS      = readMod('utils.js');
+  const dataJS       = readMod('data.js');
+  const buildPageJS  = readMod('build-page.js');
+  const photosJS     = readMod('photos.js');
+  const reviewsJS    = readMod('reviews.js');
+  const materialsJS  = readMod('materials.js');
+  const trackingJS   = readMod('tracking.js');
+  const schemaJS     = readMod('schema.js');
+
+  // Assemble: head → <style>css</style> → template → <script>js</script> → close
+  const assembled = [
+    headHtml.trimEnd(),
+    `<style>`,
+    stylesCSS,
+    `</style>`,
+    templateHtml,
+    `<script>`,
+    utilsJS,
+    dataJS,
+    buildPageJS,
+    photosJS,
+    reviewsJS,
+    materialsJS,
+    trackingJS,
+    schemaJS,
+    `</script>`,
+    `</body>`,
+    `</html>`,
+  ].join('\n');
+
+  fs.writeFileSync(outFile, assembled, 'utf8');
+  console.log(`  ✓ estimate.html assembled from src/estimate-${trade}/ (${assembled.length} bytes)`);
+}
+
 // ─── Ensure dist/ exists ───────────────────────────────────────────────────────
 if (!fs.existsSync('dist')) fs.mkdirSync('dist');
 if (!fs.existsSync('dist/api')) fs.mkdirSync('dist/api');

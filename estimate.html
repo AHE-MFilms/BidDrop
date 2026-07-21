@@ -3,8 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="robots" content="noindex, nofollow">
+<!-- title and meta description are injected dynamically by schema.js after data loads -->
 <title>Your Roof Estimate</title>
+<meta name="description" content="View your personalized roofing estimate — satellite-measured roof area, material options, and pricing prepared by a local licensed contractor.">
+<!-- canonical injected by schema.js -->
+<!-- Open Graph injected by schema.js -->
 <link rel="icon" href="/favicon.ico" type="image/x-icon" />
 <!-- NO manifest — this page must NOT be treated as a PWA -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -368,6 +371,7 @@ body{font-family:'Open Sans',sans-serif;background:var(--cream-soft);color:var(-
 .ep-fade-d1.vis{opacity:1;transform:none;}
 .ep-fade-d2{opacity:0;transform:translateY(20px);transition:opacity .6s .2s ease,transform .6s .2s ease;}
 .ep-fade-d2.vis{opacity:1;transform:none;}
+
 </style>
 </head>
 <body>
@@ -466,33 +470,35 @@ body{font-family:'Open Sans',sans-serif;background:var(--cream-soft);color:var(-
     </div>
     <div class="ep-sticky-actions">
       <a class="ep-sticky-phone" id="ep-sticky-phone" href="#">📞 <span id="ep-sticky-phone-num">Call Now</span></a>
-      <a class="ep-sticky-cta" id="ep-sticky-cta" href="#">Schedule a Free Visit</a>
+      <a class="ep-sticky-cta" id="ep-sticky-cta" href="#">Schedule Free Visit</a>
     </div>
   </div>
+
   <!-- ── HERO ── -->
   <section class="ep-hero">
+    <!-- Topbar -->
     <div class="ep-topbar">
       <a class="bd-logo" href="https://biddrop.us" target="_blank" rel="noopener">
         <div class="bd-logo-icon">BD</div>
         <span class="bd-logo-text">Bid<span>Drop</span></span>
       </a>
       <div class="co-slot">
+        <div class="co-badge" id="ep-co-badge">RC</div>
         <div class="co-name-wrap">
-          <strong id="ep-co-name">Roofing Company</strong>
+          <strong id="ep-co-name">Your Roofing Company</strong>
           <small id="ep-co-tagline">Licensed &amp; Insured</small>
         </div>
-        <div class="co-badge" id="ep-co-badge">RC</div>
       </div>
     </div>
-
+    <!-- Hero main -->
     <div class="ep-hero-main">
       <div>
         <div class="ep-hero-tag">
           <div class="ep-hero-tag-dot"></div>
-          <span id="ep-hero-tag-text">Roofing Project Report</span>
+          <span id="ep-hero-tag-text">Roofing Estimate</span>
         </div>
-        <h1 class="ep-hero-headline" id="ep-hero-headline">Your Roofing<br><em>Project,</em><br>Organized.</h1>
-        <!-- ── HOMEOWNER GREETING ── -->
+        <h1 class="ep-hero-headline" id="ep-hero-headline">Your Roof<br><em>Estimate.</em></h1>
+        <p class="ep-hero-sub" id="ep-hero-sub"></p>
         <div class="ep-greeting" id="ep-greeting" style="display:none;">
           <div id="ep-greeting-text"></div>
         </div>
@@ -508,7 +514,7 @@ body{font-family:'Open Sans',sans-serif;background:var(--cream-soft);color:var(-
         <div class="ep-repbio-info">
           <div class="ep-repbio-name" id="ep-repbio-name">Your Estimator</div>
           <div class="ep-repbio-title" id="ep-repbio-title">Project Advisor</div>
-          <p class="ep-repbio-notes" id="ep-repbio-notes">Welcome! This report was prepared to give you a clear starting point for your roofing project. When you’re ready, we’ll review the details with you, answer your questions, and confirm everything during an on-site visit.</p>
+          <p class="ep-repbio-notes" id="ep-repbio-notes">Welcome! This report was prepared to give you a clear starting point for your roofing project. When you're ready, we'll review the details with you, answer your questions, and confirm everything during an on-site visit.</p>
         </div>
       </div>
       <div class="ep-prop-card ep-fade" style="background:rgba(255,255,255,.04);border-color:var(--border-light);">
@@ -621,7 +627,7 @@ body{font-family:'Open Sans',sans-serif;background:var(--cream-soft);color:var(-
   <!-- ── CTA ── -->
   <section class="ep-cta-section">
     <h2 class="ep-cta-title ep-fade" id="ep-cta-title">Ready When<br><em style="font-style:italic;color:var(--amber-lt);">You Are.</em></h2>
-    <p class="ep-cta-sub ep-fade-d1" id="ep-cta-sub">If you’d like to move forward, schedule a convenient inspection and we’ll verify the project details together.</p>
+    <p class="ep-cta-sub ep-fade-d1" id="ep-cta-sub">If you'd like to move forward, schedule a convenient inspection and we'll verify the project details together.</p>
     <div class="ep-cta-btns ep-fade-d2" id="ep-cta-btns"></div>
     <div class="ep-contact-strip ep-fade-d2" id="ep-contact-strip"></div>
   </section>
@@ -659,6 +665,7 @@ body{font-family:'Open Sans',sans-serif;background:var(--cream-soft);color:var(-
   <button id="ep-lightbox-next" onclick="lbNav(1)">›</button>
   <div id="ep-lightbox-counter"></div>
 </div>
+
 
 <script>
 // ── Unregister any PWA service worker immediately ──────────────────────────
@@ -1105,7 +1112,7 @@ function buildPage(firstName,lastName,email,phone){
     $('ep-repbio-notes').textContent=est.inspectionNote;
   } else {
     // Fall back: global CMS default > hardcoded default
-    $('ep-repbio-notes').textContent=_gcd.repBio||'Welcome! This report was prepared to give you a clear starting point for your roofing project. When you’re ready, we’ll review the details with you, answer your questions, and confirm everything during an on-site visit.';
+    $('ep-repbio-notes').textContent=_gcd.repBio||'Welcome! This report was prepared to give you a clear starting point for your roofing project. When you\'re ready, we\'ll review the details with you, answer your questions, and confirm everything during an on-site visit.';
   }
   if(acct.headshot){
     $('ep-repbio-avatar').outerHTML=`<img class="ep-repbio-avatar" src="${acct.headshot}" alt="${esc(repDisplayName)}">`;
@@ -1182,6 +1189,8 @@ function buildPage(firstName,lastName,email,phone){
   trackView();
   // ── Fire retargeting pixels ──────────────────────────────────────────────
   firePixels('EstimateViewed', { value: est.total || 0, currency: 'USD', content_name: est.addr || '' });
+  // ── Inject dynamic SEO (title, meta, schema) after data is loaded ────────
+  injectSEO();
 }
 
 // ── Photo Gallery — labeled thumbnail grid with lightbox ──────────────────────
@@ -1245,6 +1254,43 @@ function openLBFlat(idx){
   $('ep-lightbox').classList.add('open');
   document.body.style.overflow='hidden';
 }
+
+// ── Lightbox ───────────────────────────────────────────────────────────────
+let _lbGallery=[],_lbIdx=0;
+function openLBG(gid,idx){
+  _lbGallery=_galleries[gid]||[];
+  _lbIdx=idx||0;
+  _lbShow();
+  $('ep-lightbox').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function openLB(src){
+  _lbGallery=[src];
+  _lbIdx=0;
+  _lbShow();
+  $('ep-lightbox').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function _lbShow(){
+  $('ep-lightbox-img').src=_lbGallery[_lbIdx];
+  const c=$('ep-lightbox-counter');
+  if(c)c.textContent=(_lbIdx+1)+' / '+_lbGallery.length;
+  const lbl=$('ep-lightbox-label');
+  if(lbl){const sec=_lbSectionLabels[_lbIdx];lbl.textContent=sec||'';lbl.style.display=sec?'block':'none';}
+  const prev=$('ep-lightbox-prev'),next=$('ep-lightbox-next');
+  if(prev)prev.style.display=_lbGallery.length>1?'flex':'none';
+  if(next)next.style.display=_lbGallery.length>1?'flex':'none';
+}
+function lbNav(dir){
+  _lbIdx=(_lbIdx+dir+_lbGallery.length)%_lbGallery.length;
+  _lbShow();
+}
+function closeLightbox(){$('ep-lightbox').classList.remove('open');document.body.style.overflow='';}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')closeLightbox();
+  if(e.key==='ArrowLeft')lbNav(-1);
+  if(e.key==='ArrowRight')lbNav(1);
+});
 
 // ── Google Reviews ─────────────────────────────────────────────────────────
 function loadReviews(acct){
@@ -1331,43 +1377,6 @@ function selectMat(key){
     body:JSON.stringify({action:'track_event',id:_estId,event:'mat_click',data:{mat:key}})});}catch(e){}
 }
 
-// ── Lightbox ───────────────────────────────────────────────────────────────
-let _lbGallery=[],_lbIdx=0;
-function openLBG(gid,idx){
-  _lbGallery=_galleries[gid]||[];
-  _lbIdx=idx||0;
-  _lbShow();
-  $('ep-lightbox').classList.add('open');
-  document.body.style.overflow='hidden';
-}
-function openLB(src){
-  _lbGallery=[src];
-  _lbIdx=0;
-  _lbShow();
-  $('ep-lightbox').classList.add('open');
-  document.body.style.overflow='hidden';
-}
-function _lbShow(){
-  $('ep-lightbox-img').src=_lbGallery[_lbIdx];
-  const c=$('ep-lightbox-counter');
-  if(c)c.textContent=(_lbIdx+1)+' / '+_lbGallery.length;
-  const lbl=$('ep-lightbox-label');
-  if(lbl){const sec=_lbSectionLabels[_lbIdx];lbl.textContent=sec||'';lbl.style.display=sec?'block':'none';}
-  const prev=$('ep-lightbox-prev'),next=$('ep-lightbox-next');
-  if(prev)prev.style.display=_lbGallery.length>1?'flex':'none';
-  if(next)next.style.display=_lbGallery.length>1?'flex':'none';
-}
-function lbNav(dir){
-  _lbIdx=(_lbIdx+dir+_lbGallery.length)%_lbGallery.length;
-  _lbShow();
-}
-function closeLightbox(){$('ep-lightbox').classList.remove('open');document.body.style.overflow='';}
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape')closeLightbox();
-  if(e.key==='ArrowLeft')lbNav(-1);
-  if(e.key==='ArrowRight')lbNav(1);
-});
-
 // ── Share ──────────────────────────────────────────────────────────────────
 function shareEst(){
   if(navigator.share){navigator.share({title:'My Roofing Estimate',url:location.href});}
@@ -1451,6 +1460,154 @@ function firePixels(eventName, params){
 function showError(){$('ep-loading').style.display='none';$('ep-error').style.display='flex';}
 
 init();
+
+// ── Dynamic SEO & Schema Injection ────────────────────────────────────────
+// Called by buildPage() after _acct and _est are loaded.
+// Injects: dynamic <title>, <meta description>, <link canonical>,
+//          Open Graph tags, and JSON-LD structured data.
+// The noindex meta tag is intentionally NOT present in head.html —
+// estimate pages are indexable by design (each is a unique local service page).
+function injectSEO(){
+  const acct = _acct || {};
+  const est  = _est  || {};
+
+  // ── Build dynamic strings ──────────────────────────────────────────────
+  const co    = acct.companyName || 'Your Roofing Contractor';
+  const city  = (acct.city || (est.addr ? est.addr.split(',').slice(-3,-2).join('').trim() : '')) || '';
+  const state = (acct.state || (est.addr ? est.addr.split(',').slice(-2,-1).join('').trim() : '')) || '';
+  const loc   = [city, state].filter(Boolean).join(', ');
+  const addr  = est.addr || '';
+  const price = est.priceOverride
+    ? Math.round(est.priceOverride).toLocaleString()
+    : (_prices['1.3'] ? Math.round(_prices['1.3']).toLocaleString() : null);
+
+  // Dynamic title: "Roof Replacement Estimate — Rapid Roof | Canton, MI"
+  const titleParts = ['Roof Replacement Estimate', co];
+  if(loc) titleParts.push(loc);
+  const dynamicTitle = titleParts.join(' — ').replace(' — ', ' \u2014 ');
+  document.title = dynamicTitle;
+
+  // Dynamic meta description
+  const descParts = [`Personalized roofing estimate prepared by ${co}`];
+  if(addr) descParts.push(`for ${addr}`);
+  if(price) descParts.push(`Starting from $${price}`);
+  descParts.push('Satellite-measured roof area, material options, and transparent pricing.');
+  const dynamicDesc = descParts.join('. ');
+
+  // ── Inject / update <meta name="description"> ─────────────────────────
+  let metaDesc = document.querySelector('meta[name="description"]');
+  if(!metaDesc){ metaDesc = document.createElement('meta'); metaDesc.name='description'; document.head.appendChild(metaDesc); }
+  metaDesc.content = dynamicDesc;
+
+  // ── Inject <link rel="canonical"> ─────────────────────────────────────
+  let canonical = document.querySelector('link[rel="canonical"]');
+  if(!canonical){ canonical = document.createElement('link'); canonical.rel='canonical'; document.head.appendChild(canonical); }
+  canonical.href = window.location.origin + window.location.pathname;
+
+  // ── Open Graph tags ───────────────────────────────────────────────────
+  const ogTags = {
+    'og:type':        'website',
+    'og:title':       dynamicTitle,
+    'og:description': dynamicDesc,
+    'og:url':         canonical.href,
+    'og:image':       est.photoUrl || (est.allPhotos && est.allPhotos.front && est.allPhotos.front[0]) || '',
+    'og:site_name':   'BidDrop',
+  };
+  Object.entries(ogTags).forEach(([prop, content]) => {
+    if(!content) return;
+    let el = document.querySelector(`meta[property="${prop}"]`);
+    if(!el){ el = document.createElement('meta'); el.setAttribute('property', prop); document.head.appendChild(el); }
+    el.content = content;
+  });
+
+  // ── JSON-LD Structured Data ───────────────────────────────────────────
+  // Build LocalBusiness schema from account data
+  const schema = {
+    '@context': 'https://schema.org',
+    '@graph': []
+  };
+
+  // LocalBusiness (the contractor)
+  const localBiz = {
+    '@type': ['LocalBusiness', 'RoofingContractor'],
+    'name': co,
+    'url': acct.bookingUrl || canonical.href,
+  };
+  if(acct.companyPhone) localBiz['telephone'] = acct.companyPhone;
+  if(acct.companyAddr || loc){
+    localBiz['address'] = {
+      '@type': 'PostalAddress',
+      'streetAddress': acct.companyAddr || '',
+      'addressLocality': city,
+      'addressRegion': state,
+      'addressCountry': 'US',
+    };
+  }
+  if(acct.logoData && acct.logoData.startsWith('http')){
+    localBiz['logo'] = acct.logoData;
+    localBiz['image'] = acct.logoData;
+  }
+  if(acct.yearsInBusiness){
+    const founded = new Date().getFullYear() - parseInt(acct.yearsInBusiness);
+    if(founded > 1900) localBiz['foundingDate'] = String(founded);
+  }
+  // AggregateRating — only inject if we have real Google data
+  const ratingEl = document.getElementById('ep-rating-score');
+  const countEl  = document.getElementById('ep-rating-count');
+  if(ratingEl && ratingEl.textContent && parseFloat(ratingEl.textContent) > 0){
+    const ratingVal  = parseFloat(ratingEl.textContent);
+    const countText  = (countEl && countEl.textContent) || '';
+    const countMatch = countText.match(/\d+/);
+    const ratingCount = countMatch ? parseInt(countMatch[0]) : 1;
+    if(ratingCount >= 1){
+      localBiz['aggregateRating'] = {
+        '@type': 'AggregateRating',
+        'ratingValue': ratingVal.toFixed(1),
+        'reviewCount': ratingCount,
+        'bestRating': '5',
+        'worstRating': '1',
+      };
+    }
+  }
+  schema['@graph'].push(localBiz);
+
+  // Service (Roof Replacement)
+  const service = {
+    '@type': 'Service',
+    'name': 'Roof Replacement',
+    'serviceType': 'Roofing',
+    'provider': { '@type': 'LocalBusiness', 'name': co },
+    'areaServed': loc ? { '@type': 'City', 'name': loc } : undefined,
+    'description': 'Full roof replacement including tear-off, materials, labor, disposal, and cleanup.',
+  };
+  if(price){
+    service['offers'] = {
+      '@type': 'Offer',
+      'priceCurrency': 'USD',
+      'price': price.replace(/,/g,''),
+      'priceSpecification': {
+        '@type': 'PriceSpecification',
+        'priceCurrency': 'USD',
+        'price': price.replace(/,/g,''),
+        'description': 'Preliminary estimate based on satellite measurements. Final price confirmed after on-site inspection.',
+      },
+    };
+  }
+  // Remove undefined keys
+  Object.keys(service).forEach(k => service[k] === undefined && delete service[k]);
+  schema['@graph'].push(service);
+
+  // ── Inject or replace JSON-LD script tag ──────────────────────────────
+  let ldScript = document.getElementById('ep-jsonld');
+  if(!ldScript){
+    ldScript = document.createElement('script');
+    ldScript.id = 'ep-jsonld';
+    ldScript.type = 'application/ld+json';
+    document.head.appendChild(ldScript);
+  }
+  ldScript.textContent = JSON.stringify(schema, null, 2);
+}
+
 </script>
 </body>
 </html>
