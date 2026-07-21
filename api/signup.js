@@ -203,6 +203,73 @@ export default async function handler(req, res) {
           return res.status(500).json({ error: 'Failed to create account. Please contact support@biddrop.io.' });
         }
         const [newAccount] = await createResp.json();
+
+        // ── Post-signup: GHL contact, welcome email, John notification ──
+        const RESEND_KEY = process.env.RESEND_API_KEY;
+        const GHL_API_KEY = process.env.GHL_API_KEY;
+        const GHL_LOCATION_ID = process.env.GHL_LOCATION_ID;
+
+        // 1. Create GHL contact (fire-and-forget)
+        if (GHL_API_KEY && GHL_LOCATION_ID) {
+          fetch('https://services.leadconnectorhq.com/contacts/', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${GHL_API_KEY}`,
+              'Content-Type': 'application/json',
+              'Version': '2021-07-28',
+            },
+            body: JSON.stringify({
+              firstName: firstName || '',
+              lastName: lastName || '',
+              email: email,
+              phone: phone || '',
+              companyName: companyName || '',
+              locationId: GHL_LOCATION_ID,
+              tags: ['plan-payg', 'biddrop-signup'],
+              customFields: [{ key: 'plan', field_value: 'Pay-as-you-go' }],
+            }),
+          }).catch(e => console.warn('[signup/payg] GHL contact failed:', e.message));
+        }
+
+        // 2. Send welcome email to client
+        if (RESEND_KEY) {
+          fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              from: 'BidDrop <noreply@biddrop.io>',
+              to: [email],
+              subject: 'Welcome to BidDrop — Your Account Is Ready 🎉',
+              html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
+                <h2 style="color:#F97316;">Welcome to BidDrop, ${firstName || companyName}!</h2>
+                <p>Your free Pay-as-you-go account is ready. Log in at <a href="https://biddrop.us">biddrop.us</a> to get started.</p>
+                <p>You have <strong>2 welcome credits</strong> to try the platform — credits are $4 each when you need more.</p>
+                <p style="color:#6b7280;font-size:12px;">Questions? Reply to this email or visit biddrop.us.</p>
+              </div>`,
+            }),
+          }).catch(e => console.warn('[signup/payg] Welcome email failed:', e.message));
+
+          // 3. Notify John
+          fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              from: 'BidDrop Alerts <alerts@biddrop.io>',
+              to: ['john@mongoosefilms.com'],
+              subject: `🟢 NEW SIGNUP (Free) — ${companyName || email}`,
+              html: `<div style="font-family:sans-serif;max-width:600px;">
+                <h2 style="color:#22c55e;">🟢 New BidDrop Signup (Pay-as-you-go)</h2>
+                <p><strong>Company:</strong> ${companyName || '—'}</p>
+                <p><strong>Name:</strong> ${firstName || ''} ${lastName || ''}</p>
+                <p><strong>Email:</strong> ${email}</p>
+                <p><strong>Phone:</strong> ${phone || '—'}</p>
+                <p><strong>Plan:</strong> Pay-as-you-go (Free)</p>
+                <p style="color:#6b7280;font-size:12px;">Account ID: ${newAccount?.id || '—'} | Stripe: ${customer.id}</p>
+              </div>`,
+            }),
+          }).catch(e => console.warn('[signup/payg] John notify failed:', e.message));
+        }
+
         return res.status(200).json({ success: true, account_id: newAccount?.id });
       }
 
