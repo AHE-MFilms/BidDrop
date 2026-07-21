@@ -386,7 +386,7 @@ function filterAdminAccounts(){
         '<button onclick="openAddUserModal(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\')" style="background:rgba(242,92,5,.12);border:1px solid rgba(242,92,5,.4);border-radius:5px;padding:3px 10px;color:var(--accent);font-size:10px;cursor:pointer;font-weight:700;">➕ Add User</button>'+
         '<button onclick="setAccountSlug(\''+a.id+'\',\''+escHtml(a.slug||'')+'\')" style="background:none;border:1px solid var(--border);border-radius:5px;padding:3px 10px;color:var(--muted);font-size:10px;cursor:pointer;font-weight:600;">🔗 Set Slug</button>'+
         (a.slug?'<a href="/q/'+a.slug+'" target="_blank" style="background:rgba(242,92,5,.1);border:1px solid rgba(242,92,5,.3);border-radius:5px;padding:3px 10px;color:var(--accent);font-size:10px;font-weight:600;text-decoration:none;">↗ /q/'+a.slug+'</a>':'') +
-                '<button onclick="adminChangePlan(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\',\''+escJs((a.plan||'payg').toLowerCase())+'\')" style="background:none;border:1px solid #F97316;border-radius:5px;padding:3px 10px;color:#F97316;font-size:10px;cursor:pointer;font-weight:600;" title="Change subscription plan">💳 Change Plan</button>'+
+                '<button onclick="adminChangePlan(this)" data-acct-id="'+a.id+'" data-acct-name="'+escHtml(a.company_name||a.name||'this account')+'" data-acct-plan="'+escHtml((a.plan||'payg').toLowerCase())+'" style="background:none;border:1px solid #F97316;border-radius:5px;padding:3px 10px;color:#F97316;font-size:10px;cursor:pointer;font-weight:600;" title="Change subscription plan">💳 Change Plan</button>'+
         '<button onclick="toggleAccountActive(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\',' +(a.active!==false)+')' +' style="background:none;border:1px solid '+(a.active!==false?'#22C55E':'#6B7280')+';border-radius:5px;padding:3px 10px;color:'+(a.active!==false?'#22C55E':'#9CA3AF')+';font-size:10px;cursor:pointer;font-weight:600;">'+(a.active!==false?'⏸ Deactivate':'▶ Reactivate')+'</button>'+
         '<button onclick="toggleTracerfy(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\',' +(a.tracerfy_enabled?'true':'false')+')" style="background:none;border:1px solid '+(a.tracerfy_enabled?'#A78BFA':'#4B5563')+';border-radius:5px;padding:3px 10px;color:'+(a.tracerfy_enabled?'#A78BFA':'#9CA3AF')+';font-size:10px;cursor:pointer;font-weight:600;" title="Toggle Tracerfy skip-trace">'+(a.tracerfy_enabled?'📞 ON':'📞 OFF')+'</button>'+
         '<button onclick="deleteClientAccount(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\')" style="background:none;border:1px solid var(--danger);border-radius:5px;padding:3px 10px;color:var(--danger);font-size:10px;cursor:pointer;font-weight:600;margin-left:auto;">🗑 Delete</button>'+
@@ -467,7 +467,7 @@ function renderSuperAdminPanel(accounts, allProfiles){
           '<button onclick="openAddUserModal(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\')" style="background:rgba(242,92,5,.12);border:1px solid rgba(242,92,5,.4);border-radius:5px;padding:3px 10px;color:var(--accent);font-size:10px;cursor:pointer;font-weight:700;" title="Add user to this account">➕ Add User</button>'+
           '<button onclick="setAccountSlug(\''+a.id+'\',\''+escHtml(a.slug||'')+'\')" style="background:none;border:1px solid var(--border);border-radius:5px;padding:3px 10px;color:var(--muted);font-size:10px;cursor:pointer;font-weight:600;" title="Set quote page slug">🔗 Set Slug</button>'+
           (a.slug?'<a href="/q/'+a.slug+'" target="_blank" style="background:rgba(242,92,5,.1);border:1px solid rgba(242,92,5,.3);border-radius:5px;padding:3px 10px;color:var(--accent);font-size:10px;font-weight:600;text-decoration:none;">↗ /q/'+a.slug+'</a>':'') +
-                    '<button onclick="adminChangePlan(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\',\''+escJs((a.plan||'payg').toLowerCase())+'\')" style="background:none;border:1px solid #F97316;border-radius:5px;padding:3px 10px;color:#F97316;font-size:10px;cursor:pointer;font-weight:600;" title="Change subscription plan">💳 Change Plan</button>'+
+                    '<button onclick="adminChangePlan(this)" data-acct-id="'+a.id+'" data-acct-name="'+escHtml(a.company_name||a.name||'this account')+'" data-acct-plan="'+escHtml((a.plan||'payg').toLowerCase())+'" style="background:none;border:1px solid #F97316;border-radius:5px;padding:3px 10px;color:#F97316;font-size:10px;cursor:pointer;font-weight:600;" title="Change subscription plan">💳 Change Plan</button>'+
           '<button onclick="toggleAccountActive(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\','  +(a.active!==false)+'" style="background:none;border:1px solid '+(a.active!==false?'#22C55E':'#6B7280')+';border-radius:5px;padding:3px 10px;color:'+(a.active!==false?'#22C55E':'#9CA3AF')+';font-size:10px;cursor:pointer;font-weight:600;" title="'+(a.active!==false?'Deactivate account':'Reactivate account')+'">'+(a.active!==false?'⏸ Deactivate':'▶ Reactivate')+'</button>'+
         '<button onclick="toggleTracerfy(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\','  +(a.tracerfy_enabled?'true':'false')+')" style="background:none;border:1px solid '+(a.tracerfy_enabled?'#A78BFA':'#4B5563')+';border-radius:5px;padding:3px 10px;color:'+(a.tracerfy_enabled?'#A78BFA':'#9CA3AF')+';font-size:10px;cursor:pointer;font-weight:600;" title="Toggle Tracerfy skip-trace">'+(a.tracerfy_enabled?'📞 ON':'📞 OFF')+'</button>'+
         '<button onclick="deleteClientAccount(\''+a.id+'\',\''+escJs(a.company_name||a.name||'this account')+'\')" style="background:none;border:1px solid var(--danger);border-radius:5px;padding:3px 10px;color:var(--danger);font-size:10px;cursor:pointer;font-weight:600;margin-left:auto;" title="Delete account">🗑 Delete</button>'+
@@ -1578,7 +1578,14 @@ async function saveGlobalContentDefaults(){
 // ═══════════════════════════════
 //  ADMIN CHANGE PLAN
 // ═══════════════════════════════
-async function adminChangePlan(accountId, accountName, currentPlan) {
+async function adminChangePlan(btnOrId, accountName, currentPlan) {
+  // Support both data-attribute (new safe way) and direct args (legacy)
+  let accountId = btnOrId;
+  if (btnOrId && typeof btnOrId === 'object' && btnOrId.dataset) {
+    accountId = btnOrId.dataset.acctId;
+    accountName = btnOrId.dataset.acctName;
+    currentPlan = btnOrId.dataset.acctPlan;
+  }
   if(!isSuperAdmin()){ toast('Permission denied','error'); return; }
   const otherPlan = currentPlan === 'monthly' ? 'payg' : 'monthly';
   const otherLabel = otherPlan === 'monthly' ? 'Monthly ($99/mo)' : 'Pay-as-you-go (Free)';
