@@ -125,6 +125,28 @@
         </div>
       </div>
 
+      <!-- ── AccuLynx ── -->
+      <div class="int-card" id="acculynx-int-card">
+        <div class="int-card-header">
+          <div class="int-logo" style="background:#1a3a5c;">🏠</div>
+          <div style="flex:1;">
+            <div class="int-card-title">AccuLynx</div>
+            <div class="int-card-sub">Roofing CRM · Jobs · Contacts · Measurements</div>
+          </div>
+          <div id="acculynx-int-status" class="int-status not-connected">● Not Connected</div>
+        </div>
+        <div class="int-card-body">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Push leads from BidDrop directly into AccuLynx as Jobs with satellite measurements, homeowner contact, and estimate total. Get your API key from <strong>AccuLynx → Account Settings → App Connections</strong>.</div>
+          <div class="fg" style="margin-bottom:10px;"><label class="fl" for="s-acculynx-key">AccuLynx API Key</label><input class="fi" id="s-acculynx-key" placeholder="Paste your AccuLynx API key here" type="password" autocomplete="off" oninput="updateAccuLynxStatus()"></div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <button onclick="saveAccuLynxKey()" style="background:var(--accent);border:none;border-radius:7px;padding:7px 16px;color:#fff;font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">💾 Save Key</button>
+            <button onclick="acculynxTestConnection()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 14px;color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">🔗 Test Connection</button>
+            <span id="acculynx-test-status" style="font-size:11px;color:var(--muted);"></span>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:10px;">Once connected, an <strong>⬆ AccuLynx</strong> button will appear on every pin and in the Estimator tab to push leads with one click.</div>
+        </div>
+      </div>
+
       <!-- ── Meta Pixel ── -->
       <div class="int-card">
         <div class="int-card-header">

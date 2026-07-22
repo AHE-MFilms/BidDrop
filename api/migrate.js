@@ -343,6 +343,9 @@ export default async function handler(req, res) {
 
     // ── Build 16: Pricing config persistence (pricingMode, per-square rates, GBB, material checkboxes) ──
     { name: 'accounts.pricing_config_json', sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS pricing_config_json jsonb" },
+    // ── Build 17: AccuLynx CRM integration ──
+    { name: 'accounts.acculynx_api_key', sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS acculynx_api_key text" },
+    { name: 'pins.acculynx_job_id',      sql: "ALTER TABLE pins ADD COLUMN IF NOT EXISTS acculynx_job_id text" },
   ];
 
   // Try to run DDL via rpc/exec_sql

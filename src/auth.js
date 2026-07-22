@@ -82,6 +82,7 @@ async function onSignedIn(user){
     if(typeof setPreviewMode === 'function') setPreviewMode('postcard'); else updatePreview();
     applyRoleUI();
     if(isSuperAdmin()) initCoSwitcher();
+    if(typeof initAccuLynx === 'function') initAccuLynx();
     // Load data from Supabase
     await loadPinsFromSupabase();
     await loadQueueFromSupabase();

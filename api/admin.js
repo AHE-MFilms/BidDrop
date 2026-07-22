@@ -6,14 +6,15 @@
  */
 'use strict';
 const { SUPABASE_URL, SERVICE_KEY, sbFetch } = require('./_admin-shared');
-const users    = require('./admin-users');
-const ghl      = require('./admin-ghl');
-const lob      = require('./admin-lob');
-const rentcast = require('./admin-rentcast');
-const storage  = require('./admin-storage');
-const misc     = require('./admin-misc');
+const users      = require('./admin-users');
+const ghl        = require('./admin-ghl');
+const lob        = require('./admin-lob');
+const rentcast   = require('./admin-rentcast');
+const storage    = require('./admin-storage');
+const misc       = require('./admin-misc');
+const acculynx   = require('./admin-acculynx');
 
-const MODULES = [users, ghl, lob, rentcast, storage, misc];
+const MODULES = [users, ghl, lob, rentcast, storage, misc, acculynx];
 
 function cors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');

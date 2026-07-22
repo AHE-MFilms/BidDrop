@@ -147,6 +147,7 @@ function _rowToPin(row){
     ghlSyncedAt: row.ghl_synced_at||null,
     ghlSyncError: row.ghl_sync_error||null,
     jnContactId: row.jn_contact_id||null,
+    acculynxJobId: row.acculynx_job_id||null,
     interested_trades: (est && est.interested_trades) || null,
     contactData: row.contact_data || null,
     solarKw: row.solar_kw||null,
@@ -523,7 +524,8 @@ function subscribeRealtime(){
             equityData: nw.equity_data||null,
             ghlContactId: nw.ghl_contact_id||null,
             ghlOpportunityId: nw.ghl_opportunity_id||null,
-            jnContactId: nw.jn_contact_id||null
+            jnContactId: nw.jn_contact_id||null,
+            acculynxJobId: nw.acculynx_job_id||null
           };
           const existing = S.pins.findIndex(p=>p.id===pin.id);
           if(existing>=0){

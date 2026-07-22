@@ -108,6 +108,7 @@ async function syncAccountToSupabase(){
   if(cfg.tradeStatuses !== undefined)    b10payload.trade_statuses_json = cfg.tradeStatuses ? JSON.stringify(cfg.tradeStatuses) : null;
   if(cfg.tradePostcardCopy !== undefined) b10payload.trade_postcard_copy_json = cfg.tradePostcardCopy ? JSON.stringify(cfg.tradePostcardCopy) : null;
   if(cfg.companyCamKey !== undefined)    b10payload.companycam_key = cfg.companyCamKey||null;
+  if(cfg.acculynxApiKey !== undefined)    b10payload.acculynx_api_key = cfg.acculynxApiKey||null;
   if(cfg.qbAccessToken !== undefined)    b10payload.qb_access_token = cfg.qbAccessToken||null;
   if(cfg.qbRefreshToken !== undefined)   b10payload.qb_refresh_token = cfg.qbRefreshToken||null;
   if(cfg.qbRealmId !== undefined)        b10payload.qb_realm_id = cfg.qbRealmId||null;
@@ -307,6 +308,7 @@ function accountRowToCfg(row, globalDefaults){
     tradeStatuses: row.trade_statuses_json ? (typeof row.trade_statuses_json==='string' ? JSON.parse(row.trade_statuses_json) : row.trade_statuses_json) : null,
     tradePostcardCopy: row.trade_postcard_copy_json ? (typeof row.trade_postcard_copy_json==='string' ? JSON.parse(row.trade_postcard_copy_json) : row.trade_postcard_copy_json) : null,
     companyCamKey: row.companycam_key||null,
+    acculynxApiKeySet: !!(row.acculynx_api_key),
     qbAccessToken: row.qb_access_token||null,
     qbRefreshToken: row.qb_refresh_token||null,
     qbRealmId: row.qb_realm_id||null,
