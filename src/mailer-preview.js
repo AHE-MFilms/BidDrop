@@ -6,6 +6,8 @@
 // Extracted from index.html — Tier 5 modularization
 
 function updatePreview(){
+  // If in postcard mode, refresh the postcard preview (e.g. after solar data updates the price)
+  if(_previewMode === 'postcard'){ if(typeof _refreshPostcardPreview === 'function') _refreshPostcardPreview(); return; }
   // Letter is hidden — skip rendering to avoid showing letter content
   if(_previewMode !== 'letter') return;
   const owner  = document.getElementById('e-owner').value || 'Homeowner';

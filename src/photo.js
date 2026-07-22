@@ -1199,6 +1199,12 @@ function _autoSaveEstimateOnLeave(){
   try{
     const pin = (S.pins||[]).find(p=>p.id===currentEstPinId);
     if(!pin) return;
+    // Skip autosave if the pin hasn't been persisted to Supabase yet.
+    // New pins get a local temp ID like 'p1234567890' (digit-only suffix).
+    // Supabase assigns a UUID (e.g. '550e8400-e29b-41d4-a716-446655440000').
+    // Saving an estimate with a non-existent pin_id causes a FK constraint error.
+    const isLocalTempId = /^p\d+$/.test(currentEstPinId);
+    if(isLocalTempId) return;
     const owner = (document.getElementById('e-owner')||{}).value||'';
     const email = (document.getElementById('e-email')||{}).value||'';
     const addr  = (document.getElementById('e-addr')||{}).value||pin.address||'';
