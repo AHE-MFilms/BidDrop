@@ -507,7 +507,7 @@ function renderSuperAdminPanel(accounts, allProfiles){
           '<div class="fg" style="flex:1;"><div class="fl">State</div>'+
             '<select class="fs" id="new-acct-state">'+
               '<option value="">—</option>'+
-              (function(){var st="AL,AK,AZ,AR,CA,CO,CT,DE,FL,GA,HI,ID,IL,IN,IA,KS,KY,LA,ME,MD,MA,MI,MN,MS,MO,MT,NE,NV,NH,NJ,NM,NY,NC,ND,OH,OK,OR,PA,RI,SC,SD,TN,TX,UT,VT,VA,WA,WV,WI,WY";return st.split(",").map(function(s){return "<option value=\\""+s+"\\">"+(s==="MI"?" selected":"")+s+"</option>";}).join("");})() +
+              (function(){var st='AL,AK,AZ,AR,CA,CO,CT,DE,FL,GA,HI,ID,IL,IN,IA,KS,KY,LA,ME,MD,MA,MI,MN,MS,MO,MT,NE,NV,NH,NJ,NM,NY,NC,ND,OH,OK,OR,PA,RI,SC,SD,TN,TX,UT,VT,VA,WA,WV,WI,WY';return st.split(',').map(function(s){return '<option value="'+s+'"'+(s==='MI'?' selected':'')+'>'+s+'</option>';}).join('');})() +
             '</select>'+
           '</div>'+
           '<div class="fg" style="flex:1;"><label class="fl" for="new-acct-zip">Zip</label><input class="fi" id="new-acct-zip" placeholder="48310" maxlength="5"></div>'+
