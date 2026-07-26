@@ -415,9 +415,8 @@ function renderSuperAdminPanel(accounts, allProfiles){
       '</select>' +
       '<select id="admin-filter-plan" onchange="filterAdminAccounts()" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-family:var(--font-b);font-size:11px;cursor:pointer;">' +
         '<option value="all">All Plans</option>' +
-        '<option value="starter">Starter</option>' +
-        '<option value="pro">Pro</option>' +
-        '<option value="agency">Agency</option>' +
+        '<option value="payg">Free (PAYG)</option>' +
+        '<option value="monthly">Monthly ($99/mo)</option>' +
       '</select>' +
       '<select id="admin-filter-status" onchange="filterAdminAccounts()" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-family:var(--font-b);font-size:11px;cursor:pointer;">' +
         '<option value="all">All Status</option>' +
@@ -508,9 +507,8 @@ function renderSuperAdminPanel(accounts, allProfiles){
         '<div class="frow">' +
           '<div class="fg"><div class="fl">Plan</div>' +
             '<select class="fs" id="new-acct-plan">' +
-              '<option value="starter">Starter</option>' +
-              '<option value="pro">Pro</option>' +
-              '<option value="agency">Agency</option>' +
+              '<option value="payg">Free (Pay-as-you-go)</option>' +
+              '<option value="monthly">Monthly ($99/mo)</option>' +
             '</select>' +
           '</div>' +
 

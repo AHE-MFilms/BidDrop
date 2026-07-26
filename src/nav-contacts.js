@@ -1590,13 +1590,20 @@ function launchStormCampaignFromSuggest(lat,lng){
 
 // ── SUBSCRIPTION UI MODULE ─────────────────────────────────────────────────
 const PLAN_INFO={
-  starter:{label:'Starter',price:'$97/mo',credits:15,color:'#96B0C8',desc:'Solo reps getting started with canvassing and digital estimates. 1 user.'},
-  pro:{label:'Pro',price:'$197/mo',credits:40,color:'#F25C05',desc:'Full platform access for growing teams. Up to 10 users.'},
-  agency:{label:'Agency',price:'$397/mo',credits:100,color:'#A855F7',desc:'Multi-team management with Territory Intel. Up to 100 users.'},
+  payg:{label:'Free',price:'Pay-as-you-go',credits:0,color:'#96B0C8',desc:'Canvass for free. Buy credits as you need them. 1 user.'},
+  monthly:{label:'Monthly',price:'$99/mo',credits:20,color:'#F25C05',desc:'20 credits/mo included · Up to 10 users · GHL integration included.'},
+  // legacy plan names — map to nearest equivalent
+  starter:{label:'Free',price:'Pay-as-you-go',credits:0,color:'#96B0C8',desc:'Canvass for free. Buy credits as you need them. 1 user.'},
+  pro:{label:'Monthly',price:'$99/mo',credits:20,color:'#F25C05',desc:'20 credits/mo included · Up to 10 users · GHL integration included.'},
+  agency:{label:'Monthly',price:'$99/mo',credits:20,color:'#F25C05',desc:'20 credits/mo included · Up to 10 users · GHL integration included.'},
+  enterprise:{label:'Monthly',price:'$99/mo',credits:20,color:'#F25C05',desc:'20 credits/mo included · Up to 10 users · GHL integration included.'},
 };
 function renderSubscriptionUI(){
-  const plan=(S.cfg&&S.cfg.plan)||'starter';
-  const info=PLAN_INFO[plan]||PLAN_INFO.starter;
+  // Normalize plan: legacy starter → payg, legacy pro/agency/enterprise → monthly
+  let rawPlan=(S.cfg&&S.cfg.plan)||'payg';
+  const planNorm={starter:'payg',pro:'monthly',agency:'monthly',enterprise:'monthly'};
+  const plan=planNorm[rawPlan.toLowerCase()]||rawPlan.toLowerCase();
+  const info=PLAN_INFO[plan]||PLAN_INFO.payg;
   const badge=document.getElementById('sub-plan-badge');
   const desc=document.getElementById('sub-plan-desc');
   const credLine=document.getElementById('sub-credits-line');
@@ -1607,24 +1614,23 @@ function renderSubscriptionUI(){
   if(desc)desc.textContent=info.desc;
   const paid=S.cfg.mailerCredits||0;
   const free=Math.max(0,(S.cfg.freeMailerCreditsUsed||0));
-  if(credLine)credLine.textContent=`${paid} paid credits remaining · ${info.credits} credits/month included`;
+  if(credLine)credLine.textContent=plan==='monthly'?`${paid} paid credits remaining · 20 credits/month included`:`${paid} paid credits remaining · buy credits as needed`;
   if(creditDetail)creditDetail.innerHTML=`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:400px;">
       <div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;">Paid Credits</div><div style="font-size:22px;font-weight:900;color:var(--accent);margin-top:2px;">${paid}</div></div>
-      <div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;">Monthly Allotment</div><div style="font-size:22px;font-weight:900;color:#60a5fa;margin-top:2px;">${info.credits}</div></div>
+      <div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;">Monthly Allotment</div><div style="font-size:22px;font-weight:900;color:#60a5fa;margin-top:2px;">${plan==='monthly'?20:0}</div></div>
     </div>
     <div style="margin-top:10px;font-size:12px;color:var(--muted);">1 credit = 1 postcard sent ($4.00 value). Credits roll over month to month.</div>
     <button onclick="showBuyCreditsModal()" style="margin-top:12px;background:var(--accent);border:none;border-radius:8px;padding:8px 18px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">🔍 Buy More Credits</button>
   `;
-  // Highlight current plan column in the table
-  const planOrder=['starter','pro','agency','enterprise'];
-  const planIdx=planOrder.indexOf(plan);
+  // Highlight current plan column in the table (col 1 = Free/PAYG, col 2 = Monthly)
+  const planColIdx = plan==='monthly' ? 2 : 1; // 1-based data column
   const tbody=document.getElementById('sub-plan-table-body');
   if(tbody){
     tbody.querySelectorAll('tr').forEach(row=>{
       const cells=row.querySelectorAll('td');
       cells.forEach((cell,i)=>{
-        if(i===planIdx+1){
+        if(i===planColIdx){
           cell.style.background='rgba(242,92,5,0.08)';
           cell.style.fontWeight='700';
           cell.style.color='var(--accent)';
@@ -1636,22 +1642,22 @@ function renderSubscriptionUI(){
       });
     });
   }
-  // Show/hide upgrade button
+  // Show/hide upgrade button — hide when already on monthly
   if(upgradeBtn){
-    if(plan==='enterprise'){upgradeBtn.style.display='none';}
-    else{upgradeBtn.style.display='';upgradeBtn.textContent='⬆ Upgrade to '+(PLAN_INFO[planOrder[planIdx+1]]?.label||'Next Tier');}
+    if(plan==='monthly'){upgradeBtn.style.display='none';}
+    else{upgradeBtn.style.display='';upgradeBtn.textContent='⬆ Upgrade to Monthly ($99/mo)';}
+  }
+  // Show/hide cancel button — only relevant on monthly
+  if(cancelBtn){
+    cancelBtn.style.display = plan==='monthly' ? '' : 'none';
   }
 }
 async function subUpgrade(){
-  const plan=(S.cfg&&S.cfg.plan)||'starter';
-  const planOrder=['starter','pro','agency'];
-  const idx=planOrder.indexOf(plan);
-  if(idx===-1||idx===planOrder.length-1){toast('You are already on the highest plan','info');return;}
-  const nextPlan=planOrder[idx+1];
-  const info=PLAN_INFO[nextPlan];
-  if(!confirm(`Upgrade to ${info.label} (${info.price})?
-
-This will open the Stripe billing portal where you can complete your plan upgrade.`)){return;}
+  const rawPlan=(S.cfg&&S.cfg.plan)||'payg';
+  const planNorm2={starter:'payg',pro:'monthly',agency:'monthly',enterprise:'monthly'};
+  const plan=planNorm2[rawPlan.toLowerCase()]||rawPlan.toLowerCase();
+  if(plan==='monthly'){toast('You are already on the Monthly plan.','info');return;}
+  if(!confirm('Upgrade to Monthly ($99/mo)?\n\nThis will open the Stripe billing portal to complete your subscription.')){return;}
   try{
     const sess=(await sb.auth.getSession()).data.session;
     if(!sess){toast('Please log in first.','error');return;}

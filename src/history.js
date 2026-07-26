@@ -192,10 +192,13 @@ function renderHistCredits(){
     const bg = i%2===0 ? 'var(--card)' : 'var(--panel)';
     // Derive pack label from credits
     let label = r.credits_purchased + ' Credits';
-    if(r.credits_purchased===50) label='Starter Pack (50 credits)';
-    else if(r.credits_purchased===200) label='Growth Pack (200 credits)';
-    else if(r.credits_purchased===500) label='Pro Pack (500 credits)';
-    else if(r.credits_purchased===1000) label='Agency Pack (1,000 credits)';
+    if(r.credits_purchased===10) label='10 Credits';
+    else if(r.credits_purchased===25) label='25 Credits';
+    else if(r.credits_purchased===50) label='50 Credits';
+    else if(r.credits_purchased===100) label='100 Credits';
+    else if(r.credits_purchased===200) label='200 Credits';
+    else if(r.credits_purchased===500) label='500 Credits';
+    else if(r.credits_purchased===1000) label='1,000 Credits';
     html += `<tr style="background:${bg};border-bottom:1px solid var(--border);">
       <td style="padding:11px 16px;color:var(--muted);white-space:nowrap;">${date}</td>
       <td style="padding:11px 16px;color:var(--text);font-weight:500;">${label}</td>
