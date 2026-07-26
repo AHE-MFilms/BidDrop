@@ -794,6 +794,51 @@ function renderSuperAdminPanel(accounts, allProfiles){
       '<button onclick="sendBroadcastEmail()" style="width:100%;background:linear-gradient(135deg,#3B82F6,#1d4ed8);border:none;border-radius:8px;padding:10px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">📢 Send Broadcast Email</button>'+
       '<div id="be-result" style="margin-top:8px;font-size:12px;"></div>'+
     '</div>'+
+    // ── Email Templates Manager ──────────────────────────────────────────
+    '<hr style="border:none;border-top:1px solid var(--border);margin:20px 0 14px;">'+
+    '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#10B981;margin-bottom:4px;">📧 Email Templates Manager</div>'+
+    '<div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Edit the subject and HTML body of any system transactional email. Changes save to the database and take effect immediately — no code push required. <strong style="color:#10B981;">{{variable}}</strong> placeholders are auto-substituted at send time.</div>'+
+    '<div id="etm-container" style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:16px;">'+
+      '<div id="etm-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;">'+
+        '<div style="color:var(--muted);font-size:12px;padding:8px;">Loading templates…</div>'+
+      '</div>'+
+      '<div id="etm-editor" style="display:none;">'+
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">'+
+          '<button onclick="etmCloseEditor()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;color:var(--muted);font-size:11px;cursor:pointer;">← Back to list</button>'+
+          '<div id="etm-editor-title" style="font-size:13px;font-weight:700;color:var(--text);flex:1;"></div>'+
+          '<span id="etm-db-badge" style="font-size:9px;padding:2px 7px;border-radius:10px;font-weight:700;display:none;"></span>'+
+        '</div>'+
+        '<div style="margin-bottom:10px;">'+
+          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Subject Line</label>'+
+          '<input id="etm-subject" type="text" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
+        '</div>'+
+        '<div style="margin-bottom:10px;">'+
+          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">HTML Body</label>'+
+          '<textarea id="etm-html" rows="12" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:12px;font-family:monospace;resize:vertical;"></textarea>'+
+        '</div>'+
+        '<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">'+
+          '<button onclick="etmSave()" style="background:linear-gradient(135deg,#10B981,#047857);border:none;border-radius:7px;padding:8px 18px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">💾 Save Template</button>'+
+          '<button onclick="etmPreview()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 14px;color:var(--text);font-size:12px;cursor:pointer;">👁 Preview</button>'+
+          '<button onclick="etmResetDefault()" style="background:none;border:1px solid var(--danger);border-radius:7px;padding:8px 14px;color:var(--danger);font-size:12px;cursor:pointer;">↩ Reset to Default</button>'+
+        '</div>'+
+        '<div id="etm-save-result" style="font-size:12px;margin-bottom:12px;"></div>'+
+        '<div style="border-top:1px solid var(--border);padding-top:12px;">'+
+          '<div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;">🧪 Send Test Email</div>'+
+          '<div style="display:flex;gap:8px;">'+
+            '<input id="etm-test-to" type="email" placeholder="test@example.com" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
+            '<button onclick="etmSendTest()" style="background:linear-gradient(135deg,#F97316,#c44a00);border:none;border-radius:7px;padding:8px 16px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">📤 Send Test</button>'+
+          '</div>'+
+          '<div id="etm-test-result" style="margin-top:6px;font-size:12px;"></div>'+
+        '</div>'+
+        '<div id="etm-preview-pane" style="display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:12px;">'+
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'+
+            '<div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;">Preview</div>'+
+            '<button onclick="document.getElementById(\"etm-preview-pane\").style.display=\"none\"" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;">✕ Close</button>'+
+          '</div>'+
+          '<iframe id="etm-preview-frame" style="width:100%;height:480px;border:1px solid var(--border);border-radius:7px;background:#fff;"></iframe>'+
+        '</div>'+
+      '</div>'+
+    '</div>'+
     '</div>' +
     '</div>');
   // Load current promo state from DB and populate the UI
@@ -802,6 +847,8 @@ function renderSuperAdminPanel(accounts, allProfiles){
   loadGlobalPostcardDefaults();
   // Load current global content defaults
   loadGlobalContentDefaults();
+  // Load email templates list
+  loadEmailTemplates();
 }
 
 async function seedCanvasTemplates(){
@@ -1693,4 +1740,205 @@ async function adminChangePlan(btnOrId, accountName, currentPlan) {
       toast('❌ '+(e.message||'Could not change plan.'),'error');
     }
   });
+}
+
+// ── Email Templates Manager (ETM) ─────────────────────────────────────────────
+// Template key → human-readable label
+const ETM_LABELS = {
+  welcome_payg:          'Welcome (Pay-as-you-go)',
+  welcome_monthly:       'Welcome (Monthly Plan)',
+  plan_upgraded:         'Plan Upgraded',
+  plan_downgraded:       'Plan Downgraded',
+  payment_failed:        'Payment Failed',
+  low_credits:           'Low Credits Warning',
+  trial_ending_10:       'Trial Ending (10 days)',
+  trial_ending_2:        'Trial Ending (2 days)',
+  trial_expired_admin:   'Trial Expired (Admin Alert)',
+  new_signup_alert:      'New Signup Alert (Admin)',
+};
+
+// State
+let _etmTemplates = [];
+let _etmCurrentKey = null;
+
+async function loadEmailTemplates(){
+  const listEl = document.getElementById('etm-list');
+  if(!listEl) return;
+  try {
+    const d = await adminAPI('get-templates');
+    _etmTemplates = d.templates || [];
+    _renderEtmList();
+  } catch(e) {
+    if(listEl) listEl.innerHTML = '<div style="color:var(--danger);font-size:12px;padding:8px;">Failed to load templates: '+escHtml(e.message)+'</div>';
+  }
+}
+
+function _renderEtmList(){
+  const listEl = document.getElementById('etm-list');
+  if(!listEl) return;
+  listEl.innerHTML = _etmTemplates.map(t => {
+    const label = ETM_LABELS[t.key] || t.key;
+    const isDefault = t.is_default;
+    const updatedStr = t.updated_at ? new Date(t.updated_at).toLocaleDateString() : null;
+    return '<button onclick="etmOpenEditor(\''+escJs(t.key)+'\')" style="'+
+      'background:var(--card2);border:1px solid '+(isDefault?'var(--border)':'#10B981')+';border-radius:8px;'+
+      'padding:10px 12px;text-align:left;cursor:pointer;color:var(--text);'+
+      'display:flex;flex-direction:column;gap:4px;transition:border-color .15s;">'+
+      '<div style="font-size:11px;font-weight:700;line-height:1.3;">'+escHtml(label)+'</div>'+
+      '<div style="font-size:9px;color:'+(isDefault?'var(--muted)':'#10B981')+';font-weight:700;text-transform:uppercase;letter-spacing:.4px;">'+
+        (isDefault ? 'Default' : ('Custom' + (updatedStr ? ' · '+updatedStr : '')))+
+      '</div>'+
+      '</button>';
+  }).join('');
+}
+
+function etmOpenEditor(key){
+  const tpl = _etmTemplates.find(t => t.key === key);
+  if(!tpl) return;
+  _etmCurrentKey = key;
+  // Hide list, show editor
+  const listEl = document.getElementById('etm-list');
+  const editorEl = document.getElementById('etm-editor');
+  if(listEl) listEl.style.display = 'none';
+  if(editorEl) editorEl.style.display = 'block';
+  // Populate fields
+  const titleEl = document.getElementById('etm-editor-title');
+  if(titleEl) titleEl.textContent = ETM_LABELS[key] || key;
+  const badge = document.getElementById('etm-db-badge');
+  if(badge){
+    badge.style.display = 'inline';
+    if(tpl.is_default){
+      badge.textContent = 'DEFAULT';
+      badge.style.background = 'rgba(107,114,128,.2)';
+      badge.style.color = '#9CA3AF';
+    } else {
+      badge.textContent = 'CUSTOMIZED';
+      badge.style.background = 'rgba(16,185,129,.15)';
+      badge.style.color = '#10B981';
+    }
+  }
+  const subjectEl = document.getElementById('etm-subject');
+  if(subjectEl) subjectEl.value = tpl.subject || '';
+  const htmlEl = document.getElementById('etm-html');
+  if(htmlEl) htmlEl.value = tpl.html_body || '';
+  // Clear results
+  const saveRes = document.getElementById('etm-save-result');
+  if(saveRes) saveRes.innerHTML = '';
+  const testRes = document.getElementById('etm-test-result');
+  if(testRes) testRes.innerHTML = '';
+  // Hide preview
+  const previewPane = document.getElementById('etm-preview-pane');
+  if(previewPane) previewPane.style.display = 'none';
+}
+
+function etmCloseEditor(){
+  _etmCurrentKey = null;
+  const listEl = document.getElementById('etm-list');
+  const editorEl = document.getElementById('etm-editor');
+  if(listEl) listEl.style.display = '';
+  if(editorEl) editorEl.style.display = 'none';
+}
+
+async function etmSave(){
+  if(!_etmCurrentKey) return;
+  const subject = document.getElementById('etm-subject')?.value?.trim();
+  const html_body = document.getElementById('etm-html')?.value?.trim();
+  const resultEl = document.getElementById('etm-save-result');
+  if(!subject || !html_body){
+    if(resultEl) resultEl.innerHTML = '<span style="color:var(--danger);">Subject and HTML body are required.</span>';
+    return;
+  }
+  if(resultEl) resultEl.innerHTML = '<span style="color:var(--muted);">Saving…</span>';
+  try {
+    await adminAPI('save-template', { key: _etmCurrentKey, subject, html_body, text_body: '' });
+    if(resultEl) resultEl.innerHTML = '<span style="color:#10B981;">✅ Saved successfully.</span>';
+    // Update local state
+    const tpl = _etmTemplates.find(t => t.key === _etmCurrentKey);
+    if(tpl){
+      tpl.subject = subject;
+      tpl.html_body = html_body;
+      tpl.is_default = false;
+      tpl.updated_at = new Date().toISOString();
+    }
+    // Update badge
+    const badge = document.getElementById('etm-db-badge');
+    if(badge){
+      badge.textContent = 'CUSTOMIZED';
+      badge.style.background = 'rgba(16,185,129,.15)';
+      badge.style.color = '#10B981';
+    }
+  } catch(e) {
+    if(resultEl) resultEl.innerHTML = '<span style="color:var(--danger);">❌ '+escHtml(e.message)+'</span>';
+  }
+}
+
+function etmPreview(){
+  const html = document.getElementById('etm-html')?.value || '';
+  const previewPane = document.getElementById('etm-preview-pane');
+  const frame = document.getElementById('etm-preview-frame');
+  if(!previewPane || !frame) return;
+  previewPane.style.display = 'block';
+  // Write HTML into iframe
+  const doc = frame.contentDocument || frame.contentWindow?.document;
+  if(doc){
+    doc.open();
+    doc.write(html);
+    doc.close();
+  }
+  // Scroll to preview
+  previewPane.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function etmSendTest(){
+  if(!_etmCurrentKey) return;
+  const to = document.getElementById('etm-test-to')?.value?.trim();
+  const subject = document.getElementById('etm-subject')?.value?.trim();
+  const html_body = document.getElementById('etm-html')?.value?.trim();
+  const resultEl = document.getElementById('etm-test-result');
+  if(!to){
+    if(resultEl) resultEl.innerHTML = '<span style="color:var(--danger);">Enter a recipient email address.</span>';
+    return;
+  }
+  if(!subject || !html_body){
+    if(resultEl) resultEl.innerHTML = '<span style="color:var(--danger);">Subject and HTML body are required.</span>';
+    return;
+  }
+  if(resultEl) resultEl.innerHTML = '<span style="color:var(--muted);">Sending…</span>';
+  try {
+    const d = await adminAPI('send-test-email', { key: _etmCurrentKey, to, subject, html_body });
+    if(resultEl) resultEl.innerHTML = '<span style="color:#10B981;">✅ Test email sent to '+escHtml(to)+' (Resend ID: '+escHtml(d.id||'—')+')</span>';
+  } catch(e) {
+    if(resultEl) resultEl.innerHTML = '<span style="color:var(--danger);">❌ '+escHtml(e.message)+'</span>';
+  }
+}
+
+async function etmResetDefault(){
+  if(!_etmCurrentKey) return;
+  const label = ETM_LABELS[_etmCurrentKey] || _etmCurrentKey;
+  if(!confirm('Reset "'+label+'" to the built-in default? This will delete your custom version from the database.')) return;
+  const resultEl = document.getElementById('etm-save-result');
+  if(resultEl) resultEl.innerHTML = '<span style="color:var(--muted);">Resetting…</span>';
+  try {
+    await adminAPI('reset-template', { key: _etmCurrentKey });
+    if(resultEl) resultEl.innerHTML = '<span style="color:#10B981;">✅ Reset to default. Reload the editor to see the default content.</span>';
+    // Update local state
+    const tpl = _etmTemplates.find(t => t.key === _etmCurrentKey);
+    if(tpl){
+      tpl.is_default = true;
+      tpl.updated_at = null;
+    }
+    // Update badge
+    const badge = document.getElementById('etm-db-badge');
+    if(badge){
+      badge.textContent = 'DEFAULT';
+      badge.style.background = 'rgba(107,114,128,.2)';
+      badge.style.color = '#9CA3AF';
+    }
+    // Reload templates to get fresh default content
+    await loadEmailTemplates();
+    // Re-open the editor with fresh data
+    etmOpenEditor(_etmCurrentKey);
+  } catch(e) {
+    if(resultEl) resultEl.innerHTML = '<span style="color:var(--danger);">❌ '+escHtml(e.message)+'</span>';
+  }
 }

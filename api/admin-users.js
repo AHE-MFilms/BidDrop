@@ -444,6 +444,78 @@ async function handle(action, req, res, ctx) {
         break;
       }
 
+      // ── Email Templates Manager ──────────────────────────────────────────
+      case 'get-templates': {
+        if (!isSuperAdmin) { res.status(403).json({ error: 'Super admin only' }); return; }
+        const { DEFAULT_TEMPLATES } = require('./_email-templates-defaults');
+        const tplRes = await sbFetch('email_templates?select=key,subject,html_body,text_body,updated_at');
+        const dbRows = tplRes.ok ? await tplRes.json() : [];
+        const dbMap = {};
+        for (const row of dbRows) dbMap[row.key] = row;
+        const templates = Object.keys(DEFAULT_TEMPLATES).map(key => {
+          const def = DEFAULT_TEMPLATES[key];
+          const db  = dbMap[key];
+          return {
+            key,
+            subject:    db ? db.subject    : def.subject,
+            html_body:  db ? db.html_body  : def.html,
+            text_body:  db ? db.text_body  : (def.text || ''),
+            updated_at: db ? db.updated_at : null,
+            is_default: !db,
+          };
+        });
+        res.status(200).json({ ok: true, templates });
+        break;
+      }
+      case 'save-template': {
+        if (!isSuperAdmin) { res.status(403).json({ error: 'Super admin only' }); return; }
+        const { key: tplKey, subject: tplSubject, html_body: tplHtml, text_body: tplText } = body;
+        if (!tplKey || !tplSubject || !tplHtml) {
+          res.status(400).json({ error: 'key, subject, and html_body are required' }); return;
+        }
+        const upsertRes = await sbFetch('email_templates', {
+          method: 'POST',
+          headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal', 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: tplKey, subject: tplSubject, html_body: tplHtml, text_body: tplText || '', updated_at: new Date().toISOString() }),
+        });
+        if (!upsertRes.ok) {
+          const err = await upsertRes.text();
+          res.status(500).json({ error: err }); return;
+        }
+        res.status(200).json({ ok: true });
+        break;
+      }
+      case 'send-test-email': {
+        if (!isSuperAdmin) { res.status(403).json({ error: 'Super admin only' }); return; }
+        const { key: testKey, to: testTo, subject: testSubject, html_body: testHtml } = body;
+        if (!testKey || !testTo || !testSubject || !testHtml) {
+          res.status(400).json({ error: 'key, to, subject, and html_body are required' }); return;
+        }
+        const RESEND_KEY2 = process.env.RESEND_API_KEY;
+        if (!RESEND_KEY2) { res.status(500).json({ error: 'RESEND_API_KEY not configured' }); return; }
+        const testResp = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${RESEND_KEY2}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            from: 'BidDrop <noreply@biddrop.io>',
+            to: [testTo],
+            subject: `[TEST] ${testSubject}`,
+            html: testHtml,
+          }),
+        });
+        const testBody = await testResp.json();
+        if (!testResp.ok) { res.status(500).json({ error: testBody.message || 'Resend error' }); return; }
+        res.status(200).json({ ok: true, id: testBody.id });
+        break;
+      }
+      case 'reset-template': {
+        if (!isSuperAdmin) { res.status(403).json({ error: 'Super admin only' }); return; }
+        const { key: resetKey } = body;
+        if (!resetKey) { res.status(400).json({ error: 'key required' }); return; }
+        await sbFetch(`email_templates?key=eq.${encodeURIComponent(resetKey)}`, { method: 'DELETE', headers: { 'Prefer': 'return=minimal' } });
+        res.status(200).json({ ok: true });
+        break;
+      }
     default:
       return false;
   }

@@ -346,6 +346,8 @@ export default async function handler(req, res) {
     // ── Build 17: AccuLynx CRM integration ──
     { name: 'accounts.acculynx_api_key', sql: "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS acculynx_api_key text" },
     { name: 'pins.acculynx_job_id',      sql: "ALTER TABLE pins ADD COLUMN IF NOT EXISTS acculynx_job_id text" },
+    // ── Build 18: Email Templates Manager ──
+    { name: 'email_templates', sql: "CREATE TABLE IF NOT EXISTS email_templates (key text PRIMARY KEY, subject text NOT NULL, html_body text NOT NULL, text_body text, updated_at timestamptz DEFAULT now())" },
   ];
 
   // Try to run DDL via rpc/exec_sql
