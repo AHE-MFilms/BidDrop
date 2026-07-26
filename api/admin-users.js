@@ -376,6 +376,74 @@ async function handle(action, req, res, ctx) {
         break;
       }
 
+      // ── Admin broadcast email ────────────────────────────────────────────
+      case 'broadcast-email': {
+        if (!isSuperAdmin) { res.status(403).json({ error: 'Super admin only' }); return; }
+        const RESEND_KEY = process.env.RESEND_API_KEY;
+        if (!RESEND_KEY) { res.status(500).json({ error: 'RESEND_API_KEY not configured' }); return; }
+        const { subject, html, text, target_account_id, target_plan, send_to_all } = req.body || {};
+        if (!subject || (!html && !text)) {
+          res.status(400).json({ error: 'subject and html (or text) are required' }); return;
+        }
+        // Build recipient list
+        let recipientQuery = 'user_profiles?select=email,name,account_id';
+        if (target_account_id) {
+          recipientQuery += `&account_id=eq.${target_account_id}`;
+        } else if (target_plan && !send_to_all) {
+          // Filter by plan — join via accounts
+          const planAcctRes = await sbFetch(`accounts?plan=eq.${target_plan}&select=id`);
+          const planAccts = planAcctRes.ok ? await planAcctRes.json() : [];
+          const ids = planAccts.map(a => a.id);
+          if (!ids.length) { res.status(200).json({ ok: true, sent: 0, message: 'No accounts on that plan' }); return; }
+          recipientQuery += `&account_id=in.(${ids.join(',')})`;
+        }
+        // Always only email the primary user (role=admin or first user per account)
+        const recipRes = await sbFetch(recipientQuery + '&role=eq.admin');
+        if (!recipRes.ok) { res.status(500).json({ error: 'Failed to fetch recipients' }); return; }
+        const recipients = await recipRes.json();
+        if (!recipients.length) { res.status(200).json({ ok: true, sent: 0, message: 'No recipients found' }); return; }
+        // Send via Resend — batch up to 50 at a time
+        const emails = recipients.map(r => r.email).filter(Boolean);
+        const uniqueEmails = [...new Set(emails)];
+        let sent = 0;
+        const errors = [];
+        const BATCH = 50;
+        for (let i = 0; i < uniqueEmails.length; i += BATCH) {
+          const batch = uniqueEmails.slice(i, i + BATCH);
+          const sendRes = await fetch('https://api.resend.com/emails/batch', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(batch.map(to => ({
+              from: 'BidDrop <noreply@biddrop.io>',
+              to: [to],
+              subject,
+              html: html || undefined,
+              text: text || undefined,
+            }))),
+          }).catch(e => ({ ok: false, _err: e.message }));
+          if (sendRes.ok) {
+            sent += batch.length;
+          } else {
+            const errBody = sendRes._err || (await sendRes.text().catch(() => 'unknown'));
+            errors.push(`batch ${i}-${i + BATCH}: ${errBody}`);
+          }
+        }
+        // Log the broadcast in Supabase
+        await sbFetch('broadcast_log', {
+          method: 'POST',
+          headers: { 'Prefer': 'return=minimal' },
+          body: JSON.stringify({
+            sent_by: profile?.id || null,
+            subject,
+            recipient_count: sent,
+            target: target_account_id ? `account:${target_account_id}` : target_plan ? `plan:${target_plan}` : 'all',
+            sent_at: new Date().toISOString(),
+          }),
+        }).catch(() => {}); // non-fatal if table doesn't exist yet
+        res.status(200).json({ ok: true, sent, total: uniqueEmails.length, errors });
+        break;
+      }
+
     default:
       return false;
   }

@@ -763,6 +763,37 @@ function renderSuperAdminPanel(accounts, allProfiles){
       '<button onclick="saveGlobalContentDefaults()" style="width:100%;background:linear-gradient(135deg,#F97316,#c44a00);border:none;border-radius:8px;padding:10px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">💾 Save Global Content Defaults</button>'+
       '<div id="gcd-result" style="margin-top:8px;font-size:12px;"></div>'+
     '</div>'+
+    // ── Broadcast Email ────────────────────────────────────────────────────
+    '<hr style="border:none;border-top:1px solid var(--border);margin:20px 0 14px;">'+
+    '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#3B82F6;margin-bottom:4px;">📢 Broadcast Email</div>'+
+    '<div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Send a one-time email to all clients, a specific plan tier, or a single account. Sends from noreply@biddrop.io via Resend.</div>'+
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:16px;">'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">'+
+        '<div>'+
+          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Recipients</label>'+
+          '<select id="be-target" onchange="beToggleAccountField()" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
+            '<option value="all">All Clients</option>'+
+            '<option value="plan_monthly">Monthly Plan Only</option>'+
+            '<option value="plan_payg">Pay-as-you-go Only</option>'+
+            '<option value="account">Single Account</option>'+
+          '</select>'+
+        '</div>'+
+        '<div id="be-account-row" style="display:none;">'+
+          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Account ID</label>'+
+          '<input id="be-account-id" type="text" placeholder="Paste account UUID" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
+        '</div>'+
+      '</div>'+
+      '<div style="margin-bottom:12px;">'+
+        '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Subject Line</label>'+
+        '<input id="be-subject" type="text" placeholder="Important update from BidDrop" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
+      '</div>'+
+      '<div style="margin-bottom:14px;">'+
+        '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Message Body (plain text — line breaks preserved)</label>'+
+        '<textarea id="be-body" rows="6" placeholder="Write your message here..." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>'+
+      '</div>'+
+      '<button onclick="sendBroadcastEmail()" style="width:100%;background:linear-gradient(135deg,#3B82F6,#1d4ed8);border:none;border-radius:8px;padding:10px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">📢 Send Broadcast Email</button>'+
+      '<div id="be-result" style="margin-top:8px;font-size:12px;"></div>'+
+    '</div>'+
     '</div>' +
     '</div>');
   // Load current promo state from DB and populate the UI
@@ -1172,6 +1203,55 @@ async function removeSuperAdmin(userId, emailOrId){
       renderAdminPanel();
     } catch(e){
       toast('❌ '+e.message,'error');
+    }
+  });
+}
+
+// ── BROADCAST EMAIL ──────────────────────────────────────────────────────────
+function beToggleAccountField(){
+  const target = document.getElementById('be-target');
+  const row = document.getElementById('be-account-row');
+  if(row) row.style.display = (target && target.value === 'account') ? 'block' : 'none';
+}
+
+async function sendBroadcastEmail(){
+  if(!isSuperAdmin()){ toast('Permission denied','error'); return; }
+  const subject = (document.getElementById('be-subject')||{}).value?.trim();
+  const body    = (document.getElementById('be-body')||{}).value?.trim();
+  const target  = (document.getElementById('be-target')||{}).value || 'all';
+  const acctId  = (document.getElementById('be-account-id')||{}).value?.trim();
+  const result  = document.getElementById('be-result');
+  const btn     = document.querySelector('[onclick="sendBroadcastEmail()"]');
+  if(!subject){ toast('Subject is required','error'); return; }
+  if(!body){ toast('Message body is required','error'); return; }
+  if(target === 'account' && !acctId){ toast('Paste an account UUID for single-account send','error'); return; }
+  // Confirm before sending to all
+  const recipientLabel = target==='all' ? 'ALL clients' : target==='account' ? 'account '+acctId : target+' plan clients';
+  bdConfirm('Send broadcast email to '+recipientLabel+'?\n\nSubject: '+subject, async ()=>{
+    if(btn){ btn.disabled=true; btn.textContent='⏳ Sending…'; }
+    if(result) result.innerHTML='<span style="color:var(--muted);">Sending…</span>';
+    try {
+      // Convert plain text body to simple HTML (preserve line breaks)
+      const html = '<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.6;color:#222;">'+
+        body.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')+
+        '<br><br><hr style="border:none;border-top:1px solid #eee;">'+
+        '<p style="font-size:12px;color:#888;">This message was sent by BidDrop. Questions? Reply to support@biddrop.io</p>'+
+        '</div>';
+      const payload = { subject, html, text: body };
+      if(target === 'account') payload.target_account_id = acctId;
+      else if(target.startsWith('plan_')) payload.target_plan = target.replace('plan_','');
+      else payload.send_to_all = true;
+      const data = await adminAPI('broadcast-email', payload);
+      const msg = '✅ Sent to '+data.sent+' of '+data.total+' recipients.'+(data.errors&&data.errors.length?' ⚠️ '+data.errors.length+' batch error(s).':'');
+      if(result){ result.innerHTML=msg; result.style.color='var(--success)'; }
+      toast(msg,'success');
+      // Clear form
+      ['be-subject','be-body'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+    } catch(e){
+      if(result){ result.innerHTML='❌ '+escHtml(e.message); result.style.color='var(--danger)'; }
+      toast('❌ '+e.message,'error');
+    } finally {
+      if(btn){ btn.disabled=false; btn.textContent='📢 Send Broadcast Email'; }
     }
   });
 }

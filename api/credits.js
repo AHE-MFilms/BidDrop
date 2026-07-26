@@ -373,6 +373,50 @@ module.exports = async function handler(req, res) {
           `${eventLabel} — ${cpAcct.company_name}`,
           `<p><strong>${cpAcct.company_name}</strong> just changed their plan.</p><p><strong>From:</strong> ${currentPlan}<br><strong>To:</strong> ${newPlan}</p><p>Account ID: ${effectiveAccountId}</p>`
         ).catch(e => console.warn('[change-plan] notify failed:', e.message));
+        // Send confirmation email to the client
+        if (RESEND_KEY && cpAcct.email) {
+          const isUpgrade = newPlan === 'monthly';
+          const clientSubject = isUpgrade
+            ? '🎉 You\'ve upgraded to BidDrop Monthly!'
+            : 'Your BidDrop plan has been updated';
+          const clientHtml = isUpgrade ? `
+            <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;">
+              <div style="background:#111;padding:24px 32px;border-radius:10px 10px 0 0;">
+                <span style="font-size:24px;font-weight:900;color:#fff;">Bid<span style="color:#F97316;">Drop</span></span>
+              </div>
+              <div style="padding:32px;border:1px solid #e5e5e5;border-top:none;border-radius:0 0 10px 10px;">
+                <h2 style="color:#111;margin:0 0 12px 0;">🎉 Welcome to BidDrop Monthly!</h2>
+                <p style="color:#333;margin:0 0 16px 0;">You've successfully upgraded to the <strong>Monthly Plan ($99/mo)</strong>. Here's what's included:</p>
+                <ul style="color:#333;margin:0 0 24px 0;padding-left:20px;line-height:1.8;">
+                  <li><strong>40 free postcard credits</strong> every month</li>
+                  <li>Unlimited canvassing pins</li>
+                  <li>Full estimate builder with satellite data</li>
+                  <li>Priority support</li>
+                </ul>
+                <p style="color:#333;margin:0 0 24px 0;">Your credits refresh on your billing date each month. Questions? Reply to this email or visit <a href="https://biddrop.us" style="color:#F97316;">biddrop.us</a>.</p>
+                <a href="https://biddrop.us" style="display:block;background:#F97316;color:#fff;text-decoration:none;text-align:center;padding:14px 24px;border-radius:8px;font-size:16px;font-weight:700;margin-bottom:24px;">Open BidDrop →</a>
+                <p style="font-size:12px;color:#999;border-top:1px solid #eee;padding-top:16px;margin:0;">Questions? <a href="mailto:support@biddrop.io" style="color:#F97316;">support@biddrop.io</a></p>
+              </div>
+            </div>` : `
+            <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;">
+              <div style="background:#111;padding:24px 32px;border-radius:10px 10px 0 0;">
+                <span style="font-size:24px;font-weight:900;color:#fff;">Bid<span style="color:#F97316;">Drop</span></span>
+              </div>
+              <div style="padding:32px;border:1px solid #e5e5e5;border-top:none;border-radius:0 0 10px 10px;">
+                <h2 style="color:#111;margin:0 0 12px 0;">Your plan has been updated</h2>
+                <p style="color:#333;margin:0 0 16px 0;">You've switched to the <strong>Pay-as-you-go plan</strong>. Your monthly subscription has been cancelled.</p>
+                <p style="color:#333;margin:0 0 16px 0;">You can still use BidDrop — just purchase credits when you need to send postcards ($4.00 each, volume discounts available).</p>
+                <p style="color:#333;margin:0 0 24px 0;">Any remaining credits in your account are yours to keep and use anytime.</p>
+                <a href="https://biddrop.us" style="display:block;background:#F97316;color:#fff;text-decoration:none;text-align:center;padding:14px 24px;border-radius:8px;font-size:16px;font-weight:700;margin-bottom:24px;">Open BidDrop →</a>
+                <p style="font-size:12px;color:#999;border-top:1px solid #eee;padding-top:16px;margin:0;">Questions? <a href="mailto:support@biddrop.io" style="color:#F97316;">support@biddrop.io</a></p>
+              </div>
+            </div>`;
+          fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ from: 'BidDrop <noreply@biddrop.io>', to: [cpAcct.email], subject: clientSubject, html: clientHtml }),
+          }).catch(e => console.warn('[change-plan] client email failed:', e.message));
+        }
         res.status(200).json({ ok: true, newPlan, stripeResult });
         break;
       }

@@ -125,6 +125,43 @@ async function handle(action, req, res, ctx) {
         }
         const pcNewPaid = (lobRes.ok && !pcSkipCharge) ? pcPaid - POSTCARD_CREDITS : pcPaid;
         if (lobRes.ok) {
+          // Low-credits warning: fire when balance hits 5 or fewer after this send
+          const LOW_CREDIT_THRESHOLD = 5;
+          if (!pcSkipCharge && pcNewPaid <= LOW_CREDIT_THRESHOLD && pcNewPaid >= 0) {
+            // Fetch account email to send warning
+            const lcAcctRes = await sbFetch(
+              `accounts?id=eq.${effectiveAccountId}&select=email,company_name`
+            ).catch(() => null);
+            const lcAccts = lcAcctRes && lcAcctRes.ok ? await lcAcctRes.json() : [];
+            const lcEmail = lcAccts[0]?.email;
+            const lcName  = lcAccts[0]?.company_name || 'there';
+            const RESEND_KEY = process.env.RESEND_API_KEY;
+            if (RESEND_KEY && lcEmail) {
+              const lcHtml = `
+                <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;">
+                  <div style="background:#111;padding:24px 32px;border-radius:10px 10px 0 0;">
+                    <span style="font-size:24px;font-weight:900;color:#fff;">Bid<span style="color:#F97316;">Drop</span></span>
+                  </div>
+                  <div style="padding:32px;border:1px solid #e5e5e5;border-top:none;border-radius:0 0 10px 10px;">
+                    <h2 style="color:#dc2626;margin:0 0 12px 0;">⚠️ You're running low on credits</h2>
+                    <p style="color:#333;margin:0 0 16px 0;">Hey ${lcName}, you have <strong>${pcNewPaid} credit${pcNewPaid === 1 ? '' : 's'} remaining</strong> in your BidDrop account.</p>
+                    <p style="color:#333;margin:0 0 24px 0;">Each postcard costs 1 credit ($4.00). Top up now so your follow-up campaigns keep running without interruption.</p>
+                    <a href="https://biddrop.us" style="display:block;background:#F97316;color:#fff;text-decoration:none;text-align:center;padding:14px 24px;border-radius:8px;font-size:16px;font-weight:700;margin-bottom:24px;">Buy More Credits →</a>
+                    <p style="font-size:12px;color:#999;border-top:1px solid #eee;padding-top:16px;margin:0;">Questions? <a href="mailto:support@biddrop.io" style="color:#F97316;">support@biddrop.io</a></p>
+                  </div>
+                </div>`;
+              fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  from: 'BidDrop <noreply@biddrop.io>',
+                  to: [lcEmail],
+                  subject: `⚠️ BidDrop: Only ${pcNewPaid} credit${pcNewPaid === 1 ? '' : 's'} left — top up now`,
+                  html: lcHtml,
+                }),
+              }).catch(e => console.warn('[lob-postcard] low-credits email failed:', e.message));
+            }
+          }
           res.status(200).json({
             ...lobData,
             _credits: { paid_credits: pcNewPaid }
