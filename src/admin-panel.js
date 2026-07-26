@@ -474,11 +474,19 @@ function renderSuperAdminPanel(accounts, allProfiles){
         '</div>';
     }).join('') +
     '</div>' +
-    // Two-column bottom section
-    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:20px;margin-top:8px;">' +
-    // LEFT COLUMN: Onboard + Add Rep
-    '<div>' +
-      '<button onclick="showAddAccountForm()" class="btn-primary" style="width:100%;margin-bottom:12px;">+ Onboard New Client</button>' +
+    // ── Admin Panel Tabs ─────────────────────────────────────────────────────
+    '<div style="margin-top:16px;">' +
+    // Tab nav bar
+    '<div id="adm-tab-nav" style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px;">' +
+      '<button onclick="admTab(\'clients\')" id="adm-tab-clients" style="background:none;border:none;border-bottom:3px solid var(--accent);margin-bottom:-2px;padding:8px 18px;color:var(--accent);font-family:var(--font-h);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.5px;text-transform:uppercase;">👥 Clients</button>' +
+      '<button onclick="admTab(\'email\')" id="adm-tab-email" style="background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;padding:8px 18px;color:var(--muted);font-family:var(--font-h);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.5px;text-transform:uppercase;">📧 Email</button>' +
+      '<button onclick="admTab(\'platform\')" id="adm-tab-platform" style="background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;padding:8px 18px;color:var(--muted);font-family:var(--font-h);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.5px;text-transform:uppercase;">⚙️ Platform</button>' +
+      '<button onclick="admTab(\'accounts\')" id="adm-tab-accounts" style="background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;padding:8px 18px;color:var(--muted);font-family:var(--font-h);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.5px;text-transform:uppercase;">🛡 Accounts</button>' +
+    '</div>' +
+
+    // ── TAB: CLIENTS ──────────────────────────────────────────────────────────
+    '<div id="adm-pane-clients">' +
+      '<button onclick="showAddAccountForm()" class="btn-primary" style="margin-bottom:12px;">+ Onboard New Client</button>' +
       '<div id="add-account-form" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:16px;margin-bottom:14px;">' +
         '<div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:12px;">NEW CLIENT ACCOUNT</div>' +
         '<div class="frow">' +
@@ -499,7 +507,7 @@ function renderSuperAdminPanel(accounts, allProfiles){
           '<div class="fg" style="flex:1;"><div class="fl">State</div>'+
             '<select class="fs" id="new-acct-state">'+
               '<option value="">—</option>'+
-              (function(){var st='AL,AK,AZ,AR,CA,CO,CT,DE,FL,GA,HI,ID,IL,IN,IA,KS,KY,LA,ME,MD,MA,MI,MN,MS,MO,MT,NE,NV,NH,NJ,NM,NY,NC,ND,OH,OK,OR,PA,RI,SC,SD,TN,TX,UT,VT,VA,WA,WV,WI,WY';return st.split(',').map(function(s){return '<option value="'+s+'"'+(s==='MI'?' selected':'')+'>'+s+'</option>';}).join('');})() +
+              (function(){var st="AL,AK,AZ,AR,CA,CO,CT,DE,FL,GA,HI,ID,IL,IN,IA,KS,KY,LA,ME,MD,MA,MI,MN,MS,MO,MT,NE,NV,NH,NJ,NM,NY,NC,ND,OH,OK,OR,PA,RI,SC,SD,TN,TX,UT,VT,VA,WA,WV,WI,WY";return st.split(",").map(function(s){return "<option value=\\""+s+"\\">"+(s==="MI"?" selected":"")+s+"</option>";}).join("");})() +
             '</select>'+
           '</div>'+
           '<div class="fg" style="flex:1;"><label class="fl" for="new-acct-zip">Zip</label><input class="fi" id="new-acct-zip" placeholder="48310" maxlength="5"></div>'+
@@ -511,7 +519,6 @@ function renderSuperAdminPanel(accounts, allProfiles){
               '<option value="monthly">Monthly ($99/mo)</option>' +
             '</select>' +
           '</div>' +
-
         '</div>' +
         '<div style="margin-top:10px;">'+
           '<div class="fg"><div class="fl">Quote Page Slug <span style="font-weight:400;color:var(--muted);font-size:10px;">(e.g. rapidroof → /q/rapidroof)</span></div>'+
@@ -532,9 +539,284 @@ function renderSuperAdminPanel(accounts, allProfiles){
       '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:18px 0 10px;">Add Rep / Admin to Existing Account</div>' +
       renderAddUserForm(clientAccounts) +
     '</div>' +
-    // RIGHT COLUMN: Super Admins + Migration
-    '<div>' +
-      '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#8B5CF6;margin-bottom:12px;">🛡 Super Admins — BidDrop Platform Access</div>' +
+
+    // ── TAB: EMAIL ────────────────────────────────────────────────────────────
+    '<div id="adm-pane-email" style="display:none;">' +
+      // Email Templates Manager
+      '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#10B981;margin-bottom:4px;">📧 Email Templates Manager</div>' +
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Edit the subject and HTML body of any system transactional email. Changes save to the database and take effect immediately — no code push required. <strong style="color:#10B981;">{{variable}}</strong> placeholders are auto-substituted at send time.</div>' +
+      '<div id="etm-container" style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:16px;margin-bottom:20px;">' +
+        '<div id="etm-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;">' +
+          '<div style="color:var(--muted);font-size:12px;padding:8px;">Loading templates…</div>' +
+        '</div>' +
+        '<div id="etm-editor" style="display:none;">' +
+          '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
+            '<button onclick="etmCloseEditor()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;color:var(--muted);font-size:11px;cursor:pointer;">← Back to list</button>' +
+            '<div id="etm-editor-title" style="font-size:13px;font-weight:700;color:var(--text);flex:1;"></div>' +
+            '<span id="etm-db-badge" style="font-size:9px;padding:2px 7px;border-radius:10px;font-weight:700;display:none;"></span>' +
+          '</div>' +
+          '<div style="margin-bottom:10px;">' +
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Subject Line</label>' +
+            '<input id="etm-subject" type="text" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">' +
+          '</div>' +
+          '<div style="margin-bottom:10px;">' +
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">HTML Body</label>' +
+            '<textarea id="etm-html" rows="12" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:12px;font-family:monospace;resize:vertical;"></textarea>' +
+          '</div>' +
+          '<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">' +
+            '<button onclick="etmSave()" style="background:linear-gradient(135deg,#10B981,#047857);border:none;border-radius:7px;padding:8px 18px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">💾 Save Template</button>' +
+            '<button onclick="etmPreview()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 14px;color:var(--text);font-size:12px;cursor:pointer;">👁 Preview</button>' +
+            '<button onclick="etmResetDefault()" style="background:none;border:1px solid var(--danger);border-radius:7px;padding:8px 14px;color:var(--danger);font-size:12px;cursor:pointer;">↩ Reset to Default</button>' +
+          '</div>' +
+          '<div id="etm-save-result" style="font-size:12px;margin-bottom:12px;"></div>' +
+          '<div style="border-top:1px solid var(--border);padding-top:12px;">' +
+            '<div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;">🧪 Send Test Email</div>' +
+            '<div style="display:flex;gap:8px;">' +
+              '<input id="etm-test-to" type="email" placeholder="test@example.com" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">' +
+              '<button onclick="etmSendTest()" style="background:linear-gradient(135deg,#F97316,#c44a00);border:none;border-radius:7px;padding:8px 16px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">📤 Send Test</button>' +
+            '</div>' +
+            '<div id="etm-test-result" style="margin-top:6px;font-size:12px;"></div>' +
+          '</div>' +
+          '<div id="etm-preview-pane" style="display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:12px;">' +
+            '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">' +
+              '<div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;">Preview</div>' +
+              '<button onclick="document.getElementById(\\"etm-preview-pane\\").style.display=\\"none\\"" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;">✕ Close</button>' +
+            '</div>' +
+            '<iframe id="etm-preview-frame" style="width:100%;height:480px;border:1px solid var(--border);border-radius:7px;background:#fff;"></iframe>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      // Broadcast Email
+      '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#3B82F6;margin-bottom:4px;">📢 Broadcast Email</div>' +
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Send a one-time email to all clients, a specific plan tier, or a single account. Sends from noreply@biddrop.io via Resend.</div>' +
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:16px;">' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">' +
+          '<div>' +
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Recipients</label>' +
+            '<select id="be-target" onchange="beToggleAccountField()" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">' +
+              '<option value="all">All Clients</option>' +
+              '<option value="plan_monthly">Monthly Plan Only</option>' +
+              '<option value="plan_payg">Pay-as-you-go Only</option>' +
+              '<option value="account">Single Account</option>' +
+            '</select>' +
+          '</div>' +
+          '<div id="be-account-row" style="display:none;">' +
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Account ID</label>' +
+            '<input id="be-account-id" type="text" placeholder="Paste account UUID" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">' +
+          '</div>' +
+        '</div>' +
+        '<div style="margin-bottom:12px;">' +
+          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Subject Line</label>' +
+          '<input id="be-subject" type="text" placeholder="Important update from BidDrop" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">' +
+        '</div>' +
+        '<div style="margin-bottom:14px;">' +
+          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Message Body (plain text — line breaks preserved)</label>' +
+          '<textarea id="be-body" rows="6" placeholder="Write your message here..." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>' +
+        '</div>' +
+        '<button onclick="sendBroadcastEmail()" style="width:100%;background:linear-gradient(135deg,#3B82F6,#1d4ed8);border:none;border-radius:8px;padding:10px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">📢 Send Broadcast Email</button>' +
+        '<div id="be-result" style="margin-top:8px;font-size:12px;"></div>' +
+      '</div>' +
+    '</div>' +
+
+    // ── TAB: PLATFORM ─────────────────────────────────────────────────────────
+    '<div id="adm-pane-platform" style="display:none;">' +
+      // Blitz Promo
+      '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#22C55E;margin-bottom:8px;">🔥 Blitz Promo — Platform Sale Toggle</div>' +
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:14px;">When ON, all clients see the promo badge in the Send Postcard popup. Configure the buy/get numbers and badge label below.</div>' +
+      '<div id="blitz-promo-section" style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:16px;margin-bottom:20px;">' +
+        '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">' +
+          '<div id="bp-toggle" onclick="toggleBlitzPromo()" style="width:44px;height:24px;border-radius:12px;background:var(--border);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;">' +
+            '<div id="bp-knob" style="position:absolute;top:4px;left:4px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s;"></div>' +
+          '</div>' +
+          '<div>' +
+            '<div id="bp-status-label" style="font-size:13px;font-weight:700;color:var(--muted);">Promo OFF</div>' +
+            '<div style="font-size:10px;color:var(--muted);">Toggle to activate the sale for all clients</div>' +
+          '</div>' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">' +
+          '<div>' +
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Buy (credits spent)</label>' +
+            '<input id="bp-buy" type="number" min="1" max="20" value="3" oninput="autoUpdateBlitzPromoLabel()" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:14px;font-weight:700;text-align:center;">' +
+          '</div>' +
+          '<div>' +
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Get (postcards total)</label>' +
+            '<input id="bp-get" type="number" min="1" max="20" value="5" oninput="autoUpdateBlitzPromoLabel()" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:14px;font-weight:700;text-align:center;">' +
+          '</div>' +
+        '</div>' +
+        '<div style="margin-bottom:12px;">' +
+          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Badge Label (shown to clients)</label>' +
+          '<input id="bp-label" type="text" maxlength="60" placeholder="Buy 3 Get 5 Total!" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">' +
+        '</div>' +
+        '<div id="bp-preview" style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:7px;padding:8px 12px;font-size:12px;color:#22C55E;font-weight:700;margin-bottom:12px;">\uD83D\uDD25 Preview: Buy 3 Get 5 Total!</div>' +
+        '<button onclick="saveBlitzPromo()" style="width:100%;background:linear-gradient(135deg,#22C55E,#16A34A);border:none;border-radius:8px;padding:10px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">\uD83D\uDCBE Save Promo Settings</button>' +
+        '<div id="bp-result" style="margin-top:8px;font-size:12px;"></div>' +
+      '</div>' +
+      // Global Postcard Defaults
+      '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#F97316;margin-bottom:4px;">\uD83D\uDCDD Global Postcard Defaults</div>' +
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Set site-wide default text for all postcard fields. Individual roofers can override these in their own Settings. Leave blank to use the built-in hardcoded defaults.</div>' +
+      '<div id="gpd-section" style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:16px;margin-bottom:20px;">' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">' +
+          '<div>' +
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Headline 1 (Front — large text)</label>' +
+            '<input id="gpd-headline1" type="text" placeholder="It might be time for a new roof." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">' +
+          '</div>' +
+          '<div>' +
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Headline 2 (Front — sub-headline)</label>' +
+            '<input id="gpd-headline2" type="text" placeholder="Based on satellite data, your roof may need attention." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">' +
+          '</div>' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">' +
+          '<div>' +
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Back Headline</label>' +
+            '<input id="gpd-back-headline" type="text" placeholder="Why did I receive this?" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">' +
+          '</div>' +
+          '<div>' +
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Back Body Text</label>' +
+            '<textarea id="gpd-back-body" rows="2" placeholder="We use satellite imagery to identify homes that may benefit from a roof inspection. This is not a solicitation..." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>' +
+          '</div>' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">' +
+          '<div>' +
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">CTA Headline (Back)</label>' +
+            '<input id="gpd-cta-headline" type="text" placeholder="Get Your Free Inspection" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">' +
+          '</div>' +
+          '<div>' +
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">CTA Button Label</label>' +
+            '<input id="gpd-cta-btn" type="text" placeholder="Book Free Inspection" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">' +
+          '</div>' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">' +
+          '<div>' +
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Quote / Testimonial (Back — optional)</label>' +
+            '<textarea id="gpd-quote" rows="2" placeholder="Leave blank to hide" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>' +
+          '</div>' +
+          '<div>' +
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Guarantee / Disclaimer (Back — small print)</label>' +
+            '<textarea id="gpd-guarantee" rows="2" placeholder="Prepared from satellite data. Your contractor will verify details on-site." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>' +
+          '</div>' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">' +
+          '<div>' +
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">QR Scan CTA (e.g. SCAN TO BOOK)</label>' +
+            '<input id="gpd-scan-cta" type="text" placeholder="SCAN TO BOOK" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">' +
+          '</div>' +
+          '<div>' +
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">QR Scan Sub-label</label>' +
+            '<input id="gpd-scan-sub" type="text" placeholder="No-pressure booking" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">' +
+          '</div>' +
+        '</div>' +
+        '<div style="margin-bottom:12px;">' +
+          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Letter Hook / Intro (Estimate letter body)</label>' +
+          '<textarea id="gpd-hook-letter" rows="3" placeholder="We put together a project estimate for your home based on satellite measurements..." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>' +
+        '</div>' +
+        '<div style="margin-bottom:14px;">' +
+          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Letter Why Received (Estimate letter — why they got this)</label>' +
+          '<textarea id="gpd-why-received" rows="3" placeholder="We use satellite imagery and current pricing data to build project estimates for homeowners in our service area..." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>' +
+        '</div>' +
+        '<button onclick="saveGlobalPostcardDefaults()" style="width:100%;background:linear-gradient(135deg,#F97316,#c44a00);border:none;border-radius:8px;padding:10px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">\uD83D\uDCBE Save Global Postcard Defaults</button>' +
+        '<div id="gpd-result" style="margin-top:8px;font-size:12px;"></div>' +
+      '</div>' +
+      // Global Default Content (CMS)
+      '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#F97316;margin-bottom:4px;">\uD83C\uDF10 Global Default Content</div>' +
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:14px;">CMS for all client-facing copy on the homeowner project report page. Individual roofers can override in their Settings. Leave blank to use the built-in defaults. Changes take effect immediately for all accounts that haven\'t customized that field.</div>' +
+      '<div id="gcd-section" style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:16px;margin-bottom:20px;">' +
+        '<div style="font-size:10px;font-weight:700;color:#F97316;letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">GATE SCREEN (Lead Capture)</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">' +
+          '<div>' +
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Gate Title</label>' +
+            '<input id="gcd-gate-title" type="text" placeholder="See Your Free Roof Report" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">' +
+          '</div>' +
+          '<div>' +
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Gate Subtitle</label>' +
+            '<input id="gcd-gate-subtitle" type="text" placeholder="Enter your info to view your personalized project report." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">' +
+          '</div>' +
+        '</div>' +
+        '<div style="font-size:10px;font-weight:700;color:#F97316;letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">HERO SECTION</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">' +
+          '<div>' +
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Hero Headline</label>' +
+            '<input id="gcd-hero-headline" type="text" placeholder="Your Roof Report Is Ready" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">' +
+          '</div>' +
+          '<div>' +
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Hero Subheadline</label>' +
+            '<input id="gcd-hero-sub" type="text" placeholder="Based on satellite data and current pricing." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">' +
+          '</div>' +
+        '</div>' +
+        '<div style="font-size:10px;font-weight:700;color:#F97316;letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">REP BIO</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">' +
+          '<div>' +
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Bio Intro Label</label>' +
+            '<input id="gcd-bio-label" type="text" placeholder="Your Local Roofing Expert" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">' +
+          '</div>' +
+          '<div>' +
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Default Bio Text</label>' +
+            '<textarea id="gcd-bio-text" rows="2" placeholder="I specialize in helping homeowners understand their roof\'s condition..." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>' +
+          '</div>' +
+        '</div>' +
+        '<div style="font-size:10px;font-weight:700;color:#F97316;letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">ABOUT / REVIEWS / CTA</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">' +
+          '<div>' +
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">About Section Headline</label>' +
+            '<input id="gcd-about-headline" type="text" placeholder="Why Homeowners Trust Us" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">' +
+          '</div>' +
+          '<div>' +
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">About Body</label>' +
+            '<textarea id="gcd-about-body" rows="2" placeholder="We\'ve been helping homeowners in this area protect their biggest investment..." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>' +
+          '</div>' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">' +
+          '<div>' +
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">CTA Headline</label>' +
+            '<input id="gcd-cta-headline" type="text" placeholder="Ready to Get Started?" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">' +
+          '</div>' +
+          '<div>' +
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">CTA Subheading</label>' +
+            '<textarea id="gcd-cta-sub" rows="2" placeholder="If you\'d like to move forward, schedule a convenient inspection..." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>' +
+          '</div>' +
+        '</div>' +
+        '<div style="font-size:10px;font-weight:700;color:#F97316;letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">DISCLAIMERS & FOOTER</div>' +
+        '<div style="margin-bottom:12px;">' +
+          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Footer Disclaimer (bottom of page)</label>' +
+          '<textarea id="gcd-footer-disclaimer" rows="2" placeholder="This project report was created for you by the contractor listed above..." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">' +
+          '<div>' +
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Property / Pricing Disclaimer</label>' +
+            '<textarea id="gcd-property-disclaimer" rows="2" placeholder="Pricing is an estimate based on property data. Final cost confirmed during on-site inspection." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>' +
+          '</div>' +
+          '<div>' +
+            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Material Disclaimer</label>' +
+            '<textarea id="gcd-material-disclaimer" rows="2" placeholder="Material pricing reflects current market rates and may change." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>' +
+          '</div>' +
+        '</div>' +
+        '<div style="font-size:10px;font-weight:700;color:#F97316;letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">SMS & EMAIL TEMPLATES</div>' +
+        '<div style="margin-bottom:12px;">' +
+          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Default SMS Template (sent to homeowner — use {{name}}, {{url}})</label>' +
+          '<textarea id="gcd-sms-template" rows="3" placeholder="Hi {{name}}, your roofing project report is ready. View it here: {{url}}" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>' +
+        '</div>' +
+        '<div style="margin-bottom:16px;">' +
+          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Default Email Subject</label>' +
+          '<input id="gcd-email-subject" type="text" placeholder="Your Roofing Project Report Is Ready" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">' +
+        '</div>' +
+        '<button onclick="saveGlobalContentDefaults()" style="width:100%;background:linear-gradient(135deg,#F97316,#c44a00);border:none;border-radius:8px;padding:10px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">\uD83D\uDCBE Save Global Content Defaults</button>' +
+        '<div id="gcd-result" style="margin-top:8px;font-size:12px;"></div>' +
+      '</div>' +
+      // Canvas Templates + Migration
+      '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#F25C05;margin-bottom:8px;">\uD83C\uDFA8 Canvas Templates</div>' +
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:12px;">Load the 6 built-in postcard templates (Storm, Solar, Gutters, Roofing, Alert, Estimate Ready) into the canvas editor. Safe to run once — skips if templates already exist.</div>' +
+      '<button onclick="seedCanvasTemplates()" style="background:linear-gradient(135deg,#F25C05,#c44a00);border:none;border-radius:8px;padding:10px 22px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">\uD83C\uDFA8 Load Default Templates</button>' +
+      '<div id="seed-templates-result" style="margin-top:10px;font-size:12px;"></div>' +
+      '<div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">' +
+        '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#22C55E;margin-bottom:8px;">\uD83D\uDEE0 Database Maintenance</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-bottom:12px;">Run once to add performance indexes and create missing tables. Safe to run multiple times.</div>' +
+        '<button onclick="runMigration()" style="background:linear-gradient(135deg,#22C55E,#16A34A);border:none;border-radius:8px;padding:10px 22px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">\u26A1 Run Migration</button>' +
+        '<div id="migration-result" style="margin-top:10px;font-size:12px;"></div>' +
+      '</div>' +
+    '</div>' +
+
+    // ── TAB: ACCOUNTS ─────────────────────────────────────────────────────────
+    '<div id="adm-pane-accounts" style="display:none;">' +
+      '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#8B5CF6;margin-bottom:12px;">\uD83D\uDEE1 Super Admins — BidDrop Platform Access</div>' +
       '<div style="font-size:11px;color:var(--muted);margin-bottom:12px;">Super Admins can switch between all client accounts, access the Agency view, manage all clients, and configure platform settings. They cannot delete the primary owner.</div>' +
       allProfiles.filter(p=>p.role==='super_admin').map(p=>{
         const isOwner = p.email===OWNER_EMAIL;
@@ -548,305 +830,44 @@ function renderSuperAdminPanel(accounts, allProfiles){
             : '')+
           '</div>';
       }).join('') +
-      '<div style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:14px;margin-top:8px;">'+
-        '<div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:10px;">+ Invite New Super Admin</div>'+
-        '<div class="frow">'+
-          '<div class="fg"><label class="fl" for="new-sa-name">Full Name</label><input class="fi" id="new-sa-name" placeholder="Jane Smith"></div>'+
-          '<div class="fg"><label class="fl" for="new-sa-email">Email *</label><input class="fi" id="new-sa-email" type="email" placeholder="jane@agency.com"></div>'+
-        '</div>'+
-        '<div class="fg"><label class="fl" for="new-sa-pass">Temporary Password *</label><input class="fi" id="new-sa-pass" type="password" placeholder="min 6 chars"></div>'+
-        '<button onclick="createSuperAdmin()" class="btn-primary" style="margin-top:6px;">Create Super Admin Account</button>'+
-        '<div id="new-sa-result" style="margin-top:8px;font-size:12px;"></div>'+
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:14px;margin-top:8px;">' +
+        '<div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:10px;">+ Invite New Super Admin</div>' +
+        '<div class="frow">' +
+          '<div class="fg"><label class="fl" for="new-sa-name">Full Name</label><input class="fi" id="new-sa-name" placeholder="Jane Smith"></div>' +
+          '<div class="fg"><label class="fl" for="new-sa-email">Email *</label><input class="fi" id="new-sa-email" type="email" placeholder="jane@agency.com"></div>' +
+        '</div>' +
+        '<div class="fg"><label class="fl" for="new-sa-pass">Temporary Password *</label><input class="fi" id="new-sa-pass" type="password" placeholder="min 6 chars"></div>' +
+        '<button onclick="createSuperAdmin()" class="btn-primary" style="margin-top:6px;">Create Super Admin Account</button>' +
+        '<div id="new-sa-result" style="margin-top:8px;font-size:12px;"></div>' +
       '</div>' +
-      '<hr style="border:none;border-top:1px solid var(--border);margin:24px 0 16px;">'+
-      '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#22C55E;margin-bottom:8px;">🛠 Database Maintenance</div>'+
-      '<div style="font-size:11px;color:var(--muted);margin-bottom:12px;">Run once to add performance indexes for 30,000+ pin accounts. Safe to run multiple times.</div>'+
-      '<button onclick="runMigration()" style="background:linear-gradient(135deg,#22C55E,#16A34A);border:none;border-radius:8px;padding:10px 22px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">⚡ Run Migration</button>'+
-      '<div id="migration-result" style="margin-top:10px;font-size:12px;"></div>'+
-      '<hr style="border:none;border-top:1px solid var(--border);margin:20px 0 14px;">'+
-      '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#F25C05;margin-bottom:8px;">🎨 Canvas Templates</div>'+
-      '<div style="font-size:11px;color:var(--muted);margin-bottom:12px;">Load the 6 built-in postcard templates (Storm, Solar, Gutters, Roofing, Alert, Estimate Ready) into the canvas editor. Safe to run once — skips if templates already exist.</div>'+
-      '<button onclick="seedCanvasTemplates()" style="background:linear-gradient(135deg,#F25C05,#c44a00);border:none;border-radius:8px;padding:10px 22px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">\uD83C\uDFA8 Load Default Templates</button>'+
-      '<div id="seed-templates-result" style="margin-top:10px;font-size:12px;"></div>'+
-      '<hr style="border:none;border-top:1px solid var(--border);margin:20px 0 14px;">'+
-      '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#22C55E;margin-bottom:8px;">\uD83D\uDD25 Blitz Promo — Platform Sale Toggle</div>'+
-      '<div style="font-size:11px;color:var(--muted);margin-bottom:14px;">When ON, all clients see the promo badge in the Send Postcard popup. Configure the buy/get numbers and badge label below.</div>'+
-      '<div id="blitz-promo-section" style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:16px;">'+
-        '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">'+
-          '<div id="bp-toggle" onclick="toggleBlitzPromo()" style="width:44px;height:24px;border-radius:12px;background:var(--border);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;">'+
-            '<div id="bp-knob" style="position:absolute;top:4px;left:4px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s;"></div>'+
-          '</div>'+
-          '<div>'+
-            '<div id="bp-status-label" style="font-size:13px;font-weight:700;color:var(--muted);">Promo OFF</div>'+
-            '<div style="font-size:10px;color:var(--muted);">Toggle to activate the sale for all clients</div>'+
-          '</div>'+
-        '</div>'+
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">'+
-          '<div>'+
-            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Buy (credits spent)</label>'+
-            '<input id="bp-buy" type="number" min="1" max="20" value="3" oninput="autoUpdateBlitzPromoLabel()" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:14px;font-weight:700;text-align:center;">'+
-          '</div>'+
-          '<div>'+
-            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Get (postcards total)</label>'+
-            '<input id="bp-get" type="number" min="1" max="20" value="5" oninput="autoUpdateBlitzPromoLabel()" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:14px;font-weight:700;text-align:center;">'+
-          '</div>'+
-        '</div>'+
-        '<div style="margin-bottom:12px;">'+
-          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Badge Label (shown to clients)</label>'+
-          '<input id="bp-label" type="text" maxlength="60" placeholder="Buy 3 Get 5 Total!" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
-        '</div>'+
-        '<div id="bp-preview" style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:7px;padding:8px 12px;font-size:12px;color:#22C55E;font-weight:700;margin-bottom:12px;">\uD83D\uDD25 Preview: Buy 3 Get 5 Total!</div>'+
-        '<button onclick="saveBlitzPromo()" style="width:100%;background:linear-gradient(135deg,#22C55E,#16A34A);border:none;border-radius:8px;padding:10px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">\uD83D\uDCBE Save Promo Settings</button>'+
-        '<div id="bp-result" style="margin-top:8px;font-size:12px;"></div>'+
-      '</div>'+
-      '<hr style="border:none;border-top:1px solid var(--border);margin:20px 0 14px;">'+
-      '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#F97316;margin-bottom:4px;">\uD83D\uDCDD Global Postcard Defaults</div>'+
-      '<div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Set site-wide default text for all postcard fields. Individual roofers can override these in their own Settings. Leave blank to use the built-in hardcoded defaults.</div>'+
-      '<div id="gpd-section" style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:16px;">'+
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">'+
-          '<div>'+
-            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Headline 1 (Front — large text)</label>'+
-            '<input id="gpd-headline1" type="text" placeholder="It might be time for a new roof." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
-          '</div>'+
-          '<div>'+
-            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Headline 2 (Front — sub-headline)</label>'+
-            '<input id="gpd-headline2" type="text" placeholder="But don&#39;t worry, we can help!" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
-          '</div>'+
-        '</div>'+
-        '<div style="margin-bottom:12px;">'+
-          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Hook / Intro (Back — main body paragraph)</label>'+
-          '<textarea id="gpd-hook" rows="3" placeholder="We built a project estimate for your home using satellite measurements and current pricing..." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>'+
-        '</div>'+
-        '<div style="margin-bottom:12px;">'+
-          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Why We Reached Out (Back — secondary paragraph)</label>'+
-          '<textarea id="gpd-why" rows="3" placeholder="We prepare estimates before we reach out so you have real numbers to work with from the start..." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>'+
-        '</div>'+
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">'+
-          '<div>'+
-            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Quote / Testimonial (Back — optional)</label>'+
-            '<textarea id="gpd-quote" rows="2" placeholder="Leave blank to hide" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>'+
-          '</div>'+
-          '<div>'+
-            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Guarantee / Disclaimer (Back — small print)</label>'+
-            '<textarea id="gpd-guarantee" rows="2" placeholder="Prepared from satellite data. Your contractor will verify details on-site." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>'+
-          '</div>'+
-        '</div>'+
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">'+
-          '<div>'+
-            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">QR Scan CTA (e.g. SCAN TO BOOK)</label>'+
-            '<input id="gpd-scan-cta" type="text" placeholder="SCAN TO BOOK" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
-          '</div>'+
-          '<div>'+
-            '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">QR Scan Sub-label</label>'+
-            '<input id="gpd-scan-sub" type="text" placeholder="No-pressure booking" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
-          '</div>'+
-        '</div>'+
-        '<div style="margin-bottom:12px;">'+
-          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Letter Hook / Intro (Estimate letter body)</label>'+
-          '<textarea id="gpd-hook-letter" rows="3" placeholder="We put together a project estimate for your home based on satellite measurements..." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>'+
-        '</div>'+
-        '<div style="margin-bottom:14px;">'+
-          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Letter Why Received (Estimate letter — why they got this)</label>'+
-          '<textarea id="gpd-why-received" rows="3" placeholder="We use satellite imagery and current pricing data to build project estimates for homeowners in our service area..." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>'+
-        '</div>'+
-        '<button onclick="saveGlobalPostcardDefaults()" style="width:100%;background:linear-gradient(135deg,#F97316,#c44a00);border:none;border-radius:8px;padding:10px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">\uD83D\uDCBE Save Global Postcard Defaults</button>'+
-        '<div id="gpd-result" style="margin-top:8px;font-size:12px;"></div>'+
-      '</div>'+
     '</div>' +
-    // ── Global Default Content (CMS) ─────────────────────────────────────────
-    '<hr style="border:none;border-top:1px solid var(--border);margin:20px 0 14px;">'+
-    '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#F97316;margin-bottom:4px;">🌐 Global Default Content</div>'+
-    '<div style="font-size:11px;color:var(--muted);margin-bottom:14px;">CMS for all client-facing copy on the homeowner project report page. Individual roofers can override in their Settings. Leave blank to use the built-in defaults. Changes take effect immediately for all accounts that haven\'t customized that field.</div>'+
-    '<div id="gcd-section" style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:16px;">'+
-      // ── Gate Screen ──
-      '<div style="font-size:10px;font-weight:700;color:#F97316;letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">GATE SCREEN (Lead Capture)</div>'+
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">'+
-        '<div>'+
-          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Gate Title</label>'+
-          '<input id="gcd-gate-title" type="text" placeholder="Your Project Report Is Ready" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
-        '</div>'+
-        '<div>'+
-          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Gate Button Text</label>'+
-          '<input id="gcd-gate-btn" type="text" placeholder="View My Report →" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
-        '</div>'+
-      '</div>'+
-      '<div style="margin-bottom:12px;">'+
-        '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Gate Subtitle</label>'+
-        '<textarea id="gcd-gate-sub" rows="2" placeholder="This report was prepared for your property using remote property analysis and current project data. Enter your information to continue." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>'+
-      '</div>'+
-      '<div style="margin-bottom:16px;">'+
-        '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Privacy Notice</label>'+
-        '<input id="gcd-gate-privacy" type="text" placeholder="We only share your information with the contractor who requested this report." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
-      '</div>'+
-      // ── Hero ──
-      '<div style="font-size:10px;font-weight:700;color:#F97316;letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">HERO SECTION</div>'+
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">'+
-        '<div>'+
-          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Hero Tag (eyebrow label)</label>'+
-          '<input id="gcd-hero-tag" type="text" placeholder="Roofing Project Report" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
-        '</div>'+
-        '<div>'+
-          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Hero Headline (use \\n for line breaks)</label>'+
-          '<input id="gcd-hero-headline" type="text" placeholder="Your Roofing Project, Organized." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
-        '</div>'+
-      '</div>'+
-      // ── Rep Bio ──
-      '<div style="font-size:10px;font-weight:700;color:#F97316;letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">REP / ADVISOR BIO</div>'+
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">'+
-        '<div>'+
-          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Default Rep Title</label>'+
-          '<input id="gcd-rep-title" type="text" placeholder="Project Advisor" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
-        '</div>'+
-        '<div>'+
-          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Video Section Label</label>'+
-          '<input id="gcd-video-title" type="text" placeholder="A message from your contractor" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
-        '</div>'+
-      '</div>'+
-      '<div style="margin-bottom:16px;">'+
-        '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Default Rep Bio (shown when roofer hasn\'t set an inspection note)</label>'+
-        '<textarea id="gcd-rep-bio" rows="3" placeholder="Welcome! This report was prepared to give you a clear starting point for your roofing project. When you\'re ready, we\'ll review the details with you, answer your questions, and confirm everything during an on-site visit." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>'+
-      '</div>'+
-      // ── About / Reviews / CTA ──
-      '<div style="font-size:10px;font-weight:700;color:#F97316;letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">ABOUT, REVIEWS & CTA SECTIONS</div>'+
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">'+
-        '<div>'+
-          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">About Section Title</label>'+
-          '<input id="gcd-about-title" type="text" placeholder="Meet Your Contractor." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
-        '</div>'+
-        '<div>'+
-          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Reviews Section Title</label>'+
-          '<input id="gcd-reviews-title" type="text" placeholder="What Customers Are Saying." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
-        '</div>'+
-      '</div>'+
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">'+
-        '<div>'+
-          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">CTA Headline</label>'+
-          '<input id="gcd-cta-title" type="text" placeholder="Ready When You Are." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
-        '</div>'+
-        '<div>'+
-          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Sticky Bar Tag (e.g. Licensed &amp; Insured)</label>'+
-          '<input id="gcd-sticky-tag" type="text" placeholder="Licensed &amp; Insured" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
-        '</div>'+
-      '</div>'+
-      '<div style="margin-bottom:12px;">'+
-        '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">CTA Subheading</label>'+
-        '<textarea id="gcd-cta-sub" rows="2" placeholder="If you\'d like to move forward, schedule a convenient inspection and we\'ll verify the project details together." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>'+
-      '</div>'+
-      // ── Disclaimers ──
-      '<div style="font-size:10px;font-weight:700;color:#F97316;letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">DISCLAIMERS & FOOTER</div>'+
-      '<div style="margin-bottom:12px;">'+
-        '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Footer Disclaimer (bottom of page)</label>'+
-        '<textarea id="gcd-footer-disclaimer" rows="2" placeholder="This project report was created for you by the contractor listed above. By viewing this page, you acknowledge that your interaction may be tracked for advertising purposes..." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>'+
-      '</div>'+
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">'+
-        '<div>'+
-          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Property / Pricing Disclaimer</label>'+
-          '<textarea id="gcd-property-disclaimer" rows="2" placeholder="Pricing is an estimate based on property data. Final cost confirmed during on-site inspection." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>'+
-        '</div>'+
-        '<div>'+
-          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Material Disclaimer</label>'+
-          '<textarea id="gcd-material-disclaimer" rows="2" placeholder="Material pricing reflects current market rates and may change. Your contractor will confirm at time of project." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>'+
-        '</div>'+
-      '</div>'+
-      // ── SMS / Email Templates ──
-      '<div style="font-size:10px;font-weight:700;color:#F97316;letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">SMS & EMAIL TEMPLATES</div>'+
-      '<div style="margin-bottom:12px;">'+
-        '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Default SMS Template (sent to homeowner — use {{name}}, {{url}})</label>'+
-        '<textarea id="gcd-sms-template" rows="3" placeholder="Hi {{name}}, your roofing project report is ready. View it here: {{url}}" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>'+
-      '</div>'+
-      '<div style="margin-bottom:16px;">'+
-        '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Default Email Subject</label>'+
-        '<input id="gcd-email-subject" type="text" placeholder="Your Roofing Project Report Is Ready" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
-      '</div>'+
-      '<button onclick="saveGlobalContentDefaults()" style="width:100%;background:linear-gradient(135deg,#F97316,#c44a00);border:none;border-radius:8px;padding:10px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">💾 Save Global Content Defaults</button>'+
-      '<div id="gcd-result" style="margin-top:8px;font-size:12px;"></div>'+
-    '</div>'+
-    // ── Broadcast Email ────────────────────────────────────────────────────
-    '<hr style="border:none;border-top:1px solid var(--border);margin:20px 0 14px;">'+
-    '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#3B82F6;margin-bottom:4px;">📢 Broadcast Email</div>'+
-    '<div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Send a one-time email to all clients, a specific plan tier, or a single account. Sends from noreply@biddrop.io via Resend.</div>'+
-    '<div style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:16px;">'+
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">'+
-        '<div>'+
-          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Recipients</label>'+
-          '<select id="be-target" onchange="beToggleAccountField()" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
-            '<option value="all">All Clients</option>'+
-            '<option value="plan_monthly">Monthly Plan Only</option>'+
-            '<option value="plan_payg">Pay-as-you-go Only</option>'+
-            '<option value="account">Single Account</option>'+
-          '</select>'+
-        '</div>'+
-        '<div id="be-account-row" style="display:none;">'+
-          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Account ID</label>'+
-          '<input id="be-account-id" type="text" placeholder="Paste account UUID" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
-        '</div>'+
-      '</div>'+
-      '<div style="margin-bottom:12px;">'+
-        '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Subject Line</label>'+
-        '<input id="be-subject" type="text" placeholder="Important update from BidDrop" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
-      '</div>'+
-      '<div style="margin-bottom:14px;">'+
-        '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Message Body (plain text — line breaks preserved)</label>'+
-        '<textarea id="be-body" rows="6" placeholder="Write your message here..." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;"></textarea>'+
-      '</div>'+
-      '<button onclick="sendBroadcastEmail()" style="width:100%;background:linear-gradient(135deg,#3B82F6,#1d4ed8);border:none;border-radius:8px;padding:10px;color:#fff;font-family:var(--font-h);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">📢 Send Broadcast Email</button>'+
-      '<div id="be-result" style="margin-top:8px;font-size:12px;"></div>'+
-    '</div>'+
-    // ── Email Templates Manager ──────────────────────────────────────────
-    '<hr style="border:none;border-top:1px solid var(--border);margin:20px 0 14px;">'+
-    '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#10B981;margin-bottom:4px;">📧 Email Templates Manager</div>'+
-    '<div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Edit the subject and HTML body of any system transactional email. Changes save to the database and take effect immediately — no code push required. <strong style="color:#10B981;">{{variable}}</strong> placeholders are auto-substituted at send time.</div>'+
-    '<div id="etm-container" style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:16px;">'+
-      '<div id="etm-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;">'+
-        '<div style="color:var(--muted);font-size:12px;padding:8px;">Loading templates…</div>'+
-      '</div>'+
-      '<div id="etm-editor" style="display:none;">'+
-        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">'+
-          '<button onclick="etmCloseEditor()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;color:var(--muted);font-size:11px;cursor:pointer;">← Back to list</button>'+
-          '<div id="etm-editor-title" style="font-size:13px;font-weight:700;color:var(--text);flex:1;"></div>'+
-          '<span id="etm-db-badge" style="font-size:9px;padding:2px 7px;border-radius:10px;font-weight:700;display:none;"></span>'+
-        '</div>'+
-        '<div style="margin-bottom:10px;">'+
-          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Subject Line</label>'+
-          '<input id="etm-subject" type="text" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
-        '</div>'+
-        '<div style="margin-bottom:10px;">'+
-          '<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">HTML Body</label>'+
-          '<textarea id="etm-html" rows="12" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:12px;font-family:monospace;resize:vertical;"></textarea>'+
-        '</div>'+
-        '<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">'+
-          '<button onclick="etmSave()" style="background:linear-gradient(135deg,#10B981,#047857);border:none;border-radius:7px;padding:8px 18px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">💾 Save Template</button>'+
-          '<button onclick="etmPreview()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 14px;color:var(--text);font-size:12px;cursor:pointer;">👁 Preview</button>'+
-          '<button onclick="etmResetDefault()" style="background:none;border:1px solid var(--danger);border-radius:7px;padding:8px 14px;color:var(--danger);font-size:12px;cursor:pointer;">↩ Reset to Default</button>'+
-        '</div>'+
-        '<div id="etm-save-result" style="font-size:12px;margin-bottom:12px;"></div>'+
-        '<div style="border-top:1px solid var(--border);padding-top:12px;">'+
-          '<div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;">🧪 Send Test Email</div>'+
-          '<div style="display:flex;gap:8px;">'+
-            '<input id="etm-test-to" type="email" placeholder="test@example.com" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;">'+
-            '<button onclick="etmSendTest()" style="background:linear-gradient(135deg,#F97316,#c44a00);border:none;border-radius:7px;padding:8px 16px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">📤 Send Test</button>'+
-          '</div>'+
-          '<div id="etm-test-result" style="margin-top:6px;font-size:12px;"></div>'+
-        '</div>'+
-        '<div id="etm-preview-pane" style="display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:12px;">'+
-          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'+
-            '<div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;">Preview</div>'+
-            '<button onclick="document.getElementById(\"etm-preview-pane\").style.display=\"none\"" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;">✕ Close</button>'+
-          '</div>'+
-          '<iframe id="etm-preview-frame" style="width:100%;height:480px;border:1px solid var(--border);border-radius:7px;background:#fff;"></iframe>'+
-        '</div>'+
-      '</div>'+
-    '</div>'+
-    '</div>' +
+
     '</div>');
-  // Load current promo state from DB and populate the UI
+  // Load data for the default (Clients) tab
+  // Email Templates and other tabs load lazily when tab is clicked
   loadBlitzPromoState();
-  // Load current global postcard defaults
   loadGlobalPostcardDefaults();
-  // Load current global content defaults
   loadGlobalContentDefaults();
-  // Load email templates list
-  loadEmailTemplates();
+}
+// Tab switcher for admin panel
+function admTab(tab) {
+  const tabs = ['clients','email','platform','accounts'];
+  tabs.forEach(t => {
+    const pane = document.getElementById('adm-pane-'+t);
+    const btn  = document.getElementById('adm-tab-'+t);
+    if (!pane || !btn) return;
+    const active = t === tab;
+    pane.style.display = active ? '' : 'none';
+    btn.style.borderBottomColor = active ? 'var(--accent)' : 'transparent';
+    btn.style.color = active ? 'var(--accent)' : 'var(--muted)';
+  });
+  // Lazy-load email templates when Email tab is first opened
+  if (tab === 'email') {
+    const listEl = document.getElementById('etm-list');
+    if (listEl && listEl.querySelector('[style*="Loading"]')) {
+      loadEmailTemplates();
+    }
+  }
 }
 
 async function seedCanvasTemplates(){
@@ -1749,8 +1770,6 @@ const ETM_LABELS = {
   plan_downgraded:       'Plan Downgraded',
   payment_failed:        'Payment Failed',
   low_credits:           'Low Credits Warning',
-  trial_ending_10:       'Trial Ending (10 days)',
-  trial_ending_2:        'Trial Ending (2 days)',
   trial_expired_admin:   'Trial Expired (Admin Alert)',
   new_signup_alert:      'New Signup Alert (Admin)',
 };
