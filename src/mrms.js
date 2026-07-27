@@ -159,17 +159,33 @@ window.loadMrmsForDate = async function(date) {
 
     renderMrmsLayerFromData();
 
-    // Fly the map to the center of the swath
+    // Find the geographic center of the swath
     const lats = _mrmsData.map(r => parseFloat(r.lat));
     const lons = _mrmsData.map(r => parseFloat(r.lon));
     const centerLat = (Math.min(...lats) + Math.max(...lats)) / 2;
     const centerLon = (Math.min(...lons) + Math.max(...lons)) / 2;
+
+    // Reverse-geocode the center to get a human-readable region name
+    let regionName = `${centerLat.toFixed(1)}°N, ${Math.abs(centerLon).toFixed(1)}°W`;
     try {
-      map.setView([centerLat, centerLon], 10);
+      const geoResp = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${centerLat}&lon=${centerLon}&zoom=6`);
+      if (geoResp.ok) {
+        const geoData = await geoResp.json();
+        const addr = geoData.address || {};
+        regionName = addr.state || addr.county || addr.city || regionName;
+        if (addr.country && addr.country !== 'United States') regionName += `, ${addr.country}`;
+      }
     } catch(e) {}
 
-    // Switch to map tab so rep sees the swath
-    if (typeof goTab === 'function') goTab('map');
+    // Update status with region info and a fly-to button
+    const regionMsg = `${_mrmsData.length.toLocaleString()} hail cells — centered on <strong>${regionName}</strong>`;
+    ['storm-date-status','storm-date-status2'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = `${regionMsg} &nbsp;<button onclick="_mrmsFlyCenterAndGoMap(${centerLat},${centerLon})" style="background:#6366f1;color:#fff;border:none;border-radius:5px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;">View on Map</button>`;
+    });
+
+    // Don't auto-fly — rep may be working a different city
+    // They can click 'View on Map' or search their own city
 
   } catch(e) {
     console.warn('[MRMS] loadMrmsForDate error:', e.message);
@@ -180,6 +196,12 @@ window.loadMrmsForDate = async function(date) {
   } finally {
     _mrmsFetching = false;
   }
+};
+
+// ── Fly to swath center helper ───────────────────────────────────────────────
+window._mrmsFlyCenterAndGoMap = function(lat, lon) {
+  try { map.setView([lat, lon], 9); } catch(e) {}
+  if (typeof goTab === 'function') goTab('map');
 };
 
 // ── Legacy toggle (map panel) ─────────────────────────────────────────────────
