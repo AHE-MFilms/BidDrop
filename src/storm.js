@@ -23,10 +23,19 @@ function toggleStormEvents(){
     const bnav = document.querySelector('.bottom-nav') || document.querySelector('#bottom-nav');
     const topOffset = toolbar ? toolbar.getBoundingClientRect().bottom + 10 : 130;
     const bnavH = bnav ? bnav.getBoundingClientRect().height : 60;
-    const panelH = window.innerHeight - topOffset - bnavH - 10;
+    // Use visualViewport on iOS for accurate height (window.innerHeight includes hidden Safari chrome)
+    const vph = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+    const panelH = vph - topOffset - bnavH - 10;
     panel.style.top = topOffset + 'px';
-    panel.style.height = panelH + 'px';
-    panel.style.maxHeight = panelH + 'px';
+    panel.style.height = Math.max(panelH, 200) + 'px';
+    panel.style.maxHeight = Math.max(panelH, 200) + 'px';
+    // Prevent touch events from bubbling to the map on iOS
+    const body = panel.querySelector('.storm-body');
+    if(body && !body._iosScrollBound){
+      body._iosScrollBound = true;
+      body.addEventListener('touchstart', e => e.stopPropagation(), {passive:true});
+      body.addEventListener('touchmove', e => e.stopPropagation(), {passive:true});
+    }
     _syncHailToggleUI();
     _syncWindToggleUI();
   } else {
