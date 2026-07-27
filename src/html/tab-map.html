@@ -15,7 +15,7 @@
       <button class="mtool-btn" id="solar-overlay-btn" onclick="toggleSolarOverlay()" title="Show solar kW potential overlay on pins with solar data">☀️ Solar kW</button>
     </div>
     <!-- Storm Events Panel -->
-    <div id="storm-panel" style="display:none;position:fixed;top:80px;left:12px;z-index:9999;background:var(--panel);border:1px solid var(--border);border-radius:12px;width:290px;box-shadow:0 4px 24px rgba(0,0,0,.6);flex-direction:column;max-height:calc(100vh - 150px);">
+    <div id="storm-panel" style="display:none;position:fixed;top:80px;left:12px;z-index:9999;background:var(--panel);border:1px solid var(--border);border-radius:12px;width:290px;box-shadow:0 4px 24px rgba(0,0,0,.6);flex-direction:column;height:calc(100vh - 150px);">
       <!-- Sticky header -->
       <div style="padding:14px 16px 10px;border-bottom:1px solid var(--border);flex-shrink:0;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
@@ -25,7 +25,7 @@
         <div style="font-size:10px;color:var(--muted);">Source: <span id="storm-source-label">NOAA MRMS Radar</span> · Free</div>
       </div>
       <!-- Scrollable body -->
-      <div style="overflow-y:auto;flex:1;padding:14px 16px;-webkit-overflow-scrolling:touch;">
+      <div style="overflow-y:scroll;flex:1;min-height:0;padding:14px 16px;-webkit-overflow-scrolling:touch;">
 
       <!-- City / Zip Search -->
       <div style="margin-bottom:12px;">
