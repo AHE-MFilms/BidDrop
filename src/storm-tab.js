@@ -110,6 +110,7 @@ function syncStormDays() {
   if (days2 && days) {
     days.value = days2.value;
     if (typeof loadStormEvents === 'function') loadStormEvents();
+    if (typeof renderMrmsLayer === 'function') renderMrmsLayer(); // also refresh MRMS swath
     if (typeof _saveStormState === 'function') _saveStormState();
   }
 }

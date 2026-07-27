@@ -92,8 +92,11 @@ async function fetchMrmsData() {
     return;
   }
 
-  const days    = parseInt(document.getElementById('storm-days')?.value || '30') || 30;
-  const minSize = parseFloat(document.getElementById('storm-min-size')?.value || '0.75') || 0.75;
+  // Read from whichever select is in the DOM; default to 90 days (matches our 90-day DB retention)
+  const daysEl = document.getElementById('storm-days') || document.getElementById('storm-days2');
+  const sizeEl = document.getElementById('storm-min-size') || document.getElementById('storm-min-size2');
+  const days    = parseInt(daysEl?.value || '90') || 90;
+  const minSize = parseFloat(sizeEl?.value || '0.75') || 0.75;
 
   // Get current map center
   let center;
