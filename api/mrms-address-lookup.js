@@ -41,21 +41,43 @@ export default async function handler(req, res) {
   let resolvedAddress = address || null;
 
   // --- Geocode if address provided and no lat/lon ---
+  // Primary: US Census Bureau Geocoder (free, full US coverage, no API key needed)
+  // Fallback: Nominatim/OpenStreetMap
   if (address && (isNaN(resolvedLat) || isNaN(resolvedLon))) {
+    // 1. Try US Census Bureau geocoder first — best coverage for US addresses
     try {
-      const geoUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1&countrycodes=us`;
-      const geoResp = await fetch(geoUrl, {
-        headers: { 'User-Agent': 'BidDrop/1.0 (biddrop.us)' },
-      });
-      const geoData = await geoResp.json();
-      if (!geoData || geoData.length === 0) {
-        return res.status(404).json({ error: 'Address not found. Try a more specific address.' });
+      const censusUrl = `https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=${encodeURIComponent(address)}&benchmark=Public_AR_Current&format=json`;
+      const censusResp = await fetch(censusUrl, { signal: AbortSignal.timeout(8000) });
+      if (censusResp.ok) {
+        const censusData = await censusResp.json();
+        const matches = censusData?.result?.addressMatches || [];
+        if (matches.length > 0) {
+          resolvedLat = parseFloat(matches[0].coordinates.y);
+          resolvedLon = parseFloat(matches[0].coordinates.x);
+          resolvedAddress = matches[0].matchedAddress;
+        }
       }
-      resolvedLat = parseFloat(geoData[0].lat);
-      resolvedLon = parseFloat(geoData[0].lon);
-      resolvedAddress = geoData[0].display_name;
-    } catch (e) {
-      return res.status(502).json({ error: 'Geocoding failed: ' + e.message });
+    } catch (e) { /* Census geocoder failed — fall through to Nominatim */ }
+
+    // 2. Fallback to Nominatim if Census didn't resolve
+    if (isNaN(resolvedLat) || isNaN(resolvedLon)) {
+      try {
+        const geoUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1&countrycodes=us`;
+        const geoResp = await fetch(geoUrl, {
+          headers: { 'User-Agent': 'BidDrop/1.0 (biddrop.us)' },
+          signal: AbortSignal.timeout(8000),
+        });
+        const geoData = await geoResp.json();
+        if (geoData && geoData.length > 0) {
+          resolvedLat = parseFloat(geoData[0].lat);
+          resolvedLon = parseFloat(geoData[0].lon);
+          resolvedAddress = geoData[0].display_name;
+        }
+      } catch (e) { /* Nominatim also failed */ }
+    }
+
+    if (isNaN(resolvedLat) || isNaN(resolvedLon)) {
+      return res.status(404).json({ error: 'Address not found. Try including city and state (e.g. "123 Main St, Yukon, OK").' });
     }
   }
 
