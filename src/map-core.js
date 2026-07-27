@@ -281,6 +281,8 @@ function undoMeasurePoint(){
 
 function onMapClick(e){
   if(measuring){addMeasurePoint(e.latlng);return;}
+  // Don't open pin modal while Leaflet.draw rectangle tool is active
+  if(window._slDrawRect) return;
   // Don't open pin modal if a popup is currently open (prevents popup button clicks from triggering a new pin)
   if(map._popup && map._popup.isOpen && map._popup.isOpen()) return;
   tempLL=e.latlng;
