@@ -206,20 +206,27 @@ function _renderAgencyAccountCards(accounts){
 }
 
 async function adjustCredits(accountId){
-  if(!_agencyData) return;
-  const a = _agencyData.accounts.find(x=>x.id===accountId);
-  if(!a) return;
+  // Support both super-admin path (_adminPanelData) and agency path (_agencyData)
+  let a = null;
+  if(typeof _adminPanelData !== 'undefined' && _adminPanelData && _adminPanelData.clientAccounts){
+    a = _adminPanelData.clientAccounts.find(x=>x.id===accountId);
+  }
+  if(!a && _agencyData){
+    a = _agencyData.accounts.find(x=>x.id===accountId);
+  }
+  if(!a){ toast('Account not found','error'); return; }
   const current = a.mailer_credits||0;
-  bdPrompt(`Adjust paid mailer credits for ${a.company_name||a.name}\nCurrent balance: ${current}\n\nEnter new balance:`, current, async (input)=>{
+  bdPrompt(`Adjust paid credits for ${a.company_name||a.name}\nCurrent balance: ${current}\n\nEnter new balance:`, current, async (input)=>{
     if(input===null) return;
     const newVal = parseInt(input,10);
-    if(isNaN(newVal)||newVal<0){ toast('Invalid value','error'); return; }
+    if(isNaN(newVal)||newVal<0){ toast('Invalid value — must be 0 or more','error'); return; }
     try{
       const {error} = await sb.from('accounts').update({mailer_credits:newVal}).eq('id',accountId);
       if(error) throw error;
       a.mailer_credits = newVal;
-      toast(`Credits updated to ${newVal} for ${a.company_name||a.name}`,'success');
-      await renderAdminPanel();
+      toast(`✅ Credits updated to ${newVal} for ${a.company_name||a.name}`,'success');
+      // Refresh whichever panel is active
+      if(typeof renderAdminPanel === 'function') await renderAdminPanel();
     }catch(e){
       toast('Error: '+e.message,'error');
     }
