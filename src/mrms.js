@@ -362,9 +362,9 @@ function renderMrmsLayerFromData() {
 
     // Leaflet.heat with warm color gradient (yellow → orange → red)
     const heatLayer = L.heatLayer(heatPoints, {
-      radius: 18,
-      blur: 20,
-      maxZoom: 12,
+      radius: 10,
+      blur: 8,
+      maxZoom: 14,
       max: 1.0,
       minOpacity: 0.35,
       gradient: {
