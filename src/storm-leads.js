@@ -13,12 +13,18 @@ window.stormLeadsGetAddresses = async function() {
   const statusEl = document.getElementById('mrms-status');
   const btn = document.getElementById('btn-storm-leads');
 
-  // Get current map bounds
-  const bounds = map.getBounds();
-  const swLat = bounds.getSouthWest().lat;
-  const swLng = bounds.getSouthWest().lng;
-  const neLat = bounds.getNorthEast().lat;
-  const neLng = bounds.getNorthEast().lng;
+  // Prefer the tight MRMS swath bounding box (only cells with actual hail data).
+  // Fall back to the full map viewport if no MRMS data is loaded.
+  let swLat, swLng, neLat, neLng;
+  if (window._mrmsSwathBounds) {
+    ({ swLat, swLng, neLat, neLng } = window._mrmsSwathBounds);
+  } else {
+    const bounds = map.getBounds();
+    swLat = bounds.getSouthWest().lat;
+    swLng = bounds.getSouthWest().lng;
+    neLat = bounds.getNorthEast().lat;
+    neLng = bounds.getNorthEast().lng;
+  }
 
   // Derive storm context from MRMS data if available
   const stormDate = window._mrmsLastDate || null;
@@ -26,7 +32,7 @@ window.stormLeadsGetAddresses = async function() {
 
   _slLoading = true;
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Loading…'; }
-  if (statusEl) statusEl.textContent = 'Fetching homes in this area…';
+  if (statusEl) statusEl.textContent = 'Fetching homes in storm swath…';
 
   try {
     const data = await adminAPI('storm-leads-swath', { swLat, swLng, neLat, neLng, stormDate, stormCity });

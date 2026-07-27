@@ -200,14 +200,23 @@ function renderMrmsLayerFromData() {
       const c = map.getCenter();
       window._mrmsLastCity = `${c.lat.toFixed(2)},${c.lng.toFixed(2)}`;
     } catch(e) {}
+
+    // Export tight bounding box of the actual swath cells (not full viewport)
+    // storm-leads.js uses this to query only homes inside the hail footprint
+    const lats = filtered.map(r => parseFloat(r.lat));
+    const lons = filtered.map(r => parseFloat(r.lon));
+    window._mrmsSwathBounds = {
+      swLat: Math.min(...lats) - CELL_HALF,
+      swLng: Math.min(...lons) - CELL_HALF,
+      neLat: Math.max(...lats) + CELL_HALF,
+      neLng: Math.max(...lons) + CELL_HALF,
+    };
+  } else {
+    window._mrmsSwathBounds = null;
   }
 
   if (statusEl) {
-    statusEl.innerHTML = `${filtered.length.toLocaleString()} MRMS radar cells shown
-      <br><button id="btn-storm-leads" onclick="stormLeadsGetAddresses()"
-        style="margin-top:6px;width:100%;background:#F25C05;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;">
-        🏠 Get Addresses in This Area
-      </button>`;
+    statusEl.textContent = `${filtered.length.toLocaleString()} MRMS radar cells shown`;
   }
 }
 
