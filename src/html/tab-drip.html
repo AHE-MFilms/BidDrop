@@ -2,8 +2,8 @@
     <!-- Header -->
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
       <div>
-        <div style="font-family:var(--font-h);font-size:20px;font-weight:800;color:var(--text);">🔥 Blitz Sequence Settings</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:2px;">Create and manage named Follow-Up Blitz sequences — pick which one to run when triggering a Blitz on a pin</div>
+        <div style="font-family:var(--font-h);font-size:20px;font-weight:800;color:var(--text);">🔥 Follow-Up Blitz Settings</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">Set the timing and message for each postcard in your follow-up sequence. Click any step to edit it.</div>
       </div>
       <button onclick="addBlitzSequence()" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">+ New Sequence</button>
     </div>
@@ -14,9 +14,9 @@
     </div>
 
     <!-- Info banner -->
-    <div style="background:linear-gradient(135deg,rgba(242,92,5,.08),rgba(168,85,247,.06));border:1px solid rgba(242,92,5,.2);border-radius:10px;padding:14px 16px;">
-      <div style="font-size:12px;color:var(--muted);line-height:1.6;">
-        <strong style="color:var(--text);">&#128161; How it works:</strong> When triggering a Follow-Up Blitz on a pin, you pick which sequence to run. Each sequence has its own steps, timing, and postcard designs. Step 1 is added to the Mail Queue immediately; subsequent steps are scheduled automatically.
+    <div style="background:rgba(242,92,5,.06);border:1px solid rgba(242,92,5,.18);border-radius:10px;padding:12px 16px;">
+      <div style="font-size:12px;color:var(--muted);line-height:1.7;">
+        <strong style="color:var(--text);">&#128161; How it works:</strong> When you start a Blitz on a pin, Step 1 sends right away. The rest go out automatically on the days you set. If no design is chosen, the homeowner's house photo is used. Changes here take effect on future Blitzes only.
       </div>
     </div>
 

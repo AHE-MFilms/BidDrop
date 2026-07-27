@@ -980,39 +980,44 @@ function renderBlitzSequenceList(){
 }
 function _renderBlitzSeqCard(seq,si){
   const designs=getDesigns();
-  const designOpts='<option value="">— Default design —</option>'+designs.map(d=>'<option value="'+d.id+'">'+escHtml(d.name||'')+'</option>').join('');
-  const stepsHtml=(seq.steps||[]).map((step,i)=>{
-    const selOpts=designOpts.replace('value="'+(step.designId||'')+'"','value="'+(step.designId||'')+'" selected');
-    const bc=step.enabled?'rgba(242,92,5,.3)':'var(--border)';
-    const nc=step.enabled?'var(--accent)':'var(--muted)';
-    return '<div style="background:var(--card);border:1px solid '+bc+';border-radius:12px;padding:14px 16px;display:flex;gap:14px;align-items:flex-start;">'
-      +'<div style="flex-shrink:0;text-align:center;min-width:44px;">'
-      +'<div style="font-family:var(--font-h);font-size:20px;font-weight:800;color:'+nc+';">'+( i+1)+'</div>'
-      +'<div onclick="toggleBlitzStep(\''+seq.id+'\','+i+')" style="width:30px;height:16px;border-radius:8px;background:'+(step.enabled?'var(--accent)':'var(--border)')+';cursor:pointer;position:relative;margin:5px auto 0;transition:background .2s;"><div style="position:absolute;top:2px;left:'+(step.enabled?'14px':'2px')+';width:12px;height:12px;border-radius:50%;background:#fff;transition:left .2s;"></div></div>'
-      +'</div>'
-      +'<div style="flex:1;min-width:0;">'
-      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">'
-      +'<div><label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:3px;">Delay (days from trigger)</label>'
-      +'<input type="number" min="0" max="365" value="'+step.day+'" onchange="updateBlitzStepField(\''+seq.id+'\','+i+',\'day\',parseInt(this.value)||0)" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:6px 8px;color:var(--text);font-size:12px;width:100%;"></div>'
-      +'<div><label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:3px;">Design</label>'
-      +'<select onchange="updateBlitzStepField(\''+seq.id+'\','+i+',\'designId\',this.value||null)" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:6px 8px;color:var(--text);font-size:12px;width:100%;cursor:pointer;">'+selOpts+'</select></div>'
-      +'</div>'
-      +'<div style="margin-bottom:6px;"><label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:3px;">Headline (max 40 chars)</label>'
-      +'<input class="fi" value="'+(step.headline||'').replace(/"/g,'&quot;')+'" maxlength="40" oninput="updateBlitzStepField(\''+seq.id+'\','+i+',\'headline\',this.value)" placeholder="e.g. Still thinking it over?"></div>'
-      +'<div style="margin-bottom:8px;"><label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:3px;">Subtext (max 80 chars)</label>'
-      +'<input class="fi" value="'+(step.subtext||'').replace(/"/g,'&quot;')+'" maxlength="80" oninput="updateBlitzStepField(\''+seq.id+'\','+i+',\'subtext\',this.value)" placeholder="e.g. Your estimate is still valid."></div>'
-      +'<div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">'
-      +'<span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">\ud83d\udcec Postcard Preview</span>'
-      +'<button onclick="previewBlitzStepFullscreen(\''+seq.id+'\','+i+')" style="background:var(--accent);border:none;border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;color:#fff;cursor:pointer;">\ud83d\udc41 Preview</button></div>'
-      +'<div id="blitz-preview-'+seq.id+'-'+i+'" style="padding:6px;min-height:36px;display:flex;align-items:center;justify-content:center;">'
-      +'<div style="color:var(--muted);font-size:11px;text-align:center;">Click <strong style="color:var(--text);">Preview</strong> to see how this step will look</div></div></div>'
-      +'</div>'
-      +'<button onclick="removeBlitzStep(\''+seq.id+'\','+i+')" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;flex-shrink:0;padding:0;line-height:1;" title="Remove step">&#x2715;</button>'
-      +'</div>';
-  }).join('');
   const bodyId='blitz-body-'+seq.id;
   const collapsed=seq.collapsed===true;
+  // Build timeline rows — collapsed summary + expandable editor
+  const stepsHtml=(seq.steps||[]).map((step,i)=>{
+    const designName=step.designId?((designs.find(d=>d.id===step.designId)||{}).name||'Custom design'):'House photo (default)';
+    const dayLabel=i===0?'Immediately (Day 0)':'Day '+step.day;
+    const enabled=step.enabled!==false;
+    const accentC=enabled?'var(--accent)':'var(--border)';
+    const expandId='bse-'+seq.id+'-'+i;
+    const designOpts='<option value="">House photo (default)</option>'+designs.map(d=>'<option value="'+d.id+'"'+(d.id===step.designId?' selected':'')+'>'+escHtml(d.name||'')+'</option>').join('');
+    // Summary row
+    const summaryRow='<div onclick="toggleBlitzStepExpand(\''+expandId+'\')" style="display:flex;align-items:center;gap:12px;padding:10px 14px;cursor:pointer;border-radius:10px;background:var(--card2);border:1px solid '+(enabled?'rgba(242,92,5,.25)':'var(--border)')+';user-select:none;">'
+      +'<div style="width:28px;height:28px;border-radius:50%;background:'+accentC+';display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-size:13px;font-weight:800;color:#fff;flex-shrink:0;">'+(i+1)+'</div>'
+      +'<div style="flex:1;min-width:0;">'
+      +'<div style="font-size:13px;font-weight:700;color:'+(enabled?'var(--text)':'var(--muted)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(step.headline||'(no headline)')+'</div>'
+      +'<div style="font-size:11px;color:var(--muted);margin-top:1px;">'+dayLabel+' &nbsp;·&nbsp; '+escHtml(designName)+'</div>'
+      +'</div>'
+      +'<div onclick="event.stopPropagation();toggleBlitzStep(\''+seq.id+'\','+i+')" style="width:34px;height:18px;border-radius:9px;background:'+accentC+';cursor:pointer;position:relative;flex-shrink:0;transition:background .2s;"><div style="position:absolute;top:2px;left:'+(enabled?'16px':'2px')+';width:14px;height:14px;border-radius:50%;background:#fff;transition:left .2s;"></div></div>'
+      +'<button onclick="event.stopPropagation();removeBlitzStep(\''+seq.id+'\','+i+')" style="background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;flex-shrink:0;padding:2px 4px;line-height:1;" title="Remove step">&#x2715;</button>'
+      +'</div>';
+    // Expanded editor (hidden by default)
+    const editorRow='<div id="'+expandId+'" style="display:none;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-top:-4px;">'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">'
+      +'<div><label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Send on day</label>'
+      +'<input type="number" min="0" max="365" value="'+step.day+'" onchange="updateBlitzStepField(\''+seq.id+'\','+i+',\'day\',parseInt(this.value)||0);renderBlitzSequenceList()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-size:13px;width:100%;"></div>'
+      +'<div><label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Postcard design</label>'
+      +'<select onchange="updateBlitzStepField(\''+seq.id+'\','+i+',\'designId\',this.value||null);renderBlitzSequenceList()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-size:13px;width:100%;cursor:pointer;">'+designOpts+'</select></div>'
+      +'</div>'
+      +'<div style="margin-bottom:8px;"><label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Headline <span style="color:var(--muted);font-weight:400;text-transform:none;">(max 40 chars)</span></label>'
+      +'<input class="fi" value="'+(step.headline||'').replace(/"/g,'&quot;')+'" maxlength="40" oninput="updateBlitzStepField(\''+seq.id+'\','+i+',\'headline\',this.value)" placeholder="e.g. Still thinking it over?" style="width:100%;"></div>'
+      +'<div style="margin-bottom:10px;"><label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Subtext <span style="color:var(--muted);font-weight:400;text-transform:none;">(max 80 chars)</span></label>'
+      +'<input class="fi" value="'+(step.subtext||'').replace(/"/g,'&quot;')+'" maxlength="80" oninput="updateBlitzStepField(\''+seq.id+'\','+i+',\'subtext\',this.value)" placeholder="e.g. Your estimate is still valid." style="width:100%;"></div>'
+      +'<div style="display:flex;gap:8px;">'
+      +'<button onclick="previewBlitzStepFullscreen(\''+seq.id+'\','+i+')" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:6px 14px;font-size:12px;color:var(--text);cursor:pointer;font-weight:600;">👁 Preview Postcard</button>'
+      +'</div>'
+      +'</div>';
+    return '<div style="display:flex;flex-direction:column;gap:4px;">'+summaryRow+editorRow+'</div>';
+  }).join('');
   return '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;">'
     +'<div onclick="toggleBlitzSeqCollapse(\''+seq.id+'\')" style="display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--card2);cursor:pointer;user-select:none;">'
     +'<div onclick="event.stopPropagation();toggleBlitzSequence(\''+seq.id+'\')" style="width:36px;height:20px;border-radius:10px;background:'+(seq.enabled?'var(--accent)':'var(--border)')+';cursor:pointer;position:relative;flex-shrink:0;transition:background .2s;"><div style="position:absolute;top:3px;left:'+(seq.enabled?'17px':'3px')+';width:14px;height:14px;border-radius:50%;background:#fff;transition:left .2s;"></div></div>'
@@ -1022,9 +1027,9 @@ function _renderBlitzSeqCard(seq,si){
     +(si>0?'<button onclick="event.stopPropagation();deleteBlitzSequence(\''+seq.id+'\')" style="background:none;border:1px solid rgba(239,68,68,.3);border-radius:7px;padding:6px 10px;font-size:12px;color:#EF4444;cursor:pointer;" title="Delete sequence">&#x2715;</button>':'')
     +'<span style="font-size:18px;color:var(--muted);line-height:1;display:inline-block;transform:'+(collapsed?'rotate(-90deg)':'rotate(0deg)')+';transition:transform .2s;">▾</span>'
     +'</div>'
-    +'<div id="'+bodyId+'" style="'+(collapsed?'display:none;':'')+'padding:14px 18px;flex-direction:column;gap:10px;">'
+    +'<div id="'+bodyId+'" style="'+(collapsed?'display:none;':'')+'padding:14px 18px;flex-direction:column;gap:8px;">'
     +stepsHtml
-    +'<button onclick="addBlitzStep(\''+seq.id+'\')" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 14px;font-size:12px;color:var(--text);cursor:pointer;font-weight:600;align-self:flex-start;">+ Add Step</button>'
+    +'<button onclick="addBlitzStep(\''+seq.id+'\')" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 14px;font-size:12px;color:var(--text);cursor:pointer;font-weight:600;align-self:flex-start;margin-top:4px;">+ Add Step</button>'
     +'</div></div>';
 }
 function addBlitzSequence(){
@@ -1032,6 +1037,11 @@ function addBlitzSequence(){
   seqs.push({id:'seq_'+Date.now(),name:'New Sequence',enabled:true,steps:getDefaultDripSteps()});
   S.cfg.blitzSequences=seqs; save(); renderBlitzSequenceList();
   toast('New sequence created — give it a name and save!','success');
+}
+function toggleBlitzStepExpand(expandId){
+  const el=document.getElementById(expandId);
+  if(!el) return;
+  el.style.display=el.style.display==='none'?'block':'none';
 }
 function toggleBlitzSeqCollapse(seqId){
   const seqs=getBlitzSequences(); const seq=seqs.find(s=>s.id===seqId);
