@@ -791,33 +791,56 @@ async function handle(action, req, res, ctx) {
           return res.status(400).json({ error: 'swLat, swLng, neLat, neLng required' });
         }
         if (!RENTCAST_KEY) return res.status(500).json({ error: 'RENTCAST_KEY not configured' });
-        const SL_MAX = 200;
-        const slCenterLat = (parseFloat(swLat) + parseFloat(neLat)) / 2;
-        const slCenterLng = (parseFloat(swLng) + parseFloat(neLng)) / 2;
-        const slLatDiff = parseFloat(neLat) - parseFloat(swLat);
-        const slLngDiff = parseFloat(neLng) - parseFloat(swLng);
-        const slRadiusDeg = Math.sqrt(slLatDiff * slLatDiff + slLngDiff * slLngDiff) / 2;
-        const slRadiusMiles = Math.min(slRadiusDeg * 69, 5);
-        try {
-          const slCtrl = new AbortController();
-          const slTmo = setTimeout(() => slCtrl.abort(), 12000);
-          const slRcRes = await fetch(
-            `https://api.rentcast.io/v1/properties?latitude=${slCenterLat}&longitude=${slCenterLng}&radius=${slRadiusMiles.toFixed(2)}&propertyType=Single+Family&limit=${SL_MAX}`,
-            { headers: { 'X-Api-Key': RENTCAST_KEY }, signal: slCtrl.signal }
-          );
-          clearTimeout(slTmo);
-          if (!slRcRes.ok) {
-            const slErr = await slRcRes.text();
-            return res.status(slRcRes.status).json({ error: 'RentCast error', detail: slErr.substring(0, 200) });
+        const SL_MAX = 500;
+        const sl_sw_lat = parseFloat(swLat), sl_ne_lat = parseFloat(neLat);
+        const sl_sw_lng = parseFloat(swLng), sl_ne_lng = parseFloat(neLng);
+        // Tile the swath bounding box into overlapping 4-mile-radius circles so we
+        // cover the full footprint regardless of how large or elongated the swath is.
+        // 4 miles ≈ 0.058° lat; step by 6° so tiles overlap slightly.
+        const TILE_RADIUS_MI = 4;
+        const TILE_STEP_DEG  = 0.07; // ~4.8 miles — slight overlap
+        const tileCenters = [];
+        for (let lat = sl_sw_lat + TILE_STEP_DEG / 2; lat < sl_ne_lat; lat += TILE_STEP_DEG) {
+          for (let lng = sl_sw_lng + TILE_STEP_DEG / 2; lng < sl_ne_lng; lng += TILE_STEP_DEG) {
+            tileCenters.push({ lat, lng });
           }
-          const slRcData = await slRcRes.json();
-          const slProperties = Array.isArray(slRcData) ? slRcData : (slRcData.properties || []);
-          const sl_sw_lat = parseFloat(swLat), sl_ne_lat = parseFloat(neLat);
-          const sl_sw_lng = parseFloat(swLng), sl_ne_lng = parseFloat(neLng);
+        }
+        // Always include at least the center tile
+        if (tileCenters.length === 0) {
+          tileCenters.push({ lat: (sl_sw_lat + sl_ne_lat) / 2, lng: (sl_sw_lng + sl_ne_lng) / 2 });
+        }
+        // Cap at 6 tiles to avoid hammering RentCast (each tile = 1 API call)
+        const MAX_TILES = 6;
+        const selectedTiles = tileCenters.slice(0, MAX_TILES);
+        try {
+          // Fetch all tiles in parallel
+          const tileResults = await Promise.all(selectedTiles.map(async tile => {
+            const ctrl = new AbortController();
+            const tmo = setTimeout(() => ctrl.abort(), 12000);
+            try {
+              const r = await fetch(
+                `https://api.rentcast.io/v1/properties?latitude=${tile.lat.toFixed(5)}&longitude=${tile.lng.toFixed(5)}&radius=${TILE_RADIUS_MI}&propertyType=Single+Family&limit=200`,
+                { headers: { 'X-Api-Key': RENTCAST_KEY }, signal: ctrl.signal }
+              );
+              clearTimeout(tmo);
+              if (!r.ok) return [];
+              const d = await r.json();
+              return Array.isArray(d) ? d : (d.properties || []);
+            } catch(e) { clearTimeout(tmo); return []; }
+          }));
+          // Merge, deduplicate by property id or formattedAddress, filter to swath bbox
+          const seen = new Set();
+          const slProperties = [];
+          for (const batch of tileResults) {
+            for (const p of batch) {
+              const key = p.id || (p.formattedAddress || p.address || '');
+              if (!seen.has(key)) { seen.add(key); slProperties.push(p); }
+            }
+          }
           const slInBox = slProperties.filter(p =>
-            p.latitude >= sl_sw_lat && p.latitude <= sl_ne_lat &&
+            p.latitude  >= sl_sw_lat && p.latitude  <= sl_ne_lat &&
             p.longitude >= sl_sw_lng && p.longitude <= sl_ne_lng
-          );
+          ).slice(0, SL_MAX);
           // Check which are already unlocked
           const slUnlocked = new Set();
           if (slInBox.length > 0) {
