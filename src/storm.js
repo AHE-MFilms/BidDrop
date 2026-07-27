@@ -20,12 +20,13 @@ function toggleStormEvents(){
     panel.style.display = 'flex';
     // Position below the toolbar using fixed coords
     const toolbar = document.querySelector('.map-toolbar');
-    if(toolbar){
-      const tbRect = toolbar.getBoundingClientRect();
-      panel.style.top = (tbRect.bottom + 10) + 'px';
-    } else {
-      panel.style.top = '130px';
-    }
+    const bnav = document.querySelector('.bottom-nav') || document.querySelector('#bottom-nav');
+    const topOffset = toolbar ? toolbar.getBoundingClientRect().bottom + 10 : 130;
+    const bnavH = bnav ? bnav.getBoundingClientRect().height : 60;
+    const panelH = window.innerHeight - topOffset - bnavH - 10;
+    panel.style.top = topOffset + 'px';
+    panel.style.height = panelH + 'px';
+    panel.style.maxHeight = panelH + 'px';
     _syncHailToggleUI();
     _syncWindToggleUI();
   } else {
