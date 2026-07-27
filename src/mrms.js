@@ -17,6 +17,7 @@ let _mrmsLastDays    = null;  // days param used for last fetch
 let _mrmsLastMinSize = null;  // minSize param used for last fetch
 let _mrmsFetching    = false; // prevent concurrent fetches
 let _mrmsActiveDate  = null;  // the specific date currently loaded (null = "all recent")
+let _mrmsBounds      = null;  // bounding box of the current swath {minLat,maxLat,minLon,maxLon}
 
 // Grid cell half-size in degrees (~1km at CONUS latitudes)
 const CELL_HALF = 0.005;
@@ -167,10 +168,30 @@ window.loadMrmsForDate = async function(date) {
   }
 };
 
-// ── Fly to swath center helper ───────────────────────────────────────────────
+// ── Fly to swath bounding box helper ────────────────────────────────────────
 window._mrmsFlyCenterAndGoMap = function(lat, lon) {
-  try { map.setView([lat, lon], 9); } catch(e) {}
+  // Use fitBounds if we have bounds, otherwise fall back to setView
+  try {
+    if (_mrmsBounds) {
+      map.fitBounds([
+        [_mrmsBounds.minLat, _mrmsBounds.minLon],
+        [_mrmsBounds.maxLat, _mrmsBounds.maxLon]
+      ], { padding: [40, 40], maxZoom: 9 });
+    } else {
+      map.setView([lat, lon], 9);
+    }
+  } catch(e) {}
   if (typeof goTab === 'function') goTab('map');
+};
+// ── Start draw near a clicked hail point ─────────────────────────────────────
+window._mrmsStartDrawNear = function(lat, lon) {
+  try { map.closePopup(); } catch(e) {}
+  if (typeof goTab === 'function') goTab('map');
+  // Pan to the clicked point then start draw mode
+  try { map.setView([lat, lon], 13); } catch(e) {}
+  setTimeout(() => {
+    if (typeof stormStartDrawAndGoMap === 'function') stormStartDrawAndGoMap();
+  }, 400);
 };
 
 // ── Legacy toggle (map panel) ─────────────────────────────────────────────────
@@ -378,27 +399,41 @@ function renderMrmsLayerFromData() {
     heatLayer.addTo(map);
     _mrmsLayers.push(heatLayer);
 
-    // Add a pulsing center marker showing max hail size
+    // Fit map to swath bounding box (no misleading center marker)
     const lats = filtered.map(r => parseFloat(r.lat));
     const lons = filtered.map(r => parseFloat(r.lon));
-    const centerLat = (Math.min(...lats) + Math.max(...lats)) / 2;
-    const centerLon = (Math.min(...lons) + Math.max(...lons)) / 2;
-    const { label: maxLabel } = hailColor(maxHailSize);
-    const centerIcon = L.divIcon({
-      className: '',
-      html: `<div style="background:#bd0026;color:#fff;border-radius:50%;width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;text-align:center;line-height:1.3;border:3px solid #fff;box-shadow:0 0 0 3px #bd0026,0 2px 10px rgba(0,0,0,.5);">🧊<br>${maxHailSize.toFixed(1)}&quot;</div><style>@keyframes mrms-pulse{0%,100%{box-shadow:0 0 0 3px #bd0026,0 2px 10px rgba(0,0,0,.5)}50%{box-shadow:0 0 0 10px rgba(189,0,38,.25),0 2px 10px rgba(0,0,0,.5)}}</style>`,
-      iconSize: [48, 48],
-      iconAnchor: [24, 24],
-    });
-    const centerMarker = L.marker([centerLat, centerLon], { icon: centerIcon, zIndexOffset: 1000 });
-    centerMarker.bindPopup(`<div style="font-family:sans-serif;">
-      <b>🧊 Storm Center</b><br>
-      Max hail: ${maxHailSize.toFixed(2)}&quot; (${maxLabel})<br>
-      ${filtered.length.toLocaleString()} radar cells<br>
-      <small style="color:#d1d5db">${_mrmsActiveDate || ''}</small>
-    </div>`);
-    centerMarker.addTo(map);
-    _mrmsLayers.push(centerMarker);
+    _mrmsBounds = {
+      minLat: Math.min(...lats), maxLat: Math.max(...lats),
+      minLon: Math.min(...lons), maxLon: Math.max(...lons)
+    };
+    // Add click handler to heatmap area — show hail info at clicked point
+    if (!map._mrmsClickHandler) {
+      map._mrmsClickHandler = function(e) {
+        if (!_mrmsData || !_mrmsData.length) return;
+        const clickLat = e.latlng.lat;
+        const clickLon = e.latlng.lng;
+        // Find nearest MRMS cell within ~5km
+        let nearest = null, nearestDist = Infinity;
+        for (const r of _mrmsData) {
+          const dlat = parseFloat(r.lat) - clickLat;
+          const dlon = parseFloat(r.lon) - clickLon;
+          const dist = dlat*dlat + dlon*dlon;
+          if (dist < nearestDist) { nearestDist = dist; nearest = r; }
+        }
+        if (!nearest || nearestDist > 0.01) return; // >~1km away, ignore
+        const size = parseFloat(nearest.hail_size_in);
+        const { label } = hailColor(size);
+        L.popup()
+          .setLatLng(e.latlng)
+          .setContent(`<div style="font-family:sans-serif;min-width:180px;">
+            <b>🧊 ${size.toFixed(2)}&quot; hail here</b> <span style="color:#888;font-size:11px">(${label})</span><br>
+            <small style="color:#888">${_mrmsActiveDate || ''} · NOAA MRMS radar</small><br><br>
+            <button onclick="window._mrmsStartDrawNear(${clickLat.toFixed(5)},${clickLon.toFixed(5)})" style="width:100%;background:#F25C05;color:#fff;border:none;border-radius:6px;padding:8px;font-weight:700;font-size:12px;cursor:pointer;">✏️ Get Homes Near Here</button>
+          </div>`)
+          .openOn(map);
+      };
+      map.on('click', map._mrmsClickHandler);
+    }
   } catch(e) {
     console.warn('[MRMS] Heatmap error:', e.message);
   }
