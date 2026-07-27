@@ -18,13 +18,13 @@ function toggleStormEvents(){
   if(_stormPanelOpen){
     btn.classList.add('active');
     panel.style.display = 'flex';
+    // Position below the toolbar using fixed coords
     const toolbar = document.querySelector('.map-toolbar');
     if(toolbar){
       const tbRect = toolbar.getBoundingClientRect();
-      const mapRect = document.getElementById('the-map').getBoundingClientRect();
-      panel.style.top = (tbRect.bottom - mapRect.top + 10) + 'px';
+      panel.style.top = (tbRect.bottom + 10) + 'px';
     } else {
-      panel.style.top = '210px';
+      panel.style.top = '130px';
     }
     _syncHailToggleUI();
     _syncWindToggleUI();
