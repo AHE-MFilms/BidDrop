@@ -15,12 +15,17 @@
       <button class="mtool-btn" id="solar-overlay-btn" onclick="toggleSolarOverlay()" title="Show solar kW potential overlay on pins with solar data">☀️ Solar kW</button>
     </div>
     <!-- Storm Events Panel -->
-    <div id="storm-panel" style="display:none;position:absolute;top:12px;left:12px;z-index:2000;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;width:280px;box-shadow:0 4px 20px rgba(0,0,0,.5);max-height:90vh;overflow-y:auto;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <div style="font-size:13px;font-weight:700;color:var(--text);">⛈ Storm Overlay</div>
-        <button onclick="closeStormPanel()" style="background:none;border:none;color:var(--mid);font-size:16px;cursor:pointer;line-height:1;">✕</button>
+    <div id="storm-panel" style="display:none;position:absolute;top:12px;left:12px;z-index:2000;background:var(--panel);border:1px solid var(--border);border-radius:12px;width:280px;box-shadow:0 4px 20px rgba(0,0,0,.5);display:none;flex-direction:column;max-height:calc(100vh - 130px);">
+      <!-- Sticky header -->
+      <div style="padding:14px 16px 10px;border-bottom:1px solid var(--border);flex-shrink:0;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <div style="font-size:13px;font-weight:700;color:var(--text);">⛈ Storm Overlay</div>
+          <button onclick="closeStormPanel()" style="background:none;border:none;color:var(--mid);font-size:16px;cursor:pointer;line-height:1;">✕</button>
+        </div>
+        <div style="font-size:10px;color:var(--muted);">Source: <span id="storm-source-label">NOAA MRMS Radar</span> · Free</div>
       </div>
-      <div style="font-size:10px;color:var(--muted);margin-bottom:10px;">Source: <span id="storm-source-label">NOAA MRMS Radar</span> · Free</div>
+      <!-- Scrollable body -->
+      <div style="overflow-y:auto;flex:1;padding:14px 16px;-webkit-overflow-scrolling:touch;">
 
       <!-- City / Zip Search -->
       <div style="margin-bottom:12px;">
@@ -129,8 +134,9 @@
           <button onclick="lookupHailAddress()" style="background:#f59e0b;color:#000;border:none;border-radius:7px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">Check</button>
         </div>
         <div id="hail-lookup-status" style="font-size:10px;color:var(--mid);text-align:center;min-height:14px;"></div>
-        <div id="hail-lookup-results" style="display:none;margin-top:8px;max-height:220px;overflow-y:auto;"></div>
+        <div id="hail-lookup-results" style="display:none;margin-top:8px;max-height:200px;overflow-y:auto;"></div>
       </div>
+      </div><!-- end scrollable body -->
     </div>
     <div class="measure-hud" id="measure-hud">
       <!-- Row 1: Footprint + Actual Roof Area side by side -->

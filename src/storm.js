@@ -17,7 +17,7 @@ function toggleStormEvents(){
   const panel = document.getElementById('storm-panel');
   if(_stormPanelOpen){
     btn.classList.add('active');
-    panel.style.display = 'block';
+    panel.style.display = 'flex';
     const toolbar = document.querySelector('.map-toolbar');
     if(toolbar){
       const tbRect = toolbar.getBoundingClientRect();
