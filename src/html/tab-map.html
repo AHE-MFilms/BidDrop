@@ -87,7 +87,7 @@
 
       <!-- MRMS Radar Swaths Toggle (separate) -->
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-        <div style="font-size:12px;font-weight:700;color:#818cf8;">🧊 Radar Swaths <span style="font-size:9px;background:#312e81;color:#c7d2fe;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:600;">MRMS</span></div>
+        <div style="font-size:12px;font-weight:700;color:#818cf8;">🧊 Hail Impact Zone <span style="font-size:9px;background:#312e81;color:#c7d2fe;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:600;">MRMS</span></div>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
           <span style="font-size:10px;color:var(--muted);" id="mrms-toggle-lbl">OFF</span>
           <div onclick="toggleMrmsLayer()" id="mrms-toggle-track" style="width:36px;height:20px;border-radius:10px;background:#374151;cursor:pointer;position:relative;transition:background .2s;">
@@ -103,8 +103,8 @@
       <div style="margin-bottom:10px;">
         <div style="font-size:12px;font-weight:700;color:#F25C05;margin-bottom:6px;">⚡ Storm Alert — Get Hail-Hit Homes</div>
         <div style="font-size:11px;color:var(--mid);margin-bottom:8px;line-height:1.4;">
-          <strong style="color:var(--text);">Tap any colored cell</strong> on the map → tap “Get Homes Near Here”.<br>
-          Or <strong style="color:var(--text);">draw a box</strong> around any area to get all hail-hit homes inside it.
+          <strong style="color:var(--text);">1.</strong> Turn on Hail Impact Zone above to see the red swath.<br>
+          <strong style="color:var(--text);">2.</strong> Draw a box <em>inside the red area</em> to get homes there.
         </div>
         <button id="btn-storm-draw" onclick="stormStartDraw()" style="width:100%;background:#6366F1;color:#fff;border:none;border-radius:7px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:5px;">✏️ Draw Area to Get Homes</button>
         <button onclick="clearStormLeadMarkers()" style="width:100%;background:none;border:1px solid var(--border);color:var(--mid);border-radius:7px;padding:6px;font-size:11px;cursor:pointer;">Clear Storm Pins</button>

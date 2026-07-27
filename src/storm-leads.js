@@ -567,13 +567,10 @@ window.stormGetHomesNearCell = async function(cellLat, cellLng) {
 
     let homes = data.homes || [];
 
-    // Filter to homes inside actual MRMS hail cells
-    if (window._mrmsCells && window._mrmsCells.length > 0) {
-      homes = homes.filter(h => _homeInMrmsCells(h.latitude, h.longitude));
-    }
-
+    // No per-cell filter — the tap location IS the target area.
+    // All homes within the 1-mile radius of the tapped cell are relevant.
     if (homes.length === 0) {
-      toast('No hail-hit homes found near this cell. The cell may be in a rural or non-residential area.', 'info');
+      toast('No homes found near this cell. The area may be rural or non-residential.', 'info');
       if (statusEl) statusEl.textContent = 'No residential homes found near this cell.';
       return;
     }
@@ -689,21 +686,14 @@ async function _stormFetchInBounds(swLat, swLng, neLat, neLng) {
     let homes = data.homes || [];
     const totalFetched = homes.length;
 
-    // Filter to homes inside actual MRMS hail cells.
-    // Skip the per-cell filter if the drawn rectangle is already fully inside
-    // the loaded MRMS swath bounds — every home in the box is hail-hit.
-    let skipCellFilter = false;
-    if (window._mrmsSwathBounds) {
-      const sb = window._mrmsSwathBounds;
-      skipCellFilter = (swLat >= sb.swLat && neLat <= sb.neLat && swLng >= sb.swLng && neLng <= sb.neLng);
-    }
-    if (!skipCellFilter && window._mrmsCells && window._mrmsCells.length > 0) {
-      homes = homes.filter(h => _homeInMrmsCells(h.latitude, h.longitude));
-    }
+    // NOTE: We intentionally do NOT filter by MRMS cell here.
+    // The rep drew the rectangle visually inside the red swath — that IS the filter.
+    // The _homeInMrmsCells check was too strict (0.007° tolerance vs 0.01° grid)
+    // and silently dropped most homes even when drawn directly on the red cells.
 
     if (homes.length === 0) {
-      toast(`No hail-hit homes found in drawn area (${totalFetched} homes checked, none inside hail cells).`, 'info');
-      if (statusEl) statusEl.textContent = `0 of ${totalFetched} homes in drawn area are inside the hail swath.`;
+      toast(`No homes found in drawn area. Try drawing a larger rectangle.`, 'info');
+      if (statusEl) statusEl.textContent = `No homes found in drawn area.`;
       return;
     }
 
