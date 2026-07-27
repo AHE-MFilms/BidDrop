@@ -170,16 +170,19 @@ function renderMrmsLayerFromData() {
     });
 
     const popupHtml = `
-      <div style="font-family:sans-serif;min-width:200px;">
+      <div style="font-family:sans-serif;min-width:210px;">
         <div style="font-weight:700;font-size:14px;color:#fff;margin-bottom:6px;">🧊 MRMS Radar Hail</div>
-        <div style="font-size:14px;color:#fff;margin-bottom:4px;"><b>Size:</b> ${size.toFixed(2)}" (${label})</div>
-        <div style="font-size:14px;color:#fff;margin-bottom:4px;"><b>Date:</b> ${date}</div>
-        <div style="font-size:14px;color:#fff;margin-bottom:8px;"><b>Grid:</b> ${lat.toFixed(3)}°, ${lon.toFixed(3)}°</div>
-        <div style="font-size:11px;color:#d1d5db;background:rgba(255,255,255,.08);border-radius:4px;padding:6px 8px;margin-bottom:8px;">
+        <div style="font-size:13px;color:#fff;margin-bottom:3px;"><b>Size:</b> ${size.toFixed(2)}" (${label})</div>
+        <div style="font-size:13px;color:#fff;margin-bottom:3px;"><b>Date:</b> ${date}</div>
+        <div style="font-size:11px;color:#d1d5db;background:rgba(255,255,255,.08);border-radius:4px;padding:5px 8px;margin-bottom:8px;">
           📡 Radar-estimated hail size. 1km grid cell from NOAA MRMS MESH.
         </div>
+        <button onclick="stormGetHomesNearCell(${lat},${lon})"
+          style="width:100%;background:#F25C05;color:#fff;border:none;border-radius:6px;padding:9px;font-weight:700;font-size:13px;cursor:pointer;margin-bottom:6px;">
+          🏠 Get Homes Near Here
+        </button>
         <button onclick="stormDropPin(${lat},${lon},encodeURIComponent('${lat.toFixed(3)}, ${lon.toFixed(3)}'))"
-          style="width:100%;background:#F25C05;color:#fff;border:none;border-radius:6px;padding:8px;font-weight:700;font-size:12px;cursor:pointer;">
+          style="width:100%;background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:7px;font-weight:600;font-size:12px;cursor:pointer;">
           📍 Drop Pin Here
         </button>
       </div>

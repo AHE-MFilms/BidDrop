@@ -101,10 +101,14 @@
 
       <!-- Storm Alert: Auto-drop pins -->
       <div style="margin-bottom:10px;">
-        <div style="font-size:12px;font-weight:700;color:#F25C05;margin-bottom:6px;">⚡ Storm Alert — Auto-Drop Pins</div>
-        <div style="font-size:11px;color:var(--mid);margin-bottom:8px;line-height:1.4;">Enable MRMS Radar Swaths, then <strong style="color:var(--text);">zoom into the area you want to work</strong> and tap below. Returns homes in your current view that also had hail.</div>
-        <button onclick="stormLeadsGetAddresses()" style="width:100%;background:#F25C05;color:#fff;border:none;border-radius:7px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:5px;">🏠 Get Homes in This Area</button>
+        <div style="font-size:12px;font-weight:700;color:#F25C05;margin-bottom:6px;">⚡ Storm Alert — Get Hail-Hit Homes</div>
+        <div style="font-size:11px;color:var(--mid);margin-bottom:8px;line-height:1.4;">
+          <strong style="color:var(--text);">Tap any colored cell</strong> on the map → tap “Get Homes Near Here”.<br>
+          Or <strong style="color:var(--text);">draw a box</strong> around any area to get all hail-hit homes inside it.
+        </div>
+        <button id="btn-storm-draw" onclick="stormStartDraw()" style="width:100%;background:#6366F1;color:#fff;border:none;border-radius:7px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:5px;">✏️ Draw Area to Get Homes</button>
         <button onclick="clearStormLeadMarkers()" style="width:100%;background:none;border:1px solid var(--border);color:var(--mid);border-radius:7px;padding:6px;font-size:11px;cursor:pointer;">Clear Storm Pins</button>
+        <div id="storm-draw-hint" style="font-size:10px;color:#6366F1;margin-top:5px;display:none;">Draw a rectangle on the map, then release to get homes.</div>
       </div>
 
       <div style="border-top:1px solid var(--border);margin:10px 0;"></div>

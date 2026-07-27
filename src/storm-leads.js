@@ -431,3 +431,183 @@ window.stormLeadsUnlockAll = async function() {
 window._mrmsLastDate = null;
 window._mrmsLastSize = null;
 window._mrmsLastCity = null;
+
+// ── Tap-a-cell: Get Homes Near Here ──────────────────────────────────────────
+// Called from the MRMS cell popup button. Queries a ~1-mile radius around the
+// cell center, then filters to homes inside actual MRMS hail cells.
+window.stormGetHomesNearCell = async function(cellLat, cellLng) {
+  if (_slLoading) return;
+  map.closePopup();
+
+  const statusEl = document.getElementById('mrms-status');
+  const stormDate = window._mrmsLastDate || null;
+  const stormCity = window._mrmsLastCity || null;
+
+  _slLoading = true;
+  if (statusEl) statusEl.textContent = 'Fetching homes near this cell…';
+
+  try {
+    // Use a 1-mile radius around the tapped cell center
+    const radiusMi = 1.0;
+    // Convert radius to bounding box for the API (1 mile ≈ 0.0145 degrees)
+    const delta = radiusMi * 0.0145;
+    const swLat = cellLat - delta;
+    const swLng = cellLng - delta;
+    const neLat = cellLat + delta;
+    const neLng = cellLng + delta;
+
+    const data = await adminAPI('storm-leads-swath', { swLat, swLng, neLat, neLng, stormDate, stormCity });
+    if (data.error) { toast('⚠️ ' + data.error, 'error'); return; }
+
+    let homes = data.homes || [];
+
+    // Filter to homes inside actual MRMS hail cells
+    if (window._mrmsCells && window._mrmsCells.length > 0) {
+      homes = homes.filter(h => _homeInMrmsCells(h.latitude, h.longitude));
+    }
+
+    if (homes.length === 0) {
+      toast('No hail-hit homes found near this cell. The cell may be in a rural or non-residential area.', 'info');
+      if (statusEl) statusEl.textContent = 'No residential homes found near this cell.';
+      return;
+    }
+
+    // Append to existing homes (don't replace — user may tap multiple cells)
+    const existingAddrs = new Set(_slHomes.map(h => h.address));
+    const newHomes = homes.filter(h => !existingAddrs.has(h.address));
+    _slHomes = _slHomes.concat(newHomes);
+    _slCampaignId  = data.campaignId;
+    _slCampaignName = data.campaignName;
+
+    _renderStormLeadMarkers();
+
+    const locked   = _slHomes.filter(h => !h.unlocked).length;
+    const unlocked = _slHomes.filter(h => h.unlocked).length;
+    if (statusEl) statusEl.textContent = `${_slHomes.length} hail-hit homes — ${locked} locked · ${unlocked} unlocked`;
+    toast(`🏠 ${newHomes.length} new hail-hit homes added (${_slHomes.length} total)`, 'success');
+    _renderBulkUnlockBar(locked);
+  } catch (e) {
+    toast('Error: ' + e.message, 'error');
+    if (statusEl) statusEl.textContent = 'Error loading homes.';
+  } finally {
+    _slLoading = false;
+  }
+};
+
+// ── Draw Area: rectangle draw tool ───────────────────────────────────────────
+let _slDrawRect = null;   // active Leaflet.draw rectangle handler
+let _slDrawLayer = null;  // the drawn rectangle layer
+
+window.stormStartDraw = function() {
+  const btn = document.getElementById('btn-storm-draw');
+  const hint = document.getElementById('storm-draw-hint');
+
+  // Cancel if already drawing
+  if (_slDrawRect) {
+    _slDrawRect.disable();
+    _slDrawRect = null;
+    if (btn) { btn.textContent = '✏️ Draw Area to Get Homes'; btn.style.background = '#6366F1'; }
+    if (hint) hint.style.display = 'none';
+    return;
+  }
+
+  // Remove previous drawn rectangle
+  if (_slDrawLayer) { try { map.removeLayer(_slDrawLayer); } catch(e){} _slDrawLayer = null; }
+
+  // Close storm panel so the map is fully visible for drawing
+  closeStormPanel();
+
+  if (btn) { btn.textContent = '⏹ Cancel Draw'; btn.style.background = '#EF4444'; }
+  if (hint) hint.style.display = 'block';
+
+  // Start Leaflet.draw rectangle
+  _slDrawRect = new L.Draw.Rectangle(map, {
+    shapeOptions: {
+      color: '#6366F1',
+      fillColor: '#6366F1',
+      fillOpacity: 0.15,
+      weight: 2,
+      dashArray: '6,4',
+    },
+  });
+  _slDrawRect.enable();
+
+  // Listen for draw:created once
+  map.once('draw:created', async function(e) {
+    _slDrawLayer = e.layer;
+    _slDrawLayer.addTo(map);
+    _slDrawRect = null;
+    if (btn) { btn.textContent = '✏️ Draw Area to Get Homes'; btn.style.background = '#6366F1'; }
+    if (hint) hint.style.display = 'none';
+
+    const bounds = e.layer.getBounds();
+    const swLat = bounds.getSouthWest().lat;
+    const swLng = bounds.getSouthWest().lng;
+    const neLat = bounds.getNorthEast().lat;
+    const neLng = bounds.getNorthEast().lng;
+
+    await _stormFetchInBounds(swLat, swLng, neLat, neLng);
+
+    // Remove the drawn rectangle after fetching
+    setTimeout(() => {
+      if (_slDrawLayer) { try { map.removeLayer(_slDrawLayer); } catch(e){} _slDrawLayer = null; }
+    }, 2000);
+  });
+
+  // If user cancels draw
+  map.once('draw:drawstop', function() {
+    _slDrawRect = null;
+    if (btn) { btn.textContent = '✏️ Draw Area to Get Homes'; btn.style.background = '#6366F1'; }
+    if (hint) hint.style.display = 'none';
+  });
+};
+
+// Shared fetch-and-filter logic for both draw-area and viewport queries
+async function _stormFetchInBounds(swLat, swLng, neLat, neLng) {
+  if (_slLoading) return;
+  const statusEl = document.getElementById('mrms-status');
+  const stormDate = window._mrmsLastDate || null;
+  const stormCity = window._mrmsLastCity || null;
+
+  _slLoading = true;
+  if (statusEl) statusEl.textContent = 'Fetching homes in drawn area…';
+
+  try {
+    const data = await adminAPI('storm-leads-swath', { swLat, swLng, neLat, neLng, stormDate, stormCity });
+    if (data.error) { toast('⚠️ ' + data.error, 'error'); return; }
+
+    let homes = data.homes || [];
+    const totalFetched = homes.length;
+
+    // Filter to homes inside actual MRMS hail cells
+    if (window._mrmsCells && window._mrmsCells.length > 0) {
+      homes = homes.filter(h => _homeInMrmsCells(h.latitude, h.longitude));
+    }
+
+    if (homes.length === 0) {
+      toast(`No hail-hit homes found in drawn area (${totalFetched} homes checked, none inside hail cells).`, 'info');
+      if (statusEl) statusEl.textContent = `0 of ${totalFetched} homes in drawn area are inside the hail swath.`;
+      return;
+    }
+
+    // Append to existing (deduplicate)
+    const existingAddrs = new Set(_slHomes.map(h => h.address));
+    const newHomes = homes.filter(h => !existingAddrs.has(h.address));
+    _slHomes = _slHomes.concat(newHomes);
+    _slCampaignId  = data.campaignId;
+    _slCampaignName = data.campaignName;
+
+    _renderStormLeadMarkers();
+
+    const locked   = _slHomes.filter(h => !h.unlocked).length;
+    const unlocked = _slHomes.filter(h => h.unlocked).length;
+    if (statusEl) statusEl.textContent = `${_slHomes.length} hail-hit homes — ${locked} locked · ${unlocked} unlocked`;
+    toast(`🏠 ${newHomes.length} hail-hit homes found (${_slHomes.length} total)`, 'success');
+    _renderBulkUnlockBar(locked);
+  } catch (e) {
+    toast('Error: ' + e.message, 'error');
+    if (statusEl) statusEl.textContent = 'Error loading homes.';
+  } finally {
+    _slLoading = false;
+  }
+}
