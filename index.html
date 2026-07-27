@@ -87,7 +87,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);display:fl
 .main{flex:1;overflow:hidden;display:flex;flex-direction:column;position:relative;}
 .tab-pane{display:none;flex:1;overflow:hidden;min-height:0;}
 .tab-pane.active{display:flex;}
-#tab-agency,#tab-history,#tab-admin,#tab-dashboard,#tab-hotleads,#tab-pixel,#tab-analytics,#tab-zones,#tab-mailqueue,#tab-estimates,#tab-drip,#tab-contacts,#tab-campaigns,#tab-territory,#tab-subscription,#tab-leaderboard{overflow-y:auto!important;overflow-x:hidden;flex:1;min-height:0;}
+#tab-agency,#tab-history,#tab-admin,#tab-dashboard,#tab-hotleads,#tab-pixel,#tab-analytics,#tab-zones,#tab-mailqueue,#tab-estimates,#tab-drip,#tab-contacts,#tab-campaigns,#tab-territory,#tab-subscription,#tab-leaderboard,#tab-storm{overflow-y:auto!important;overflow-x:hidden;flex:1;min-height:0;}
 #tab-designs{overflow:hidden!important;flex:1;min-height:0;}
 #tab-settings{display:none;flex-direction:column;overflow-y:auto;padding:22px;gap:14px;}
   #tab-settings.active{display:flex;}
@@ -1101,6 +1101,7 @@ tr:hover td{background:var(--card);}
 
 <nav class="bottom-nav">
   <button class="bnav-btn active" onclick="goTab('map')" data-tab="map"><span class="bicon">🗺</span>Map</button>
+  <button class="bnav-btn" onclick="goTab('storm')" data-tab="storm"><span class="bicon">⛈</span>Storm</button>
   <button class="bnav-btn" onclick="goTab('estimate')" data-tab="estimate"><span class="bicon">📋</span>Estimator</button>
   <button class="bnav-btn" onclick="goTab('estimates')" data-tab="estimates"><span class="bicon">🗂</span>Estimates</button>
   <button class="bnav-btn" onclick="goTab('mailqueue')" data-tab="mailqueue"><span class="bicon">📬</span>Mail</button>
@@ -1154,6 +1155,7 @@ tr:hover td{background:var(--card);}
   <div class="bd-sb-group" id="bd-sbg-canvass">
     <button class="bd-snav-item" onclick="goTab('territory')" data-nav="territory"><span class="bd-snav-icon">🌩</span><span class="bd-snav-label">Territory Intel</span></button>
     <button class="bd-snav-item active" onclick="goTab('map')" data-nav="map"><span class="bd-snav-icon">🗺</span><span class="bd-snav-label">Canvass Map</span></button>
+    <button class="bd-snav-item" onclick="goTab('storm')" data-nav="storm"><span class="bd-snav-icon">⛈</span><span class="bd-snav-label">Storm Events</span></button>
     <button class="bd-snav-item" onclick="goTab('zones')" data-nav="zones"><span class="bd-snav-icon">🗂</span><span class="bd-snav-label">Canvass Areas</span></button>
   </div>
 
@@ -1222,6 +1224,7 @@ tr:hover td{background:var(--card);}
 <div class="main">
 
   <!-- MAP -->
+  <!-- @@PARTIAL:tab-storm.html -->
   <!-- @@PARTIAL:tab-map.html -->
   <!-- @@PARTIAL:tab-estimate.html -->
   <!-- @@PARTIAL:tab-estimates.html -->
@@ -1291,6 +1294,7 @@ tr:hover td{background:var(--card);}
   <script src="/src/storm.js"></script>
   <script src="/src/mrms.js"></script>
   <script src="/src/storm-leads.js"></script>
+  <script src="/src/storm-tab.js"></script>
   <script src="/src/storm-notif.js"></script>
   <script src="/src/analytics.js"></script>
   <script src="/src/subscription.js"></script>

@@ -1,0 +1,123 @@
+  <div class="tab-pane" id="tab-storm" style="flex-direction:column;overflow-y:auto;padding:0;gap:0;">
+
+    <!-- Header -->
+    <div style="background:var(--panel);border-bottom:1px solid var(--border);padding:16px 18px 12px;position:sticky;top:0;z-index:10;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+        <div style="font-family:var(--font-h);font-size:18px;font-weight:700;color:var(--text);">⛈ Storm Events</div>
+        <button onclick="goTab('map')" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--mid);font-size:11px;font-weight:700;cursor:pointer;">← Back to Map</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);">Source: <span id="storm-source-label2">NOAA MRMS Radar</span> · Free</div>
+    </div>
+
+    <div style="padding:16px 18px;display:flex;flex-direction:column;gap:0;">
+
+      <!-- ── Search City / ZIP ─────────────────────────────────────── -->
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:700;color:var(--mid);letter-spacing:.6px;margin-bottom:8px;">📍 SEARCH CITY OR ZIP</div>
+        <div style="display:flex;gap:8px;">
+          <input id="storm-search-inp2" type="text" placeholder="City, state or ZIP…"
+            style="flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;"
+            onkeydown="if(event.key==='Enter')stormSearchFly2()"
+          />
+          <button onclick="stormSearchFly2()" style="background:#6366F1;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Go</button>
+        </div>
+        <div id="storm-search-status2" style="font-size:11px;color:var(--mid);min-height:16px;margin-top:6px;"></div>
+      </div>
+
+      <!-- ── Hail Reports (SPC) ─────────────────────────────────────── -->
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <div style="font-size:14px;font-weight:700;color:#60a5fa;">🌩️ Hail Reports <span style="font-size:9px;background:#1e3a5f;color:#93c5fd;border-radius:4px;padding:2px 6px;margin-left:4px;font-weight:600;">SPC</span></div>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <span style="font-size:11px;color:var(--muted);" id="hail-toggle-lbl2">OFF</span>
+            <div onclick="toggleHailLayerSync()" id="hail-toggle-track2" style="width:40px;height:22px;border-radius:11px;background:#374151;cursor:pointer;position:relative;transition:background .2s;">
+              <div id="hail-toggle-thumb2" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#9ca3af;transition:all .2s;"></div>
+            </div>
+          </label>
+        </div>
+        <div id="hail-controls2" style="display:none;margin-top:10px;">
+          <div style="margin-bottom:10px;">
+            <label style="font-size:10px;font-weight:700;color:var(--mid);letter-spacing:.5px;display:block;margin-bottom:5px;">DATE RANGE</label>
+            <select id="storm-days2" onchange="syncStormDays()" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;font-size:13px;">
+              <option value="1">Today</option>
+              <option value="3">Last 3 Days</option>
+              <option value="7">Last 7 Days</option>
+              <option value="14">Last 14 Days</option>
+              <option value="30" selected>Last 30 Days</option>
+              <option value="60">Last 60 Days</option>
+              <option value="90">Last 90 Days</option>
+              <option value="180">Last 6 Months</option>
+              <option value="365">Last 1 Year</option>
+            </select>
+          </div>
+          <div style="margin-bottom:10px;">
+            <label style="font-size:10px;font-weight:700;color:var(--mid);letter-spacing:.5px;display:block;margin-bottom:5px;">MIN HAIL SIZE</label>
+            <select id="storm-min-size2" onchange="syncStormMinSize()" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;font-size:13px;">
+              <option value="0.75" selected>0.75"+ (Penny)</option>
+              <option value="1.00">1.00"+ (Quarter)</option>
+              <option value="1.50">1.50"+ (Golf Ball)</option>
+              <option value="2.00">2.00"+ (Baseball+)</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:10px;font-size:11px;color:var(--mid);flex-wrap:wrap;margin-bottom:6px;">
+            <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#FBBF24;display:inline-block;"></span>Penny</span>
+            <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#F59E0B;display:inline-block;"></span>Quarter</span>
+            <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#F97316;display:inline-block;"></span>Golf Ball</span>
+            <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#EF4444;display:inline-block;"></span>Baseball+</span>
+          </div>
+          <div id="storm-status2" style="font-size:11px;color:var(--mid);text-align:center;min-height:16px;"></div>
+        </div>
+      </div>
+
+      <!-- ── MRMS Radar Swaths ──────────────────────────────────────── -->
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <div style="font-size:14px;font-weight:700;color:#818cf8;">🧊 Radar Swaths <span style="font-size:9px;background:#312e81;color:#c7d2fe;border-radius:4px;padding:2px 6px;margin-left:4px;font-weight:600;">MRMS</span></div>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <span style="font-size:11px;color:var(--muted);" id="mrms-toggle-lbl2">OFF</span>
+            <div onclick="toggleMrmsLayerSync()" id="mrms-toggle-track2" style="width:40px;height:22px;border-radius:11px;background:#374151;cursor:pointer;position:relative;transition:background .2s;">
+              <div id="mrms-toggle-thumb2" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#9ca3af;transition:all .2s;"></div>
+            </div>
+          </label>
+        </div>
+        <div id="mrms-status2" style="font-size:11px;color:var(--mid);min-height:16px;margin-top:4px;">🔍 Zoom into a city on the map to see 1km radar hail swaths</div>
+      </div>
+
+      <!-- ── Storm Alert: Auto-Drop Pins ───────────────────────────── -->
+      <div style="background:linear-gradient(135deg,rgba(242,92,5,.12),rgba(242,92,5,.04));border:1px solid rgba(242,92,5,.4);border-radius:12px;padding:14px 16px;margin-bottom:14px;">
+        <div style="font-size:14px;font-weight:700;color:#F25C05;margin-bottom:6px;">⚡ Storm Alert — Auto-Drop Pins</div>
+        <div style="font-size:12px;color:var(--mid);margin-bottom:12px;line-height:1.5;">Enable MRMS Radar Swaths above, then tap below to load every home <strong style="color:var(--text);">inside the hail swath</strong> — not the whole map view.</div>
+        <button onclick="stormLeadsGetAddresses()" style="width:100%;background:#F25C05;color:#fff;border:none;border-radius:9px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;letter-spacing:.3px;">🏠 Get Homes in This Area</button>
+        <button onclick="clearStormLeadMarkers()" style="width:100%;background:none;border:1px solid var(--border);color:var(--mid);border-radius:9px;padding:10px;font-size:12px;cursor:pointer;">Clear Storm Pins</button>
+      </div>
+
+      <!-- ── Wind Layer ─────────────────────────────────────────────── -->
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-size:14px;font-weight:700;color:#34d399;">💨 Wind 50 MPH+ (90 days)</div>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <span style="font-size:11px;color:var(--muted);" id="wind-toggle-lbl2">OFF</span>
+            <div onclick="toggleWindLayerSync()" id="wind-toggle-track2" style="width:40px;height:22px;border-radius:11px;background:#374151;cursor:pointer;position:relative;transition:background .2s;">
+              <div id="wind-toggle-thumb2" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#9ca3af;transition:all .2s;"></div>
+            </div>
+          </label>
+        </div>
+        <div id="wind-status2" style="font-size:11px;color:var(--mid);min-height:16px;margin-top:4px;"></div>
+      </div>
+
+      <!-- ── Hail History by Address ────────────────────────────────── -->
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:80px;">
+        <div style="font-size:14px;font-weight:700;color:#f59e0b;margin-bottom:10px;">🔎 Hail History by Address</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <input id="hail-lookup-input2" type="text" placeholder="Enter any address…"
+            style="flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;"
+            onkeydown="if(event.key==='Enter')lookupHailAddressSync()"
+          />
+          <button onclick="lookupHailAddressSync()" style="background:#f59e0b;color:#000;border:none;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Check</button>
+        </div>
+        <div id="hail-lookup-status2" style="font-size:11px;color:var(--mid);text-align:center;min-height:16px;"></div>
+        <div id="hail-lookup-results2" style="display:none;margin-top:10px;"></div>
+      </div>
+
+    </div>
+  </div>

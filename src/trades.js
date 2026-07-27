@@ -566,6 +566,7 @@ function goTab(t){
     }
   }
   if(t==='zones')initZonesTab();
+  if(t==='storm')initStormTab();
   if(t==='agency')renderAgencyView();
   if(t==='history')loadHistory();
   if(t==='settings')renderSettingsTab();
