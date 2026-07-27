@@ -1,16 +1,16 @@
 // api/mrms-storm-dates.js
-// Returns distinct storm dates from the MRMS database for the past N days,
-// with max hail size per date. Used to populate the Storm Date Picker.
+// Returns distinct storm dates with max hail size and cell count.
+// Uses the get_mrms_storm_dates() Supabase RPC function which does a
+// server-side GROUP BY — bypasses the 1,000-row REST API limit.
 //
 // Query params:
-//   days  — how many days back to look (default: 90, max: 365)
+//   days  — how many days back to look (default: 30, max: 90)
 //
 // Returns JSON array sorted newest-first:
 //   [{ date: "2026-07-24", maxSize: 2.12, label: "Baseball+", cellCount: 4821 }, ...]
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://gtwbhxnrmfmdenogzuea.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
-const TABLE = 'mrms_hail_events';
 
 function hailLabel(sizeIn) {
   if (sizeIn >= 2.00) return 'Baseball+';
@@ -30,67 +30,42 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'SUPABASE_SERVICE_KEY not configured' });
   }
 
-  const daysBack = Math.min(Math.max(parseInt(req.query.days || '90') || 90, 1), 365);
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - daysBack);
-  const cutoffStr = cutoff.toISOString().slice(0, 10);
-
-  // Fetch all distinct dates with max hail size — use a large limit since
-  // there are at most ~365 distinct dates and we need to aggregate client-side
-  // (Supabase REST doesn't support GROUP BY natively)
-  const params = new URLSearchParams({
-    select: 'event_date,hail_size_in',
-    event_date: `gte.${cutoffStr}`,
-    order: 'event_date.desc',
-    limit: '500000', // enough to cover all cells across 90 days
-  });
-
-  const url = `${SUPABASE_URL}/rest/v1/${TABLE}?${params.toString()}`;
+  // Default 30 days — fast enough (~5s). Cap at 90 days.
+  const daysBack = Math.min(Math.max(parseInt(req.query.days || '30') || 30, 1), 90);
 
   try {
-    const resp = await fetch(url, {
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_mrms_storm_dates`, {
+      method: 'POST',
       headers: {
         apikey: SUPABASE_KEY,
         Authorization: `Bearer ${SUPABASE_KEY}`,
-        Accept: 'application/json',
-        // Use CSV for faster transfer — we only need 2 columns
-        'Accept-Profile': 'public',
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({ days_back: daysBack }),
     });
 
     if (!resp.ok) {
       const err = await resp.text();
-      console.error('[mrms-storm-dates] Supabase error:', resp.status, err);
+      console.error('[mrms-storm-dates] RPC error:', resp.status, err);
       return res.status(502).json({ error: 'Database query failed', detail: err });
     }
 
     const rows = await resp.json();
 
-    // Aggregate: group by event_date, find max hail_size_in and count cells
-    const byDate = {};
-    for (const row of rows) {
-      const d = row.event_date;
-      const s = parseFloat(row.hail_size_in);
-      if (!byDate[d]) {
-        byDate[d] = { date: d, maxSize: s, cellCount: 1 };
-      } else {
-        if (s > byDate[d].maxSize) byDate[d].maxSize = s;
-        byDate[d].cellCount++;
-      }
+    if (!Array.isArray(rows)) {
+      return res.status(502).json({ error: 'Unexpected response from database', detail: rows });
     }
 
-    // Sort newest first, add human label
-    const result = Object.values(byDate)
-      .sort((a, b) => b.date.localeCompare(a.date))
-      .map(d => ({
-        date: d.date,
-        maxSize: Math.round(d.maxSize * 100) / 100,
-        label: hailLabel(d.maxSize),
-        cellCount: d.cellCount,
-      }));
+    // Map to our output format
+    const result = rows.map(r => ({
+      date: r.event_date,
+      maxSize: Math.round(parseFloat(r.max_size) * 100) / 100,
+      label: hailLabel(parseFloat(r.max_size)),
+      cellCount: parseInt(r.cell_count),
+    }));
 
-    // Cache for 30 minutes — data only changes once per day
-    res.setHeader('Cache-Control', 'public, max-age=1800, stale-while-revalidate=3600');
+    // Cache for 15 minutes — data only changes once per day
+    res.setHeader('Cache-Control', 'public, max-age=900, stale-while-revalidate=1800');
     return res.status(200).json(result);
 
   } catch (err) {
