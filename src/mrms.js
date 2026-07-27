@@ -297,6 +297,46 @@ window._hailLookupDropPin = function(lat, lon) {
   } catch(e) { console.warn('[MRMS] dropPin error:', e); }
 };
 
+// ── Pin popup Hail History card ─────────────────────────────────────────────
+// Called from the pin popup "⚡ Hail History" button.
+window.showPinHailHistory = async function(pid, address, lat, lon) {
+  const el = document.getElementById('hail-hist-' + pid);
+  if (!el) return;
+  // Toggle: if already visible, hide it
+  if (el.style.display !== 'none') { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  el.innerHTML = '<div style="color:#60A5FA;text-align:center;padding:8px;">⚡ Loading hail history…</div>';
+  try {
+    const params = new URLSearchParams({ lat: String(lat), lon: String(lon), days: '1825', minSize: '0.5' });
+    const resp = await fetch('/api/mrms-address-lookup?' + params.toString());
+    const data = await resp.json();
+    if (!resp.ok) { el.innerHTML = '<div style="color:#EF4444;font-size:10px;">' + (data.error || 'Lookup failed.') + '</div>'; return; }
+    if (!data.events || data.events.length === 0) {
+      el.innerHTML = '<div style="color:#22C55E;font-size:11px;text-align:center;padding:6px;">✅ No hail ≥ 0.5" detected at this address in the last 5 years.</div>';
+      return;
+    }
+    const sizeLabel = s => {
+      if (s >= 2.00) return { label: 'Baseball+', color: '#EF4444' };
+      if (s >= 1.50) return { label: 'Golf Ball', color: '#F97316' };
+      if (s >= 1.00) return { label: 'Quarter',   color: '#F59E0B' };
+      if (s >= 0.75) return { label: 'Penny',     color: '#FBBF24' };
+      return             { label: 'Dime',      color: '#FEF08A' };
+    };
+    const rows = data.events.slice(0, 10).map(ev => {
+      const { label, color } = sizeLabel(ev.hail_size_in);
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.07)">'
+        + '<div><div style="font-size:11px;font-weight:700;color:#fff;">' + ev.event_date + '</div>'
+        + '<div style="font-size:9px;color:#6B7280;">' + ev.distance_km + ' km away</div></div>'
+        + '<div style="text-align:right;"><div style="font-size:12px;font-weight:700;color:' + color + ';">' + parseFloat(ev.hail_size_in).toFixed(2) + '"</div>'
+        + '<div style="font-size:9px;color:' + color + ';">' + label + '</div></div></div>';
+    }).join('');
+    const more = data.events.length > 10 ? '<div style="font-size:9px;color:#6B7280;text-align:center;padding-top:4px;">+' + (data.events.length - 10) + ' more events</div>' : '';
+    el.innerHTML = '<div style="font-size:10px;font-weight:700;color:#60A5FA;margin-bottom:6px;">⚡ ' + data.events.length + ' hail event' + (data.events.length !== 1 ? 's' : '') + ' — last 5 years</div>' + rows + more;
+  } catch(e) {
+    el.innerHTML = '<div style="color:#EF4444;font-size:10px;">Network error. Try again.</div>';
+  }
+};
+
 // Re-fetch when map is panned/zoomed (debounced) so we always show
 // the current viewport's data
 let _mrmsDebounce = null;

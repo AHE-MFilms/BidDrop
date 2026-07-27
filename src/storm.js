@@ -41,6 +41,36 @@ function closeStormPanel(){
   const _sp=document.getElementById('storm-panel'); if(_sp) _sp.style.display='none';
 }
 
+// ── Storm city/zip search bar ────────────────────────────────────────────────
+// Geocodes the city/zip input, flies the map there, then refreshes storm layers.
+window.stormSearchFly = async function() {
+  const inp = document.getElementById('storm-search-inp');
+  const statusEl = document.getElementById('storm-search-status');
+  const q = (inp?.value || '').trim();
+  if (!q) { if (statusEl) statusEl.textContent = 'Enter a city or ZIP code.'; return; }
+  if (statusEl) statusEl.textContent = '🔍 Searching…';
+  try {
+    const MB = window._mapboxToken || '';
+    const res = await fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/' + encodeURIComponent(q) + '.json?country=us&types=place,postcode&limit=1&access_token=' + MB);
+    const data = await res.json();
+    const feat = (data.features || [])[0];
+    if (!feat) { if (statusEl) statusEl.textContent = 'Location not found.'; return; }
+    const [lng, lat] = feat.center;
+    const name = feat.place_name;
+    // Fly to city/zip level (zoom 11)
+    map.flyTo([lat, lng], 11, { duration: 1.2 });
+    if (statusEl) statusEl.textContent = '✓ ' + (name || '').split(',').slice(0, 2).join(',').trim();
+    // Refresh storm layers after the fly animation settles
+    setTimeout(() => {
+      if (_hailLayerOn) loadStormEvents();
+      if (typeof renderMrmsLayer === 'function') renderMrmsLayer();
+      if (typeof loadWindEvents === 'function' && _windLayerOn) loadWindEvents();
+    }, 1400);
+  } catch(e) {
+    if (statusEl) statusEl.textContent = 'Search error. Try again.';
+  }
+};
+
 // ── Storm state persistence ──────────────────────────────────────────────────
 function _saveStormState(){
   try{

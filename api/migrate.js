@@ -348,6 +348,9 @@ export default async function handler(req, res) {
     { name: 'pins.acculynx_job_id',      sql: "ALTER TABLE pins ADD COLUMN IF NOT EXISTS acculynx_job_id text" },
     // ── Build 18: Email Templates Manager ──
     { name: 'email_templates', sql: "CREATE TABLE IF NOT EXISTS email_templates (key text PRIMARY KEY, subject text NOT NULL, html_body text NOT NULL, text_body text, updated_at timestamptz DEFAULT now())" },
+    // ── Build 19: MRMS Hail Events (nightly ingestion from IEM/NOAA) ──
+    { name: 'mrms_hail_events', sql: "CREATE TABLE IF NOT EXISTS mrms_hail_events (id bigserial PRIMARY KEY, event_date date NOT NULL, lat numeric(7,4) NOT NULL, lon numeric(8,4) NOT NULL, hail_size_in numeric(5,2) NOT NULL, created_at timestamptz DEFAULT now(), UNIQUE(event_date, lat, lon))" },
+    { name: 'mrms_hail_events_bbox_idx', sql: "CREATE INDEX IF NOT EXISTS mrms_hail_events_bbox_idx ON mrms_hail_events (event_date, lat, lon, hail_size_in)" },
   ];
 
   // Try to run DDL via rpc/exec_sql

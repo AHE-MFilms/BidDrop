@@ -15,12 +15,25 @@
       <button class="mtool-btn" id="solar-overlay-btn" onclick="toggleSolarOverlay()" title="Show solar kW potential overlay on pins with solar data">☀️ Solar kW</button>
     </div>
     <!-- Storm Events Panel -->
-    <div id="storm-panel" style="display:none;position:absolute;top:12px;left:12px;z-index:2000;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;width:280px;box-shadow:0 4px 20px rgba(0,0,0,.5);">
+    <div id="storm-panel" style="display:none;position:absolute;top:12px;left:12px;z-index:2000;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;width:280px;box-shadow:0 4px 20px rgba(0,0,0,.5);max-height:90vh;overflow-y:auto;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
         <div style="font-size:13px;font-weight:700;color:var(--text);">⛈ Storm Overlay</div>
         <button onclick="closeStormPanel()" style="background:none;border:none;color:var(--mid);font-size:16px;cursor:pointer;line-height:1;">✕</button>
       </div>
-      <div style="font-size:10px;color:var(--muted);margin-bottom:12px;">Source: <span id="storm-source-label">NOAA MRMS Radar</span> · Free</div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:10px;">Source: <span id="storm-source-label">NOAA MRMS Radar</span> · Free</div>
+
+      <!-- City / Zip Search -->
+      <div style="margin-bottom:12px;">
+        <div style="font-size:10px;font-weight:700;color:var(--mid);margin-bottom:5px;">📍 SEARCH CITY OR ZIP</div>
+        <div style="display:flex;gap:6px;">
+          <input id="storm-search-inp" type="text" placeholder="City, state or ZIP…"
+            style="flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:6px 10px;font-size:12px;outline:none;"
+            onkeydown="if(event.key==='Enter')stormSearchFly()"
+          />
+          <button onclick="stormSearchFly()" style="background:#6366F1;color:#fff;border:none;border-radius:7px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;">Go</button>
+        </div>
+        <div id="storm-search-status" style="font-size:10px;color:var(--mid);min-height:14px;margin-top:4px;"></div>
+      </div>
 
       <!-- Hail Layer Toggle (SPC) -->
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
@@ -78,6 +91,16 @@
         </label>
       </div>
       <div id="mrms-status" style="font-size:10px;color:var(--mid);text-align:center;min-height:14px;margin-bottom:8px;">🔍 Zoom into a city to see 1km radar hail swaths</div>
+
+      <div style="border-top:1px solid var(--border);margin:10px 0;"></div>
+
+      <!-- Storm Alert: Auto-drop pins -->
+      <div style="margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:700;color:#F25C05;margin-bottom:6px;">⚡ Storm Alert — Auto-Drop Pins</div>
+        <div style="font-size:11px;color:var(--mid);margin-bottom:8px;line-height:1.4;">Enable MRMS Radar Swaths above, then tap below to load every home in the current view and auto-drop pins for the storm area.</div>
+        <button onclick="stormLeadsGetAddresses()" style="width:100%;background:#F25C05;color:#fff;border:none;border-radius:7px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:5px;">🏠 Get Homes in This Area</button>
+        <button onclick="clearStormLeadMarkers()" style="width:100%;background:none;border:1px solid var(--border);color:var(--mid);border-radius:7px;padding:6px;font-size:11px;cursor:pointer;">Clear Storm Pins</button>
+      </div>
 
       <div style="border-top:1px solid var(--border);margin:10px 0;"></div>
 

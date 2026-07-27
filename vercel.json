@@ -67,6 +67,10 @@
     {
       "path": "/api/cron-purge-trash",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron-mrms-ingest",
+      "schedule": "0 6 * * *"
     }
   ],
   "functions": {
