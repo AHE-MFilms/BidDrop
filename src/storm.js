@@ -38,6 +38,11 @@ function toggleStormEvents(){
     }
     _syncHailToggleUI();
     _syncWindToggleUI();
+    // Populate the storm date picker if not already loaded
+    if (typeof fetchMrmsStormDates === 'function') {
+      const sel = document.getElementById('storm-date-sel');
+      if (sel && sel.options.length <= 1) fetchMrmsStormDates();
+    }
   } else {
     btn.classList.remove('active');
     panel.style.display = 'none';

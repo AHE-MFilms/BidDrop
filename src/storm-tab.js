@@ -11,6 +11,16 @@
 // ── Tab init ─────────────────────────────────────────────────────────────────
 function initStormTab() {
   _syncStormTabToggles();
+  // Load storm dates into the date picker on first open
+  if (typeof fetchMrmsStormDates === 'function') fetchMrmsStormDates();
+}
+
+// ── Draw area + switch to map tab ────────────────────────────────────────────
+function stormStartDrawAndGoMap() {
+  if (typeof goTab === 'function') goTab('map');
+  setTimeout(() => {
+    if (typeof stormStartDraw === 'function') stormStartDraw();
+  }, 200);
 }
 
 // ── Sync toggle states from map-panel → storm tab ────────────────────────────

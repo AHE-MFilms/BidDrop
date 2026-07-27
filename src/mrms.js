@@ -1,75 +1,233 @@
-// src/mrms.js
+// mrms.js
 // NOAA MRMS (Multi-Radar Multi-Sensor) hail layer for BidDrop.
 // Fetches radar-grade hail grid cells from /api/mrms-hail and renders them
-// as colored rectangles on the Leaflet map — similar to SwathIQ's hail swath view.
+// as colored rectangles on the Leaflet map.
 //
-// Each grid cell is ~1km (0.001° precision). Cells are colored by hail size:
-//   ≥ 2.00" (Baseball+) → red
-//   ≥ 1.50" (Golf Ball) → orange
-//   ≥ 1.00" (Quarter)   → amber
-//   ≥ 0.75" (Penny)     → yellow
-//   ≥ 0.50" (Dime)      → light yellow
-//
-// This module is loaded alongside storm.js and integrates with the existing
-// storm panel toggles.
+// NEW: Date-picker-first approach.
+//   1. fetchMrmsStormDates()  — loads distinct storm dates into the picker
+//   2. loadMrmsForDate(date)  — loads MRMS swath for a specific date, flies map to it
+//   3. toggleMrmsLayer()      — legacy toggle (still works from map panel)
 
-let _mrmsLayers = [];       // Leaflet rectangle layers
-let _mrmsData   = [];       // raw fetched rows — full cached dataset
-let _mrmsLoaded = false;    // whether data has been fetched for current settings
-let _mrmsVisible = false;   // whether the MRMS layer is currently shown
-let _mrmsFetchBounds = null; // the large bbox used for the last fetch
-let _mrmsLastDays = null;    // days param used for last fetch
-let _mrmsLastMinSize = null; // minSize param used for last fetch
-let _mrmsFetching = false;   // prevent concurrent fetches
+let _mrmsLayers   = [];       // Leaflet rectangle layers
+let _mrmsData     = [];       // raw fetched rows — full cached dataset
+let _mrmsLoaded   = false;    // whether data has been fetched for current settings
+let _mrmsVisible  = false;    // whether the MRMS layer is currently shown
+let _mrmsFetchBounds = null;  // the large bbox used for the last fetch
+let _mrmsLastDays    = null;  // days param used for last fetch
+let _mrmsLastMinSize = null;  // minSize param used for last fetch
+let _mrmsFetching    = false; // prevent concurrent fetches
+let _mrmsActiveDate  = null;  // the specific date currently loaded (null = "all recent")
 
 // Grid cell half-size in degrees (~1km at CONUS latitudes)
-// MRMS data is on a 0.01° grid; use 0.005° half-size so cells tile edge-to-edge
-const CELL_HALF = 0.005; // display half-size for map rectangles (0.01° cell → 0.005° half)
-const CELL_GRID = 0.01;  // actual NOAA MRMS grid spacing (0.01° ≈ 1km)
+const CELL_HALF = 0.005;
+const CELL_GRID = 0.01;
+
+// ── Storm Date Picker ─────────────────────────────────────────────────────────
 
 /**
- * Called by the MRMS toggle button — independent of SPC hail toggle.
+ * Fetch distinct storm dates and populate the storm date picker selects.
+ * Called when the Storm tab opens.
  */
+window.fetchMrmsStormDates = async function() {
+  const statusIds = ['storm-date-status', 'storm-date-status2'];
+  const selectIds = ['storm-date-sel', 'storm-date-sel2'];
+
+  statusIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = 'Loading storm dates…';
+  });
+
+  try {
+    const resp = await fetch('/api/mrms-storm-dates?days=90');
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const dates = await resp.json();
+
+    if (!dates || dates.length === 0) {
+      statusIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = 'No storm data in the last 90 days.';
+      });
+      return;
+    }
+
+    // Build option HTML
+    const optionsHtml = dates.map(d => {
+      const dateObj = new Date(d.date + 'T12:00:00Z');
+      const label = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+      const sizeColor = d.maxSize >= 2.0 ? '#EF4444' : d.maxSize >= 1.5 ? '#F97316' : d.maxSize >= 1.0 ? '#F59E0B' : '#FBBF24';
+      return `<option value="${d.date}" data-size="${d.maxSize}" data-label="${d.label}" data-cells="${d.cellCount}">${label} — ${d.label} ${d.maxSize.toFixed(2)}"</option>`;
+    }).join('');
+
+    selectIds.forEach(id => {
+      const sel = document.getElementById(id);
+      if (!sel) return;
+      sel.innerHTML = '<option value="">— Pick a storm date —</option>' + optionsHtml;
+    });
+
+    statusIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = `${dates.length} storm event${dates.length !== 1 ? 's' : ''} in the last 90 days`;
+    });
+
+  } catch(e) {
+    console.warn('[MRMS] fetchMrmsStormDates error:', e.message);
+    statusIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = 'Could not load storm dates.';
+    });
+  }
+};
+
+/**
+ * Load the MRMS swath for a specific date and fly the map to it.
+ * Called when the user picks a date from the storm date picker.
+ */
+window.loadMrmsForDate = async function(date) {
+  if (!date) {
+    // User cleared the picker — clear the swath
+    clearMrmsLayerOnly();
+    _mrmsActiveDate = null;
+    _mrmsVisible = false;
+    _updateMrmsToggleUI(false);
+    ['storm-date-status','storm-date-status2'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = '';
+    });
+    return;
+  }
+
+  _mrmsActiveDate = date;
+  _mrmsVisible = true;
+  _updateMrmsToggleUI(true);
+
+  const statusIds = ['storm-date-status', 'storm-date-status2', 'mrms-status', 'mrms-status2'];
+  statusIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = `Loading ${date} swath…`;
+  });
+
+  // Sync both selects to the chosen date
+  ['storm-date-sel','storm-date-sel2'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (sel && sel.value !== date) sel.value = date;
+  });
+
+  // Fetch the full CONUS bounding box for this specific date
+  // We use a very large bbox and filter by date server-side
+  const params = new URLSearchParams({
+    swLat: '-90', swLng: '-180', neLat: '90', neLng: '0',
+    days: '1',   // We'll override with exact date below
+    minSize: '0.5',
+    date: date,  // exact date filter (we'll add this to the API)
+  });
+
+  // Actually: the existing /api/mrms-hail doesn't support exact date.
+  // Use days=1 and a date-relative approach: calculate days since today
+  const today = new Date();
+  const stormDate = new Date(date + 'T12:00:00Z');
+  const diffDays = Math.ceil((today - stormDate) / (1000 * 60 * 60 * 24)) + 1;
+
+  // Use a wide CONUS bbox to get all cells for this date
+  // We'll filter client-side to only show the selected date
+  const fetchParams = new URLSearchParams({
+    swLat: '20', swLng: '-130', neLat: '55', neLng: '-60',
+    days: String(Math.max(diffDays + 1, 2)),
+    minSize: '0.5',
+  });
+
+  try {
+    if (_mrmsFetching) return;
+    _mrmsFetching = true;
+
+    const resp = await fetch(`/api/mrms-hail?${fetchParams.toString()}`);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const allData = await resp.json();
+
+    // Filter to only the selected date
+    _mrmsData = allData.filter(r => r.event_date === date);
+    _mrmsLoaded = true;
+    _mrmsFetchBounds = { swLat: 20, swLng: -130, neLat: 55, neLng: -60 };
+    _mrmsLastDays = diffDays;
+
+    if (_mrmsData.length === 0) {
+      statusIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = `No hail data found for ${date}.`;
+      });
+      return;
+    }
+
+    renderMrmsLayerFromData();
+
+    // Fly the map to the center of the swath
+    const lats = _mrmsData.map(r => parseFloat(r.lat));
+    const lons = _mrmsData.map(r => parseFloat(r.lon));
+    const centerLat = (Math.min(...lats) + Math.max(...lats)) / 2;
+    const centerLon = (Math.min(...lons) + Math.max(...lons)) / 2;
+    try {
+      map.setView([centerLat, centerLon], 10);
+    } catch(e) {}
+
+    // Switch to map tab so rep sees the swath
+    if (typeof goTab === 'function') goTab('map');
+
+  } catch(e) {
+    console.warn('[MRMS] loadMrmsForDate error:', e.message);
+    statusIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = `Failed to load swath for ${date}.`;
+    });
+  } finally {
+    _mrmsFetching = false;
+  }
+};
+
+// ── Legacy toggle (map panel) ─────────────────────────────────────────────────
+
 window.toggleMrmsLayer = function() {
   _mrmsVisible = !_mrmsVisible;
-  const track = document.getElementById('mrms-toggle-track');
-  const thumb = document.getElementById('mrms-toggle-thumb');
-  const lbl   = document.getElementById('mrms-toggle-lbl');
+  _updateMrmsToggleUI(_mrmsVisible);
   if (_mrmsVisible) {
-    if (track) track.style.background = '#6366f1';
-    if (thumb) { thumb.style.background = '#fff'; thumb.style.left = '19px'; }
-    if (lbl)   lbl.textContent = 'ON';
     _mrmsLoaded = false;
-    fetchMrmsData();
+    if (_mrmsActiveDate) {
+      loadMrmsForDate(_mrmsActiveDate);
+    } else {
+      fetchMrmsData();
+    }
   } else {
-    if (track) track.style.background = '#374151';
-    if (thumb) { thumb.style.background = '#9ca3af'; thumb.style.left = '3px'; }
-    if (lbl)   lbl.textContent = 'OFF';
     clearMrmsLayerOnly();
     const statusEl = document.getElementById('mrms-status');
     if (statusEl) statusEl.textContent = '🔍 Zoom into a city to see 1km radar hail swaths';
   }
 };
 
-/**
- * Called by toggleHailLayer() in storm.js — kept for backward compat but MRMS
- * is now independent. This is a no-op so SPC toggle doesn’t auto-load MRMS.
- */
-window.loadMrmsLayer = async function() {};
+function _updateMrmsToggleUI(on) {
+  const pairs = [
+    ['mrms-toggle-track', 'mrms-toggle-thumb', 'mrms-toggle-lbl'],
+    ['mrms-toggle-track2', 'mrms-toggle-thumb2', 'mrms-toggle-lbl2'],
+  ];
+  pairs.forEach(([trackId, thumbId, lblId]) => {
+    const track = document.getElementById(trackId);
+    const thumb = document.getElementById(thumbId);
+    const lbl   = document.getElementById(lblId);
+    if (track) track.style.background = on ? '#6366f1' : '#374151';
+    if (thumb) { thumb.style.background = on ? '#fff' : '#9ca3af'; thumb.style.left = on ? '19px' : '3px'; }
+    if (lbl)   lbl.textContent = on ? 'ON' : 'OFF';
+  });
+}
 
-/**
- * Called when hail layer is turned off — kept for backward compat.
- */
+window.loadMrmsLayer = async function() {};
 window.clearMrmsLayer = function() {};
 
-/**
- * Called when storm-days or storm-min-size changes — refetch and re-render.
- */
 window.renderMrmsLayer = function() {
   if (!_mrmsVisible) return;
   _mrmsLoaded = false;
   clearMrmsLayerOnly();
-  fetchMrmsData();
+  if (_mrmsActiveDate) {
+    loadMrmsForDate(_mrmsActiveDate);
+  } else {
+    fetchMrmsData();
+  }
 };
 
 function clearMrmsLayerOnly() {
@@ -77,13 +235,12 @@ function clearMrmsLayerOnly() {
   _mrmsLayers = [];
 }
 
-const MRMS_MIN_ZOOM = 6; // state/regional level — cells are ~1km, visible from zoom 6+
+const MRMS_MIN_ZOOM = 6;
 
 async function fetchMrmsData() {
   const statusEl = document.getElementById('mrms-status');
-  if (_mrmsFetching) return; // prevent concurrent fetches
+  if (_mrmsFetching) return;
 
-  // Gate: only render MRMS when zoomed in enough to see 1km cells
   let currentZoom = 0;
   try { currentZoom = map.getZoom(); } catch(e) {}
   if (currentZoom < MRMS_MIN_ZOOM) {
@@ -92,22 +249,18 @@ async function fetchMrmsData() {
     return;
   }
 
-  // Read from whichever select is in the DOM; default to 90 days (matches our 90-day DB retention)
   const daysEl = document.getElementById('storm-days') || document.getElementById('storm-days2');
   const sizeEl = document.getElementById('storm-min-size') || document.getElementById('storm-min-size2');
   const days    = parseInt(daysEl?.value || '90') || 90;
   const minSize = parseFloat(sizeEl?.value || '0.75') || 0.75;
 
-  // Get current map center
   let center;
   try { center = map.getCenter(); } catch(e) {
     if (statusEl) statusEl.textContent = 'Map not ready.';
     return;
   }
 
-  // Use a large fixed bbox (±5° around center) so one fetch covers the whole metro area.
-  // Only re-fetch if: settings changed, or user has panned outside the cached bbox.
-  const FETCH_PAD = 5.0; // degrees — covers ~550km radius, one fetch per metro
+  const FETCH_PAD = 5.0;
   const needRefetch = !_mrmsFetchBounds
     || days !== _mrmsLastDays
     || minSize !== _mrmsLastMinSize
@@ -117,7 +270,6 @@ async function fetchMrmsData() {
     || center.lng > _mrmsFetchBounds.neLng - 1.0;
 
   if (!needRefetch && _mrmsLoaded) {
-    // Data is still good — just re-render from cache (no network call)
     renderMrmsLayerFromData();
     return;
   }
@@ -170,12 +322,15 @@ async function fetchMrmsData() {
 function renderMrmsLayerFromData() {
   clearMrmsLayerOnly();
   const statusEl = document.getElementById('mrms-status');
-  const minSize = parseFloat(document.getElementById('storm-min-size')?.value || '0.75') || 0.75;
+  const statusEl2 = document.getElementById('mrms-status2');
+  const minSize = parseFloat(document.getElementById('storm-min-size')?.value || '0.5') || 0.5;
 
   const filtered = _mrmsData.filter(r => parseFloat(r.hail_size_in) >= minSize);
 
   if (filtered.length === 0) {
-    if (statusEl) statusEl.textContent = 'No MRMS hail data for this area/period.';
+    const msg = 'No MRMS hail data for this area/period.';
+    if (statusEl) statusEl.textContent = msg;
+    if (statusEl2) statusEl2.textContent = msg;
     return;
   }
 
@@ -187,7 +342,6 @@ function renderMrmsLayerFromData() {
 
     const { color, label } = hailColor(size);
 
-    // Each grid cell is a ~1km square rectangle
     const bounds = [
       [lat - CELL_HALF, lon - CELL_HALF],
       [lat + CELL_HALF, lon + CELL_HALF],
@@ -229,14 +383,11 @@ function renderMrmsLayerFromData() {
     const mostRecent = filtered.reduce((a, b) => a.event_date > b.event_date ? a : b);
     window._mrmsLastDate = mostRecent.event_date;
     window._mrmsLastSize = parseFloat(mostRecent.hail_size_in);
-    // Derive city from map center (best effort)
     try {
       const c = map.getCenter();
       window._mrmsLastCity = `${c.lat.toFixed(2)},${c.lng.toFixed(2)}`;
     } catch(e) {}
 
-    // Export tight bounding box of the actual swath cells (not full viewport)
-    // storm-leads.js uses this to query only homes inside the hail footprint
     const lats = filtered.map(r => parseFloat(r.lat));
     const lons = filtered.map(r => parseFloat(r.lon));
     window._mrmsSwathBounds = {
@@ -245,8 +396,6 @@ function renderMrmsLayerFromData() {
       neLat: Math.max(...lats) + CELL_HALF,
       neLng: Math.max(...lons) + CELL_HALF,
     };
-    // Export individual cell centers so storm-leads can do point-in-cell filtering
-    // Each cell is CELL_HALF degrees on each side (~0.5km radius)
     window._mrmsCells = filtered.map(r => ({
       lat: parseFloat(r.lat),
       lng: parseFloat(r.lon),
@@ -256,9 +405,15 @@ function renderMrmsLayerFromData() {
     window._mrmsCells = [];
   }
 
-  if (statusEl) {
-    statusEl.textContent = `${filtered.length.toLocaleString()} MRMS radar cells shown`;
-  }
+  const msg = `${filtered.length.toLocaleString()} MRMS radar cells shown`;
+  if (statusEl) statusEl.textContent = msg;
+  if (statusEl2) statusEl2.textContent = msg;
+
+  // Also update date status elements
+  const dateStatus = document.getElementById('storm-date-status');
+  const dateStatus2 = document.getElementById('storm-date-status2');
+  if (dateStatus && _mrmsActiveDate) dateStatus.textContent = `${filtered.length.toLocaleString()} hail cells loaded — draw a box inside the red to get homes`;
+  if (dateStatus2 && _mrmsActiveDate) dateStatus2.textContent = `${filtered.length.toLocaleString()} hail cells loaded — draw a box inside the red to get homes`;
 }
 
 function hailColor(sizeIn) {
@@ -297,7 +452,6 @@ window.lookupHailAddress = async function() {
     }
     if (statusEl) statusEl.textContent = '';
     _renderHailLookupResults(data, resultsEl);
-    // Pan map to the address
     try { map.setView([data.lat, data.lon], Math.max(map.getZoom(), 13)); } catch(e) {}
   } catch(e) {
     if (statusEl) statusEl.textContent = 'Network error. Try again.';
@@ -318,92 +472,16 @@ function _renderHailLookupResults(data, el) {
     return `<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);">
       <div>
         <div style="font-size:11px;font-weight:700;color:var(--text);">${ev.event_date}</div>
-        <div style="font-size:10px;color:var(--mid);">${ev.distance_km} km from address</div>
+        <div style="font-size:10px;color:var(--mid);">${ev.hail_size_in.toFixed(2)}" — ${label}</div>
       </div>
-      <div style="text-align:right;">
-        <div style="font-size:12px;font-weight:700;color:${color};">${ev.hail_size_in.toFixed(2)}"</div>
-        <div style="font-size:9px;color:${color};">${label}</div>
-      </div>
+      <span style="font-size:10px;font-weight:700;color:${color};background:rgba(255,255,255,.06);border-radius:4px;padding:2px 6px;">${label}</span>
     </div>`;
   }).join('');
-  const more = events.length > 20 ? `<div style="font-size:10px;color:var(--mid);text-align:center;padding-top:6px;">+${events.length - 20} more events</div>` : '';
+
   el.innerHTML = `
-    <div style="font-size:10px;color:var(--mid);margin-bottom:6px;word-break:break-word;">${address?.split(',').slice(0,2).join(',') || 'Address'}</div>
-    <div style="font-size:11px;font-weight:700;color:#f59e0b;margin-bottom:6px;">${events.length} hail event${events.length !== 1 ? 's' : ''} found (last 5 yrs)</div>
+    <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:6px;">${escHtml(address)}</div>
+    <div style="font-size:10px;color:var(--mid);margin-bottom:8px;">${events.length} hail event${events.length !== 1 ? 's' : ''} found</div>
     ${rows}
-    ${more}
-    <button onclick="_hailLookupDropPin(${data.lat},${data.lon})"
-      style="width:100%;margin-top:8px;background:#F25C05;color:#fff;border:none;border-radius:6px;padding:7px;font-size:11px;font-weight:700;cursor:pointer;">
-      📍 Drop Pin at This Address
-    </button>
   `;
   el.style.display = 'block';
 }
-
-window._hailLookupDropPin = function(lat, lon) {
-  try {
-    const addr = document.getElementById('hail-lookup-input')?.value || '';
-    stormDropPin(lat, lon, encodeURIComponent(addr || `${lat.toFixed(3)}, ${lon.toFixed(3)}`));
-  } catch(e) { console.warn('[MRMS] dropPin error:', e); }
-};
-
-// ── Pin popup Hail History card ─────────────────────────────────────────────
-// Called from the pin popup "⚡ Hail History" button.
-window.showPinHailHistory = async function(pid, address, lat, lon) {
-  const el = document.getElementById('hail-hist-' + pid);
-  if (!el) return;
-  // Toggle: if already visible, hide it
-  if (el.style.display !== 'none') { el.style.display = 'none'; return; }
-  el.style.display = 'block';
-  el.innerHTML = '<div style="color:#60A5FA;text-align:center;padding:8px;">⚡ Loading hail history…</div>';
-  try {
-    const params = new URLSearchParams({ lat: String(lat), lon: String(lon), days: '1825', minSize: '0.5' });
-    const resp = await fetch('/api/mrms-address-lookup?' + params.toString());
-    const data = await resp.json();
-    if (!resp.ok) { el.innerHTML = '<div style="color:#EF4444;font-size:10px;">' + (data.error || 'Lookup failed.') + '</div>'; return; }
-    if (!data.events || data.events.length === 0) {
-      el.innerHTML = '<div style="color:#22C55E;font-size:11px;text-align:center;padding:6px;">✅ No hail ≥ 0.5" detected at this address in the last 5 years.</div>';
-      return;
-    }
-    const sizeLabel = s => {
-      if (s >= 2.00) return { label: 'Baseball+', color: '#EF4444' };
-      if (s >= 1.50) return { label: 'Golf Ball', color: '#F97316' };
-      if (s >= 1.00) return { label: 'Quarter',   color: '#F59E0B' };
-      if (s >= 0.75) return { label: 'Penny',     color: '#FBBF24' };
-      return             { label: 'Dime',      color: '#FEF08A' };
-    };
-    const rows = data.events.slice(0, 10).map(ev => {
-      const { label, color } = sizeLabel(ev.hail_size_in);
-      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.07)">'
-        + '<div><div style="font-size:11px;font-weight:700;color:#fff;">' + ev.event_date + '</div>'
-        + '<div style="font-size:9px;color:#6B7280;">' + ev.distance_km + ' km away</div></div>'
-        + '<div style="text-align:right;"><div style="font-size:12px;font-weight:700;color:' + color + ';">' + parseFloat(ev.hail_size_in).toFixed(2) + '"</div>'
-        + '<div style="font-size:9px;color:' + color + ';">' + label + '</div></div></div>';
-    }).join('');
-    const more = data.events.length > 10 ? '<div style="font-size:9px;color:#6B7280;text-align:center;padding-top:4px;">+' + (data.events.length - 10) + ' more events</div>' : '';
-    el.innerHTML = '<div style="font-size:10px;font-weight:700;color:#60A5FA;margin-bottom:6px;">⚡ ' + data.events.length + ' hail event' + (data.events.length !== 1 ? 's' : '') + ' — last 5 years</div>' + rows + more;
-  } catch(e) {
-    el.innerHTML = '<div style="color:#EF4444;font-size:10px;">Network error. Try again.</div>';
-  }
-};
-
-// On pan/zoom: re-render from cache (no refetch unless we've moved far outside cached area)
-let _mrmsDebounce = null;
-function onMapMoveForMrms() {
-  if (!_mrmsVisible) return;
-  clearTimeout(_mrmsDebounce);
-  _mrmsDebounce = setTimeout(() => {
-    // fetchMrmsData checks if a refetch is needed; if not, just re-renders from cache
-    fetchMrmsData();
-  }, 400);
-}
-
-// Hook into the map's moveend event once the map is ready
-function initMrmsMapHook() {
-  if (typeof map !== 'undefined' && map) {
-    map.on('moveend', onMapMoveForMrms);
-  } else {
-    setTimeout(initMrmsMapHook, 500);
-  }
-}
-initMrmsMapHook();

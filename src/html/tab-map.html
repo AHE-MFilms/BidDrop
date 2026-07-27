@@ -85,27 +85,28 @@
 
       <div style="border-top:1px solid var(--border);margin:10px 0;"></div>
 
-      <!-- MRMS Radar Swaths Toggle (separate) -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-        <div style="font-size:12px;font-weight:700;color:#818cf8;">🧊 Hail Impact Zone <span style="font-size:9px;background:#312e81;color:#c7d2fe;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:600;">MRMS</span></div>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-          <span style="font-size:10px;color:var(--muted);" id="mrms-toggle-lbl">OFF</span>
-          <div onclick="toggleMrmsLayer()" id="mrms-toggle-track" style="width:36px;height:20px;border-radius:10px;background:#374151;cursor:pointer;position:relative;transition:background .2s;">
-            <div id="mrms-toggle-thumb" style="position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#9ca3af;transition:all .2s;"></div>
-          </div>
-        </label>
+      <!-- Hail Impact Zone: date-picker-first -->
+      <div style="margin-bottom:8px;">
+        <div style="font-size:12px;font-weight:700;color:#818cf8;margin-bottom:5px;">🧊 Hail Impact Zone <span style="font-size:9px;background:#312e81;color:#c7d2fe;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:600;">MRMS</span></div>
+        <select id="storm-date-sel" onchange="loadMrmsForDate(this.value)"
+          style="width:100%;background:var(--bg);border:1px solid rgba(99,102,241,.5);color:var(--text);border-radius:7px;padding:7px 10px;font-size:11px;font-weight:600;cursor:pointer;outline:none;margin-bottom:4px;">
+          <option value="">— Pick a storm date —</option>
+        </select>
+        <div id="storm-date-status" style="font-size:10px;color:var(--mid);min-height:12px;margin-bottom:4px;"></div>
+        <div id="mrms-status" style="font-size:10px;color:var(--mid);min-height:12px;"></div>
       </div>
-      <div id="mrms-status" style="font-size:10px;color:var(--mid);text-align:center;min-height:14px;margin-bottom:8px;">🔍 Zoom into a city to see 1km radar hail swaths</div>
 
-      <div style="border-top:1px solid var(--border);margin:10px 0;"></div>
+      <!-- Hidden legacy toggle IDs (kept for JS compat) -->
+      <div id="mrms-toggle-track" style="display:none;"></div>
+      <div id="mrms-toggle-thumb" style="display:none;"></div>
+      <span id="mrms-toggle-lbl" style="display:none;"></span>
 
-      <!-- Storm Alert: Auto-drop pins -->
+      <div style="border-top:1px solid var(--border);margin:8px 0;"></div>
+
+      <!-- Storm Alert: Draw to get homes -->
       <div style="margin-bottom:10px;">
-        <div style="font-size:12px;font-weight:700;color:#F25C05;margin-bottom:6px;">⚡ Storm Alert — Get Hail-Hit Homes</div>
-        <div style="font-size:11px;color:var(--mid);margin-bottom:8px;line-height:1.4;">
-          <strong style="color:var(--text);">1.</strong> Turn on Hail Impact Zone above to see the red swath.<br>
-          <strong style="color:var(--text);">2.</strong> Draw a box <em>inside the red area</em> to get homes there.
-        </div>
+        <div style="font-size:12px;font-weight:700;color:#F25C05;margin-bottom:5px;">⚡ Get Hail-Hit Homes</div>
+        <div style="font-size:10px;color:var(--mid);margin-bottom:6px;line-height:1.4;">Pick a date above → red swath appears → draw inside it.</div>
         <button id="btn-storm-draw" onclick="stormStartDraw()" style="width:100%;background:#6366F1;color:#fff;border:none;border-radius:7px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:5px;">✏️ Draw Area to Get Homes</button>
         <button onclick="clearStormLeadMarkers()" style="width:100%;background:none;border:1px solid var(--border);color:var(--mid);border-radius:7px;padding:6px;font-size:11px;cursor:pointer;">Clear Storm Pins</button>
         <div id="storm-draw-hint" style="font-size:10px;color:#6366F1;margin-top:5px;display:none;">Draw a rectangle on the map, then release to get homes.</div>

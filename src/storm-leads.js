@@ -187,6 +187,12 @@ function _unlockedIcon() {
 
 function _buildPopup(home) {
   const credits = S.cfg.mailerCredits || 0;
+  // Store home data in a lookup map keyed by a safe ID so onclick never injects
+  // raw strings (addresses with quotes/apostrophes) into HTML attributes.
+  const homeKey = 'h' + Math.abs(Math.round(home.lat * 10000)) + '_' + Math.abs(Math.round(home.lon * 10000));
+  window._slHomeCache = window._slHomeCache || {};
+  window._slHomeCache[homeKey] = home;
+
   if (home.unlocked) {
     return `
       <div style="font-family:sans-serif;min-width:200px;">
@@ -208,13 +214,20 @@ function _buildPopup(home) {
       ${credits < 1
         ? `<div style="font-size:11px;color:#EF4444;margin-bottom:6px;">⚠️ No credits remaining</div>
            <button onclick="openCreditsModal()" style="width:100%;background:#3B82F6;color:#fff;border:none;border-radius:6px;padding:7px;font-size:11px;font-weight:700;cursor:pointer;">Buy Credits</button>`
-        : `<button onclick="stormLeadsUnlock(${home.lat},${home.lon},${JSON.stringify(home.address)},${JSON.stringify(home.owner||null)},${JSON.stringify(home.yearBuilt||null)})"
+        : `<button onclick="stormLeadsUnlockByKey('${homeKey}')"
              style="width:100%;background:#F25C05;color:#fff;border:none;border-radius:6px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;">
              🔓 Unlock — 1 Credit (${credits} left)
            </button>`
       }
     </div>`;
 }
+
+// Safe unlock via key lookup — avoids injecting raw address strings into onclick HTML attributes
+window.stormLeadsUnlockByKey = function(homeKey) {
+  const home = (window._slHomeCache || {})[homeKey];
+  if (!home) { toast('Home data not found. Please close and reopen the panel.', 'error'); return; }
+  stormLeadsUnlock(home.lat, home.lon, home.address, home.owner || null, home.yearBuilt || null);
+};
 
 // ── Unlock a single home ─────────────────────────────────────────────────────
 window.stormLeadsUnlock = async function(lat, lon, address, owner, yearBuilt) {

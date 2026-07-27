@@ -6,12 +6,39 @@
         <div style="font-family:var(--font-h);font-size:18px;font-weight:700;color:var(--text);">⛈ Storm Events</div>
         <button onclick="goTab('map')" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--mid);font-size:11px;font-weight:700;cursor:pointer;">← Back to Map</button>
       </div>
-      <div style="font-size:11px;color:var(--muted);">Source: <span id="storm-source-label2">NOAA MRMS Radar</span> · Free</div>
+      <div style="font-size:11px;color:var(--muted);">Source: NOAA MRMS Radar · Free</div>
     </div>
 
     <div style="padding:16px 18px;display:flex;flex-direction:column;gap:0;">
 
-      <!-- ── Search City / ZIP ─────────────────────────────────────── -->
+      <!-- ── STEP 1: Pick a Storm Date ─────────────────────────────────── -->
+      <div style="background:linear-gradient(135deg,rgba(99,102,241,.15),rgba(99,102,241,.05));border:1px solid rgba(99,102,241,.4);border-radius:12px;padding:14px 16px;margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:700;color:#818cf8;letter-spacing:.7px;margin-bottom:8px;">STEP 1 — PICK A STORM DATE</div>
+        <select id="storm-date-sel2" onchange="loadMrmsForDate(this.value)"
+          style="width:100%;background:var(--bg);border:1px solid rgba(99,102,241,.5);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;font-weight:600;cursor:pointer;outline:none;">
+          <option value="">— Loading storm dates… —</option>
+        </select>
+        <div id="storm-date-status2" style="font-size:11px;color:var(--mid);min-height:16px;margin-top:6px;"></div>
+        <!-- Legend -->
+        <div style="display:flex;gap:10px;font-size:10px;color:var(--mid);flex-wrap:wrap;margin-top:8px;">
+          <span style="display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;border-radius:2px;background:#FBBF24;display:inline-block;"></span>Penny 0.75"</span>
+          <span style="display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;border-radius:2px;background:#F59E0B;display:inline-block;"></span>Quarter 1.0"</span>
+          <span style="display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;border-radius:2px;background:#F97316;display:inline-block;"></span>Golf Ball 1.5"</span>
+          <span style="display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;border-radius:2px;background:#EF4444;display:inline-block;"></span>Baseball+ 2.0"</span>
+        </div>
+      </div>
+
+      <!-- ── STEP 2: Draw Area to Get Homes ─────────────────────────────── -->
+      <div style="background:linear-gradient(135deg,rgba(242,92,5,.12),rgba(242,92,5,.04));border:1px solid rgba(242,92,5,.4);border-radius:12px;padding:14px 16px;margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:700;color:#F25C05;letter-spacing:.7px;margin-bottom:8px;">STEP 2 — DRAW INSIDE THE RED AREA</div>
+        <div style="font-size:12px;color:var(--mid);margin-bottom:12px;line-height:1.5;">
+          After picking a date, the hail swath appears on the map in red. Draw a box <strong style="color:var(--text);">inside the red</strong> to get all homes in that area.
+        </div>
+        <button onclick="stormStartDrawAndGoMap()" style="width:100%;background:#F25C05;color:#fff;border:none;border-radius:9px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;letter-spacing:.3px;">✏️ Draw Area to Get Homes</button>
+        <button onclick="clearStormLeadMarkers()" style="width:100%;background:none;border:1px solid var(--border);color:var(--mid);border-radius:9px;padding:10px;font-size:12px;cursor:pointer;">Clear Storm Pins</button>
+      </div>
+
+      <!-- ── Search City / ZIP ─────────────────────────────────────────── -->
       <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:14px;">
         <div style="font-size:11px;font-weight:700;color:var(--mid);letter-spacing:.6px;margin-bottom:8px;">📍 SEARCH CITY OR ZIP</div>
         <div style="display:flex;gap:8px;">
@@ -24,7 +51,7 @@
         <div id="storm-search-status2" style="font-size:11px;color:var(--mid);min-height:16px;margin-top:6px;"></div>
       </div>
 
-      <!-- ── Hail Reports (SPC) ─────────────────────────────────────── -->
+      <!-- ── Hail Reports (SPC) ─────────────────────────────────────────── -->
       <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:14px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
           <div style="font-size:14px;font-weight:700;color:#60a5fa;">🌩️ Hail Reports <span style="font-size:9px;background:#1e3a5f;color:#93c5fd;border-radius:4px;padding:2px 6px;margin-left:4px;font-weight:600;">SPC</span></div>
@@ -35,6 +62,7 @@
             </div>
           </label>
         </div>
+        <div style="font-size:11px;color:var(--mid);">Ground-truth hail reports from storm chasers (SPC). Use with MRMS for confirmation.</div>
         <div id="hail-controls2" style="display:none;margin-top:10px;">
           <div style="margin-bottom:10px;">
             <label style="font-size:10px;font-weight:700;color:var(--mid);letter-spacing:.5px;display:block;margin-bottom:5px;">DATE RANGE</label>
@@ -59,39 +87,11 @@
               <option value="2.00">2.00"+ (Baseball+)</option>
             </select>
           </div>
-          <div style="display:flex;gap:10px;font-size:11px;color:var(--mid);flex-wrap:wrap;margin-bottom:6px;">
-            <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#FBBF24;display:inline-block;"></span>Penny</span>
-            <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#F59E0B;display:inline-block;"></span>Quarter</span>
-            <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#F97316;display:inline-block;"></span>Golf Ball</span>
-            <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#EF4444;display:inline-block;"></span>Baseball+</span>
-          </div>
           <div id="storm-status2" style="font-size:11px;color:var(--mid);text-align:center;min-height:16px;"></div>
         </div>
       </div>
 
-      <!-- ── MRMS Radar Swaths ──────────────────────────────────────── -->
-      <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:14px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-          <div style="font-size:14px;font-weight:700;color:#818cf8;">🧊 Hail Impact Zone <span style="font-size:9px;background:#312e81;color:#c7d2fe;border-radius:4px;padding:2px 6px;margin-left:4px;font-weight:600;">MRMS</span></div>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-            <span style="font-size:11px;color:var(--muted);" id="mrms-toggle-lbl2">OFF</span>
-            <div onclick="toggleMrmsLayerSync()" id="mrms-toggle-track2" style="width:40px;height:22px;border-radius:11px;background:#374151;cursor:pointer;position:relative;transition:background .2s;">
-              <div id="mrms-toggle-thumb2" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#9ca3af;transition:all .2s;"></div>
-            </div>
-          </label>
-        </div>
-        <div id="mrms-status2" style="font-size:11px;color:var(--mid);min-height:16px;margin-top:4px;">🔍 Zoom into a city on the map to see 1km radar hail swaths</div>
-      </div>
-
-      <!-- ── Storm Alert: Auto-Drop Pins ───────────────────────────── -->
-      <div style="background:linear-gradient(135deg,rgba(242,92,5,.12),rgba(242,92,5,.04));border:1px solid rgba(242,92,5,.4);border-radius:12px;padding:14px 16px;margin-bottom:14px;">
-        <div style="font-size:14px;font-weight:700;color:#F25C05;margin-bottom:6px;">⚡ Storm Alert — Auto-Drop Pins</div>
-        <div style="font-size:12px;color:var(--mid);margin-bottom:12px;line-height:1.5;">Enable MRMS Radar Swaths above, then tap below to load every home <strong style="color:var(--text);">inside the hail swath</strong> — not the whole map view.</div>
-        <button onclick="stormLeadsGetAddresses()" style="width:100%;background:#F25C05;color:#fff;border:none;border-radius:9px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;letter-spacing:.3px;">🏠 Get Homes in This Area</button>
-        <button onclick="clearStormLeadMarkers()" style="width:100%;background:none;border:1px solid var(--border);color:var(--mid);border-radius:9px;padding:10px;font-size:12px;cursor:pointer;">Clear Storm Pins</button>
-      </div>
-
-      <!-- ── Wind Layer ─────────────────────────────────────────────── -->
+      <!-- ── Wind Layer ─────────────────────────────────────────────────── -->
       <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:14px;">
         <div style="display:flex;align-items:center;justify-content:space-between;">
           <div style="font-size:14px;font-weight:700;color:#34d399;">💨 Wind 50 MPH+ (90 days)</div>
@@ -105,7 +105,7 @@
         <div id="wind-status2" style="font-size:11px;color:var(--mid);min-height:16px;margin-top:4px;"></div>
       </div>
 
-      <!-- ── Hail History by Address ────────────────────────────────── -->
+      <!-- ── Hail History by Address ────────────────────────────────────── -->
       <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:80px;">
         <div style="font-size:14px;font-weight:700;color:#f59e0b;margin-bottom:10px;">🔎 Hail History by Address</div>
         <div style="display:flex;gap:8px;margin-bottom:8px;">
