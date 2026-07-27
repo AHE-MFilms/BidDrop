@@ -19,7 +19,8 @@ const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const TABLE = 'mrms_hail_events';
 
 // Max rows to return per request (prevents massive payloads)
-const MAX_ROWS = 5000;
+// 20k rows covers a full metro area in one fetch (~200km radius at 0.01° grid)
+const MAX_ROWS = 20000;
 
 export default async function handler(req, res) {
   // CORS

@@ -14,9 +14,13 @@
 // storm panel toggles.
 
 let _mrmsLayers = [];       // Leaflet rectangle layers
-let _mrmsData   = [];       // raw fetched rows
+let _mrmsData   = [];       // raw fetched rows — full cached dataset
 let _mrmsLoaded = false;    // whether data has been fetched for current settings
 let _mrmsVisible = false;   // whether the MRMS layer is currently shown
+let _mrmsFetchBounds = null; // the large bbox used for the last fetch
+let _mrmsLastDays = null;    // days param used for last fetch
+let _mrmsLastMinSize = null; // minSize param used for last fetch
+let _mrmsFetching = false;   // prevent concurrent fetches
 
 // Grid cell half-size in degrees (~1km at CONUS latitudes)
 // MRMS data is on a 0.01° grid; use 0.005° half-size so cells tile edge-to-edge
@@ -77,6 +81,7 @@ const MRMS_MIN_ZOOM = 6; // state/regional level — cells are ~1km, visible fro
 
 async function fetchMrmsData() {
   const statusEl = document.getElementById('mrms-status');
+  if (_mrmsFetching) return; // prevent concurrent fetches
 
   // Gate: only render MRMS when zoomed in enough to see 1km cells
   let currentZoom = 0;
@@ -87,30 +92,48 @@ async function fetchMrmsData() {
     return;
   }
 
-  if (statusEl) statusEl.textContent = 'Loading MRMS radar data…';
-
   const days    = parseInt(document.getElementById('storm-days')?.value || '30') || 30;
   const minSize = parseFloat(document.getElementById('storm-min-size')?.value || '0.75') || 0.75;
 
-  // Get current map bounds for the bounding box query
-  let bounds;
-  try {
-    bounds = map.getBounds();
-  } catch(e) {
+  // Get current map center
+  let center;
+  try { center = map.getCenter(); } catch(e) {
     if (statusEl) statusEl.textContent = 'Map not ready.';
     return;
   }
 
-  const sw = bounds.getSouthWest();
-  const ne = bounds.getNorthEast();
+  // Use a large fixed bbox (±5° around center) so one fetch covers the whole metro area.
+  // Only re-fetch if: settings changed, or user has panned outside the cached bbox.
+  const FETCH_PAD = 5.0; // degrees — covers ~550km radius, one fetch per metro
+  const needRefetch = !_mrmsFetchBounds
+    || days !== _mrmsLastDays
+    || minSize !== _mrmsLastMinSize
+    || center.lat < _mrmsFetchBounds.swLat + 1.0
+    || center.lat > _mrmsFetchBounds.neLat - 1.0
+    || center.lng < _mrmsFetchBounds.swLng + 1.0
+    || center.lng > _mrmsFetchBounds.neLng - 1.0;
 
-  // Expand bounds slightly so cells on the edge are included
-  const pad = 0.5;
+  if (!needRefetch && _mrmsLoaded) {
+    // Data is still good — just re-render from cache (no network call)
+    renderMrmsLayerFromData();
+    return;
+  }
+
+  if (statusEl) statusEl.textContent = 'Loading MRMS radar data…';
+  _mrmsFetching = true;
+
+  const fetchBounds = {
+    swLat: center.lat - FETCH_PAD,
+    swLng: center.lng - FETCH_PAD,
+    neLat: center.lat + FETCH_PAD,
+    neLng: center.lng + FETCH_PAD,
+  };
+
   const params = new URLSearchParams({
-    swLat:   (sw.lat - pad).toFixed(4),
-    swLng:   (sw.lng - pad).toFixed(4),
-    neLat:   (ne.lat + pad).toFixed(4),
-    neLng:   (ne.lng + pad).toFixed(4),
+    swLat:   fetchBounds.swLat.toFixed(4),
+    swLng:   fetchBounds.swLng.toFixed(4),
+    neLat:   fetchBounds.neLat.toFixed(4),
+    neLng:   fetchBounds.neLng.toFixed(4),
     days:    String(days),
     minSize: String(minSize),
   });
@@ -120,7 +143,6 @@ async function fetchMrmsData() {
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
       console.warn('[MRMS] API error:', resp.status, err);
-      // Graceful fallback — if table doesn't exist yet, show a friendly message
       if (statusEl) {
         statusEl.textContent = resp.status === 404 || resp.status === 400
           ? 'MRMS data not yet available — runs nightly.'
@@ -130,10 +152,15 @@ async function fetchMrmsData() {
     }
     _mrmsData = await resp.json();
     _mrmsLoaded = true;
+    _mrmsFetchBounds = fetchBounds;
+    _mrmsLastDays = days;
+    _mrmsLastMinSize = minSize;
     renderMrmsLayerFromData();
   } catch(e) {
     console.warn('[MRMS] Fetch failed:', e.message);
     if (statusEl) statusEl.textContent = 'MRMS data unavailable.';
+  } finally {
+    _mrmsFetching = false;
   }
 }
 
@@ -357,16 +384,15 @@ window.showPinHailHistory = async function(pid, address, lat, lon) {
   }
 };
 
-// Re-fetch when map is panned/zoomed (debounced) so we always show
-// the current viewport's data
+// On pan/zoom: re-render from cache (no refetch unless we've moved far outside cached area)
 let _mrmsDebounce = null;
 function onMapMoveForMrms() {
   if (!_mrmsVisible) return;
   clearTimeout(_mrmsDebounce);
   _mrmsDebounce = setTimeout(() => {
-    _mrmsLoaded = false;
+    // fetchMrmsData checks if a refetch is needed; if not, just re-renders from cache
     fetchMrmsData();
-  }, 800);
+  }, 400);
 }
 
 // Hook into the map's moveend event once the map is ready
