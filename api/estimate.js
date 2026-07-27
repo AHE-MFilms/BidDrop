@@ -323,6 +323,15 @@ export default async function handler(req, res) {
           financingDown: acct.financing_down || 0,
           // Server-computed per-material prices — raw cost/overhead/margin NOT sent to browser
           prices:            serverPrices,
+          // Which material options to show on the estimate page (controlled by Settings → Pricing checkboxes)
+          enabledMats: {
+            arch:   pcfg.matArch   !== false,  // default ON
+            des:    !!pcfg.matDes,
+            impact: !!pcfg.matImpact,
+            metal:  !!pcfg.matMetal,
+            flat:   !!pcfg.matFlat,
+            tile:   !!pcfg.matTile,
+          },
           estimatePageCountdown: acct.estimate_page_countdown || false,
           estimatePageExpiresDays: acct.estimate_page_expires_days || null,
           companyBio:    acct.company_bio    || '',
