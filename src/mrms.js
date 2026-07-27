@@ -165,27 +165,14 @@ window.loadMrmsForDate = async function(date) {
     const centerLat = (Math.min(...lats) + Math.max(...lats)) / 2;
     const centerLon = (Math.min(...lons) + Math.max(...lons)) / 2;
 
-    // Reverse-geocode the center to get a human-readable region name
-    let regionName = `${centerLat.toFixed(1)}°N, ${Math.abs(centerLon).toFixed(1)}°W`;
-    try {
-      const geoResp = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${centerLat}&lon=${centerLon}&zoom=6`);
-      if (geoResp.ok) {
-        const geoData = await geoResp.json();
-        const addr = geoData.address || {};
-        regionName = addr.state || addr.county || addr.city || regionName;
-        if (addr.country && addr.country !== 'United States') regionName += `, ${addr.country}`;
-      }
-    } catch(e) {}
-
-    // Update status with region info and a fly-to button
-    const regionMsg = `${_mrmsData.length.toLocaleString()} hail cells — centered on <strong>${regionName}</strong>`;
+    // Show cell count with a View on Map button — no external geocode call (CSP blocked)
+    const regionMsg = `${_mrmsData.length.toLocaleString()} hail cells loaded`;
     ['storm-date-status','storm-date-status2'].forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.innerHTML = `${regionMsg} &nbsp;<button onclick="_mrmsFlyCenterAndGoMap(${centerLat},${centerLon})" style="background:#6366f1;color:#fff;border:none;border-radius:5px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;">View on Map</button>`;
+      if (el) el.innerHTML = `${regionMsg} &nbsp;<button onclick="_mrmsFlyCenterAndGoMap(${centerLat.toFixed(4)},${centerLon.toFixed(4)})" style="background:#6366f1;color:#fff;border:none;border-radius:5px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;">\ud83d\uddfa\ufe0f View Swath</button> &nbsp;<span style="font-size:10px;color:var(--mid);">or search your city above</span>`;
     });
 
     // Don't auto-fly — rep may be working a different city
-    // They can click 'View on Map' or search their own city
 
   } catch(e) {
     console.warn('[MRMS] loadMrmsForDate error:', e.message);
