@@ -305,16 +305,22 @@ async function loadCampaignsTab(){
       const statusColor = c.status==='active'?'var(--accent)':c.status==='completed'?'#22C55E':'var(--muted)';
       const pct = c.home_count ? Math.round((c.postcards_sent||0)/c.home_count*100) : 0;
       const barW = Math.min(pct,100);
-      // Campaign name: short address + Part N if there are multiple from same address
+      // Campaign name: prefer explicit campaign_name, fall back to address-based name
       const addrKey = (c.source_address||'').toLowerCase().trim();
       const totalForAddr = _addrCount[addrKey]||1;
       const partNum = _campPart[c.id]||1;
       const shortAddr = (c.source_address||'Unknown address').split(',')[0];
-      const campName = totalForAddr > 1 ? shortAddr + ' — Part ' + partNum : shortAddr;
+      const addrFallback = totalForAddr > 1 ? shortAddr + ' \u2014 Part ' + partNum : shortAddr;
+      const campName = c.campaign_name || addrFallback;
+      // Escape id for use in HTML attributes (single-quote safe)
+      const safeId = c.id.replace(/'/g,'&#39;');
       return `<div style="padding:16px 20px;border-bottom:1px solid var(--border);">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
           <div style="flex:1;min-width:200px;">
-            <div style="font-weight:700;color:var(--text);font-size:13px;margin-bottom:3px;">&#128205; ${escHtml(campName)}</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+              <span style="font-size:13px;">&#128205;</span>
+              <span id="camp-name-${safeId}" style="font-weight:700;color:var(--text);font-size:13px;cursor:pointer;border-bottom:1px dashed var(--border);" title="Click to rename" onclick="campaignStartRename('${safeId}')">${escHtml(campName)}</span>
+            </div>
             <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">${dateStr} &middot; ${escHtml(c.rep_email||'')} &middot; <strong style="color:var(--text);">${c.home_count||0} homes</strong>${c.design_name ? ' &middot; <span style="color:var(--accent);">\ud83d\udcec '+escHtml(c.design_name)+'</span>' : ''}</div>
             <div style="display:flex;gap:16px;font-size:11px;flex-wrap:wrap;">
               <span style="color:#3B82F6;">&#8679; ${c.ghl_pushed||0} to GHL</span>
@@ -324,11 +330,14 @@ async function loadCampaignsTab(){
             </div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
-            <span style="background:rgba(242,92,5,.1);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;color:${statusColor};text-transform:uppercase;letter-spacing:.5px;">${c.status||'active'}</span>
-            <div style="display:flex;gap:6px;">
-              <button onclick="campaignViewPins('${escHtml(c.id)}')" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--mid);font-size:10px;font-weight:700;cursor:pointer;">View Pins</button>
-              <button onclick="campaignAddToQueue('${escHtml(c.id)}')" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--mid);font-size:10px;font-weight:700;cursor:pointer;">&#128236; Queue Mail</button>
-              <button onclick="openCampaignQRStats('${escHtml(c.id)}')" style="background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.4);border-radius:6px;padding:5px 10px;color:#60a5fa;font-size:10px;font-weight:700;cursor:pointer;">&#128202; QR Stats</button>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="background:rgba(242,92,5,.1);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;color:${statusColor};text-transform:uppercase;letter-spacing:.5px;">${c.status||'active'}</span>
+              <button onclick="campaignDelete('${safeId}')" title="Delete campaign" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:6px;padding:5px 8px;color:#ef4444;font-size:11px;cursor:pointer;" >&#128465;</button>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+              <button onclick="campaignViewPins('${safeId}')" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--mid);font-size:10px;font-weight:700;cursor:pointer;">View Pins</button>
+              <button onclick="campaignAddToQueue('${safeId}')" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--mid);font-size:10px;font-weight:700;cursor:pointer;">&#128236; Queue Mail</button>
+              <button onclick="openCampaignQRStats('${safeId}')" style="background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.4);border-radius:6px;padding:5px 10px;color:#60a5fa;font-size:10px;font-weight:700;cursor:pointer;">&#128202; QR Stats</button>
             </div>
           </div>
         </div>
@@ -346,7 +355,11 @@ function campaignViewPins(campaignId){
   goTab('map');
   setTimeout(function(){
     const campPins = S.pins.filter(p=>p.campaign_id===campaignId && !p.deleted_at);
-    if(!campPins.length){ toast('No pins found for this campaign','info'); return; }
+    if(!campPins.length){
+      // No pins yet — still go to map and show a helpful message
+      toast('No pins yet for this campaign — draw on the map to add homes','info');
+      return;
+    }
     // Highlight pins on map
     campPins.forEach(function(p){
       const m = markers[p.id];
@@ -378,6 +391,54 @@ function campaignViewPins(campaignId){
     }, 30000);
     toast('Showing '+campPins.length+' campaign pins','success');
   }, 300);
+}
+
+// Inline rename: replace the name span with an input
+function campaignStartRename(campaignId){
+  const span = document.getElementById('camp-name-'+campaignId);
+  if(!span) return;
+  const currentName = span.textContent.trim();
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = currentName;
+  input.style.cssText = 'font-weight:700;color:var(--text);font-size:13px;background:var(--card2);border:1px solid var(--accent);border-radius:4px;padding:2px 6px;width:200px;outline:none;';
+  span.replaceWith(input);
+  input.focus();
+  input.select();
+  async function saveRename(){
+    const newName = input.value.trim();
+    if(!newName || newName === currentName){
+      // Restore original span
+      input.replaceWith(span);
+      return;
+    }
+    input.disabled = true;
+    try{
+      await adminAPI('campaign-update', { campaignId: campaignId, updates: { campaign_name: newName } });
+      span.textContent = newName;
+      toast('Campaign renamed','success');
+    } catch(e){
+      toast('Rename failed: '+e.message,'error');
+    }
+    input.replaceWith(span);
+  }
+  input.addEventListener('blur', saveRename);
+  input.addEventListener('keydown', function(e){
+    if(e.key==='Enter'){ e.preventDefault(); input.blur(); }
+    if(e.key==='Escape'){ input.value = currentName; input.blur(); }
+  });
+}
+
+// Delete a campaign with confirmation
+async function campaignDelete(campaignId){
+  if(!confirm('Delete this campaign? This cannot be undone.')) return;
+  try{
+    await adminAPI('campaign-delete', { campaignId: campaignId });
+    toast('Campaign deleted','success');
+    loadCampaignsTab();
+  } catch(e){
+    toast('Delete failed: '+e.message,'error');
+  }
 }
 
 function campaignAddToQueue(campaignId){

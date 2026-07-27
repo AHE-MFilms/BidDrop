@@ -250,7 +250,9 @@ async function handle(action, req, res, ctx) {
           /* ── SuperAdmin global postcard defaults (Build 16) ── */
           `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS global_postcard_defaults JSONB`,
           /* ── SuperAdmin global content defaults / CMS (Build 17) ── */
-          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS global_content_defaults JSONB`
+          `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS global_content_defaults JSONB`,
+          /* ── Campaign name field (Build 18) ── */
+          `ALTER TABLE campaign_targets ADD COLUMN IF NOT EXISTS campaign_name TEXT`
         ].join('; ');
         const results = [];
         // Run each DDL statement individually via Supabase pg_meta API (uses SERVICE_KEY)
@@ -555,7 +557,7 @@ async function handle(action, req, res, ctx) {
         return res.status(r.ok ? 200 : r.status).json({ ok: r.ok, status: r.status, body: body.substring(0, 200) });
       }
       case 'campaign-update': {
-        // Update an existing campaign record (e.g. postcards_sent, ghl_pushed)
+        // Update an existing campaign record (e.g. postcards_sent, ghl_pushed, campaign_name)
         const { campaignId, updates } = req.body;
         if (!campaignId || !updates) { res.status(400).json({ error: 'campaignId and updates required' }); return; }
         const r = await sbFetch(`campaign_targets?id=eq.${campaignId}`, {
@@ -563,6 +565,21 @@ async function handle(action, req, res, ctx) {
           body: JSON.stringify(updates)
         });
         return res.status(r.ok ? 200 : r.status).json({ ok: r.ok });
+      }
+      case 'campaign-delete': {
+        // Delete a campaign record (hard delete — irreversible)
+        const { campaignId: delCampId } = req.body;
+        if (!delCampId) { res.status(400).json({ error: 'campaignId required' }); return; }
+        // Verify ownership (non-superadmin can only delete their own account's campaigns)
+        if (!isSuperAdmin) {
+          const ownerCheck = await sbFetch(`campaign_targets?id=eq.${delCampId}&account_id=eq.${effectiveAccountId}&select=id&limit=1`);
+          if (ownerCheck.ok) {
+            const rows = await ownerCheck.json();
+            if (!rows.length) { res.status(403).json({ error: 'Campaign not found or not yours' }); return; }
+          }
+        }
+        const delR = await sbFetch(`campaign_targets?id=eq.${delCampId}`, { method: 'DELETE' });
+        return res.status(delR.ok ? 200 : delR.status).json({ ok: delR.ok });
       }
       case 'campaign-list': {
         // List campaigns for an account, most recent first
