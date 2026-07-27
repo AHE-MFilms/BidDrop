@@ -643,6 +643,10 @@ window.stormStartDraw = function() {
     _slDrawLayer = e.layer;
     _slDrawLayer.addTo(map);
     _slDrawRect = null;
+    // Set a cooldown so the mouseup that completed the rectangle doesn't
+    // immediately trigger onMapClick and open the Pin This Home modal
+    window._slDrawCooldown = true;
+    setTimeout(() => { window._slDrawCooldown = false; }, 1500);
     if (btn) { btn.textContent = '✏️ Draw Area to Get Homes'; btn.style.background = '#6366F1'; }
     if (hint) hint.style.display = 'none';
 
