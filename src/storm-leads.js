@@ -13,17 +13,30 @@ window.stormLeadsGetAddresses = async function() {
   const statusEl = document.getElementById('mrms-status');
   const btn = document.getElementById('btn-storm-leads');
 
-  // Prefer the tight MRMS swath bounding box (only cells with actual hail data).
-  // Fall back to the full map viewport if no MRMS data is loaded.
+  // Option D: intersect the current map viewport with the MRMS swath bounding box.
+  // This means: zoom into the area you want to work, then tap Get Homes.
+  // Only homes that are BOTH visible on screen AND inside a hail cell will be returned.
+  const vBounds = map.getBounds();
+  const vSwLat = vBounds.getSouthWest().lat;
+  const vSwLng = vBounds.getSouthWest().lng;
+  const vNeLat = vBounds.getNorthEast().lat;
+  const vNeLng = vBounds.getNorthEast().lng;
+
   let swLat, swLng, neLat, neLng;
   if (window._mrmsSwathBounds) {
-    ({ swLat, swLng, neLat, neLng } = window._mrmsSwathBounds);
+    // Intersect viewport with swath bounds — use the tighter of the two
+    swLat = Math.max(vSwLat, window._mrmsSwathBounds.swLat);
+    swLng = Math.max(vSwLng, window._mrmsSwathBounds.swLng);
+    neLat = Math.min(vNeLat, window._mrmsSwathBounds.neLat);
+    neLng = Math.min(vNeLng, window._mrmsSwathBounds.neLng);
+    // If viewport doesn't overlap the swath at all, warn and use viewport
+    if (swLat >= neLat || swLng >= neLng) {
+      toast('⚠️ Your map view is outside the hail swath. Pan into the swath and try again.', 'warning');
+      return;
+    }
   } else {
-    const bounds = map.getBounds();
-    swLat = bounds.getSouthWest().lat;
-    swLng = bounds.getSouthWest().lng;
-    neLat = bounds.getNorthEast().lat;
-    neLng = bounds.getNorthEast().lng;
+    // No MRMS swath loaded — just use the viewport
+    swLat = vSwLat; swLng = vSwLng; neLat = vNeLat; neLng = vNeLng;
   }
 
   // Derive storm context from MRMS data if available
