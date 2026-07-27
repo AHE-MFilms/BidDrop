@@ -310,6 +310,30 @@ async function fetchMrmsData() {
   }
 }
 
+// Simple convex hull (gift wrapping) for a set of [lat,lon] points
+function _convexHull(points) {
+  if (points.length < 3) return points;
+  // Find leftmost point
+  let start = 0;
+  for (let i = 1; i < points.length; i++) {
+    if (points[i][1] < points[start][1]) start = i;
+  }
+  const hull = [];
+  let current = start;
+  do {
+    hull.push(points[current]);
+    let next = (current + 1) % points.length;
+    for (let i = 0; i < points.length; i++) {
+      // Cross product to find most counter-clockwise point
+      const cross = (points[next][0] - points[current][0]) * (points[i][1] - points[current][1])
+                  - (points[next][1] - points[current][1]) * (points[i][0] - points[current][0]);
+      if (cross < 0) next = i;
+    }
+    current = next;
+  } while (current !== start && hull.length <= points.length);
+  return hull;
+}
+
 function renderMrmsLayerFromData() {
   clearMrmsLayerOnly();
   const statusEl = document.getElementById('mrms-status');
@@ -323,6 +347,106 @@ function renderMrmsLayerFromData() {
     if (statusEl) statusEl.textContent = msg;
     if (statusEl2) statusEl2.textContent = msg;
     return;
+  }
+
+  // ── Draw swath outline polygon (visible at any zoom) ──────────────────────
+  // Group cells into a bounding-box polygon with a convex hull approximation
+  // Use a grid-based approach: collect unique grid cells and build a filled region
+  try {
+    const lats = filtered.map(r => parseFloat(r.lat));
+    const lons = filtered.map(r => parseFloat(r.lon));
+    const minLat = Math.min(...lats) - CELL_HALF;
+    const maxLat = Math.max(...lats) + CELL_HALF;
+    const minLon = Math.min(...lons) - CELL_HALF;
+    const maxLon = Math.max(...lons) + CELL_HALF;
+
+    // Sample points for hull (every Nth point to avoid freezing with 50k+ cells)
+    const HULL_SAMPLE = Math.max(1, Math.floor(filtered.length / 500));
+    const sampledPoints = filtered
+      .filter((_, i) => i % HULL_SAMPLE === 0)
+      .map(r => [parseFloat(r.lat), parseFloat(r.lon)]);
+
+    // Compute convex hull of sampled cell centers
+    const hull = _convexHull(sampledPoints);
+    const hullExpanded = hull;
+
+    // Draw the swath outline polygon — semi-transparent fill, bold red border
+    const swathPoly = L.polygon(hullExpanded, {
+      color: '#EF4444',
+      weight: 2,
+      opacity: 0.9,
+      fillColor: '#EF4444',
+      fillOpacity: 0.15,
+      dashArray: null,
+      className: 'mrms-swath-outline',
+    });
+    swathPoly.addTo(map);
+    _mrmsLayers.push(swathPoly);
+
+    // Also draw a bounding box as a dashed outline for context
+    const bboxPoly = L.rectangle([[minLat, minLon], [maxLat, maxLon]], {
+      color: '#EF4444',
+      weight: 1.5,
+      opacity: 0.4,
+      fill: false,
+      dashArray: '6 4',
+    });
+    bboxPoly.addTo(map);
+    _mrmsLayers.push(bboxPoly);
+
+    // Add a pulsing center marker
+    const centerLat = (minLat + maxLat) / 2;
+    const centerLon = (minLon + maxLon) / 2;
+    const maxSize = Math.max(...filtered.map(r => parseFloat(r.hail_size_in)));
+    const { label: maxLabel } = hailColor(maxSize);
+    const centerIcon = L.divIcon({
+      className: '',
+      html: `<div style="
+        background:#EF4444;
+        color:#fff;
+        border-radius:50%;
+        width:44px;height:44px;
+        display:flex;align-items:center;justify-content:center;
+        font-size:10px;font-weight:700;text-align:center;line-height:1.2;
+        border:3px solid #fff;
+        box-shadow:0 0 0 3px #EF4444,0 2px 8px rgba(0,0,0,.4);
+        animation:mrms-pulse 2s infinite;
+      ">🧊<br>${maxSize.toFixed(1)}&quot;</div>
+      <style>@keyframes mrms-pulse{0%,100%{box-shadow:0 0 0 3px #EF4444,0 2px 8px rgba(0,0,0,.4)}50%{box-shadow:0 0 0 8px rgba(239,68,68,.3),0 2px 8px rgba(0,0,0,.4)}}</style>`,
+      iconSize: [44, 44],
+      iconAnchor: [22, 22],
+    });
+    const centerMarker = L.marker([centerLat, centerLon], { icon: centerIcon, zIndexOffset: 1000 });
+    centerMarker.bindPopup(`<div style="font-family:sans-serif;color:#fff;">
+      <b>🧊 Storm Center</b><br>
+      Max hail: ${maxSize.toFixed(2)}&quot; (${maxLabel})<br>
+      ${filtered.length.toLocaleString()} radar cells<br>
+      <small style="color:#d1d5db">${_mrmsActiveDate || ''}</small>
+    </div>`);
+    centerMarker.addTo(map);
+    _mrmsLayers.push(centerMarker);
+  } catch(e) {
+    console.warn('[MRMS] Swath outline error:', e.message);
+  }
+
+  // Only render individual 1km cells at zoom 10+ (they're invisible at lower zooms)
+  let currentZoom = 8;
+  try { currentZoom = map.getZoom(); } catch(e) {}
+  const showCells = currentZoom >= 10;
+
+  // Re-render cells when user zooms in
+  if (!map._mrmsZoomListener) {
+    map._mrmsZoomListener = true;
+    map.on('zoomend', () => {
+      const z = map.getZoom();
+      // Show/hide cell rectangles based on zoom
+      _mrmsLayers.forEach(l => {
+        if (l._isMrmsCellRect) {
+          if (z >= 10) { try { l.setStyle({ fillOpacity: 0.55 }); } catch(e){} }
+          else { try { l.setStyle({ fillOpacity: 0 }); } catch(e){} }
+        }
+      });
+    });
   }
 
   filtered.forEach(r => {
@@ -342,8 +466,9 @@ function renderMrmsLayerFromData() {
       color:       color,
       fillColor:   color,
       weight:      0,
-      fillOpacity: 0.55,
+      fillOpacity: showCells ? 0.55 : 0,
     });
+    rect._isMrmsCellRect = true;
 
     const popupHtml = `
       <div style="font-family:sans-serif;min-width:210px;">

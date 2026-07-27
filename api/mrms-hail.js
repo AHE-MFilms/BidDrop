@@ -63,13 +63,14 @@ export default async function handler(req, res) {
   }
 
   // Build Supabase REST query
+  // NOTE: Do NOT include limit= param — use Range header instead to override
+  // Supabase's default 1,000-row cap. The limit= param takes precedence over Range.
   const params = new URLSearchParams({
     select: 'event_date,lat,lon,hail_size_in',
     ...dateFilter,
     lat: `gte.${sw_lat}`,
     hail_size_in: `gte.${minSizeIn}`,
     order: 'event_date.desc',
-    limit: String(maxRows),
   });
 
   // Supabase REST doesn't support BETWEEN directly — use the `and` query param
@@ -82,8 +83,10 @@ export default async function handler(req, res) {
         apikey: SUPABASE_KEY,
         Authorization: `Bearer ${SUPABASE_KEY}`,
         Accept: 'application/json',
-        // Request up to 80k rows for single-date queries
-        ...(maxRows > 20000 ? { 'Range-Unit': 'items', Range: `0-${maxRows - 1}` } : {}),
+        // Range header overrides Supabase's default 1,000-row limit
+        // For single-date: up to 80k rows; for multi-day: up to 20k rows
+        'Range-Unit': 'items',
+        'Range': `0-${maxRows - 1}`,
       },
       signal: AbortSignal.timeout(9000),
     });
