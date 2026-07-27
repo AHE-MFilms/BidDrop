@@ -13,30 +13,25 @@ window.stormLeadsGetAddresses = async function() {
   const statusEl = document.getElementById('mrms-status');
   const btn = document.getElementById('btn-storm-leads');
 
-  // Option D: intersect the current map viewport with the MRMS swath bounding box.
-  // This means: zoom into the area you want to work, then tap Get Homes.
-  // Only homes that are BOTH visible on screen AND inside a hail cell will be returned.
+  // Always use the current map VIEWPORT for the RentCast query.
+  // If MRMS swath data is loaded, we then filter the results client-side
+  // to only keep homes whose coordinates fall inside an actual hail cell.
+  // This way: zoom to any neighborhood, tap Get Homes, get back only the
+  // hail-hit homes in that neighborhood.
   const vBounds = map.getBounds();
-  const vSwLat = vBounds.getSouthWest().lat;
-  const vSwLng = vBounds.getSouthWest().lng;
-  const vNeLat = vBounds.getNorthEast().lat;
-  const vNeLng = vBounds.getNorthEast().lng;
+  const swLat = vBounds.getSouthWest().lat;
+  const swLng = vBounds.getSouthWest().lng;
+  const neLat = vBounds.getNorthEast().lat;
+  const neLng = vBounds.getNorthEast().lng;
 
-  let swLat, swLng, neLat, neLng;
+  // Check if viewport overlaps the swath at all (warn if completely outside)
   if (window._mrmsSwathBounds) {
-    // Intersect viewport with swath bounds — use the tighter of the two
-    swLat = Math.max(vSwLat, window._mrmsSwathBounds.swLat);
-    swLng = Math.max(vSwLng, window._mrmsSwathBounds.swLng);
-    neLat = Math.min(vNeLat, window._mrmsSwathBounds.neLat);
-    neLng = Math.min(vNeLng, window._mrmsSwathBounds.neLng);
-    // If viewport doesn't overlap the swath at all, warn and use viewport
-    if (swLat >= neLat || swLng >= neLng) {
-      toast('⚠️ Your map view is outside the hail swath. Pan into the swath and try again.', 'warning');
+    const sb = window._mrmsSwathBounds;
+    const noOverlap = swLat > sb.neLat || neLat < sb.swLat || swLng > sb.neLng || neLng < sb.swLng;
+    if (noOverlap) {
+      toast('⚠️ Your map view is outside the hail swath. Pan into the colored area and try again.', 'warning');
       return;
     }
-  } else {
-    // No MRMS swath loaded — just use the viewport
-    swLat = vSwLat; swLng = vSwLng; neLat = vNeLat; neLng = vNeLng;
   }
 
   // Derive storm context from MRMS data if available
@@ -45,16 +40,34 @@ window.stormLeadsGetAddresses = async function() {
 
   _slLoading = true;
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Loading…'; }
-  if (statusEl) statusEl.textContent = 'Fetching homes in storm swath…';
+  if (statusEl) statusEl.textContent = 'Fetching homes in view…';
 
   try {
+    // Pass viewport bounds + mrmsFilter flag so the API knows to return all homes
+    // in the viewport; client will filter to hail cells
     const data = await adminAPI('storm-leads-swath', { swLat, swLng, neLat, neLng, stormDate, stormCity });
     if (data.error) {
       toast('⚠️ ' + data.error, 'error');
       if (statusEl) statusEl.textContent = data.error;
       return;
     }
-    _slHomes       = data.homes || [];
+
+    let homes = data.homes || [];
+    const totalFetched = homes.length;
+
+    // Client-side filter: keep only homes inside an actual MRMS hail cell
+    if (window._mrmsCells && window._mrmsCells.length > 0) {
+      homes = homes.filter(h => _homeInMrmsCells(h.latitude, h.longitude));
+      if (homes.length === 0) {
+        toast('No hail-hit homes found in this view. Try panning into the colored swath area.', 'info');
+        if (statusEl) statusEl.textContent = `0 of ${totalFetched} homes in view are inside the hail swath.`;
+        if (btn) { btn.disabled = false; btn.textContent = '🏠 Get Homes in This Area'; }
+        _slLoading = false;
+        return;
+      }
+    }
+
+    _slHomes       = homes;
     _slCampaignId  = data.campaignId;
     _slCampaignName = data.campaignName;
 
@@ -63,7 +76,7 @@ window.stormLeadsGetAddresses = async function() {
     const locked   = _slHomes.filter(h => !h.unlocked).length;
     const unlocked = _slHomes.filter(h => h.unlocked).length;
     if (statusEl) {
-      statusEl.textContent = `${_slHomes.length} homes found — ${locked} locked · ${unlocked} unlocked`;
+      statusEl.textContent = `${_slHomes.length} hail-hit homes — ${locked} locked · ${unlocked} unlocked`;
     }
     if (btn) { btn.textContent = `🔄 Refresh (${_slHomes.length})`; }
 
@@ -77,6 +90,16 @@ window.stormLeadsGetAddresses = async function() {
     if (btn) btn.disabled = false;
   }
 };
+
+// Check if a lat/lng point falls inside any loaded MRMS hail cell (1km grid squares)
+function _homeInMrmsCells(lat, lng) {
+  if (!window._mrmsCells || !lat || !lng) return true; // no cells loaded = no filter
+  const cellSize = 0.009; // ~1km in degrees
+  return window._mrmsCells.some(c => {
+    return lat >= (c.lat - cellSize/2) && lat <= (c.lat + cellSize/2) &&
+           lng >= (c.lng - cellSize/2) && lng <= (c.lng + cellSize/2);
+  });
+}
 
 // ── Clear all storm lead markers ─────────────────────────────────────────────
 window.clearStormLeadMarkers = function() {

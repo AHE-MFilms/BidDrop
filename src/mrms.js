@@ -211,8 +211,15 @@ function renderMrmsLayerFromData() {
       neLat: Math.max(...lats) + CELL_HALF,
       neLng: Math.max(...lons) + CELL_HALF,
     };
+    // Export individual cell centers so storm-leads can do point-in-cell filtering
+    // Each cell is CELL_HALF degrees on each side (~0.5km radius)
+    window._mrmsCells = filtered.map(r => ({
+      lat: parseFloat(r.lat),
+      lng: parseFloat(r.lon),
+    }));
   } else {
     window._mrmsSwathBounds = null;
+    window._mrmsCells = [];
   }
 
   if (statusEl) {
