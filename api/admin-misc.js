@@ -791,14 +791,15 @@ async function handle(action, req, res, ctx) {
           return res.status(400).json({ error: 'swLat, swLng, neLat, neLng required' });
         }
         if (!RENTCAST_KEY) return res.status(500).json({ error: 'RENTCAST_KEY not configured' });
-        const SL_MAX = 500;
+        const SL_MAX = 2000; // allow up to 2000 homes per draw (16 tiles × 500 each, deduped)
         const sl_sw_lat = parseFloat(swLat), sl_ne_lat = parseFloat(neLat);
         const sl_sw_lng = parseFloat(swLng), sl_ne_lng = parseFloat(neLng);
-        // Tile the swath bounding box into overlapping 4-mile-radius circles so we
-        // cover the full footprint regardless of how large or elongated the swath is.
-        // 4 miles ≈ 0.058° lat; step by 6° so tiles overlap slightly.
-        const TILE_RADIUS_MI = 4;
-        const TILE_STEP_DEG  = 0.07; // ~4.8 miles — slight overlap
+        // Tile the swath bounding box into overlapping circles.
+        // Use a larger radius (8 miles) and bigger step (0.14°) so a typical
+        // neighbourhood draw needs only 1-4 tiles, covering the full rectangle
+        // without any cap. Each tile fetches up to 500 homes.
+        const TILE_RADIUS_MI = 8;
+        const TILE_STEP_DEG  = 0.14; // ~9.6 miles — slight overlap between tiles
         const tileCenters = [];
         for (let lat = sl_sw_lat + TILE_STEP_DEG / 2; lat < sl_ne_lat; lat += TILE_STEP_DEG) {
           for (let lng = sl_sw_lng + TILE_STEP_DEG / 2; lng < sl_ne_lng; lng += TILE_STEP_DEG) {
@@ -809,8 +810,8 @@ async function handle(action, req, res, ctx) {
         if (tileCenters.length === 0) {
           tileCenters.push({ lat: (sl_sw_lat + sl_ne_lat) / 2, lng: (sl_sw_lng + sl_ne_lng) / 2 });
         }
-        // Cap at 6 tiles to avoid hammering RentCast (each tile = 1 API call)
-        const MAX_TILES = 6;
+        // Hard cap at 16 tiles (covers a ~35×35 mile area) to stay within Vercel 300s limit
+        const MAX_TILES = 16;
         const selectedTiles = tileCenters.slice(0, MAX_TILES);
         try {
           // Fetch all tiles in parallel
@@ -819,7 +820,7 @@ async function handle(action, req, res, ctx) {
             const tmo = setTimeout(() => ctrl.abort(), 12000);
             try {
               const r = await fetch(
-                `https://api.rentcast.io/v1/properties?latitude=${tile.lat.toFixed(5)}&longitude=${tile.lng.toFixed(5)}&radius=${TILE_RADIUS_MI}&propertyType=Single+Family&limit=200`,
+                `https://api.rentcast.io/v1/properties?latitude=${tile.lat.toFixed(5)}&longitude=${tile.lng.toFixed(5)}&radius=${TILE_RADIUS_MI}&propertyType=Single+Family&limit=500`,
                 { headers: { 'X-Api-Key': RENTCAST_KEY }, signal: ctrl.signal }
               );
               clearTimeout(tmo);

@@ -689,8 +689,15 @@ async function _stormFetchInBounds(swLat, swLng, neLat, neLng) {
     let homes = data.homes || [];
     const totalFetched = homes.length;
 
-    // Filter to homes inside actual MRMS hail cells
-    if (window._mrmsCells && window._mrmsCells.length > 0) {
+    // Filter to homes inside actual MRMS hail cells.
+    // Skip the per-cell filter if the drawn rectangle is already fully inside
+    // the loaded MRMS swath bounds — every home in the box is hail-hit.
+    let skipCellFilter = false;
+    if (window._mrmsSwathBounds) {
+      const sb = window._mrmsSwathBounds;
+      skipCellFilter = (swLat >= sb.swLat && neLat <= sb.neLat && swLng >= sb.swLng && neLng <= sb.neLng);
+    }
+    if (!skipCellFilter && window._mrmsCells && window._mrmsCells.length > 0) {
       homes = homes.filter(h => _homeInMrmsCells(h.latitude, h.longitude));
     }
 
