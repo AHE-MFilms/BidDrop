@@ -67,6 +67,7 @@ window.stormLeadsGetAddresses = async function() {
 
 // ── Clear all storm lead markers ─────────────────────────────────────────────
 window.clearStormLeadMarkers = function() {
+  if (_slCluster) { try { _slCluster.clearLayers(); map.removeLayer(_slCluster); } catch(e){} _slCluster = null; }
   _slMarkers.forEach(m => { try { map.removeLayer(m); } catch(e){} });
   _slMarkers = [];
   _slHomes   = [];
@@ -75,23 +76,55 @@ window.clearStormLeadMarkers = function() {
   const bar = document.getElementById('storm-leads-bulk-bar');
   if (bar) bar.style.display = 'none';
   const btn = document.getElementById('btn-storm-leads');
-  if (btn) { btn.disabled = false; btn.textContent = '🏠 Get Addresses'; }
+  if (btn) { btn.disabled = false; btn.textContent = '🏠 Get Homes in This Area'; }
   const statusEl = document.getElementById('mrms-status');
   if (statusEl) statusEl.textContent = '';
 };
 
 // ── Render locked/unlocked markers ───────────────────────────────────────────
+// Leaflet.markercluster group (created once, reused)
+let _slCluster = null;
+
+function _getOrCreateCluster() {
+  if (_slCluster) return _slCluster;
+  // Use markercluster if available, otherwise fall back to plain layer group
+  if (window.L && L.markerClusterGroup) {
+    _slCluster = L.markerClusterGroup({
+      maxClusterRadius: 40,
+      iconCreateFunction: function(cluster) {
+        const count = cluster.getChildCount();
+        return L.divIcon({
+          className: '',
+          html: `<div style="width:38px;height:38px;background:#F25C05;border:3px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;box-shadow:0 2px 10px rgba(0,0,0,.6);">${count}</div>`,
+          iconSize: [38, 38],
+          iconAnchor: [19, 19],
+        });
+      },
+      spiderfyOnMaxZoom: true,
+      showCoverageOnHover: false,
+      zoomToBoundsOnClick: true,
+    });
+  } else {
+    _slCluster = L.layerGroup();
+  }
+  _slCluster.addTo(map);
+  return _slCluster;
+}
+
 function _renderStormLeadMarkers() {
   // Remove old markers
   _slMarkers.forEach(m => { try { map.removeLayer(m); } catch(e){} });
   _slMarkers = [];
+  if (_slCluster) { try { _slCluster.clearLayers(); } catch(e){} }
+
+  const cluster = _getOrCreateCluster();
 
   _slHomes.forEach(home => {
     if (!home.lat || !home.lon) return;
     const icon = home.unlocked ? _unlockedIcon() : _lockedIcon();
     const m = L.marker([home.lat, home.lon], { icon, zIndexOffset: 500 });
     m.bindPopup(_buildPopup(home), { maxWidth: 260 });
-    m.addTo(map);
+    cluster.addLayer(m);
     _slMarkers.push(m);
   });
 }
@@ -99,18 +132,18 @@ function _renderStormLeadMarkers() {
 function _lockedIcon() {
   return L.divIcon({
     className: '',
-    html: `<div style="width:22px;height:22px;background:rgba(242,92,5,0.35);border:2px solid #F25C05;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;box-shadow:0 2px 8px rgba(0,0,0,.5);">🔒</div>`,
-    iconSize:   [22, 22],
-    iconAnchor: [11, 11],
+    html: `<div style="width:30px;height:30px;background:#F25C05;border:2.5px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 10px rgba(0,0,0,.7);">🔒</div>`,
+    iconSize:   [30, 30],
+    iconAnchor: [15, 15],
   });
 }
 
 function _unlockedIcon() {
   return L.divIcon({
     className: '',
-    html: `<div style="width:22px;height:22px;background:#22C55E;border:2px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;box-shadow:0 2px 8px rgba(0,0,0,.5);">📍</div>`,
-    iconSize:   [22, 22],
-    iconAnchor: [11, 11],
+    html: `<div style="width:30px;height:30px;background:#22C55E;border:2.5px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 10px rgba(0,0,0,.7);">✅</div>`,
+    iconSize:   [30, 30],
+    iconAnchor: [15, 15],
   });
 }
 
