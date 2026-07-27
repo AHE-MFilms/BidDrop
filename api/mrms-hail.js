@@ -6,30 +6,28 @@
 //   swLat, swLng, neLat, neLng  — bounding box (required)
 //   days                        — how many days back to query (default: 90, max: 365)
 //   minSize                     — minimum hail size in inches (default: 0.5)
+//   exactDate                   — YYYY-MM-DD: fetch ONLY this date (overrides days)
+//                                 Uses higher row limit since it's a single day
 //
 // Returns JSON array of hail events:
 //   [{ event_date, lat, lon, hail_size_in }, ...]
-//
-// Required env vars:
-//   SUPABASE_URL
-//   SUPABASE_SERVICE_KEY  (already set in Vercel)
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://gtwbhxnrmfmdenogzuea.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const TABLE = 'mrms_hail_events';
 
-// Max rows to return per request (prevents massive payloads)
-// 20k rows covers a full metro area in one fetch (~200km radius at 0.01° grid)
-const MAX_ROWS = 20000;
+// Max rows for multi-day queries (prevents massive payloads)
+const MAX_ROWS_MULTI = 20000;
+// Max rows for single-day exact queries — one day can have up to ~65k cells
+const MAX_ROWS_SINGLE = 80000;
 
 export default async function handler(req, res) {
-  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { swLat, swLng, neLat, neLng, days = '90', minSize = '0.5' } = req.query;
+  const { swLat, swLng, neLat, neLng, days = '90', minSize = '0.5', exactDate } = req.query;
 
   // Validate bounding box
   const sw_lat = parseFloat(swLat);
@@ -41,36 +39,41 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid bounding box. Provide swLat, swLng, neLat, neLng.' });
   }
 
-  // Clamp days to 1–365
-  const daysBack = Math.min(Math.max(parseInt(days) || 90, 1), 365);
   const minSizeIn = Math.max(parseFloat(minSize) || 0.5, 0.1);
-
-  // Calculate cutoff date
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - daysBack);
-  const cutoffStr = cutoff.toISOString().slice(0, 10); // YYYY-MM-DD
 
   if (!SUPABASE_KEY) {
     return res.status(500).json({ error: 'SUPABASE_SERVICE_KEY not configured' });
   }
 
+  let dateFilter;
+  let maxRows;
+
+  if (exactDate && /^\d{4}-\d{2}-\d{2}$/.test(exactDate)) {
+    // Single exact date — use eq filter and higher row limit
+    dateFilter = { event_date: `eq.${exactDate}` };
+    maxRows = MAX_ROWS_SINGLE;
+  } else {
+    // Date range — calculate cutoff
+    const daysBack = Math.min(Math.max(parseInt(days) || 90, 1), 365);
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - daysBack);
+    const cutoffStr = cutoff.toISOString().slice(0, 10);
+    dateFilter = { event_date: `gte.${cutoffStr}` };
+    maxRows = MAX_ROWS_MULTI;
+  }
+
   // Build Supabase REST query
-  // Filter: event_date >= cutoff AND lat BETWEEN sw_lat AND ne_lat
-  //         AND lon BETWEEN sw_lng AND ne_lng AND hail_size_in >= minSizeIn
   const params = new URLSearchParams({
     select: 'event_date,lat,lon,hail_size_in',
-    event_date: `gte.${cutoffStr}`,
+    ...dateFilter,
     lat: `gte.${sw_lat}`,
-    // Additional lat filter handled below via and= param
     hail_size_in: `gte.${minSizeIn}`,
     order: 'event_date.desc',
-    limit: String(MAX_ROWS),
+    limit: String(maxRows),
   });
 
-  // Supabase REST doesn't support BETWEEN directly — use two separate filters
-  // via the `and` query param
+  // Supabase REST doesn't support BETWEEN directly — use the `and` query param
   const andFilter = `lat.lte.${ne_lat},lon.gte.${sw_lng},lon.lte.${ne_lng}`;
-
   const url = `${SUPABASE_URL}/rest/v1/${TABLE}?${params.toString()}&and=(${encodeURIComponent(andFilter)})`;
 
   try {
@@ -79,7 +82,10 @@ export default async function handler(req, res) {
         apikey: SUPABASE_KEY,
         Authorization: `Bearer ${SUPABASE_KEY}`,
         Accept: 'application/json',
+        // Request up to 80k rows for single-date queries
+        ...(maxRows > 20000 ? { 'Range-Unit': 'items', Range: `0-${maxRows - 1}` } : {}),
       },
+      signal: AbortSignal.timeout(9000),
     });
 
     if (!resp.ok) {

@@ -112,42 +112,24 @@ window.loadMrmsForDate = async function(date) {
     if (sel && sel.value !== date) sel.value = date;
   });
 
-  // Fetch the full CONUS bounding box for this specific date
-  // We use a very large bbox and filter by date server-side
-  const params = new URLSearchParams({
-    swLat: '-90', swLng: '-180', neLat: '90', neLng: '0',
-    days: '1',   // We'll override with exact date below
-    minSize: '0.5',
-    date: date,  // exact date filter (we'll add this to the API)
-  });
-
-  // Actually: the existing /api/mrms-hail doesn't support exact date.
-  // Use days=1 and a date-relative approach: calculate days since today
-  const today = new Date();
-  const stormDate = new Date(date + 'T12:00:00Z');
-  const diffDays = Math.ceil((today - stormDate) / (1000 * 60 * 60 * 24)) + 1;
-
-  // Use a wide CONUS bbox to get all cells for this date
-  // We'll filter client-side to only show the selected date
+    // Fetch CONUS-wide cells for the exact date using the new exactDate param
+  // This avoids the row-cap issue that cut off older dates
   const fetchParams = new URLSearchParams({
     swLat: '20', swLng: '-130', neLat: '55', neLng: '-60',
-    days: String(Math.max(diffDays + 1, 2)),
+    exactDate: date,
     minSize: '0.5',
   });
-
   try {
     if (_mrmsFetching) return;
     _mrmsFetching = true;
-
     const resp = await fetch(`/api/mrms-hail?${fetchParams.toString()}`);
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const allData = await resp.json();
-
-    // Filter to only the selected date
-    _mrmsData = allData.filter(r => r.event_date === date);
+    // All rows are already for this exact date — no client-side filter needed
+    _mrmsData = Array.isArray(allData) ? allData : [];
     _mrmsLoaded = true;
     _mrmsFetchBounds = { swLat: 20, swLng: -130, neLat: 55, neLng: -60 };
-    _mrmsLastDays = diffDays;
+    _mrmsLastDays = 1; // single-date fetch
 
     if (_mrmsData.length === 0) {
       statusIds.forEach(id => {

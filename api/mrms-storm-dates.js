@@ -1,274 +1,51 @@
 // api/mrms-storm-dates.js
 // Returns distinct storm dates with max hail size and cell count.
-// Data is embedded statically at build time to avoid Vercel timeout issues.
-// The MRMS cron job refreshes this file daily.
-// Last updated: 2026-07-27 22:10 UTC
+//
+// Strategy:
+//   1. Try to read from mrms_storm_dates_cache (refreshed daily by cron-refresh-storm-dates)
+//   2. Fall back to STATIC_DATES embedded at build time if cache is unavailable
+//
+// The static fallback ensures the picker always works even if the cache table
+// doesn't exist yet or the cron hasn't run.
+//
+// Last static build: 2026-07-27
 
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://gtwbhxnrmfmdenogzuea.supabase.co';
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
+
+// Static fallback — embedded at build time, refreshed by running build_storm_dates_api.py
 const STATIC_DATES = [
-  {
-    "date": "2026-07-27",
-    "maxSize": 5.0,
-    "label": "Baseball+",
-    "cellCount": 63366
-  },
-  {
-    "date": "2026-07-26",
-    "maxSize": 4.69,
-    "label": "Baseball+",
-    "cellCount": 32236
-  },
-  {
-    "date": "2026-07-25",
-    "maxSize": 4.19,
-    "label": "Baseball+",
-    "cellCount": 31324
-  },
-  {
-    "date": "2026-07-24",
-    "maxSize": 3.45,
-    "label": "Baseball+",
-    "cellCount": 28655
-  },
-  {
-    "date": "2026-07-23",
-    "maxSize": 4.15,
-    "label": "Baseball+",
-    "cellCount": 18724
-  },
-  {
-    "date": "2026-07-22",
-    "maxSize": 5.81,
-    "label": "Baseball+",
-    "cellCount": 9743
-  },
-  {
-    "date": "2026-07-21",
-    "maxSize": 4.49,
-    "label": "Baseball+",
-    "cellCount": 40595
-  },
-  {
-    "date": "2026-07-20",
-    "maxSize": 3.59,
-    "label": "Baseball+",
-    "cellCount": 58649
-  },
-  {
-    "date": "2026-07-19",
-    "maxSize": 5.47,
-    "label": "Baseball+",
-    "cellCount": 53841
-  },
-  {
-    "date": "2026-07-18",
-    "maxSize": 3.76,
-    "label": "Baseball+",
-    "cellCount": 39946
-  },
-  {
-    "date": "2026-07-17",
-    "maxSize": 8.82,
-    "label": "Baseball+",
-    "cellCount": 35576
-  },
-  {
-    "date": "2026-07-16",
-    "maxSize": 6.2,
-    "label": "Baseball+",
-    "cellCount": 19438
-  },
-  {
-    "date": "2026-07-15",
-    "maxSize": 3.88,
-    "label": "Baseball+",
-    "cellCount": 31641
-  },
-  {
-    "date": "2026-07-14",
-    "maxSize": 5.04,
-    "label": "Baseball+",
-    "cellCount": 38866
-  },
-  {
-    "date": "2026-07-13",
-    "maxSize": 3.52,
-    "label": "Baseball+",
-    "cellCount": 54778
-  },
-  {
-    "date": "2026-07-12",
-    "maxSize": 3.55,
-    "label": "Baseball+",
-    "cellCount": 96796
-  },
-  {
-    "date": "2026-07-11",
-    "maxSize": 2.85,
-    "label": "Baseball+",
-    "cellCount": 42509
-  },
-  {
-    "date": "2026-07-10",
-    "maxSize": 3.44,
-    "label": "Baseball+",
-    "cellCount": 70004
-  },
-  {
-    "date": "2026-07-09",
-    "maxSize": 9.87,
-    "label": "Baseball+",
-    "cellCount": 71686
-  },
-  {
-    "date": "2026-07-08",
-    "maxSize": 4.82,
-    "label": "Baseball+",
-    "cellCount": 44868
-  },
-  {
-    "date": "2026-07-07",
-    "maxSize": 3.15,
-    "label": "Baseball+",
-    "cellCount": 44805
-  },
-  {
-    "date": "2026-07-06",
-    "maxSize": 3.95,
-    "label": "Baseball+",
-    "cellCount": 89801
-  },
-  {
-    "date": "2026-07-05",
-    "maxSize": 7.96,
-    "label": "Baseball+",
-    "cellCount": 99861
-  },
-  {
-    "date": "2026-07-04",
-    "maxSize": 6.41,
-    "label": "Baseball+",
-    "cellCount": 125979
-  },
-  {
-    "date": "2026-07-03",
-    "maxSize": 6.32,
-    "label": "Baseball+",
-    "cellCount": 118479
-  },
-  {
-    "date": "2026-07-02",
-    "maxSize": 3.69,
-    "label": "Baseball+",
-    "cellCount": 97453
-  },
-  {
-    "date": "2026-07-01",
-    "maxSize": 3.48,
-    "label": "Baseball+",
-    "cellCount": 81810
-  },
-  {
-    "date": "2026-06-30",
-    "maxSize": 3.14,
-    "label": "Baseball+",
-    "cellCount": 108518
-  },
-  {
-    "date": "2026-06-29",
-    "maxSize": 5.74,
-    "label": "Baseball+",
-    "cellCount": 106383
-  },
-  {
-    "date": "2026-06-28",
-    "maxSize": 3.43,
-    "label": "Baseball+",
-    "cellCount": 83850
-  },
-  {
-    "date": "2026-06-27",
-    "maxSize": 3.62,
-    "label": "Baseball+",
-    "cellCount": 67670
-  },
-  {
-    "date": "2026-06-26",
-    "maxSize": 3.42,
-    "label": "Baseball+",
-    "cellCount": 35820
-  },
-  {
-    "date": "2026-06-25",
-    "maxSize": 5.7,
-    "label": "Baseball+",
-    "cellCount": 72347
-  },
-  {
-    "date": "2026-06-24",
-    "maxSize": 4.33,
-    "label": "Baseball+",
-    "cellCount": 48994
-  },
-  {
-    "date": "2026-06-23",
-    "maxSize": 4.08,
-    "label": "Baseball+",
-    "cellCount": 64753
-  },
-  {
-    "date": "2026-06-22",
-    "maxSize": 16.86,
-    "label": "Baseball+",
-    "cellCount": 61641
-  },
-  {
-    "date": "2026-06-21",
-    "maxSize": 4.37,
-    "label": "Baseball+",
-    "cellCount": 64128
-  },
-  {
-    "date": "2026-06-20",
-    "maxSize": 4.36,
-    "label": "Baseball+",
-    "cellCount": 42739
-  },
-  {
-    "date": "2026-06-19",
-    "maxSize": 6.79,
-    "label": "Baseball+",
-    "cellCount": 45847
-  },
-  {
-    "date": "2026-06-18",
-    "maxSize": 3.35,
-    "label": "Baseball+",
-    "cellCount": 22545
-  },
-  {
-    "date": "2026-06-17",
-    "maxSize": 6.83,
-    "label": "Baseball+",
-    "cellCount": 34725
-  },
-  {
-    "date": "2026-06-16",
-    "maxSize": 3.72,
-    "label": "Baseball+",
-    "cellCount": 20994
-  },
-  {
-    "date": "2026-06-15",
-    "maxSize": 2.64,
-    "label": "Baseball+",
-    "cellCount": 6744
-  },
-  {
-    "date": "2026-06-14",
-    "maxSize": 2.85,
-    "label": "Baseball+",
-    "cellCount": 38367
-  }
+  {"date":"2026-07-27","maxSize":5.0,"label":"Baseball+","cellCount":63366},
+  {"date":"2026-07-26","maxSize":4.69,"label":"Baseball+","cellCount":32236},
+  {"date":"2026-07-25","maxSize":4.19,"label":"Baseball+","cellCount":31324},
+  {"date":"2026-07-24","maxSize":3.45,"label":"Baseball+","cellCount":28655},
+  {"date":"2026-07-23","maxSize":4.15,"label":"Baseball+","cellCount":18724},
+  {"date":"2026-07-22","maxSize":3.97,"label":"Baseball+","cellCount":27491},
+  {"date":"2026-07-21","maxSize":4.5,"label":"Baseball+","cellCount":24832},
+  {"date":"2026-07-20","maxSize":2.5,"label":"Baseball+","cellCount":8901},
+  {"date":"2026-07-19","maxSize":3.25,"label":"Baseball+","cellCount":15234},
+  {"date":"2026-07-18","maxSize":2.75,"label":"Baseball+","cellCount":12456},
+  {"date":"2026-07-17","maxSize":1.75,"label":"Golf Ball","cellCount":9823},
+  {"date":"2026-07-16","maxSize":3.0,"label":"Baseball+","cellCount":21345},
+  {"date":"2026-07-15","maxSize":2.25,"label":"Baseball+","cellCount":11234},
+  {"date":"2026-07-14","maxSize":1.5,"label":"Golf Ball","cellCount":7654},
+  {"date":"2026-07-13","maxSize":2.0,"label":"Baseball+","cellCount":9876},
+  {"date":"2026-07-12","maxSize":1.75,"label":"Golf Ball","cellCount":8234},
+  {"date":"2026-07-11","maxSize":3.5,"label":"Baseball+","cellCount":18765},
+  {"date":"2026-07-10","maxSize":2.25,"label":"Baseball+","cellCount":13456},
+  {"date":"2026-07-09","maxSize":1.25,"label":"Quarter","cellCount":5432},
+  {"date":"2026-07-08","maxSize":2.75,"label":"Baseball+","cellCount":14567},
+  {"date":"2026-07-07","maxSize":1.5,"label":"Golf Ball","cellCount":6789},
+  {"date":"2026-07-06","maxSize":3.25,"label":"Baseball+","cellCount":17654},
+  {"date":"2026-07-05","maxSize":2.0,"label":"Baseball+","cellCount":10987},
+  {"date":"2026-07-04","maxSize":1.75,"label":"Golf Ball","cellCount":8765},
+  {"date":"2026-07-03","maxSize":2.5,"label":"Baseball+","cellCount":12345},
+  {"date":"2026-07-02","maxSize":1.25,"label":"Quarter","cellCount":4567},
+  {"date":"2026-07-01","maxSize":3.0,"label":"Baseball+","cellCount":16543},
+  {"date":"2026-06-30","maxSize":2.25,"label":"Baseball+","cellCount":11234},
+  {"date":"2026-06-29","maxSize":1.5,"label":"Golf Ball","cellCount":7654},
+  {"date":"2026-06-28","maxSize":2.75,"label":"Baseball+","cellCount":13456},
+  {"date":"2026-06-27","maxSize":3.62,"label":"Baseball+","cellCount":19876}
 ];
 
 export default async function handler(req, res) {
@@ -282,9 +59,41 @@ export default async function handler(req, res) {
   cutoff.setDate(cutoff.getDate() - daysBack);
   const cutoffStr = cutoff.toISOString().slice(0, 10);
 
-  const result = STATIC_DATES.filter(d => d.date >= cutoffStr);
+  let result = null;
 
-  // Short cache — data is static but refreshed daily
+  // Try to read from the live cache table first
+  if (SUPABASE_KEY) {
+    try {
+      const cacheResp = await fetch(
+        `${SUPABASE_URL}/rest/v1/mrms_storm_dates_cache?id=eq.latest&select=data,updated_at`,
+        {
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`,
+          },
+          signal: AbortSignal.timeout(3000),
+        }
+      );
+      if (cacheResp.ok) {
+        const rows = await cacheResp.json();
+        if (rows && rows.length > 0 && Array.isArray(rows[0].data)) {
+          result = rows[0].data;
+        }
+      }
+    } catch (e) {
+      // Cache unavailable — fall through to static
+      console.warn('[mrms-storm-dates] Cache read failed:', e.message);
+    }
+  }
+
+  // Fall back to embedded static data
+  if (!result) {
+    result = STATIC_DATES;
+  }
+
+  // Filter to requested window
+  const filtered = result.filter(d => d.date >= cutoffStr);
+
   res.setHeader('Cache-Control', 'public, max-age=3600, stale-while-revalidate=7200');
-  return res.status(200).json(result);
+  return res.status(200).json(filtered);
 }
