@@ -356,22 +356,126 @@ window.stormLeadsShowChoiceModal = function() {
 };
 
 // ── Bulk unlock all locked homes (up to credit balance) ──────────────────────
-// ── Add to Campaign (no credits charged) ─────────────────────────────────────
-window.stormLeadsAddToCampaign = async function() {
-  const modal = document.getElementById('sl-choice-modal');
-  if (modal) modal.remove();
+// ── Add to Campaign — Step 2: name + notes setup modal ───────────────────────
+window.stormLeadsAddToCampaign = function() {
+  // Close the choice modal
+  const choiceModal = document.getElementById('sl-choice-modal');
+  if (choiceModal) choiceModal.remove();
+
   const lockedCount = _slHomes.filter(h => !h.unlocked).length;
-  // Campaign already created by storm-leads-swath API — just confirm to user
-  toast(`📋 ${lockedCount} homes saved to "${_slCampaignName || 'Storm Campaign'}" — tap any pin to unlock when ready`, 'success');
-  // Update popup text to reflect campaign mode
+  const defaultName = _slCampaignName || 'Storm Campaign';
+
+  const existing = document.getElementById('sl-campaign-setup-modal');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'sl-campaign-setup-modal';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.78);display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.innerHTML = `
+    <div style="background:#1a2332;border:1px solid #2d3748;border-radius:16px;padding:28px;max-width:460px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,0.7);">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px;">
+        <div style="width:44px;height:44px;background:rgba(242,92,5,0.15);border:1px solid rgba(242,92,5,0.4);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">📋</div>
+        <div>
+          <div style="font-size:17px;font-weight:800;color:#fff;line-height:1.2;">Set Up Your Campaign</div>
+          <div style="font-size:12px;color:#9CA3AF;margin-top:2px;">${lockedCount} homes · 0 credits now · pay per unlock</div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:11px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px;">Campaign Name</label>
+        <input id="sl-camp-name-input" type="text" value="${defaultName.replace(/"/g, '&quot;')}" maxlength="80"
+          style="width:100%;box-sizing:border-box;background:#0f1923;border:1.5px solid #374151;border-radius:9px;padding:11px 14px;color:#fff;font-size:14px;font-family:inherit;outline:none;"
+          onfocus="this.style.borderColor='#F25C05'" onblur="this.style.borderColor='#374151'" />
+      </div>
+
+      <div style="margin-bottom:22px;">
+        <label style="display:block;font-size:11px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px;">Notes <span style="font-weight:400;text-transform:none;opacity:.7;">(optional)</span></label>
+        <textarea id="sl-camp-notes-input" rows="2" maxlength="200" placeholder="e.g. Focus on older roofs, skip north side…"
+          style="width:100%;box-sizing:border-box;background:#0f1923;border:1.5px solid #374151;border-radius:9px;padding:11px 14px;color:#fff;font-size:13px;font-family:inherit;outline:none;resize:none;"
+          onfocus="this.style.borderColor='#F25C05'" onblur="this.style.borderColor='#374151'"></textarea>
+      </div>
+
+      <div style="background:#0f1923;border:1px solid #1e2d40;border-radius:11px;padding:14px 18px;margin-bottom:22px;display:flex;gap:0;">
+        <div style="flex:1;text-align:center;border-right:1px solid #1e2d40;padding-right:16px;">
+          <div style="font-size:26px;font-weight:800;color:#F25C05;line-height:1;">${lockedCount}</div>
+          <div style="font-size:10px;color:#6B7280;text-transform:uppercase;letter-spacing:.5px;margin-top:4px;">Homes Saved</div>
+        </div>
+        <div style="flex:1;text-align:center;border-right:1px solid #1e2d40;padding:0 16px;">
+          <div style="font-size:26px;font-weight:800;color:#22C55E;line-height:1;">0</div>
+          <div style="font-size:10px;color:#6B7280;text-transform:uppercase;letter-spacing:.5px;margin-top:4px;">Credits Used</div>
+        </div>
+        <div style="flex:2;padding-left:16px;display:flex;align-items:center;">
+          <div style="font-size:12px;color:#9CA3AF;line-height:1.5;">Tap any pin on the map to unlock &amp; mail when you confirm it needs a roof.</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;">
+        <button onclick="document.getElementById('sl-campaign-setup-modal').remove()" style="flex:1;background:none;border:1.5px solid #374151;color:#9CA3AF;border-radius:9px;padding:12px;font-size:13px;cursor:pointer;">Cancel</button>
+        <button id="sl-camp-save-btn" onclick="stormLeadsSaveCampaign()" style="flex:2;background:#F25C05;border:none;border-radius:9px;padding:12px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">Save Campaign →</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  setTimeout(() => {
+    const inp = document.getElementById('sl-camp-name-input');
+    if (inp) { inp.focus(); inp.select(); }
+  }, 80);
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) overlay.remove();
+  });
+};
+
+// ── Save Campaign: optionally rename, then navigate to Campaigns tab ──────────
+window.stormLeadsSaveCampaign = async function() {
+  const nameInput = document.getElementById('sl-camp-name-input');
+  const notesInput = document.getElementById('sl-camp-notes-input');
+  const saveBtn = document.getElementById('sl-camp-save-btn');
+  const newName = (nameInput ? nameInput.value.trim() : '') || _slCampaignName || 'Storm Campaign';
+  const notes = notesInput ? notesInput.value.trim() : '';
+
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
+
+  // Persist name/notes change to the DB (best-effort)
+  if (_slCampaignId) {
+    const updates = {};
+    if (newName !== _slCampaignName) updates.source_address = newName;
+    if (notes) updates.notes = notes;
+    if (Object.keys(updates).length > 0) {
+      try {
+        await adminAPI('campaign-update', { campaignId: _slCampaignId, updates });
+        if (updates.source_address) _slCampaignName = newName;
+      } catch(e) { /* non-fatal */ }
+    }
+  }
+
+  const setupModal = document.getElementById('sl-campaign-setup-modal');
+  if (setupModal) setupModal.remove();
+
+  const lockedCount = _slHomes.filter(h => !h.unlocked).length;
   _renderStormLeadMarkers();
-  // Auto-navigate to Campaigns tab so user can see the new campaign
+  toast(`📋 ${lockedCount} homes saved to "${_slCampaignName}" — tap any pin to unlock when ready`, 'success');
+
+  // Navigate to Campaigns tab and highlight the new campaign
   setTimeout(() => {
     if (typeof goTab === 'function') {
       goTab('campaigns');
-      if (typeof loadCampaignsTab === 'function') loadCampaignsTab();
+      setTimeout(() => {
+        if (typeof loadCampaignsTab === 'function') loadCampaignsTab();
+        setTimeout(() => {
+          const list = document.getElementById('campaigns-list');
+          if (list) {
+            list.scrollTop = 0;
+            const first = list.firstElementChild;
+            if (first) {
+              first.style.transition = 'background 0.3s';
+              first.style.background = 'rgba(242,92,5,0.14)';
+              setTimeout(() => { first.style.background = ''; }, 2500);
+            }
+          }
+        }, 500);
+      }, 300);
     }
-  }, 1200);
+  }, 900);
 };
 
 window.stormLeadsUnlockAll = async function() {
