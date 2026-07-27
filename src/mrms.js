@@ -20,7 +20,8 @@ let _mrmsVisible = false;   // whether the MRMS layer is currently shown
 
 // Grid cell half-size in degrees (~1km at CONUS latitudes)
 // MRMS data is on a 0.01° grid; use 0.005° half-size so cells tile edge-to-edge
-const CELL_HALF = 0.005;
+const CELL_HALF = 0.005; // display half-size for map rectangles (0.01° cell → 0.005° half)
+const CELL_GRID = 0.01;  // actual NOAA MRMS grid spacing (0.01° ≈ 1km)
 
 /**
  * Called by the MRMS toggle button — independent of SPC hail toggle.

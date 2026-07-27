@@ -91,13 +91,15 @@ window.stormLeadsGetAddresses = async function() {
   }
 };
 
-// Check if a lat/lng point falls inside any loaded MRMS hail cell (1km grid squares)
+// Check if a lat/lng point falls inside any loaded MRMS hail cell.
+// NOAA MRMS data is on a 0.01° grid; each cell center ± 0.005° covers the full cell.
+// Add a small tolerance (0.002° ≈ 200m) so homes near cell edges are not missed.
 function _homeInMrmsCells(lat, lng) {
   if (!window._mrmsCells || !lat || !lng) return true; // no cells loaded = no filter
-  const cellSize = 0.009; // ~1km in degrees
+  const half = 0.005 + 0.002; // 0.005° cell half + 0.002° tolerance
   return window._mrmsCells.some(c => {
-    return lat >= (c.lat - cellSize/2) && lat <= (c.lat + cellSize/2) &&
-           lng >= (c.lng - cellSize/2) && lng <= (c.lng + cellSize/2);
+    return lat >= (c.lat - half) && lat <= (c.lat + half) &&
+           lng >= (c.lng - half) && lng <= (c.lng + half);
   });
 }
 
