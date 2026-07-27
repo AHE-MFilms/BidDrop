@@ -137,6 +137,15 @@
     "api/cron-purge-trash.js": {
       "maxDuration": 30
     },
+    "api/cron-mrms-ingest.js": {
+      "maxDuration": 300
+    },
+    "api/mrms-hail.js": {
+      "maxDuration": 15
+    },
+    "api/mrms-address-lookup.js": {
+      "maxDuration": 15
+    },
     "api/r.js": {
       "maxDuration": 15
     },
