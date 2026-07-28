@@ -219,15 +219,13 @@ export default async function handler(req, res) {
         if (!structures || !structures.length) return 0;
         const stMult = 1; // stories multiplier (default 1 for homeowner page)
         if (pricingMode === 'per_square') {
-          // Per-square mode: Squares × $/sq (matches estimator exactly)
+          // Per-square mode: (sqft ÷ 100) × 1.10 overage × $/sq — all-in rate, no pitch/stories/complexity upcharges
           let total = 0;
           structures.forEach(s => {
             const sqft = parseFloat(s.sqft) || 0; if (!sqft) return;
-            const pitchMult = parseFloat(s.pitch) || 1.118;
-            const complexity = parseFloat(s.complexity) || 1.12;
-            const sq = sqft / 100 * 1.10 * pitchMult;
+            const flatSq = sqft / 100 * 1.10; // footprint squares + 10% overage only
             const pps = ppsMap[matKey] || ppsArch;
-            total += Math.round(sq * pps * stMult * complexity);
+            total += Math.round(flatSq * pps);
           });
           return total;
         }

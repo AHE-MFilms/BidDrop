@@ -27,11 +27,12 @@ function calcStructPrice(s){
   const stories=parseFloat(s.stories)||1;
   const sq=sqft/100*1.10*pitchMult; // footprint → actual roof squares w/ 10% waste
   // ── Simple mode: price per square (per-material rates) ──
+  // Formula: (sqft ÷ 100) × 1.10 overage × $/sq — all-in rate, no pitch/stories/complexity upcharges.
   if((c.pricingMode||'detailed')==='per_square'){
     const ppsMap={'1.3':parseFloat(c.ppsArchitectural)||450,'1.8':parseFloat(c.ppsDesigner)||580,'1.5':parseFloat(c.ppsImpact)||520,'2.5':parseFloat(c.ppsMetal)||950,'0.9':parseFloat(c.ppsFlat)||400,'3.2':parseFloat(c.ppsTile)||1400};
     const pps=ppsMap[String(s.mat)]||(parseFloat(c.pricePerSquare)||450);
-    const stMult=stories<=1?1:stories<=1.5?1.08:stories<=2?1.16:1.25;
-    return Math.round(sq*pps*stMult*complexity);
+    const flatSq=sqft/100*1.10; // footprint squares + 10% overage only
+    return Math.round(flatSq*pps);
   }
   // ── Detailed mode ──
   const stMult=stories<=1?1:stories<=1.5?1.08:stories<=2?1.16:1.25;
