@@ -1070,7 +1070,7 @@ function _renderBlitzSeqCard(seq,si){
       +'</div>'
       +thumbHtml
       +'<div onclick="event.stopPropagation();toggleBlitzStep(\''+seq.id+'\','+i+')" style="width:34px;height:18px;border-radius:9px;background:'+accentC+';cursor:pointer;position:relative;flex-shrink:0;transition:background .2s;"><div style="position:absolute;top:2px;left:'+(enabled?'16px':'2px')+';width:14px;height:14px;border-radius:50%;background:#fff;transition:left .2s;"></div></div>'
-      +'<button onclick="event.stopPropagation();removeBlitzStep(\''+seq.id+'\','+i+')" style="background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;flex-shrink:0;padding:2px 4px;line-height:1;" title="Remove step">&#x2715;</button>'
+      +(isSuperAdmin()?'<button onclick="event.stopPropagation();removeBlitzStep(\''+seq.id+'\','+i+')" style="background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;flex-shrink:0;padding:2px 4px;line-height:1;" title="Remove step">&#x2715;</button>':'')
       +'</div>';
     // Upload input id
     const uploadInputId = 'blitz-upload-'+seq.id+'-'+i;
@@ -1116,7 +1116,7 @@ function _renderBlitzSeqCard(seq,si){
     +'</div>'
     +'<div id="'+bodyId+'" style="'+(collapsed?'display:none;':'')+'padding:14px 18px;flex-direction:column;gap:8px;">'
     +stepsHtml
-    +'<button onclick="addBlitzStep(\''+seq.id+'\')" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 14px;font-size:12px;color:var(--text);cursor:pointer;font-weight:600;align-self:flex-start;margin-top:4px;">+ Add Step</button>'
+    +(isSuperAdmin()?'<button onclick="addBlitzStep(\''+seq.id+'\')" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 14px;font-size:12px;color:var(--text);cursor:pointer;font-weight:600;align-self:flex-start;margin-top:4px;">+ Add Step</button>':'')
     +'</div></div>';
 }
 function addBlitzSequence(){
