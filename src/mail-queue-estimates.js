@@ -383,7 +383,8 @@ function renderEstimatesTab(){
     const shortAddr = addr.split(',')[0];
     const cityState = addr.split(',').slice(1).join(',').trim();
     const pid = escHtml(String(pin.id||''));
-    const ownerName = (pin.estimate && pin.estimate.owner) || (pin.contactData && pin.contactData.ownerName) || '';
+    const _pinEstObj = pin.estimate ? (typeof pin.estimate==='string' ? (() => { try { return JSON.parse(pin.estimate); } catch(e) { return {}; } })() : pin.estimate) : {};
+    const ownerName = String((_pinEstObj && _pinEstObj.owner) || (pin.contactData && pin.contactData.ownerName) || '');
     const statusColors = {pinned:'#64748B',contacted:'#3B82F6',quoted:'#0EA5E9',interested:'#22C55E',signed:'#A855F7',sold:'#F59E0B',lost:'#EF4444'};
     const statusColor = statusColors[pin.status] || '#64748B';
     const statusLabel = {pinned:'Pinned',contacted:'Contacted',quoted:'Quoted',interested:'Interested',signed:'Signed',sold:'Sold',lost:'Lost'}[pin.status] || (pin.status||'Pinned');
