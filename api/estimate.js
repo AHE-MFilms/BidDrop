@@ -332,6 +332,7 @@ export default async function handler(req, res) {
           },
           estimatePageCountdown: acct.estimate_page_countdown || false,
           estimatePageExpiresDays: acct.estimate_page_expires_days || null,
+          estimatePageShowPrice: pcfg.estimatePageShowPrice !== false,
           companyBio:    acct.company_bio    || '',
           hookLetter:    acct.hook_letter    || '',
           postcardHook:  acct.postcard_hook  || '',

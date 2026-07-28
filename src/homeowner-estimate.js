@@ -359,15 +359,16 @@ async function initEstimatePage(estId) {
               <div class="ep-mat-name">${m.label}</div>
               <div class="ep-mat-desc">${m.desc}</div>
               ${m.popular ? `<div class="ep-mat-popular" style="background:${brand};color:#fff;">POPULAR</div>` : '<div style="height:18px;"></div>'}
-              <div class="ep-mat-price" style="color:${m.key === currentMat ? brand : 'rgba(255,255,255,.7)'};">$${mTotal.toLocaleString()}</div>
+              ${acct.estimatePageShowPrice !== false ? `<div class="ep-mat-price" style="color:${m.key === currentMat ? brand : 'rgba(255,255,255,.7)'};">$${mTotal.toLocaleString()}</div>` : ''}
             </div>`;
           }).join('')}
         </div>
+        ${acct.estimatePageShowPrice !== false ? `
         <div class="ep-price-hero">
           <div class="ep-price-label">Selected: ${matLabel}</div>
           <div id="ep-total" class="ep-price-amount" style="color:${brand};">$${total.toLocaleString()}</div>
           ${monthly ? `<div class="ep-price-monthly">or ~<span id="ep-monthly">$${monthly}</span>/mo with financing</div>` : ''}
-        </div>
+        </div>` : `<div class="ep-price-hero"><div class="ep-price-label" style="font-size:16px;font-weight:700;opacity:.8;">Contact us for your personalized quote</div></div>`}
       </div>`;
 
     // ── Trust bar ──────────────────────────────────────────────────────────

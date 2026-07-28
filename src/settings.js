@@ -50,6 +50,7 @@ function openSettings(){
   const _pcShowMonthly=document.getElementById('s-pc-show-monthly'); if(_pcShowMonthly) _pcShowMonthly.checked=c.postcardShowMonthly!==false;
   const _pcShowPhone=document.getElementById('s-pc-show-phone'); if(_pcShowPhone) _pcShowPhone.checked=c.postcardShowPhone!==false;
   const _pcShowPriceBack=document.getElementById('s-pc-show-price-back'); if(_pcShowPriceBack) _pcShowPriceBack.checked=c.postcardShowPriceBack!==false;
+  const _epShowPrice=document.getElementById('s-ep-show-price'); if(_epShowPrice) _epShowPrice.checked=c.estimatePageShowPrice!==false;
   // Design selector — locked to Estimate Reveal (design 1)
   const _pcDesEl=document.getElementById('s-pc-design-1');
   if(_pcDesEl)_pcDesEl.checked=true;
@@ -506,6 +507,7 @@ function saveSettings(){
     postcardShowMonthly:!!(document.getElementById('s-pc-show-monthly')&&document.getElementById('s-pc-show-monthly').checked),
     postcardShowPhone:!!(document.getElementById('s-pc-show-phone')&&document.getElementById('s-pc-show-phone').checked),
     postcardShowPriceBack:!!(document.getElementById('s-pc-show-price-back')&&document.getElementById('s-pc-show-price-back').checked),
+    estimatePageShowPrice:!!(document.getElementById('s-ep-show-price')&&document.getElementById('s-ep-show-price').checked),
     postcardHl1Size:parseInt(v('s-pc-hl1-sz'))||160,
     postcardHl2Size:parseInt(v('s-pc-hl2-sz'))||160,
     postcardHookSize:parseInt(v('s-pc-hook-sz'))||36,
