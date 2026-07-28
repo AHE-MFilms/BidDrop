@@ -1002,16 +1002,19 @@ function confirmDesignPick(){
 
 // ── Named Blitz Sequences (Build 13) ─────────────────────────────────────────────
 function getDefaultDripSteps(){
+  // Step 1 (Day 0 / immediate) is always the initial postcard sent at pin time.
+  // These are the FOLLOW-UP steps that start a week later.
   return [
-    {id:1,enabled:true,day:0, designId:null,headline:'Still thinking it over?',subtext:"Your estimate is still valid. We'd love to help."},
-    {id:2,enabled:true,day:7, designId:null,headline:'Storm season is coming.',subtext:"Now's the time to protect your home."},
-    {id:3,enabled:true,day:14,designId:null,headline:'Final notice.',subtext:'Your estimate expires soon. Secure your spot.'},
+    {id:1,enabled:true,day:7, designId:null,designUrl:null,headline:'Still thinking it over?',subtext:"Your estimate is still valid. We'd love to help."},
+    {id:2,enabled:true,day:14,designId:null,designUrl:null,headline:'Storm season is coming.',subtext:"Now's the time to protect your home."},
+    {id:3,enabled:true,day:21,designId:null,designUrl:null,headline:'Final notice.',subtext:'Your estimate expires soon. Secure your spot.'},
+    {id:4,enabled:true,day:35,designId:null,designUrl:null,headline:"We're still here for you.",subtext:"Your roof won't fix itself. Let's get started today."},
   ];
 }
 function _migrateToBlitzSequences(){
   if(S.cfg.blitzSequences&&Array.isArray(S.cfg.blitzSequences)&&S.cfg.blitzSequences.length) return;
   const legacy=S.cfg.dripStepsJson&&Array.isArray(S.cfg.dripStepsJson)&&S.cfg.dripStepsJson.length?S.cfg.dripStepsJson:getDefaultDripSteps();
-  const cleanSteps=legacy.map((s,i)=>({id:s.id||Date.now()+i,enabled:s.enabled!==false,day:s.day||0,designId:s.designId||null,headline:s.headline||'',subtext:s.subtext||''}));
+  const cleanSteps=legacy.map((s,i)=>({id:s.id||Date.now()+i,enabled:s.enabled!==false,day:s.day||0,designId:s.designId||null,designUrl:s.designUrl||null,headline:s.headline||'',subtext:s.subtext||''}));
   S.cfg.blitzSequences=[{id:'seq_default',name:'Default Sequence',enabled:true,steps:cleanSteps}];
   save();
 }
@@ -1045,12 +1048,19 @@ function _renderBlitzSeqCard(seq,si){
   const collapsed=seq.collapsed===true;
   // Build timeline rows — collapsed summary + expandable editor
   const stepsHtml=(seq.steps||[]).map((step,i)=>{
-    const designName=step.designId?((designs.find(d=>d.id===step.designId)||{}).name||'Custom design'):'House photo (default)';
-    const dayLabel=i===0?'Immediately (Day 0)':'Day '+step.day;
+    // Design name: custom upload > library design > default
+    const hasCustomUrl = !!(step.designUrl);
+    const libDesign = step.designId ? (designs.find(d=>d.id===step.designId)||null) : null;
+    const designName = hasCustomUrl ? '📎 Custom upload' : (libDesign ? libDesign.name : 'House photo (default)');
+    const dayLabel = 'Day '+step.day;
     const enabled=step.enabled!==false;
     const accentC=enabled?'var(--accent)':'var(--border)';
     const expandId='bse-'+seq.id+'-'+i;
     const designOpts='<option value="">House photo (default)</option>'+designs.map(d=>'<option value="'+d.id+'"'+(d.id===step.designId?' selected':'')+'>'+escHtml(d.name||'')+'</option>').join('');
+    // Thumbnail for custom upload
+    const thumbHtml = hasCustomUrl
+      ? '<img src="'+step.designUrl+'" style="width:36px;height:24px;object-fit:cover;border-radius:4px;border:1px solid var(--border);flex-shrink:0;">'
+      : '';
     // Summary row
     const summaryRow='<div onclick="toggleBlitzStepExpand(\''+expandId+'\')" style="display:flex;align-items:center;gap:12px;padding:10px 14px;cursor:pointer;border-radius:10px;background:var(--card2);border:1px solid '+(enabled?'rgba(242,92,5,.25)':'var(--border)')+';user-select:none;">'
       +'<div style="width:28px;height:28px;border-radius:50%;background:'+accentC+';display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-size:13px;font-weight:800;color:#fff;flex-shrink:0;">'+(i+1)+'</div>'
@@ -1058,16 +1068,32 @@ function _renderBlitzSeqCard(seq,si){
       +'<div style="font-size:13px;font-weight:700;color:'+(enabled?'var(--text)':'var(--muted)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(step.headline||'(no headline)')+'</div>'
       +'<div style="font-size:11px;color:var(--muted);margin-top:1px;">'+dayLabel+' &nbsp;·&nbsp; '+escHtml(designName)+'</div>'
       +'</div>'
+      +thumbHtml
       +'<div onclick="event.stopPropagation();toggleBlitzStep(\''+seq.id+'\','+i+')" style="width:34px;height:18px;border-radius:9px;background:'+accentC+';cursor:pointer;position:relative;flex-shrink:0;transition:background .2s;"><div style="position:absolute;top:2px;left:'+(enabled?'16px':'2px')+';width:14px;height:14px;border-radius:50%;background:#fff;transition:left .2s;"></div></div>'
       +'<button onclick="event.stopPropagation();removeBlitzStep(\''+seq.id+'\','+i+')" style="background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;flex-shrink:0;padding:2px 4px;line-height:1;" title="Remove step">&#x2715;</button>'
       +'</div>';
+    // Upload input id
+    const uploadInputId = 'blitz-upload-'+seq.id+'-'+i;
     // Expanded editor (hidden by default)
     const editorRow='<div id="'+expandId+'" style="display:none;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-top:-4px;">'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">'
       +'<div><label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Send on day</label>'
-      +'<input type="number" min="0" max="365" value="'+step.day+'" onchange="updateBlitzStepField(\''+seq.id+'\','+i+',\'day\',parseInt(this.value)||0);renderBlitzSequenceList()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-size:13px;width:100%;"></div>'
-      +'<div><label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Postcard design</label>'
+      +'<input type="number" min="1" max="365" value="'+step.day+'" onchange="updateBlitzStepField(\''+seq.id+'\','+i+',\'day\',parseInt(this.value)||7);renderBlitzSequenceList()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-size:13px;width:100%;"></div>'
+      +'<div><label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Library design</label>'
       +'<select onchange="updateBlitzStepField(\''+seq.id+'\','+i+',\'designId\',this.value||null);renderBlitzSequenceList()" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-size:13px;width:100%;cursor:pointer;">'+designOpts+'</select></div>'
+      +'</div>'
+      // Custom upload section
+      +'<div style="margin-bottom:10px;padding:10px 12px;background:var(--card2);border:1px solid var(--border);border-radius:8px;">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;">'
+      +'<label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;">Custom postcard design (optional)</label>'
+      +(hasCustomUrl?'<button onclick="clearBlitzStepUpload(\''+seq.id+'\','+i+')" style="background:none;border:none;color:#ef4444;font-size:11px;cursor:pointer;font-weight:600;">✕ Remove</button>':'')
+      +'</div>'
+      +(hasCustomUrl
+        ? '<div style="display:flex;align-items:center;gap:8px;"><img src="'+step.designUrl+'" style="height:48px;border-radius:6px;border:1px solid var(--border);"><span style="font-size:11px;color:var(--accent);font-weight:600;">✓ Custom design uploaded</span></div>'
+        : '<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Upload your own postcard front (JPG/PNG). Overrides the library design above.</div>'
+      )
+      +'<input type="file" id="'+uploadInputId+'" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="blitzStepUploadFile(\''+seq.id+'\','+i+',this)">'
+      +(!hasCustomUrl?'<button onclick="document.getElementById(\''+uploadInputId+'\').click()" style="background:var(--accent);color:#fff;border:none;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">📎 Upload Design</button>':'')
       +'</div>'
       +'<div style="margin-bottom:8px;"><label style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Headline <span style="color:var(--muted);font-weight:400;text-transform:none;">(max 40 chars)</span></label>'
       +'<input class="fi" value="'+(step.headline||'').replace(/"/g,'&quot;')+'" maxlength="40" oninput="updateBlitzStepField(\''+seq.id+'\','+i+',\'headline\',this.value)" placeholder="e.g. Still thinking it over?" style="width:100%;"></div>'
@@ -1141,8 +1167,42 @@ function addBlitzStep(seqId){
   const seqs=getBlitzSequences(); const seq=seqs.find(s=>s.id===seqId);
   if(!seq) return;
   const lastDay=(seq.steps&&seq.steps.length)?seq.steps[seq.steps.length-1].day:0;
-  seq.steps.push({id:Date.now(),enabled:true,day:lastDay+7,designId:null,headline:'',subtext:''});
+  seq.steps.push({id:Date.now(),enabled:true,day:lastDay+7,designId:null,designUrl:null,headline:'',subtext:''});
   S.cfg.blitzSequences=seqs; renderBlitzSequenceList();
+}
+// Upload a custom design image for a blitz step
+async function blitzStepUploadFile(seqId, stepIdx, inputEl){
+  const file = inputEl && inputEl.files && inputEl.files[0];
+  if(!file){ return; }
+  const seqs = getBlitzSequences();
+  const seq = seqs.find(s=>s.id===seqId);
+  if(!seq || !seq.steps[stepIdx]) return;
+  toast('Uploading design…','info');
+  const acctId = currentAccount && currentAccount.id ? currentAccount.id : 'unknown';
+  const ts = Date.now();
+  const path = acctId+'/blitz-designs/step-'+stepIdx+'-'+ts+'.jpg';
+  try{
+    const url = await uploadToStorage(file, path, 1800, 0.92, 'image/jpeg');
+    if(!url){ toast('Upload failed. Try again.','error'); return; }
+    seq.steps[stepIdx].designUrl = url;
+    seq.steps[stepIdx].designId = null; // custom upload overrides library selection
+    S.cfg.blitzSequences = seqs;
+    save();
+    renderBlitzSequenceList();
+    toast('Design uploaded!','success');
+  } catch(e){
+    toast('Upload error: '+e.message,'error');
+  }
+}
+function clearBlitzStepUpload(seqId, stepIdx){
+  const seqs = getBlitzSequences();
+  const seq = seqs.find(s=>s.id===seqId);
+  if(!seq || !seq.steps[stepIdx]) return;
+  seq.steps[stepIdx].designUrl = null;
+  S.cfg.blitzSequences = seqs;
+  save();
+  renderBlitzSequenceList();
+  toast('Custom design removed','info');
 }
 function removeBlitzStep(seqId,idx){
   const seqs=getBlitzSequences(); const seq=seqs.find(s=>s.id===seqId);

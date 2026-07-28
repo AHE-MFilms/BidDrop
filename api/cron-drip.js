@@ -305,6 +305,8 @@ export default async function handler(req, res) {
         const meta = item.structures.find(s => s && s.id === '_meta');
         if (meta) photoUrl = meta.photo_url || meta.photo_data || null;
       }
+      // Custom uploaded design URL overrides house photo
+      if (item.drip_design_url) photoUrl = item.drip_design_url;
 
       const frontHtml = buildDripFront({
         photoUrl,

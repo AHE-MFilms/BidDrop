@@ -469,6 +469,7 @@ async function startDripSequence(){
       headline: s.headline||'',
       subtext: s.subtext||'',
       designId: s.designId||null,
+      designUrl: s.designUrl||null,
       sendAt: i===0 ? now.toISOString() : new Date(now.getTime()+(s.day||0)*msDay).toISOString(),
       sentAt: null,
       queueId: null
@@ -507,6 +508,7 @@ function addEstimateToMailQueueWithDripTag(est, stepNum){
     drip_headline: stepData ? (stepData.headline||null) : null,
     drip_subtext:  stepData ? (stepData.subtext||null)  : null,
     drip_design_id: stepData ? (stepData.designId||null) : null,
+    drip_design_url: stepData ? (stepData.designUrl||null) : null,
     // blitz_prepaid: credits were deducted upfront at Blitz start — skip per-postcard charge in admin-lob
     blitz_prepaid: !!(est.drip && est.drip.blitz_prepaid)
   };
@@ -538,6 +540,7 @@ function scheduleDripStep(est, step){
     drip_headline: step.headline || null,
     drip_subtext:  step.subtext  || null,
     drip_design_id: step.designId || null,
+    drip_design_url: step.designUrl || null,
     // blitz_prepaid: credits were deducted upfront at Blitz start — skip per-postcard charge in admin-lob
     blitz_prepaid: !!(est.drip && est.drip.blitz_prepaid)
   };
@@ -603,8 +606,10 @@ async function sendDripPostcard(id){
   const _fallbackMsg = getDripStepMessage(item.drip_step);
   const _headline = item.drip_headline || _fallbackMsg.headline;
   const _subtext  = item.drip_subtext  || _fallbackMsg.subtext;
+  // Use custom uploaded design URL if set, otherwise fall back to house photo
+  const _photoSrc = item.drip_design_url || item.photo_url || item.photo_data || null;
   const frontHtml = buildDripPostcardFrontHtml({
-    photoUrl: item.photo_url || item.photo_data || null,
+    photoUrl: _photoSrc,
     headline: _headline,
     subtext:  _subtext,
     companyName: co,
