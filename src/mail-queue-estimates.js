@@ -253,10 +253,10 @@ function renderEstimatesTab(){
   _updateEstSortArrows();
   tbody.innerHTML = list.map(function(est){
     const date = est.savedAt ? new Date(est.savedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
-    const addr = est.addr || '—';
+    const addr = String(est.addr || '—');
     const shortAddr = addr.split(',')[0];
-    const owner = est.owner || 'Homeowner';
-    const rep = est.rep || '—';
+    const owner = String(est.owner || 'Homeowner');
+    const rep = String(est.rep || '—');
     const total = '$'+(est.total||0).toLocaleString();
     const sentBadge = est.sentAt
       ? '<span style="background:rgba(34,197,94,.15);color:var(--success);border:1px solid var(--success);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;">SENT</span>'
@@ -362,7 +362,7 @@ function renderEstimatesTab(){
       +'</tr>';
   }).join('') + trashedPins.map(function(pin){
     const date = pin.deleted_at ? new Date(pin.deleted_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
-    const addr = pin.address || '—';
+    const addr = String(pin.address || '—');
     const shortAddr = addr.split(',')[0];
     const pid = escHtml(String(pin.id||''));
     const pinActionBtns = '<button data-pid="' + pid + '" onclick="restorePin(this.dataset.pid)" style="background:#1a7f4b;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#8629; Restore Pin</button>'
@@ -379,7 +379,7 @@ function renderEstimatesTab(){
   }).join('') + pinsWithoutEst.map(function(pin){
     // Active pins with no estimate yet — show as PIN ONLY with a Start Estimate button
     const date = pin.at ? new Date(pin.at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
-    const addr = pin.address || '—';
+    const addr = String(pin.address || '—');
     const shortAddr = addr.split(',')[0];
     const cityState = addr.split(',').slice(1).join(',').trim();
     const pid = escHtml(String(pin.id||''));
