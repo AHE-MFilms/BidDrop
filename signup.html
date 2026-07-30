@@ -1006,8 +1006,9 @@
         agreedAt:      new Date().toISOString()
       };
 
-      // Send verification code and show modal
-      sendVerificationCode(formData.email, formData.firstName + ' ' + formData.lastName);
+      // Email verification temporarily bypassed
+      emailVerified = true;
+      goToStep(3);
     }
 
     // ---- EMAIL VERIFICATION ----
