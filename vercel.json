@@ -105,6 +105,9 @@
     "api/billing-webhook.js": {
       "maxDuration": 30
     },
+    "api/verify-email.js": {
+      "maxDuration": 30
+    },
     "api/admin.js": {
       "maxDuration": 60
     },
