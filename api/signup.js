@@ -1,6 +1,6 @@
 // /api/signup.js
 // Creates a Stripe Checkout session for new BidDrop signups.
-// Monthly: 30-day free trial via Stripe Checkout — $0 today, card charged after trial.
+// Monthly: $99/mo — charged immediately on signup, no trial.
 // Pay-as-you-go: requires card via Stripe SetupIntent (off_session), then creates account
 //   with 2 welcome credits. No monthly charge — credits at $4 each when needed.
 
@@ -179,7 +179,6 @@ export default async function handler(req, res) {
           stripe_customer_id: customer.id,
           stripe_payment_method_id: si.payment_method,
           stripe_subscription_id: null,
-          trial_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           notes: `Signed up via BidDrop signup page. Plan: Pay-as-you-go. Stripe customer: ${customer.id}. Welcome credits: ${WELCOME_CREDITS}.`,
           ...(brandColor    ? { brand_color: brandColor }             : {}),
           ...(licenseNum    ? { license_num: licenseNum }             : {}),
@@ -294,9 +293,9 @@ export default async function handler(req, res) {
     }
 
     // ── Monthly plan: create Stripe Checkout Session ──
-    // trial_period_days = 30 means $0 today, first charge after trial ends.
+    // No trial — charge starts immediately at $99/mo.
     // Monthly accounts get 2 welcome credits immediately via signup-webhook when
-    // the subscription is created; the 40 included credits replenish each billing cycle.
+    // the subscription is created; the 20 included credits replenish each billing cycle.
     // IMPORTANT: When `customer` is set, `customer_email` must be completely omitted
     // (not just undefined) — Stripe rejects requests that include both.
     const sessionParams = {
@@ -309,7 +308,6 @@ export default async function handler(req, res) {
         },
       ],
       subscription_data: {
-        trial_period_days: 30,
         metadata: {
           company_name: companyName,
           first_name: firstName,
