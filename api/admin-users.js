@@ -224,9 +224,11 @@ async function handle(action, req, res, ctx) {
 
         // 1. Look up the profile of the user being deleted to get their account_id and name
         const profResp = await sbFetch(`user_profiles?id=eq.${userId}&select=id,account_id,name,email`);
-        const profData = await profResp.json();
-        if (!profResp.ok || !profData.length) {
-          res.status(404).json({ error: 'User profile not found' }); return;
+        let profData;
+        try { profData = await profResp.json(); } catch(e) { profData = []; }
+        if (!profResp.ok || !Array.isArray(profData) || !profData.length) {
+          console.error('[delete-user] profile lookup failed:', profResp.status, profData);
+          res.status(404).json({ error: 'User profile not found', detail: JSON.stringify(profData) }); return;
         }
         const delProfile = profData[0];
         const accountId = delProfile.account_id;
@@ -270,7 +272,12 @@ async function handle(action, req, res, ctx) {
           method: 'DELETE',
           headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}` }
         });
-        if (!r.ok) { const d = await r.json(); res.status(r.status).json({ error: d.message || 'Delete failed' }); return; }
+        if (!r.ok) {
+          let d = {};
+          try { d = await r.json(); } catch(e) { d = { message: await r.text().catch(() => 'unknown') }; }
+          console.error('[delete-user] auth delete failed:', r.status, d);
+          res.status(r.status).json({ error: d.message || d.error_description || 'Delete failed', status: r.status }); return;
+        }
 
         res.status(200).json({
           success: true,
