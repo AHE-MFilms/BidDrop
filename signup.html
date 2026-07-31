@@ -613,23 +613,30 @@
               <label for="email">Work Email *</label>
               <input type="email" id="email" placeholder="john@smithroofing.com" autocomplete="email" />
               <div class="form-error" id="errEmail">Please enter a valid email</div>
+              <div style="font-size:12px;color:#888;margin-top:4px;">This will also be your login username.</div>
             </div>
           </div>
           <div class="form-row single">
             <div class="form-group" style="position:relative;">
               <label for="password">Create Password *</label>
-              <input type="password" id="password" placeholder="At least 8 characters" autocomplete="new-password" style="padding-right:44px;" />
+              <input type="password" id="password" placeholder="Min 8 chars, uppercase, number, symbol" autocomplete="new-password" style="padding-right:44px;" oninput="checkPasswordStrength(this.value)" />
               <button type="button" onclick="togglePasswordVisibility()" style="position:absolute;right:12px;top:36px;background:none;border:none;cursor:pointer;color:#888;padding:4px;" title="Show/hide password">
                 <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               </button>
-              <div class="form-error" id="errPassword">Password must be at least 8 characters</div>
+              <div id="passwordStrengthBar" style="display:none;margin-top:6px;">
+                <div style="height:4px;border-radius:2px;background:#333;overflow:hidden;">
+                  <div id="passwordStrengthFill" style="height:100%;width:0%;transition:width 0.3s,background 0.3s;"></div>
+                </div>
+                <div id="passwordStrengthLabel" style="font-size:11px;margin-top:3px;color:#888;"></div>
+              </div>
+              <div class="form-error" id="errPassword">Password must be at least 8 characters with uppercase, number, and symbol</div>
             </div>
           </div>
           <div class="form-row single">
             <div class="form-group" style="position:relative;">
               <label for="confirmPassword">Confirm Password *</label>
-              <input type="password" id="confirmPassword" placeholder="Re-enter your password" autocomplete="new-password" style="padding-right:44px;"
-                onpaste="return false;" ondrop="return false;" autocomplete="off" />
+              <input type="password" id="confirmPassword" placeholder="Re-enter your password" style="padding-right:44px;"
+                onpaste="return false;" ondrop="return false;" autocomplete="off" oninput="checkConfirmMatch()" />
               <button type="button" onclick="toggleConfirmPasswordVisibility()" style="position:absolute;right:12px;top:36px;background:none;border:none;cursor:pointer;color:#888;padding:4px;" title="Show/hide password">
                 <svg id="eyeIconConfirm" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               </button>
@@ -1001,7 +1008,7 @@
         { id: 'city',          errId: 'errCity',          check: v => v.trim().length > 0 },
         { id: 'zip',           errId: 'errZip',           check: v => v.trim().length >= 5 },
         { id: 'state',         errId: 'errState',         check: v => v !== '' },
-        { id: 'password',      errId: 'errPassword',      check: v => v.trim().length >= 8 },
+        { id: 'password',      errId: 'errPassword',      check: v => v.length >= 8 && /[A-Z]/.test(v) && /[0-9]/.test(v) && /[^A-Za-z0-9]/.test(v) && !COMMON_PASSWORDS.includes(v.toLowerCase()) },
         { id: 'confirmPassword', errId: 'errConfirmPassword', check: v => v === document.getElementById('password').value }
       ];
 
@@ -1070,6 +1077,50 @@
         icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
       }
     }
+    // ---- PASSWORD STRENGTH ----
+    const COMMON_PASSWORDS = ['password','123456','12345678','123456789','1234567890','qwerty','abc123','password1','iloveyou','admin','letmein','welcome','monkey','dragon','master','sunshine','princess','shadow','superman','michael','football','baseball','soccer','hockey','batman','trustno1','hello','charlie','donald','password123','passw0rd','qwerty123','111111','000000','654321','987654321'];
+
+    function checkPasswordStrength(val) {
+      const bar = document.getElementById('passwordStrengthBar');
+      const fill = document.getElementById('passwordStrengthFill');
+      const label = document.getElementById('passwordStrengthLabel');
+      if (!val) { bar.style.display = 'none'; return; }
+      bar.style.display = 'block';
+      let score = 0;
+      if (val.length >= 8) score++;
+      if (val.length >= 12) score++;
+      if (/[A-Z]/.test(val)) score++;
+      if (/[0-9]/.test(val)) score++;
+      if (/[^A-Za-z0-9]/.test(val)) score++;
+      if (COMMON_PASSWORDS.includes(val.toLowerCase())) score = 0;
+      const levels = [
+        { pct: '20%', color: '#ef4444', text: 'Too weak' },
+        { pct: '40%', color: '#f97316', text: 'Weak' },
+        { pct: '60%', color: '#eab308', text: 'Fair' },
+        { pct: '80%', color: '#84cc16', text: 'Good' },
+        { pct: '100%', color: '#22c55e', text: 'Strong ✓' },
+      ];
+      const lvl = levels[Math.min(score, 4)];
+      fill.style.width = lvl.pct;
+      fill.style.background = lvl.color;
+      label.textContent = lvl.text;
+      label.style.color = lvl.color;
+      // Also re-check confirm match live
+      const conf = document.getElementById('confirmPassword');
+      if (conf.value) checkConfirmMatch();
+    }
+
+    function checkConfirmMatch() {
+      const pw = document.getElementById('password').value;
+      const conf = document.getElementById('confirmPassword').value;
+      const err = document.getElementById('errConfirmPassword');
+      if (conf && conf !== pw) {
+        err.classList.add('show');
+      } else {
+        err.classList.remove('show');
+      }
+    }
+
     // ---- EMAIL VERIFICATION ----
     let emailVerified = false;
 
