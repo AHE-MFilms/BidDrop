@@ -586,8 +586,8 @@ export default async function handler(req, res) {
         headers: { 'Authorization': `Bearer ${resendKeyAdmin}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           from: 'BidDrop Alerts <alerts@biddrop.io>',
-          to: ['john@mongoosefilms.com'],
-          subject: `🟢 NEW SIGNUP — ${companyName || customerEmail} (${planConfig.name})`,
+          to: ['john@americashomeexperts.com', 'steve@americashomeexperts.com'],
+          subject: `🟢 NEW BIDDROP SIGNUP — ${companyName || customerEmail} (${planConfig.name})`,
           html: `<div style="font-family:sans-serif;max-width:600px;">
             <h2 style="color:#22c55e;">🟢 New BidDrop Signup</h2>
             <p><strong>Company:</strong> ${companyName || '—'}</p>
@@ -598,7 +598,7 @@ export default async function handler(req, res) {
             <p style="color:#6b7280;font-size:12px;">Account ID: ${newAccount?.id || '—'}</p>
           </div>`,
         }),
-      }).catch(e => console.warn('[signup-webhook] John notify failed:', e.message));
+      }).catch(e => console.warn('[signup-webhook] Notify failed:', e.message));
     }
 
     // ---- 6. GHL — Create contact in BidDrop sub-account ----

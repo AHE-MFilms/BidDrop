@@ -315,8 +315,8 @@ export default async function handler(req, res) {
             headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
               from: 'BidDrop Alerts <alerts@biddrop.io>',
-              to: ['john@mongoosefilms.com'],
-              subject: `🟢 NEW SIGNUP (Free) — ${companyName || email}`,
+              to: ['john@americashomeexperts.com', 'steve@americashomeexperts.com'],
+              subject: `🟢 NEW BIDDROP SIGNUP — ${companyName || email}`,
               html: `<div style="font-family:sans-serif;max-width:600px;">
                 <h2 style="color:#22c55e;">🟢 New BidDrop Signup (Pay-as-you-go)</h2>
                 <p><strong>Company:</strong> ${companyName || '—'}</p>
@@ -327,7 +327,7 @@ export default async function handler(req, res) {
                 <p style="color:#6b7280;font-size:12px;">Account ID: ${newAccount?.id || '—'} | Stripe: ${customer.id}</p>
               </div>`,
             }),
-          }).catch(e => console.warn('[signup/payg] John notify failed:', e.message));
+          }).catch(e => console.warn('[signup/payg] Notify failed:', e.message));
         }
 
         return res.status(200).json({ success: true, account_id: newAccount?.id });
