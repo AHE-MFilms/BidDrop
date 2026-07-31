@@ -9,7 +9,6 @@ const ONBOARDING_STEPS = [
   { id: 'logo',     label: 'Upload your logo',                  icon: '🖼',  action: ()=>goTab('settings'), actionLabel: 'Go to Settings' },
   { id: 'phone',    label: 'Add your company phone & address',  icon: '📞',  action: ()=>goTab('settings'), actionLabel: 'Go to Settings' },
   { id: 'color',    label: 'Set your brand color',              icon: '🎨',  action: ()=>goTab('settings'), actionLabel: 'Go to Settings' },
-  { id: 'design',   label: 'Design your postcard',              icon: '📬',  action: ()=>goTab('designs'),  actionLabel: 'Open Postcard Designer' },
   { id: 'pin',      label: 'Drop your first pin on the map',    icon: '📍',  action: ()=>goTab('map'),      actionLabel: 'Open Map' },
   { id: 'estimate', label: 'Build your first estimate',         icon: '📋',  action: ()=>goTab('estimate'), actionLabel: 'Open Estimator' },
   { id: 'mailer',   label: 'Send your first mailer',            icon: '✉️',  action: ()=>goTab('mailqueue'),actionLabel: 'Open Mail Queue' },
@@ -34,7 +33,6 @@ function autoDetectCompletedSteps() {
   if (!steps.logo     && S.cfg.logoData)                                                          { steps.logo     = true; changed = true; }
   if (!steps.phone    && S.cfg.companyPhone && S.cfg.companyAddr)                                 { steps.phone    = true; changed = true; }
   if (!steps.color    && S.cfg.brandColor && S.cfg.brandColor !== '#F25C05')                      { steps.color    = true; changed = true; }
-  if (!steps.design   && (S.cfg.canvasDesignFrontJson || S.cfg.postcardDesigns?.length))          { steps.design   = true; changed = true; }
   if (!steps.pin      && S.pins && S.pins.filter(p=>!p.deleted_at).length > 0)                   { steps.pin      = true; changed = true; }
   if (!steps.estimate && S.estimates && S.estimates.length > 0)                                   { steps.estimate = true; changed = true; }
   if (!steps.ghl      && (S.cfg.ghlOauthLocationId || S.cfg.ghlLocationId))                      { steps.ghl      = true; changed = true; }
