@@ -57,6 +57,8 @@ export default async function handler(req, res) {
     offerGutters,
     // PAYG card confirmation step
     setupIntentId,
+    // Password for immediate login
+    password,
     // Logo is base64 — too large for Stripe metadata, handled post-account-creation
   } = req.body;
 
@@ -203,6 +205,61 @@ export default async function handler(req, res) {
         }
         const [newAccount] = await createResp.json();
 
+        // ── Create Supabase auth user so they can log in immediately ──
+        let authUserId = null;
+        if (password && password.length >= 8) {
+          try {
+            // Check if auth user already exists
+            const listResp = await fetch(`${SUPABASE_URL}/auth/v1/admin/users?per_page=1000`, {
+              headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}` },
+            });
+            const listData = await listResp.json();
+            const existingAuthUser = (listData.users || []).find(u => u.email === email);
+
+            if (existingAuthUser) {
+              // Update password for existing user
+              authUserId = existingAuthUser.id;
+              await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${authUserId}`, {
+                method: 'PUT',
+                headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password }),
+              });
+            } else {
+              // Create new auth user
+              const authResp = await fetch(`${SUPABASE_URL}/auth/v1/admin/users`, {
+                method: 'POST',
+                headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  email,
+                  password,
+                  email_confirm: true,
+                  user_metadata: { first_name: firstName, last_name: lastName, company_name: companyName, plan: 'payg' },
+                }),
+              });
+              const authData = await authResp.json();
+              authUserId = authData.id;
+            }
+
+            // Create user_profile linking auth user to account
+            if (authUserId) {
+              await fetch(`${SUPABASE_URL}/rest/v1/user_profiles`, {
+                method: 'POST',
+                headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+                body: JSON.stringify({
+                  id: authUserId,
+                  account_id: newAccount.id,
+                  role: 'admin',
+                  name: `${firstName} ${lastName}`.trim(),
+                  email,
+                }),
+              });
+            }
+          } catch (authErr) {
+            console.error('[signup/payg] Auth user creation error:', authErr.message);
+            // Non-fatal — account was created, user can reset password
+          }
+        }
+
         // ── Post-signup: GHL contact, welcome email, John notification ──
         const RESEND_KEY = process.env.RESEND_API_KEY;
         const GHL_API_KEY = process.env.GHL_API_KEY;
@@ -232,7 +289,7 @@ export default async function handler(req, res) {
 
         // 2. Send welcome email to client
         if (RESEND_KEY) {
-          fetch('https://api.resend.com/emails', {
+          const welcomeResult = await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -241,12 +298,16 @@ export default async function handler(req, res) {
               subject: 'Welcome to BidDrop — Your Account Is Ready 🎉',
               html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
                 <h2 style="color:#F97316;">Welcome to BidDrop, ${firstName || companyName}!</h2>
-                <p>Your free Pay-as-you-go account is ready. Log in at <a href="https://biddrop.us">biddrop.us</a> to get started.</p>
+                <p>Your BidDrop account is ready. Log in now at <a href="https://biddrop.us">biddrop.us</a> using your email and the password you created during signup.</p>
                 <p>You have <strong>2 welcome credits</strong> to try the platform — credits are $4 each when you need more.</p>
                 <p style="color:#6b7280;font-size:12px;">Questions? Reply to this email or visit biddrop.us.</p>
               </div>`,
             }),
-          }).catch(e => console.warn('[signup/payg] Welcome email failed:', e.message));
+          }).catch(e => { console.error('[signup/payg] Welcome email error:', e.message); return null; });
+          if (welcomeResult && !welcomeResult.ok) {
+            const errBody = await welcomeResult.text().catch(() => '');
+            console.error('[signup/payg] Welcome email failed:', welcomeResult.status, errBody);
+          }
 
           // 3. Notify John
           fetch('https://api.resend.com/emails', {
