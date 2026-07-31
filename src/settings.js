@@ -327,9 +327,12 @@ function openSettings(){
     }
     el.value = val;
   });
-  // Integrations card (GHL, JobNimbus) — visible to all admins; RentCast/Lob sub-sections remain super_admin only
+  // Integrations tab + card — visible only to Monthly plan (pro) and above; hidden for PAYG
+  const intTab = document.getElementById('stab-tab-integrations');
   const intCard = document.getElementById('stab-integrations-card');
-  if(intCard) intCard.style.display = isAdminOrAbove() ? 'block' : 'none';
+  const canSeeIntegrations = isPlanAtLeast('pro') || isSuperAdmin();
+  if(intTab) intTab.style.display = canSeeIntegrations ? '' : 'none';
+  if(intCard) intCard.style.display = (canSeeIntegrations && isAdminOrAbove()) ? 'block' : 'none';
   // Show Lob and RentCast key fields only to super_admin
   const lobSection = document.getElementById('lob-settings-section');
   if(lobSection) lobSection.style.display = isSuperAdmin() ? 'block' : 'none';
