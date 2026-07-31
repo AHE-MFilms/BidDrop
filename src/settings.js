@@ -327,12 +327,14 @@ function openSettings(){
     }
     el.value = val;
   });
-  // Integrations tab + card — visible only to Monthly plan (pro) and above; hidden for PAYG
+  // Integrations tab — visible to all users; PAYG users see a locked overlay with upgrade CTA
   const intTab = document.getElementById('stab-tab-integrations');
+  if(intTab) intTab.style.display = '';
   const intCard = document.getElementById('stab-integrations-card');
-  const canSeeIntegrations = isPlanAtLeast('pro') || isSuperAdmin();
-  if(intTab) intTab.style.display = canSeeIntegrations ? '' : 'none';
-  if(intCard) intCard.style.display = (canSeeIntegrations && isAdminOrAbove()) ? 'block' : 'none';
+  if(intCard) intCard.style.display = isAdminOrAbove() ? 'block' : 'none';
+  // Show/hide the plan gate overlay
+  const intGate = document.getElementById('integrations-plan-gate');
+  if(intGate) intGate.style.display = (!isPlanAtLeast('pro') && !isSuperAdmin()) ? 'flex' : 'none';
   // Show Lob and RentCast key fields only to super_admin
   const lobSection = document.getElementById('lob-settings-section');
   if(lobSection) lobSection.style.display = isSuperAdmin() ? 'block' : 'none';

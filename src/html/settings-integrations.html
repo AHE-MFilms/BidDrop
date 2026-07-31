@@ -1,6 +1,15 @@
 
     <!-- ══ TAB: INTEGRATIONS ══ -->
-    <div class="stab-tab-pane" id="stab-tabpane-integrations">
+    <div class="stab-tab-pane" id="stab-tabpane-integrations" style="position:relative;">
+
+    <!-- Plan gate overlay — shown for PAYG users -->
+    <div id="integrations-plan-gate" style="display:none;position:absolute;inset:0;z-index:10;background:rgba(0,0,0,0.72);backdrop-filter:blur(3px);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 24px;">
+      <div style="font-size:40px;margin-bottom:14px;">🔒</div>
+      <div style="font-family:var(--font-h);font-size:20px;font-weight:700;color:#fff;margin-bottom:8px;">Integrations — Monthly Plan Only</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.7);max-width:360px;margin-bottom:24px;line-height:1.6;">Connect GHL, JobNimbus, AccuLynx, QuickBooks, and more. Upgrade to the Monthly Plan to unlock all integrations.</div>
+      <button onclick="showPlanUpgradePrompt('Integrations','pro')" style="background:var(--accent);border:none;border-radius:8px;padding:12px 28px;color:#fff;font-family:var(--font-h);font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.5px;">Upgrade to Monthly — $99/mo →</button>
+      <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:12px;">Contact <a href="mailto:support@biddrop.io" style="color:var(--accent);">support@biddrop.io</a> to upgrade</div>
+    </div>
 
     <!-- Integration cards CSS -->
     <style>
