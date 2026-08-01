@@ -234,7 +234,7 @@ async function doForgotPassword(){
     });
     if(error) throw error;
     msg.style.color = '#1a7f4b';
-    msg.textContent = '✅ Reset link sent! Check your email.';
+    msg.textContent = '✅ Reset link sent! Check your email — and your spam! 😊';
     btn.textContent = 'Sent!';
     // Don't re-enable — prevent double sends
   } catch(e){
