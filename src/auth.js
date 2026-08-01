@@ -284,6 +284,29 @@ async function doSetNewPassword(){
   }
 }
 
+async function doChangePassword(){
+  const pw1  = document.getElementById('chpw-new').value.trim();
+  const pw2  = document.getElementById('chpw-confirm').value.trim();
+  const btn  = document.getElementById('chpw-btn');
+  const msg  = document.getElementById('chpw-msg');
+  msg.textContent = '';
+  if(!pw1 || pw1.length < 8){ msg.style.color='var(--danger)'; msg.textContent='Password must be at least 8 characters.'; return; }
+  if(pw1 !== pw2){ msg.style.color='var(--danger)'; msg.textContent='Passwords do not match.'; return; }
+  btn.textContent = 'Updating...'; btn.disabled = true;
+  try {
+    const { error } = await sb.auth.updateUser({ password: pw1 });
+    if(error) throw error;
+    msg.style.color = '#1a7f4b';
+    msg.textContent = '✅ Password updated successfully!';
+    document.getElementById('chpw-new').value = '';
+    document.getElementById('chpw-confirm').value = '';
+  } catch(e){
+    msg.style.color = 'var(--danger)';
+    msg.textContent = 'Error: '+(e.message||'Could not update password.');
+  }
+  btn.textContent = 'Update Password'; btn.disabled = false;
+}
+
 async function doLogout(){
   // Wipe all Supabase localStorage keys BEFORE signOut() so the client
   // starts clean — this clears any stale locks without creating a new client

@@ -273,5 +273,35 @@
       </div>
 
       <!-- LEFT: Pricing & Estimator -->
+
+      <!-- Change Password Card -->
+      <div class="stab-card" id="stab-change-pw-card">
+        <div class="stab-card-hdr" onclick="toggleStabCard('change-pw')">
+          <span>&#128274; Change Password</span>
+          <span class="stab-chevron" id="stab-chevron-change-pw">&#9662;</span>
+        </div>
+        <div class="stab-card-body" id="stab-body-change-pw">
+          <div style="max-width:400px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Update the password you use to log in to BidDrop.</div>
+            <div class="fg" style="margin-bottom:12px;">
+              <label class="fl" for="chpw-new">New Password</label>
+              <div style="position:relative;">
+                <input class="fi" id="chpw-new" type="password" placeholder="min 8 characters" autocomplete="new-password" style="padding-right:40px;width:100%;box-sizing:border-box;">
+                <button type="button" onclick="var i=document.getElementById('chpw-new');i.type=i.type==='password'?'text':'password';this.innerHTML=i.type==='password'?'&#128065;':'&#128064;';" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-size:15px;padding:0;line-height:1;">&#128065;</button>
+              </div>
+            </div>
+            <div class="fg" style="margin-bottom:16px;">
+              <label class="fl" for="chpw-confirm">Confirm New Password</label>
+              <div style="position:relative;">
+                <input class="fi" id="chpw-confirm" type="password" placeholder="re-enter new password" autocomplete="new-password" onpaste="return false;" ondrop="return false;" style="padding-right:40px;width:100%;box-sizing:border-box;">
+                <button type="button" onclick="var i=document.getElementById('chpw-confirm');i.type=i.type==='password'?'text':'password';this.innerHTML=i.type==='password'?'&#128065;':'&#128064;';" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-size:15px;padding:0;line-height:1;">&#128065;</button>
+              </div>
+            </div>
+            <div id="chpw-msg" style="font-size:12px;min-height:16px;margin-bottom:10px;"></div>
+            <button id="chpw-btn" onclick="doChangePassword()" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:13px;font-weight:700;cursor:pointer;">Update Password</button>
+          </div>
+        </div>
+      </div>
+
     </div><!-- /stab-grid profile -->
     </div><!-- /stab-tab-pane profile -->

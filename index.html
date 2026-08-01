@@ -770,7 +770,7 @@ tr:hover td{background:var(--card);}
       <div style="font-family:var(--font-h);font-size:16px;font-weight:600;letter-spacing:.5px;color:var(--text);margin-bottom:20px;">Sign In to Your Account</div>
       <form id="login-form" autocomplete="on" onsubmit="event.preventDefault();doLogin()" style="margin:0;">
       <div class="fg"><label class="fl" for="login-email">Email</label><input class="fi" id="login-email" type="email" name="email" placeholder="you@company.com" autocomplete="username email"></div>
-      <div class="fg"><label class="fl" for="login-pass">Password</label><input class="fi" id="login-pass" type="password" name="password" placeholder="••••••••" autocomplete="current-password"></div>
+      <div class="fg"><label class="fl" for="login-pass">Password</label><div style="position:relative;"><input class="fi" id="login-pass" type="password" name="password" placeholder="••••••••" autocomplete="current-password" style="padding-right:40px;width:100%;box-sizing:border-box;"><button type="button" onclick="var i=document.getElementById('login-pass');i.type=i.type==='password'?'text':'password';this.innerHTML=i.type==='password'?'&#128065;':'&#128064;';" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;padding:0;line-height:1;">&#128065;</button></div></div>
       <div id="login-error" style="color:var(--danger);font-size:12px;margin-bottom:10px;min-height:16px;"></div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
         <input type="checkbox" id="login-remember" name="remember" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;">
