@@ -1979,3 +1979,87 @@ function normStruct(s){
 
 
 // ═══════════════════════════════
+
+// ── Pin Hail History ─────────────────────────────────────────────────────────
+// Shows inline hail history for a pinned address using the MRMS address lookup API.
+// Called from the pin popup "⚡ Hail History" button.
+async function showPinHailHistory(pid, address, lat, lon) {
+  const container = document.getElementById('hail-hist-' + pid);
+  if (!container) return;
+
+  // Toggle off if already showing
+  if (container.style.display !== 'none' && container.dataset.loaded === '1') {
+    container.style.display = 'none';
+    container.dataset.loaded = '';
+    return;
+  }
+
+  // Show loading state
+  container.style.display = '';
+  container.innerHTML = '<div style="color:#60A5FA;font-size:11px;text-align:center;padding:6px;">⏳ Loading hail history…</div>';
+
+  try {
+    const sess = (await sb.auth.getSession()).data.session;
+    const headers = sess ? { 'Authorization': 'Bearer ' + sess.access_token } : {};
+
+    // Build query — prefer lat/lon if available, otherwise use address
+    let url = '/api/mrms-address-lookup?days=1825&minSize=0.5';
+    if (lat && lon && lat !== 0 && lon !== 0) {
+      url += '&lat=' + lat + '&lon=' + lon;
+    } else if (address) {
+      url += '&address=' + encodeURIComponent(address);
+    } else {
+      container.innerHTML = '<div style="color:#EF4444;font-size:11px;">No address or coordinates available.</div>';
+      return;
+    }
+
+    const resp = await fetch(url, { headers });
+    if (!resp.ok) throw new Error('API error ' + resp.status);
+    const data = await resp.json();
+
+    const events = data.events || [];
+    if (events.length === 0) {
+      container.innerHTML = '<div style="color:#6B7280;font-size:11px;text-align:center;padding:6px;">No hail events found within 5km in the last 5 years.</div>';
+      container.dataset.loaded = '1';
+      return;
+    }
+
+    function hailLabel(sizeIn) {
+      if (sizeIn >= 2.00) return 'Baseball+';
+      if (sizeIn >= 1.50) return 'Golf Ball';
+      if (sizeIn >= 1.00) return 'Quarter';
+      if (sizeIn >= 0.75) return 'Penny';
+      return 'Dime';
+    }
+    function hailColor(sizeIn) {
+      if (sizeIn >= 2.00) return '#EF4444';
+      if (sizeIn >= 1.50) return '#F97316';
+      if (sizeIn >= 1.00) return '#EAB308';
+      return '#60A5FA';
+    }
+
+    const rows = events.slice(0, 10).map(e => {
+      const sz = parseFloat(e.hail_size_in);
+      const color = hailColor(sz);
+      const label = hailLabel(sz);
+      const dist = e.distance_km ? ' · ' + parseFloat(e.distance_km).toFixed(1) + 'km' : '';
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.06);">'
+        + '<span style="color:#9CA3AF;">' + e.event_date + '</span>'
+        + '<span style="color:' + color + ';font-weight:700;">' + label + ' (' + sz + '"' + dist + ')</span>'
+        + '</div>';
+    }).join('');
+
+    const moreNote = events.length > 10
+      ? '<div style="color:#6B7280;font-size:10px;text-align:center;margin-top:4px;">+' + (events.length - 10) + ' more events</div>'
+      : '';
+
+    container.innerHTML = '<div style="font-size:10px;font-weight:700;color:#60A5FA;margin-bottom:6px;letter-spacing:.5px;text-transform:uppercase;">⚡ '
+      + events.length + ' Hail Event' + (events.length !== 1 ? 's' : '') + ' — Last 5 Years</div>'
+      + rows + moreNote;
+    container.dataset.loaded = '1';
+
+  } catch (err) {
+    container.innerHTML = '<div style="color:#EF4444;font-size:11px;">Failed to load: ' + err.message + '</div>';
+    console.warn('[BidDrop] showPinHailHistory error:', err);
+  }
+}
