@@ -70,11 +70,11 @@
     },
     {
       "path": "/api/cron-mrms-ingest",
-      "schedule": "0 6 * * *"
+      "schedule": "0 9 * * *"
     },
     {
       "path": "/api/cron-refresh-storm-dates",
-      "schedule": "0 7 * * *"
+      "schedule": "30 9 * * *"
     }
   ],
   "functions": {
