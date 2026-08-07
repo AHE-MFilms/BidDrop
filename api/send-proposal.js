@@ -46,8 +46,9 @@ export default async function handler(req, res) {
         'Authorization': `Bearer ${RESEND_KEY}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        from: 'BidDrop Proposals <proposals@biddrop.us>',
+        body: JSON.stringify({
+        from: 'BidDrop Proposals <noreply@biddrop.io>',
+        reply_to: 'BidDrop Support <support@biddrop.io>',
         to: [to],
         subject: subject || `Your Roofing Proposal from BidDrop`,
         html
