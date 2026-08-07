@@ -154,7 +154,7 @@ async function handle(action, req, res, ctx) {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                  from: 'BidDrop <noreply@biddrop.io>',
+                  from: 'BidDrop <support@biddrop.io>',
                   to: [lcEmail],
                   subject: `⚠️ BidDrop: Only ${pcNewPaid} credit${pcNewPaid === 1 ? '' : 's'} left — top up now`,
                   html: lcHtml,

@@ -46,7 +46,7 @@ const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
 const RESEND_KEY   = process.env.RESEND_API_KEY;
 const SENDGRID_KEY = process.env.SENDGRID_API_KEY;
 const ADMIN_EMAIL  = 'john@mongoosefilms.com';
-const FROM_EMAIL   = 'BidDrop <noreply@biddrop.io>';
+const FROM_EMAIL   = 'BidDrop <support@biddrop.io>';
 const APP_URL      = (process.env.APP_URL || 'https://biddrop.us').trim();
 
 // Monthly credit allotments per plan (after trial, once billing starts)
@@ -81,7 +81,7 @@ async function sendEmail(toEmail, subject, html) {
       headers: { 'Authorization': `Bearer ${SENDGRID_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         personalizations: [{ to: [{ email: toEmail }] }],
-        from: { email: 'noreply@biddrop.io', name: 'BidDrop' },
+        from: { email: 'support@biddrop.io', name: 'BidDrop' },
         subject,
         content: [{ type: 'text/html', value: html }],
       }),

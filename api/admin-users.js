@@ -58,7 +58,7 @@ async function handle(action, req, res, ctx) {
           await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${resendKeyInv}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ from: 'BidDrop <noreply@biddrop.io>', to: [invEmail], subject: `You've been added to ${acctInv.company_name || 'BidDrop'} on BidDrop`, html: invEmailHtml })
+            body: JSON.stringify({ from: 'BidDrop <support@biddrop.io>', to: [invEmail], subject: `You've been added to ${acctInv.company_name || 'BidDrop'} on BidDrop`, html: invEmailHtml })
           }).catch(e => console.error('[invite-rep] email send error:', e));
         }
         res.status(200).json({ success: true, userId: newUserId, tempPassword: tempPw });
@@ -176,7 +176,7 @@ async function handle(action, req, res, ctx) {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              from: 'BidDrop <noreply@biddrop.io>',
+              from: 'BidDrop <support@biddrop.io>',
               to: [ownerEmail],
               subject: 'Your BidDrop subscription has been cancelled',
               html: `<div style="font-family:sans-serif;max-width:600px;padding:24px;">
@@ -421,7 +421,7 @@ async function handle(action, req, res, ctx) {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
             body: JSON.stringify(batch.map(to => ({
-              from: 'BidDrop <noreply@biddrop.io>',
+              from: 'BidDrop <support@biddrop.io>',
               to: [to],
               subject,
               html: html || undefined,
@@ -504,7 +504,7 @@ async function handle(action, req, res, ctx) {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${RESEND_KEY2}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            from: 'BidDrop <noreply@biddrop.io>',
+            from: 'BidDrop <support@biddrop.io>',
             to: [testTo],
             subject: `[TEST] ${testSubject}`,
             html: testHtml,

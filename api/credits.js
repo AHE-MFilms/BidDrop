@@ -414,7 +414,7 @@ module.exports = async function handler(req, res) {
           fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ from: 'BidDrop <noreply@biddrop.io>', to: [cpAcct.email], subject: clientSubject, html: clientHtml }),
+            body: JSON.stringify({ from: 'BidDrop <support@biddrop.io>', to: [cpAcct.email], subject: clientSubject, html: clientHtml }),
           }).catch(e => console.warn('[change-plan] client email failed:', e.message));
         }
         res.status(200).json({ ok: true, newPlan, stripeResult });

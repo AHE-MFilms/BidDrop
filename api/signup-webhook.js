@@ -234,7 +234,7 @@ async function sendWelcomeEmail({ email, firstName, companyName, planName, tempP
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'BidDrop <noreply@biddrop.io>',
+        from: 'BidDrop <support@biddrop.io>',
         to: [email],
         subject,
         html,
@@ -253,7 +253,7 @@ async function sendWelcomeEmail({ email, firstName, companyName, planName, tempP
       },
       body: JSON.stringify({
         personalizations: [{ to: [{ email }] }],
-        from: { email: 'noreply@biddrop.io', name: 'BidDrop' },
+        from: { email: 'support@biddrop.io', name: 'BidDrop' },
         subject,
         content: [{ type: 'text/html', value: html }],
       }),

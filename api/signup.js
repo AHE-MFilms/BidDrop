@@ -293,7 +293,7 @@ export default async function handler(req, res) {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              from: 'BidDrop <noreply@biddrop.io>',
+              from: 'BidDrop <support@biddrop.io>',
               to: [email],
               subject: 'Welcome to BidDrop — Your Account Is Ready 🎉',
               html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;">

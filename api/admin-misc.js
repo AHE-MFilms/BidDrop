@@ -621,7 +621,7 @@ async function handle(action, req, res, ctx) {
         const emailRes = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ from: 'BidDrop <noreply@biddrop.io>', to: [alertEmail], subject: `${approvalCount} Postcard${approvalCount!==1?'s':''} Waiting for Approval — ${companyName}`, html: approvalEmailHtml })
+          body: JSON.stringify({ from: 'BidDrop <support@biddrop.io>', to: [alertEmail], subject: `${approvalCount} Postcard${approvalCount!==1?'s':''} Waiting for Approval — ${companyName}`, html: approvalEmailHtml })
         });
         const emailData = await emailRes.json().catch(()=>({}));
         res.status(200).json({ sent: emailRes.ok, id: emailData.id });

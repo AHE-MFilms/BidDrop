@@ -47,7 +47,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json'
       },
         body: JSON.stringify({
-        from: 'BidDrop Proposals <noreply@biddrop.io>',
+        from: 'BidDrop Proposals <support@biddrop.io>',
         reply_to: 'BidDrop Support <support@biddrop.io>',
         to: [to],
         subject: subject || `Your Roofing Proposal from BidDrop`,
