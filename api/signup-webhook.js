@@ -135,7 +135,7 @@ function generateSlug(companyName) {
 // Send welcome email via Resend (or swap for SendGrid)
 // Uses Resend API — add RESEND_API_KEY to Vercel env vars
 // Alternatively, set SENDGRID_API_KEY and swap the fetch call
-async function sendWelcomeEmail({ email, firstName, companyName, planName, tempPassword, loginUrl, mailerCredits }) {
+async function sendWelcomeEmail({ email, firstName, companyName, planName, tempPassword, loginUrl, mailerCredits, usingUserPassword }) {
   const resendKey = process.env.RESEND_API_KEY;
   const sendgridKey = process.env.SENDGRID_API_KEY;
 
@@ -161,8 +161,12 @@ async function sendWelcomeEmail({ email, firstName, companyName, planName, tempP
         <div style="background: #f8f8f8; border: 1px solid #e0e0e0; border-left: 4px solid #F97316; border-radius: 8px; padding: 24px; margin-bottom: 28px;">
           <p style="font-size: 12px; color: #666666; margin: 0 0 14px 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">Your Login Credentials</p>
           <p style="margin: 0 0 10px 0; font-size: 15px; color: #111111;"><strong>Email:</strong> ${email}</p>
-          <p style="margin: 0 0 10px 0; font-size: 15px; color: #111111;"><strong>Temp Password:</strong> <span style="color: #F97316; font-size: 20px; font-weight: 800; letter-spacing: 1px;">${tempPassword}</span></p>
-          <p style="font-size: 13px; color: #666666; margin: 12px 0 0 0;">You'll be prompted to change your password after logging in.</p>
+          ${usingUserPassword
+            ? `<p style="margin: 0 0 10px 0; font-size: 15px; color: #111111;"><strong>Password:</strong> The password you created during signup.</p>
+               <p style="font-size: 13px; color: #16a34a; margin: 12px 0 0 0;">✓ You can log in immediately with the password you set.</p>`
+            : `<p style="margin: 0 0 10px 0; font-size: 15px; color: #111111;"><strong>Temp Password:</strong> <span style="color: #F97316; font-size: 20px; font-weight: 800; letter-spacing: 1px;">${tempPassword}</span></p>
+               <p style="font-size: 13px; color: #666666; margin: 12px 0 0 0;">You'll be prompted to change your password after logging in.</p>`
+          }
         </div>
 
         <!-- Credits Badge -->
@@ -180,8 +184,8 @@ async function sendWelcomeEmail({ email, firstName, companyName, planName, tempP
                 <div style="width: 28px; height: 28px; background: #F97316; border-radius: 50%; text-align: center; line-height: 28px; color: #fff; font-weight: 800; font-size: 14px;">1</div>
               </td>
               <td style="vertical-align: top; padding-bottom: 14px; padding-left: 10px;">
-                <p style="margin: 0; font-size: 15px; font-weight: 700; color: #111111;">Set your password</p>
-                <p style="margin: 4px 0 0 0; font-size: 13px; color: #666666;">You'll be prompted on first login. Takes 30 seconds.</p>
+                <p style="margin: 0; font-size: 15px; font-weight: 700; color: #111111;">${usingUserPassword ? 'Log in to BidDrop' : 'Set your password'}</p>
+                <p style="margin: 4px 0 0 0; font-size: 13px; color: #666666;">${usingUserPassword ? 'Use the email and password you created during signup.' : 'You\'ll be prompted on first login. Takes 30 seconds.'}</p>
               </td>
             </tr>
             <tr>
@@ -456,7 +460,34 @@ export default async function handler(req, res) {
     }
 
     // ---- 2. Create Supabase auth user ----
-    const tempPassword = generatePassword(12);
+    // Try to retrieve the user's chosen password from pending_signups (set by signup.js before Stripe redirect)
+    // Fall back to a generated temp password if not found (e.g., old signups, direct Stripe signups)
+    const pendingCustomerId = fullSession.customer?.id || session.customer || null;
+    let userPassword = null;
+    if (pendingCustomerId) {
+      try {
+        const pendingResp = await fetch(
+          `${process.env.SUPABASE_URL || 'https://gtwbhxnrmfmdenogzuea.supabase.co'}/rest/v1/pending_signups?stripe_customer_id=eq.${pendingCustomerId}&select=password_hash`,
+          { headers: { 'apikey': process.env.SUPABASE_SERVICE_KEY, 'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}` } }
+        );
+        if (pendingResp.ok) {
+          const rows = await pendingResp.json();
+          if (rows && rows.length > 0 && rows[0].password_hash) {
+            userPassword = rows[0].password_hash;
+            console.log('[signup-webhook] Using user-chosen password from pending_signups');
+            // Delete the row immediately — single use
+            fetch(
+              `${process.env.SUPABASE_URL || 'https://gtwbhxnrmfmdenogzuea.supabase.co'}/rest/v1/pending_signups?stripe_customer_id=eq.${pendingCustomerId}`,
+              { method: 'DELETE', headers: { 'apikey': process.env.SUPABASE_SERVICE_KEY, 'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}` } }
+            ).catch(() => {});
+          }
+        }
+      } catch (e) {
+        console.warn('[signup-webhook] Could not read pending_signups:', e.message);
+      }
+    }
+    const tempPassword = userPassword || generatePassword(12);
+    const usingUserPassword = !!userPassword;
     let authUserId = null;
 
     // Always try to create the auth user fresh.
@@ -553,7 +584,8 @@ export default async function handler(req, res) {
         name: `${firstName || ''} ${lastName || ''}`.trim() || companyName,
         email: customerEmail,
         phone: phone || null,
-        must_change_password: true,
+        must_change_password: !usingUserPassword,
+        // If user set their own password during signup, they don't need to change it
         // NOTE: user_profiles has no deleted_at column — do not include it
       };
       const { error: profileError } = await supabase
@@ -576,6 +608,7 @@ export default async function handler(req, res) {
       tempPassword,
       loginUrl,
       mailerCredits: planConfig.mailer_credits || 10,
+      usingUserPassword,
     });
 
     // ---- 5b. Notify John of new signup ----

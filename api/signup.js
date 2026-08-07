@@ -411,6 +411,32 @@ export default async function handler(req, res) {
       },
     };
 
+    // ── Save password to pending_signups so webhook can use it ──
+    // The user typed their password on BidDrop's form. We store it temporarily
+    // in Supabase (service-role only, deleted after webhook uses it) so the
+    // signup-webhook can create the auth user with the real password instead of
+    // a random temp password.
+    const SUPABASE_URL_M = process.env.SUPABASE_URL || 'https://gtwbhxnrmfmdenogzuea.supabase.co';
+    const SERVICE_KEY_M  = process.env.SUPABASE_SERVICE_KEY;
+    if (password && password.length >= 8 && SERVICE_KEY_M) {
+      try {
+        await fetch(`${SUPABASE_URL_M}/rest/v1/pending_signups`, {
+          method: 'POST',
+          headers: {
+            'apikey': SERVICE_KEY_M,
+            'Authorization': `Bearer ${SERVICE_KEY_M}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'resolution=merge-duplicates,return=minimal',
+          },
+          body: JSON.stringify({ stripe_customer_id: customer.id, password_hash: password }),
+        });
+        console.log('[signup/monthly] Saved pending password for customer:', customer.id);
+      } catch (e) {
+        console.warn('[signup/monthly] Could not save pending password:', e.message);
+        // Non-fatal — webhook will fall back to temp password
+      }
+    }
+
     const session = await stripe.checkout.sessions.create(sessionParams);
 
     return res.status(200).json({ url: session.url });
