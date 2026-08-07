@@ -588,7 +588,7 @@ function renderSuperAdminPanel(accounts, allProfiles){
       '</div>' +
       // Broadcast Email
       '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#3B82F6;margin-bottom:4px;">📢 Broadcast Email</div>' +
-      '<div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Send a one-time email to all clients, a specific plan tier, or a single account. Sends from noreply@biddrop.io via Resend.</div>' +
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Send a one-time email to all clients, a specific plan tier, or a single account. Sends from support@biddrop.io via Resend.</div>' +
       '<div style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:16px;">' +
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">' +
           '<div>' +
