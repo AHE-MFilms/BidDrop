@@ -549,17 +549,6 @@ function goTab(t){
   if(t==='mailqueue')renderQueue();
   if(t==='estimates')renderEstimatesTab();
   if(t==='estimate'){
-    // ── Plan gate: Roofing Calculator requires Monthly plan ──
-    if(typeof isPlanAtLeast==='function' && !isPlanAtLeast('monthly')){
-      if(typeof showPlanUpgradePrompt==='function') showPlanUpgradePrompt('Roofing Calculator','monthly');
-      // Revert nav highlight back to previous tab
-      const _prev = prevTab && prevTab.dataset.tab;
-      if(_prev && _prev !== 'estimate'){
-        document.querySelectorAll('.tab-btn,.bnav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===_prev));
-        document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active',p.id==='tab-'+_prev));
-      }
-      return;
-    }
     populateEstPinPicker();updatePreview();scheduleDraftSave&&clearTimeout(_draftTimer);
     if(typeof renderTradeSelector==='function') renderTradeSelector();
     // Restore home photo if it was cleared during tab switch
