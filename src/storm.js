@@ -743,13 +743,26 @@ window.loadHailEventsFeed = async function() {
     if (!r.ok) throw new Error('API error');
     const data = await r.json();
     const mrms = data.mrms_hail || [];
-    // Group by date and find max hail per date
+    const spcHail = data.spc_hail_spotters || [];
+
+    // Merge MRMS + SPC spotter data by date
     const byDate = {};
     mrms.forEach(e => {
-      if (!byDate[e.date]) byDate[e.date] = { max: 0, count: 0, events: [] };
+      if (!byDate[e.date]) byDate[e.date] = { max: 0, mrmsCount: 0, spcCount: 0, sources: [] };
       if (e.hail_size_in > byDate[e.date].max) byDate[e.date].max = e.hail_size_in;
-      byDate[e.date].count++;
+      byDate[e.date].mrmsCount++;
+      if (!byDate[e.date].sources.includes('MRMS')) byDate[e.date].sources.push('MRMS');
     });
+    spcHail.forEach(e => {
+      const date = e.date || '';
+      if (!date) return;
+      const sizeIn = e.size_in || (e.magnitude ? e.magnitude / 100 : 0);
+      if (!byDate[date]) byDate[date] = { max: 0, mrmsCount: 0, spcCount: 0, sources: [] };
+      if (sizeIn > byDate[date].max) byDate[date].max = sizeIn;
+      byDate[date].spcCount++;
+      if (!byDate[date].sources.includes('SPC')) byDate[date].sources.push('SPC');
+    });
+
     const dates = Object.keys(byDate).sort((a,b) => b.localeCompare(a));
     if (!dates.length) {
       feedEl.innerHTML = '<div style="font-size:11px;color:var(--mid);text-align:center;padding:10px;">No hail events found in this area for the selected period.</div>';
@@ -760,13 +773,19 @@ window.loadHailEventsFeed = async function() {
       const d = byDate[date];
       const lbl = d.max >= 2.75 ? '🔴 Baseball+' : d.max >= 1.75 ? '🟠 Baseball' : d.max >= 1.0 ? '🟡 Golf Ball' : '🔵 Quarter';
       const sizeColor = d.max >= 2.75 ? '#ef4444' : d.max >= 1.75 ? '#f97316' : d.max >= 1.0 ? '#eab308' : '#3b82f6';
+      const subLabel = [
+        d.mrmsCount ? `${d.mrmsCount} radar pts` : '',
+        d.spcCount ? `${d.spcCount} spotter${d.spcCount > 1 ? 's' : ''}` : ''
+      ].filter(Boolean).join(' · ');
+      const sourceBadge = d.sources.map(s => `<span style="font-size:9px;background:rgba(255,255,255,0.08);border-radius:3px;padding:1px 4px;color:var(--mid);">${s}</span>`).join(' ');
       html += `<div onclick="loadMrmsForDate('${date}');_onStormDateChange('${date}');document.getElementById('storm-date-sel').value='${date}';" style="display:flex;justify-content:space-between;align-items:center;padding:7px 6px;border-bottom:1px solid var(--border);cursor:pointer;border-radius:5px;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='none'">
         <div>
           <div style="font-size:12px;font-weight:700;color:var(--text);">${date}</div>
-          <div style="font-size:10px;color:var(--mid);">${d.count} radar grid points</div>
+          <div style="font-size:10px;color:var(--mid);margin-top:1px;">${subLabel}</div>
+          <div style="margin-top:2px;">${sourceBadge}</div>
         </div>
         <div style="text-align:right;">
-          <div style="font-size:13px;font-weight:800;color:${sizeColor};">${d.max.toFixed(2)}"</div>
+          <div style="font-size:13px;font-weight:800;color:${sizeColor};">${d.max > 0 ? d.max.toFixed(2)+'"' : '—'}</div>
           <div style="font-size:10px;color:var(--mid);">${lbl.replace(/^[^ ]+ /,'')}</div>
         </div>
       </div>`;
