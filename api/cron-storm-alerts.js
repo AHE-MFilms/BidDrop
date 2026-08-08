@@ -19,10 +19,14 @@ async function supabaseFetch(path, opts = {}) {
       apikey: SERVICE_KEY,
       Authorization: `Bearer ${SERVICE_KEY}`,
       'Content-Type': 'application/json',
+      'Prefer': 'return=minimal',
       ...(opts.headers || {})
     }
   });
-  return r.json();
+  if (r.status === 204 || r.headers.get('content-length') === '0') return null;
+  const text = await r.text();
+  if (!text) return null;
+  try { return JSON.parse(text); } catch { return null; }
 }
 
 // Check if a lat/lon point is inside a territory definition
