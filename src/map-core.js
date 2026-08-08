@@ -681,6 +681,7 @@ function addMarker(pin){
       <div id="contact-info-${pid}" style="margin-bottom:5px;">${pin.contactData ? buildContactInfoHTML(pid, pin.contactData) : (currentAccount && currentAccount.tracerfy_enabled ? `<button onclick="event.stopPropagation();lookupContactInfo('${pid}')" style="background:transparent;border:1.5px solid #A78BFA;border-radius:7px;padding:6px;color:#A78BFA;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;display:block;">📞 Get Contact Info</button>` : `<div style="font-size:10px;color:#6B7280;text-align:center;padding:4px;">Contact lookup not enabled</div>`)}</div>
       <button onclick="openNearbyCampaign('${pid}')" style="background:rgba(242,92,5,.12);border:1.5px solid #F25C05;border-radius:7px;padding:6px;color:#F25C05;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">📍 Nearby Campaign</button>
       <button onclick="openSorryForMess('${pid}')" style="background:rgba(99,102,241,.12);border:1.5px solid #6366F1;border-radius:7px;padding:6px;color:#6366F1;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">🏗 Sorry for the Mess</button>
+      <button onclick="openSendStormReport('${pid}')" style="background:rgba(242,92,5,.12);border:1.5px solid #F25C05;border-radius:7px;padding:6px;color:#F25C05;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">📄 Send Storm Report</button>
       <button onclick="confirmDeletePin('${pid}')" style="background:transparent;border:1.5px solid #EF4444;border-radius:7px;padding:5px;color:#EF4444;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;display:block;">🗑 Delete Pin</button>
     </div>
   `,{maxWidth:260});
@@ -1106,6 +1107,7 @@ function _buildPinPopupHTML(pin){
       <button onclick="openPhotoModal('${pid}')" style="background:transparent;border:1.5px solid #22C55E;border-radius:7px;padding:6px;color:#22C55E;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">\ud83d\udcf7 Manage Photos</button>
       <button onclick="openNearbyCampaign('${pid}')" style="background:rgba(242,92,5,.12);border:1.5px solid #F25C05;border-radius:7px;padding:6px;color:#F25C05;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">\ud83d\udccd Nearby Campaign</button>
       <button onclick="openSorryForMess('${pid}')" style="background:rgba(99,102,241,.12);border:1.5px solid #6366F1;border-radius:7px;padding:6px;color:#6366F1;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">\ud83c\udfd7 Sorry for the Mess</button>
+      <button onclick="openSendStormReport('${pid}')" style="background:rgba(242,92,5,.12);border:1.5px solid #F25C05;border-radius:7px;padding:6px;color:#F25C05;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">📄 Send Storm Report</button>
       <button onclick="showPinHailHistory('${pid}','${escHtml(pin.address||'')}',${pin.lat||0},${pin.lon||0})" style="background:rgba(96,165,250,.12);border:1.5px solid #60A5FA;border-radius:7px;padding:6px;color:#60A5FA;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">\u26a1 Hail History</button>
       <div id="hail-hist-${pid}" style="display:none;background:#0a1628;border:1px solid #60A5FA33;border-radius:7px;padding:8px;margin-bottom:5px;font-size:11px;"></div>
       <button onclick="confirmDeletePin('${pid}')" style="background:transparent;border:1.5px solid #EF4444;border-radius:7px;padding:5px;color:#EF4444;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;display:block;">\ud83d\uddd1 Delete Pin</button>
@@ -2217,3 +2219,117 @@ async function showPinHailHistory(pid, address, lat, lon) {
     console.warn('[BidDrop] showPinHailHistory error:', err);
   }
 }
+
+// ── SEND STORM REPORT ─────────────────────────────────────────────────────────
+window.openSendStormReport = function(pid) {
+  const pin = S.pins.find(p => p.id === pid);
+  if (!pin) return;
+  // Pre-fill from contact data if available
+  const contact = pin.contactData || {};
+  const ownerName = (pin.estimate && typeof pin.estimate === 'object' ? pin.estimate.owner : '') || contact.owner_name || '';
+  const ownerEmail = contact.email || '';
+  const ownerPhone = contact.phone || '';
+
+  // Build modal
+  const existing = document.getElementById('storm-report-modal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'storm-report-modal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:10010;background:rgba(0,0,0,0.75);display:flex;align-items:flex-end;justify-content:center;';
+  modal.innerHTML = `
+    <div style="background:var(--panel,#1a2535);border-radius:16px 16px 0 0;width:100%;max-width:480px;padding:24px 20px 32px;max-height:90vh;overflow-y:auto;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div>
+          <div style="font-size:16px;font-weight:800;color:var(--text,#fff);">📄 Send Storm Report</div>
+          <div style="font-size:11px;color:var(--mid,#9ca3af);margin-top:2px;">${escHtml(pin.address||'')}</div>
+        </div>
+        <button onclick="document.getElementById('storm-report-modal').remove()" style="background:none;border:none;color:var(--mid,#9ca3af);font-size:20px;cursor:pointer;">✕</button>
+      </div>
+
+      <div style="font-size:11px;font-weight:700;color:var(--mid,#9ca3af);margin-bottom:5px;letter-spacing:.4px;">HOMEOWNER NAME (optional)</div>
+      <input id="srm-name" type="text" value="${escHtml(ownerName)}" placeholder="e.g. John Smith"
+        style="width:100%;background:var(--bg,#0f172a);border:1px solid var(--border,#374151);color:var(--text,#fff);border-radius:8px;padding:9px 12px;font-size:13px;margin-bottom:12px;box-sizing:border-box;outline:none;">
+
+      <div style="font-size:11px;font-weight:700;color:var(--mid,#9ca3af);margin-bottom:5px;letter-spacing:.4px;">EMAIL ADDRESS</div>
+      <input id="srm-email" type="email" value="${escHtml(ownerEmail)}" placeholder="homeowner@email.com"
+        style="width:100%;background:var(--bg,#0f172a);border:1px solid var(--border,#374151);color:var(--text,#fff);border-radius:8px;padding:9px 12px;font-size:13px;margin-bottom:12px;box-sizing:border-box;outline:none;">
+
+      <div style="font-size:11px;font-weight:700;color:var(--mid,#9ca3af);margin-bottom:5px;letter-spacing:.4px;">PHONE (for SMS)</div>
+      <input id="srm-phone" type="tel" value="${escHtml(ownerPhone)}" placeholder="+1 (555) 000-0000"
+        style="width:100%;background:var(--bg,#0f172a);border:1px solid var(--border,#374151);color:var(--text,#fff);border-radius:8px;padding:9px 12px;font-size:13px;margin-bottom:16px;box-sizing:border-box;outline:none;">
+
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text,#fff);">
+          <input type="checkbox" id="srm-send-email" checked style="accent-color:#F25C05;width:16px;height:16px;"> Send Email
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text,#fff);">
+          <input type="checkbox" id="srm-send-sms" style="accent-color:#F25C05;width:16px;height:16px;"> Send SMS
+        </label>
+      </div>
+
+      <div id="srm-status" style="font-size:12px;color:var(--mid,#9ca3af);text-align:center;min-height:18px;margin-bottom:10px;"></div>
+
+      <button onclick="sendStormReport('${pid}')" id="srm-send-btn"
+        style="width:100%;background:#F25C05;border:none;border-radius:10px;padding:14px;color:#fff;font-size:15px;font-weight:800;cursor:pointer;letter-spacing:.3px;">
+        📄 Generate &amp; Send Report
+      </button>
+    </div>`;
+  document.body.appendChild(modal);
+};
+
+window.sendStormReport = async function(pid) {
+  const pin = S.pins.find(p => p.id === pid);
+  if (!pin) return;
+  const name = document.getElementById('srm-name').value.trim();
+  const email = document.getElementById('srm-email').value.trim();
+  const phone = document.getElementById('srm-phone').value.trim();
+  const sendEmail = document.getElementById('srm-send-email').checked;
+  const sendSms = document.getElementById('srm-send-sms').checked;
+  const statusEl = document.getElementById('srm-status');
+  const btn = document.getElementById('srm-send-btn');
+
+  if (!email && !phone) { statusEl.textContent = '⚠️ Enter an email or phone number.'; statusEl.style.color = '#F59E0B'; return; }
+  if (sendEmail && !email) { statusEl.textContent = '⚠️ Enter an email address to send email.'; statusEl.style.color = '#F59E0B'; return; }
+
+  btn.textContent = '⏳ Generating report…'; btn.disabled = true;
+  statusEl.textContent = 'Fetching storm data for this property…'; statusEl.style.color = 'var(--mid,#9ca3af)';
+
+  try {
+    const r = await fetch('/api/send-storm-report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (supabase.auth.session ? supabase.auth.session()?.access_token : '') },
+      body: JSON.stringify({
+        address: pin.address,
+        lat: pin.lat,
+        lon: pin.lng || pin.lon,
+        homeowner_name: name,
+        homeowner_email: email,
+        homeowner_phone: phone,
+        send_email: sendEmail,
+        send_sms: sendSms,
+        account_id: S.account?.id
+      })
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'Server error');
+
+    const parts = [];
+    if (data.email_sent) parts.push('email sent ✓');
+    if (data.sms_sent) parts.push('SMS sent ✓');
+    if (!parts.length) parts.push('report generated');
+
+    statusEl.textContent = '✅ ' + parts.join(' · ');
+    statusEl.style.color = '#22c55e';
+    btn.textContent = '✓ Done';
+    toast('📄 Storm report sent!', 'success');
+    setTimeout(() => {
+      const modal = document.getElementById('storm-report-modal');
+      if (modal) modal.remove();
+    }, 2000);
+  } catch(e) {
+    statusEl.textContent = '❌ ' + (e.message || 'Failed to send report');
+    statusEl.style.color = '#ef4444';
+    btn.textContent = '📄 Generate & Send Report'; btn.disabled = false;
+  }
+};

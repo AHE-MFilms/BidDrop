@@ -795,3 +795,25 @@ window.loadHailEventsFeed = async function() {
     feedEl.innerHTML = '<div style="font-size:11px;color:#ef4444;text-align:center;padding:10px;">Error loading events. Try again.</div>';
   }
 };
+
+// ── STORM PANEL TAB SWITCHER ──────────────────────────────────────────────────
+window.switchStormTab = function(tab) {
+  const tabs = ['find', 'map', 'work'];
+  tabs.forEach(t => {
+    const btn = document.getElementById('storm-tab-' + t);
+    const pane = document.getElementById('storm-pane-' + t);
+    const active = t === tab;
+    if (btn) {
+      btn.style.borderBottomColor = active ? '#6366F1' : 'transparent';
+      btn.style.color = active ? '#6366F1' : 'var(--mid)';
+    }
+    if (pane) pane.style.display = active ? 'block' : 'none';
+  });
+  // Auto-load events when switching to Find tab
+  if (tab === 'find') {
+    const feedEl = document.getElementById('hail-events-feed');
+    if (feedEl && feedEl.querySelector && feedEl.querySelector('.no-events-loaded')) {
+      loadHailEventsFeed();
+    }
+  }
+};
