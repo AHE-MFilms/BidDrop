@@ -202,6 +202,39 @@
         <div id="hail-lookup-status" style="font-size:10px;color:var(--mid);text-align:center;min-height:14px;"></div>
         <div id="hail-lookup-results" style="display:none;margin-top:8px;max-height:200px;overflow-y:auto;"></div>
       </div>
+
+      <!-- Hail by ZIP Code -->
+      <div style="border-top:1px solid var(--border);margin:10px 0;"></div>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:700;color:#a78bfa;margin-bottom:8px;">📮 Hail Hits by ZIP Code</div>
+        <div style="display:flex;gap:6px;margin-bottom:6px;">
+          <input id="hail-zip-input" type="text" placeholder="Enter ZIP code…" maxlength="5"
+            style="flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:6px 10px;font-size:12px;outline:none;"
+            onkeydown="if(event.key==='Enter')lookupHailByZip()"
+          />
+          <button onclick="lookupHailByZip()" style="background:#a78bfa;color:#000;border:none;border-radius:7px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;">Check</button>
+        </div>
+        <div id="hail-zip-status" style="font-size:10px;color:var(--mid);text-align:center;min-height:14px;"></div>
+        <div id="hail-zip-results" style="display:none;margin-top:8px;max-height:220px;overflow-y:auto;"></div>
+      </div>
+
+      <!-- Hail Events Feed -->
+      <div style="border-top:1px solid var(--border);margin:10px 0;"></div>
+      <div style="margin-bottom:10px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div style="font-size:12px;font-weight:700;color:#34d399;">⚡ Recent Hail Events</div>
+          <select id="hail-events-days" onchange="loadHailEventsFeed()" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:5px;padding:3px 6px;font-size:10px;cursor:pointer;">
+            <option value="7">Last 7 days</option>
+            <option value="30" selected>Last 30 days</option>
+            <option value="90">Last 90 days</option>
+          </select>
+        </div>
+        <div id="hail-events-feed" style="max-height:250px;overflow-y:auto;">
+          <div style="font-size:11px;color:var(--mid);text-align:center;padding:10px;">Tap to load recent hail events…</div>
+        </div>
+        <button onclick="loadHailEventsFeed()" style="width:100%;background:none;border:1px solid var(--border);color:var(--mid);border-radius:7px;padding:6px;font-size:11px;cursor:pointer;margin-top:6px;">🔄 Load Events</button>
+      </div>
+
       </div><!-- end scrollable body -->
     </div>
     <div class="measure-hud" id="measure-hud">

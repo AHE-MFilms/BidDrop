@@ -537,6 +537,54 @@ function measureForPin(pinId){
 }
 
 async function revGeo(lat,lng){
+// ── QUICK EDIT PIN NOTE ──────────────────────────────────────────────────────
+window.quickEditPinNote = function(pid) {
+  const displayEl = document.getElementById('pin-note-display-' + pid);
+  const editEl = document.getElementById('pin-note-edit-' + pid);
+  if (!displayEl || !editEl) return;
+  displayEl.style.display = 'none';
+  editEl.style.display = 'block';
+  const ta = document.getElementById('pin-note-ta-' + pid);
+  if (ta) { ta.focus(); ta.select(); }
+};
+
+window.cancelPinNote = function(pid) {
+  const displayEl = document.getElementById('pin-note-display-' + pid);
+  const editEl = document.getElementById('pin-note-edit-' + pid);
+  if (!displayEl || !editEl) return;
+  editEl.style.display = 'none';
+  displayEl.style.display = 'flex';
+};
+
+window.savePinNote = async function(pid) {
+  const ta = document.getElementById('pin-note-ta-' + pid);
+  const displayEl = document.getElementById('pin-note-display-' + pid);
+  const editEl = document.getElementById('pin-note-edit-' + pid);
+  if (!ta) return;
+  const newNote = ta.value.trim();
+  const saveBtn = editEl ? editEl.querySelector('button') : null;
+  if (saveBtn) { saveBtn.textContent = '⏳ Saving…'; saveBtn.disabled = true; }
+  try {
+    const { error } = await supabase.from('pins').update({ notes: newNote }).eq('id', pid);
+    if (error) throw error;
+    // Update local state
+    const pin = S.pins.find(p => p.id === pid);
+    if (pin) pin.notes = newNote;
+    // Update display
+    if (displayEl) {
+      displayEl.innerHTML = newNote
+        ? `<div style="flex:1;font-size:12px;color:#A8BECE;font-style:italic;line-height:1.4;">"${escHtml(newNote)}"</div><span style="font-size:11px;color:#F59E0B;flex-shrink:0;margin-top:1px;">✏️</span>`
+        : `<div style="flex:1;font-size:11px;color:#6B7280;">+ Add a note…</div>`;
+      displayEl.style.display = 'flex';
+    }
+    if (editEl) editEl.style.display = 'none';
+    toast('📝 Note saved', 'success');
+  } catch(e) {
+    if (saveBtn) { saveBtn.textContent = '💾 Save'; saveBtn.disabled = false; }
+    toast('❌ Failed to save note', 'error');
+  }
+};
+
   try{
     const MB=window._mapboxToken||'';
     const r=await fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/'+lng+','+lat+'.json?types=address&access_token='+MB);
@@ -579,6 +627,19 @@ function addMarker(pin){
       ? '<img src="'+pin.photo_url+'" style="width:100%;max-height:160px;object-fit:cover;border-radius:8px;margin-bottom:10px;display:block;" onerror="this.style.display=\'none\'">'
       : '';
   const _popupNotes = pin.notes ? '<div style="font-size:13px;color:#A8BECE;margin-bottom:10px;font-style:italic;">"'+escHtml(pin.notes)+'"</div>' : '';
+  // Notes section with quick-edit support
+  const _notesSection = `<div id="pin-note-section-${pid}" style="margin-bottom:8px;">
+    <div id="pin-note-display-${pid}" style="display:flex;align-items:flex-start;gap:6px;cursor:pointer;" onclick="quickEditPinNote('${pid}')">
+      ${pin.notes ? `<div style="flex:1;font-size:12px;color:#A8BECE;font-style:italic;line-height:1.4;">"${escHtml(pin.notes)}"</div><span style="font-size:11px;color:#F59E0B;flex-shrink:0;margin-top:1px;">✏️</span>` : `<div style="flex:1;font-size:11px;color:#6B7280;">+ Add a note…</div>`}
+    </div>
+    <div id="pin-note-edit-${pid}" style="display:none;">
+      <textarea id="pin-note-ta-${pid}" rows="3" placeholder="Add a note about this property…" style="width:100%;background:#1a2535;border:1px solid #F59E0B;color:#fff;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;resize:none;box-sizing:border-box;">${escHtml(pin.notes||'')}</textarea>
+      <div style="display:flex;gap:5px;margin-top:4px;">
+        <button onclick="savePinNote('${pid}')" style="flex:1;background:#F59E0B;border:none;border-radius:6px;padding:5px;color:#000;font-size:11px;font-weight:700;cursor:pointer;">💾 Save</button>
+        <button onclick="cancelPinNote('${pid}')" style="flex:1;background:none;border:1px solid #374151;border-radius:6px;padding:5px;color:#A8BECE;font-size:11px;cursor:pointer;">Cancel</button>
+      </div>
+    </div>
+  </div>`;
   // Equity snapshot for popup
   const _eq = pin.equityData;
   const _popupEquity = _eq && (_eq.estValue || _eq.equity || _eq.yearBuilt) ? `
@@ -611,6 +672,7 @@ function addMarker(pin){
       <div id="storm-impact-${pid}" style="display:none;background:linear-gradient(135deg,#1a0800,#2d1200);border:1px solid rgba(242,92,5,0.6);border-radius:8px;padding:8px 10px;margin-bottom:8px;"></div>
       ${pin.photo_url ? '<img src="'+pin.photo_url+'" style="width:100%;max-height:90px;object-fit:cover;border-radius:6px;margin-bottom:8px;display:block;" onerror="this.style.display=\'none\'">' : ''}
       ${_propSnap}
+      ${_notesSection}
       ${_popupSolar}
       ${pin.estimate && pin.estimate.total ? `<div style="background:#0a1628;border:1px solid #3B82F655;border-radius:6px;padding:5px 8px;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;"><span style="font-size:9px;font-weight:700;color:#3B82F6;">✓ ESTIMATE</span><span style="font-size:13px;font-weight:700;color:#FFF;">$${(pin.estimate.total||0).toLocaleString()}</span></div>` : ''}
       <button onclick="goEstFromPin('${pid}')" style="background:#F25C05;border:none;border-radius:7px;padding:8px;color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">${pin.estimate && pin.estimate.total ? '📋 Edit Estimate' : '📋 Build Estimate'}</button>

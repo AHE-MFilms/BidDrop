@@ -669,3 +669,110 @@ window.deactivateStormMode = function() {
   if (activeRow) activeRow.style.display = 'none';
   if (btn && sel && sel.value) btn.style.display = 'block';
 };
+
+// ── HAIL BY ZIP CODE ─────────────────────────────────────────────────────────
+window.lookupHailByZip = async function() {
+  const zip = (document.getElementById('hail-zip-input').value || '').trim();
+  const statusEl = document.getElementById('hail-zip-status');
+  const resultsEl = document.getElementById('hail-zip-results');
+  if (!zip || zip.length < 5) { statusEl.textContent = 'Enter a 5-digit ZIP code.'; return; }
+  statusEl.textContent = '🔍 Looking up hail events for ZIP ' + zip + '…';
+  resultsEl.style.display = 'none';
+  try {
+    // Geocode ZIP to lat/lon using Mapbox
+    const MB = window._mapboxToken || '';
+    const geo = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${zip}.json?country=us&types=postcode&limit=1&access_token=${MB}`);
+    const geoData = await geo.json();
+    if (!geoData.features || !geoData.features.length) { statusEl.textContent = '❌ ZIP code not found.'; return; }
+    const [lon, lat] = geoData.features[0].center;
+    const placeName = geoData.features[0].place_name || zip;
+    statusEl.textContent = '📡 Fetching storm data for ' + placeName + '…';
+    // Fetch storm report for this location (90 days)
+    const r = await fetch(`/api/storm-report?lat=${lat}&lon=${lon}&days=90`);
+    if (!r.ok) throw new Error('API error');
+    const data = await r.json();
+    const mrms = data.mrms_hail || [];
+    const spcHail = data.spc_hail_spotters || [];
+    const wind = data.spc_wind || [];
+    if (!mrms.length && !spcHail.length && !wind.length) {
+      statusEl.textContent = '✅ No significant hail events found in ZIP ' + zip + ' (last 90 days).';
+      return;
+    }
+    statusEl.textContent = '';
+    // Group MRMS by date
+    const byDate = {};
+    mrms.forEach(e => {
+      if (!byDate[e.date]) byDate[e.date] = { max: 0, count: 0 };
+      if (e.hail_size_in > byDate[e.date].max) byDate[e.date].max = e.hail_size_in;
+      byDate[e.date].count++;
+    });
+    const dates = Object.keys(byDate).sort((a,b) => b.localeCompare(a));
+    let html = `<div style="font-size:10px;font-weight:700;color:#a78bfa;margin-bottom:6px;">📮 ${placeName} — Last 90 Days</div>`;
+    html += `<div style="font-size:10px;color:var(--mid);margin-bottom:8px;">${dates.length} storm date${dates.length !== 1 ? 's' : ''} with hail detected</div>`;
+    dates.slice(0, 20).forEach(date => {
+      const d = byDate[date];
+      const lbl = d.max >= 2.75 ? '🔴 Baseball+' : d.max >= 1.75 ? '🟠 Baseball' : d.max >= 1.0 ? '🟡 Golf Ball' : '🔵 Quarter';
+      html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;">
+        <span style="color:var(--text);">${date}</span>
+        <span>${lbl} <b>${d.max.toFixed(2)}"</b></span>
+        <span style="color:var(--mid);">${d.count} pts</span>
+      </div>`;
+    });
+    if (spcHail.length) {
+      html += `<div style="font-size:10px;font-weight:700;color:#60a5fa;margin-top:8px;margin-bottom:4px;">👤 Spotter Reports (${spcHail.length})</div>`;
+      spcHail.slice(0, 5).forEach(e => {
+        html += `<div style="font-size:11px;color:#93c5fd;padding:3px 0;border-bottom:1px solid var(--border);">${e.date || ''} — ${(e.magnitude/100).toFixed(2)}" hail${e.comments ? ' — "' + e.comments.substring(0,50) + '"' : ''}</div>`;
+      });
+    }
+    resultsEl.innerHTML = html;
+    resultsEl.style.display = 'block';
+  } catch(e) {
+    statusEl.textContent = '❌ Error fetching data. Try again.';
+  }
+};
+
+// ── HAIL EVENTS FEED ─────────────────────────────────────────────────────────
+window.loadHailEventsFeed = async function() {
+  const days = parseInt(document.getElementById('hail-events-days').value) || 30;
+  const feedEl = document.getElementById('hail-events-feed');
+  feedEl.innerHTML = '<div style="font-size:11px;color:var(--mid);text-align:center;padding:10px;">⚡ Loading hail events…</div>';
+  try {
+    // Get current map center for context
+    const center = map ? map.getCenter() : { lat: 39.5, lng: -98.35 };
+    const r = await fetch(`/api/storm-report?lat=${center.lat}&lon=${center.lng}&days=${days}`);
+    if (!r.ok) throw new Error('API error');
+    const data = await r.json();
+    const mrms = data.mrms_hail || [];
+    // Group by date and find max hail per date
+    const byDate = {};
+    mrms.forEach(e => {
+      if (!byDate[e.date]) byDate[e.date] = { max: 0, count: 0, events: [] };
+      if (e.hail_size_in > byDate[e.date].max) byDate[e.date].max = e.hail_size_in;
+      byDate[e.date].count++;
+    });
+    const dates = Object.keys(byDate).sort((a,b) => b.localeCompare(a));
+    if (!dates.length) {
+      feedEl.innerHTML = '<div style="font-size:11px;color:var(--mid);text-align:center;padding:10px;">No hail events found in this area for the selected period.</div>';
+      return;
+    }
+    let html = `<div style="font-size:10px;color:var(--mid);margin-bottom:6px;">${dates.length} storm dates near map center (${days}-day window)</div>`;
+    dates.forEach(date => {
+      const d = byDate[date];
+      const lbl = d.max >= 2.75 ? '🔴 Baseball+' : d.max >= 1.75 ? '🟠 Baseball' : d.max >= 1.0 ? '🟡 Golf Ball' : '🔵 Quarter';
+      const sizeColor = d.max >= 2.75 ? '#ef4444' : d.max >= 1.75 ? '#f97316' : d.max >= 1.0 ? '#eab308' : '#3b82f6';
+      html += `<div onclick="loadMrmsForDate('${date}');_onStormDateChange('${date}');document.getElementById('storm-date-sel').value='${date}';" style="display:flex;justify-content:space-between;align-items:center;padding:7px 6px;border-bottom:1px solid var(--border);cursor:pointer;border-radius:5px;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='none'">
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--text);">${date}</div>
+          <div style="font-size:10px;color:var(--mid);">${d.count} radar grid points</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:13px;font-weight:800;color:${sizeColor};">${d.max.toFixed(2)}"</div>
+          <div style="font-size:10px;color:var(--mid);">${lbl.replace(/^[^ ]+ /,'')}</div>
+        </div>
+      </div>`;
+    });
+    feedEl.innerHTML = html;
+  } catch(e) {
+    feedEl.innerHTML = '<div style="font-size:11px;color:#ef4444;text-align:center;padding:10px;">Error loading events. Try again.</div>';
+  }
+};

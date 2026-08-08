@@ -156,6 +156,8 @@ export default async function handler(req, res) {
   const lat = parseFloat(req.query.lat);
   const lon = parseFloat(req.query.lon);
   const days = Math.min(parseInt(req.query.days || '365'), 365);
+  // years param: fetch full annual SPC archives going back N years (default 0 = use days only)
+  const years = Math.min(parseInt(req.query.years || '0'), 10);
 
   if (isNaN(lat) || isNaN(lon)) {
     return res.status(400).json({ error: 'lat and lon are required' });
@@ -165,7 +167,7 @@ export default async function handler(req, res) {
   const dateStrings = getDateStrings(days);
 
   // Fetch MRMS hail from Supabase (fast, our own DB)
-  const mrmsHail = await fetchMrmsHail(lat, lon, days);
+  const mrmsHail = await fetchMrmsHail(lat, lon, Math.max(days, years * 365));
 
   // Fetch SPC reports in parallel — limit to 90 days for SPC (performance)
   const spcDates = dateStrings.slice(0, 90);
@@ -186,6 +188,53 @@ export default async function handler(req, res) {
       if (type === 'hail') spcHail.push(...parsed);
       else if (type === 'wind') spcWind.push(...parsed);
       else if (type === 'tornado') spcTornado.push(...parsed);
+    }
+  }
+
+
+  // If years > 0, also fetch full annual SPC archives for each past year
+  if (years > 0) {
+    const currentYear = new Date().getFullYear();
+    const annualFetches = [];
+    for (let y = 1; y <= years; y++) {
+      const yr = currentYear - y;
+      annualFetches.push({ yr, type: 'hail' });
+      annualFetches.push({ yr, type: 'wind' });
+      annualFetches.push({ yr, type: 'tornado' });
+    }
+    for (let b = 0; b < annualFetches.length; b += 6) {
+      const batch = annualFetches.slice(b, b + 6);
+      const results = await Promise.all(batch.map(async ({ yr, type }) => {
+        const typeMap = { hail: 'hail', wind: 'wind', tornado: 'torn' };
+        const url = `https://www.spc.noaa.gov/wcm/data/${yr}_${typeMap[type]}.csv`;
+        try {
+          const r = await fetch(url, {
+            headers: { 'User-Agent': 'BidDrop/1.0 (support@biddrop.io)' },
+            signal: AbortSignal.timeout(15000)
+          });
+          if (!r.ok) return { yr, type, csv: '' };
+          return { yr, type, csv: await r.text() };
+        } catch { return { yr, type, csv: '' }; }
+      }));
+      for (const { yr, type, csv } of results) {
+        if (!csv) continue;
+        const parsed = parseSpcCsv(csv, lat, lon, 35, type);
+        parsed.forEach(r => {
+          if (!r.date) {
+            const t = r.time || '';
+            if (t.includes('/')) {
+              const [mo, dy] = t.split('/');
+              r.date = `${yr}-${String(mo).padStart(2,'0')}-${String(dy).padStart(2,'0')}`;
+            } else {
+              r.date = `${yr}-01-01`;
+            }
+          }
+          r.source_archive = `SPC Annual ${yr}`;
+        });
+        if (type === 'hail') spcHail.push(...parsed);
+        else if (type === 'wind') spcWind.push(...parsed);
+        else if (type === 'tornado') spcTornado.push(...parsed);
+      }
     }
   }
 
