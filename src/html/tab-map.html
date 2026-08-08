@@ -179,6 +179,50 @@
 
           <div style="border-top:1px solid var(--border);margin:10px 0;"></div>
 
+          <!-- Storm Playback -->
+          <div style="border-top:1px solid var(--border);margin:10px 0;"></div>
+          <div style="margin-bottom:10px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <div>
+                <div style="font-size:12px;font-weight:700;color:#F25C05;">📡 Storm Playback</div>
+                <div style="font-size:10px;color:var(--muted);">Watch the storm move frame by frame</div>
+              </div>
+              <button id="btn-storm-playback-toggle" onclick="toggleStormPlayback()" style="background:rgba(242,92,5,0.15);border:1px solid rgba(242,92,5,0.4);color:#F25C05;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">Load</button>
+            </div>
+            <div id="storm-playback-panel" style="display:none;">
+              <!-- Time scrubber -->
+              <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:10px 12px;margin-bottom:8px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                  <div id="storm-playback-time" style="font-size:13px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums;">-- : -- UTC</div>
+                  <div id="storm-playback-frame" style="font-size:10px;color:var(--muted);">0 / 0</div>
+                </div>
+                <input type="range" id="storm-playback-scrubber" min="0" max="0" value="0"
+                  oninput="scrubStormFrame(this.value)"
+                  style="width:100%;accent-color:#F25C05;cursor:pointer;margin-bottom:6px;">
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <button onclick="stepStormFrame(-1)" style="background:rgba(255,255,255,0.08);border:none;color:#fff;border-radius:5px;padding:5px 8px;font-size:13px;cursor:pointer;">◀</button>
+                  <button id="btn-storm-play" onclick="toggleStormPlay()" style="flex:1;background:#F25C05;border:none;color:#fff;border-radius:6px;padding:6px;font-size:12px;font-weight:700;cursor:pointer;">▶ Play</button>
+                  <button onclick="stepStormFrame(1)" style="background:rgba(255,255,255,0.08);border:none;color:#fff;border-radius:5px;padding:5px 8px;font-size:13px;cursor:pointer;">▶</button>
+                  <select id="storm-playback-speed" style="background:rgba(255,255,255,0.08);border:none;color:#fff;border-radius:5px;padding:5px 6px;font-size:10px;cursor:pointer;">
+                    <option value="500">Fast</option>
+                    <option value="200" selected>Normal</option>
+                    <option value="100">Slow</option>
+                  </select>
+                </div>
+              </div>
+              <!-- Hour range filter -->
+              <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
+                <div style="font-size:10px;color:var(--muted);white-space:nowrap;">Hours (UTC):</div>
+                <input type="number" id="storm-playback-start-hr" min="0" max="23" value="12" style="flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:5px;padding:4px 6px;font-size:11px;text-align:center;">
+                <div style="font-size:10px;color:var(--muted);">to</div>
+                <input type="number" id="storm-playback-end-hr" min="0" max="23" value="23" style="flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:5px;padding:4px 6px;font-size:11px;text-align:center;">
+                <button onclick="loadStormPlayback()" style="background:#6366F1;border:none;color:#fff;border-radius:5px;padding:4px 8px;font-size:10px;font-weight:700;cursor:pointer;">Go</button>
+              </div>
+              <div id="storm-playback-status" style="font-size:10px;color:var(--mid);text-align:center;min-height:14px;"></div>
+              <button onclick="clearStormPlayback()" style="width:100%;background:none;border:1px solid var(--border);color:var(--mid);border-radius:6px;padding:5px;font-size:10px;cursor:pointer;margin-top:4px;">✕ Clear Radar Overlay</button>
+            </div>
+          </div>
+
           <!-- SPC Hail Reports layer -->
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
             <div>

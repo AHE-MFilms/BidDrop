@@ -817,3 +817,150 @@ window.switchStormTab = function(tab) {
     }
   }
 };
+
+// ── STORM PLAYBACK ────────────────────────────────────────────────────────────
+let _playbackFrames = [];
+let _playbackIdx = 0;
+let _playbackTimer = null;
+let _playbackOverlay = null;
+let _playbackDate = null;
+
+window.toggleStormPlayback = function() {
+  const panel = document.getElementById('storm-playback-panel');
+  const btn = document.getElementById('btn-storm-playback-toggle');
+  if (!panel) return;
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  if (btn) btn.textContent = isOpen ? 'Load' : 'Close';
+  if (!isOpen && _playbackDate) loadStormPlayback();
+};
+
+window.loadStormPlayback = async function() {
+  // Use the currently selected storm date, or today
+  const dateSel = document.getElementById('storm-date-sel');
+  const date = (dateSel && dateSel.value) || new Date().toISOString().slice(0, 10);
+  const startHr = parseInt(document.getElementById('storm-playback-start-hr')?.value || '12');
+  const endHr = parseInt(document.getElementById('storm-playback-end-hr')?.value || '23');
+  const statusEl = document.getElementById('storm-playback-status');
+  const scrubber = document.getElementById('storm-playback-scrubber');
+
+  _playbackDate = date;
+  if (statusEl) statusEl.textContent = '📡 Loading radar frames…';
+
+  try {
+    const r = await fetch(`/api/storm-frames?date=${date}&start_hour=${startHr}&end_hour=${endHr}`);
+    if (!r.ok) throw new Error('API error');
+    const data = await r.json();
+    _playbackFrames = data.frames || [];
+    _playbackIdx = 0;
+
+    if (!_playbackFrames.length) {
+      if (statusEl) statusEl.textContent = 'No frames available for this date.';
+      return;
+    }
+
+    // Set up scrubber
+    if (scrubber) {
+      scrubber.max = _playbackFrames.length - 1;
+      scrubber.value = 0;
+    }
+
+    // Pre-load first frame
+    _showPlaybackFrame(0);
+    if (statusEl) statusEl.textContent = `${_playbackFrames.length} frames loaded · ${date}`;
+
+    // Open the playback panel
+    const panel = document.getElementById('storm-playback-panel');
+    if (panel) panel.style.display = 'block';
+    const btn = document.getElementById('btn-storm-playback-toggle');
+    if (btn) btn.textContent = 'Close';
+
+  } catch(e) {
+    if (statusEl) statusEl.textContent = '❌ Failed to load radar frames.';
+  }
+};
+
+function _showPlaybackFrame(idx) {
+  if (!_playbackFrames.length || idx < 0 || idx >= _playbackFrames.length) return;
+  _playbackIdx = idx;
+  const frame = _playbackFrames[idx];
+
+  // Update time display
+  const timeEl = document.getElementById('storm-playback-time');
+  const frameEl = document.getElementById('storm-playback-frame');
+  const scrubber = document.getElementById('storm-playback-scrubber');
+  if (timeEl) timeEl.textContent = frame.label || frame.hhmm;
+  if (frameEl) frameEl.textContent = `${idx + 1} / ${_playbackFrames.length}`;
+  if (scrubber) scrubber.value = idx;
+
+  // Update Leaflet image overlay
+  // Bounds: [[south, west], [north, east]] = [[24, -126], [50, -66]]
+  const bounds = [[24, -126], [50, -66]];
+  if (_playbackOverlay) {
+    _playbackOverlay.setUrl(frame.url);
+  } else {
+    if (typeof L !== 'undefined' && map) {
+      _playbackOverlay = L.imageOverlay(frame.url, bounds, {
+        opacity: 0.7,
+        zIndex: 400,
+        crossOrigin: true
+      }).addTo(map);
+    }
+  }
+}
+
+window.scrubStormFrame = function(val) {
+  _showPlaybackFrame(parseInt(val));
+};
+
+window.stepStormFrame = function(delta) {
+  const next = Math.max(0, Math.min(_playbackFrames.length - 1, _playbackIdx + delta));
+  _showPlaybackFrame(next);
+};
+
+window.toggleStormPlay = function() {
+  const btn = document.getElementById('btn-storm-play');
+  if (_playbackTimer) {
+    clearInterval(_playbackTimer);
+    _playbackTimer = null;
+    if (btn) btn.textContent = '▶ Play';
+  } else {
+    const speed = parseInt(document.getElementById('storm-playback-speed')?.value || '200');
+    if (btn) btn.textContent = '⏸ Pause';
+    _playbackTimer = setInterval(() => {
+      const next = (_playbackIdx + 1) % _playbackFrames.length;
+      _showPlaybackFrame(next);
+      const scrubber = document.getElementById('storm-playback-scrubber');
+      if (scrubber) scrubber.value = next;
+    }, speed);
+  }
+};
+
+window.clearStormPlayback = function() {
+  if (_playbackTimer) { clearInterval(_playbackTimer); _playbackTimer = null; }
+  if (_playbackOverlay && map) { map.removeLayer(_playbackOverlay); _playbackOverlay = null; }
+  _playbackFrames = [];
+  _playbackIdx = 0;
+  const timeEl = document.getElementById('storm-playback-time');
+  const frameEl = document.getElementById('storm-playback-frame');
+  const scrubber = document.getElementById('storm-playback-scrubber');
+  const statusEl = document.getElementById('storm-playback-status');
+  const btn = document.getElementById('btn-storm-play');
+  if (timeEl) timeEl.textContent = '-- : -- UTC';
+  if (frameEl) frameEl.textContent = '0 / 0';
+  if (scrubber) { scrubber.max = 0; scrubber.value = 0; }
+  if (statusEl) statusEl.textContent = '';
+  if (btn) btn.textContent = '▶ Play';
+};
+
+// Auto-load playback when storm date changes
+const _origOnStormDateChange = window._onStormDateChange;
+window._onStormDateChange = function(date) {
+  if (_origOnStormDateChange) _origOnStormDateChange(date);
+  // If playback panel is open, reload frames for new date
+  const panel = document.getElementById('storm-playback-panel');
+  if (panel && panel.style.display !== 'none' && date) {
+    _playbackDate = date;
+    loadStormPlayback();
+  }
+};
