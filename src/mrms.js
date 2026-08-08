@@ -31,7 +31,7 @@ const CELL_GRID = 0.01;
  */
 window.fetchMrmsStormDates = async function() {
   const statusIds = ['storm-date-status', 'storm-date-status2'];
-  const selectIds = ['storm-date-sel', 'storm-date-sel2'];
+  const selectIds = ['storm-date-sel', 'storm-date-sel2', 'storm-mode-date-select'];
 
   statusIds.forEach(id => {
     const el = document.getElementById(id);
