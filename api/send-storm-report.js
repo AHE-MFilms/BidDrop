@@ -12,11 +12,9 @@
  * }
  */
 
-import { Resend } from 'resend';
-
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://gtwbhxnrmfmdenogzuea.supabase.co';
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
-const resend = new Resend(process.env.RESEND_API_KEY);
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
 // Fetch account branding
 async function getAccount(accountId) {
@@ -231,12 +229,12 @@ export default async function handler(req, res) {
   if (send_email && homeowner_email) {
     try {
       const subject = `Storm Impact Report — ${address.split(',')[0]}`;
-      await resend.emails.send({
-        from: 'BidDrop Storm Reports <support@biddrop.io>',
-        to: homeowner_email,
-        subject,
-        html
+      const resendResp = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: 'BidDrop Storm Reports <support@biddrop.io>', to: homeowner_email, subject, html })
       });
+      if (!resendResp.ok) throw new Error(`Resend error: ${resendResp.status}`);
       results.email_sent = true;
     } catch(e) {
       results.email_error = e.message;

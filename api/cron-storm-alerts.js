@@ -7,11 +7,9 @@
  * GET /api/cron-storm-alerts (called by Vercel cron)
  */
 
-import { Resend } from 'resend';
-
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://gtwbhxnrmfmdenogzuea.supabase.co';
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
-const resend = new Resend(process.env.RESEND_API_KEY);
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const CRON_SECRET = process.env.CRON_SECRET || 'biddrop-cron-2026';
 
 async function supabaseFetch(path, opts = {}) {
@@ -194,12 +192,12 @@ export default async function handler(req, res) {
     const subject = `⚡ Hail Alert: ${maxHail.toFixed(2)}" hail in your territory — ${dateStr}`;
 
     try {
-      await resend.emails.send({
-        from: 'BidDrop Storm Alerts <support@biddrop.io>',
-        to: emails,
-        subject,
-        html
+      const resendResp = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: 'BidDrop Storm Alerts <support@biddrop.io>', to: emails, subject, html })
       });
+      if (!resendResp.ok) throw new Error(`Resend error: ${resendResp.status}`);
 
       // Update last_sent timestamp
       await supabaseFetch(`accounts?id=eq.${account.id}`, {
