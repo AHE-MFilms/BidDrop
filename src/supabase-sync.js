@@ -585,7 +585,26 @@ function subscribeRealtime(){
           renderEstimateTable();
         }
       })
+    .on('postgres_changes', {event:'*', schema:'public', table:'user_profiles', filter:'account_id=eq.'+currentAccount.id},
+      payload=>{
+        // Team member added, edited, or removed — refresh Settings team card and analytics team view
+        if(typeof renderSettingsTab === 'function') renderSettingsTab();
+        if(typeof renderTeam === 'function') renderTeam();
+      })
+    .on('postgres_changes', {event:'UPDATE', schema:'public', table:'accounts', filter:'id=eq.'+currentAccount.id},
+      payload=>{
+        // Account updated from another session (credits, plan, config) — sync credit badge
+        const nw = payload.new;
+        if(!nw) return;
+        if(nw.mailer_credits !== undefined && S.cfg) S.cfg.mailerCredits = nw.mailer_credits;
+        if(nw.plan && S.cfg) S.cfg.plan = nw.plan;
+        if(typeof updateSidebarBadge === 'function') updateSidebarBadge();
+      })
+    .on('postgres_changes', {event:'*', schema:'public', table:'queue', filter:'account_id=eq.'+currentAccount.id},
+      payload=>{
+        // Mail queue changed — refresh queue count badge
+        if(typeof updateSidebarBadge === 'function') updateSidebarBadge();
+      })
     .subscribe();
 }
-
 
