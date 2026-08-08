@@ -1076,6 +1076,19 @@ function _buildPinPopupHTML(pin){
   const _eq2 = pin.equityData;
   const _propSnap = _eq2 ? buildPropertySnapHTML(pid, _eq2) : `<div id="prop-snap-${pid}" style="background:linear-gradient(135deg,#0f2027,#1a3a2a);border:1px solid #22C55E33;border-radius:8px;padding:8px 10px;margin-bottom:7px;font-size:11px;color:#A8BECE;">\ud83c\udfe0 <span id="prop-snap-val-${pid}">Loading property data\u2026</span></div>`;
   // Owner name from estimate or equity data (shown even before contact lookup)
+  // Notes section with quick-edit
+  const _notesSection2 = `<div id="pin-note-section-${pid}" style="margin-bottom:8px;">
+    <div id="pin-note-display-${pid}" style="display:flex;align-items:flex-start;gap:6px;cursor:pointer;" onclick="quickEditPinNote('${pid}')">
+      ${pin.notes ? `<div style="flex:1;font-size:12px;color:#A8BECE;font-style:italic;line-height:1.4;">"${escHtml(pin.notes)}"</div><span style="font-size:11px;color:#F59E0B;flex-shrink:0;margin-top:1px;">✏️</span>` : `<div style="flex:1;font-size:11px;color:#6B7280;">+ Add a note…</div>`}
+    </div>
+    <div id="pin-note-edit-${pid}" style="display:none;">
+      <textarea id="pin-note-ta-${pid}" rows="3" placeholder="Add a note about this property…" style="width:100%;background:#1a2535;border:1px solid #F59E0B;color:#fff;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;resize:none;box-sizing:border-box;">${escHtml(pin.notes||'')}</textarea>
+      <div style="display:flex;gap:5px;margin-top:4px;">
+        <button onclick="savePinNote('${pid}')" style="flex:1;background:#F59E0B;border:none;border-radius:6px;padding:5px;color:#000;font-size:11px;font-weight:700;cursor:pointer;">💾 Save</button>
+        <button onclick="cancelPinNote('${pid}')" style="flex:1;background:none;border:1px solid #374151;border-radius:6px;padding:5px;color:#A8BECE;font-size:11px;cursor:pointer;">Cancel</button>
+      </div>
+    </div>
+  </div>`;
   const _ownerName = (pin.estimate && (typeof pin.estimate==='object' ? pin.estimate.owner : (() => { try { return JSON.parse(pin.estimate).owner; } catch(e) { return ''; } })()))
     || (pin.equityData && pin.equityData.ownerName) || '';
   // Contact info is now only accessible from the Estimator (Unlock Pin button)
@@ -1086,6 +1099,7 @@ function _buildPinPopupHTML(pin){
       ${_popupPhotos}
       ${_propSnap}
       ${_popupSolar}
+      ${_notesSection2}
       ${pin.estimate && pin.estimate.total ? `<div style="background:#0a1628;border:1px solid #3B82F655;border-radius:6px;padding:5px 8px;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;"><span style="font-size:9px;font-weight:700;color:#3B82F6;">\u2713 ESTIMATE</span><span style="font-size:13px;font-weight:700;color:#FFF;">$${(pin.estimate.total||0).toLocaleString()}</span></div>` : ''}
       <button onclick="goEstFromPin('${pid}')" style="background:#F25C05;border:none;border-radius:7px;padding:8px;color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">${pin.estimate && pin.estimate.total ? '\ud83d\udccb Edit Estimate' : '\ud83d\udccb Build Estimate'}</button>
       <button onclick="measureForPin('${pid}')" style="background:transparent;border:1.5px solid #F25C05;border-radius:7px;padding:6px;color:#F25C05;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:5px;display:block;">\ud83d\udcd0 Measure Roof</button>
