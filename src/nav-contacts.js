@@ -1866,7 +1866,7 @@ async function submitInviteRep() {
 
     closeInviteRepModal();
     // Refresh team list
-    if (typeof renderSettingsTeam === 'function') renderSettingsTeam();
+    if (typeof renderSettingsTab === "function") renderSettingsTab();
     alert(`✅ Invite sent to ${email}! They'll receive an email with login instructions.`);
   } catch (e) {
     showErr(e.message || 'Something went wrong. Please try again.');
