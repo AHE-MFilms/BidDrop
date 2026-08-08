@@ -10,7 +10,7 @@
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://gtwbhxnrmfmdenogzuea.supabase.co';
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const CRON_SECRET = process.env.CRON_SECRET || 'biddrop-cron-2026';
+const CRON_SECRET = process.env.CRON_SECRET;
 
 async function supabaseFetch(path, opts = {}) {
   const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
@@ -126,9 +126,13 @@ function buildAlertEmail({ account, hailEvents, territory, date }) {
 }
 
 export default async function handler(req, res) {
-  // Verify cron secret
-  const secret = req.headers['x-cron-secret'] || req.query.secret;
-  if (secret !== CRON_SECRET) {
+  // Verify cron secret (same pattern as other BidDrop cron jobs)
+  if (!CRON_SECRET) { return res.status(500).json({ error: 'CRON_SECRET not configured' }); }
+  const authHeader = req.headers['authorization'] || '';
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+  // Also allow query param for manual testing
+  const querySecret = req.query.secret || '';
+  if (token !== CRON_SECRET && querySecret !== CRON_SECRET) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
