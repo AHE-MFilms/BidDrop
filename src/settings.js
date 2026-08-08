@@ -352,6 +352,7 @@ function openSettings(){
   document.getElementById('s-reptitle').value=c.repTitle||'';
   document.getElementById('s-hspos').value=c.headshotPos||'30';
   document.getElementById('s-bookingurl').value=c.bookingUrl||'';
+  if(typeof loadCalendlyStatus==='function') loadCalendlyStatus();
   document.getElementById('s-lead-alert-email').value=c.leadAlertEmail||'';
   const hp=document.getElementById('headshot-preview');
   if(hp){
@@ -795,3 +796,32 @@ function hexToRgba(hex,a){
   return 'rgba('+r+','+g+','+b+','+a+')';
 }
 
+
+// ── Calendly Integration ──────────────────────────────────────────────────────
+function updateCalendlyStatus() {
+  const url = (document.getElementById('s-calendly-url') || {}).value || '';
+  const status = document.getElementById('calendly-int-status');
+  const preview = document.getElementById('calendly-int-preview');
+  if (url && url.startsWith('http')) {
+    if (status) { status.textContent = '● Connected'; status.className = 'int-status connected'; }
+    if (preview) preview.style.display = 'block';
+  } else {
+    if (status) { status.textContent = '● Not Connected'; status.className = 'int-status not-connected'; }
+    if (preview) preview.style.display = 'none';
+  }
+}
+function saveCalendlyUrl() {
+  const url = (document.getElementById('s-calendly-url') || {}).value || '';
+  // Save to s-bookingurl (same field) so it flows through to estimate pages
+  const bookingEl = document.getElementById('s-bookingurl');
+  if (bookingEl) bookingEl.value = url;
+  // Trigger save settings
+  saveSettings();
+  updateCalendlyStatus();
+}
+function loadCalendlyStatus() {
+  const url = (S.cfg && S.cfg.bookingUrl) || '';
+  const el = document.getElementById('s-calendly-url');
+  if (el) el.value = url;
+  updateCalendlyStatus();
+}

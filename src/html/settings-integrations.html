@@ -329,6 +329,30 @@
             <button onclick="saveCompanyCamKey()" style="background:var(--accent);border:none;border-radius:7px;padding:9px 18px;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">Save</button>
           </div>
           <div style="font-size:11px;color:var(--muted);">Get your API key from <a href="https://app.companycam.com/settings/api" target="_blank" style="color:var(--accent);">CompanyCam Settings → API</a>. Once connected, a 📷 CompanyCam button will appear on each pin.</div>
+      </div>
+    </div>
+
+      <!-- ── Calendly ── -->
+      <div class="int-card" id="calendly-int-card">
+        <div class="int-card-header">
+          <div class="int-logo" style="background:#006BFF;">📅</div>
+          <div style="flex:1;">
+            <div class="int-card-title">Calendly <span class="int-badge" style="background:#006BFF;color:#fff;">SCHEDULING</span></div>
+            <div class="int-card-sub">Online booking · Appointment scheduling</div>
+          </div>
+          <div id="calendly-int-status" class="int-status not-connected">● Not Connected</div>
+        </div>
+        <div class="int-card-body">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Add your Calendly booking link so homeowners can schedule a free inspection directly from your estimate page and postcards. A "📅 Schedule a Free Visit" button will appear automatically.</div>
+          <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;margin-bottom:12px;">
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--mid);display:block;margin-bottom:5px;">Booking / Calendly URL</label>
+              <input id="s-calendly-url" type="url" placeholder="https://calendly.com/yourname/inspection" oninput="updateCalendlyStatus()" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-size:12px;font-family:var(--font-m);">
+            </div>
+            <button onclick="saveCalendlyUrl()" style="background:var(--accent);border:none;border-radius:7px;padding:9px 18px;color:#fff;font-family:var(--font-h);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">Save</button>
+          </div>
+          <div id="calendly-int-info" style="font-size:11px;color:var(--muted);">Works with Calendly, Acuity, Square Appointments, or any booking URL. Once saved, a scheduling button appears on every estimate page you send to homeowners and on your postcard QR code.</div>
+          <div id="calendly-int-preview" style="display:none;margin-top:10px;background:rgba(0,107,255,.06);border:1px solid rgba(0,107,255,.2);border-radius:7px;padding:8px 12px;font-size:11px;color:#60a5fa;">✅ Booking link active — homeowners will see a "Schedule a Free Visit" button on your estimate pages.</div>
         </div>
       </div>
     </div><!-- /int-grid -->
