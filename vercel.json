@@ -79,6 +79,10 @@
     {
       "path": "/api/cron-cleanup-storage",
       "schedule": "0 7 * * 0"
+    },
+    {
+      "path": "/api/cron-storm-alerts",
+      "schedule": "0 10 * * *"
     }
   ],
   "functions": {

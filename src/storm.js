@@ -823,6 +823,7 @@ let _playbackFrames = [];
 let _playbackIdx = 0;
 let _playbackTimer = null;
 let _playbackOverlay = null;
+let _playbackImages = [];
 let _playbackDate = null;
 
 window.toggleStormPlayback = function() {
@@ -845,7 +846,12 @@ window.loadStormPlayback = async function() {
   const scrubber = document.getElementById('storm-playback-scrubber');
 
   _playbackDate = date;
-  if (statusEl) statusEl.textContent = '📡 Loading radar frames…';
+  if (statusEl) statusEl.textContent = '📡 Fetching frame list…';
+
+  // Stop any running playback
+  if (_playbackTimer) { clearInterval(_playbackTimer); _playbackTimer = null; }
+  const playBtn = document.getElementById('btn-storm-play');
+  if (playBtn) playBtn.textContent = '▶ Play';
 
   try {
     const r = await fetch(`/api/storm-frames?date=${date}&start_hour=${startHr}&end_hour=${endHr}`);
@@ -865,15 +871,43 @@ window.loadStormPlayback = async function() {
       scrubber.value = 0;
     }
 
-    // Pre-load first frame
-    _showPlaybackFrame(0);
-    if (statusEl) statusEl.textContent = `${_playbackFrames.length} frames loaded · ${date}`;
-
     // Open the playback panel
     const panel = document.getElementById('storm-playback-panel');
     if (panel) panel.style.display = 'block';
     const btn = document.getElementById('btn-storm-playback-toggle');
     if (btn) btn.textContent = 'Close';
+
+    // Show first frame immediately so map updates right away
+    _showPlaybackFrame(0);
+
+    // Preload ALL frames in background — batch of 8 at a time
+    if (statusEl) statusEl.textContent = `⏳ Preloading 0 / ${_playbackFrames.length} frames…`;
+    _playbackImages = new Array(_playbackFrames.length).fill(null);
+    let loaded = 0;
+    const BATCH = 8;
+    const preloadBatch = (start) => {
+      const end = Math.min(start + BATCH, _playbackFrames.length);
+      const promises = [];
+      for (let i = start; i < end; i++) {
+        const img = new Image();
+        const idx = i;
+        promises.push(new Promise(resolve => {
+          img.onload = img.onerror = () => {
+            _playbackImages[idx] = img;
+            loaded++;
+            if (statusEl) statusEl.textContent = `⏳ Preloading ${loaded} / ${_playbackFrames.length} frames…`;
+            resolve();
+          };
+          img.src = _playbackFrames[idx].url;
+        }));
+      }
+      return Promise.all(promises).then(() => {
+        if (end < _playbackFrames.length) return preloadBatch(end);
+      });
+    };
+    preloadBatch(0).then(() => {
+      if (statusEl) statusEl.textContent = `✅ ${_playbackFrames.length} frames ready · ${date}`;
+    });
 
   } catch(e) {
     if (statusEl) statusEl.textContent = '❌ Failed to load radar frames.';
@@ -962,5 +996,94 @@ window._onStormDateChange = function(date) {
   if (panel && panel.style.display !== 'none' && date) {
     _playbackDate = date;
     loadStormPlayback();
+  }
+};
+
+// ── STORM ALERTS ─────────────────────────────────────────────────────────────
+window.setStormAlertTerritory = async function() {
+  const city = document.getElementById('storm-alert-city').value.trim();
+  const statusEl = document.getElementById('storm-alert-territory-status');
+  const labelEl = document.getElementById('storm-alert-territory-label');
+  if (!city) { statusEl.textContent = 'Enter a city, state or ZIP.'; return; }
+  statusEl.textContent = '🔍 Geocoding…';
+  try {
+    const MB = window._mapboxToken || '';
+    const r = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(city)}.json?country=us&limit=1&access_token=${MB}`);
+    const data = await r.json();
+    if (!data.features || !data.features.length) { statusEl.textContent = '❌ Location not found.'; return; }
+    const [lon, lat] = data.features[0].center;
+    const placeName = data.features[0].place_name || city;
+    const radius = parseInt(document.getElementById('storm-alert-radius').value) || 50;
+    const minSize = parseFloat(document.getElementById('storm-alert-min-size').value) || 1.0;
+    const territory = { type: 'radius', lat, lon, miles: radius, label: placeName.split(',').slice(0,2).join(',') };
+    // Save to account
+    const { error } = await supabase.from('accounts').update({
+      storm_territory_json: territory,
+      storm_alert_min_size: minSize
+    }).eq('id', S.account?.id);
+    if (error) throw error;
+    if (S.account) { S.account.storm_territory_json = territory; S.account.storm_alert_min_size = minSize; }
+    statusEl.textContent = `✅ Territory set: ${territory.label}`;
+    statusEl.style.color = '#22c55e';
+    if (labelEl) labelEl.textContent = `${territory.label} · ${radius} mi radius · ≥${minSize}"`;
+    // Draw territory circle on map
+    if (typeof L !== 'undefined' && map) {
+      if (window._alertTerritoryCircle) map.removeLayer(window._alertTerritoryCircle);
+      window._alertTerritoryCircle = L.circle([lat, lon], {
+        radius: radius * 1609.34,
+        color: '#34d399', fillColor: '#34d399', fillOpacity: 0.08, weight: 2, dashArray: '6,4'
+      }).addTo(map);
+      map.flyTo([lat, lon], 9, { duration: 1 });
+    }
+  } catch(e) {
+    statusEl.textContent = '❌ Failed to save territory.';
+    statusEl.style.color = '#ef4444';
+  }
+};
+
+window.toggleStormAlerts = async function() {
+  const track = document.getElementById('storm-alert-toggle-track');
+  const thumb = document.getElementById('storm-alert-toggle-thumb');
+  const lbl = document.getElementById('storm-alert-toggle-lbl');
+  const current = S.account?.storm_alert_enabled || false;
+  const newVal = !current;
+  if (newVal && !S.account?.storm_territory_json) {
+    toast('⚠️ Set your territory first', 'warning'); return;
+  }
+  try {
+    const { error } = await supabase.from('accounts').update({ storm_alert_enabled: newVal }).eq('id', S.account?.id);
+    if (error) throw error;
+    if (S.account) S.account.storm_alert_enabled = newVal;
+    if (track) track.style.background = newVal ? '#34d399' : '#374151';
+    if (thumb) thumb.style.left = newVal ? '19px' : '3px';
+    if (lbl) lbl.textContent = newVal ? 'ON' : 'OFF';
+    toast(newVal ? '🔔 Storm alerts enabled!' : '🔕 Storm alerts disabled', newVal ? 'success' : 'info');
+  } catch(e) {
+    toast('❌ Failed to update alerts', 'error');
+  }
+};
+
+// Init storm alert UI state from account data
+window._initStormAlertUI = function() {
+  const account = S.account;
+  if (!account) return;
+  const track = document.getElementById('storm-alert-toggle-track');
+  const thumb = document.getElementById('storm-alert-toggle-thumb');
+  const lbl = document.getElementById('storm-alert-toggle-lbl');
+  const labelEl = document.getElementById('storm-alert-territory-label');
+  const enabled = account.storm_alert_enabled;
+  if (track) track.style.background = enabled ? '#34d399' : '#374151';
+  if (thumb) thumb.style.left = enabled ? '19px' : '3px';
+  if (lbl) lbl.textContent = enabled ? 'ON' : 'OFF';
+  const t = account.storm_territory_json;
+  if (t && labelEl) {
+    const minSize = account.storm_alert_min_size || 1.0;
+    labelEl.textContent = `${t.label || 'Custom territory'} · ${t.miles || 50} mi · ≥${minSize}"`;
+    const cityInput = document.getElementById('storm-alert-city');
+    if (cityInput) cityInput.value = t.label || '';
+    const radiusSel = document.getElementById('storm-alert-radius');
+    if (radiusSel) radiusSel.value = t.miles || 50;
+    const minSel = document.getElementById('storm-alert-min-size');
+    if (minSel) minSel.value = minSize;
   }
 };
