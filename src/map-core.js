@@ -639,10 +639,11 @@ function addMarker(pin){
           if (!bannerEl || !data) { if(bannerEl) bannerEl.style.display='none'; return; }
           const s = data.summary || {};
           const mrmsEvents = data.mrms_hail || [];
-          const spotterHail = (data.spc_hail || []).slice(0, 3);
+          const spotterHail = (data.spc_hail_spotters || data.spc_hail || []).slice(0, 3);
           const windEvents = (data.spc_wind || []).slice(0, 3);
           const tornadoes = (data.spc_tornado || []).slice(0, 2);
           const warnings = data.nws_warnings || [];
+          const radarImg = data.radar_images && data.radar_images.length ? data.radar_images[0] : null;
           const hasAny = mrmsEvents.length || spotterHail.length || windEvents.length || tornadoes.length || warnings.length;
           if (!hasAny) { bannerEl.style.display='none'; return; }
           const stormDate = typeof _stormModeDate !== 'undefined' ? _stormModeDate : '';
@@ -691,6 +692,12 @@ function addMarker(pin){
             });
           } else if (s.tornado_events === 0) {
             html += '<div style="font-size:9px;color:var(--mid);margin-top:5px;">🌪️ No tornado reports within 35 miles</div>';
+          }
+          // NEXRAD Radar Image
+          if (radarImg) {
+            html += '<div style="font-size:9px;font-weight:700;color:#a78bfa;letter-spacing:.4px;margin-top:6px;margin-bottom:4px;">📡 NEXRAD RADAR</div>';
+            html += '<img src="' + radarImg.url + '" style="width:100%;border-radius:6px;border:1px solid rgba(167,139,250,0.3);display:block;cursor:pointer;" onclick="window.open(\'' + radarImg.url + '\',\'_blank\')" title="' + radarImg.label + '" onerror="this.parentElement.style.display=\'none\'">';
+            html += '<div style="font-size:9px;color:var(--mid);margin-top:3px;">' + radarImg.label + '</div>';
           }
           bannerEl.innerHTML = html;
         }).catch(function() { if(bannerEl) bannerEl.style.display='none'; });
