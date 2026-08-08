@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hail Impact Report — Concept 2: The Door Knock Leave-Behind</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; display: flex; justify-content: center; padding: 20px; }
+  .page { width: 600px; background: #111; color: #fff; border-radius: 4px; overflow: hidden; }
+  /* Top alert bar */
+  .alert-bar { background: #c0392b; padding: 14px 28px; display: flex; align-items: center; gap: 12px; }
+  .alert-icon { font-size: 28px; }
+  .alert-text { font-size: 22px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
+  /* Address hero */
+  .address-hero { background: #1a1a1a; padding: 24px 28px; border-bottom: 1px solid #2a2a2a; }
+  .address-label { font-size: 10px; font-weight: 700; color: #888; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+  .address-text { font-size: 22px; font-weight: 800; color: #fff; line-height: 1.2; }
+  /* Stats row */
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); background: #c0392b; }
+  .stat { padding: 18px 16px; text-align: center; border-right: 1px solid rgba(255,255,255,.15); }
+  .stat:last-child { border-right: none; }
+  .stat-value { font-size: 32px; font-weight: 900; color: #fff; line-height: 1; }
+  .stat-label { font-size: 10px; color: rgba(255,255,255,.75); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+  /* Storm map section */
+  .map-section { padding: 20px 28px; background: #161616; border-bottom: 1px solid #2a2a2a; }
+  .section-label { font-size: 10px; font-weight: 700; color: #888; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
+  .map-mock { background: #0d1f0d; border: 1px solid #1a3a1a; border-radius: 4px; height: 160px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+  /* Fake radar blobs */
+  .blob { position: absolute; border-radius: 50%; opacity: .6; }
+  .blob1 { width: 180px; height: 120px; background: radial-gradient(ellipse, #c0392b 0%, #e74c3c 40%, transparent 70%); top: 20px; left: 80px; }
+  .blob2 { width: 120px; height: 80px; background: radial-gradient(ellipse, #e67e22 0%, #f39c12 50%, transparent 70%); top: 50px; left: 200px; }
+  .blob3 { width: 80px; height: 60px; background: radial-gradient(ellipse, #27ae60 0%, #2ecc71 50%, transparent 70%); top: 80px; left: 60px; }
+  .map-pin-label { position: absolute; z-index: 2; text-align: center; }
+  .map-pin-label span { font-size: 28px; display: block; }
+  .map-pin-label small { font-size: 9px; color: #fff; background: rgba(0,0,0,.7); padding: 2px 6px; border-radius: 3px; white-space: nowrap; }
+  .map-legend { display: flex; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: #888; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+  /* Events list */
+  .events-section { padding: 20px 28px; background: #1a1a1a; border-bottom: 1px solid #2a2a2a; }
+  .event-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a2a; }
+  .event-row:last-child { border-bottom: none; }
+  .event-date { font-size: 13px; color: #ccc; }
+  .event-size { font-size: 14px; font-weight: 800; }
+  .event-size.red { color: #e74c3c; }
+  .event-size.orange { color: #e67e22; }
+  .event-size.yellow { color: #f1c40f; }
+  .event-badge { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 700; }
+  .badge-red { background: rgba(192,57,43,.2); color: #e74c3c; border: 1px solid #e74c3c; }
+  .badge-orange { background: rgba(230,126,34,.2); color: #e67e22; border: 1px solid #e67e22; }
+  .badge-yellow { background: rgba(241,196,15,.2); color: #f1c40f; border: 1px solid #f1c40f; }
+  /* CTA */
+  .cta-section { background: #F25C05; padding: 24px 28px; }
+  .cta-headline { font-size: 18px; font-weight: 900; color: #fff; margin-bottom: 4px; }
+  .cta-sub { font-size: 13px; color: rgba(255,255,255,.85); margin-bottom: 16px; }
+  .cta-contact { display: flex; justify-content: space-between; align-items: center; }
+  .roofer-info { }
+  .roofer-name { font-size: 18px; font-weight: 800; color: #fff; }
+  .roofer-phone { font-size: 22px; font-weight: 900; color: #fff; letter-spacing: 1px; }
+  .roofer-web { font-size: 12px; color: rgba(255,255,255,.75); }
+  .roofer-logo { width: 70px; height: 70px; background: rgba(0,0,0,.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: rgba(255,255,255,.7); text-align: center; font-weight: 700; }
+  /* Footer */
+  .footer { background: #0a0a0a; padding: 10px 28px; display: flex; justify-content: space-between; font-size: 9px; color: #444; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="alert-bar">
+    <div class="alert-icon">⚡</div>
+    <div class="alert-text">Your Roof Was Hit by Hail</div>
+  </div>
+  <div class="address-hero">
+    <div class="address-label">Property Address</div>
+    <div class="address-text">43671 Yorktown St<br>Canton, MI 48187</div>
+  </div>
+  <div class="stats-row">
+    <div class="stat">
+      <div class="stat-value">5.0"</div>
+      <div class="stat-label">Hail Size</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">3</div>
+      <div class="stat-label">Hits This Year</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">7</div>
+      <div class="stat-label">Hits in 5 Years</div>
+    </div>
+  </div>
+  <div class="map-section">
+    <div class="section-label">Storm Swath — July 27, 2026</div>
+    <div class="map-mock">
+      <div class="blob blob1"></div>
+      <div class="blob blob2"></div>
+      <div class="blob blob3"></div>
+      <div class="map-pin-label">
+        <span>📍</span>
+        <small>Your Property</small>
+      </div>
+    </div>
+    <div class="map-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#c0392b;"></div>Baseball+ (2"+)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#e67e22;"></div>Golf Ball (1.5"+)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#27ae60;"></div>Quarter (1"+)</div>
+    </div>
+  </div>
+  <div class="events-section">
+    <div class="section-label">Recent Hail Events at This Address</div>
+    <div class="event-row">
+      <div class="event-date">Jul 27, 2026</div>
+      <div class="event-size red">5.00" ⚾</div>
+      <div class="event-badge badge-red">Baseball+</div>
+    </div>
+    <div class="event-row">
+      <div class="event-date">Jul 21, 2026</div>
+      <div class="event-size red">4.50" ⚾</div>
+      <div class="event-badge badge-red">Baseball+</div>
+    </div>
+    <div class="event-row">
+      <div class="event-date">May 14, 2026</div>
+      <div class="event-size orange">2.25" ⛳</div>
+      <div class="event-badge badge-orange">Golf Ball</div>
+    </div>
+    <div class="event-row">
+      <div class="event-date">Jul 9, 2024</div>
+      <div class="event-size red">3.50" ⚾</div>
+      <div class="event-badge badge-red">Baseball+</div>
+    </div>
+    <div class="event-row">
+      <div class="event-date">Jun 5, 2025</div>
+      <div class="event-size yellow">1.75" 🪙</div>
+      <div class="event-badge badge-yellow">Golf Ball</div>
+    </div>
+  </div>
+  <div class="cta-section">
+    <div class="cta-headline">Free Roof Inspection — No Obligation</div>
+    <div class="cta-sub">We'll assess the damage and work directly with your insurance company.</div>
+    <div class="cta-contact">
+      <div class="roofer-info">
+        <div class="roofer-name">AHE Roofing LLC</div>
+        <div class="roofer-phone">(313) 555-0192</div>
+        <div class="roofer-web">www.aheroofing.com</div>
+      </div>
+      <div class="roofer-logo">AHE<br>ROOFING</div>
+    </div>
+  </div>
+  <div class="footer">
+    <span>Data: NOAA MRMS Radar · Report BD-2026-0804-7291</span>
+    <span>Powered by BidDrop · biddrop.us</span>
+  </div>
+</div>
+</body>
+</html>

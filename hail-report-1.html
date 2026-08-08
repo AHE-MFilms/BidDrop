@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BidDrop — Storm Impact Card</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background:#f0f2f5; min-height:100vh; display:flex; align-items:flex-start; justify-content:center; padding:40px 20px; }
+  .card { width:680px; background:#fff; box-shadow:0 4px 32px rgba(0,0,0,0.13); overflow:hidden; }
+  .top-bar { background:#111; display:flex; align-items:stretch; }
+  .top-bar .logo-block { background:#F97316; padding:18px 28px; display:flex; align-items:center; }
+  .top-bar .logo-text { font-size:22px; font-weight:900; color:#fff; letter-spacing:-0.5px; }
+  .top-bar .logo-text span { color:#111; }
+  .top-bar .title-block { padding:18px 24px; display:flex; flex-direction:column; justify-content:center; }
+  .top-bar .title-block h1 { font-size:15px; font-weight:700; color:#fff; text-transform:uppercase; letter-spacing:2px; }
+  .top-bar .title-block p { font-size:11px; color:#888; margin-top:2px; }
+  .top-bar .ref-block { margin-left:auto; padding:18px 24px; display:flex; flex-direction:column; justify-content:center; align-items:flex-end; }
+  .top-bar .ref-block .ref { font-size:11px; color:#666; text-transform:uppercase; letter-spacing:1px; }
+  .top-bar .ref-block .ref-num { font-size:16px; font-weight:800; color:#F97316; font-family:monospace; }
+  .roofer-bar { background:#1a1a1a; padding:12px 28px; display:flex; align-items:center; gap:16px; border-bottom:2px solid #F97316; }
+  .roofer-bar .roofer-logo { width:36px; height:36px; background:#F97316; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; color:#fff; font-size:14px; }
+  .roofer-bar .roofer-info { flex:1; }
+  .roofer-bar .roofer-name { font-size:13px; font-weight:700; color:#fff; }
+  .roofer-bar .roofer-contact { font-size:11px; color:#888; }
+  .roofer-bar .roofer-badge { background:#F97316; color:#fff; font-size:10px; font-weight:700; padding:4px 10px; text-transform:uppercase; letter-spacing:1px; }
+  .address-section { background:#f8f8f8; border-bottom:1px solid #e8e8e8; padding:20px 28px; display:flex; align-items:center; gap:20px; }
+  .address-pin { font-size:28px; }
+  .address-info h2 { font-size:18px; font-weight:800; color:#111; }
+  .address-info p { font-size:13px; color:#666; margin-top:2px; }
+  .address-meta { margin-left:auto; text-align:right; }
+  .address-meta .scan-date { font-size:11px; color:#999; text-transform:uppercase; letter-spacing:1px; }
+  .address-meta .scan-date strong { display:block; font-size:14px; color:#111; font-weight:700; margin-top:2px; }
+  .impact-hero { background:linear-gradient(135deg, #111 0%, #1f1f1f 100%); padding:28px; display:flex; gap:20px; align-items:center; }
+  .impact-hero .impact-icon { font-size:48px; }
+  .impact-hero .impact-text h3 { font-size:13px; color:#F97316; text-transform:uppercase; letter-spacing:2px; font-weight:700; }
+  .impact-hero .impact-text .big-hit { font-size:36px; font-weight:900; color:#fff; line-height:1; margin-top:4px; }
+  .impact-hero .impact-text .big-hit span { color:#F97316; }
+  .impact-hero .impact-text p { font-size:13px; color:#aaa; margin-top:8px; line-height:1.5; }
+  .impact-hero .impact-stats { margin-left:auto; display:flex; flex-direction:column; gap:10px; }
+  .stat-pill { background:rgba(249,115,22,0.15); border:1px solid rgba(249,115,22,0.3); padding:8px 16px; text-align:center; }
+  .stat-pill .val { font-size:20px; font-weight:900; color:#F97316; }
+  .stat-pill .lbl { font-size:10px; color:#aaa; text-transform:uppercase; letter-spacing:1px; }
+  .history-section { padding:24px 28px; }
+  .history-section h4 { font-size:11px; color:#999; text-transform:uppercase; letter-spacing:2px; font-weight:700; margin-bottom:14px; }
+  .history-table { width:100%; border-collapse:collapse; font-size:13px; }
+  .history-table th { text-align:left; padding:8px 12px; background:#f5f5f5; color:#666; font-size:11px; text-transform:uppercase; letter-spacing:1px; font-weight:600; }
+  .history-table td { padding:10px 12px; border-bottom:1px solid #f0f0f0; color:#333; }
+  .history-table tr.highlight td { background:#fff8f4; font-weight:700; color:#111; }
+  .history-table tr.highlight td:first-child { border-left:3px solid #F97316; }
+  .badge { display:inline-block; padding:2px 8px; font-size:10px; font-weight:700; text-transform:uppercase; }
+  .badge-red { background:#fee2e2; color:#dc2626; }
+  .badge-orange { background:#fff7ed; color:#ea580c; }
+  .badge-yellow { background:#fefce8; color:#ca8a04; }
+  .badge-blue { background:#eff6ff; color:#2563eb; }
+  .cta-section { background:#F97316; padding:20px 28px; display:flex; align-items:center; justify-content:space-between; }
+  .cta-section .cta-text { color:#fff; }
+  .cta-section .cta-text h3 { font-size:16px; font-weight:800; }
+  .cta-section .cta-text p { font-size:12px; opacity:0.85; margin-top:2px; }
+  .cta-section .cta-btn { background:#fff; color:#F97316; font-weight:800; font-size:13px; padding:10px 20px; border:none; cursor:pointer; text-transform:uppercase; letter-spacing:1px; }
+  .footer { background:#111; padding:12px 28px; display:flex; align-items:center; justify-content:space-between; }
+  .footer p { font-size:10px; color:#555; }
+  .footer .bd { font-size:11px; font-weight:700; color:#F97316; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="top-bar">
+    <div class="logo-block"><span class="logo-text">Bid<span>Drop</span></span></div>
+    <div class="title-block"><h1>Storm Impact Card</h1><p>Radar-verified hail data for this property</p></div>
+    <div class="ref-block"><span class="ref">Report</span><span class="ref-num">#BD-20260727</span></div>
+  </div>
+  <div class="roofer-bar">
+    <div class="roofer-logo">AHE</div>
+    <div class="roofer-info">
+      <div class="roofer-name">AHE Roofing — Calvin Hocher</div>
+      <div class="roofer-contact">(734) 555-0192 · calvin@aheroofing.com</div>
+    </div>
+    <div class="roofer-badge">Certified Inspector</div>
+  </div>
+  <div class="address-section">
+    <div class="address-pin">📍</div>
+    <div class="address-info">
+      <h2>43671 Yorktown St</h2>
+      <p>Canton, MI 48187 · Wayne County</p>
+    </div>
+    <div class="address-meta">
+      <span class="scan-date">Scanned<strong>Aug 7, 2026</strong></span>
+    </div>
+  </div>
+  <div class="impact-hero">
+    <div class="impact-icon">⛈️</div>
+    <div class="impact-text">
+      <h3>Most Recent Storm Hit</h3>
+      <div class="big-hit">Jul 27, <span>2026</span></div>
+      <p>NOAA MRMS radar detected hail at this property.<br>Estimated hail size: <strong style="color:#fff">5.00"</strong> — Baseball+</p>
+    </div>
+    <div class="impact-stats">
+      <div class="stat-pill"><div class="val">5.00"</div><div class="lbl">Max Hail</div></div>
+      <div class="stat-pill"><div class="val">7</div><div class="lbl">Storms (5yr)</div></div>
+    </div>
+  </div>
+  <div class="history-section">
+    <h4>5-Year Storm History — At This Address</h4>
+    <table class="history-table">
+      <thead><tr><th>Date</th><th>Hail Size</th><th>Severity</th><th>Source</th></tr></thead>
+      <tbody>
+        <tr class="highlight"><td>Jul 27, 2026</td><td>5.00"</td><td><span class="badge badge-red">Baseball+</span></td><td>NOAA MRMS</td></tr>
+        <tr><td>Jul 15, 2026</td><td>2.75"</td><td><span class="badge badge-orange">Golf Ball</span></td><td>NOAA MRMS</td></tr>
+        <tr><td>Jun 3, 2026</td><td>1.25"</td><td><span class="badge badge-yellow">Quarter</span></td><td>NOAA MRMS</td></tr>
+        <tr><td>Sep 12, 2025</td><td>3.50"</td><td><span class="badge badge-red">Baseball+</span></td><td>NOAA MRMS</td></tr>
+        <tr><td>May 8, 2025</td><td>0.75"</td><td><span class="badge badge-blue">Dime</span></td><td>NOAA MRMS</td></tr>
+        <tr><td>Aug 19, 2024</td><td>2.00"</td><td><span class="badge badge-orange">Golf Ball</span></td><td>NOAA MRMS</td></tr>
+        <tr><td>Jun 22, 2023</td><td>1.50"</td><td><span class="badge badge-yellow">Quarter</span></td><td>NOAA MRMS</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="cta-section">
+    <div class="cta-text"><h3>Your roof may qualify for a full insurance replacement.</h3><p>Free inspection · No obligation · We work with all major carriers</p></div>
+    <button class="cta-btn">Book Free Inspection</button>
+  </div>
+  <div class="footer">
+    <p>Data sourced from NOAA MRMS Radar · Generated by BidDrop · biddrop.us</p>
+    <span class="bd">BidDrop</span>
+  </div>
+</div>
+</body></html>
