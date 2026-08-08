@@ -638,16 +638,60 @@ function addMarker(pin){
         getStormModeImpact(pin.lat, pin.lng).then(function(data) {
           if (!bannerEl || !data) { if(bannerEl) bannerEl.style.display='none'; return; }
           const s = data.summary || {};
-          const hailSize = s.max_hail_in ? s.max_hail_in.toFixed(2) + '"' : null;
-          const hailLabel = hailSize ? (s.max_hail_in >= 2.75 ? 'Baseball+' : s.max_hail_in >= 1.75 ? 'Baseball' : s.max_hail_in >= 1.0 ? 'Golf Ball' : 'Quarter') : null;
-          const windMph = s.max_wind_mph ? Math.round(s.max_wind_mph) + ' MPH' : null;
-          const warning = s.severe_warning_issued;
-          if (!hailSize && !windMph) { bannerEl.style.display='none'; return; }
-          let html = '<div style="font-size:10px;font-weight:800;color:#F25C05;letter-spacing:.5px;margin-bottom:5px;">⚡ STORM IMPACT</div>';
-          if (hailSize) html += '<div style="font-size:12px;color:#fff;margin-bottom:3px;">🌧️ <b>' + hailSize + '</b> hail (' + hailLabel + ') detected</div>';
-          if (windMph) html += '<div style="font-size:12px;color:#fff;margin-bottom:3px;">💨 <b>' + windMph + '</b> wind reported nearby</div>';
-          if (warning) html += '<div style="font-size:11px;color:#fbbf24;margin-bottom:2px;">⚠️ Severe Thunderstorm Warning issued</div>';
-          if (s.tornado_events > 0) html += '<div style="font-size:11px;color:#ef4444;">🌪️ Tornado report within 35 miles</div>';
+          const mrmsEvents = data.mrms_hail || [];
+          const spotterHail = (data.spc_hail || []).slice(0, 3);
+          const windEvents = (data.spc_wind || []).slice(0, 3);
+          const tornadoes = (data.spc_tornado || []).slice(0, 2);
+          const warnings = data.nws_warnings || [];
+          const hasAny = mrmsEvents.length || spotterHail.length || windEvents.length || tornadoes.length || warnings.length;
+          if (!hasAny) { bannerEl.style.display='none'; return; }
+          const stormDate = typeof _stormModeDate !== 'undefined' ? _stormModeDate : '';
+          let html = '<div style="font-size:10px;font-weight:800;color:#F25C05;letter-spacing:.5px;margin-bottom:6px;border-bottom:1px solid rgba(242,92,5,0.3);padding-bottom:5px;">⚡ STORM IMPACT' + (stormDate ? ' — ' + stormDate : '') + '</div>';
+          // MRMS Hail section
+          if (mrmsEvents.length) {
+            html += '<div style="font-size:9px;font-weight:700;color:#F25C05;letter-spacing:.4px;margin-bottom:3px;">🌧️ HAIL (MRMS RADAR)</div>';
+            mrmsEvents.slice(0, 3).forEach(function(e) {
+              const lbl = e.hail_size_in >= 2.75 ? 'Baseball+' : e.hail_size_in >= 1.75 ? 'Baseball' : e.hail_size_in >= 1.0 ? 'Golf Ball' : 'Quarter';
+              const dist = e.dist_miles ? ' · ' + e.dist_miles.toFixed(1) + ' mi away' : ' at this location';
+              html += '<div style="font-size:11px;color:#fff;margin-bottom:2px;"><b>' + e.hail_size_in.toFixed(2) + '"</b> — ' + lbl + dist + '</div>';
+            });
+          }
+          // SPC Spotter Hail
+          if (spotterHail.length) {
+            html += '<div style="font-size:9px;font-weight:700;color:#60a5fa;letter-spacing:.4px;margin-top:5px;margin-bottom:3px;">👤 SPOTTER CONFIRMED</div>';
+            spotterHail.forEach(function(e) {
+              const dist = e.dist_miles ? e.dist_miles.toFixed(1) + ' mi away' : 'nearby';
+              const comment = e.comments ? ' — "' + e.comments.substring(0, 40) + (e.comments.length > 40 ? '…' : '') + '"' : '';
+              html += '<div style="font-size:11px;color:#93c5fd;margin-bottom:2px;"><b>' + (e.magnitude/100).toFixed(2) + '"</b> hail, ' + dist + comment + '</div>';
+            });
+          }
+          // Wind Damage
+          if (windEvents.length) {
+            html += '<div style="font-size:9px;font-weight:700;color:#34d399;letter-spacing:.4px;margin-top:5px;margin-bottom:3px;">💨 WIND DAMAGE</div>';
+            windEvents.forEach(function(e) {
+              const mph = e.magnitude ? Math.round(e.magnitude * 1.15078) + ' MPH' : 'Unknown speed';
+              const dist = e.dist_miles ? e.dist_miles.toFixed(1) + ' mi away' : 'nearby';
+              const comment = e.comments ? ' — "' + e.comments.substring(0, 40) + (e.comments.length > 40 ? '…' : '') + '"' : '';
+              html += '<div style="font-size:11px;color:#6ee7b7;margin-bottom:2px;"><b>' + mph + '</b>, ' + dist + comment + '</div>';
+            });
+          }
+          // NWS Warnings
+          if (warnings.length) {
+            html += '<div style="font-size:9px;font-weight:700;color:#fbbf24;letter-spacing:.4px;margin-top:5px;margin-bottom:3px;">⚠️ NWS WARNING</div>';
+            warnings.slice(0, 2).forEach(function(w) {
+              html += '<div style="font-size:11px;color:#fde68a;margin-bottom:2px;">' + (w.event || 'Warning') + (w.onset ? ' · ' + w.onset.substring(11,16) : '') + '</div>';
+            });
+          }
+          // Tornado Reports
+          if (tornadoes.length) {
+            html += '<div style="font-size:9px;font-weight:700;color:#ef4444;letter-spacing:.4px;margin-top:5px;margin-bottom:3px;">🌪️ TORNADO</div>';
+            tornadoes.forEach(function(t) {
+              const dist = t.dist_miles ? t.dist_miles.toFixed(1) + ' mi away' : 'nearby';
+              html += '<div style="font-size:11px;color:#fca5a5;margin-bottom:2px;">' + (t.f_scale || 'EF?') + ' tornado, ' + dist + '</div>';
+            });
+          } else if (s.tornado_events === 0) {
+            html += '<div style="font-size:9px;color:var(--mid);margin-top:5px;">🌪️ No tornado reports within 35 miles</div>';
+          }
           bannerEl.innerHTML = html;
         }).catch(function() { if(bannerEl) bannerEl.style.display='none'; });
       }

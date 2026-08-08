@@ -11,7 +11,6 @@
       <button class="mtool-btn" id="btn-measure" onclick="toggleMeasure()">📐 Measure Roof</button>
       <button class="mtool-btn" id="btn-zones-toggle" onclick="toggleZonesOnMap()">🗂 Zones</button>
       <button class="mtool-btn" id="btn-storm-toggle" onclick="toggleStormEvents()">⛈ Storm Events</button>
-      <button class="mtool-btn" id="btn-storm-mode" onclick="openStormModeSelector()" title="Activate Storm Mode — color-code every house by hail damage" style="border-color:#F25C05;color:#F25C05;font-weight:700;">⚡ Storm Mode</button>
       <button class="mtool-btn" id="btn-property-layer" onclick="togglePropertyLayer()" title="Color-code pins by home age">🏠 Home Age</button>
     </div>
 
@@ -141,7 +140,7 @@
       <!-- Hail Impact Zone: date-picker-first -->
       <div style="margin-bottom:8px;">
         <div style="font-size:12px;font-weight:700;color:#818cf8;margin-bottom:5px;">🧊 Hail Impact Zone <span style="font-size:9px;background:#312e81;color:#c7d2fe;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:600;">MRMS</span></div>
-        <select id="storm-date-sel" onchange="loadMrmsForDate(this.value)"
+        <select id="storm-date-sel" onchange="loadMrmsForDate(this.value);_onStormDateChange(this.value)"
           style="width:100%;background:var(--bg);border:1px solid rgba(99,102,241,.5);color:var(--text);border-radius:7px;padding:7px 10px;font-size:11px;font-weight:600;cursor:pointer;outline:none;margin-bottom:4px;">
           <option value="">— Pick a storm date —</option>
         </select>
@@ -153,6 +152,15 @@
       <div id="mrms-toggle-track" style="display:none;"></div>
       <div id="mrms-toggle-thumb" style="display:none;"></div>
       <span id="mrms-toggle-lbl" style="display:none;"></span>
+
+      <!-- Storm Mode: Activate/Deactivate (embedded in Storm Events panel) -->
+      <div id="storm-mode-panel-row" style="margin-bottom:6px;">
+        <button id="btn-activate-storm-mode" onclick="activateStormModeFromPanel()" style="width:100%;background:#F25C05;color:#fff;border:none;border-radius:8px;padding:9px;font-size:12px;font-weight:800;cursor:pointer;display:none;letter-spacing:.3px;">⚡ Activate Storm Mode</button>
+        <div id="storm-mode-active-row" style="display:none;background:rgba(242,92,5,0.12);border:1px solid rgba(242,92,5,0.4);border-radius:8px;padding:7px 10px;">
+          <div style="font-size:11px;font-weight:800;color:#F25C05;margin-bottom:5px;" id="storm-mode-active-label">⚡ STORM MODE ACTIVE</div>
+          <button onclick="deactivateStormMode()" style="width:100%;background:none;border:1px solid rgba(242,92,5,0.5);color:#F25C05;border-radius:6px;padding:5px;font-size:11px;font-weight:700;cursor:pointer;">✕ Exit Storm Mode</button>
+        </div>
+      </div>
 
       <div style="border-top:1px solid var(--border);margin:8px 0;"></div>
 

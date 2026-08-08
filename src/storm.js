@@ -632,3 +632,40 @@ window.getStormModeImpact = async function(lat, lon) {
     return data;
   } catch(e) { return null; }
 };
+
+// Show/hide Activate Storm Mode button when a date is selected in the Storm Events panel
+window._onStormDateChange = function(val) {
+  const btn = document.getElementById('btn-activate-storm-mode');
+  if (!btn) return;
+  if (val && !_stormModeActive) {
+    btn.style.display = 'block';
+  } else {
+    btn.style.display = 'none';
+  }
+};
+
+// Activate Storm Mode from within the Storm Events panel
+window.activateStormModeFromPanel = function() {
+  const sel = document.getElementById('storm-date-sel');
+  const date = sel ? sel.value : '';
+  if (!date) { toast('Please pick a storm date first', 'error'); return; }
+  activateStormMode(date);
+  // Update panel UI
+  const btn = document.getElementById('btn-activate-storm-mode');
+  const activeRow = document.getElementById('storm-mode-active-row');
+  const activeLabel = document.getElementById('storm-mode-active-label');
+  if (btn) btn.style.display = 'none';
+  if (activeRow) activeRow.style.display = 'block';
+  if (activeLabel) activeLabel.textContent = '⚡ STORM MODE ACTIVE — ' + date;
+};
+
+// Override deactivateStormMode to also reset panel UI
+const _origDeactivate = window.deactivateStormMode;
+window.deactivateStormMode = function() {
+  if (typeof _origDeactivate === 'function') _origDeactivate();
+  const btn = document.getElementById('btn-activate-storm-mode');
+  const activeRow = document.getElementById('storm-mode-active-row');
+  const sel = document.getElementById('storm-date-sel');
+  if (activeRow) activeRow.style.display = 'none';
+  if (btn && sel && sel.value) btn.style.display = 'block';
+};
