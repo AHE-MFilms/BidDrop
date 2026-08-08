@@ -608,6 +608,7 @@ function addMarker(pin){
     <div style="min-width:200px;max-width:240px;">
       <div style="font-weight:700;font-size:13px;margin-bottom:5px;color:#FFFFFF;line-height:1.3;">${escHtml(pin.address||'Unknown')}</div>
       <div style="display:inline-block;background:${sColor(pin.status)};color:white;font-size:11px;padding:2px 8px;border-radius:5px;font-weight:700;margin-bottom:8px;">${sLabel(pin.status)}</div>
+      <div id="storm-impact-${pid}" style="display:none;background:linear-gradient(135deg,#1a0800,#2d1200);border:1px solid rgba(242,92,5,0.6);border-radius:8px;padding:8px 10px;margin-bottom:8px;"></div>
       ${pin.photo_url ? '<img src="'+pin.photo_url+'" style="width:100%;max-height:90px;object-fit:cover;border-radius:6px;margin-bottom:8px;display:block;" onerror="this.style.display=\'none\'">' : ''}
       ${_propSnap}
       ${_popupSolar}
@@ -626,6 +627,32 @@ function addMarker(pin){
   m._bidDropPinId = pid;
   m._bidDropLat = pin.lat;
   m._bidDropLng = pin.lng;
+  // Storm Mode: inject impact banner when popup opens (if Storm Mode is active)
+  m.on('popupopen', function() {
+    if (typeof _stormModeActive !== 'undefined' && _stormModeActive && pin.lat && pin.lng) {
+      const bannerEl = document.getElementById('storm-impact-' + pid);
+      if (!bannerEl) return;
+      bannerEl.innerHTML = '<div style="font-size:10px;color:#F25C05;font-weight:700;margin-bottom:4px;">⚡ LOADING STORM DATA…</div>';
+      bannerEl.style.display = 'block';
+      if (typeof getStormModeImpact === 'function') {
+        getStormModeImpact(pin.lat, pin.lng).then(function(data) {
+          if (!bannerEl || !data) { if(bannerEl) bannerEl.style.display='none'; return; }
+          const s = data.summary || {};
+          const hailSize = s.max_hail_in ? s.max_hail_in.toFixed(2) + '"' : null;
+          const hailLabel = hailSize ? (s.max_hail_in >= 2.75 ? 'Baseball+' : s.max_hail_in >= 1.75 ? 'Baseball' : s.max_hail_in >= 1.0 ? 'Golf Ball' : 'Quarter') : null;
+          const windMph = s.max_wind_mph ? Math.round(s.max_wind_mph) + ' MPH' : null;
+          const warning = s.severe_warning_issued;
+          if (!hailSize && !windMph) { bannerEl.style.display='none'; return; }
+          let html = '<div style="font-size:10px;font-weight:800;color:#F25C05;letter-spacing:.5px;margin-bottom:5px;">⚡ STORM IMPACT</div>';
+          if (hailSize) html += '<div style="font-size:12px;color:#fff;margin-bottom:3px;">🌧️ <b>' + hailSize + '</b> hail (' + hailLabel + ') detected</div>';
+          if (windMph) html += '<div style="font-size:12px;color:#fff;margin-bottom:3px;">💨 <b>' + windMph + '</b> wind reported nearby</div>';
+          if (warning) html += '<div style="font-size:11px;color:#fbbf24;margin-bottom:2px;">⚠️ Severe Thunderstorm Warning issued</div>';
+          if (s.tornado_events > 0) html += '<div style="font-size:11px;color:#ef4444;">🌪️ Tornado report within 35 miles</div>';
+          bannerEl.innerHTML = html;
+        }).catch(function() { if(bannerEl) bannerEl.style.display='none'; });
+      }
+    }
+  });
   // Add to cluster group (falls back to direct map add if cluster not ready)
   if(clusterGroup) clusterGroup.addLayer(m);
   else m.addTo(map);

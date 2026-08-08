@@ -457,3 +457,178 @@ function renderWindMarkers(){
   if(statusEl && _windData.length > 0) statusEl.textContent = `${_windData.length} wind report${_windData.length!==1?'s':''} shown (50+ MPH)`;
 }
 
+
+// ══════════════════════════════════════════════════════════════════════════════
+// STORM MODE — Hail intensity overlay for storm chasers
+// ══════════════════════════════════════════════════════════════════════════════
+
+let _stormModeActive = false;
+let _stormModeDate = null;
+let _stormModeLayer = null;      // Leaflet LayerGroup for hail dots
+let _stormModeCache = {};        // { date_bounds_key: points[] }
+let _stormModeReportCache = {};  // { "lat,lon": stormReportData }
+let _stormModeDebounce = null;
+
+// Open the Storm Mode date selector modal
+window.openStormModeSelector = function() {
+  const modal = document.getElementById('storm-mode-modal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  // Populate date selector if not already loaded
+  const sel = document.getElementById('storm-mode-date-select');
+  if (sel && sel.options.length <= 1 && typeof fetchMrmsStormDates === 'function') {
+    fetchMrmsStormDates();
+  }
+};
+
+window.closeStormModeModal = function() {
+  const modal = document.getElementById('storm-mode-modal');
+  if (modal) modal.style.display = 'none';
+};
+
+// Activate Storm Mode with the selected date
+window.activateStormMode = function() {
+  const sel = document.getElementById('storm-mode-date-select');
+  const date = sel ? sel.value : '';
+  if (!date) { toast('Please select a storm date first.'); return; }
+
+  const opt = sel.options[sel.selectedIndex];
+  const label = opt ? opt.text : date;
+
+  _stormModeActive = true;
+  _stormModeDate = date;
+  _stormModeCache = {};
+  _stormModeReportCache = {};
+
+  // Close modal
+  closeStormModeModal();
+
+  // Show active banner
+  const banner = document.getElementById('storm-mode-banner');
+  const bannerDate = document.getElementById('storm-mode-banner-date');
+  const bannerSize = document.getElementById('storm-mode-banner-size');
+  if (banner) { banner.style.display = 'flex'; }
+  if (bannerDate) bannerDate.textContent = label.split('—')[0].trim();
+  if (bannerSize) bannerSize.textContent = (label.split('—')[1] || '').trim();
+
+  // Style the Storm Mode button as active
+  const btn = document.getElementById('btn-storm-mode');
+  if (btn) { btn.style.background = '#F25C05'; btn.style.color = '#fff'; }
+
+  // Load hail overlay for current viewport
+  _loadStormModeOverlay();
+
+  // Re-render on map move (debounced)
+  if (map) {
+    map.on('moveend', _onStormModeMapMove);
+    map.on('zoomend', _onStormModeMapMove);
+  }
+
+  toast('⚡ Storm Mode activated — ' + date);
+};
+
+// Deactivate Storm Mode
+window.deactivateStormMode = function() {
+  _stormModeActive = false;
+  _stormModeDate = null;
+
+  // Hide banner
+  const banner = document.getElementById('storm-mode-banner');
+  if (banner) banner.style.display = 'none';
+
+  // Reset button style
+  const btn = document.getElementById('btn-storm-mode');
+  if (btn) { btn.style.background = 'rgba(242,92,5,0.15)'; btn.style.color = '#F25C05'; }
+
+  // Clear overlay
+  if (_stormModeLayer) { map.removeLayer(_stormModeLayer); _stormModeLayer = null; }
+
+  // Remove map listeners
+  if (map) {
+    map.off('moveend', _onStormModeMapMove);
+    map.off('zoomend', _onStormModeMapMove);
+  }
+};
+
+function _onStormModeMapMove() {
+  if (!_stormModeActive) return;
+  clearTimeout(_stormModeDebounce);
+  _stormModeDebounce = setTimeout(_loadStormModeOverlay, 300);
+}
+
+// Load MRMS hail points for the current viewport from /api/mrms-viewport
+async function _loadStormModeOverlay() {
+  if (!_stormModeActive || !_stormModeDate || !map) return;
+
+  const bounds = map.getBounds();
+  const latMin = bounds.getSouth().toFixed(3);
+  const latMax = bounds.getNorth().toFixed(3);
+  const lonMin = bounds.getWest().toFixed(3);
+  const lonMax = bounds.getEast().toFixed(3);
+
+  const cacheKey = `${_stormModeDate}_${latMin}_${latMax}_${lonMin}_${lonMax}`;
+  let points;
+
+  if (_stormModeCache[cacheKey]) {
+    points = _stormModeCache[cacheKey];
+  } else {
+    try {
+      const url = `/api/mrms-viewport?date=${_stormModeDate}&latMin=${latMin}&latMax=${latMax}&lonMin=${lonMin}&lonMax=${lonMax}`;
+      const r = await fetch(url);
+      if (!r.ok) return;
+      const data = await r.json();
+      points = data.points || [];
+      _stormModeCache[cacheKey] = points;
+    } catch(e) { return; }
+  }
+
+  // Clear previous overlay
+  if (_stormModeLayer) { map.removeLayer(_stormModeLayer); _stormModeLayer = null; }
+
+  if (points.length === 0) return;
+
+  const zoom = map.getZoom();
+  const radius = zoom >= 14 ? 6 : zoom >= 12 ? 9 : 13;
+
+  const layers = [];
+  points.forEach(pt => {
+    let color;
+    if (pt.hail_size_in >= 2.75)      color = '#dc2626'; // Baseball+
+    else if (pt.hail_size_in >= 1.75) color = '#ea580c'; // Baseball
+    else if (pt.hail_size_in >= 1.0)  color = '#ca8a04'; // Golf Ball
+    else                               color = '#2563eb'; // Quarter/Dime
+
+    const dot = L.circleMarker([pt.lat, pt.lon], {
+      radius,
+      fillColor: color,
+      color: color,
+      weight: 0,
+      fillOpacity: 0.75
+    });
+
+    const sizeLabel = pt.hail_size_in >= 2.75 ? 'Baseball+' :
+                      pt.hail_size_in >= 1.75 ? 'Baseball' :
+                      pt.hail_size_in >= 1.0  ? 'Golf Ball' : 'Quarter/Dime';
+
+    dot.bindTooltip(`${pt.hail_size_in.toFixed(2)}" — ${sizeLabel}`, { sticky: true });
+    layers.push(dot);
+  });
+
+  _stormModeLayer = L.layerGroup(layers).addTo(map);
+}
+
+// Get storm impact data for a specific lat/lon (used by pin popup)
+window.getStormModeImpact = async function(lat, lon) {
+  if (!_stormModeActive || !_stormModeDate) return null;
+  const key = `${lat.toFixed(4)},${lon.toFixed(4)}`;
+  if (_stormModeReportCache[key]) return _stormModeReportCache[key];
+
+  try {
+    const url = `/api/storm-report?lat=${lat}&lon=${lon}&days=7`;
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    const data = await r.json();
+    _stormModeReportCache[key] = data;
+    return data;
+  } catch(e) { return null; }
+};
