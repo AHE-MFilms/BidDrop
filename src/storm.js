@@ -837,109 +837,69 @@ window.toggleStormPlayback = function() {
 };
 
 window.loadStormPlayback = async function() {
-  // Use the currently selected storm date, or today
-  const dateSel = document.getElementById('storm-date-sel');
-  const date = (dateSel && dateSel.value) || new Date().toISOString().slice(0, 10);
-  const startHr = parseInt(document.getElementById('storm-playback-start-hr')?.value || '12');
-  const endHr = parseInt(document.getElementById('storm-playback-end-hr')?.value || '23');
+  const date = _playbackDate;
+  if (!date) { alert('Pick a storm date first in the MAP tab.'); return; }
+  const hourStart = parseInt(document.getElementById('storm-pb-hour-start')?.value || '0');
+  const hourEnd = parseInt(document.getElementById('storm-pb-hour-end')?.value || '23');
   const statusEl = document.getElementById('storm-playback-status');
   const scrubber = document.getElementById('storm-playback-scrubber');
-
-  _playbackDate = date;
-  if (statusEl) statusEl.textContent = '📡 Fetching frame list…';
-
-  // Stop any running playback
+  const timeEl = document.getElementById('storm-playback-time');
+  const frameEl = document.getElementById('storm-playback-frame');
+  if (statusEl) statusEl.textContent = '⏳ Building frame list…';
+  // Stop any active playback
   if (_playbackTimer) { clearInterval(_playbackTimer); _playbackTimer = null; }
-  const playBtn = document.getElementById('btn-storm-play');
-  if (playBtn) playBtn.textContent = '▶ Play';
-
-  try {
-    const r = await fetch(`/api/storm-frames?date=${date}&start_hour=${startHr}&end_hour=${endHr}`);
-    if (!r.ok) throw new Error('API error');
-    const data = await r.json();
-    _playbackFrames = data.frames || [];
-    _playbackIdx = 0;
-
-    if (!_playbackFrames.length) {
-      if (statusEl) statusEl.textContent = 'No frames available for this date.';
-      return;
-    }
-
-    // Set up scrubber
-    if (scrubber) {
-      scrubber.max = _playbackFrames.length - 1;
-      scrubber.value = 0;
-    }
-
-    // Open the playback panel
-    const panel = document.getElementById('storm-playback-panel');
-    if (panel) panel.style.display = 'block';
-    const btn = document.getElementById('btn-storm-playback-toggle');
-    if (btn) btn.textContent = 'Close';
-
-    // Show first frame immediately so map updates right away
-    _showPlaybackFrame(0);
-
-    // Preload ALL frames in background — batch of 8 at a time
-    if (statusEl) statusEl.textContent = `⏳ Preloading 0 / ${_playbackFrames.length} frames…`;
-    _playbackImages = new Array(_playbackFrames.length).fill(null);
-    let loaded = 0;
-    const BATCH = 8;
-    const preloadBatch = (start) => {
-      const end = Math.min(start + BATCH, _playbackFrames.length);
-      const promises = [];
-      for (let i = start; i < end; i++) {
-        const img = new Image();
-        const idx = i;
-        promises.push(new Promise(resolve => {
-          img.onload = img.onerror = () => {
-            _playbackImages[idx] = img;
-            loaded++;
-            if (statusEl) statusEl.textContent = `⏳ Preloading ${loaded} / ${_playbackFrames.length} frames…`;
-            resolve();
-          };
-          img.src = _playbackFrames[idx].url;
-        }));
-      }
-      return Promise.all(promises).then(() => {
-        if (end < _playbackFrames.length) return preloadBatch(end);
+  // Remove old tile layer
+  if (_playbackOverlay && map) { map.removeLayer(_playbackOverlay); _playbackOverlay = null; }
+  // Build frame list from hourStart to hourEnd, every 5 minutes
+  // IEM tile URL: https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/ridge::USCOMP-N0Q-{YYYYMMDDHHII}/{z}/{x}/{y}.png
+  const yyyymmdd = date.replace(/-/g, '');
+  const frames = [];
+  for (let h = hourStart; h <= hourEnd; h++) {
+    for (let m = 0; m < 60; m += 5) {
+      const hh = String(h).padStart(2, '0');
+      const mm = String(m).padStart(2, '0');
+      frames.push({
+        yyyymmddhhmm: `${yyyymmdd}${hh}${mm}`,
+        label: `${hh}:${mm} UTC`,
+        hhmm: `${hh}${mm}`
       });
-    };
-    preloadBatch(0).then(() => {
-      if (statusEl) statusEl.textContent = `✅ ${_playbackFrames.length} frames ready · ${date}`;
-    });
-
-  } catch(e) {
-    if (statusEl) statusEl.textContent = '❌ Failed to load radar frames.';
+    }
   }
+  _playbackFrames = frames;
+  _playbackIdx = 0;
+  if (scrubber) { scrubber.max = frames.length - 1; scrubber.value = 0; }
+  if (statusEl) statusEl.textContent = `✅ ${frames.length} frames ready · ${date}`;
+  if (timeEl) timeEl.textContent = frames[0]?.label || '--:-- UTC';
+  if (frameEl) frameEl.textContent = `1 / ${frames.length}`;
+  // Show first frame immediately
+  _showPlaybackFrame(0);
 };
 
 function _showPlaybackFrame(idx) {
   if (!_playbackFrames.length || idx < 0 || idx >= _playbackFrames.length) return;
   _playbackIdx = idx;
   const frame = _playbackFrames[idx];
-
-  // Update time display
+  // Update UI
   const timeEl = document.getElementById('storm-playback-time');
   const frameEl = document.getElementById('storm-playback-frame');
   const scrubber = document.getElementById('storm-playback-scrubber');
-  if (timeEl) timeEl.textContent = frame.label || frame.hhmm;
+  if (timeEl) timeEl.textContent = frame.label;
   if (frameEl) frameEl.textContent = `${idx + 1} / ${_playbackFrames.length}`;
   if (scrubber) scrubber.value = idx;
-
-  // Update Leaflet image overlay
-  // Bounds: [[south, west], [north, east]] = [[24, -126], [50, -66]]
-  const bounds = [[24, -126], [50, -66]];
+  if (typeof L === 'undefined' || !map) return;
+  // Build IEM tile URL for this timestamp
+  const tileUrl = `https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/ridge::USCOMP-N0Q-${frame.yyyymmddhhmm}/{z}/{x}/{y}.png`;
   if (_playbackOverlay) {
-    _playbackOverlay.setUrl(frame.url);
+    // Update existing tile layer URL
+    _playbackOverlay.setUrl(tileUrl);
   } else {
-    if (typeof L !== 'undefined' && map) {
-      _playbackOverlay = L.imageOverlay(frame.url, bounds, {
-        opacity: 0.7,
-        zIndex: 400,
-        crossOrigin: true
-      }).addTo(map);
-    }
+    _playbackOverlay = L.tileLayer(tileUrl, {
+      opacity: 0.75,
+      zIndex: 400,
+      attribution: 'NEXRAD via IEM',
+      tileSize: 256,
+      maxZoom: 18
+    }).addTo(map);
   }
 }
 

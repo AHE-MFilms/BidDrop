@@ -11,8 +11,8 @@
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://gtwbhxnrmfmdenogzuea.supabase.co';
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
-const RADIUS_DEG   = 0.15; // ~10 miles
-const SPC_RADIUS_DEG = 0.5; // ~35 miles for SPC spotter reports
+const RADIUS_DEG   = 0.75; // ~50 miles — wide enough for FIND tab to show useful results
+const SPC_RADIUS_DEG = 0.75; // ~50 miles for SPC spotter reports
 
 // Haversine distance in miles
 function distMiles(lat1, lon1, lat2, lon2) {
@@ -183,7 +183,7 @@ export default async function handler(req, res) {
     ]));
     for (const { date, type, csv } of results) {
       if (!csv) continue;
-      const parsed = parseSpcCsv(csv, lat, lon, 35, type); // 35 mile radius for spotters
+      const parsed = parseSpcCsv(csv, lat, lon, 50, type); // 50 mile radius for spotters
       parsed.forEach(r => { r.date = date; });
       if (type === 'hail') spcHail.push(...parsed);
       else if (type === 'wind') spcWind.push(...parsed);
@@ -218,7 +218,7 @@ export default async function handler(req, res) {
       }));
       for (const { yr, type, csv } of results) {
         if (!csv) continue;
-        const parsed = parseSpcCsv(csv, lat, lon, 35, type);
+        const parsed = parseSpcCsv(csv, lat, lon, 50, type);
         parsed.forEach(r => {
           if (!r.date) {
             const t = r.time || '';
