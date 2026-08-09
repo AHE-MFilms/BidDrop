@@ -672,62 +672,118 @@ window.deactivateStormMode = function() {
 
 // ── HAIL BY ZIP CODE ─────────────────────────────────────────────────────────
 window.lookupHailByZip = async function() {
-  const zip = (document.getElementById('hail-zip-input').value || '').trim();
+  const query = (document.getElementById('hail-zip-input').value || '').trim();
   const statusEl = document.getElementById('hail-zip-status');
   const resultsEl = document.getElementById('hail-zip-results');
-  if (!zip || zip.length < 5) { statusEl.textContent = 'Enter a 5-digit ZIP code.'; return; }
-  statusEl.textContent = '🔍 Looking up hail events for ZIP ' + zip + '…';
+  if (!query) { statusEl.textContent = 'Enter an address or ZIP code.'; return; }
+  statusEl.textContent = '🔍 Looking up ' + query + '…';
   resultsEl.style.display = 'none';
   try {
-    // Geocode ZIP to lat/lon using Mapbox
+    // Geocode address/ZIP to lat/lon using Mapbox
     const MB = window._mapboxToken || '';
-    const geo = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${zip}.json?country=us&types=postcode&limit=1&access_token=${MB}`);
+    const geo = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?country=us&limit=1&access_token=${MB}`);
     const geoData = await geo.json();
-    if (!geoData.features || !geoData.features.length) { statusEl.textContent = '❌ ZIP code not found.'; return; }
+    if (!geoData.features || !geoData.features.length) { statusEl.textContent = '❌ Location not found.'; return; }
     const [lon, lat] = geoData.features[0].center;
-    const placeName = geoData.features[0].place_name || zip;
-    statusEl.textContent = '📡 Fetching storm data for ' + placeName + '…';
-    // Fetch storm report for this location (90 days)
+    const placeName = geoData.features[0].place_name || query;
+    statusEl.textContent = '📡 Fetching storm data for ' + placeName.split(',').slice(0,2).join(',') + '…';
+
+    // Fly map to this location
+    if (map) map.flyTo([lat, lon], 10, { duration: 1.2 });
+
+    // Fetch full storm report (same as loadHailEventsFeed but for this specific location)
     const r = await fetch(`/api/storm-report?lat=${lat}&lon=${lon}&days=90`);
     if (!r.ok) throw new Error('API error');
     const data = await r.json();
     const mrms = data.mrms_hail || [];
     const spcHail = data.spc_hail_spotters || [];
-    const wind = data.spc_wind || [];
-    if (!mrms.length && !spcHail.length && !wind.length) {
-      statusEl.textContent = '✅ No significant hail events found in ZIP ' + zip + ' (last 90 days).';
+    const spcWind = data.spc_wind || [];
+    const nwsWarnings = data.nws_warnings || [];
+
+    // Merge all sources by date — same logic as loadHailEventsFeed
+    const byDate = {};
+    const ensureDate = (date) => {
+      if (!byDate[date]) byDate[date] = { maxHail: 0, mrmsCount: 0, spcHailCount: 0, windCount: 0, warningCount: 0, maxWind: 0, sources: [] };
+    };
+    mrms.forEach(e => {
+      ensureDate(e.date);
+      if (e.hail_size_in > byDate[e.date].maxHail) byDate[e.date].maxHail = e.hail_size_in;
+      byDate[e.date].mrmsCount++;
+      if (!byDate[e.date].sources.includes('MRMS')) byDate[e.date].sources.push('MRMS');
+    });
+    spcHail.forEach(e => {
+      const date = e.date || ''; if (!date) return;
+      ensureDate(date);
+      const sizeIn = e.size_in || (e.magnitude ? e.magnitude / 100 : 0);
+      if (sizeIn > byDate[date].maxHail) byDate[date].maxHail = sizeIn;
+      byDate[date].spcHailCount++;
+      if (!byDate[date].sources.includes('SPC')) byDate[date].sources.push('SPC');
+    });
+    spcWind.forEach(e => {
+      const date = e.date || ''; if (!date) return;
+      ensureDate(date);
+      byDate[date].windCount++;
+      if (e.speed_mph && e.speed_mph > byDate[date].maxWind) byDate[date].maxWind = e.speed_mph;
+      if (!byDate[date].sources.includes('Wind')) byDate[date].sources.push('Wind');
+    });
+    nwsWarnings.forEach(e => {
+      const date = (e.onset || '').slice(0, 10); if (!date) return;
+      ensureDate(date);
+      byDate[date].warningCount++;
+      if (!byDate[date].sources.includes('NWS')) byDate[date].sources.push('NWS');
+    });
+
+    const dates = Object.keys(byDate).sort((a,b) => b.localeCompare(a));
+    statusEl.textContent = '';
+
+    if (!dates.length) {
+      resultsEl.innerHTML = `<div style="font-size:11px;color:var(--mid);padding:8px 0;">No storm events found within 50 miles of this location in the last 90 days.</div>`;
+      resultsEl.style.display = 'block';
       return;
     }
-    statusEl.textContent = '';
-    // Group MRMS by date
-    const byDate = {};
-    mrms.forEach(e => {
-      if (!byDate[e.date]) byDate[e.date] = { max: 0, count: 0 };
-      if (e.hail_size_in > byDate[e.date].max) byDate[e.date].max = e.hail_size_in;
-      byDate[e.date].count++;
-    });
-    const dates = Object.keys(byDate).sort((a,b) => b.localeCompare(a));
-    let html = `<div style="font-size:10px;font-weight:700;color:#a78bfa;margin-bottom:6px;">📮 ${placeName} — Last 90 Days</div>`;
-    html += `<div style="font-size:10px;color:var(--mid);margin-bottom:8px;">${dates.length} storm date${dates.length !== 1 ? 's' : ''} with hail detected</div>`;
-    dates.slice(0, 20).forEach(date => {
+
+    const shortName = placeName.split(',').slice(0,2).join(',');
+    const badgeColors = { MRMS: '#6366f1', SPC: '#f97316', Wind: '#22d3ee', NWS: '#ef4444' };
+
+    let html = `<div style="font-size:10px;font-weight:700;color:#a78bfa;margin-bottom:4px;">📍 ${shortName}</div>`;
+    html += `<div style="font-size:10px;color:var(--mid);margin-bottom:8px;">${dates.length} storm date${dates.length !== 1 ? 's' : ''} within 50 miles · last 90 days</div>`;
+
+    dates.forEach(date => {
       const d = byDate[date];
-      const lbl = d.max >= 2.75 ? '🔴 Baseball+' : d.max >= 1.75 ? '🟠 Baseball' : d.max >= 1.0 ? '🟡 Golf Ball' : '🔵 Quarter';
-      html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;">
-        <span style="color:var(--text);">${date}</span>
-        <span>${lbl} <b>${d.max.toFixed(2)}"</b></span>
-        <span style="color:var(--mid);">${d.count} pts</span>
+      const hasHail = d.maxHail > 0;
+      const hailColor = d.maxHail >= 2.75 ? '#ef4444' : d.maxHail >= 1.75 ? '#f97316' : d.maxHail >= 1.0 ? '#eab308' : '#3b82f6';
+      const hailLbl = d.maxHail >= 2.75 ? 'Baseball+' : d.maxHail >= 1.75 ? 'Baseball' : d.maxHail >= 1.0 ? 'Golf Ball' : 'Quarter';
+      const subParts = [];
+      if (d.mrmsCount) subParts.push(`${d.mrmsCount} radar pts`);
+      if (d.spcHailCount) subParts.push(`${d.spcHailCount} hail spotter${d.spcHailCount > 1 ? 's' : ''}`);
+      if (d.windCount) subParts.push(`${d.windCount} wind${d.maxWind ? ' ' + d.maxWind + 'mph' : ''}`);
+      if (d.warningCount) subParts.push(`${d.warningCount} NWS warning${d.warningCount > 1 ? 's' : ''}`);
+      const sourceBadge = d.sources.map(s =>
+        `<span style="font-size:9px;background:${badgeColors[s] || '#374151'};border-radius:3px;padding:1px 5px;color:#fff;font-weight:700;">${s}</span>`
+      ).join(' ');
+      html += `<div onclick="loadMrmsForDate('${date}');_onStormDateChange('${date}');document.getElementById('storm-date-sel').value='${date}';switchStormTab('map');"
+        style="display:flex;justify-content:space-between;align-items:center;padding:8px 6px;border-bottom:1px solid var(--border);cursor:pointer;border-radius:5px;"
+        onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='none'">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:12px;font-weight:700;color:var(--text);">${date}</div>
+          <div style="font-size:10px;color:var(--mid);margin-top:1px;">${subParts.join(' · ')}</div>
+          <div style="margin-top:3px;display:flex;gap:3px;flex-wrap:wrap;">${sourceBadge}</div>
+        </div>
+        <div style="text-align:right;margin-left:8px;flex-shrink:0;">
+          ${hasHail
+            ? `<div style="font-size:13px;font-weight:800;color:${hailColor};">${d.maxHail.toFixed(2)}"</div><div style="font-size:10px;color:var(--mid);">${hailLbl}</div>`
+            : d.maxWind
+              ? `<div style="font-size:12px;font-weight:800;color:#22d3ee;">${d.maxWind}mph</div><div style="font-size:10px;color:var(--mid);">Wind</div>`
+              : `<div style="font-size:11px;color:var(--mid);">⚠️</div>`}
+        </div>
       </div>`;
     });
-    if (spcHail.length) {
-      html += `<div style="font-size:10px;font-weight:700;color:#60a5fa;margin-top:8px;margin-bottom:4px;">👤 Spotter Reports (${spcHail.length})</div>`;
-      spcHail.slice(0, 5).forEach(e => {
-        html += `<div style="font-size:11px;color:#93c5fd;padding:3px 0;border-bottom:1px solid var(--border);">${e.date || ''} — ${(e.magnitude/100).toFixed(2)}" hail${e.comments ? ' — "' + e.comments.substring(0,50) + '"' : ''}</div>`;
-      });
-    }
+    html += `<div style="font-size:10px;color:var(--mid);text-align:center;padding:6px 0;">Tap any row to load that storm's hail swath on the map</div>`;
     resultsEl.innerHTML = html;
     resultsEl.style.display = 'block';
   } catch(e) {
     statusEl.textContent = '❌ Error fetching data. Try again.';
+    console.error('[lookupHailByZip]', e);
   }
 };
 
