@@ -924,7 +924,17 @@ window.toggleStormPlayback = function() {
   const isOpen = panel.style.display !== 'none';
   panel.style.display = isOpen ? 'none' : 'block';
   if (btn) btn.textContent = isOpen ? 'Load' : 'Close';
-  if (!isOpen && _playbackDate) loadStormPlayback();
+  if (!isOpen) {
+    // Auto-read the currently selected storm date from the MAP tab date picker
+    const dateSel = document.getElementById('storm-date-sel');
+    if (dateSel && dateSel.value) _playbackDate = dateSel.value;
+    if (_playbackDate) {
+      loadStormPlayback();
+    } else {
+      const statusEl = document.getElementById('storm-playback-status');
+      if (statusEl) statusEl.textContent = '⚠️ Pick a storm date above, then open Playback.';
+    }
+  }
 };
 
 window.loadStormPlayback = async function() {
