@@ -1160,7 +1160,7 @@ function addMarker_updatePropData(m, pid, pin){
 function savePin(){
   if(!tempLL)return;
   const dmgPhotos = window._pinDamagePhotos || [];
-  // ── Deduplicate: if a pin already exists at this address OR within 30m, offer to open it instead
+  // ── Deduplicate: if a pin already exists at this address OR within 8m, offer to open it instead
   const newAddr = (document.getElementById('p-addr').value.trim()||(tempLL.lat.toFixed(4)+', '+tempLL.lng.toFixed(4))).toLowerCase();
   function _haversineM(lat1,lng1,lat2,lng2){
     const R=6371000,dLat=(lat2-lat1)*Math.PI/180,dLng=(lng2-lng1)*Math.PI/180;
@@ -1174,7 +1174,7 @@ function savePin(){
     const sameAccount = !currentAccountId || !p.account_id || p.account_id === currentAccountId;
     if(!sameAccount) return false;
     if((p.address||'').toLowerCase()===newAddr) return true;
-    if(p.lat && p.lng && tempLL) return _haversineM(p.lat,p.lng,tempLL.lat,tempLL.lng) < 30;
+    if(p.lat && p.lng && tempLL) return _haversineM(p.lat,p.lng,tempLL.lat,tempLL.lng) < 8;
     return false;
   });
   if(dupPin){
