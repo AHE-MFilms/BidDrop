@@ -97,6 +97,20 @@ const PLAN_CONFIG = {
     offer_multi_rep: true,
     offer_white_label: false,
   },
+  omnipresent: {
+    name: 'The Omnipresent System',
+    price: 3500,
+    mailer_credits: 500,  // 500 credits included per month
+    max_reps: 10,
+    max_pins_per_month: null,
+    offer_ghl: true,
+    offer_estimate_pages: true,
+    offer_analytics: true,
+    offer_solar: true,
+    offer_multi_rep: true,
+    offer_white_label: true,
+    offer_blitz: true,
+  },
   payg: {
     name: 'Pay-as-you-go',
     price: 0,
@@ -533,7 +547,7 @@ export default async function handler(req, res) {
     const slug = generateSlug(companyName || `${firstName}-${lastName}`);
 
     // mailer_rate by plan (cost per mailer to the account)
-    const mailerRateByPlan = { starter: 2.50, pro: 2.50, agency: 2.50, enterprise: 2.50, monthly: 2.50, payg: 2.50 };
+    const mailerRateByPlan = { starter: 2.50, pro: 2.50, agency: 2.50, enterprise: 2.50, monthly: 2.50, omnipresent: 2.50, payg: 2.50 };
 
     const stripeCustomerId = fullSession.customer?.id || session.customer || null;
     const stripeSubscriptionId = fullSession.subscription?.id || fullSession.subscription || null;

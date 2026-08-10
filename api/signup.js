@@ -11,6 +11,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 // Stripe Price IDs for each plan (monthly recurring).
 const PRICE_IDS = {
   monthly: process.env.STRIPE_PRICE_MONTHLY || 'price_1TuE9ZACMaED04opUcqpS98m',
+  omnipresent: process.env.STRIPE_PRICE_OMNIPRESENT || 'price_1U2ytFACMaED04opNATKiGUm',
   // payg has no Stripe price — no subscription, card on file only
 };
 
@@ -18,6 +19,7 @@ const PRICE_IDS = {
 // Monthly accounts also receive their 20 included credits on first billing cycle via webhook.
 const PLAN_MAILER_CREDITS = {
   monthly: 40,
+  omnipresent: 500,
   payg: 0,
 };
 
@@ -27,6 +29,7 @@ const WELCOME_CREDITS = 2;
 // Max users per plan — must match PLAN_MAX_REPS_INV in admin-users.js
 const PLAN_MAX_REPS = {
   monthly: 10,
+  omnipresent: 10,
   payg: 1,
 };
 
@@ -68,7 +71,7 @@ export default async function handler(req, res) {
   }
 
   // Validate plan
-  if (!['monthly', 'payg'].includes(plan)) {
+  if (!['monthly', 'payg', 'omnipresent'].includes(plan)) {
     return res.status(400).json({ error: `Unknown plan: ${plan}. Please contact support.` });
   }
 
