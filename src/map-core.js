@@ -1066,31 +1066,28 @@ function _buildPinPopupHTML(pin){
   const pid = pin.id;
   const _dmgPhotos = pin.damage_photos||[];
   const _popupPhotos = _dmgPhotos.length
-    ? '<div style="display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap;">' + _dmgPhotos.map(src=>'<img src="'+src+'" style="width:calc(33% - 3px);height:80px;object-fit:cover;border-radius:6px;display:block;" onerror="this.style.display=\'none\'">').join('') + '</div>'
+    ? '<div style="display:flex;gap:3px;margin-bottom:6px;flex-wrap:wrap;">' + _dmgPhotos.map(src=>'<img src="'+src+'" style="width:calc(33% - 2px);height:44px;object-fit:cover;border-radius:5px;display:block;" onerror="this.style.display=\'none\'">').join('') + '</div>'
     : pin.photo_url
-      ? '<img src="'+pin.photo_url+'" style="width:100%;max-height:90px;object-fit:cover;border-radius:6px;margin-bottom:8px;display:block;" onerror="this.style.display=\'none\'">'
+      ? '<img src="'+pin.photo_url+'" style="width:100%;max-height:52px;object-fit:cover;border-radius:5px;margin-bottom:5px;display:block;" onerror="this.style.display=\'none\'">'
       : '';
   const _solar = pin._solarCache;
   const _solarContent = _solar && _solar.status==='ok' && _solar.sqft
     ? _solar.sqft.toLocaleString()+' sq ft &nbsp;&middot;&nbsp; <span style="color:#F25C05;font-weight:700;">'+_solar.squares+' sq</span> &nbsp;&middot;&nbsp; <span style="color:#22C55E;font-weight:700;">'+_solar.pitchLabel+' pitch</span>'
     : null;
-  const _popupSolar = _solarContent ? `<div id="solar-row-${pid}" style="background:rgba(242,92,5,.1);border:1px solid rgba(242,92,5,.3);border-radius:7px;padding:7px 10px;margin-bottom:7px;">
-    <div style="font-size:9px;font-weight:700;letter-spacing:.6px;color:#F25C05;margin-bottom:3px;">\ud83d\udef0 SATELLITE MEASUREMENT</div>
-    <div id="solar-val-${pid}" style="font-size:12px;color:#fff;font-weight:600;">${_solarContent}</div>
-  </div>` : '';
+  const _popupSolar = _solarContent ? `<div id="solar-row-${pid}" style="background:rgba(242,92,5,.08);border:1px solid rgba(242,92,5,.25);border-radius:6px;padding:4px 8px;margin-bottom:5px;display:flex;align-items:center;gap:6px;"><span style="font-size:9px;font-weight:700;color:#F25C05;white-space:nowrap;">🛰 SQFT</span><span id="solar-val-${pid}" style="font-size:11px;color:#fff;font-weight:600;">${_solarContent}</span></div>` : '';
   const _eq2 = pin.equityData;
-  const _propSnap = _eq2 ? buildPropertySnapHTML(pid, _eq2) : `<div id="prop-snap-${pid}" style="background:linear-gradient(135deg,#0f2027,#1a3a2a);border:1px solid #22C55E33;border-radius:8px;padding:8px 10px;margin-bottom:7px;font-size:11px;color:#A8BECE;">\ud83c\udfe0 <span id="prop-snap-val-${pid}">Loading property data\u2026</span></div>`;
+  const _propSnap = _eq2 ? buildPropertySnapHTML(pid, _eq2) : `<div id="prop-snap-${pid}" style="background:rgba(34,197,94,.06);border:1px solid #22C55E22;border-radius:6px;padding:4px 8px;margin-bottom:5px;font-size:10px;color:#A8BECE;">\ud83c\udfe0 <span id="prop-snap-val-${pid}">Loading property data\u2026</span></div>`;
   // Owner name from estimate or equity data (shown even before contact lookup)
   // Notes section with quick-edit
-  const _notesSection2 = `<div id="pin-note-section-${pid}" style="margin-bottom:8px;">
-    <div id="pin-note-display-${pid}" style="display:flex;align-items:flex-start;gap:6px;cursor:pointer;" onclick="quickEditPinNote('${pid}')">
-      ${pin.notes ? `<div style="flex:1;font-size:12px;color:#A8BECE;font-style:italic;line-height:1.4;">"${escHtml(pin.notes)}"</div><span style="font-size:11px;color:#F59E0B;flex-shrink:0;margin-top:1px;">✏️</span>` : `<div style="flex:1;font-size:11px;color:#6B7280;">+ Add a note…</div>`}
+  const _notesSection2 = `<div id="pin-note-section-${pid}" style="margin-bottom:5px;">
+    <div id="pin-note-display-${pid}" style="display:flex;align-items:center;gap:5px;cursor:pointer;" onclick="quickEditPinNote('${pid}')">
+      ${pin.notes ? `<div style="flex:1;font-size:10px;color:#A8BECE;font-style:italic;line-height:1.3;">"${escHtml(pin.notes)}"</div><span style="font-size:10px;color:#F59E0B;flex-shrink:0;">✏️</span>` : `<div style="flex:1;font-size:10px;color:#6B7280;">+ Add a note…</div>`}
     </div>
     <div id="pin-note-edit-${pid}" style="display:none;">
-      <textarea id="pin-note-ta-${pid}" rows="3" placeholder="Add a note about this property…" style="width:100%;background:#1a2535;border:1px solid #F59E0B;color:#fff;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;resize:none;box-sizing:border-box;">${escHtml(pin.notes||'')}</textarea>
+      <textarea id="pin-note-ta-${pid}" rows="2" placeholder="Add a note…" style="width:100%;background:#1a2535;border:1px solid #F59E0B;color:#fff;border-radius:6px;padding:5px 7px;font-size:11px;font-family:inherit;resize:none;box-sizing:border-box;">${escHtml(pin.notes||'')}</textarea>
       <div style="display:flex;gap:5px;margin-top:4px;">
-        <button onclick="savePinNote('${pid}')" style="flex:1;background:#F59E0B;border:none;border-radius:6px;padding:5px;color:#000;font-size:11px;font-weight:700;cursor:pointer;">💾 Save</button>
-        <button onclick="cancelPinNote('${pid}')" style="flex:1;background:none;border:1px solid #374151;border-radius:6px;padding:5px;color:#A8BECE;font-size:11px;cursor:pointer;">Cancel</button>
+        <button onclick="savePinNote('${pid}')" style="flex:1;background:#F59E0B;border:none;border-radius:5px;padding:4px;color:#000;font-size:10px;font-weight:700;cursor:pointer;">💾 Save</button>
+        <button onclick="cancelPinNote('${pid}')" style="flex:1;background:none;border:1px solid #374151;border-radius:5px;padding:4px;color:#A8BECE;font-size:10px;cursor:pointer;">Cancel</button>
       </div>
     </div>
   </div>`;
@@ -1098,26 +1095,28 @@ function _buildPinPopupHTML(pin){
     || (pin.equityData && pin.equityData.ownerName) || '';
   // Contact info is now only accessible from the Estimator (Unlock Pin button)
   return `<div style="min-width:200px;max-width:240px;">
-      <div style="font-weight:700;font-size:13px;margin-bottom:5px;color:#FFFFFF;line-height:1.3;">${escHtml(pin.address||'Unknown')}</div>
-      <div style="display:inline-block;background:${sColor(pin.status)};color:white;font-size:11px;padding:2px 8px;border-radius:5px;font-weight:700;margin-bottom:${_ownerName ? '4px' : '8px'};">${sLabel(pin.status)}</div>
-      ${_ownerName ? `<div style="font-size:12px;font-weight:700;color:#FFF;margin-bottom:8px;padding:3px 8px;background:rgba(255,255,255,.06);border-radius:6px;display:inline-block;">👤 ${escHtml(_ownerName)}</div>` : ''}
+      <div style="font-weight:700;font-size:12px;margin-bottom:3px;color:#FFFFFF;line-height:1.3;">${escHtml(pin.address||'Unknown')}</div>
+      <div style="display:inline-flex;align-items:center;gap:6px;margin-bottom:4px;">
+        <span style="background:${sColor(pin.status)};color:white;font-size:10px;padding:2px 7px;border-radius:4px;font-weight:700;">${sLabel(pin.status)}</span>
+        ${_ownerName ? `<span style="font-size:10px;font-weight:700;color:#CBD5E1;">👤 ${escHtml(_ownerName)}</span>` : ''}
+      </div>
       ${_popupPhotos}
       ${_propSnap}
       ${_popupSolar}
       ${_notesSection2}
-      ${pin.estimate && pin.estimate.total ? `<div style="background:#0a1628;border:1px solid #3B82F655;border-radius:6px;padding:5px 8px;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;"><span style="font-size:9px;font-weight:700;color:#3B82F6;">\u2713 ESTIMATE</span><span style="font-size:13px;font-weight:700;color:#FFF;">$${(pin.estimate.total||0).toLocaleString()}</span></div>` : ''}
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:6px;">
-        <button onclick="goEstFromPin('${pid}')" style="background:#F25C05;border:none;border-radius:7px;padding:9px 6px;color:white;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;line-height:1.2;">${pin.estimate && pin.estimate.total ? '\ud83d\udccb Edit\nEstimate' : '\ud83d\udccb Build\nEstimate'}</button>
-        <button onclick="measureForPin('${pid}')" style="background:rgba(242,92,5,.1);border:1.5px solid #F25C05;border-radius:7px;padding:9px 6px;color:#F25C05;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;line-height:1.2;">\ud83d\udcd0 Measure\nRoof</button>
-        <button onclick="openPhotoModal('${pid}')" style="background:rgba(34,197,94,.08);border:1.5px solid #22C55E;border-radius:7px;padding:9px 6px;color:#22C55E;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;line-height:1.2;">\ud83d\udcf7 Manage\nPhotos</button>
-        <button onclick="openNearbyCampaign('${pid}')" style="background:rgba(242,92,5,.08);border:1.5px solid #F25C05;border-radius:7px;padding:9px 6px;color:#F25C05;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;line-height:1.2;">\ud83d\udccd Nearby\nCampaign</button>
-        <button onclick="openSendStormReport('${pid}')" style="background:rgba(96,165,250,.08);border:1.5px solid #60A5FA;border-radius:7px;padding:9px 6px;color:#60A5FA;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;line-height:1.2;">\u26a1 Storm\nReport</button>
-        <button onclick="showPinHailHistory('${pid}','${escHtml(pin.address||'')}',${pin.lat||0},${pin.lon||0})" style="background:rgba(96,165,250,.08);border:1.5px solid #60A5FA;border-radius:7px;padding:9px 6px;color:#60A5FA;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;line-height:1.2;">\u26a1 Hail\nHistory</button>
+      ${pin.estimate && pin.estimate.total ? `<div style="background:#0a1628;border:1px solid #3B82F633;border-radius:5px;padding:3px 8px;margin-bottom:5px;display:flex;align-items:center;justify-content:space-between;"><span style="font-size:9px;font-weight:700;color:#3B82F6;">\u2713 ESTIMATE</span><span style="font-size:12px;font-weight:700;color:#FFF;">$${(pin.estimate.total||0).toLocaleString()}</span></div>` : ''}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:5px;">
+        <button onclick="goEstFromPin('${pid}')" style="background:#F25C05;border:none;border-radius:6px;padding:7px 5px;color:white;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;line-height:1.2;">${pin.estimate && pin.estimate.total ? '📋 Edit Estimate' : '📋 Build Estimate'}</button>
+        <button onclick="measureForPin('${pid}')" style="background:rgba(242,92,5,.1);border:1px solid #F25C05;border-radius:6px;padding:7px 5px;color:#F25C05;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;line-height:1.2;">📐 Measure Roof</button>
+        <button onclick="openPhotoModal('${pid}')" style="background:rgba(34,197,94,.08);border:1px solid #22C55E;border-radius:6px;padding:7px 5px;color:#22C55E;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;line-height:1.2;">📷 Photos</button>
+        <button onclick="openNearbyCampaign('${pid}')" style="background:rgba(242,92,5,.08);border:1px solid #F25C05;border-radius:6px;padding:7px 5px;color:#F25C05;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;line-height:1.2;">📍 Campaign</button>
+        <button onclick="openSendStormReport('${pid}')" style="background:rgba(96,165,250,.08);border:1px solid #60A5FA;border-radius:6px;padding:7px 5px;color:#60A5FA;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;line-height:1.2;">⚡ Storm Rpt</button>
+        <button onclick="showPinHailHistory('${pid}','${escHtml(pin.address||'')}',${pin.lat||0},${pin.lon||0})" style="background:rgba(96,165,250,.08);border:1px solid #60A5FA;border-radius:6px;padding:7px 5px;color:#60A5FA;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;line-height:1.2;">⚡ Hail Hist</button>
       </div>
       <div id="hail-hist-${pid}" style="display:none;background:#0a1628;border:1px solid #60A5FA33;border-radius:7px;padding:8px;margin-bottom:5px;font-size:11px;"></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;padding-top:4px;border-top:1px solid rgba(255,255,255,.07);">
-        <button onclick="openSorryForMess('${pid}')" style="background:none;border:none;color:#6366F1;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;padding:3px 0;">\ud83c\udfd7 Sorry for the Mess</button>
-        <button onclick="confirmDeletePin('${pid}')" style="background:none;border:none;color:#EF4444;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;padding:3px 0;">\ud83d\uddd1 Delete Pin</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding-top:3px;border-top:1px solid rgba(255,255,255,.07);">
+        <button onclick="openSorryForMess('${pid}')" style="background:none;border:none;color:#6366F1;font-size:9px;font-weight:700;cursor:pointer;font-family:inherit;padding:2px 0;">🏗 Sorry for the Mess</button>
+        <button onclick="confirmDeletePin('${pid}')" style="background:none;border:none;color:#EF4444;font-size:9px;font-weight:700;cursor:pointer;font-family:inherit;padding:2px 0;">🗑 Delete</button>
       </div>
     </div>`;
 }
