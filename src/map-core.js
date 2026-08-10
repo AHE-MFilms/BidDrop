@@ -1182,7 +1182,32 @@ function savePin(){
     toast('📍 A pin already exists at this address — opening it','info');
     // Fly to existing pin and open its card
     if(map && dupPin.lat && dupPin.lng) map.flyTo([dupPin.lat, dupPin.lng], Math.max(map.getZoom(), 17));
-    setTimeout(()=>{ const el=document.getElementById('pc-'+dupPin.id); if(el){ el.classList.add('open'); el.scrollIntoView({behavior:'smooth',block:'nearest'}); } }, 600);
+    setTimeout(()=>{
+      // Try to open the pin card in the sidebar
+      const el=document.getElementById('pc-'+dupPin.id);
+      if(el){
+        el.classList.add('open');
+        el.scrollIntoView({behavior:'smooth',block:'nearest'});
+      } else {
+        // Fallback: marker may not be rendered yet — try to open the popup directly
+        // by finding the Leaflet marker for this pin
+        let found = false;
+        map.eachLayer(layer => {
+          if(found) return;
+          if(layer._pinId === dupPin.id || (layer.options && layer.options.pinId === dupPin.id)){
+            found = true;
+            layer.openPopup && layer.openPopup();
+          }
+        });
+        if(!found){
+          // Last resort: show the pin in the sidebar by scrolling to it
+          toast('📍 Pin found — scroll the sidebar to see it','info');
+          // Ensure the pinned homes panel is open
+          const pipelineBtn = document.getElementById('btn-pipeline');
+          if(pipelineBtn) pipelineBtn.click();
+        }
+      }
+    }, 600);
     return;
   }
   // ── Zone lock-out enforcement ──────────────────────────────────────────────
