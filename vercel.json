@@ -83,6 +83,10 @@
     {
       "path": "/api/cron-storm-alerts",
       "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron-address-monitor",
+      "schedule": "*/15 * * * *"
     }
   ],
   "functions": {

@@ -358,6 +358,33 @@
             </div>
           </div>
 
+          <div style="border-top:1px solid var(--border);margin:10px 0;"></div>
+          <!-- Address Monitoring -->
+          <div id="address-monitor-section" style="margin-bottom:10px;">
+            <div style="font-size:12px;font-weight:700;color:#818cf8;margin-bottom:4px;">📍 Address Monitoring</div>
+            <div style="font-size:10px;color:var(--mid);margin-bottom:8px;line-height:1.5;">Watch specific addresses for hail. Get an email alert within 15 minutes when hail ≥ 1" hits a monitored address.</div>
+            <!-- Plan gate for PAYG -->
+            <div id="addr-monitor-gate" style="display:none;background:rgba(129,140,248,0.08);border:1px solid rgba(129,140,248,0.3);border-radius:8px;padding:10px 12px;text-align:center;">
+              <div style="font-size:11px;font-weight:700;color:#818cf8;margin-bottom:4px;">🔒 Monthly Plan Feature</div>
+              <div style="font-size:10px;color:var(--mid);margin-bottom:8px;">Address Monitoring is available on the Monthly plan.</div>
+              <button onclick="window.open('https://biddrop.us/signup','_blank')" style="background:#818cf8;color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">Upgrade to Monthly →</button>
+            </div>
+            <!-- Monitoring UI (shown for monthly/omnipresent) -->
+            <div id="addr-monitor-ui">
+              <!-- Add address input -->
+              <div style="display:flex;gap:5px;margin-bottom:8px;">
+                <input id="watch-addr-input" type="text" placeholder="Enter address to monitor…"
+                  style="flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:7px 9px;font-size:11px;outline:none;"
+                  onkeydown="if(event.key==='Enter')addWatchedAddress()">
+                <button onclick="addWatchedAddress()" style="background:#818cf8;color:#fff;border:none;border-radius:7px;padding:7px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">+ Watch</button>
+              </div>
+              <div id="watch-addr-status" style="font-size:10px;color:var(--mid);min-height:12px;margin-bottom:6px;"></div>
+              <!-- Watched addresses list -->
+              <div id="watched-addresses-list" style="font-size:11px;color:var(--mid);">
+                <div style="text-align:center;padding:8px 0;color:var(--muted);">Loading watched addresses…</div>
+              </div>
+            </div>
+          </div>
         </div><!-- end pane-work -->
 
       </div><!-- end scrollable body -->

@@ -89,20 +89,25 @@ function buildAlertEmail({ account, hailEvents, territory, date }) {
     </p>
 
     <!-- Stats row -->
-    <div style="display:flex;gap:10px;margin-bottom:20px;">
-      <div style="flex:1;background:#fef3c7;border-radius:8px;padding:12px;text-align:center;">
-        <div style="font-size:20px;font-weight:800;color:#d97706;">${maxHail.toFixed(2)}"</div>
-        <div style="font-size:10px;font-weight:700;color:#92400e;">MAX HAIL</div>
-      </div>
-      <div style="flex:1;background:#fee2e2;border-radius:8px;padding:12px;text-align:center;">
-        <div style="font-size:20px;font-weight:800;color:#dc2626;">${hailEvents.length}</div>
-        <div style="font-size:10px;font-weight:700;color:#991b1b;">IMPACTS</div>
-      </div>
-      <div style="flex:1;background:#dbeafe;border-radius:8px;padding:12px;text-align:center;">
-        <div style="font-size:20px;font-weight:800;color:#1d4ed8;">${lbl.split(' ')[0]}</div>
-        <div style="font-size:10px;font-weight:700;color:#1e3a8a;">CATEGORY</div>
-      </div>
-    </div>
+    <!-- Stats row (table layout for email client compatibility) -->
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:20px;">
+      <tr>
+        <td style="background:#fef3c7;border-radius:8px;padding:14px 8px;text-align:center;width:33%;">
+          <div style="font-size:22px;font-weight:800;color:#d97706;line-height:1.2;">${maxHail.toFixed(2)}"</div>
+          <div style="font-size:10px;font-weight:700;color:#92400e;letter-spacing:.06em;margin-top:4px;">MAX HAIL</div>
+        </td>
+        <td style="width:8px;"></td>
+        <td style="background:#fee2e2;border-radius:8px;padding:14px 8px;text-align:center;width:33%;">
+          <div style="font-size:22px;font-weight:800;color:#dc2626;line-height:1.2;">${hailEvents.length.toLocaleString()}</div>
+          <div style="font-size:10px;font-weight:700;color:#991b1b;letter-spacing:.06em;margin-top:4px;">IMPACTS</div>
+        </td>
+        <td style="width:8px;"></td>
+        <td style="background:#dbeafe;border-radius:8px;padding:14px 8px;text-align:center;width:33%;">
+          <div style="font-size:22px;font-weight:800;color:#1d4ed8;line-height:1.2;">${lbl.split(' ')[0]}</div>
+          <div style="font-size:10px;font-weight:700;color:#1e3a8a;letter-spacing:.06em;margin-top:4px;">CATEGORY</div>
+        </td>
+      </tr>
+    </table>
 
     <!-- CTA -->
     <div style="text-align:center;margin-bottom:20px;">

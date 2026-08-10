@@ -1148,3 +1148,109 @@ window._initStormAlertUI = function() {
     if (minSel) minSel.value = minSize;
   }
 };
+
+// ── ADDRESS MONITORING ──────────────────────────────────────────────────────
+
+window.initAddressMonitoring = async function() {
+  if (!window._currentAccount) return;
+  const plan = window._currentAccount.plan;
+  const isMonthly = ['monthly', 'omnipresent'].includes(plan);
+  const gate = document.getElementById('addr-monitor-gate');
+  const ui = document.getElementById('addr-monitor-ui');
+  if (!gate || !ui) return;
+  if (!isMonthly) {
+    gate.style.display = 'block';
+    ui.style.display = 'none';
+    return;
+  }
+  gate.style.display = 'none';
+  ui.style.display = 'block';
+  await loadWatchedAddresses();
+};
+
+window.loadWatchedAddresses = async function() {
+  const listEl = document.getElementById('watched-addresses-list');
+  if (!listEl) return;
+  if (!window._currentAccount?.id) { listEl.innerHTML = '<div style="color:var(--muted);font-size:10px;text-align:center;padding:8px;">Not logged in</div>'; return; }
+  listEl.innerHTML = '<div style="text-align:center;padding:8px;color:var(--muted);font-size:10px;">Loading…</div>';
+  try {
+    const { data, error } = await window._supabase
+      .from('watched_addresses')
+      .select('id,address,label,min_hail_size,alert_enabled,last_hail_date,last_hail_size,last_alert_sent_at')
+      .eq('account_id', window._currentAccount.id)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    if (!data || !data.length) {
+      listEl.innerHTML = '<div style="text-align:center;padding:8px;color:var(--muted);font-size:10px;">No addresses being monitored yet.<br>Add an address above to start.</div>';
+      return;
+    }
+    listEl.innerHTML = data.map(wa => {
+      const lastHail = wa.last_hail_date ? `<span style="color:#F97316;font-size:9px;">Last hit: ${wa.last_hail_date} (${wa.last_hail_size?.toFixed(2)}")</span>` : '<span style="color:var(--muted);font-size:9px;">No hail detected yet</span>';
+      return `<div style="background:rgba(129,140,248,0.07);border:1px solid rgba(129,140,248,0.2);border-radius:7px;padding:8px 10px;margin-bottom:6px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;">
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:11px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${wa.label || wa.address.split(',')[0]}</div>
+            <div style="font-size:9px;color:var(--mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${wa.address}</div>
+            <div style="margin-top:3px;">${lastHail}</div>
+          </div>
+          <button onclick="removeWatchedAddress('${wa.id}')" title="Remove" style="background:rgba(239,68,68,0.15);border:none;border-radius:5px;color:#ef4444;cursor:pointer;padding:3px 7px;font-size:10px;flex-shrink:0;">✕</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    listEl.innerHTML = `<div style="color:#ef4444;font-size:10px;padding:6px;">Error: ${e.message}</div>`;
+  }
+};
+
+window.addWatchedAddress = async function() {
+  const input = document.getElementById('watch-addr-input');
+  const status = document.getElementById('watch-addr-status');
+  const addr = input?.value?.trim();
+  if (!addr) return;
+  if (!window._currentAccount?.id) { if(status) status.textContent = 'Not logged in.'; return; }
+  if (status) status.textContent = 'Geocoding address…';
+  try {
+    // Geocode via Mapbox
+    const MAPBOX_TOKEN = window._mapboxToken || '';
+    const geoResp = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(addr)}.json?access_token=${MAPBOX_TOKEN}&limit=1`);
+    const geoData = await geoResp.json();
+    const feat = geoData.features?.[0];
+    if (!feat) { if(status) status.textContent = 'Address not found. Try a more specific address.'; return; }
+    const [lon, lat] = feat.center;
+    const fullAddr = feat.place_name;
+    if (status) status.textContent = 'Adding…';
+    const { error } = await window._supabase.from('watched_addresses').insert({
+      account_id: window._currentAccount.id,
+      address: fullAddr,
+      label: addr.length < 40 ? addr : null,
+      lat, lon,
+      min_hail_size: 1.0,
+      alert_enabled: true
+    });
+    if (error) throw error;
+    input.value = '';
+    if (status) status.textContent = `✅ Now monitoring: ${fullAddr.split(',')[0]}`;
+    setTimeout(() => { if(status) status.textContent = ''; }, 4000);
+    await loadWatchedAddresses();
+  } catch(e) {
+    if (status) status.textContent = `Error: ${e.message}`;
+  }
+};
+
+window.removeWatchedAddress = async function(id) {
+  if (!confirm('Stop monitoring this address?')) return;
+  try {
+    const { error } = await window._supabase.from('watched_addresses').delete().eq('id', id);
+    if (error) throw error;
+    await loadWatchedAddresses();
+  } catch(e) {
+    alert('Error removing address: ' + e.message);
+  }
+};
+
+// Auto-init when WORK tab is shown
+const _origSwitchStormTab = window.switchStormTab;
+window.switchStormTab = function(tab) {
+  if (_origSwitchStormTab) _origSwitchStormTab(tab);
+  if (tab === 'work') setTimeout(() => window.initAddressMonitoring?.(), 100);
+};
