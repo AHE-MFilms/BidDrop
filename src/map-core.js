@@ -537,6 +537,8 @@ function measureForPin(pinId){
 }
 
 async function revGeo(lat,lng){
+  // reverse geocode placeholder — actual implementation is in map.js
+}
 // ── QUICK EDIT PIN NOTE ──────────────────────────────────────────────────────
 window.quickEditPinNote = function(pid) {
   const displayEl = document.getElementById('pin-note-display-' + pid);
