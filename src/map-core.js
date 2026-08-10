@@ -536,9 +536,6 @@ function measureForPin(pinId){
   toast('📐 Tap roof corners for '+(pin.address?pin.address.split(',')[0]:'selected pin'),'info');
 }
 
-async function revGeo(lat,lng){
-  // reverse geocode placeholder — actual implementation is in map.js
-}
 // ── QUICK EDIT PIN NOTE ──────────────────────────────────────────────────────
 window.quickEditPinNote = function(pid) {
   const displayEl = document.getElementById('pin-note-display-' + pid);
@@ -587,6 +584,7 @@ window.savePinNote = async function(pid) {
   }
 };
 
+async function revGeo(lat,lng){
   try{
     const MB=window._mapboxToken||'';
     const r=await fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/'+lng+','+lat+'.json?types=address&access_token='+MB);
