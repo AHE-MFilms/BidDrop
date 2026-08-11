@@ -11,7 +11,7 @@ const _rentcastFetched = new Set(); // pin IDs already fetched this session (pre
 let _rentcastLoadQueue = 0; // stagger counter: delays auto-fetch by 200ms * position to prevent burst on page load
 async function lookupPropertyData(address, opts){
   if(!address) return null;
-  const cacheKey = address.toLowerCase().trim();
+  const cacheKey = address.toLowerCase().trim() + ((opts && opts.includeOwner && opts.pinId) ? '|owner:'+opts.pinId : '');
   if(opts && opts.force){
     delete _propDataCache[cacheKey];
     delete _propDataInFlight[cacheKey];
@@ -20,7 +20,7 @@ async function lookupPropertyData(address, opts){
   if(cacheKey in _propDataCache) return _propDataCache[cacheKey];
   // Deduplicate concurrent requests for the same address
   if(_propDataInFlight[cacheKey]) return _propDataInFlight[cacheKey];
-  _propDataInFlight[cacheKey] = _lookupPropertyDataRaw(address).then(function(result){
+  _propDataInFlight[cacheKey] = _lookupPropertyDataRaw(address, opts).then(function(result){
     _propDataCache[cacheKey] = result;
     delete _propDataInFlight[cacheKey];
     return result;
@@ -30,11 +30,13 @@ async function lookupPropertyData(address, opts){
   });
   return _propDataInFlight[cacheKey];
 }
-async function _lookupPropertyDataRaw(address){
+async function _lookupPropertyDataRaw(address, opts){
   if(!address) return null;
   try{
     // Proxy through secure server-side API — RentCast key never exposed in browser
-    const data = await adminAPI('rentcast', {}, { address });
+    const query = { address };
+    if(opts && opts.includeOwner && opts.pinId) query.pinId = opts.pinId;
+    const data = await adminAPI('rentcast', {}, query);
 
     // Handle no-credits error (402)
     if(data && data.error === 'no_credits'){
@@ -71,7 +73,8 @@ async function _lookupPropertyDataRaw(address){
     const squareFootage = r.squareFootage || null;
     const lastSaleDate = r.lastSaleDate ? r.lastSaleDate.substring(0,10) : null;
     const lastSalePrice = r.lastSalePrice || null;
-    return { estValue, mortgageBalance, equity, yearBuilt, roofType, bedrooms, bathrooms, squareFootage, lastSaleDate, lastSalePrice };
+    const name = [r.ownerFirstName, r.ownerLastName].filter(Boolean).join(' ') || (typeof r.owner === 'string' ? r.owner : '');
+    return { name, estValue, mortgageBalance, equity, yearBuilt, roofType, bedrooms, bathrooms, squareFootage, lastSaleDate, lastSalePrice };
   } catch(e){
     console.warn('RentCast lookup failed:', e);
     return null;

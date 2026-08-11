@@ -33,9 +33,17 @@ async function handle(action, req, res, ctx) {
   const { profile, isSuperAdmin, isAdmin, effectiveAccountId, caller } = ctx;
   switch (action) {
       case 'rentcast': {
-        // Homeowner lookups are free — no credit gate
-        const { address } = req.query;
+        // Property facts are visible before unlock. Owner identity is only returned
+        // for a pin that the caller's account has already unlocked.
+        const { address, pinId } = req.query;
         if (!address) { res.status(400).json({ error: 'address required' }); return; }
+        let includeOwner = false;
+        if (pinId && effectiveAccountId) {
+          const pinRes = await sbFetch(`pins?id=eq.${encodeURIComponent(pinId)}&select=id,account_id,unlocked_at&limit=1`);
+          const pinRows = pinRes.ok ? await pinRes.json() : [];
+          const pin = pinRows[0];
+          includeOwner = !!(pin && pin.unlocked_at && (isSuperAdmin || pin.account_id === effectiveAccountId));
+        }
         // Call RentCast with a hard 8s timeout to prevent 504 gateway timeouts
         const rcCtrl = new AbortController();
         const rcTimeout = setTimeout(() => rcCtrl.abort(), 8000);
@@ -48,7 +56,7 @@ async function handle(action, req, res, ctx) {
           // Return 200 with notFound:true for 404s — address not in RentCast DB is expected, not an error
           if (rcRes.status === 404) { res.status(200).json({ notFound: true, properties: [] }); return; }
           const rcData = await rcRes.json();
-          res.status(rcRes.status).json(redactOwnerPayload(rcData));
+          res.status(rcRes.status).json(includeOwner ? rcData : redactOwnerPayload(rcData));
         } catch (rcErr) {
           clearTimeout(rcTimeout);
           if (rcErr.name === 'AbortError') {

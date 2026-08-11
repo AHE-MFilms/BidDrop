@@ -137,9 +137,9 @@ function _estRefreshUnlockUI() {
         ((_pin.contactData.phones||[]).length + (_pin.contactData.emails||[]).length) > 0) {
       _fillEstimatorContactFields(_pin.contactData);
     }
-    if (_pin && !dataReady && !_pin._leadHydrateAttempted) {
-      _pin._leadHydrateAttempted = true;
-      _hydratePaidEstimatorLead(_pin, status);
+    if (_pin && !dataReady && !_pin._leadPopulateStarted) {
+      _pin._leadPopulateStarted = true;
+      _populateUnlockedEstimatorLead(_pin, status);
     }
   } else {
     btn.style.display    = 'flex';
@@ -153,43 +153,54 @@ function _estLeadDataReady(pin){
   return hasOwner && hasContact;
 }
 
-function _showEstimatorLeadRetry(pin, status){
-  if(!status || !pin) return;
-  const safeId = String(pin.id||'').replace(/'/g,"\\'");
-  status.style.color = '#F59E0B';
-  status.innerHTML = '⚠️ Lead unlocked — homeowner data is temporarily unavailable. <button onclick="retryEstimatorLeadData(\''+safeId+'\')" style="margin-left:5px;background:none;border:1px solid #F59E0B66;border-radius:4px;padding:2px 6px;color:#FCD34D;font-size:10px;font-weight:700;cursor:pointer;">↻ Retry</button>';
-}
-
-async function _hydratePaidEstimatorLead(pin, status){
+async function _populateUnlockedEstimatorLead(pin, status){
   try {
-    const result = await Promise.race([
-      adminAPI('unlock-pin', { pinId:pin.id, address:pin.address, queuePostcard:false }),
-      new Promise(function(_, reject){ setTimeout(function(){ reject(new Error('retrieval timed out')); }, 30000); })
-    ]);
-    if (typeof result.owner === 'string' && result.owner.trim()) {
-      const est = pin.estimate ? (typeof pin.estimate === 'string' ? JSON.parse(pin.estimate) : pin.estimate) : {};
-      est.owner = result.owner;
-      pin.estimate = est;
+    const property = await lookupPropertyData(pin.address, { includeOwner:true, pinId:pin.id, force:true });
+    if (property) {
+      pin.equityData = { estValue:property.estValue, mortgageBalance:property.mortgageBalance, equity:property.equity, yearBuilt:property.yearBuilt, roofType:property.roofType, bedrooms:property.bedrooms, bathrooms:property.bathrooms, lastSaleDate:property.lastSaleDate, lastSalePrice:property.lastSalePrice };
+      if (property.name) {
+        const est = pin.estimate ? (typeof pin.estimate === 'string' ? JSON.parse(pin.estimate) : pin.estimate) : {};
+        est.owner = property.name;
+        pin.estimate = est;
+      }
+      if(sb) sb.from('pins').update({ estimate:pin.estimate || {}, equity_data:pin.equityData }).eq('id',pin.id).then(function(){});
     }
-    if (result.contact_data) pin.contactData = result.contact_data;
-    if (result.equity_data) pin.equityData = result.equity_data;
+    await lookupContactInfo(pin.id, { suppressUnlockCheck:true });
     if (_estLeadDataReady(pin)) {
       _estRefreshUnlockUI();
       if (typeof _accUpdateHomeownerSummary === 'function') _accUpdateHomeownerSummary();
     } else {
-      _showEstimatorLeadRetry(pin, status);
+      status.textContent = '⚠️ Lead unlocked — no homeowner contact data found.';
+      status.style.color = '#F59E0B';
     }
   } catch(e) {
-    _showEstimatorLeadRetry(pin, status);
+    status.textContent = '⚠️ Lead unlocked — homeowner data unavailable.';
+    status.style.color = '#F59E0B';
   }
+}
+
+async function _hydratePaidEstimatorLead(pin, status){
+  return _populateUnlockedEstimatorLead(pin, status);
 }
 
 window.retryEstimatorLeadData = function(pinId){
   const pin = (S.pins||[]).find(function(p){ return p.id === pinId; });
   if(!pin) return;
-  pin._leadHydrateAttempted = false;
+  pin._leadPopulateStarted = false;
   _estRefreshUnlockUI();
 };
+
+/* legacy wrapper retained for cached event handlers */
+async function _legacyPopulateUnlockedEstimatorLead(pin, status){
+  try {
+    const property = await lookupPropertyData(pin.address, { includeOwner:true, pinId:pin.id, force:true });
+    if (property && property.name) {
+      const est = pin.estimate ? (typeof pin.estimate === 'string' ? JSON.parse(pin.estimate) : pin.estimate) : {};
+      est.owner = property.name;
+      pin.estimate = est;
+    }
+  } catch(e) {}
+}
 
 // Called when rep clicks "📞 Look Up Phone & Email"
 async function estLookupContact() {
