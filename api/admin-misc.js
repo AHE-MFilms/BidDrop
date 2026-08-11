@@ -413,13 +413,19 @@ async function handle(action, req, res, ctx) {
                 ...(tfParts[0] && { first_name: tfParts[0] }),
                 ...(tfParts.slice(1).join(' ') && { last_name: tfParts.slice(1).join(' ') }),
               };
-              const tfRes = await fetch('https://www.tracerfy.com/v1/api/trace/lookup/', {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${TRACERFY_KEY}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify(tfPayload)
-              });
-              if (tfRes.ok) return await tfRes.json();
-              return null;
+              const tfCtrl = new AbortController();
+              const tfTimeout = setTimeout(() => tfCtrl.abort(), 8000);
+              try {
+                const tfRes = await fetch('https://www.tracerfy.com/v1/api/trace/lookup/', {
+                  method: 'POST',
+                  headers: { 'Authorization': `Bearer ${TRACERFY_KEY}`, 'Content-Type': 'application/json' },
+                  body: JSON.stringify(tfPayload), signal: tfCtrl.signal
+                });
+                if (tfRes.ok) return await tfRes.json();
+                return null;
+              } finally {
+                clearTimeout(tfTimeout);
+              }
             })()
           ]);
 
