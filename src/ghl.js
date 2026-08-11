@@ -176,7 +176,8 @@ async function ghlBulkSync(){
       const est = (S.estimates||[]).find(e=>e.pinId===pin.id && !e.deletedAt);
       const total = est ? (est.total||0) : 0;
       const ownerName1 = pin.owner||pin.estimate?.owner||pin.rep||'Homeowner';
-      const contactId = await ghlUpsertContact(ownerName1, pin.address, pin.phone||null, pin.ghlContactId||null);
+      const methods = _ghlContactMethods(pin);
+      const contactId = await ghlUpsertContact(ownerName1, pin.address, methods.primaryEmail, pin.ghlContactId||null, pin.id||null, methods.primaryPhone, pin.contactData||null);
       if(!contactId) throw new Error('No contact ID returned');
       const oppId = await ghlCreateOpportunity(contactId, ownerName1, pin.address, total);
       // Update in-memory pin
@@ -377,8 +378,78 @@ async function ghlEnsureEstimateUrlField(){
   }
 }
 
-async function ghlUpsertContact(name, address, email, existingContactId, pinId, phone){
+const _ghlContactFieldCache = {};
+
+function _ghlContactMethods(pin, selectedEmail, selectedPhone){
+  const cd = pin && pin.contactData ? pin.contactData : {};
+  const rawPhones = Array.isArray(cd.phones) ? cd.phones : [];
+  const rawEmails = Array.isArray(cd.emails) ? cd.emails : [];
+  const seenPhones = new Set(), seenEmails = new Set();
+  const phones = rawPhones.map(function(p){
+    const number = String((p && (p.number || p.phone)) || p || '').trim();
+    const key = number.replace(/\D/g,'');
+    if(!number || !key || seenPhones.has(key)) return null;
+    seenPhones.add(key);
+    return { number:number, type:(p && p.type) || '', dnc:!!(p && p.dnc) };
+  }).filter(Boolean);
+  const emails = rawEmails.map(function(e){
+    const address = String((e && (e.address || e.email)) || e || '').trim();
+    const key = address.toLowerCase();
+    if(!address || seenEmails.has(key)) return null;
+    seenEmails.add(key);
+    return address;
+  }).filter(Boolean);
+  const primaryPhone = selectedPhone || (pin && pin.phone) || ((phones.find(function(p){ return !p.dnc; }) || phones[0] || {}).number || '');
+  const primaryEmail = selectedEmail || (pin && pin.email) || (pin && pin.estimate && pin.estimate.email) || emails[0] || '';
+  return { primaryPhone, primaryEmail, phones, emails };
+}
+
+async function _ghlEnsureAllContactFields(locationId){
+  if(_ghlContactFieldCache[locationId]) return _ghlContactFieldCache[locationId];
+  const promise = (async function(){
+    const definitions = [
+      { name:'BidDrop All Phones', key:'biddrop_all_phones' },
+      { name:'BidDrop All Emails', key:'biddrop_all_emails' },
+      { name:'BidDrop Phone Compliance', key:'biddrop_phone_compliance' }
+    ];
+    try{
+      const response = await ghlRequest('/locations/'+locationId+'/customFields?model=contact');
+      const fields = response.customFields || response.fields || [];
+      const out = {};
+      for(const def of definitions){
+        let field = fields.find(function(f){ return f.name === def.name || f.fieldKey === def.key || f.key === def.key; });
+        if(!field){
+          const created = await ghlRequest('/locations/'+locationId+'/customFields', 'POST', {
+            name:def.name, dataType:'TEXT', model:'contact', placeholder:def.name
+          });
+          field = created.customField || created;
+        }
+        if(field && field.id) out[def.key] = { id:field.id, key:field.fieldKey || field.key || def.key };
+      }
+      return out;
+    }catch(err){
+      console.warn('[BidDrop] Could not prepare GHL all-contact fields:', err.message);
+      return {};
+    }
+  })();
+  _ghlContactFieldCache[locationId] = promise;
+  return promise;
+}
+
+async function ghlUpsertContact(name, address, email, existingContactId, pinId, phone, contactData){
   const locationId = S.cfg.ghlLocationId || 'gz85VU6SxGXS7lqHAQGx';
+  const methodData = _ghlContactMethods({ contactData:contactData, email:email, phone:phone }, email, phone);
+  email = methodData.primaryEmail;
+  phone = methodData.primaryPhone;
+  const customFieldIds = await _ghlEnsureAllContactFields(locationId);
+  const allPhoneText = methodData.phones.map(function(p){ return p.number+' — '+(p.type || 'phone')+(p.dnc ? ' — DNC' : ''); }).join('\n');
+  const allEmailText = methodData.emails.join('\n');
+  const complianceText = methodData.phones.map(function(p){ return p.number+': '+(p.dnc ? 'DNC — do not call or text' : 'not marked DNC'); }).join('\n');
+  const customFields = [
+    customFieldIds.biddrop_all_phones && { id:customFieldIds.biddrop_all_phones.id, key:customFieldIds.biddrop_all_phones.key, fieldValue:allPhoneText },
+    customFieldIds.biddrop_all_emails && { id:customFieldIds.biddrop_all_emails.id, key:customFieldIds.biddrop_all_emails.key, fieldValue:allEmailText },
+    customFieldIds.biddrop_phone_compliance && { id:customFieldIds.biddrop_phone_compliance.id, key:customFieldIds.biddrop_phone_compliance.key, fieldValue:complianceText }
+  ].filter(Boolean);
   const nameParts = (name||'Homeowner').split(' ');
   // Parse "123 Main St, Canton, Michigan 48188" into GHL fields
   let street = address||'', city = '', state = '', postalCode = '';
@@ -418,6 +489,14 @@ async function ghlUpsertContact(name, address, email, existingContactId, pinId, 
     const digits = phone.replace(/\D/g,'');
     postBody.phone = digits.length===10 ? '+1'+digits : (digits.length===11&&digits[0]==='1' ? '+'+digits : phone);
   }
+  const selectedDnc = methodData.phones.some(function(p){ return p.dnc && p.number.replace(/\D/g,'') === String(phone||'').replace(/\D/g,''); });
+  if(selectedDnc){
+    postBody.dndSettings = {
+      call:{ status:'active', message:'BidDrop source marked this number DNC', code:'OPTED_OUT' },
+      sms:{ status:'active', message:'BidDrop source marked this number DNC', code:'OPTED_OUT' }
+    };
+  }
+  if(customFields.length) postBody.customFields = customFields;
   // PUT body must NOT include locationId — GHL returns 422 if it's present on update
   const putBody = {
     firstName:  postBody.firstName,
@@ -431,6 +510,8 @@ async function ghlUpsertContact(name, address, email, existingContactId, pinId, 
   };
   // Sync phone to putBody now that it's declared
   if(postBody.phone) putBody.phone = postBody.phone;
+  if(postBody.dndSettings) putBody.dndSettings = postBody.dndSettings;
+  if(customFields.length) putBody.customFields = customFields;
   // NOTE: email NOT in putBody — sent separately to avoid GHL 400 on first-time email add
 
   // Helper: try PUT update; if GHL returns 400/404 (stale/deleted contact), fall through to POST
@@ -548,7 +629,8 @@ async function ghlPushPin(pinId){
     }
     const ownerName = pin.owner||pin.estimate?.owner||pin.rep||'Homeowner';
     const total = pin.estimate?.total || 0;
-    const contactId = await ghlUpsertContact(ownerName, pin.address, pin.phone||null, pin.ghlContactId||null);
+    const methods = _ghlContactMethods(pin);
+    const contactId = await ghlUpsertContact(ownerName, pin.address, methods.primaryEmail, pin.ghlContactId||null, pin.id||null, methods.primaryPhone, pin.contactData||null);
     if(!contactId) throw new Error('No contact ID returned from GHL');
     let oppId = pin.ghlOpportunityId;
     if(!oppId){
@@ -599,7 +681,8 @@ async function ghlAutoPushPin(pin){
   if(pin.id) _ghlSyncLocks[pin.id] = new Promise((res,rej)=>{ _resolve=res; _reject=rej; });
   try {
     const ownerName2 = pin.owner||pin.estimate?.owner||pin.rep||'Homeowner';
-    const contactId = await ghlUpsertContact(ownerName2, pin.address, pin.phone||null, pin.ghlContactId||null, pin.id||null);
+    const methods = _ghlContactMethods(pin);
+    const contactId = await ghlUpsertContact(ownerName2, pin.address, methods.primaryEmail, pin.ghlContactId||null, pin.id||null, methods.primaryPhone, pin.contactData||null);
     if(!contactId){ if(_resolve) _resolve(null); return; }
     // Save contact ID immediately — before opportunity creation — so it's never lost if opp fails
     pin.ghlContactId = contactId;
@@ -757,7 +840,7 @@ async function sendViaGHL(){
   const _existingGhlId = _curPin ? (_curPin.ghlContactId||null) : null;
   try {
     // 1. Upsert contact — pass existing ID and pinId to prevent duplicates
-    const contactId = await ghlUpsertContact(owner||'Homeowner', addr, email||null, _existingGhlId, currentEstPinId||null, phone||null);
+    const contactId = await ghlUpsertContact(owner||'Homeowner', addr, email||null, _existingGhlId, currentEstPinId||null, phone||null, _curPin?.contactData||null);
     // Always save returned contactId — even if it changed (e.g. fallback create after 404)
     if(_curPin && contactId){
       _curPin.ghlContactId = contactId;
