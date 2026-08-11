@@ -174,8 +174,8 @@ function _showUnlockModal(pin, resolve) {
   const modal = document.createElement('div');
   modal.id = 'bd-unlock-modal';
   modal.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.75);';
-  const safeAddr = (pin.address||'This address').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  const safePinId = (pin.id||'').replace(/'/g,"\\'");
+  const safeAddr = String(pin.address||'This address').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const safePinId = String(pin.id||'').replace(/'/g,"\\'");
   modal.innerHTML = `
     <div style="background:#1a1f2e;border:1px solid rgba(249,115,22,.4);border-radius:16px;padding:28px 24px;max-width:360px;width:90%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.6);">
       <div style="font-size:32px;margin-bottom:8px;">🔓</div>
@@ -235,7 +235,7 @@ async function _confirmUnlockPin(pinId) {
     // Update in-memory pin
     if (pin) {
       pin.unlockedAt = result.unlocked_at || new Date().toISOString();
-      if (result.owner) {
+      if (typeof result.owner === 'string' && result.owner.trim()) {
         const est = pin.estimate ? (typeof pin.estimate==='string'?JSON.parse(pin.estimate):pin.estimate) : {};
         est.owner = result.owner;
         pin.estimate = est;

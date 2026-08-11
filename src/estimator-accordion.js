@@ -127,10 +127,32 @@ function _estRefreshUnlockUI() {
   const unlocked = typeof isPinUnlocked === 'function' && isPinUnlocked(_pin);
   if (unlocked) {
     btn.style.display    = 'none';
+    const hasOwner = !!(_pin && _pin.estimate && typeof _pin.estimate.owner === 'string' && _pin.estimate.owner.trim());
+    const hasContact = !!(_pin && _pin.contactData && ((_pin.contactData.phones||[]).length + (_pin.contactData.emails||[]).length));
+    const dataReady = hasOwner && hasContact;
     status.style.display = 'block';
+    status.style.color = dataReady ? '#4ade80' : '#F59E0B';
+    status.textContent = dataReady ? '✅ Pin Unlocked — all features active' : '⏳ Retrieving homeowner data…';
     if (_pin && _pin.contactData &&
         ((_pin.contactData.phones||[]).length + (_pin.contactData.emails||[]).length) > 0) {
       _fillEstimatorContactFields(_pin.contactData);
+    }
+    if (_pin && !dataReady && !_pin._leadHydrateAttempted) {
+      _pin._leadHydrateAttempted = true;
+      adminAPI('unlock-pin', { pinId:_pin.id, address:_pin.address, queuePostcard:false }).then(function(result){
+        if (typeof result.owner === 'string' && result.owner.trim()) {
+          const est = _pin.estimate ? (typeof _pin.estimate === 'string' ? JSON.parse(_pin.estimate) : _pin.estimate) : {};
+          est.owner = result.owner;
+          _pin.estimate = est;
+        }
+        if (result.contact_data) _pin.contactData = result.contact_data;
+        if (result.equity_data) _pin.equityData = result.equity_data;
+        _estRefreshUnlockUI();
+        if (typeof _accUpdateHomeownerSummary === 'function') _accUpdateHomeownerSummary();
+      }).catch(function(){
+        status.textContent = '⚠️ Lead unlocked — homeowner data unavailable';
+        status.style.color = '#F59E0B';
+      });
     }
   } else {
     btn.style.display    = 'flex';

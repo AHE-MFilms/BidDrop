@@ -6,6 +6,15 @@
 const { SUPABASE_URL, SERVICE_KEY, LOB_KEY, RENTCAST_KEY, AGENCY_ACCT_ID,
   STRIPE_SECRET_KEY, SUPABASE_PAT, TRACERFY_KEY, _checkRate, _checkIdem, sbFetch } = require('./_admin-shared');
 
+function leadName(value) {
+  if (typeof value === 'string') return value.trim();
+  if (Array.isArray(value)) return value.map(leadName).find(Boolean) || '';
+  if (value && typeof value === 'object') {
+    return leadName(value.full_name || value.fullName || value.name || value.names || '');
+  }
+  return '';
+}
+
 /**
  * Handle actions for this module.
  * Returns true if the action was handled, false if unknown (caller should try next module).
@@ -339,9 +348,17 @@ async function handle(action, req, res, ctx) {
         if (!isSuperAdmin && upPin.account_id && upPin.account_id !== accountId) {
           res.status(403).json({ error: 'pin does not belong to this account' }); return;
         }
-        if (upPin.unlocked_at) {
-          // Return existing contact_data so the client can fill fields without a separate fetch
-          return res.json({ ok: true, already_unlocked: true, unlocked_at: upPin.unlocked_at, contact_data: upPin.contact_data || null });
+        const upWasPreviouslyUnlocked = !!upPin.unlocked_at;
+        const upExistingEst = upPin.estimate
+          ? (typeof upPin.estimate === 'string' ? JSON.parse(upPin.estimate) : upPin.estimate)
+          : {};
+        const upExistingOwner = leadName(upExistingEst.owner);
+        const upExistingContact = upPin.contact_data || null;
+        const upHasContact = !!(upExistingContact &&
+          ((upExistingContact.phones || []).length || (upExistingContact.emails || []).length));
+        if (upWasPreviouslyUnlocked && upExistingOwner && upHasContact) {
+          // Fully populated paid lead: return saved data and never bill again.
+          return res.json({ ok: true, already_unlocked: true, unlocked_at: upPin.unlocked_at, owner: upExistingOwner, contact_data: upExistingContact, equity_data: upPin.equity_data || null });
         }
 
         // 2. Check credit balance
@@ -350,19 +367,22 @@ async function handle(action, req, res, ctx) {
         const upAcct = upAcctRows[0];
         if (!upAcct) { res.status(404).json({ error: 'account not found' }); return; }
         const upBalance = upAcct.mailer_credits || 0;
-        if (upBalance < 1) {
+        if (!upWasPreviouslyUnlocked && upBalance < 1) {
           return res.status(402).json({ error: 'no_credits', message: 'Not enough credits to unlock this lead. Purchase more credits to continue.' });
         }
 
-        // 3. Deduct 1 credit immediately
-        await sbFetch(`accounts?id=eq.${accountId}`, {
-          method: 'PATCH',
-          headers: { 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ mailer_credits: upBalance - 1 })
-        });
+        // 3. Deduct exactly once. A prior paid unlock with incomplete provider data
+        // is rehydrated free of charge.
+        if (!upWasPreviouslyUnlocked) {
+          await sbFetch(`accounts?id=eq.${accountId}`, {
+            method: 'PATCH',
+            headers: { 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ mailer_credits: upBalance - 1 })
+          });
+        }
 
         // 4. Fire RentCast + Tracerfy in parallel
-        const upUpdates = { unlocked_at: new Date().toISOString() };
+        const upUpdates = { unlocked_at: upPin.unlocked_at || new Date().toISOString() };
         try {
           const [rcResult, tfResult] = await Promise.allSettled([
             // RentCast: owner name + equity
@@ -386,7 +406,7 @@ async function handle(action, req, res, ctx) {
             // Tracerfy: phone + email (always run when key is available)
             (async () => {
               if (!TRACERFY_KEY) return null;
-              const existingOwner = (upPin.estimate && upPin.estimate.owner) || '';
+              const existingOwner = upExistingOwner;
               const tfParts = existingOwner.trim().split(/\s+/);
               const tfPayload = {
                 address: upAddress,
@@ -405,7 +425,7 @@ async function handle(action, req, res, ctx) {
 
           if (rcResult.status === 'fulfilled' && rcResult.value) {
             const rcData = rcResult.value;
-            const ownerName = [rcData.ownerFirstName, rcData.ownerLastName].filter(Boolean).join(' ') || rcData.owner || '';
+            const ownerName = leadName([rcData.ownerFirstName, rcData.ownerLastName].filter(Boolean).join(' ')) || leadName(rcData.owner);
             upUpdates.equity_data = {
               estValue: rcData.estimatedValue || null,
               mortgageBalance: rcData.mortgageBalance || null,
@@ -416,7 +436,7 @@ async function handle(action, req, res, ctx) {
               lastSaleDate: rcData.lastSaleDate || null,
               lastSalePrice: rcData.lastSalePrice || null
             };
-            const existingEst = upPin.estimate || {};
+            const existingEst = upExistingEst;
             if (ownerName && !existingEst.owner) {
               upUpdates.estimate = { ...existingEst, owner: ownerName };
             }
@@ -429,7 +449,7 @@ async function handle(action, req, res, ctx) {
               const best = persons[0];
               const phones = (best.phones || []).map(p => ({ number: p.number || p, type: p.type || 'mobile', dnc: p.dnc || false }));
               const emails = (best.emails || []).map(e => typeof e === 'string' ? e : (e.email || e.address || ''));
-              upUpdates.contact_data = { phones, emails, ownerName: best.full_name || best.name || '' };
+              upUpdates.contact_data = { phones, emails, ownerName: leadName(best.full_name || best.name || '') };
             }
           }
         } catch(parallelErr) {
@@ -445,8 +465,8 @@ async function handle(action, req, res, ctx) {
 
         // 6. Optionally queue a postcard
         let upQueueItemId = null;
-        const upOwnerName = (upUpdates.estimate && upUpdates.estimate.owner) || (upPin.estimate && upPin.estimate.owner) || '';
-        if (upQueuePostcard) {
+        const upOwnerName = leadName((upUpdates.estimate && upUpdates.estimate.owner) || upExistingOwner || '');
+        if (upQueuePostcard && !upWasPreviouslyUnlocked) {
           upQueueItemId = 'mq_unlock_' + upPinId + '_' + Date.now();
           // Resolve best photo from pin: prefer a URL (publicly accessible), fall back to data URL
           const upPhotoUrl  = upPin.photo_url  || null;
@@ -487,11 +507,11 @@ async function handle(action, req, res, ctx) {
           owner: upOwnerName || null,
           equity_data: upUpdates.equity_data || null,
           contact_data: upUpdates.contact_data || null,
-          postcard_queued: !!upQueuePostcard,
+          postcard_queued: !!upQueuePostcard && !upWasPreviouslyUnlocked,
           queue_item_id: upQueueItemId,
           queue_item_addr: upAddress,
           queue_item_owner: upOwnerName,
-          _credits: { paid_credits: upBalance - 1 }
+          _credits: { paid_credits: upWasPreviouslyUnlocked ? upBalance : upBalance - 1 }
         });
       }
 
