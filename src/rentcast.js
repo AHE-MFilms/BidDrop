@@ -9,9 +9,13 @@ const _propDataCache = {}; // address -> data (null means not found)
 const _propDataInFlight = {}; // address -> Promise (deduplicates concurrent requests)
 const _rentcastFetched = new Set(); // pin IDs already fetched this session (prevents re-fetch on addMarker rebuild)
 let _rentcastLoadQueue = 0; // stagger counter: delays auto-fetch by 200ms * position to prevent burst on page load
-async function lookupPropertyData(address){
+async function lookupPropertyData(address, opts){
   if(!address) return null;
   const cacheKey = address.toLowerCase().trim();
+  if(opts && opts.force){
+    delete _propDataCache[cacheKey];
+    delete _propDataInFlight[cacheKey];
+  }
   // Return cached result immediately (including null = not found)
   if(cacheKey in _propDataCache) return _propDataCache[cacheKey];
   // Deduplicate concurrent requests for the same address

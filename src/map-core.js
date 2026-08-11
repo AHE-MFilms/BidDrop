@@ -802,7 +802,7 @@ function addMarker(pin){
     const _rcDelay = (_rentcastLoadQueue++) * 200; // stagger: 200ms apart to avoid burst-firing on load
     setTimeout(function(){
     lookupPropertyData(pin.address).then(function(data){
-      if(!data) return;
+      if(!data){ showPropertyDataUnavailable(pid); return; }
       pin.equityData = {
         estValue: data.estValue, mortgageBalance: data.mortgageBalance, equity: data.equity,
         yearBuilt: data.yearBuilt, roofType: data.roofType, bedrooms: data.bedrooms,
@@ -822,7 +822,7 @@ function addMarker(pin){
         if(m.getPopup && m.getPopup() && m.getPopup().update) m.getPopup().update();
       }
       addMarker_updatePropData(m, pid, pin);
-    }).catch(function(){});
+    }).catch(function(){ showPropertyDataUnavailable(pid); });
     }, _rcDelay); // end stagger setTimeout
   }
 }
@@ -1157,6 +1157,34 @@ function addMarker_updatePropData(m, pid, pin){
   }
 }
 
+function showPropertyDataUnavailable(pid){
+  const el = document.getElementById('prop-snap-val-'+pid);
+  if(!el) return;
+  el.innerHTML = '<span style="color:#F59E0B;">Property data is temporarily unavailable.</span> <button onclick="event.stopPropagation();retryPropertyData(\''+pid+'\')" style="margin-left:4px;background:none;border:1px solid #F59E0B66;border-radius:4px;padding:2px 5px;color:#FCD34D;font-size:9px;font-weight:700;cursor:pointer;">↻ Retry</button>';
+}
+
+window.retryPropertyData = async function(pid){
+  const pin = (S.pins||[]).find(function(p){ return p.id===pid; });
+  if(!pin || !pin.address) return;
+  const el = document.getElementById('prop-snap-val-'+pid);
+  if(el) el.textContent = 'Retrying property data…';
+  try{
+    const data = await lookupPropertyData(pin.address, {force:true});
+    if(!data){ showPropertyDataUnavailable(pid); return; }
+    pin.equityData = {
+      estValue:data.estValue, mortgageBalance:data.mortgageBalance, equity:data.equity,
+      yearBuilt:data.yearBuilt, roofType:data.roofType, bedrooms:data.bedrooms,
+      bathrooms:data.bathrooms, lastSaleDate:data.lastSaleDate, lastSalePrice:data.lastSalePrice
+    };
+    if(sb) sb.from('pins').update({ equity_data:pin.equityData }).eq('id',pid)
+      .then(function({error}){ if(error && error.code!=='PGRST204') console.warn('equityData retry persist:',error); });
+    const marker = markers[pid];
+    if(marker) addMarker_updatePropData(marker,pid,pin);
+  }catch(e){
+    showPropertyDataUnavailable(pid);
+  }
+};
+
 function savePin(){
   if(!tempLL)return;
   const dmgPhotos = window._pinDamagePhotos || [];
@@ -1268,14 +1296,14 @@ function savePin(){
   if(masterRentcastKey && pin.address){
     const _newPin = pin;
     lookupPropertyData(_newPin.address).then(function(data){
-      if(!data || !data.name) return;
+      if(!data){ showPropertyDataUnavailable(_newPin.id); return; }
       // Store on pin object
       if(!_newPin.estimate) _newPin.estimate = {};
       // Also store equity data
       _newPin.equityData = { estValue: data.estValue, mortgageBalance: data.mortgageBalance, equity: data.equity, yearBuilt: data.yearBuilt, roofType: data.roofType, bedrooms: data.bedrooms, bathrooms: data.bathrooms, lastSaleDate: data.lastSaleDate, lastSalePrice: data.lastSalePrice };
       if(sb) sb.from('pins').update({ equity_data: _newPin.equityData }).eq('id', _newPin.id)
         .then(function({error}){ if(error && error.code !== 'PGRST204') console.warn('Equity auto-pull persist:', error); });
-    }).catch(function(){});
+    }).catch(function(){ showPropertyDataUnavailable(_newPin.id); });
   }
 }
 
