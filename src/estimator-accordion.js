@@ -125,8 +125,6 @@ function _estRefreshUnlockUI() {
   wrap.style.display = 'block';
   const _pin = (S.pins||[]).find(function(p){ return p.id === currentEstPinId; });
   const unlocked = typeof isPinUnlocked === 'function' && isPinUnlocked(_pin);
-  var rcLookupBtn = document.getElementById('rc-lookup-btn');
-  if (rcLookupBtn) rcLookupBtn.style.display = unlocked ? '' : 'none';
   if (unlocked) {
     btn.style.display    = 'none';
     status.style.display = 'block';
@@ -134,17 +132,9 @@ function _estRefreshUnlockUI() {
         ((_pin.contactData.phones||[]).length + (_pin.contactData.emails||[]).length) > 0) {
       _fillEstimatorContactFields(_pin.contactData);
     }
-    var lookupBtn = document.getElementById('est-contact-lookup-btn');
-    if (lookupBtn) {
-      var hasData = _pin && _pin.contactData &&
-        ((_pin.contactData.phones||[]).length + (_pin.contactData.emails||[]).length) > 0;
-      lookupBtn.style.display = hasData ? 'none' : 'block';
-    }
   } else {
     btn.style.display    = 'flex';
     status.style.display = 'none';
-    var lookupBtn2 = document.getElementById('est-contact-lookup-btn');
-    if (lookupBtn2) lookupBtn2.style.display = 'none';
   }
 }
 

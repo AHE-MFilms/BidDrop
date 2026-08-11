@@ -44,10 +44,7 @@
           </div>
           <div class="fg" style="margin-bottom:10px;">
             <div class="fl" style="font-size:10px;">Homeowner Name</div>
-            <div style="display:flex;gap:6px;align-items:center;">
-              <input class="fi" id="e-owner" placeholder="Jane Smith" oninput="updatePreview();scheduleDraftSave();_accUpdateHomeownerSummary()" style="flex:1;margin-bottom:0;font-size:13px;padding:9px 12px;">
-              <button id="rc-lookup-btn" onclick="manualRentcastLookup()" title="Look up owner name &amp; property data" style="flex-shrink:0;padding:0 10px;height:36px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🏠 Look Up</button>
-            </div>
+            <input class="fi" id="e-owner" placeholder="Unlock a pinned lead to reveal the name" oninput="updatePreview();scheduleDraftSave();_accUpdateHomeownerSummary()" style="margin-bottom:0;font-size:13px;padding:9px 12px;">
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
             <div>
@@ -62,12 +59,6 @@
                 <input class="fi" id="e-email" placeholder="jane@email.com" type="email" oninput="_accUpdateHomeownerSummary()" style="font-size:12px;padding:8px 10px;">
               </div>
             </div>
-          </div>
-          <!-- Contact Lookup Button (shown when pin is unlocked but no contact data yet) -->
-          <div id="est-contact-lookup-btn" style="display:none;margin-bottom:8px;">
-            <button onclick="estLookupContact()" style="width:100%;padding:9px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
-              📞 Look Up Phone &amp; Email
-            </button>
           </div>
           <!-- Unlock Pin CTA -->
           <div id="est-unlock-wrap" style="margin-top:4px;">
