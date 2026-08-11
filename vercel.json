@@ -159,6 +159,9 @@
     "api/cron-mrms-ingest.js": {
       "maxDuration": 300
     },
+    "api/cron-address-monitor.js": {
+      "maxDuration": 60
+    },
     "api/mrms-hail.js": {
       "maxDuration": 15
     },

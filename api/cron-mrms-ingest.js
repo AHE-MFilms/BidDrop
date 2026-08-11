@@ -251,7 +251,8 @@ export default async function handler(req, res) {
 
   try {
     // ── 1. Determine date range ────────────────────────────────────────────
-    const { date: dateParam, days: daysParam } = req.query || {};
+    const { date: dateParam, days: daysParam, force: forceParam } = req.query || {};
+    const forceReingest = forceParam === 'true';
     const daysBack = Math.min(parseInt(daysParam) || 1, 30);
     const datesToFetch = [];
 
@@ -270,6 +271,20 @@ export default async function handler(req, res) {
     let totalInserted = 0;
 
     for (const dateStr of datesToFetch) {
+      // A completed date is immutable for the historical 1440-minute product.
+      // Skip it on normal cron runs to avoid re-writing the same MRMS rows and indexes.
+      if (!forceReingest) {
+        try {
+          const existingResp = await sbFetch(`mrms_ingest_runs?event_date=eq.${dateStr}&status=eq.completed&select=event_date&limit=1`);
+          const existingRuns = existingResp.ok ? await existingResp.json() : [];
+          if (existingRuns.length) {
+            push(`MRMS history for ${dateStr} already completed — skipping repeat upsert`);
+            continue;
+          }
+        } catch (e) {
+          push(`Ingest-run check warning for ${dateStr}: ${e.message} — continuing safely`);
+        }
+      }
       // ── 2. Find last GRIB2 file for this date ──────────────────────────
       push(`Listing S3 keys for ${dateStr}...`);
       let keys;
@@ -311,6 +326,11 @@ export default async function handler(req, res) {
 
       if (hailCells.length === 0) {
         push(`No qualifying hail events for ${dateStr}`);
+        await sbFetch('mrms_ingest_runs?on_conflict=event_date', {
+          method: 'POST',
+          headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+          body: JSON.stringify({ event_date: dateStr, status: 'completed', row_count: 0, source_key: s3Key, completed_at: new Date().toISOString() }),
+        });
         continue;
       }
 
@@ -335,6 +355,7 @@ export default async function handler(req, res) {
       push(`Upserting ${toInsert.length} rows for ${dateStr}...`);
 
       const BATCH = 1000;
+      let allBatchesSucceeded = true;
       for (let b = 0; b < toInsert.length; b += BATCH) {
         const batch = toInsert.slice(b, b + BATCH);
           const upsertResp = await sbFetch('mrms_hail_events?on_conflict=event_date,lat,lon', {
@@ -343,13 +364,23 @@ export default async function handler(req, res) {
           body: JSON.stringify(batch),
         });
         if (!upsertResp.ok) {
+          allBatchesSucceeded = false;
           const errText = await upsertResp.text();
           push(`Upsert error (batch ${b}): ${upsertResp.status} ${errText}`);
         }
       }
 
       totalInserted += toInsert.length;
-      push(`Inserted/updated ${toInsert.length} rows for ${dateStr}`);
+      if (allBatchesSucceeded) {
+        await sbFetch('mrms_ingest_runs?on_conflict=event_date', {
+          method: 'POST',
+          headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+          body: JSON.stringify({ event_date: dateStr, status: 'completed', row_count: toInsert.length, source_key: s3Key, completed_at: new Date().toISOString() }),
+        });
+        push(`Inserted/updated ${toInsert.length} rows for ${dateStr}; marked completed`);
+      } else {
+        push(`MRMS ingest for ${dateStr} had failed batches; date remains eligible for a safe retry`);
+      }
 
       if (totalInserted >= MAX_UPSERT) {
         push(`Hit MAX_UPSERT cap (${MAX_UPSERT}) — stopping`);
