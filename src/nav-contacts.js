@@ -210,7 +210,7 @@ function renderContacts(){
     repSel.innerHTML = '<option value="">All Reps</option>' + reps.map(r=>`<option value="${r}"${r===cur?' selected':''}>${r}</option>`).join('');
   }
   let pins = S.pins.filter(p=>!p.deleted_at);
-  if(search){ const q=search.toLowerCase(); pins=pins.filter(p=>(p.address||'').toLowerCase().includes(q)||(p.owner||(p.estimate&&p.estimate.owner)||'').toLowerCase().includes(q)||(p.rep||'').toLowerCase().includes(q)); }
+  if(search){ const q=search.toLowerCase(); pins=pins.filter(p=>(p.address||'').toLowerCase().includes(q)||((typeof isPinUnlocked==='function'&&isPinUnlocked(p))?(p.owner||(p.estimate&&p.estimate.owner)||'').toLowerCase().includes(q):false)||(p.rep||'').toLowerCase().includes(q)); }
   if(statusF) pins=pins.filter(p=>(p.status||'pipeline')===statusF);
   if(ghlF==='synced') pins=pins.filter(p=>p.ghlContactId);
   if(ghlF==='unsynced') pins=pins.filter(p=>!p.ghlContactId);
@@ -232,7 +232,9 @@ function renderContacts(){
   const TL={roofing:'Roof',solar:'Solar',fencing:'Fence',siding:'Siding',gutters:'Gutters',insulation:'Insul',paint:'Paint',doors:'Doors',windows:'Win'};
   tbody.innerHTML=pins.map(p=>{
     const pid=p.id;
-    const name=(p.owner||(p.estimate&&p.estimate.owner)||'').replace(/[<>&'"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;',"'":'&#39;','"':'&quot;'}[c]))||'&mdash;';
+    const unlocked=typeof isPinUnlocked==='function'&&isPinUnlocked(p);
+    const rawName=p.owner||(p.estimate&&p.estimate.owner)||'';
+    const name=unlocked?(escHtml(rawName)||'&mdash;'):'<span style="color:var(--accent);font-size:11px;">🔒 Unlock to reveal</span>';
     const addr=(p.address||'').replace(/[<>&'"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;',"'":'&#39;','"':'&quot;'}[c]))||'&mdash;';
     const status=p.status||'pipeline';
     const sc=sColor(status); const sl=sLabel(status)||status;
@@ -2204,4 +2206,3 @@ function openCampaignQRStats(campaignId) {
   if (titleEl) titleEl.textContent = campaign ? (campaign.source_address || 'Campaign') : 'Campaign QR Stats';
   modal.style.display = 'flex';
 }
-

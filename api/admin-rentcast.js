@@ -6,6 +6,25 @@
 const { SUPABASE_URL, SERVICE_KEY, LOB_KEY, RENTCAST_KEY, AGENCY_ACCT_ID,
   STRIPE_SECRET_KEY, SUPABASE_PAT, TRACERFY_KEY, _checkRate, _checkIdem, sbFetch } = require('./_admin-shared');
 
+// Property facts are available before a lead is unlocked. Owner identity is not:
+// the paid unlock route fetches the full RentCast record server-side instead.
+function redactOwnerFields(record) {
+  if (!record || typeof record !== 'object') return record;
+  const safe = { ...record };
+  delete safe.owner;
+  delete safe.ownerName;
+  delete safe.ownerFirstName;
+  delete safe.ownerLastName;
+  delete safe.ownerMailingAddress;
+  return safe;
+}
+
+function redactOwnerPayload(data) {
+  if (Array.isArray(data)) return { properties: data.map(redactOwnerFields) };
+  if (data && Array.isArray(data.properties)) return { ...data, properties: data.properties.map(redactOwnerFields) };
+  return redactOwnerFields(data);
+}
+
 /**
  * Handle actions for this module.
  * Returns true if the action was handled, false if unknown (caller should try next module).
@@ -29,9 +48,7 @@ async function handle(action, req, res, ctx) {
           // Return 200 with notFound:true for 404s — address not in RentCast DB is expected, not an error
           if (rcRes.status === 404) { res.status(200).json({ notFound: true, properties: [] }); return; }
           const rcData = await rcRes.json();
-          res.status(rcRes.status).json(
-            Array.isArray(rcData) ? { properties: rcData } : rcData
-          );
+          res.status(rcRes.status).json(redactOwnerPayload(rcData));
         } catch (rcErr) {
           clearTimeout(rcTimeout);
           if (rcErr.name === 'AbortError') {
@@ -61,9 +78,7 @@ async function handle(action, req, res, ctx) {
           );
           clearTimeout(rcTimeout2);
           const rcData2 = await rcRes2.json();
-          res.status(rcRes2.status).json(
-            Array.isArray(rcData2) ? { properties: rcData2 } : rcData2
-          );
+          res.status(rcRes2.status).json(redactOwnerPayload(rcData2));
         } catch (rcErr2) {
           clearTimeout(rcTimeout2);
           if (rcErr2.name === 'AbortError') {

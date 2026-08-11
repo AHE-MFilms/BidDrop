@@ -255,7 +255,9 @@ function renderEstimatesTab(){
     const date = est.savedAt ? new Date(est.savedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
     const addr = String(est.addr || '—');
     const shortAddr = addr.split(',')[0];
-    const owner = String(est.owner || 'Homeowner');
+    const _estPinForUnlock = est.pinId ? (S.pins||[]).find(p=>p.id===est.pinId) : (S.pins||[]).find(p=>p.address===est.addr);
+    const _pinUnlocked = _estPinForUnlock ? (isSuperAdmin() || !!_estPinForUnlock.unlockedAt) : false;
+    const owner = _pinUnlocked ? String(est.owner || 'Homeowner') : '🔒 Unlock to reveal';
     const rep = String(est.rep || '—');
     const total = '$'+(est.total||0).toLocaleString();
     const sentBadge = est.sentAt
@@ -268,9 +270,7 @@ function renderEstimatesTab(){
       ? '<div style="margin-top:4px;"><span style="background:rgba(14,116,144,.15);color:#22d3ee;border:1px solid rgba(14,116,144,.6);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;">📬 MAILED</span>'+(_mailedItem.mailedAt?'<div style="font-size:10px;color:var(--muted);margin-top:2px;">'+new Date(_mailedItem.mailedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+'</div>':'')+'</div>'
       : '';
     const eid = escHtml(String(est.id||''));
-    // Unlock check: find the linked pin and see if it has been unlocked
-    const _estPinForUnlock = est.pinId ? (S.pins||[]).find(p=>p.id===est.pinId) : (S.pins||[]).find(p=>p.address===est.addr);
-    const _pinUnlocked = _estPinForUnlock ? (isSuperAdmin() || !!_estPinForUnlock.unlockedAt) : false;
+    // Unlock check: linked pin state is calculated before owner display above.
     const actionBtns = _estView === 'trash'
       ? `<button onclick="restoreEstimate('${eid}')" style="background:#1a7f4b;border:none;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#8629; Restore</button>`
         +(isAdminOrAbove()?`<button onclick="hardDeleteEstimate('${eid}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">&#10005; Purge</button>`:'')
@@ -384,7 +384,7 @@ function renderEstimatesTab(){
     const cityState = addr.split(',').slice(1).join(',').trim();
     const pid = escHtml(String(pin.id||''));
     const _pinEstObj = pin.estimate ? (typeof pin.estimate==='string' ? (() => { try { return JSON.parse(pin.estimate); } catch(e) { return {}; } })() : pin.estimate) : {};
-    const ownerName = String((_pinEstObj && _pinEstObj.owner) || (pin.contactData && pin.contactData.ownerName) || '');
+    const ownerName = (typeof isPinUnlocked === 'function' && isPinUnlocked(pin)) ? String((_pinEstObj && _pinEstObj.owner) || (pin.contactData && pin.contactData.ownerName) || '') : '';
     const statusColors = {pinned:'#64748B',contacted:'#3B82F6',quoted:'#0EA5E9',interested:'#22C55E',signed:'#A855F7',sold:'#F59E0B',lost:'#EF4444'};
     const statusColor = statusColors[pin.status] || '#64748B';
     const statusLabel = {pinned:'Pinned',contacted:'Contacted',quoted:'Quoted',interested:'Interested',signed:'Signed',sold:'Sold',lost:'Lost'}[pin.status] || (pin.status||'Pinned');

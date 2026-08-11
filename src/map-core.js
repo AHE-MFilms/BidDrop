@@ -811,11 +811,6 @@ function addMarker(pin){
       // ── PERSIST to Supabase so future page loads skip RentCast for this pin ──
       if(sb) sb.from('pins').update({ equity_data: pin.equityData }).eq('id', pid)
         .then(function({error}){ if(error && error.code !== 'PGRST204') console.warn('equityData persist:', error); });
-      if(data.name && pin.estimate && !pin.estimate.owner){
-        pin.estimate.owner = data.name;
-        sb.from('pins').update({ estimate: pin.estimate }).eq('id', pid)
-          .then(({error})=>{ if(error) console.warn('Owner persist:', error); });
-      }
       const snapEl = document.getElementById('prop-snap-val-'+pid);
       if(snapEl){
         const parts = [];
@@ -865,6 +860,10 @@ function buildPropertySnapHTML(pid, eq){
 
 // ── Tracerfy Contact Info ──────────────────────────────────────────────────
 function buildContactInfoHTML(pid, cd){
+  const pin = (S.pins||[]).find(function(p){ return p.id===pid; });
+  if (pin && typeof isPinUnlocked === 'function' && !isPinUnlocked(pin)) {
+    return '<button onclick="event.stopPropagation();requirePinUnlocked(\''+pid+'\')" style="background:rgba(167,139,250,.08);border:1.5px solid #A78BFA;border-radius:7px;padding:8px 6px;color:#C4B5FD;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;line-height:1.25;width:100%;height:100%;">🔒 Unlock Lead<br><span style="font-size:9px;color:#A78BFA;">Name · Phone · Email · 1 credit</span></button>';
+  }
   if(!cd) return '';
   const phones = (cd.phones||[]).slice(0,4);
   const emails = (cd.emails||[]).slice(0,2);
@@ -1093,12 +1092,13 @@ function _buildPinPopupHTML(pin){
   </div>`;
   const _ownerName = (pin.estimate && (typeof pin.estimate==='object' ? pin.estimate.owner : (() => { try { return JSON.parse(pin.estimate).owner; } catch(e) { return ''; } })()))
     || (pin.equityData && pin.equityData.ownerName) || '';
+  const _pinUnlocked = typeof isPinUnlocked === 'function' ? isPinUnlocked(pin) : !!pin.unlockedAt;
   // Contact info is now only accessible from the Estimator (Unlock Pin button)
   return `<div style="min-width:200px;max-width:240px;">
       <div style="font-weight:700;font-size:12px;margin-bottom:3px;color:#FFFFFF;line-height:1.3;">${escHtml(pin.address||'Unknown')}</div>
       <div style="display:inline-flex;align-items:center;gap:6px;margin-bottom:4px;">
         <span style="background:${sColor(pin.status)};color:white;font-size:10px;padding:2px 7px;border-radius:4px;font-weight:700;">${sLabel(pin.status)}</span>
-        ${_ownerName ? `<span style="font-size:10px;font-weight:700;color:#CBD5E1;">👤 ${escHtml(_ownerName)}</span>` : ''}
+        ${_ownerName ? (_pinUnlocked ? `<span style="font-size:10px;font-weight:700;color:#CBD5E1;">👤 ${escHtml(_ownerName)}</span>` : `<span style="font-size:10px;font-weight:700;color:#A78BFA;">🔒 Name locked</span>`) : ''}
       </div>
       ${_popupPhotos}
       ${_propSnap}
@@ -1271,10 +1271,6 @@ function savePin(){
       if(!data || !data.name) return;
       // Store on pin object
       if(!_newPin.estimate) _newPin.estimate = {};
-      if(!_newPin.estimate.owner) _newPin.estimate.owner = data.name;
-      // Persist to Supabase
-      if(sb) sb.from('pins').update({ estimate: _newPin.estimate }).eq('id', _newPin.id)
-        .then(function({error}){ if(error && error.code !== 'PGRST204') console.warn('Owner auto-pull persist:', error); });
       // Also store equity data
       _newPin.equityData = { estValue: data.estValue, mortgageBalance: data.mortgageBalance, equity: data.equity, yearBuilt: data.yearBuilt, roofType: data.roofType, bedrooms: data.bedrooms, bathrooms: data.bathrooms, lastSaleDate: data.lastSaleDate, lastSalePrice: data.lastSalePrice };
       if(sb) sb.from('pins').update({ equity_data: _newPin.equityData }).eq('id', _newPin.id)

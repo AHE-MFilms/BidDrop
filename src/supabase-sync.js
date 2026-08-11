@@ -125,7 +125,16 @@ async function sbUpdatePinTrades(pin){
 
 // ── Helper: map a DB row to a JS pin object ──────────────────────────────────
 function _rowToPin(row){
-  const est = row.estimate ? (typeof row.estimate==='string'?JSON.parse(row.estimate):row.estimate) : null;
+  const rawEst = row.estimate ? (typeof row.estimate==='string'?JSON.parse(row.estimate):row.estimate) : null;
+  const unlocked = !!row.unlocked_at || (typeof isSuperAdmin === 'function' && isSuperAdmin());
+  // Legacy pins may contain owner/contact fields that were saved before the
+  // credit gate. Keep them out of the in-memory app state until unlocked.
+  const est = rawEst ? { ...rawEst } : null;
+  const equityData = row.equity_data ? { ...row.equity_data } : null;
+  if (!unlocked) {
+    if (est) delete est.owner;
+    if (equityData) delete equityData.ownerName;
+  }
   // Resolve photo: prefer pin-level photo_url, then estimate's photo_url, then estimate's photo_data
   const resolvedPhotoUrl  = row.photo_url || (est && est.photo_url)  || null;
   const resolvedPhotoData = (est && est.photo_data) || null;
@@ -138,10 +147,10 @@ function _rowToPin(row){
     photo_url: resolvedPhotoUrl,
     photo_data: resolvedPhotoData,
     all_photos: row.all_photos||null,
-    estimate: row.estimate||null,
+    estimate: est,
     at_est: row.at_est||null,
     damage_photos: row.damage_photos||(est && est.damage_photos && est.damage_photos.length ? est.damage_photos : null),
-    equityData: row.equity_data||null,
+    equityData,
     ghlContactId: row.ghl_contact_id||null,
     ghlOpportunityId: row.ghl_opportunity_id||null,
     ghlSyncedAt: row.ghl_synced_at||null,
@@ -149,7 +158,7 @@ function _rowToPin(row){
     jnContactId: row.jn_contact_id||null,
     acculynxJobId: row.acculynx_job_id||null,
     interested_trades: (est && est.interested_trades) || null,
-    contactData: row.contact_data || null,
+    contactData: unlocked ? (row.contact_data || null) : null,
     solarKw: row.solar_kw||null,
     solarPotential: row.solar_potential||null,
     unlockedAt: row.unlocked_at||null,
@@ -607,4 +616,3 @@ function subscribeRealtime(){
       })
     .subscribe();
 }
-

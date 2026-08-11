@@ -57,7 +57,6 @@ async function _lookupPropertyDataRaw(address){
     const arr = data && data.properties ? data.properties : (Array.isArray(data) ? data : null);
     const r = arr ? arr[0] : (data && !data.error ? data : null);
     if(!r) return null;
-    const name = (r.owner && r.owner.names && r.owner.names[0]) || null;
     const estValue = r.estimatedValue || null;
     const mortgageBalance = (r.mortgage && r.mortgage.amount) ? r.mortgage.amount : null;
     const equity = (estValue && mortgageBalance) ? Math.max(0, estValue - mortgageBalance) : (estValue ? estValue : null);
@@ -68,14 +67,15 @@ async function _lookupPropertyDataRaw(address){
     const squareFootage = r.squareFootage || null;
     const lastSaleDate = r.lastSaleDate ? r.lastSaleDate.substring(0,10) : null;
     const lastSalePrice = r.lastSalePrice || null;
-    return { name, estValue, mortgageBalance, equity, yearBuilt, roofType, bedrooms, bathrooms, squareFootage, lastSaleDate, lastSalePrice };
+    return { estValue, mortgageBalance, equity, yearBuilt, roofType, bedrooms, bathrooms, squareFootage, lastSaleDate, lastSalePrice };
   } catch(e){
     console.warn('RentCast lookup failed:', e);
     return null;
   }
 }
 // Backwards-compat alias
-async function lookupOwnerName(address){ const d=await lookupPropertyData(address); return d?d.name:null; }
+// Owner names are intentionally returned only by the paid unlock endpoint.
+async function lookupOwnerName(address){ await lookupPropertyData(address); return null; }
 function showEquityBadge(data){
   const badge = document.getElementById('equity-badge');
   if(!badge) return;
