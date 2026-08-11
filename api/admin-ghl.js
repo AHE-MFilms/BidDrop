@@ -62,7 +62,7 @@ async function handle(action, req, res, ctx) {
         break;
       }
       case 'ghl': {
-        const { path, method: ghlMethod = 'GET', body: ghlBody, accountId: ghlAcctId } = req.body;
+        const { path, method: ghlMethod = 'GET', body: ghlBody, accountId: ghlAcctId, temporaryApiKey } = req.body;
         if (!path) { res.status(400).json({ error: 'path required' }); return; }
         // SSRF guard: path must be a relative GHL API path (no protocol, no host injection)
         if (typeof path !== 'string' || !path.startsWith('/') || /[\r\n]|:\/\//.test(path)) {
@@ -82,7 +82,10 @@ async function handle(action, req, res, ctx) {
         const acctRes = await sbFetch(`accounts?id=eq.${acctId}&select=ghl_api_key,ghl_oauth_access_token,ghl_oauth_refresh_token,ghl_oauth_expires_at`);
         const acctRows = await acctRes.json();
         const acct = acctRows[0];
-        let ghlToken = acct?.ghl_oauth_access_token || acct?.ghl_api_key;
+        // A private token typed into Settings may be used only for a read-only pipeline
+        // preview before the user saves it. It is never persisted by this proxy.
+        const allowTemporaryKey = ghlMethod.toUpperCase() === 'GET' && /^\/opportunities\/pipelines\?/.test(path);
+        let ghlToken = acct?.ghl_oauth_access_token || acct?.ghl_api_key || (allowTemporaryKey ? String(temporaryApiKey || '').trim() : '');
         if (!ghlToken) { res.status(400).json({ error: 'No GHL API key or OAuth connection configured for this account' }); return; }
 
         // Auto-refresh OAuth token if expired (within 5 min buffer)

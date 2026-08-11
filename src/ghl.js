@@ -3,9 +3,9 @@
 
 const GHL_BASE = 'https://services.leadconnectorhq.com';
 
-async function ghlRequest(path, method='GET', body=null){
+async function ghlRequest(path, method='GET', body=null, options={}){
   // All GHL calls go through the secure server-side proxy — API key never exposed in browser
-  const data = await adminAPI('ghl', { path, method, body: body||undefined });
+  const data = await adminAPI('ghl', { path, method, body: body||undefined, ...options });
   return data;
 }
 
@@ -305,7 +305,8 @@ async function ghlFetchStages() {
   btn.textContent='Loading...'; btn.disabled=true;
   if(statusEl) statusEl.textContent = 'Fetching…';
   try {
-    const data = await ghlRequest('/opportunities/pipelines?locationId='+locId);
+    const enteredKey = (document.getElementById('s-ghl-key')?.value || '').trim();
+    const data = await ghlRequest('/opportunities/pipelines?locationId='+locId, 'GET', null, enteredKey ? { temporaryApiKey:enteredKey } : null);
     const pipelines = data.pipelines || [];
     const pipeline = pipelines.find(p => p.id === pipelineId) || pipelines[0];
     const stages = pipeline?.stages || [];
