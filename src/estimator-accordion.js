@@ -164,7 +164,7 @@ async function _hydratePaidEstimatorLead(pin, status){
   try {
     const result = await Promise.race([
       adminAPI('unlock-pin', { pinId:pin.id, address:pin.address, queuePostcard:false }),
-      new Promise(function(_, reject){ setTimeout(function(){ reject(new Error('retrieval timed out')); }, 12000); })
+      new Promise(function(_, reject){ setTimeout(function(){ reject(new Error('retrieval timed out')); }, 30000); })
     ]);
     if (typeof result.owner === 'string' && result.owner.trim()) {
       const est = pin.estimate ? (typeof pin.estimate === 'string' ? JSON.parse(pin.estimate) : pin.estimate) : {};

@@ -381,57 +381,30 @@ async function handle(action, req, res, ctx) {
           });
         }
 
-        // 4. Fire RentCast + Tracerfy in parallel
+        // 4. Resolve the owner first, then pass that verified name to Tracerfy.
+        // Before the name gate, RentCast had already populated the pin before this
+        // action ran. The gated flow must do the same work here instead of sending
+        // Tracerfy an address-only request.
         const upUpdates = { unlocked_at: upPin.unlocked_at || new Date().toISOString() };
         try {
-          const [rcResult, tfResult] = await Promise.allSettled([
-            // RentCast: owner name + equity
-            (async () => {
-              if (!RENTCAST_KEY) return null;
-              const rcCtrl = new AbortController();
-              const rcTimeout = setTimeout(() => rcCtrl.abort(), 8000);
-              try {
-                const r = await fetch(
-                  `https://api.rentcast.io/v1/properties?address=${encodeURIComponent(upAddress)}&limit=1`,
-                  { headers: { 'X-Api-Key': RENTCAST_KEY }, signal: rcCtrl.signal }
-                );
-                clearTimeout(rcTimeout);
-                if (r.ok) {
-                  const d = await r.json();
-                  return Array.isArray(d) ? d[0] : (d.properties && d.properties[0]) || d;
-                }
-              } catch(e) { clearTimeout(rcTimeout); }
-              return null;
-            })(),
-            // Tracerfy: phone + email (always run when key is available)
-            (async () => {
-              if (!TRACERFY_KEY) return null;
-              const existingOwner = upExistingOwner;
-              const tfParts = existingOwner.trim().split(/\s+/);
-              const tfPayload = {
-                address: upAddress,
-                ...(tfParts[0] && { first_name: tfParts[0] }),
-                ...(tfParts.slice(1).join(' ') && { last_name: tfParts.slice(1).join(' ') }),
-              };
-              const tfCtrl = new AbortController();
-              const tfTimeout = setTimeout(() => tfCtrl.abort(), 8000);
-              try {
-                const tfRes = await fetch('https://www.tracerfy.com/v1/api/trace/lookup/', {
-                  method: 'POST',
-                  headers: { 'Authorization': `Bearer ${TRACERFY_KEY}`, 'Content-Type': 'application/json' },
-                  body: JSON.stringify(tfPayload), signal: tfCtrl.signal
-                });
-                if (tfRes.ok) return await tfRes.json();
-                return null;
-              } finally {
-                clearTimeout(tfTimeout);
+          let resolvedOwnerName = upExistingOwner;
+          if (RENTCAST_KEY) {
+            const rcCtrl = new AbortController();
+            const rcTimeout = setTimeout(() => rcCtrl.abort(), 8000);
+            let rcData = null;
+            try {
+              const r = await fetch(
+                `https://api.rentcast.io/v1/properties?address=${encodeURIComponent(upAddress)}&limit=1`,
+                { headers: { 'X-Api-Key': RENTCAST_KEY }, signal: rcCtrl.signal }
+              );
+              if (r.ok) {
+                const d = await r.json();
+                rcData = Array.isArray(d) ? d[0] : (d.properties && d.properties[0]) || d;
               }
-            })()
-          ]);
-
-          if (rcResult.status === 'fulfilled' && rcResult.value) {
-            const rcData = rcResult.value;
+            } finally { clearTimeout(rcTimeout); }
+            if (rcData) {
             const ownerName = leadName([rcData.ownerFirstName, rcData.ownerLastName].filter(Boolean).join(' ')) || leadName(rcData.owner);
+            resolvedOwnerName = ownerName || resolvedOwnerName;
             upUpdates.equity_data = {
               estValue: rcData.estimatedValue || null,
               mortgageBalance: rcData.mortgageBalance || null,
@@ -447,15 +420,28 @@ async function handle(action, req, res, ctx) {
               upUpdates.estimate = { ...existingEst, owner: ownerName };
             }
           }
-
-          if (tfResult.status === 'fulfilled' && tfResult.value) {
-            const tfData = tfResult.value;
+          }
+          if (TRACERFY_KEY) {
+            const tfParts = resolvedOwnerName.trim().split(/\s+/);
+            const tfPayload = {
+              address: upAddress,
+              ...(tfParts[0] && { first_name: tfParts[0] }),
+              ...(tfParts.slice(1).join(' ') && { last_name: tfParts.slice(1).join(' ') }),
+            };
+            const tfRes = await fetch('https://www.tracerfy.com/v1/api/trace/lookup/', {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${TRACERFY_KEY}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify(tfPayload)
+            });
+            if (tfRes.ok) {
+              const tfData = await tfRes.json();
             const persons = tfData.persons || tfData.results || [];
             if (persons.length > 0) {
               const best = persons[0];
               const phones = (best.phones || []).map(p => ({ number: p.number || p, type: p.type || 'mobile', dnc: p.dnc || false }));
               const emails = (best.emails || []).map(e => typeof e === 'string' ? e : (e.email || e.address || ''));
               upUpdates.contact_data = { phones, emails, ownerName: leadName(best.full_name || best.name || '') };
+            }
             }
           }
         } catch(parallelErr) {
