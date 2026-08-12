@@ -438,7 +438,8 @@ async function _ghlEnsureAllContactFields(locationId){
 }
 
 async function ghlUpsertContact(name, address, email, existingContactId, pinId, phone, contactData){
-  const locationId = S.cfg.ghlLocationId || 'gz85VU6SxGXS7lqHAQGx';
+  const locationId = S.cfg.ghlLocationId;
+  if(!locationId) throw new Error('GHL Location ID is not configured for this account. Save the account’s GHL Settings before syncing.');
   const methodData = _ghlContactMethods({ contactData:contactData, email:email, phone:phone }, email, phone);
   email = methodData.primaryEmail;
   phone = methodData.primaryPhone;
@@ -493,8 +494,8 @@ async function ghlUpsertContact(name, address, email, existingContactId, pinId, 
   const selectedDnc = methodData.phones.some(function(p){ return p.dnc && p.number.replace(/\D/g,'') === String(phone||'').replace(/\D/g,''); });
   if(selectedDnc){
     postBody.dndSettings = {
-      call:{ status:'active', message:'BidDrop source marked this number DNC', code:'OPTED_OUT' },
-      sms:{ status:'active', message:'BidDrop source marked this number DNC', code:'OPTED_OUT' }
+      Call:{ status:'active', message:'BidDrop source marked this number DNC', code:'OPTED_OUT' },
+      SMS:{ status:'active', message:'BidDrop source marked this number DNC', code:'OPTED_OUT' }
     };
   }
   if(customFields.length) postBody.customFields = customFields;
@@ -562,7 +563,8 @@ async function ghlUpsertContact(name, address, email, existingContactId, pinId, 
 }
 
 async function ghlCreateOpportunity(contactId, name, address, total){
-  const locationId = S.cfg.ghlLocationId || 'gz85VU6SxGXS7lqHAQGx';
+  const locationId = S.cfg.ghlLocationId;
+  if(!locationId) throw new Error('GHL Location ID is not configured for this account. Save the account’s GHL Settings before syncing.');
   const pipelineId = S.cfg.ghlPipelineId;
   const stageId    = S.cfg.ghlStageId;
   if(!pipelineId){
