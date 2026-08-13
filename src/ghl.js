@@ -414,7 +414,8 @@ async function _ghlEnsureAllContactFields(locationId){
       { name:'BidDrop Phone Compliance', key:'biddrop_phone_compliance' }
     ];
     try{
-      const response = await ghlRequest('/locations/'+locationId+'/customFields?model=contact');
+      const v3 = { apiVersion:'v3' };
+      const response = await ghlRequest('/locations/'+locationId+'/customFields?model=contact', 'GET', null, v3);
       const fields = response.customFields || response.fields || [];
       const out = {};
       for(const def of definitions){
@@ -422,7 +423,7 @@ async function _ghlEnsureAllContactFields(locationId){
         if(!field){
           const created = await ghlRequest('/locations/'+locationId+'/customFields', 'POST', {
             name:def.name, dataType:'TEXT', model:'contact', placeholder:def.name
-          });
+          }, v3);
           field = created.customField || created;
         }
         if(field && field.id) out[def.key] = { id:field.id, key:field.fieldKey || field.key || def.key };

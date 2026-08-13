@@ -62,7 +62,7 @@ async function handle(action, req, res, ctx) {
         break;
       }
       case 'ghl': {
-        const { path, method: ghlMethod = 'GET', body: ghlBody, accountId: ghlAcctId, temporaryApiKey } = req.body;
+        const { path, method: ghlMethod = 'GET', body: ghlBody, accountId: ghlAcctId, temporaryApiKey, apiVersion } = req.body;
         if (!path) { res.status(400).json({ error: 'path required' }); return; }
         // SSRF guard: path must be a relative GHL API path (no protocol, no host injection)
         if (typeof path !== 'string' || !path.startsWith('/') || /[\r\n]|:\/\//.test(path)) {
@@ -125,12 +125,16 @@ async function handle(action, req, res, ctx) {
           }
         }
 
+        // GHL custom fields are a v3-only API. Preserve 2021-07-28 for the
+        // existing contact/opportunity endpoints, and explicitly opt in only
+        // where the caller requires v3.
+        const ghlVersion = apiVersion === 'v3' ? 'v3' : '2021-07-28';
         const ghlRes = await fetch(`https://services.leadconnectorhq.com${path}`, {
           method: ghlMethod,
           headers: {
             'Authorization': `Bearer ${ghlToken}`,
             'Content-Type': 'application/json',
-            'Version': '2021-07-28'
+            'Version': ghlVersion
           },
           ...(ghlBody ? { body: JSON.stringify(ghlBody) } : {})
         });
