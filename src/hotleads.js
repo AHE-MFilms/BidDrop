@@ -254,7 +254,7 @@ async function _doSendToGHL(btn, estId, owner, addr, email, total, rep){
     ghlEnsureEstimateUrlField().then(fieldId=>{
       if(!fieldId) return;
       ghlRequest('/contacts/'+contactId, 'PUT', {
-        customFields: [{ id: fieldId, value: estUrl }]
+        customFields: [{ id: fieldId, fieldValue: estUrl }]
       }).then(()=>console.log('[BidDrop] GHL: estimate URL set on contact:', estUrl))
         .catch(e=>console.warn('[BidDrop] GHL: estimate URL field update failed:', e.message));
     });
@@ -276,4 +276,3 @@ async function _doSendToGHL(btn, estId, owner, addr, email, total, rep){
     console.error('hlSendToGHL error:', e);
   }
 }
-

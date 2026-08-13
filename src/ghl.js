@@ -353,8 +353,9 @@ async function ghlEnsureEstimateUrlField(){
   const locationId = S.cfg.ghlLocationId;
   if(!locationId) return null;
   try{
+    const v3 = { apiVersion:'v3' };
     // 1. Check if field already exists
-    const existing = await ghlRequest('/locations/'+locationId+'/customFields');
+    const existing = await ghlRequest('/locations/'+locationId+'/customFields?model=contact', 'GET', null, v3);
     const fields = existing.customFields || existing.customField || [];
     const found = fields.find(f => f.name === 'Estimate URL' || f.fieldKey === 'contact.estimate_url');
     if(found){
@@ -368,7 +369,7 @@ async function ghlEnsureEstimateUrlField(){
       dataType: 'TEXT',
       placeholder: 'https://biddrop.us/e/...',
       model:    'contact'
-    });
+    }, v3);
     const fieldId = res.customField?.id || res.id;
     S.cfg.ghlEstimateUrlFieldId = fieldId;
     console.log('[BidDrop] GHL: created Estimate URL custom field:', fieldId);
@@ -868,7 +869,7 @@ async function sendViaGHL(){
         if(!fieldId) return;
         const estUrl = window.location.origin+'/e/'+_estId;
         ghlRequest('/contacts/'+contactId, 'PUT', {
-          customFields: [{ id: fieldId, value: estUrl }]
+          customFields: [{ id: fieldId, fieldValue: estUrl }]
         }).then(()=>console.log('[BidDrop] GHL: estimate URL set on contact:', estUrl))
           .catch(e=>console.warn('[BidDrop] GHL: estimate URL field update failed:', e.message));
       });
