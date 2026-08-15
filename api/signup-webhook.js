@@ -625,14 +625,14 @@ export default async function handler(req, res) {
       usingUserPassword,
     });
 
-    // ---- 5b. Notify John of new signup ----
+    // ---- 5b. Notify BidDrop leadership of every confirmed subscription signup ----
     const resendKeyAdmin = process.env.RESEND_API_KEY;
     if (resendKeyAdmin) {
-      await fetch('https://api.resend.com/emails', {
+      const alertResult = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${resendKeyAdmin}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          from: 'BidDrop Alerts <alerts@biddrop.io>',
+          from: 'BidDrop Alerts <support@biddrop.io>',
           to: ['john@americashomeexperts.com', 'steve@americashomeexperts.com'],
           subject: `🟢 NEW BIDDROP SIGNUP — ${companyName || customerEmail} (${planConfig.name})`,
           html: `<div style="font-family:sans-serif;max-width:600px;">
@@ -645,7 +645,10 @@ export default async function handler(req, res) {
             <p style="color:#6b7280;font-size:12px;">Account ID: ${newAccount?.id || '—'}</p>
           </div>`,
         }),
-      }).catch(e => console.warn('[signup-webhook] Notify failed:', e.message));
+      }).catch(e => { console.warn('[signup-webhook] Signup alert failed:', e.message); return null; });
+      if (alertResult && !alertResult.ok) {
+        console.warn('[signup-webhook] Signup alert rejected:', alertResult.status, await alertResult.text().catch(() => ''));
+      }
     }
 
     // ---- 6. GHL — Create contact in BidDrop sub-account ----

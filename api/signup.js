@@ -312,12 +312,14 @@ export default async function handler(req, res) {
             console.error('[signup/payg] Welcome email failed:', welcomeResult.status, errBody);
           }
 
-          // 3. Notify John
-          fetch('https://api.resend.com/emails', {
+          // 3. Notify BidDrop leadership after the account is fully provisioned.
+          // Await this independent alert so Vercel does not end the function before
+          // Resend receives it; alert failure never changes the customer signup result.
+          const alertResult = await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              from: 'BidDrop Alerts <alerts@biddrop.io>',
+              from: 'BidDrop Alerts <support@biddrop.io>',
               to: ['john@americashomeexperts.com', 'steve@americashomeexperts.com'],
               subject: `🟢 NEW BIDDROP SIGNUP — ${companyName || email}`,
               html: `<div style="font-family:sans-serif;max-width:600px;">
@@ -330,7 +332,10 @@ export default async function handler(req, res) {
                 <p style="color:#6b7280;font-size:12px;">Account ID: ${newAccount?.id || '—'} | Stripe: ${customer.id}</p>
               </div>`,
             }),
-          }).catch(e => console.warn('[signup/payg] Notify failed:', e.message));
+          }).catch(e => { console.warn('[signup/payg] Signup alert failed:', e.message); return null; });
+          if (alertResult && !alertResult.ok) {
+            console.warn('[signup/payg] Signup alert rejected:', alertResult.status, await alertResult.text().catch(() => ''));
+          }
         }
 
         return res.status(200).json({ success: true, account_id: newAccount?.id });
