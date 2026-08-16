@@ -269,6 +269,20 @@
     .terms-row label a { color: var(--orange); text-decoration: underline; }
     .form-error.terms-error { font-size: 12px; color: var(--red); margin-top: 4px; }
 
+    /* ---- OPTIONAL AHE GROWTH INTEREST ---- */
+    .ahe-interest {
+      margin: 22px 0 0;
+      padding: 18px;
+      border: 1px solid rgba(249,115,22,0.32);
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(249,115,22,0.10), rgba(255,255,255,0.02));
+    }
+    .ahe-interest h3 { font-size: 15px; font-weight: 800; margin-bottom: 5px; }
+    .ahe-interest p { color: var(--text-muted); font-size: 12px; line-height: 1.5; margin-bottom: 13px; }
+    .ahe-interest-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .ahe-interest-options label { display: flex; align-items: flex-start; gap: 8px; color: #ddd; font-size: 12px; line-height: 1.35; cursor: pointer; }
+    .ahe-interest-options input { width: 16px; height: 16px; accent-color: var(--orange); flex: 0 0 auto; margin-top: 1px; }
+
     /* ---- CHECKOUT ---- */
     .checkout-summary {
       background: var(--bg2);
@@ -422,6 +436,7 @@
     /* ---- RESPONSIVE ---- */
     @media (max-width: 640px) {
       .form-row { grid-template-columns: 1fr; }
+      .ahe-interest-options { grid-template-columns: 1fr; }
       .form-section, .checkout-summary { padding: 24px 20px; }
       .plans-grid { grid-template-columns: 1fr; }
       .nav { padding: 16px 20px; }
@@ -532,13 +547,15 @@
             <span class="amount"><sup>$</sup>3,500</span>
             <span class="period">/mo</span>
           </div>
-          <div class="plan-note" style="color:#F97316;font-weight:700;">6-month engagement · $21,000 total</div>
+          <div class="plan-note" style="margin:12px 0 18px;padding:12px 14px;border:1px solid rgba(34,197,94,.36);border-radius:9px;background:rgba(34,197,94,.08);color:#4ade80;font-weight:800;line-height:1.35;">
+            500 BidDrop credits included every month<br><span style="font-size:12px;color:#bbf7d0;font-weight:700;">That is a $2,000 monthly BidDrop value</span>
+          </div>
           <div class="plan-divider"></div>
           <div style="font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:10px;">Everything in Monthly, plus</div>
           <div class="plan-features">
             <div class="plan-feature included">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3.5" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <strong style="color:#F97316;">500 BidDrop credits/mo</strong> <span style="color:rgba(255,255,255,0.45);font-size:11px;">($2,000 value)</span>
+              <strong style="color:#F97316;">500 credits for pins, reports &amp; mailers</strong>
             </div>
             <div class="plan-feature included">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3.5" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -554,7 +571,7 @@
             </div>
             <div class="plan-feature included">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3.5" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Brand refresh + website audit + full CRM
+              Brand refresh + website audit + AHE CRM setup
             </div>
             <div class="plan-feature included">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3.5" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -565,6 +582,7 @@
               AHE directory listing + backlink
             </div>
           </div>
+          <div style="font-size:11px;color:rgba(255,255,255,.42);line-height:1.45;margin-top:14px;">6-month AHE engagement · strategy call before enrollment</div>
           <button class="select-btn" style="background:linear-gradient(90deg,#F97316,#FFB347);border-color:transparent;color:#fff;">Join The Omnipresent System →</button>
         </div>
                 <!-- PAY-AS-YOU-GO -->
@@ -755,6 +773,19 @@
             </label>
           </div>
           <div class="form-error terms-error" id="errTerms">You must agree to the Terms of Service to continue.</div>
+
+          <section class="ahe-interest" id="aheInterestSection" aria-labelledby="aheInterestHeading">
+            <h3 id="aheInterestHeading">Want help getting more from every BidDrop lead?</h3>
+            <p>Optional—tell America’s Home Experts what you would like to improve. This does not add a charge to your BidDrop signup.</p>
+            <div class="ahe-interest-options" id="aheInterestOptions">
+              <label><input type="checkbox" value="Contractor website" /> Contractor website</label>
+              <label><input type="checkbox" value="Video and social visibility" /> Video &amp; social visibility</label>
+              <label><input type="checkbox" value="Local SEO and Google Business Profile" /> Local SEO &amp; Google profile</label>
+              <label><input type="checkbox" value="Meta or Google lead generation" /> Meta / Google lead generation</label>
+              <label><input type="checkbox" value="Reputation management" /> Reputation management</label>
+              <label><input type="checkbox" value="Full marketing strategy" /> Full marketing strategy</label>
+            </div>
+          </section>
 
           <button class="btn-primary" onclick="submitForm()">Continue to Review →</button>
         </form>
@@ -999,6 +1030,8 @@
       else if (step === 2) {
         if (!selectedPlan) { goToStep(1); return; }
         updatePlanSummary();
+        const aheInterestSection = document.getElementById('aheInterestSection');
+        if (aheInterestSection) aheInterestSection.style.display = selectedPlan.plan === 'omnipresent' ? 'none' : 'block';
         document.getElementById('panel2').classList.add('active');
       }
       else if (step === 3) {
@@ -1024,6 +1057,8 @@
       document.getElementById('summaryPlanName').textContent = selectedPlan.name + ' Plan';
       if (selectedPlan.plan === 'monthly') {
         document.getElementById('summaryPlanPrice').textContent = '$99/mo — 20 credits included';
+      } else if (selectedPlan.plan === 'omnipresent') {
+        document.getElementById('summaryPlanPrice').textContent = '$3,500/mo — 500 BidDrop credits included ($2,000 value)';
       } else {
         document.getElementById('summaryPlanPrice').textContent = '$0/mo — credits at $4 each';
       }
@@ -1035,14 +1070,20 @@
       document.getElementById('reviewEmail').textContent = formData.email || '—';
 
       const isMonthly = selectedPlan.plan === 'monthly';
-      document.getElementById('reviewCreditsLine').style.display = isMonthly ? 'flex' : 'none';
-      document.getElementById('reviewGHLLine').style.display = isMonthly ? 'flex' : 'none';
-      document.getElementById('reviewMonthlyBox').style.display = isMonthly ? 'block' : 'none';
-      document.getElementById('reviewPaygBox').style.display = isMonthly ? 'none' : 'block';
-      document.getElementById('reviewTotal').textContent = isMonthly ? '$99' : '$0 — Free';
-      document.getElementById('checkoutBtn').textContent = isMonthly
-        ? 'Start My Monthly Plan →'
-        : 'Create Free Account →';
+      const isOmnipresent = selectedPlan.plan === 'omnipresent';
+      const isPaid = isMonthly || isOmnipresent;
+      document.getElementById('reviewCreditsLine').style.display = isPaid ? 'flex' : 'none';
+      document.getElementById('reviewGHLLine').style.display = isPaid ? 'flex' : 'none';
+      document.getElementById('reviewCredits').textContent = isOmnipresent ? '500 credits/month ($2,000 value)' : '20 credits/month';
+      document.getElementById('reviewMonthlyBox').style.display = isPaid ? 'block' : 'none';
+      document.getElementById('reviewMonthlyBox').innerHTML = isOmnipresent
+        ? '<strong>Included every month: 500 BidDrop credits.</strong> Your AHE strategy call confirms your 6-month engagement and full-system setup.'
+        : '<strong>Billed monthly at $99.</strong> Your 20 included credits renew each billing cycle. Additional credits are $4 each. Cancel anytime.';
+      document.getElementById('reviewPaygBox').style.display = isPaid ? 'none' : 'block';
+      document.getElementById('reviewTotal').textContent = isOmnipresent ? '$3,500' : (isMonthly ? '$99' : '$0 — Free');
+      document.getElementById('checkoutBtn').textContent = isOmnipresent
+        ? 'Start My Omnipresent System →'
+        : (isMonthly ? 'Start My Monthly Plan →' : 'Create Free Account →');
     }
 
     // ---- FORM VALIDATION ----
@@ -1096,6 +1137,7 @@
         plan:          selectedPlan.plan,
         planName:      selectedPlan.name,
         planPrice:     selectedPlan.price,
+        aheInterest:   Array.from(document.querySelectorAll('#aheInterestOptions input:checked')).map(function(input){ return input.value; }),
         agreedToTerms: true,
         agreedAt:      new Date().toISOString()
       };

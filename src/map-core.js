@@ -865,24 +865,28 @@ function buildContactInfoHTML(pid, cd){
     return '<button onclick="event.stopPropagation();requirePinUnlocked(\''+pid+'\')" style="background:rgba(167,139,250,.08);border:1.5px solid #A78BFA;border-radius:7px;padding:8px 6px;color:#C4B5FD;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;line-height:1.25;width:100%;height:100%;">🔒 Unlock Lead<br><span style="font-size:9px;color:#A78BFA;">Name · Phone · Email · 1 credit</span></button>';
   }
   if(!cd) return '';
-  const phones = (cd.phones||[]).slice(0,4);
-  const emails = (cd.emails||[]).slice(0,2);
+  const phones = (cd.phones||[]).slice().sort(function(a,b){ return (Number(a&&a.rank)||999)-(Number(b&&b.rank)||999); }).slice(0,4);
+  const emails = (cd.emails||[]).slice().sort(function(a,b){ return (Number(a&&a.rank)||999)-(Number(b&&b.rank)||999); }).slice(0,2);
   if(!phones.length && !emails.length) return '<div style="font-size:10px;color:#96B0C8;text-align:center;padding:4px;">No contact data found</div>';
   // Format 10-digit number as (XXX) XXX-XXXX
   function fmtPhone(n){ const d=(n||'').replace(/\D/g,''); return d.length===10?'('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6):n; }
   let html = '<div style="background:linear-gradient(135deg,#1a0f2e,#2a1a3e);border:1px solid #A78BFA44;border-radius:8px;padding:8px 10px;">';
   html += '<div style="font-size:9px;font-weight:700;letter-spacing:.6px;color:#A78BFA;margin-bottom:4px;">📞 CONTACT INFO</div>';
   if(cd.ownerName) html += '<div style="font-size:11px;font-weight:700;color:#FFF;margin-bottom:5px;">'+cd.ownerName+'</div>';
-  phones.forEach(function(p){
+  const bestPhone = phones.find(function(p){ return !p.dnc; });
+  phones.forEach(function(p, index){
     const raw = p.number||p;
     const num = fmtPhone(raw);
+    const rank = Number(p && p.rank) || (index+1);
+    const best = p === bestPhone ? ' <span style="font-size:8px;color:#22C55E;background:#22C55E1C;padding:1px 4px;border-radius:3px;">BEST AVAILABLE</span>' : '';
     const dnc = p.dnc ? ' <span style="font-size:8px;color:#EF4444;background:#EF444422;padding:1px 4px;border-radius:3px;">DNC</span>' : '';
     const type = p.type ? ' <span style="font-size:8px;color:#96B0C8;">'+p.type+'</span>' : '';
-    html += '<div style="font-size:12px;color:#FFF;font-weight:600;margin-bottom:3px;"><a href="tel:'+raw+'" style="color:#A78BFA;text-decoration:none;">'+num+'</a>'+type+dnc+'</div>';
+    html += '<div style="font-size:12px;color:#FFF;font-weight:600;margin-bottom:3px;"><span style="font-size:8px;color:#C4B5FD;">#'+rank+'</span> <a href="tel:'+raw+'" style="color:#A78BFA;text-decoration:none;">'+num+'</a>'+type+best+dnc+'</div>';
   });
-  emails.forEach(function(e){
+  emails.forEach(function(e, index){
     const addr = e.address||e;
-    html += '<div style="font-size:10px;color:#C4B5FD;margin-bottom:2px;word-break:break-all;">✉ '+addr+'</div>';
+    const rank = Number(e && e.rank) || (index+1);
+    html += '<div style="font-size:10px;color:#C4B5FD;margin-bottom:2px;word-break:break-all;"><span style="font-size:8px;color:#A78BFA;">#'+rank+'</span> ✉ '+addr+'</div>';
   });
   html += '</div>';
   return html;
@@ -973,8 +977,8 @@ async function lookupContactInfo(pid, opts){
 // Handles multiple phones (with DNC badges) and multiple emails as a picker UI.
 function _fillEstimatorContactFields(cd){
   if(!cd) return;
-  var phones = cd.phones || [];
-  var emails = cd.emails || [];
+  var phones = (cd.phones || []).slice().sort(function(a,b){ return (Number(a&&a.rank)||999)-(Number(b&&b.rank)||999); });
+  var emails = (cd.emails || []).slice().sort(function(a,b){ return (Number(a&&a.rank)||999)-(Number(b&&b.rank)||999); });
 
   // ── Phone picker ──────────────────────────────────────────────────────────
   var phoneWrap = document.getElementById('e-phone-wrap');
@@ -991,12 +995,16 @@ function _fillEstimatorContactFields(cd){
       var list = document.createElement('div');
       list.id = 'e-phone-picker-list';
       list.style.cssText = 'margin-top:4px;display:flex;flex-direction:column;gap:3px;';
-      phones.forEach(function(ph){
+      phones.forEach(function(ph, index){
+        var rank = Number(ph && ph.rank) || (index+1);
+        var isBest = ph === bestPhone;
         var row = document.createElement('div');
         row.style.cssText = 'display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:6px;cursor:pointer;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);font-size:11px;';
         row.innerHTML =
+          '<span style="font-size:9px;font-weight:800;color:'+(isBest?'#22c55e':'#a78bfa')+';min-width:21px;">#'+rank+'</span>' +
           '<span style="flex:1;color:#e5e7eb;font-weight:600;">' + (ph.number||'') + '</span>' +
           '<span style="font-size:9px;color:#9ca3af;text-transform:uppercase;">' + (ph.type||'') + '</span>' +
+          (isBest ? '<span style="background:#22c55e22;color:#22c55e;font-size:8px;font-weight:800;padding:1px 4px;border-radius:4px;">BEST</span>' : '') +
           (ph.dnc ? '<span style="background:#ef4444;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;">DNC</span>' : '<span style="background:#22c55e;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;">OK</span>') +
           '<span style="font-size:10px;color:#f97316;">Use</span>';
         row.addEventListener('click', function(){
@@ -1022,7 +1030,7 @@ function _fillEstimatorContactFields(cd){
   var emailWrap = document.getElementById('e-email-wrap');
   var emailEl   = document.getElementById('e-email');
   if(emailWrap && emails.length > 0){
-    // emails[] are plain strings from Tracerfy
+    // Emails retain Tracerfy provider rank when contact data is freshly unlocked.
     var bestEmail = emails[0];
     if(typeof bestEmail === 'object') bestEmail = bestEmail.email || bestEmail.address || '';
     if(emailEl && !emailEl.value) emailEl.value = bestEmail;
@@ -1034,12 +1042,15 @@ function _fillEstimatorContactFields(cd){
       var eList = document.createElement('div');
       eList.id = 'e-email-picker-list';
       eList.style.cssText = 'margin-top:4px;display:flex;flex-direction:column;gap:3px;';
-      emails.forEach(function(em){
+      emails.forEach(function(em, index){
         var addr = typeof em === 'string' ? em : (em.email || em.address || '');
+        var rank = Number(em && em.rank) || (index+1);
         var eRow = document.createElement('div');
         eRow.style.cssText = 'display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:6px;cursor:pointer;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);font-size:11px;';
         eRow.innerHTML =
+          '<span style="font-size:9px;font-weight:800;color:'+(rank===1?'#22c55e':'#a78bfa')+';min-width:21px;">#'+rank+'</span>' +
           '<span style="flex:1;color:#e5e7eb;font-weight:600;word-break:break-all;">' + addr + '</span>' +
+          (rank===1 ? '<span style="background:#22c55e22;color:#22c55e;font-size:8px;font-weight:800;padding:1px 4px;border-radius:4px;">TOP</span>' : '') +
           '<span style="font-size:10px;color:#f97316;">Use</span>';
         eRow.addEventListener('click', function(){
           if(emailEl) emailEl.value = addr;

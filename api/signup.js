@@ -58,12 +58,26 @@ export default async function handler(req, res) {
     pricePerSquare,
     costGutter,
     offerGutters,
+    aheInterest,
     // PAYG card confirmation step
     setupIntentId,
     // Password for immediate login
     password,
     // Logo is base64 — too large for Stripe metadata, handled post-account-creation
   } = req.body;
+
+  const AHE_INTEREST_OPTIONS = new Set([
+    'Contractor website',
+    'Video and social visibility',
+    'Local SEO and Google Business Profile',
+    'Meta or Google lead generation',
+    'Reputation management',
+    'Full marketing strategy',
+  ]);
+  const aheInterestList = Array.isArray(aheInterest)
+    ? aheInterest.filter(item => AHE_INTEREST_OPTIONS.has(item)).slice(0, 6)
+    : [];
+  const aheInterestText = aheInterestList.join(' | ');
 
   // Basic validation
   if (!firstName || !lastName || !companyName || !email || !phone || !state || !plan) {
@@ -184,7 +198,7 @@ export default async function handler(req, res) {
           stripe_customer_id: customer.id,
           stripe_payment_method_id: si.payment_method,
           stripe_subscription_id: null,
-          notes: `Signed up via BidDrop signup page. Plan: Pay-as-you-go. Stripe customer: ${customer.id}. Welcome credits: ${WELCOME_CREDITS}.`,
+          notes: `Signed up via BidDrop signup page. Plan: Pay-as-you-go. Stripe customer: ${customer.id}. Welcome credits: ${WELCOME_CREDITS}.${aheInterestText ? ` AHE interest: ${aheInterestText}.` : ''}`,
           ...(brandColor    ? { brand_color: brandColor }             : {}),
           ...(licenseNum    ? { license_num: licenseNum }             : {}),
           ...(pricePerSquare ? { cost_architectural: pricePerSquare } : {}),
@@ -284,7 +298,7 @@ export default async function handler(req, res) {
               phone: phone || '',
               companyName: companyName || '',
               locationId: GHL_LOCATION_ID,
-              tags: ['plan-payg', 'biddrop-signup'],
+              tags: ['plan-payg', 'biddrop-signup'].concat(aheInterestList.length ? ['ahe-growth-interest'] : []),
               customFields: [{ key: 'plan', field_value: 'Pay-as-you-go' }],
             }),
           }).catch(e => console.warn('[signup/payg] GHL contact failed:', e.message));
@@ -329,6 +343,7 @@ export default async function handler(req, res) {
                 <p><strong>Email:</strong> ${email}</p>
                 <p><strong>Phone:</strong> ${phone || '—'}</p>
                 <p><strong>Plan:</strong> Pay-as-you-go (Free)</p>
+                ${aheInterestText ? `<p><strong>AHE interest:</strong> ${aheInterestText.replace(/ \| /g, ', ')}</p>` : ''}
                 <p style="color:#6b7280;font-size:12px;">Account ID: ${newAccount?.id || '—'} | Stripe: ${customer.id}</p>
               </div>`,
             }),
@@ -416,6 +431,7 @@ export default async function handler(req, res) {
         zip: zip || '',
         state,
         plan,
+        ahe_interest: aheInterestText,
       },
     };
 

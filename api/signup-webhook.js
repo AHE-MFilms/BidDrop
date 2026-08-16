@@ -286,7 +286,7 @@ async function sendWelcomeEmail({ email, firstName, companyName, planName, tempP
 // Uses GHL API v2 with Private Integration token
 // Env vars: GHL_API_KEY, GHL_LOCATION_ID
 // ============================================================
-async function createGHLContact({ firstName, lastName, email, phone, companyName, planName }) {
+async function createGHLContact({ firstName, lastName, email, phone, companyName, planName, aheInterest }) {
   const GHL_API_KEY = process.env.GHL_API_KEY;
   const GHL_LOCATION_ID = process.env.GHL_LOCATION_ID;
   if (!GHL_API_KEY || !GHL_LOCATION_ID) {
@@ -308,7 +308,7 @@ async function createGHLContact({ firstName, lastName, email, phone, companyName
         phone: phone || '',
         companyName: companyName || '',
         locationId: GHL_LOCATION_ID,
-        tags: ['biddrop - signup', `plan-${planName.toLowerCase()}`, 'trial-30-day'],
+        tags: ['biddrop - signup', `plan-${planName.toLowerCase()}`, 'trial-30-day'].concat(aheInterest ? ['ahe-growth-interest'] : []),
         source: 'BidDrop Signup Page',
       }),
     });
@@ -422,6 +422,7 @@ export default async function handler(req, res) {
   const pricePerSquare = meta.price_per_square ? parseInt(meta.price_per_square) : null;
   const costGutter    = meta.cost_gutter    ? parseInt(meta.cost_gutter) : null;
   const offerGutters  = meta.offer_gutters  === '1';
+  const aheInterest = meta.ahe_interest || '';
 
   // Fallback to customer email if metadata email missing
   const customerEmail = email || fullSession.customer_details?.email || fullSession.customer?.email;
@@ -565,7 +566,7 @@ export default async function handler(req, res) {
       stripe_customer_id: stripeCustomerId,
       stripe_subscription_id: stripeSubscriptionId,
       trial_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      notes: `Signed up via BidDrop signup page. Plan: ${planConfig.name}. Stripe customer: ${stripeCustomerId}. Trial ends: ${new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}.`,
+      notes: `Signed up via BidDrop signup page. Plan: ${planConfig.name}. Stripe customer: ${stripeCustomerId}. Trial ends: ${new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}.${aheInterest ? ` AHE interest: ${aheInterest}.` : ''}`,
       // Brand & Pricing from Step 3 (all optional — null if skipped)
       ...(brandColor    ? { brand_color: brandColor }              : {}),
       ...(licenseNum    ? { license_num: licenseNum }              : {}),
@@ -642,6 +643,7 @@ export default async function handler(req, res) {
             <p><strong>Email:</strong> ${customerEmail}</p>
             <p><strong>Phone:</strong> ${phone || '—'}</p>
             <p><strong>Plan:</strong> ${planConfig.name}</p>
+            ${aheInterest ? `<p><strong>AHE interest:</strong> ${aheInterest.replace(/ \| /g, ', ')}</p>` : ''}
             <p style="color:#6b7280;font-size:12px;">Account ID: ${newAccount?.id || '—'}</p>
           </div>`,
         }),
@@ -659,6 +661,7 @@ export default async function handler(req, res) {
       phone,
       companyName,
       planName: planConfig.name,
+      aheInterest,
     });
 
     return res.status(200).json({ received: true, success: true, accountId: newAccount.id });

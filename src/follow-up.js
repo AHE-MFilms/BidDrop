@@ -161,14 +161,15 @@ function _renderContactDropdowns(p){
   const curPhone = (document.getElementById('e-phone')||{}).value||'';
   const fi = 'width:100%;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:9px 11px;color:var(--fg);font-size:13px;font-family:inherit;outline:none;';
   if(emailWrap){
-    const emails = cd && cd.emails && cd.emails.length ? cd.emails : null;
+    const emails = cd && cd.emails && cd.emails.length ? cd.emails.slice().sort(function(a,b){ return (Number(a&&a.rank)||999)-(Number(b&&b.rank)||999); }) : null;
     if(emails && emails.length > 1){
       const sel = document.createElement('select');
       sel.id = 'e-email'; sel.style.cssText = fi;
       const blank = document.createElement('option'); blank.value=''; blank.textContent='— select email —'; sel.appendChild(blank);
-      emails.forEach(function(em){
+      emails.forEach(function(em, index){
         const e = typeof em === 'string' ? em : (em.email||em.address||String(em));
-        const opt = document.createElement('option'); opt.value=e; opt.textContent=e;
+        const rank = Number(em && em.rank) || (index+1);
+        const opt = document.createElement('option'); opt.value=e; opt.textContent='Rank #'+rank+' · '+e;
         if(e===curEmail) opt.selected=true;
         sel.appendChild(opt);
       });
@@ -186,16 +187,17 @@ function _renderContactDropdowns(p){
     }
   }
   if(phoneWrap){
-    const phones = cd && cd.phones && cd.phones.length ? cd.phones : null;
+    const phones = cd && cd.phones && cd.phones.length ? cd.phones.slice().sort(function(a,b){ return (Number(a&&a.rank)||999)-(Number(b&&b.rank)||999); }) : null;
     function fmtPhone(n){ const d=(n||'').replace(/\D/g,''); return d.length===10?'('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6):n; }
     if(phones && phones.length > 1){
       const sel = document.createElement('select');
       sel.id = 'e-phone'; sel.style.cssText = fi;
       const blank = document.createElement('option'); blank.value=''; blank.textContent='— select phone —'; sel.appendChild(blank);
-      phones.forEach(function(ph){
+      phones.forEach(function(ph, index){
         const num = fmtPhone(ph.number||ph);
         const raw = (ph.number||ph||'').replace(/\D/g,'');
-        const label = num + (ph.type?' · '+ph.type:'') + (ph.dnc?' ⚠ DNC':'');
+        const rank = Number(ph && ph.rank) || (index+1);
+        const label = 'Rank #'+rank+' · '+num + (ph.type?' · '+ph.type:'') + (ph.dnc?' ⚠ DNC':'');
         const opt = document.createElement('option'); opt.value=num; opt.textContent=label;
         if(num===curPhone||raw===curPhone.replace(/\D/g,'')) opt.selected=true;
         sel.appendChild(opt);
