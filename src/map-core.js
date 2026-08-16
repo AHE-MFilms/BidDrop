@@ -934,17 +934,17 @@ async function lookupContactInfo(pid, opts){
         ownerFullName = person.full_name || person.name ||
           ([person.first_name, person.last_name].filter(Boolean).join(' ')) || '';
       }
-      (person.phones||[]).forEach(function(p){ phones.push({ number: p.number||p, dnc: p.dnc||false, type: p.type||'' }); });
-      (person.emails||[]).forEach(function(e){ emails.push({ address: e.address||e.email||e }); });
+      (person.phones||[]).forEach(function(p, index){ phones.push({ number: p.number||p, dnc: p.dnc||false, type: p.type||'', rank: Number(p.rank)||(index+1), carrier:p.carrier||'', tcpa:!!p.tcpa }); });
+      (person.emails||[]).forEach(function(e, index){ emails.push({ address: e.address||e.email||e, rank: Number(e.rank)||(index+1) }); });
     });
     // Fallback: top-level phones/emails (older API shape)
     if(!phones.length && result && result.phones){
-      result.phones.forEach(function(p){ phones.push({ number: p.number||p, dnc: p.dnc||false }); });
+      result.phones.forEach(function(p, index){ phones.push({ number: p.number||p, dnc: p.dnc||false, type:p.type||'', rank:Number(p.rank)||(index+1), carrier:p.carrier||'', tcpa:!!p.tcpa }); });
     }
     if(!emails.length && result && result.emails){
-      result.emails.forEach(function(e){ emails.push({ address: e.address||e }); });
+      result.emails.forEach(function(e, index){ emails.push({ address: e.address||e.email||e, rank:Number(e.rank)||(index+1) }); });
     }
-    const cd = { phones: phones, emails: emails, ownerName: ownerFullName };
+    const cd = { phones: phones, emails: emails, ownerName: ownerFullName, source:'Tracerfy', lookedUpAt:new Date().toISOString() };
     pin.contactData = cd;
     if(sb && pin.id) sb.from('pins').update({ contact_data: cd }).eq('id', pin.id).then(function(){});
     // Re-fetch el in case popup was rebuilt while async call was in-flight

@@ -438,9 +438,25 @@ async function handle(action, req, res, ctx) {
             const persons = tfData.persons || tfData.results || [];
             if (persons.length > 0) {
               const best = persons[0];
-              const phones = (best.phones || []).map(p => ({ number: p.number || p, type: p.type || 'mobile', dnc: p.dnc || false }));
-              const emails = (best.emails || []).map(e => typeof e === 'string' ? e : (e.email || e.address || ''));
-              upUpdates.contact_data = { phones, emails, ownerName: leadName(best.full_name || best.name || '') };
+              const phones = (best.phones || []).map((p, index) => ({
+                number: p.number || p,
+                type: p.type || 'mobile',
+                dnc: p.dnc || false,
+                rank: Number(p.rank) || (index + 1),
+                carrier: p.carrier || '',
+                tcpa: !!p.tcpa
+              }));
+              const emails = (best.emails || []).map((e, index) => ({
+                address: typeof e === 'string' ? e : (e.email || e.address || ''),
+                rank: Number(e && e.rank) || (index + 1)
+              })).filter(e => e.address);
+              upUpdates.contact_data = {
+                phones,
+                emails,
+                ownerName: leadName(best.full_name || best.name || ''),
+                source: 'Tracerfy',
+                lookedUpAt: new Date().toISOString()
+              };
             }
             }
           }

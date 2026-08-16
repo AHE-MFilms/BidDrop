@@ -387,22 +387,29 @@ function _ghlContactMethods(pin, selectedEmail, selectedPhone){
   const rawPhones = Array.isArray(cd.phones) ? cd.phones : [];
   const rawEmails = Array.isArray(cd.emails) ? cd.emails : [];
   const seenPhones = new Set(), seenEmails = new Set();
-  const phones = rawPhones.map(function(p){
+  const phones = rawPhones.map(function(p, index){
     const number = String((p && (p.number || p.phone)) || p || '').trim();
     const key = number.replace(/\D/g,'');
     if(!number || !key || seenPhones.has(key)) return null;
     seenPhones.add(key);
-    return { number:number, type:(p && p.type) || '', dnc:!!(p && p.dnc) };
-  }).filter(Boolean);
-  const emails = rawEmails.map(function(e){
+    return {
+      number:number,
+      type:(p && p.type) || '',
+      dnc:!!(p && p.dnc),
+      rank:Number(p && p.rank) || (index + 1),
+      carrier:(p && p.carrier) || '',
+      tcpa:!!(p && p.tcpa)
+    };
+  }).filter(Boolean).sort(function(a,b){ return a.rank - b.rank; });
+  const emails = rawEmails.map(function(e, index){
     const address = String((e && (e.address || e.email)) || e || '').trim();
     const key = address.toLowerCase();
     if(!address || seenEmails.has(key)) return null;
     seenEmails.add(key);
-    return address;
-  }).filter(Boolean);
+    return { address:address, rank:Number(e && e.rank) || (index + 1) };
+  }).filter(Boolean).sort(function(a,b){ return a.rank - b.rank; });
   const primaryPhone = selectedPhone || (pin && pin.phone) || ((phones.find(function(p){ return !p.dnc; }) || phones[0] || {}).number || '');
-  const primaryEmail = selectedEmail || (pin && pin.email) || (pin && pin.estimate && pin.estimate.email) || emails[0] || '';
+  const primaryEmail = selectedEmail || (pin && pin.email) || (pin && pin.estimate && pin.estimate.email) || ((emails[0] || {}).address || '');
   return { primaryPhone, primaryEmail, phones, emails };
 }
 
@@ -446,9 +453,13 @@ async function ghlUpsertContact(name, address, email, existingContactId, pinId, 
   email = methodData.primaryEmail;
   phone = methodData.primaryPhone;
   const customFieldIds = await _ghlEnsureAllContactFields(locationId);
-  const allPhoneText = methodData.phones.map(function(p){ return p.number+' — '+(p.type || 'phone')+(p.dnc ? ' — DNC' : ''); }).join('\n');
-  const allEmailText = methodData.emails.join('\n');
-  const complianceText = methodData.phones.map(function(p){ return p.number+': '+(p.dnc ? 'DNC — do not call or text' : 'not marked DNC'); }).join('\n');
+  const allPhoneText = methodData.phones.map(function(p){
+    return 'Rank #'+p.rank+' — '+p.number+' — '+(p.type || 'phone')+(p.carrier ? ' · '+p.carrier : '')+(p.dnc ? ' — DNC' : '');
+  }).join('\n');
+  const allEmailText = methodData.emails.map(function(e){ return 'Rank #'+e.rank+' — '+e.address; }).join('\n');
+  const complianceText = methodData.phones.map(function(p){
+    return 'Rank #'+p.rank+' — '+p.number+': '+(p.dnc ? 'DNC — do not call or text' : 'not marked DNC')+(p.tcpa ? ' — TCPA flag' : '');
+  }).join('\n');
   const customFields = [
     customFieldIds.biddrop_all_phones && { id:customFieldIds.biddrop_all_phones.id, key:customFieldIds.biddrop_all_phones.key, fieldValue:allPhoneText },
     customFieldIds.biddrop_all_emails && { id:customFieldIds.biddrop_all_emails.id, key:customFieldIds.biddrop_all_emails.key, fieldValue:allEmailText },
@@ -493,13 +504,9 @@ async function ghlUpsertContact(name, address, email, existingContactId, pinId, 
     const digits = phone.replace(/\D/g,'');
     postBody.phone = digits.length===10 ? '+1'+digits : (digits.length===11&&digits[0]==='1' ? '+'+digits : phone);
   }
-  const selectedDnc = methodData.phones.some(function(p){ return p.dnc && p.number.replace(/\D/g,'') === String(phone||'').replace(/\D/g,''); });
-  if(selectedDnc){
-    postBody.dndSettings = {
-      Call:{ status:'active', message:'BidDrop source marked this number DNC', code:'OPTED_OUT' },
-      SMS:{ status:'active', message:'BidDrop source marked this number DNC', code:'OPTED_OUT' }
-    };
-  }
+  // Provider DNC is retained in BidDrop custom fields for rep/compliance review.
+  // Never set or clear GHL contact-level DND from a third-party lookup: an
+  // existing consent or opt-out decision belongs to the contractor and remains intact.
   if(customFields.length) postBody.customFields = customFields;
   // PUT body must NOT include locationId — GHL returns 422 if it's present on update
   const putBody = {
@@ -514,7 +521,6 @@ async function ghlUpsertContact(name, address, email, existingContactId, pinId, 
   };
   // Sync phone to putBody now that it's declared
   if(postBody.phone) putBody.phone = postBody.phone;
-  if(postBody.dndSettings) putBody.dndSettings = postBody.dndSettings;
   if(customFields.length) putBody.customFields = customFields;
   // NOTE: email NOT in putBody — sent separately to avoid GHL 400 on first-time email add
 
