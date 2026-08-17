@@ -696,6 +696,7 @@ window.lookupHailByZip = async function() {
     if (!r.ok) throw new Error('API error');
     const data = await r.json();
     const mrms = data.mrms_hail || [];
+    const localRadius = data.local_radius_miles || 5;
     const spcHail = data.spc_hail_spotters || [];
     const spcWind = data.spc_wind || [];
     const nwsWarnings = data.nws_warnings || [];
@@ -703,12 +704,13 @@ window.lookupHailByZip = async function() {
     // Merge all sources by date — same logic as loadHailEventsFeed
     const byDate = {};
     const ensureDate = (date) => {
-      if (!byDate[date]) byDate[date] = { maxHail: 0, mrmsCount: 0, spcHailCount: 0, windCount: 0, warningCount: 0, maxWind: 0, sources: [] };
+      if (!byDate[date]) byDate[date] = { maxHail: 0, mrmsCount: 0, nearestMrmsMiles: null, spcHailCount: 0, windCount: 0, warningCount: 0, maxWind: 0, sources: [] };
     };
     mrms.forEach(e => {
       ensureDate(e.date);
       if (e.hail_size_in > byDate[e.date].maxHail) byDate[e.date].maxHail = e.hail_size_in;
       byDate[e.date].mrmsCount++;
+      if (Number.isFinite(e.dist_miles) && (byDate[e.date].nearestMrmsMiles === null || e.dist_miles < byDate[e.date].nearestMrmsMiles)) byDate[e.date].nearestMrmsMiles = e.dist_miles;
       if (!byDate[e.date].sources.includes('MRMS')) byDate[e.date].sources.push('MRMS');
     });
     spcHail.forEach(e => {
@@ -737,7 +739,7 @@ window.lookupHailByZip = async function() {
     statusEl.textContent = '';
 
     if (!dates.length) {
-      resultsEl.innerHTML = `<div style="font-size:11px;color:var(--mid);padding:8px 0;">No storm events found within 50 miles of this location in the last 90 days.</div>`;
+      resultsEl.innerHTML = `<div style="font-size:11px;color:var(--mid);padding:8px 0;">No meaningful local storm signal found within ${localRadius} miles in the last 90 days.</div>`;
       resultsEl.style.display = 'block';
       return;
     }
@@ -746,7 +748,7 @@ window.lookupHailByZip = async function() {
     const badgeColors = { MRMS: '#6366f1', SPC: '#f97316', Wind: '#22d3ee', NWS: '#ef4444' };
 
     let html = `<div style="font-size:10px;font-weight:700;color:#a78bfa;margin-bottom:4px;">📍 ${shortName}</div>`;
-    html += `<div style="font-size:10px;color:var(--mid);margin-bottom:8px;">${dates.length} storm date${dates.length !== 1 ? 's' : ''} within 50 miles · last 90 days</div>`;
+    html += `<div style="font-size:10px;color:var(--mid);margin-bottom:8px;">${dates.length} local storm signal${dates.length !== 1 ? 's' : ''} within ${localRadius} miles · radar estimates are not ground confirmation</div>`;
 
     dates.forEach(date => {
       const d = byDate[date];
@@ -754,12 +756,12 @@ window.lookupHailByZip = async function() {
       const hailColor = d.maxHail >= 2.75 ? '#ef4444' : d.maxHail >= 1.75 ? '#f97316' : d.maxHail >= 1.0 ? '#eab308' : '#3b82f6';
       const hailLbl = d.maxHail >= 2.75 ? 'Baseball+' : d.maxHail >= 1.75 ? 'Baseball' : d.maxHail >= 1.0 ? 'Golf Ball' : 'Quarter';
       const subParts = [];
-      if (d.mrmsCount) subParts.push(`${d.mrmsCount} radar pts`);
+      if (d.mrmsCount) subParts.push(`${d.mrmsCount} radar cell${d.mrmsCount !== 1 ? 's' : ''}${d.nearestMrmsMiles !== null ? ' · nearest ' + d.nearestMrmsMiles.toFixed(1) + ' mi' : ''}`);
       if (d.spcHailCount) subParts.push(`${d.spcHailCount} hail spotter${d.spcHailCount > 1 ? 's' : ''}`);
       if (d.windCount) subParts.push(`${d.windCount} wind${d.maxWind ? ' ' + d.maxWind + 'mph' : ''}`);
       if (d.warningCount) subParts.push(`${d.warningCount} NWS warning${d.warningCount > 1 ? 's' : ''}`);
       const sourceBadge = d.sources.map(s =>
-        `<span style="font-size:9px;background:${badgeColors[s] || '#374151'};border-radius:3px;padding:1px 5px;color:#fff;font-weight:700;">${s}</span>`
+        `<span style="font-size:9px;background:${badgeColors[s] || '#374151'};border-radius:3px;padding:1px 5px;color:#fff;font-weight:700;">${s === 'MRMS' ? 'MRMS ESTIMATE' : s}</span>`
       ).join(' ');
       html += `<div onclick="loadMrmsForDate('${date}');_onStormDateChange('${date}');document.getElementById('storm-date-sel').value='${date}';switchStormTab('map');"
         style="display:flex;justify-content:space-between;align-items:center;padding:8px 6px;border-bottom:1px solid var(--border);cursor:pointer;border-radius:5px;"
@@ -771,7 +773,7 @@ window.lookupHailByZip = async function() {
         </div>
         <div style="text-align:right;margin-left:8px;flex-shrink:0;">
           ${hasHail
-            ? `<div style="font-size:13px;font-weight:800;color:${hailColor};">${d.maxHail.toFixed(2)}"</div><div style="font-size:10px;color:var(--mid);">${hailLbl}</div>`
+            ? `<div style="font-size:13px;font-weight:800;color:${hailColor};">${d.maxHail.toFixed(2)}"</div><div style="font-size:10px;color:var(--mid);">${d.spcHailCount ? 'Spotter + radar' : 'Radar estimate'}</div>`
             : d.maxWind
               ? `<div style="font-size:12px;font-weight:800;color:#22d3ee;">${d.maxWind}mph</div><div style="font-size:10px;color:var(--mid);">Wind</div>`
               : `<div style="font-size:11px;color:var(--mid);">⚠️</div>`}
@@ -798,6 +800,7 @@ window.loadHailEventsFeed = async function() {
     if (!r.ok) throw new Error('API error');
     const data = await r.json();
     const mrms = data.mrms_hail || [];
+    const localRadius = data.local_radius_miles || 5;
     const spcHail = data.spc_hail_spotters || [];
     const spcWind = data.spc_wind || [];
     const nwsWarnings = data.nws_warnings || [];
@@ -805,13 +808,14 @@ window.loadHailEventsFeed = async function() {
     // Merge all data sources by date
     const byDate = {};
     const ensureDate = (date) => {
-      if (!byDate[date]) byDate[date] = { maxHail: 0, mrmsCount: 0, spcHailCount: 0, windCount: 0, warningCount: 0, maxWind: 0, sources: [] };
+      if (!byDate[date]) byDate[date] = { maxHail: 0, mrmsCount: 0, nearestMrmsMiles: null, spcHailCount: 0, windCount: 0, warningCount: 0, maxWind: 0, sources: [] };
     };
 
     mrms.forEach(e => {
       ensureDate(e.date);
       if (e.hail_size_in > byDate[e.date].maxHail) byDate[e.date].maxHail = e.hail_size_in;
       byDate[e.date].mrmsCount++;
+      if (Number.isFinite(e.dist_miles) && (byDate[e.date].nearestMrmsMiles === null || e.dist_miles < byDate[e.date].nearestMrmsMiles)) byDate[e.date].nearestMrmsMiles = e.dist_miles;
       if (!byDate[e.date].sources.includes('MRMS')) byDate[e.date].sources.push('MRMS');
     });
     spcHail.forEach(e => {
@@ -841,11 +845,11 @@ window.loadHailEventsFeed = async function() {
 
     const dates = Object.keys(byDate).sort((a,b) => b.localeCompare(a));
     if (!dates.length) {
-      feedEl.innerHTML = '<div style="font-size:11px;color:var(--mid);text-align:center;padding:10px;">No storm events found within 50 miles for the selected period.</div>';
+      feedEl.innerHTML = `<div style="font-size:11px;color:var(--mid);text-align:center;padding:10px;">No meaningful local storm signal found within ${localRadius} miles for the selected period.</div>`;
       return;
     }
 
-    let html = `<div style="font-size:10px;color:var(--mid);margin-bottom:6px;">${dates.length} storm dates within 50 mi of map center</div>`;
+    let html = `<div style="font-size:10px;color:var(--mid);margin-bottom:6px;">${dates.length} local storm signal${dates.length !== 1 ? 's' : ''} within ${localRadius} mi of map center</div><div style="font-size:9px;color:var(--mid);margin-bottom:6px;">MRMS is a radar estimate, not proof that hail hit the property.</div>`;
     dates.forEach(date => {
       const d = byDate[date];
       const hasHail = d.maxHail > 0;
@@ -854,7 +858,7 @@ window.loadHailEventsFeed = async function() {
 
       // Build sub-labels
       const subParts = [];
-      if (d.mrmsCount) subParts.push(`${d.mrmsCount} radar pts`);
+      if (d.mrmsCount) subParts.push(`${d.mrmsCount} radar cell${d.mrmsCount !== 1 ? 's' : ''}${d.nearestMrmsMiles !== null ? ' · nearest ' + d.nearestMrmsMiles.toFixed(1) + ' mi' : ''}`);
       if (d.spcHailCount) subParts.push(`${d.spcHailCount} hail spotter${d.spcHailCount > 1 ? 's' : ''}`);
       if (d.windCount) subParts.push(`${d.windCount} wind${d.maxWind ? ' ' + d.maxWind + 'mph' : ''}`);
       if (d.warningCount) subParts.push(`${d.warningCount} NWS warning${d.warningCount > 1 ? 's' : ''}`);
@@ -862,7 +866,7 @@ window.loadHailEventsFeed = async function() {
       // Source badges
       const badgeColors = { MRMS: '#6366f1', SPC: '#f97316', Wind: '#22d3ee', NWS: '#ef4444' };
       const sourceBadge = d.sources.map(s =>
-        `<span style="font-size:9px;background:${badgeColors[s] || '#374151'};border-radius:3px;padding:1px 5px;color:#fff;font-weight:700;">${s}</span>`
+        `<span style="font-size:9px;background:${badgeColors[s] || '#374151'};border-radius:3px;padding:1px 5px;color:#fff;font-weight:700;">${s === 'MRMS' ? 'MRMS ESTIMATE' : s}</span>`
       ).join(' ');
 
       html += `<div onclick="loadMrmsForDate('${date}');_onStormDateChange('${date}');document.getElementById('storm-date-sel').value='${date}';switchStormTab('map');"
@@ -875,11 +879,11 @@ window.loadHailEventsFeed = async function() {
         </div>
         <div style="text-align:right;margin-left:8px;flex-shrink:0;">
           ${hasHail ? `<div style="font-size:13px;font-weight:800;color:${hailColor};">${d.maxHail.toFixed(2)}"</div>
-          <div style="font-size:10px;color:var(--mid);">${hailLbl}</div>` : d.maxWind ? `<div style="font-size:12px;font-weight:800;color:#22d3ee;">${d.maxWind}mph</div><div style="font-size:10px;color:var(--mid);">Wind</div>` : `<div style="font-size:11px;color:var(--mid);">⚠️</div>`}
+          <div style="font-size:10px;color:var(--mid);">${d.spcHailCount ? 'Spotter + radar' : 'Radar estimate'}</div>` : d.maxWind ? `<div style="font-size:12px;font-weight:800;color:#22d3ee;">${d.maxWind}mph</div><div style="font-size:10px;color:var(--mid);">Wind</div>` : `<div style="font-size:11px;color:var(--mid);">⚠️</div>`}
         </div>
       </div>`;
     });
-    html += `<div style="font-size:10px;color:var(--mid);text-align:center;padding:6px 0;">Tap any row to load that storm's hail swath on the map</div>`;
+    html += `<div style="font-size:10px;color:var(--mid);text-align:center;padding:6px 0;">Tap any row to review the radar swath. Do not treat radar-only estimates as a confirmed hail hit.</div>`;
     feedEl.innerHTML = html;
   } catch(e) {
     feedEl.innerHTML = '<div style="font-size:11px;color:#ef4444;text-align:center;padding:10px;">Error loading events. Try again.</div>';

@@ -11,8 +11,11 @@
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://gtwbhxnrmfmdenogzuea.supabase.co';
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
-const RADIUS_DEG   = 0.75; // ~50 miles — wide enough for FIND tab to show useful results
-const SPC_RADIUS_DEG = 0.75; // ~50 miles for SPC spotter reports
+// The Find panel is a property/local-area decision aid—not a regional storm
+// chaser search. Keep radar-only results tight enough that they cannot be
+// mistaken for hail at a searched ZIP or property.
+const LOCAL_RADIUS_MILES = 5;
+const MIN_DISPLAY_HAIL_IN = 0.75; // quarter-sized radar estimate; suppress marginal single-cell noise
 
 // Haversine distance in miles
 function distMiles(lat1, lon1, lat2, lon2) {
@@ -118,9 +121,11 @@ async function fetchMrmsHail(lat, lon, days) {
     const since = new Date();
     since.setDate(since.getDate() - days);
     const sinceStr = since.toISOString().slice(0, 10);
-    const latMin = lat - RADIUS_DEG, latMax = lat + RADIUS_DEG;
-    const lonMin = lon - RADIUS_DEG, lonMax = lon + RADIUS_DEG;
-    const url = `${SUPABASE_URL}/rest/v1/mrms_hail_events?event_date=gte.${sinceStr}&lat=gte.${latMin}&lat=lte.${latMax}&lon=gte.${lonMin}&lon=lte.${lonMax}&order=event_date.desc&limit=200`;
+    const latDelta = LOCAL_RADIUS_MILES / 69;
+    const lonDelta = LOCAL_RADIUS_MILES / (69 * Math.max(Math.cos(lat * Math.PI / 180), 0.1));
+    const latMin = lat - latDelta, latMax = lat + latDelta;
+    const lonMin = lon - lonDelta, lonMax = lon + lonDelta;
+    const url = `${SUPABASE_URL}/rest/v1/mrms_hail_events?event_date=gte.${sinceStr}&lat=gte.${latMin}&lat=lte.${latMax}&lon=gte.${lonMin}&lon=lte.${lonMax}&hail_size_in=gte.${MIN_DISPLAY_HAIL_IN}&order=event_date.desc&limit=500`;
     const r = await fetch(url, {
       headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}` }
     });
@@ -132,8 +137,12 @@ async function fetchMrmsHail(lat, lon, days) {
       lon: row.lon,
       hail_size_in: row.hail_size_in,
       dist_miles: Math.round(distMiles(lat, lon, row.lat, row.lon) * 10) / 10,
-      source: 'MRMS Radar'
-    })).sort((a, b) => b.hail_size_in - a.hail_size_in);
+      source: 'MRMS Radar Estimate'
+    }))
+      // A bounding box can include locations beyond a circular five-mile scope.
+      // Always apply the final geodesic check before returning a “local” result.
+      .filter(row => row.dist_miles <= LOCAL_RADIUS_MILES)
+      .sort((a, b) => a.date.localeCompare(b.date) || a.dist_miles - b.dist_miles || b.hail_size_in - a.hail_size_in);
   } catch { return []; }
 }
 
@@ -283,6 +292,8 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'public, max-age=3600');
   return res.status(200).json({
     lat, lon, days,
+    local_radius_miles: LOCAL_RADIUS_MILES,
+    mrms_min_display_hail_in: MIN_DISPLAY_HAIL_IN,
     summary,
     mrms_hail: mrmsHail.slice(0, 50),
     spc_hail_spotters: spcHail.slice(0, 30),

@@ -96,7 +96,7 @@
           <!-- Recent Storm Events (primary) -->
           <div style="margin-bottom:12px;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-              <div style="font-size:12px;font-weight:700;color:var(--text);">🌩 Recent Storms Near You</div>
+              <div style="font-size:12px;font-weight:700;color:var(--text);">🌩 Local Storm Signals</div>
               <select id="hail-events-days" onchange="loadHailEventsFeed()" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:5px;padding:3px 6px;font-size:10px;cursor:pointer;">
                 <option value="7">7 days</option>
                 <option value="30" selected>30 days</option>
@@ -106,7 +106,7 @@
             <div id="hail-events-feed" style="max-height:220px;overflow-y:auto;">
               <div style="font-size:11px;color:var(--mid);text-align:center;padding:16px 10px;">
                 <div style="font-size:22px;margin-bottom:6px;">🌩</div>
-                Tap Load to see recent storms near your map center
+                Tap Load to see local radar estimates and confirmed reports near your map center
               </div>
             </div>
             <button onclick="loadHailEventsFeed()" style="width:100%;background:#6366F1;border:none;color:#fff;border-radius:7px;padding:7px;font-size:11px;font-weight:700;cursor:pointer;margin-top:6px;">🔄 Load Storms</button>
