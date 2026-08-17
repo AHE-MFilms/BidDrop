@@ -227,11 +227,14 @@ async function sendLobPostcard6x9(id){
   fromState=toStateAbbr(fromState);
   // Build a synthetic item with all config fields for the canvas builders
   // Merge design backOverrides if rep selected a custom design in the Send Postcard modal
-  const _backOvr = item._sendBackOverrides || {};
+  const _sender = item.sender_profile || null;
+  const _senderLayout = _sender?.layout_data || null;
+  const _backOvr = item._sendBackOverrides || _senderLayout?.back_overrides || {};
   const syntheticItem=Object.assign({},item,{
-    companyName:co,companyAddr:fromRaw,companyPhone:S.cfg.companyPhone||'',
-    logoData:S.cfg.logoData||'',headshotData:S.cfg.headshotData||'',
-    repName:S.cfg.repName||'',repTitle:S.cfg.repTitle||'',
+    companyName:co,companyAddr:fromRaw,companyPhone:(_sender?.phone)||S.cfg.companyPhone||'',
+    logoData:S.cfg.logoData||'',headshotData:(_sender?.photo_url)||S.cfg.headshotData||'',
+    repName:(_sender?.name)||S.cfg.repName||'',repTitle:(_sender?.title)||S.cfg.repTitle||'',
+    repPhone:(_sender?.phone)||S.cfg.companyPhone||'',
     pcHook:_backOvr.postcardHook||S.cfg.pcHook||'',
     pcWhy:_backOvr.postcardWhy||S.cfg.pcWhy||'',
     pcQuote:_backOvr.postcardQuote||S.cfg.pcQuote||'',
@@ -247,7 +250,7 @@ async function sendLobPostcard6x9(id){
     bookingUrl:S.cfg.bookingUrl||''
   });
   // If a custom design front URL is set, override photo_url for the front render
-  if(item._sendDesignUrl) syntheticItem._customFrontUrl = item._sendDesignUrl;
+  if(item._sendDesignUrl || _senderLayout?.url) syntheticItem._customFrontUrl = item._sendDesignUrl || _senderLayout.url;
   toast('Rendering postcard images…','info');
   // Render front & back to JPEG via canvas, upload to Supabase, send URLs to Lob
   let frontUrl, backUrl;
@@ -255,7 +258,7 @@ async function sendLobPostcard6x9(id){
     const ts=Date.now();
     const acctId=(currentAccount&&currentAccount.id)||'shared';
     // Determine back renderer: custom uploaded back vs standard BidDrop back
-    const _customBackUrl = item._sendDesignBackUrl || null;
+    const _customBackUrl = item._sendDesignBackUrl || _senderLayout?.back_url || null;
     const backRenderFn = _customBackUrl
       ? () => renderCustomBackCanvas(_customBackUrl, S.cfg||{})
       : () => renderPostcard6x9BackCanvas(syntheticItem);
@@ -350,5 +353,3 @@ async function sendLobPostcard6x9(id){
   }}
 // ─── Canvas-based JPEG renderers for Lob (no HTML renderer dependency) ───────
 // Helper: load an image URL as an Image element (handles CORS)
-
-

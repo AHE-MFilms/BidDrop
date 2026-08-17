@@ -424,7 +424,114 @@ function openSettings(){
   // Load trade-specific settings (Build 10)
   if(typeof loadTradeStatusSettings === 'function') loadTradeStatusSettings();
   if(typeof loadTradePostcardCopySettings === 'function') loadTradePostcardCopySettings();
+  if(typeof loadSenderProfile === 'function') loadSenderProfile();
 }
+
+let _senderPhotoData = null;
+
+function loadSenderProfile(){
+  const p = currentProfile || {};
+  const set = (id, value) => { const el = document.getElementById(id); if(el) el.value = value || ''; };
+  set('sender-name', p.sender_name || p.name || p.full_name || '');
+  set('sender-title', p.sender_title || (p.role === 'admin' ? 'Team Administrator' : 'Roofing Specialist'));
+  set('sender-phone', p.sender_phone || p.phone || '');
+  populateSenderLayoutOptions(p.sender_layout || 'company-default');
+  const enabled = document.getElementById('sender-profile-enabled');
+  if(enabled) enabled.checked = p.sender_profile_enabled !== false;
+  _senderPhotoData = null;
+  renderSenderPhotoPreview(p.sender_photo_url || null);
+}
+
+function renderSenderPhotoPreview(url){
+  const target = document.getElementById('sender-photo-preview');
+  if(!target) return;
+  target.innerHTML = url
+    ? `<img src="${url}" alt="Your sender profile" style="width:100%;height:100%;object-fit:cover;">`
+    : '&#128100;';
+}
+
+function previewSenderPhoto(input){
+  const file = input && input.files && input.files[0];
+  if(!file) return;
+  if(file.size > 3 * 1024 * 1024){ toast('Please use a photo smaller than 3 MB.', 'error'); input.value = ''; return; }
+  const reader = new FileReader();
+  reader.onload = () => { _senderPhotoData = reader.result; renderSenderPhotoPreview(_senderPhotoData); };
+  reader.readAsDataURL(file);
+}
+
+function getActiveSenderProfile(){
+  const p = currentProfile || {};
+  if(p.sender_profile_enabled === false) return null;
+  const layout = p.sender_layout || 'company-default';
+  const design = layout !== 'company-default' && typeof getDesigns === 'function'
+    ? (getDesigns() || []).find(d => d.id === layout) : null;
+  return {
+    user_id: currentUser?.id || null,
+    name: p.sender_name || p.name || p.full_name || '',
+    title: p.sender_title || (p.role === 'admin' ? 'Team Administrator' : 'Roofing Specialist'),
+    phone: p.sender_phone || p.phone || '',
+    photo_url: p.sender_photo_url || null,
+    layout,
+    layout_data: design ? {
+      id: design.id,
+      url: design.url || null,
+      back_url: design.backUrl || null,
+      back_overrides: design.backOverrides || null
+    } : null
+  };
+}
+
+function populateSenderLayoutOptions(selected){
+  const select = document.getElementById('sender-layout');
+  if(!select) return;
+  const designs = typeof getDesigns === 'function' ? (getDesigns() || []) : [];
+  select.innerHTML = '<option value="company-default">Company Default</option>'
+    + designs.map(d => '<option value="'+String(d.id).replace(/"/g,'&quot;')+'">'+escHtml(d.name || 'Approved postcard layout')+'</option>').join('');
+  select.value = [...select.options].some(o => o.value === selected) ? selected : 'company-default';
+}
+
+async function saveSenderProfile(){
+  if(!currentUser || !currentAccount || !sb) return;
+  const button = document.getElementById('sender-profile-save');
+  const note = document.getElementById('sender-profile-note');
+  const read = (id) => (document.getElementById(id)?.value || '').trim();
+  const payload = {
+    sender_name: read('sender-name').slice(0,80),
+    sender_title: read('sender-title').slice(0,80),
+    sender_phone: read('sender-phone').slice(0,20),
+    sender_layout: read('sender-layout') || 'company-default',
+    sender_profile_enabled: document.getElementById('sender-profile-enabled')?.checked !== false
+  };
+  if(!payload.sender_name){ toast('Add the name you want to appear on postcards.', 'error'); return; }
+  if(button){ button.disabled = true; button.textContent = 'Saving…'; }
+  if(note){ note.style.display = 'none'; }
+  try {
+    if(_senderPhotoData){
+      const uploaded = await adminAPI('upload-photo', {
+        path: `sender-profiles/${currentAccount.id}/${currentUser.id}.jpg`,
+        dataUrl: _senderPhotoData,
+        mimeType: 'image/jpeg'
+      });
+      payload.sender_photo_url = uploaded.url;
+    }
+    const { data, error } = await sb.from('user_profiles')
+      .update(payload).eq('id', currentUser.id).eq('account_id', currentAccount.id).select('*').single();
+    if(error) throw error;
+    currentProfile = { ...(currentProfile || {}), ...(data || payload) };
+    const teamIndex = (S.team || []).findIndex(member => member.id === currentUser.id);
+    if(teamIndex >= 0) S.team[teamIndex] = { ...S.team[teamIndex], ...currentProfile };
+    _senderPhotoData = null;
+    if(note){ note.textContent = '✓ Your sender profile is ready for postcards you create.'; note.style.color = '#22c55e'; note.style.display = 'block'; }
+    toast('Sender profile saved', 'success');
+  } catch(error) {
+    console.error('[BidDrop] sender profile save:', error);
+    if(note){ note.textContent = 'Could not save profile: ' + (error.message || 'Unknown error'); note.style.color = '#ef4444'; note.style.display = 'block'; }
+    toast('Could not save sender profile', 'error');
+  } finally {
+    if(button){ button.disabled = false; button.textContent = 'Save My Profile'; }
+  }
+}
+
 function populateEmbedCard(){
   const slug = currentAccount && currentAccount.slug;
   const noSlug = document.getElementById('embed-no-slug');

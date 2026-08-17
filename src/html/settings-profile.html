@@ -1,8 +1,40 @@
     <div class="stab-tab-pane active" id="stab-tabpane-profile">
   <!-- ── TWO-COLUMN GRID ── -->
-    <div class="stab-grid">
+	    <div class="stab-grid">
 
-      <!-- LEFT: Team Members -->
+      <!-- Personal sender profile: owns field-rep identity, not company brand settings. -->
+      <div class="stab-card" id="stab-sender-profile-card">
+        <div class="stab-card-hdr" onclick="toggleStabCard('sender-profile')">
+          <span>&#128100; My Postcard Sender Profile</span>
+          <span class="stab-chevron" id="stab-chevron-sender-profile">&#9662;</span>
+        </div>
+        <div class="stab-card-body" id="stab-body-sender-profile">
+          <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:14px;">Your photo, name, title, and direct phone can appear on postcards you create. Your company logo, return address, legal details, and approved copy remain protected.</div>
+          <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px;">
+            <div id="sender-photo-preview" style="width:62px;height:62px;border-radius:50%;overflow:hidden;background:var(--card2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:26px;flex:0 0 62px;">&#128100;</div>
+            <div style="min-width:0;flex:1;">
+              <label class="fl" for="sender-photo-input">Your Photo</label>
+              <input id="sender-photo-input" type="file" accept="image/jpeg,image/png,image/webp" style="font-size:12px;color:var(--muted);max-width:100%;" onchange="previewSenderPhoto(this)">
+              <div style="font-size:10px;color:var(--muted);margin-top:5px;">Square headshot recommended. JPG, PNG, or WebP.</div>
+            </div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl" for="sender-name">Name on Postcard</label><input class="fi" id="sender-name" maxlength="80" placeholder="Jordan Smith"></div>
+            <div class="fg"><label class="fl" for="sender-title">Title</label><input class="fi" id="sender-title" maxlength="80" placeholder="Roofing Specialist"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl" for="sender-phone">Direct Phone</label><input class="fi" id="sender-phone" maxlength="20" placeholder="(555) 555-0199" oninput="autoFormatPhone(this)"></div>
+            <div class="fg"><label class="fl" for="sender-layout">Approved Postcard Layout</label><select class="fi" id="sender-layout"><option value="company-default">Company Default</option><option value="estimate-reveal">Estimate Reveal</option><option value="storm-impact">Storm Impact</option></select></div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:5px;">
+            <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px;cursor:pointer;"><input type="checkbox" id="sender-profile-enabled" checked> Use my profile on postcards I create</label>
+            <button onclick="saveSenderProfile()" id="sender-profile-save" style="background:var(--accent);color:#fff;border:none;border-radius:7px;padding:9px 15px;font-size:12px;font-weight:700;cursor:pointer;">Save My Profile</button>
+          </div>
+          <div id="sender-profile-note" style="display:none;margin-top:10px;font-size:12px;"></div>
+        </div>
+      </div>
+
+	      <!-- LEFT: Team Members -->
       <div class="stab-card" id="stab-team-card">
         <div class="stab-card-hdr" onclick="toggleStabCard('team')">
           <span>&#128101; Team Members</span>

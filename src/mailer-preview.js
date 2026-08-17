@@ -13,17 +13,19 @@ function updatePreview(){
   const owner  = document.getElementById('e-owner').value || 'Homeowner';
   const addr   = document.getElementById('e-addr').value  || '';
   const cfg    = S.cfg;
+  const sender = typeof getActiveSenderProfile === 'function' ? getActiveSenderProfile() : null;
   const co     = cfg.companyName   || 'Your Roofing Co';
   const coAddr = cfg.companyAddr   || '';
-  const ph     = cfg.companyPhone  || '(000) 000-0000';
+  const ph     = sender?.phone || cfg.companyPhone  || '(000) 000-0000';
   const accent = cfg.brandColor    || '#F25C05';
-  const rep    = cfg.repName       || co;
-  const repTitle = cfg.repTitle    || 'Roofing Consultant';
+  const rep    = sender?.name || cfg.repName || co;
+  const repTitle = sender?.title || cfg.repTitle || 'Roofing Consultant';
   const lic    = cfg.licenseNum    || '';
   const yrs    = cfg.yearsInBusiness || '5+';
   const warr   = cfg.warrantyYears || '10';
   const logoUrl = (cfg.logoData && cfg.logoData.startsWith('http')) ? cfg.logoData : '';
-  const hsUrl   = (cfg.headshotData && cfg.headshotData.startsWith('http')) ? cfg.headshotData : '';
+  const hsSource = sender?.photo_url || cfg.headshotData || '';
+  const hsUrl   = hsSource && hsSource.startsWith('http') ? hsSource : '';
   const bookUrl = cfg.bookingUrl || 'https://biddrop.us';
 
   // QR code
@@ -570,4 +572,3 @@ async function _refreshPostcardPreview(){
   }
   setTimeout(_scalePostcardPreviews, 80);
 }
-

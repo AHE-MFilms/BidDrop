@@ -453,11 +453,12 @@ async function loadQueueFromSupabase(){
       structures: structs, total: row.total,
       status: row.status, lobId: row.lob_id,
       mailedAt: row.mailed_at, at: row.created_at,
-      source: row.source||null,
-      photo_url: meta.photo_url||null,
-      photo_data: meta.photo_data||null,
-      pinId: meta.pin_id||null
-    };
+	      source: row.source||null,
+	      photo_url: meta.photo_url||null,
+	      photo_data: meta.photo_data||null,
+	      pinId: meta.pin_id||null,
+	      sender_profile: meta.sender_profile||null
+	    };
   });
 }
 
@@ -465,7 +466,13 @@ async function sbSaveQueueItem(item){
   if(!currentAccount) return;
   // Embed photo_url, photo_data, pin_id inside structures as _meta (no extra columns needed)
   const structs = (item.structures||[]).filter(s=>s&&s.id!=='_meta');
-  const meta = {id:'_meta', photo_url: item.photo_url||null, photo_data: item.photo_data||null, pin_id: item.pinId||null};
+  // Freeze the sender at queue time. Later profile updates must not change an approved or mailed piece.
+  const senderProfile = item.sender_profile || (typeof getActiveSenderProfile === 'function' ? getActiveSenderProfile() : null);
+  if(senderProfile) item.sender_profile = senderProfile;
+  const meta = {
+    id:'_meta', photo_url: item.photo_url||null, photo_data: item.photo_data||null, pin_id: item.pinId||null,
+    sender_profile: senderProfile || null
+  };
   // Capture rep name at send time for analytics attribution
   const repName = item.rep_name || currentProfile?.name || currentProfile?.full_name || currentUser?.email?.split('@')[0] || null;
   const fullPayload = {
