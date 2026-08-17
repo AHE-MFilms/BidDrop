@@ -229,10 +229,13 @@ async function doForgotPassword(){
   if(!email){ msg.style.color='var(--danger)'; msg.textContent='Please enter your email address.'; return; }
   btn.textContent = 'Sending...'; btn.disabled = true; msg.textContent = '';
   try {
-    const { error } = await sb.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://biddrop.us'
+    const response = await fetch('/api/auth-reset', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
     });
-    if(error) throw error;
+    const data = await response.json().catch(() => ({}));
+    if(!response.ok) throw new Error(data.error || 'Could not send reset email.');
     msg.style.color = '#1a7f4b';
     msg.textContent = '✅ Reset link sent! Check your email — and your spam! 😊';
     btn.textContent = 'Sent!';
