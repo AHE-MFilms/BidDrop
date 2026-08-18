@@ -98,8 +98,9 @@ const PLAN_TIERS = {
   starter: 0,
   // legacy paid tiers — all treated as full access (monthly)
   pro: 1, agency: 1, enterprise: 1,
-  // new plan names
-  monthly: 1
+  // current paid plans
+  monthly: 1,
+  omnipresent: 1
 };
 function currentPlanTier(){
   const plan = (S.cfg && S.cfg.plan) ? S.cfg.plan.toLowerCase() : 'payg';
@@ -113,7 +114,7 @@ function isPlanAtLeast(minPlan){
 }
 // Show an upgrade prompt when a feature is gated
 function showPlanUpgradePrompt(featureName, requiredPlan){
-  const planNames = { payg: 'Pay-as-you-go (Free)', monthly: 'Monthly ($99/mo)', starter: 'Pay-as-you-go (Free)', pro: 'Monthly ($99/mo)', agency: 'Monthly ($99/mo)' };
+  const planNames = { payg: 'Pay-as-you-go (Free)', monthly: 'Monthly ($99/mo)', omnipresent: 'Omnipresent', starter: 'Pay-as-you-go (Free)', pro: 'Monthly ($99/mo)', agency: 'Monthly ($99/mo)', enterprise: 'Monthly ($99/mo)' };
   const currentPlan = (S.cfg && S.cfg.plan) ? S.cfg.plan : 'payg';
   toast(
     `🔒 ${featureName} requires the Monthly Plan ($99/mo). You are on ${planNames[currentPlan] || currentPlan}. Contact support@biddrop.io to upgrade.`,

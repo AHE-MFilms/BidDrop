@@ -9,12 +9,17 @@ const { sbFetch } = require('./_admin-shared');
 
 function esc(v) { return encodeURIComponent(String(v || '')); }
 function hashSecret(value) { return crypto.createHash('sha256').update(value).digest('hex'); }
+function isMonthlyOrHigher(plan) { return ['monthly', 'omnipresent', 'pro', 'agency', 'enterprise'].includes(String(plan || '').toLowerCase()); }
 
 async function handle(action, req, res, ctx) {
   const { isAdmin, effectiveAccountId } = ctx;
   if (!['salesrabbit-connection', 'salesrabbit-create-connection', 'salesrabbit-disable-connection', 'salesrabbit-map-user'].includes(action)) return false;
   if (!isAdmin) { res.status(403).json({ error: 'Account administrators only' }); return true; }
   if (!effectiveAccountId) { res.status(400).json({ error: 'No account selected' }); return true; }
+  const planR = await sbFetch(`accounts?id=eq.${esc(effectiveAccountId)}&select=plan`);
+  if (!planR.ok) { res.status(500).json({ error: 'Could not verify account plan' }); return true; }
+  const plan = (await planR.json())[0]?.plan;
+  if (!isMonthlyOrHigher(plan)) { res.status(403).json({ error: 'SalesRabbit automatic import requires the Monthly Plan ($99/mo) or a higher plan.' }); return true; }
 
   if (action === 'salesrabbit-connection') {
     const [acctR, teamR] = await Promise.all([
