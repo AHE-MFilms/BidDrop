@@ -135,9 +135,43 @@ async function doDeletePin(){
 }
 
 function cycleStatus(id){
+  openPinStatusPicker(id);
+}
+
+function openPinStatusPicker(id){
   const p=S.pins.find(x=>x.id===id);if(!p)return;
-  const opts=['pinned','mailed','emailed','called','responded','quoted','signed','not_interested'];
-  p.status=opts[(opts.indexOf(p.status)+1)%opts.length];
+  const existing=document.getElementById('pin-status-picker');
+  if(existing) existing.remove();
+  const options=[
+    ['pinned','📍 Pinned'],['mailed','📬 Mailed'],['emailed','📧 Emailed'],['called','📞 Called'],
+    ['responded','💬 Responded'],['quoted','📋 Quoted'],['signed','✅ Signed'],['not_interested','❌ Not Interested']
+  ];
+  const modal=document.createElement('div');
+  modal.id='pin-status-picker';
+  modal.style.cssText='position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:16px;';
+  modal.innerHTML='<div style="width:100%;max-width:360px;background:#182335;border:1px solid #3B4B63;border-radius:14px;padding:20px;box-shadow:0 24px 64px rgba(0,0,0,.55);">'
+    +'<div style="font-family:var(--font-h);font-size:16px;font-weight:700;color:#fff;margin-bottom:5px;">Update Lead Status</div>'
+    +'<div style="font-size:12px;color:#A8BECE;line-height:1.45;margin-bottom:14px;">Choose the correct status for '+escHtml(p.address||'this property')+'. You can change it again later.</div>'
+    +'<select id="pin-status-picker-select" style="width:100%;box-sizing:border-box;background:#0F1623;border:1px solid #41546D;border-radius:8px;color:#fff;padding:10px 11px;font-size:13px;margin-bottom:14px;">'
+    +options.map(function(o){return '<option value="'+o[0]+'"'+(p.status===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>'
+    +'<div style="display:flex;gap:8px;"><button id="pin-status-picker-cancel" style="flex:1;background:transparent;border:1px solid #52657B;border-radius:8px;padding:10px;color:#D5E1EF;font-weight:700;cursor:pointer;">Cancel</button><button id="pin-status-picker-save" style="flex:1;background:#F25C05;border:none;border-radius:8px;padding:10px;color:#fff;font-weight:800;cursor:pointer;">Save Status</button></div>'
+    +'</div>';
+  const close=function(){modal.remove();};
+  modal.addEventListener('click',function(e){if(e.target===modal) close();});
+  modal.querySelector('#pin-status-picker-cancel').onclick=close;
+  modal.querySelector('#pin-status-picker-save').onclick=function(){
+    const next=modal.querySelector('#pin-status-picker-select').value;
+    close();
+    setPinStatus(id,next);
+  };
+  document.body.appendChild(modal);
+}
+
+function setPinStatus(id,nextStatus){
+  const p=S.pins.find(x=>x.id===id);if(!p||!nextStatus)return;
+  const priorStatus=p.status||'pinned';
+  if(priorStatus===nextStatus){toast('Status is already '+sLabel(nextStatus),'info');return;}
+  p.status=nextStatus;
   if(markers[id]){
     if(clusterGroup) clusterGroup.removeLayer(markers[id]);
     else map.removeLayer(markers[id]);
@@ -147,7 +181,7 @@ function cycleStatus(id){
   sbUpdatePinStatus(id,p.status).catch(e=>console.error('Status:',e));
   // Sync status change to GHL (fire-and-forget)
   ghlSyncPinStatus(p).catch(e=>console.warn('GHL sync:',e));
-  save();toast('Status → '+sLabel(p.status),'info');
+  save();toast(sLabel(priorStatus)+' → '+sLabel(p.status),'success');
   // ── Auto-prompt Nearby Campaign when a job is marked Signed ──
   if(p.status==='signed') _promptSignedNearbyCampaign(id);
 }
@@ -297,7 +331,7 @@ function goEstFromPin(id){
     if(cachedSolar && cachedSolar.status === 'ok'){
       showSolarBanner(cachedSolar);
       const mainStruct = structures[0];
-      if(mainStruct && (!mainStruct.sqft || mainStruct.sqft===0)) applySolarToEstimate();
+      if(mainStruct && (!mainStruct.sqft || mainStruct.sqft===0) && !solarNeedsManualVerification(cachedSolar)) applySolarToEstimate();
     } else {
       fetchSolarData(p.lat, p.lng).then(function(solarData){
         if(solarData && solarData.status==='ok'){
@@ -305,7 +339,7 @@ function goEstFromPin(id){
           showSolarBanner(solarData);
           // Auto-apply only if sqft is still 0 (not yet manually entered)
           const mainStruct = structures[0];
-          if(mainStruct && (!mainStruct.sqft || mainStruct.sqft===0)){
+          if(mainStruct && (!mainStruct.sqft || mainStruct.sqft===0) && !solarNeedsManualVerification(solarData)){
             applySolarToEstimate();
           }
         } else {

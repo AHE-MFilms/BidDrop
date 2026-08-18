@@ -794,7 +794,7 @@ function loadEstFromPicker(){
         showSolarBanner(solarData);
         // Auto-apply only if sqft is still 0
         const mainStruct = structures[0];
-        if(mainStruct && (!mainStruct.sqft || mainStruct.sqft===0)){
+        if(mainStruct && (!mainStruct.sqft || mainStruct.sqft===0) && !solarNeedsManualVerification(solarData)){
           applySolarToEstimate();
         }
       } else {

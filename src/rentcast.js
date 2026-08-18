@@ -142,6 +142,12 @@ function hideSolarUnavailableBanner(){
   const ub = document.getElementById('solar-unavailable-banner');
   if(ub) ub.style.display='none';
 }
+function solarNeedsManualVerification(data){
+  if(!data) return true;
+  if(typeof data.needsManualVerification === 'boolean') return data.needsManualVerification;
+  const year = Number(data.imageryDate && data.imageryDate.year) || 0;
+  return !year || (new Date().getFullYear() - year) >= 5;
+}
 function showSolarBanner(data){
   const banner = document.getElementById('solar-roof-banner');
   if(!banner) return;
@@ -162,10 +168,19 @@ function showSolarBanner(data){
     shadingEl.textContent  = data.roofShadingLabel;
     shadingEl.style.color  = data.roofShadingColor || '#22C55E';
   }
+  const needsVerification = solarNeedsManualVerification(data);
+  const verifyEl = document.getElementById('solar-verification-note');
   if(dateEl && data.imageryDate){
     const d = data.imageryDate;
-    dateEl.textContent = 'Imagery: ' + (d.month||'') + '/' + (d.year||'');
+    dateEl.textContent = 'Imagery: ' + (d.month||'') + '/' + (d.year||'') + (needsVerification ? ' · verify manually' : '');
+    dateEl.style.color = needsVerification ? '#FCD34D' : 'var(--muted)';
   } else if(dateEl) dateEl.textContent = '';
+  if(verifyEl){
+    verifyEl.style.display = needsVerification ? 'block' : 'none';
+    verifyEl.textContent = needsVerification
+      ? '⚠ This satellite image is old or undated. Trace the roof or edit the area before saving an estimate.'
+      : 'Satellite estimate — confirm the roof outline before saving.';
+  }
 
   // ── Solar potential row — only show when Solar trade is active ──
   const _isRoofingTrade = (window._activeTrade || 'roofing') === 'roofing';
@@ -250,9 +265,16 @@ function hideSolarBanner(){
   window._solarData = null;
 }
 
-function applySolarToEstimate(){
+function applySolarToEstimate(forceApply){
   const data = window._solarData;
   if(!data || data.status !== 'ok') return;
+  if(solarNeedsManualVerification(data) && !forceApply){
+    bdConfirm(
+      'The available satellite imagery is old or undated. It may not match the current roof. Use Measure Roof or edit the area for the most reliable estimate.\n\nUse this satellite estimate anyway?',
+      function(){ applySolarToEstimate(true); }
+    );
+    return;
+  }
   // Apply sqft and pitch to the first (Main House) structure
   if(!structures.length) addStructure(0,'Main House',null);
   const s = structures[0];
@@ -267,7 +289,7 @@ function applySolarToEstimate(){
     const solarRow = document.getElementById('solar-addon-row');
     if(solarRow) solarRow.style.display = 'block';
   }
-  toast('🛰 Satellite measurement applied — ' + data.sqft.toLocaleString() + ' sq ft, ' + data.pitchLabel + ' pitch' + (data.systemKw ? ' · ☀️ ' + data.systemKw + ' kW solar potential' : ''), 'success');
+  toast('🛰 Satellite estimate applied — ' + data.sqft.toLocaleString() + ' sq ft, ' + data.pitchLabel + ' pitch' + (data.systemKw ? ' · ☀️ ' + data.systemKw + ' kW solar potential' : ''), 'success');
 }
 
 function s_clearSolarFilled(sid){

@@ -97,6 +97,11 @@ export default async function handler(req, res) {
     // ── Roof Measurements ──────────────────────────────────────────────────────
     const roofAreaM2 = sp.wholeRoofStats?.areaMeters2 || 0;
     const sqft = Math.round(roofAreaM2 * 10.7639);
+    const imageryYear = Number(data.imageryDate?.year) || null;
+    const imageryAgeYears = imageryYear ? Math.max(0, new Date().getUTCFullYear() - imageryYear) : null;
+    // A satellite model is useful as a starting point, but imagery that is missing
+    // or five or more years old must be manually verified before it prices a roof.
+    const needsManualVerification = imageryAgeYears === null || imageryAgeYears >= 5;
 
     // ── Roof Segments with shading ─────────────────────────────────────────────
     const rawSegments = (sp.roofSegmentStats || []).map(seg => {
@@ -169,6 +174,8 @@ export default async function handler(req, res) {
       dominantTiltDeg: Math.round(dominantTilt * 10) / 10,
       roofAreaM2: Math.round(roofAreaM2 * 10) / 10,
       imageryDate: data.imageryDate || null,
+      imageryAgeYears,
+      needsManualVerification,
 
       // Panel configuration
       maxPanels,

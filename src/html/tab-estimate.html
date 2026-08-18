@@ -667,7 +667,7 @@
       <div id="solar-roof-banner" style="display:none;background:linear-gradient(135deg,#0a1628,#0f2a1a);border:1px solid rgba(242,92,5,.35);border-radius:10px;padding:12px 14px;margin-bottom:10px;">
         <!-- Header row -->
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:#F25C05;">&#128752; SATELLITE ROOF &amp; SOLAR ANALYSIS</div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:#F25C05;">&#128752; SATELLITE ROOF ESTIMATE</div>
           <div id="solar-imagery-date" style="font-size:9px;color:var(--muted);"></div>
         </div>
         <!-- Row 1: Roof measurements -->
@@ -693,6 +693,7 @@
             <div style="font-size:8px;color:var(--muted);">roof quality</div>
           </div>
         </div>
+        <div id="solar-verification-note" style="display:none;background:rgba(252,211,77,.09);border:1px solid rgba(252,211,77,.3);border-radius:7px;padding:7px 9px;margin:-2px 0 10px;color:#FCD34D;font-size:10px;line-height:1.4;"></div>
         <!-- Row 2: Solar potential (hidden until data available) -->
         <div id="solar-potential-row" style="display:none;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:8px;padding:9px 10px;margin-bottom:10px;">
           <div style="font-size:9px;font-weight:700;letter-spacing:.6px;color:#22C55E;margin-bottom:8px;">&#9728;&#65039; SOLAR POTENTIAL (Project Sunroof)</div>
@@ -732,7 +733,7 @@
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
           <button onclick="applySolarToEstimate()" style="background:#F25C05;border:none;border-radius:7px;padding:7px 14px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">&#10003; Apply to Estimate</button>
           <button id="solar-autofill-kw-btn" onclick="applySolarKwToAddon()" style="display:none;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);border-radius:7px;padding:7px 12px;color:#22C55E;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">&#9728;&#65039; Add Solar Add-On (<span id="solar-autofill-kw-label">—</span> kW)</button>
-          <span style="font-size:10px;color:var(--muted);">Auto-fills sq ft &amp; pitch</span>
+          <span style="font-size:10px;color:var(--muted);">Applies sq ft &amp; pitch after your review</span>
         </div>
       </div>
       <!-- Equity snapshot badge (shown after RentCast lookup) -->

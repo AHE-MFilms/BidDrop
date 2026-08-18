@@ -654,11 +654,12 @@ function addMarker(pin){
     </div>` : '';
   // Solar measurement row — shown only if cached data exists (fetched on-demand via estimator)
   const _solar = pin._solarCache || (pin.solarKw ? { status:'ok', sqft: null, squares: null, pitchLabel: null, systemKw: pin.solarKw } : null);
+  const _solarNeedsManual = _solar && typeof solarNeedsManualVerification === 'function' && solarNeedsManualVerification(_solar);
   const _solarContent = _solar && _solar.status==='ok' && _solar.sqft
-    ? _solar.sqft.toLocaleString()+' sq ft &nbsp;&middot;&nbsp; <span style="color:#F25C05;font-weight:700;">'+_solar.squares+' sq</span> &nbsp;&middot;&nbsp; <span style="color:#22C55E;font-weight:700;">'+_solar.pitchLabel+' pitch</span>'
+    ? _solar.sqft.toLocaleString()+' sq ft &nbsp;&middot;&nbsp; <span style="color:#F25C05;font-weight:700;">'+_solar.squares+' sq</span> &nbsp;&middot;&nbsp; <span style="color:#22C55E;font-weight:700;">'+_solar.pitchLabel+' pitch</span>'+(_solarNeedsManual ? '<div style="font-size:9px;color:#FCD34D;margin-top:4px;">⚠ Verify by tracing the roof before pricing.</div>' : '')
     : (pin.solarKw ? '<span style="color:#F59E0B;font-weight:700;">☀️ '+pin.solarKw+' kW solar potential</span>' : null);
   const _popupSolar = _solarContent ? `<div id="solar-row-${pid}" style="background:rgba(242,92,5,.1);border:1px solid rgba(242,92,5,.3);border-radius:7px;padding:7px 10px;margin-bottom:7px;">
-    <div style="font-size:9px;font-weight:700;letter-spacing:.6px;color:#F25C05;margin-bottom:3px;">🛰 SATELLITE MEASUREMENT</div>
+    <div style="font-size:9px;font-weight:700;letter-spacing:.6px;color:#F25C05;margin-bottom:3px;">🛰 SATELLITE ESTIMATE</div>
     <div id="solar-val-${pid}" style="font-size:12px;color:#fff;font-weight:600;">${_solarContent}</div>
   </div>` : '';
   // Build property snapshot row from cached equityData
@@ -785,7 +786,8 @@ function addMarker(pin){
           // If popup is open, inject solar row directly
           const valEl = document.getElementById('solar-val-'+_sPid);
           if(valEl){
-            valEl.innerHTML = data.sqft.toLocaleString()+' sq ft &nbsp;&middot;&nbsp; <span style="color:#F25C05;font-weight:700;">'+data.squares+' sq</span> &nbsp;&middot;&nbsp; <span style="color:#22C55E;font-weight:700;">'+data.pitchLabel+' pitch</span>';
+            const needsManual = typeof solarNeedsManualVerification === 'function' && solarNeedsManualVerification(data);
+            valEl.innerHTML = data.sqft.toLocaleString()+' sq ft &nbsp;&middot;&nbsp; <span style="color:#F25C05;font-weight:700;">'+data.squares+' sq</span> &nbsp;&middot;&nbsp; <span style="color:#22C55E;font-weight:700;">'+data.pitchLabel+' pitch</span>'+(needsManual ? '<div style="font-size:9px;color:#FCD34D;margin-top:4px;">⚠ Verify by tracing the roof before pricing.</div>' : '');
             const rowEl = document.getElementById('solar-row-'+_sPid);
             if(rowEl) rowEl.style.display = 'block';
           } else {
@@ -1081,10 +1083,11 @@ function _buildPinPopupHTML(pin){
       ? '<img src="'+pin.photo_url+'" style="width:100%;max-height:52px;object-fit:cover;border-radius:5px;margin-bottom:5px;display:block;" onerror="this.style.display=\'none\'">'
       : '';
   const _solar = pin._solarCache;
+  const _solarNeedsManual = _solar && typeof solarNeedsManualVerification === 'function' && solarNeedsManualVerification(_solar);
   const _solarContent = _solar && _solar.status==='ok' && _solar.sqft
-    ? _solar.sqft.toLocaleString()+' sq ft &nbsp;&middot;&nbsp; <span style="color:#F25C05;font-weight:700;">'+_solar.squares+' sq</span> &nbsp;&middot;&nbsp; <span style="color:#22C55E;font-weight:700;">'+_solar.pitchLabel+' pitch</span>'
+    ? _solar.sqft.toLocaleString()+' sq ft &nbsp;&middot;&nbsp; <span style="color:#F25C05;font-weight:700;">'+_solar.squares+' sq</span> &nbsp;&middot;&nbsp; <span style="color:#22C55E;font-weight:700;">'+_solar.pitchLabel+' pitch</span>'+(_solarNeedsManual ? '<div style="font-size:9px;color:#FCD34D;margin-top:3px;">⚠ Verify before pricing.</div>' : '')
     : null;
-  const _popupSolar = _solarContent ? `<div id="solar-row-${pid}" style="background:rgba(242,92,5,.08);border:1px solid rgba(242,92,5,.25);border-radius:6px;padding:4px 8px;margin-bottom:5px;display:flex;align-items:center;gap:6px;"><span style="font-size:9px;font-weight:700;color:#F25C05;white-space:nowrap;">🛰 SQFT</span><span id="solar-val-${pid}" style="font-size:11px;color:#fff;font-weight:600;">${_solarContent}</span></div>` : '';
+  const _popupSolar = _solarContent ? `<div id="solar-row-${pid}" style="background:rgba(242,92,5,.08);border:1px solid rgba(242,92,5,.25);border-radius:6px;padding:4px 8px;margin-bottom:5px;display:flex;align-items:center;gap:6px;"><span style="font-size:9px;font-weight:700;color:#F25C05;white-space:nowrap;">🛰 EST.</span><span id="solar-val-${pid}" style="font-size:11px;color:#fff;font-weight:600;">${_solarContent}</span></div>` : '';
   const _eq2 = pin.equityData;
   const _propSnap = _eq2 ? buildPropertySnapHTML(pid, _eq2) : `<div id="prop-snap-${pid}" style="background:rgba(34,197,94,.06);border:1px solid #22C55E22;border-radius:6px;padding:4px 8px;margin-bottom:5px;font-size:10px;color:#A8BECE;">\ud83c\udfe0 <span id="prop-snap-val-${pid}">Loading property data\u2026</span></div>`;
   // Owner name from estimate or equity data (shown even before contact lookup)
