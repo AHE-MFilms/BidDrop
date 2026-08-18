@@ -353,6 +353,7 @@ function openSettings(){
   document.getElementById('s-hspos').value=c.headshotPos||'30';
   document.getElementById('s-bookingurl').value=c.bookingUrl||'';
   if(typeof loadCalendlyStatus==='function') loadCalendlyStatus();
+  if(typeof loadSalesRabbitIntegration==='function') loadSalesRabbitIntegration();
   document.getElementById('s-lead-alert-email').value=c.leadAlertEmail||'';
   const hp=document.getElementById('headshot-preview');
   if(hp){
@@ -931,4 +932,100 @@ function loadCalendlyStatus() {
   const el = document.getElementById('s-calendly-url');
   if (el) el.value = url;
   updateCalendlyStatus();
+}
+
+// ── SalesRabbit Incoming Lead Import ─────────────────────────────────────────
+let _salesRabbitConnection = null;
+let _salesRabbitTeam = [];
+
+async function _salesRabbitAdmin(action, payload) {
+  const session = await sb.auth.getSession();
+  const token = session && session.data && session.data.session && session.data.session.access_token;
+  if (!token) throw new Error('Please sign in again.');
+  const response = await fetch('/api/admin?action=' + encodeURIComponent(action), {
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify(Object.assign({ viewingAccountId: currentAccount && currentAccount.id }, payload || {}))
+  });
+  const data = await response.json().catch(function(){ return {}; });
+  if (!response.ok) throw new Error(data.error || 'SalesRabbit request failed');
+  return data;
+}
+
+function _salesRabbitEsc(v) {
+  return typeof escHtml === 'function' ? escHtml(String(v || '')) : String(v || '').replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; });
+}
+
+function renderSalesRabbitIntegration() {
+  const card = document.getElementById('salesrabbit-int-card');
+  if (!card) return;
+  const canManage = typeof isAdminOrAbove === 'function' && isAdminOrAbove();
+  card.style.display = canManage ? 'block' : 'none';
+  if (!canManage) return;
+  const connected = !!(_salesRabbitConnection && _salesRabbitConnection.enabled);
+  const status = document.getElementById('salesrabbit-int-status');
+  if (status) { status.textContent = connected ? '● Connected' : '● Not Connected'; status.className = 'int-status ' + (connected ? 'connected' : 'not-connected'); }
+  const create = document.getElementById('salesrabbit-create-btn');
+  if (create) create.textContent = connected ? 'Rotate Secure Webhook URL' : 'Create Secure Webhook URL';
+  const disable = document.getElementById('salesrabbit-disable-btn');
+  if (disable) disable.style.display = connected ? '' : 'none';
+  const maps = document.getElementById('salesrabbit-team-maps');
+  if (!maps) return;
+  maps.innerHTML = (_salesRabbitTeam || []).map(function(member){
+    const label = _salesRabbitEsc(member.name || member.email || 'Team member');
+    const current = _salesRabbitEsc(member.salesrabbit_user_id || '');
+    return '<div style="display:grid;grid-template-columns:minmax(110px,1fr) minmax(120px,1fr) auto;gap:7px;align-items:center;"><div style="font-size:11px;font-weight:700;color:var(--mid);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+label+'">'+label+'</div><input id="salesrabbit-user-'+member.id+'" class="fi" style="font-size:11px;padding:7px 8px;" placeholder="SalesRabbit user ID" value="'+current+'"><button onclick="saveSalesRabbitUserMap(\''+member.id+'\')" style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 9px;color:var(--mid);font-size:10px;font-weight:800;cursor:pointer;">Save</button></div>';
+  }).join('') || '<div style="font-size:11px;color:var(--muted);">No team members found.</div>';
+}
+
+async function loadSalesRabbitIntegration() {
+  const card = document.getElementById('salesrabbit-int-card');
+  if (!card || !(typeof isAdminOrAbove === 'function' && isAdminOrAbove())) return;
+  try {
+    const data = await _salesRabbitAdmin('salesrabbit-connection');
+    _salesRabbitConnection = data;
+    _salesRabbitTeam = data.team || [];
+    renderSalesRabbitIntegration();
+  } catch (err) { console.warn('[SalesRabbit]', err.message); }
+}
+
+async function createSalesRabbitConnection() {
+  const button = document.getElementById('salesrabbit-create-btn');
+  if (button) { button.disabled = true; button.textContent = 'Creating…'; }
+  try {
+    const data = await _salesRabbitAdmin('salesrabbit-create-connection');
+    _salesRabbitConnection = Object.assign({}, _salesRabbitConnection || {}, data);
+    const url = document.getElementById('salesrabbit-webhook-url');
+    const steps = document.getElementById('salesrabbit-setup-steps');
+    if (url) url.value = data.webhookUrl || '';
+    if (steps) steps.style.display = 'block';
+    renderSalesRabbitIntegration();
+    toast('Secure SalesRabbit webhook URL created. Copy it now.','success');
+  } catch (err) { toast(err.message || 'Could not create SalesRabbit connection','error'); }
+  finally { if (button) button.disabled = false; }
+}
+
+async function copySalesRabbitWebhookUrl() {
+  const input = document.getElementById('salesrabbit-webhook-url');
+  if (!input || !input.value) { toast('Create a secure webhook URL first.','info'); return; }
+  try { await navigator.clipboard.writeText(input.value); toast('Webhook URL copied.','success'); }
+  catch (err) { input.select(); document.execCommand('copy'); toast('Webhook URL copied.','success'); }
+}
+
+async function disableSalesRabbitConnection() {
+  if (!confirm('Disconnect SalesRabbit? Existing BidDrop pins will stay, but new SalesRabbit webhook events will stop importing.')) return;
+  try {
+    await _salesRabbitAdmin('salesrabbit-disable-connection');
+    _salesRabbitConnection = { enabled: false };
+    const steps = document.getElementById('salesrabbit-setup-steps'); if (steps) steps.style.display = 'none';
+    renderSalesRabbitIntegration(); toast('SalesRabbit disconnected.','success');
+  } catch (err) { toast(err.message || 'Could not disconnect SalesRabbit','error'); }
+}
+
+async function saveSalesRabbitUserMap(profileId) {
+  const input = document.getElementById('salesrabbit-user-' + profileId);
+  try {
+    const data = await _salesRabbitAdmin('salesrabbit-map-user', { profileId: profileId, salesrabbitUserId: input ? input.value : '' });
+    _salesRabbitTeam = (_salesRabbitTeam || []).map(function(member){ return member.id === profileId ? Object.assign({}, member, { salesrabbit_user_id: data.salesrabbitUserId || null }) : member; });
+    renderSalesRabbitIntegration(); toast('SalesRabbit team mapping saved.','success');
+  } catch (err) { toast(err.message || 'Could not save SalesRabbit mapping','error'); }
 }

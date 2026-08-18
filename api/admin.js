@@ -13,8 +13,9 @@ const rentcast   = require('./admin-rentcast');
 const storage    = require('./admin-storage');
 const misc       = require('./admin-misc');
 const acculynx   = require('./admin-acculynx');
+const salesrabbit = require('./admin-salesrabbit');
 
-const MODULES = [users, ghl, lob, rentcast, storage, misc, acculynx];
+const MODULES = [users, ghl, lob, rentcast, storage, misc, acculynx, salesrabbit];
 
 function cors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
