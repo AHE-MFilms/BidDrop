@@ -48,6 +48,93 @@ const SENDGRID_KEY = process.env.SENDGRID_API_KEY;
 const ADMIN_EMAIL  = 'john@mongoosefilms.com';
 const FROM_EMAIL   = 'BidDrop <support@biddrop.io>';
 const APP_URL      = (process.env.APP_URL || 'https://biddrop.us').trim();
+const GHL_API_KEY  = process.env.GHL_API_KEY;
+const GHL_LOCATION_ID = process.env.GHL_LOCATION_ID;
+const GHL_CANCELLED_TAG = 'biddrop-cancelled';
+
+// Add, rather than replace, the cancellation tag on the same AHE GHL contact
+// created during signup. This is deliberately best-effort: a GHL outage must
+// never cause Stripe's signed cancellation webhook to fail and retry.
+async function tagGhlContactCancelled({ email, companyName }) {
+  if (!GHL_API_KEY || !GHL_LOCATION_ID || !email) {
+    console.warn('[billing-webhook] GHL cancellation tag skipped: missing GHL configuration or owner email');
+    return { tagged: false, reason: 'missing_configuration_or_email' };
+  }
+
+  const legacyHeaders = {
+    Authorization: `Bearer ${GHL_API_KEY}`,
+    Version: '2021-07-28',
+    'Content-Type': 'application/json',
+  };
+
+  try {
+    const lookup = await fetch(
+      `https://services.leadconnectorhq.com/contacts/?locationId=${encodeURIComponent(GHL_LOCATION_ID)}&query=${encodeURIComponent(email)}&limit=20`,
+      { headers: legacyHeaders }
+    );
+    const lookupData = await lookup.json().catch(() => ({}));
+    let contact = (lookupData.contacts || []).find(c => String(c.email || '').trim().toLowerCase() === String(email).trim().toLowerCase()) || null;
+
+    // An old signup may predate the GHL connection. Create one clean account-owner
+    // contact in that exceptional case so a cancellation never disappears silently.
+    if (!contact) {
+      const nameParts = String(companyName || 'BidDrop Customer').trim().split(/\s+/);
+      const create = await fetch('https://services.leadconnectorhq.com/contacts/', {
+        method: 'POST',
+        headers: legacyHeaders,
+        body: JSON.stringify({
+          firstName: nameParts[0] || 'BidDrop',
+          lastName: nameParts.slice(1).join(' ') || 'Customer',
+          email,
+          companyName: companyName || '',
+          locationId: GHL_LOCATION_ID,
+          tags: [GHL_CANCELLED_TAG],
+          source: 'BidDrop Subscription Cancellation',
+        }),
+      });
+      const createData = await create.json().catch(() => ({}));
+      if (!create.ok) throw new Error(`GHL contact create failed ${create.status}: ${JSON.stringify(createData).slice(0, 300)}`);
+      console.log('[billing-webhook] Created and tagged missing GHL contact for cancelled BidDrop account:', createData?.contact?.id || 'unknown');
+      return { tagged: true, created: true };
+    }
+
+    const tagResp = await fetch(`https://services.leadconnectorhq.com/contacts/${encodeURIComponent(contact.id)}/tags`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${GHL_API_KEY}`,
+        Version: 'v3',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ tags: [GHL_CANCELLED_TAG] }),
+    });
+    const tagData = await tagResp.json().catch(() => ({}));
+    if (!tagResp.ok) {
+      // Some established private integrations predate the v3 tag scope. Preserve
+      // every existing tag and use the original v2021 contact API as a fallback.
+      const contactResp = await fetch(`https://services.leadconnectorhq.com/contacts/${encodeURIComponent(contact.id)}`, {
+        headers: legacyHeaders,
+      });
+      const contactData = await contactResp.json().catch(() => ({}));
+      if (!contactResp.ok) throw new Error(`GHL tag add failed ${tagResp.status}; fallback contact read failed ${contactResp.status}`);
+      const existingTags = Array.isArray(contactData.contact?.tags) ? contactData.contact.tags : (Array.isArray(contactData.tags) ? contactData.tags : []);
+      const mergedTags = Array.from(new Set([...existingTags, GHL_CANCELLED_TAG]));
+      const fallback = await fetch(`https://services.leadconnectorhq.com/contacts/${encodeURIComponent(contact.id)}`, {
+        method: 'PUT',
+        headers: legacyHeaders,
+        body: JSON.stringify({ tags: mergedTags }),
+      });
+      const fallbackData = await fallback.json().catch(() => ({}));
+      if (!fallback.ok) throw new Error(`GHL legacy tag fallback failed ${fallback.status}: ${JSON.stringify(fallbackData).slice(0, 300)}`);
+      console.warn('[billing-webhook] Used legacy GHL tag fallback for contact:', contact.id);
+      return { tagged: true, contactId: contact.id, fallback: true };
+    }
+    console.log('[billing-webhook] Added biddrop-cancelled tag to GHL contact:', contact.id);
+    return { tagged: true, contactId: contact.id };
+  } catch (error) {
+    console.error('[billing-webhook] GHL cancellation tag failed:', error.message);
+    return { tagged: false, reason: error.message };
+  }
+}
 
 // Monthly credit allotments per plan (after trial, once billing starts)
 const PLAN_MONTHLY_CREDITS = {
@@ -347,6 +434,18 @@ export default async function handler(req, res) {
 
       console.log(`[billing-webhook] Account deactivated after subscription deletion: ${companyName}`);
 
+      const { data: owners, error: ownerError } = await supabase
+        .from('user_profiles')
+        .select('email')
+        .eq('account_id', account.id)
+        .eq('role', 'admin')
+        .limit(1);
+      if (ownerError) console.warn('[billing-webhook] Could not load account owner for GHL cancellation tag:', ownerError.message);
+      const ghlTagResult = await tagGhlContactCancelled({
+        email: owners?.[0]?.email || null,
+        companyName,
+      });
+
       // Notify admin
       const adminHtml = `
         <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;">
@@ -372,6 +471,7 @@ export default async function handler(req, res) {
         account_id: account.id,
         account_name: companyName,
         action: 'deactivated',
+        ghl_cancellation_tagged: ghlTagResult.tagged,
       });
 
     } catch (err) {
