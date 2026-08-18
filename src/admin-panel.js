@@ -294,6 +294,10 @@ async function renderAdminPanel(){
       const accounts = Array.isArray(d.accounts) ? d.accounts : [];
       const profiles = Array.isArray(d.profiles) ? d.profiles : [];
       el.innerHTML = renderSuperAdminPanel(accounts, profiles);
+      setTimeout(() => {
+        updateAdminStatusTabs();
+        filterAdminAccounts();
+      }, 0);
     } else if(isAdminOrAbove()){
       // Account admin sees their users
       const {data:profiles} = await sb.from('user_profiles').select('*').eq('account_id', currentAccount.id);
@@ -309,6 +313,34 @@ async function renderAdminPanel(){
 
 // Store admin panel data for live filtering
 let _adminPanelData = null;
+let _adminStatusTab = 'active';
+
+function setAdminStatusTab(tab){
+  if(!['active','inactive','all'].includes(tab)) return;
+  _adminStatusTab = tab;
+  updateAdminStatusTabs();
+  filterAdminAccounts();
+}
+
+function updateAdminStatusTabs(){
+  if(!_adminPanelData) return;
+  const accounts = _adminPanelData.clientAccounts || [];
+  const counts = {
+    active: accounts.filter(a => a.active !== false).length,
+    inactive: accounts.filter(a => a.active === false).length,
+    all: accounts.length,
+  };
+  const labels = { active: 'Active', inactive: 'Inactive / Cancelled', all: 'All Accounts' };
+  ['active','inactive','all'].forEach(tab => {
+    const btn = document.getElementById('admin-status-tab-'+tab);
+    if(!btn) return;
+    const selected = tab === _adminStatusTab;
+    btn.style.background = selected ? (tab === 'inactive' ? 'rgba(239,68,68,.14)' : 'rgba(242,92,5,.16)') : 'transparent';
+    btn.style.borderColor = selected ? (tab === 'inactive' ? 'rgba(239,68,68,.65)' : 'rgba(242,92,5,.7)') : 'var(--border)';
+    btn.style.color = selected ? (tab === 'inactive' ? '#f87171' : 'var(--accent)') : 'var(--mid)';
+    btn.innerHTML = labels[tab] + ' <span style="opacity:.8;font-size:10px;">' + counts[tab] + '</span>';
+  });
+}
 
 function filterAdminAccounts(){
   if(!_adminPanelData) return;
@@ -316,14 +348,14 @@ function filterAdminAccounts(){
   const q = (document.getElementById('admin-search')?.value||'').toLowerCase().trim();
   const sort = document.getElementById('admin-sort')?.value || 'name_asc';
   const planFilter = document.getElementById('admin-filter-plan')?.value || 'all';
-  const statusFilter = document.getElementById('admin-filter-status')?.value || 'all';
+  const statusTab = _adminStatusTab || 'active';
 
   let filtered = clientAccounts.filter(a=>{
     const name = (a.company_name||a.name||'').toLowerCase();
     if(q && !name.includes(q)) return false;
     if(planFilter !== 'all' && (a.plan||'starter').toLowerCase() !== planFilter) return false;
-    if(statusFilter === 'active' && a.active === false) return false;
-    if(statusFilter === 'inactive' && a.active !== false) return false;
+    if(statusTab === 'active' && a.active === false) return false;
+    if(statusTab === 'inactive' && a.active !== false) return false;
     return true;
   });
 
@@ -346,7 +378,9 @@ function filterAdminAccounts(){
 
   const grid = document.getElementById('admin-accounts-grid');
   const countEl = document.getElementById('admin-acct-count');
-  if(countEl) countEl.textContent = 'Client Accounts (' + filtered.length + (filtered.length !== clientAccounts.length ? ' of ' + clientAccounts.length : '') + ')';
+  const tabLabels = { active: 'Active Accounts', inactive: 'Inactive / Cancelled', all: 'All Accounts' };
+  const tabTotal = statusTab === 'active' ? clientAccounts.filter(a=>a.active!==false).length : statusTab === 'inactive' ? clientAccounts.filter(a=>a.active===false).length : clientAccounts.length;
+  if(countEl) countEl.textContent = (tabLabels[statusTab] || 'Client Accounts') + ' (' + filtered.length + (filtered.length !== tabTotal ? ' of ' + tabTotal : '') + ')';
   if(!grid) return;
   if(!filtered.length){
     grid.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:10px;">No accounts match your search.</div>';
@@ -397,12 +431,13 @@ function filterAdminAccounts(){
 
 function renderSuperAdminPanel(accounts, allProfiles){
   const clientAccounts = accounts.filter(a=>a.id!==AGENCY_ACCOUNT_ID);
+  const activeAccounts = clientAccounts.filter(a=>a.active!==false);
   // Store for live filtering
   _adminPanelData = {clientAccounts, allProfiles};
+  _adminStatusTab = 'active';
   return (
-    // Search + sort + filter toolbar
-    '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:14px;">' +
-      '<div id="admin-acct-count" style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);flex-shrink:0;">Client Accounts ('+clientAccounts.length+')</div>' +
+    '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:10px;">' +
+      '<div id="admin-acct-count" style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);flex-shrink:0;">Active Accounts ('+activeAccounts.length+')</div>' +
       '<div style="flex:1;min-width:180px;position:relative;">' +
         '<span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:13px;pointer-events:none;">🔍</span>' +
         '<input id="admin-search" oninput="filterAdminAccounts()" placeholder="Search clients..." style="width:100%;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 10px 6px 30px;color:var(--text);font-family:var(--font-b);font-size:12px;outline:none;">' +
@@ -418,14 +453,14 @@ function renderSuperAdminPanel(accounts, allProfiles){
         '<option value="payg">Free (PAYG)</option>' +
         '<option value="monthly">Monthly ($99/mo)</option>' +
       '</select>' +
-      '<select id="admin-filter-status" onchange="filterAdminAccounts()" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-family:var(--font-b);font-size:11px;cursor:pointer;">' +
-        '<option value="all">All Status</option>' +
-        '<option value="active">Active</option>' +
-        '<option value="inactive">Inactive</option>' +
-      '</select>' +
+    '</div>' +
+    '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);">' +
+      '<button id="admin-status-tab-active" onclick="setAdminStatusTab(\'active\')" style="background:rgba(242,92,5,.16);border:1px solid rgba(242,92,5,.7);border-radius:7px;padding:6px 11px;color:var(--accent);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">Active <span style="opacity:.8;font-size:10px;">'+activeAccounts.length+'</span></button>' +
+      '<button id="admin-status-tab-inactive" onclick="setAdminStatusTab(\'inactive\')" style="background:transparent;border:1px solid var(--border);border-radius:7px;padding:6px 11px;color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">Inactive / Cancelled <span style="opacity:.8;font-size:10px;">'+clientAccounts.filter(a=>a.active===false).length+'</span></button>' +
+      '<button id="admin-status-tab-all" onclick="setAdminStatusTab(\'all\')" style="background:transparent;border:1px solid var(--border);border-radius:7px;padding:6px 11px;color:var(--mid);font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;">All Accounts <span style="opacity:.8;font-size:10px;">'+clientAccounts.length+'</span></button>' +
     '</div>' +
     '<div id="admin-accounts-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-bottom:24px;">' +
-    clientAccounts.map(a=>{
+    activeAccounts.map(a=>{
       const users = allProfiles.filter(p=>p.account_id===a.id);
       const planColor = {starter:'#3B82F6',pro:'#8B5CF6',agency:'#F25C05',enterprise:'#D97706'}[a.plan]||'#6688A8';
       const activeColor = a.active!==false ? '#22C55E' : '#EF4444';
