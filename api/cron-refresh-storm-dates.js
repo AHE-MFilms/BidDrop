@@ -60,9 +60,9 @@ export default async function handler(req, res) {
   try {
     push('Starting storm dates refresh...');
 
-    // Collect dates using paginated 7-day windows (each fast)
+    // Collect the complete retained history using small grouped date windows.
     const allDates = {};
-    for (const days of [7, 14, 30, 60]) {
+    for (const days of [7, 14, 30, 60, 90, 120]) {
       try {
         const rows = await fetchWindow(days);
         let newCount = 0;

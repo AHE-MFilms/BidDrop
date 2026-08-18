@@ -178,9 +178,9 @@ export default async function handler(req, res) {
   // Fetch MRMS hail from Supabase (fast, our own DB)
   const mrmsHail = await fetchMrmsHail(lat, lon, Math.max(days, years * 365));
 
-  // Fetch SPC reports in parallel — limit to 90 days for SPC (performance)
-  const spcDates = dateStrings.slice(0, 90);
-  const BATCH = 15;
+  // Fetch the same requested period for ground-truth SPC reports in moderate batches.
+  const spcDates = dateStrings.slice(0, Math.min(days, 120));
+  const BATCH = 20;
   const spcHail = [], spcWind = [], spcTornado = [];
 
   for (let b = 0; b < spcDates.length; b += BATCH) {

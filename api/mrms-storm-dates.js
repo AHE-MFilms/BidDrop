@@ -74,7 +74,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
-  const daysBack = Math.min(Math.max(parseInt(req.query.days || '30') || 30, 1), 90);
+  const daysBack = Math.min(Math.max(parseInt(req.query.days || '30') || 30, 1), 120);
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - daysBack);
   const cutoffStr = cutoff.toISOString().slice(0, 10);

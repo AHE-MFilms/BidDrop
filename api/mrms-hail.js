@@ -4,7 +4,7 @@
 //
 // Query params:
 //   swLat, swLng, neLat, neLng  — bounding box (required)
-//   days                        — how many days back to query (default: 90, max: 365)
+//   days                        — how many days back to query (default: 120, max: 365)
 //   minSize                     — minimum hail size in inches (default: 0.5)
 //   exactDate                   — YYYY-MM-DD: fetch ONLY this date (overrides days)
 //                                 Uses higher row limit since it's a single day
@@ -27,7 +27,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { swLat, swLng, neLat, neLng, days = '90', minSize = '0.5', exactDate } = req.query;
+  const { swLat, swLng, neLat, neLng, days = '120', minSize = '0.5', exactDate } = req.query;
 
   // Validate bounding box
   const sw_lat = parseFloat(swLat);
@@ -54,7 +54,7 @@ export default async function handler(req, res) {
     maxRows = MAX_ROWS_SINGLE;
   } else {
     // Date range — calculate cutoff
-    const daysBack = Math.min(Math.max(parseInt(days) || 90, 1), 365);
+    const daysBack = Math.min(Math.max(parseInt(days) || 120, 1), 365);
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - daysBack);
     const cutoffStr = cutoff.toISOString().slice(0, 10);

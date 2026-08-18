@@ -353,7 +353,7 @@ function stormDropPin(lat, lon, locationHint){
   });
 }
 
-// ── Wind Events (50 MPH+, past 90 days) ──────────────────────────────
+// ── Wind Events (50 MPH+, past 120 days) ─────────────────────────────
 async function loadWindEvents(){
   if(!_windLayerOn) return;
   clearWindMarkers();
@@ -362,7 +362,7 @@ async function loadWindEvents(){
   if(statusEl) statusEl.textContent = 'Loading wind data...';
 
   const dates = [];
-  for(let i = 0; i < 90; i++){
+  for(let i = 0; i < 120; i++){
     const d = new Date();
     d.setDate(d.getDate() - i);
     const yy = String(d.getFullYear()).slice(2);
@@ -377,7 +377,7 @@ async function loadWindEvents(){
       const url = `/api/storm-proxy?date=${dateStr}&type=wind`;
       const res = await fetch(url);
       completed++;
-      if(statusEl) statusEl.textContent = `Loading wind… ${completed}/90`;
+      if(statusEl) statusEl.textContent = `Loading wind… ${completed}/120`;
       if(!res.ok) return [];
       const text = await res.text();
       const lines = text.trim().split('\n');
@@ -397,7 +397,7 @@ async function loadWindEvents(){
     } catch(e){ completed++; return []; }
   };
 
-  const BATCH = 30;
+  const BATCH = 20;
   const allRows = [];
   for(let b = 0; b < dates.length; b += BATCH){
     const batch = dates.slice(b, b + BATCH);
@@ -406,7 +406,7 @@ async function loadWindEvents(){
   }
   _windData = allRows;
   renderWindMarkers();
-  if(_windData.length === 0 && statusEl) statusEl.textContent = 'No 50 MPH+ wind reports in past 90 days.';
+  if(_windData.length === 0 && statusEl) statusEl.textContent = 'No 50 MPH+ wind reports in past 120 days.';
 }
 
 function renderWindMarkers(){
@@ -692,7 +692,7 @@ window.lookupHailByZip = async function() {
     if (map) map.flyTo([lat, lon], 10, { duration: 1.2 });
 
     // Fetch full storm report (same as loadHailEventsFeed but for this specific location)
-    const r = await fetch(`/api/storm-report?lat=${lat}&lon=${lon}&days=90`);
+    const r = await fetch(`/api/storm-report?lat=${lat}&lon=${lon}&days=120`);
     if (!r.ok) throw new Error('API error');
     const data = await r.json();
     const mrms = data.mrms_hail || [];
@@ -739,7 +739,7 @@ window.lookupHailByZip = async function() {
     statusEl.textContent = '';
 
     if (!dates.length) {
-      resultsEl.innerHTML = `<div style="font-size:11px;color:var(--mid);padding:8px 0;">No meaningful local storm signal found within ${localRadius} miles in the last 90 days.</div>`;
+      resultsEl.innerHTML = `<div style="font-size:11px;color:var(--mid);padding:8px 0;">No meaningful local storm signal found within ${localRadius} miles in the last 120 days.</div>`;
       resultsEl.style.display = 'block';
       return;
     }

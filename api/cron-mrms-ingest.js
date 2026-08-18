@@ -17,7 +17,7 @@
  *   3. Decode GRIB2 PNG-packed data using pure Node.js (no external deps)
  *   4. Filter to hail_size >= 0.5" (dime-sized or larger)
  *   5. Upsert into mrms_hail_events (event_date, lat, lon, hail_size_in)
- *   6. Delete rows older than 90 days to keep the table lean
+ *   6. Delete rows older than 120 days to keep the table lean
  *
  * Security: Vercel cron sends Authorization: Bearer <CRON_SECRET>
  */
@@ -388,11 +388,11 @@ export default async function handler(req, res) {
       }
     }
 
-    // ── 5. Prune data older than 90 days ────────────────────────────────────
+    // ── 5. Prune data older than 120 days ───────────────────────────────────
     const cutoff    = new Date();
-    cutoff.setDate(cutoff.getDate() - 90);
+    cutoff.setDate(cutoff.getDate() - 120);
     const cutoffStr = cutoff.toISOString().slice(0, 10);
-    push(`Pruning rows older than ${cutoffStr} (90-day retention)...`);
+    push(`Pruning rows older than ${cutoffStr} (120-day retention)...`);
 
     const pruneResp = await sbFetch(
       `mrms_hail_events?event_date=lt.${cutoffStr}`,

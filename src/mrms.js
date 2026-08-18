@@ -18,6 +18,7 @@ let _mrmsLastMinSize = null;  // minSize param used for last fetch
 let _mrmsFetching    = false; // prevent concurrent fetches
 let _mrmsActiveDate  = null;  // the specific date currently loaded (null = "all recent")
 let _mrmsBounds      = null;  // bounding box of the current swath {minLat,maxLat,minLon,maxLon}
+const MRMS_HISTORY_DAYS = 120;
 
 // Grid cell half-size in degrees (~1km at CONUS latitudes)
 const CELL_HALF = 0.005;
@@ -39,14 +40,14 @@ window.fetchMrmsStormDates = async function() {
   });
 
   try {
-    const resp = await fetch('/api/mrms-storm-dates?days=90');
+    const resp = await fetch('/api/mrms-storm-dates?days=' + MRMS_HISTORY_DAYS);
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const dates = await resp.json();
 
     if (!dates || dates.length === 0) {
       statusIds.forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.textContent = 'No storm data in the last 90 days.';
+        if (el) el.textContent = 'No storm data in the last ' + MRMS_HISTORY_DAYS + ' days.';
       });
       return;
     }
@@ -67,7 +68,7 @@ window.fetchMrmsStormDates = async function() {
 
     statusIds.forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.textContent = `${dates.length} storm event${dates.length !== 1 ? 's' : ''} in the last 90 days`;
+      if (el) el.textContent = `${dates.length} storm event${dates.length !== 1 ? 's' : ''} in the last ${MRMS_HISTORY_DAYS} days`;
     });
 
   } catch(e) {
@@ -263,7 +264,7 @@ async function fetchMrmsData() {
 
   const daysEl = document.getElementById('storm-days') || document.getElementById('storm-days2');
   const sizeEl = document.getElementById('storm-min-size') || document.getElementById('storm-min-size2');
-  const days    = parseInt(daysEl?.value || '90') || 90;
+  const days    = parseInt(daysEl?.value || String(MRMS_HISTORY_DAYS)) || MRMS_HISTORY_DAYS;
   const minSize = parseFloat(sizeEl?.value || '0.75') || 0.75;
 
   let center;
