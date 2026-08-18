@@ -121,25 +121,37 @@
     .step-line { flex: 1; height: 2px; background: var(--border); margin-bottom: 24px; max-width: 80px; }
 
     /* ---- MAIN ---- */
-    .main { max-width: 1000px; margin: 0 auto; padding: 0 24px 80px; }
+    .main { max-width: 1480px; margin: 0 auto; padding: 0 24px 80px; }
     .step-panel { display: none; }
     .step-panel.active { display: block; }
 
     /* ---- PLAN CARDS ---- */
     .plans-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 24px;
-      margin-bottom: 40px;
-      max-width: 1100px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-bottom: 0;
+      max-width: none;
       margin-left: auto;
       margin-right: auto;
     }
+    .signup-plan-intro { max-width: 900px; margin: 0 auto 34px; text-align: center; }
+    .signup-plan-intro h2 { font-size: clamp(30px, 4vw, 48px); line-height: 1.05; letter-spacing: -1.8px; margin: 0 0 12px; }
+    .signup-plan-intro p { max-width: 780px; margin: 0 auto; color: var(--text-muted); font-size: 17px; line-height: 1.6; }
+    .signup-plan-intro strong { color: #fff; }
+    .marketing-value-line { display: inline-block; margin-top: 15px; padding: 8px 13px; color: #bbf7d0; background: rgba(34,197,94,.10); border: 1px solid rgba(34,197,94,.28); border-radius: 999px; font-size: 12px; font-weight: 800; letter-spacing: .3px; }
+    .plan-category { margin: 0 auto 30px; padding: 20px; border: 1px solid var(--border); border-radius: 18px; background: rgba(255,255,255,.015); }
+    .plan-category.marketing-category { border-color: rgba(249,115,22,.34); background: linear-gradient(135deg, rgba(249,115,22,.10), rgba(255,255,255,.02) 38%, rgba(255,255,255,.01)); }
+    .plan-category-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin: 2px 4px 18px; }
+    .category-kicker { color: var(--orange); font-size: 11px; letter-spacing: 1.3px; font-weight: 900; text-transform: uppercase; margin-bottom: 6px; }
+    .category-title { font-size: 22px; font-weight: 900; letter-spacing: -.5px; margin: 0 0 5px; }
+    .category-description { max-width: 720px; color: var(--text-muted); font-size: 13px; line-height: 1.55; }
+    .category-statement { align-self: center; color: #fed7aa; font-size: 11px; font-weight: 700; text-align: right; line-height: 1.45; }
     .plan-card {
       background: var(--bg2);
       border: 2px solid var(--border);
       border-radius: 16px;
-      padding: 32px 28px;
+      padding: 28px 26px;
       cursor: pointer;
       transition: all 0.2s;
       position: relative;
@@ -147,6 +159,10 @@
     .plan-card:hover { border-color: rgba(249,115,22,0.5); transform: translateY(-2px); }
     .plan-card.selected { border-color: var(--orange); background: rgba(249,115,22,0.05); }
     .plan-card.popular { border-color: var(--orange); }
+    .plan-card.marketing-info { cursor: default; }
+    .plan-card.marketing-info:hover { transform: none; }
+    .plan-card.digital-growth { border-color: rgba(14,165,233,.52); background: linear-gradient(145deg, rgba(14,165,233,.09), rgba(15,23,42,.95) 55%); }
+    .plan-card.omnipresent-system { border-color: rgba(249,115,22,.72); background: linear-gradient(145deg, rgba(249,115,22,.14), rgba(15,23,42,.96) 52%); box-shadow: 0 16px 40px rgba(249,115,22,.08); }
     .popular-badge {
       position: absolute;
       top: -13px;
@@ -178,6 +194,17 @@
     }
     .plan-feature.included { color: var(--text); }
     .plan-feature svg { flex-shrink: 0; }
+    .plan-credit-value { margin: 15px 0 18px; padding: 15px 16px; border: 1px solid rgba(34,197,94,.48); border-radius: 11px; background: rgba(34,197,94,.09); }
+    .plan-credit-value .credit-amount { color: #dcfce7; font-size: 19px; font-weight: 900; line-height: 1.15; letter-spacing: -.4px; }
+    .plan-credit-value .credit-value { margin-top: 4px; color: #86efac; font-size: 12px; font-weight: 800; letter-spacing: .3px; }
+    .service-stack { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin: 16px 0 4px; }
+    .service-group { min-height: 84px; padding: 11px 12px; background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.08); border-radius: 9px; }
+    .service-group h4 { margin: 0 0 4px; color: #fff; font-size: 11px; letter-spacing: .4px; }
+    .service-group p { margin: 0; color: var(--text-muted); font-size: 11px; line-height: 1.45; }
+    .everything-plus { margin: 17px 0 11px; padding: 11px 12px; border-left: 3px solid var(--orange); background: rgba(249,115,22,.10); color: #fff; font-size: 13px; font-weight: 900; letter-spacing: .2px; }
+    .marketing-provider { margin-top: 14px; color: rgba(255,255,255,.58); font-size: 11px; line-height: 1.5; }
+    .marketing-provider strong { color: #fdba74; }
+    .marketing-cta { background: linear-gradient(90deg,#F97316,#FFB347); border-color: transparent; color: #fff; }
     .plan-divider { height: 1px; background: var(--border); margin: 16px 0; }
     .select-btn {
       width: 100%;
@@ -439,6 +466,10 @@
       .ahe-interest-options { grid-template-columns: 1fr; }
       .form-section, .checkout-summary { padding: 24px 20px; }
       .plans-grid { grid-template-columns: 1fr; }
+      .plan-category { padding: 14px; }
+      .plan-category-header { display: block; margin-bottom: 16px; }
+      .category-statement { text-align: left; margin-top: 8px; }
+      .service-stack { grid-template-columns: 1fr; }
       .nav { padding: 16px 20px; }
     }
   </style>
@@ -485,158 +516,105 @@
 
     <!-- STEP 1: PLAN SELECTION -->
     <div class="step-panel active" id="panel1">
-      <div class="plans-grid">
+      <div class="signup-plan-intro">
+        <h2>Choose How Much You Want Us To Do</h2>
+        <p><strong>Use BidDrop yourself</strong> — or have <strong>America's Home Experts</strong>, our done-for-you marketing team for contractors and home-improvement companies, handle your website, SEO, AI search, social media, content, and more.</p>
+        <div class="marketing-value-line">DONE-FOR-YOU MARKETING PLANS INCLUDE UP TO $2,000/MONTH IN BIDDROP CREDITS</div>
+      </div>
 
-        <!-- MONTHLY PLAN -->
-        <div class="plan-card popular" data-plan="monthly" data-price="99" data-name="Monthly" onclick="selectPlan(this)">
-          <div class="popular-badge">★ BEST VALUE</div>
-          <div class="plan-name">Monthly</div>
-          <div class="plan-desc">Everything you need to canvass, mail, and close — with GHL included.</div>
-          <div class="plan-price">
-            <span class="amount"><sup>$</sup>99</span>
-            <span class="period">/mo</span>
+      <section class="plan-category">
+        <div class="plan-category-header">
+          <div>
+            <div class="category-kicker">BidDrop Software</div>
+            <h3 class="category-title">Do It Yourself</h3>
+            <div class="category-description">Use the software yourself to find, measure, price, and follow up with the properties you want to win.</div>
           </div>
-          <div class="plan-note">✓ 20 mailer credits included every month <span style="color:rgba(255,255,255,0.45);font-size:11px;">(an $80 value)</span></div>
-          <div class="plan-divider"></div>
-          <div class="plan-features">
-            <div class="plan-feature included">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3.5" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <strong>Up to 10 users</strong>
-            </div>
-            <div class="plan-feature included">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3.5" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Map canvassing &amp; pin drops
-            </div>
-            <div class="plan-feature included">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3.5" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Satellite measurements &amp; estimates
-            </div>
-            <div class="plan-feature included">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3.5" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Postcard &amp; letter campaigns
-            </div>
-            <div class="plan-feature included">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3.5" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Storm leads &amp; hail mapping
-            </div>
-            <div class="plan-feature included" style="flex-direction:column;align-items:flex-start;gap:4px;">
-              <div style="display:flex;align-items:center;gap:6px;">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3.5" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                <strong style="color:#F97316;">CRM integration + FREE GoHighLevel account</strong>
-              </div>
-              <div style="font-size:11px;color:rgba(255,255,255,0.5);padding-left:20px;line-height:1.5;">Connect GHL, JobNimbus, AccuLynx, QuickBooks &amp; more — or get a free GHL sub-account included</div>
-            </div>
-            <div class="plan-feature included">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3.5" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Priority support
-            </div>
-            <div class="plan-feature included">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3.5" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Additional credits: $4 each
-            </div>
-          </div>
-          <button class="select-btn">Get Started — $99/mo</button>
+          <div class="category-statement">You control the canvassing.<br>BidDrop powers the workflow.</div>
         </div>
+        <div class="plans-grid">
+          <div class="plan-card" data-plan="payg" data-price="0" data-name="Pay-as-you-go" onclick="selectPlan(this)">
+            <div class="plan-name">Pay As You Go</div>
+            <div class="plan-desc">Use BidDrop when you need it.</div>
+            <div class="plan-price"><span class="amount"><sup>$</sup>0</span><span class="period">/mo</span></div>
+            <div class="plan-note" style="color:#a3a3a3;">Credits purchased as needed · $4 per credit</div>
+            <div class="plan-divider"></div>
+            <div class="plan-features">
+              <div class="plan-feature included">✓ <strong>1 user</strong></div>
+              <div class="plan-feature included">✓ Map canvassing &amp; pin drops</div>
+              <div class="plan-feature included">✓ Satellite measurements &amp; estimates</div>
+              <div class="plan-feature included">✓ Postcard &amp; letter campaigns</div>
+              <div class="plan-feature included">✓ Storm leads &amp; hail mapping</div>
+              <div class="plan-feature included">✓ Credits purchased as needed</div>
+            </div>
+            <button class="select-btn">Start Free — $0/mo</button>
+          </div>
 
-        <!-- OMNIPRESENT SYSTEM -->
-        <div class="plan-card" data-plan="omnipresent" data-price="3500" data-name="The Omnipresent System" onclick="selectPlan(this)" style="border-color:rgba(249,115,22,0.4);background:linear-gradient(135deg,rgba(249,115,22,0.06),rgba(10,15,30,1));">
-          <div class="popular-badge" style="background:linear-gradient(90deg,#F97316,#FFB347);">🔥 FULL SYSTEM</div>
-          <div class="plan-name" style="font-size:20px;">The Omnipresent System</div>
-          <div class="plan-desc">BidDrop Monthly + full AHE digital marketing takeover. Be everywhere. Get chosen.</div>
-          <div class="plan-price">
-            <span class="amount"><sup>$</sup>3,500</span>
-            <span class="period">/mo</span>
+          <div class="plan-card popular" data-plan="monthly" data-price="99" data-name="BidDrop Pro" onclick="selectPlan(this)">
+            <div class="popular-badge">★ BUILT FOR PROSPECTING</div>
+            <div class="plan-name">BidDrop Pro</div>
+            <div class="plan-desc">For contractors actively prospecting with BidDrop.</div>
+            <div class="plan-price"><span class="amount"><sup>$</sup>99</span><span class="period">/mo</span></div>
+            <div class="plan-credit-value"><div class="credit-amount">20 BIDDROP CREDITS INCLUDED EVERY MONTH</div><div class="credit-value">$80 MONTHLY VALUE</div></div>
+            <div class="plan-features">
+              <div class="plan-feature included">✓ <strong>Up to 10 users</strong></div>
+              <div class="plan-feature included">✓ Map canvassing, measurements &amp; estimates</div>
+              <div class="plan-feature included">✓ Postcard &amp; letter campaigns</div>
+              <div class="plan-feature included">✓ Storm leads &amp; hail mapping</div>
+              <div class="plan-feature included">✓ CRM integration</div>
+              <div class="plan-feature included">✓ <strong style="color:#fdba74;">FREE GoHighLevel sub-account</strong></div>
+              <div class="plan-feature included">✓ Priority support · Additional credits $4 each</div>
+            </div>
+            <button class="select-btn">Get BidDrop Pro — $99/mo</button>
           </div>
-          <div class="plan-note" style="margin:12px 0 18px;padding:12px 14px;border:1px solid rgba(34,197,94,.36);border-radius:9px;background:rgba(34,197,94,.08);color:#4ade80;font-weight:800;line-height:1.35;">
-            500 BidDrop credits included every month<br><span style="font-size:12px;color:#bbf7d0;font-weight:700;">That is a $2,000 monthly BidDrop value</span>
-          </div>
-          <div class="plan-divider"></div>
-          <div style="font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:10px;">Everything in Monthly, plus</div>
-          <div class="plan-features">
-            <div class="plan-feature included">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3.5" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <strong style="color:#F97316;">500 credits for pins, reports &amp; mailers</strong>
-            </div>
-            <div class="plan-feature included">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3.5" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              4 on-site video sessions (48 clips + 4 long-form)
-            </div>
-            <div class="plan-feature included">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3.5" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              72 posts — FB, Instagram, YouTube, TikTok
-            </div>
-            <div class="plan-feature included">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3.5" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              12 SEO blog posts + 15+ keywords tracked
-            </div>
-            <div class="plan-feature included">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3.5" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Brand refresh + website audit + AHE CRM setup
-            </div>
-            <div class="plan-feature included">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3.5" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              12 bi-weekly strategy calls
-            </div>
-            <div class="plan-feature included">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3.5" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              AHE directory listing + backlink
-            </div>
-          </div>
-          <div style="font-size:11px;color:rgba(255,255,255,.42);line-height:1.45;margin-top:14px;">6-month AHE engagement · strategy call before enrollment</div>
-          <button class="select-btn" style="background:linear-gradient(90deg,#F97316,#FFB347);border-color:transparent;color:#fff;">Join The Omnipresent System →</button>
         </div>
-                <!-- PAY-AS-YOU-GO -->
-        <div class="plan-card" data-plan="payg" data-price="0" data-name="Pay-as-you-go" onclick="selectPlan(this)">
-          <div class="plan-name">Pay-as-you-go</div>
-          <div class="plan-desc">No monthly commitment. Buy credits when you need them.</div>
-          <div class="plan-price">
-            <span class="amount"><sup>$</sup>0</span>
-            <span class="period">/mo</span>
-          </div>
-          <div class="plan-note" style="color:#888;">Credits: $4 each — buy as needed</div>
-          <div class="plan-divider"></div>
-          <div class="plan-features">
-            <div class="plan-feature included">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3.5" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <strong>1 user</strong>
-            </div>
-            <div class="plan-feature included">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3.5" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Map canvassing &amp; pin drops
-            </div>
-            <div class="plan-feature included">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3.5" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Satellite measurements &amp; estimates
-            </div>
-            <div class="plan-feature included">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3.5" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Postcard &amp; letter campaigns
-            </div>
-            <div class="plan-feature included">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3.5" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Storm leads &amp; hail mapping
-            </div>
-            <div class="plan-feature" style="color:#555;">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="#555" stroke-width="2" stroke-linecap="round"/></svg>
-              No CRM integration
-            </div>
-            <div class="plan-feature" style="color:#555;">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="#555" stroke-width="2" stroke-linecap="round"/></svg>
-              No GHL sub-account
-            </div>
-            <div class="plan-feature" style="color:#555;">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="#555" stroke-width="2" stroke-linecap="round"/></svg>
-              No priority support
-            </div>
-            <div class="plan-feature" style="color:#555;">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="#555" stroke-width="2" stroke-linecap="round"/></svg>
-              No included credits
-            </div>
-          </div>
-          <button class="select-btn">Start Free — $0/mo</button>
-        </div>
+      </section>
 
-      </div><!-- end plans-grid -->
+      <section class="plan-category marketing-category">
+        <div class="plan-category-header">
+          <div>
+            <div class="category-kicker">Done-For-You Marketing + BidDrop</div>
+            <h3 class="category-title">We Do The Marketing For You</h3>
+            <div class="category-description"><strong>America's Home Experts</strong> handles the marketing while you run the business. BidDrop usage is included as part of the marketing relationship.</div>
+          </div>
+          <div class="category-statement">Website · local SEO · AI search · content<br>social media · lead systems · reputation</div>
+        </div>
+        <div class="plans-grid">
+          <div class="plan-card marketing-info digital-growth" data-plan-preview="digital-growth">
+            <div class="popular-badge" style="background:#0ea5e9;">DONE FOR YOU</div>
+            <div class="plan-name">Digital Growth</div>
+            <div class="plan-desc">We handle your digital marketing. You run your business.</div>
+            <div class="plan-price"><span class="amount"><sup>$</sup>2,000</span><span class="period">/mo</span></div>
+            <div class="plan-credit-value"><div class="credit-amount">250 BIDDROP CREDITS INCLUDED</div><div class="credit-value">$1,000 VALUE EVERY MONTH</div></div>
+            <div class="service-stack">
+              <div class="service-group"><h4>WEBSITE + SEO</h4><p>Website management, local SEO, and Google Business Profile optimization.</p></div>
+              <div class="service-group"><h4>AI SEARCH + CONTENT</h4><p>AEO / AI search optimization, SEO content, blogs, and search visibility.</p></div>
+              <div class="service-group"><h4>SOCIAL MEDIA</h4><p>Content creation with managed and scheduled social posting.</p></div>
+              <div class="service-group"><h4>LEAD SYSTEM</h4><p>CRM and lead capture, reputation tools, and directory presence.</p></div>
+            </div>
+            <div class="marketing-provider">Done-for-you marketing provided by <strong>America's Home Experts.</strong></div>
+            <button class="select-btn marketing-cta" type="button">Grow My Business — $2,000/mo</button>
+          </div>
+
+          <div class="plan-card omnipresent-system" data-plan="omnipresent" data-price="3500" data-name="Omnipresent" onclick="selectPlan(this)">
+            <div class="popular-badge" style="background:linear-gradient(90deg,#F97316,#FFB347);">FULL MARKETING SYSTEM</div>
+            <div class="plan-name">Omnipresent</div>
+            <div class="plan-desc">Your complete digital marketing system + professional video production.</div>
+            <div class="plan-price"><span class="amount"><sup>$</sup>3,500</span><span class="period">/mo</span></div>
+            <div class="plan-credit-value"><div class="credit-amount">500 BIDDROP CREDITS INCLUDED</div><div class="credit-value">$2,000 VALUE EVERY MONTH</div></div>
+            <div class="everything-plus">EVERYTHING IN DIGITAL GROWTH, PLUS:</div>
+            <div class="service-group" style="min-height:auto;border-color:rgba(249,115,22,.28);"><h4 style="color:#fdba74;">PROFESSIONAL VIDEO PRODUCTION</h4><p>We come to your business and professionally film the content that makes your company impossible to ignore.</p></div>
+            <div class="plan-features" style="margin-top:13px;">
+              <div class="plan-feature included">✓ 4 on-site professional video production sessions</div>
+              <div class="plan-feature included">✓ 48 short-form videos · 4 long-form videos</div>
+              <div class="plan-feature included">✓ 72 scheduled posts for Facebook, Instagram, YouTube &amp; TikTok</div>
+              <div class="plan-feature included">✓ Ongoing strategy &amp; marketing management</div>
+            </div>
+            <div class="marketing-provider"><strong>Also included:</strong> website management, SEO, Local SEO, Google Business Profile, AEO / AI search, blogs and content, social media, CRM / lead systems, reputation and reviews, and America's Home Experts directory presence.</div>
+            <div class="marketing-provider">Strategy call and marketing engagement discussion before enrollment.</div>
+            <button class="select-btn marketing-cta">Get The Full System — $3,500/mo</button>
+          </div>
+        </div>
+      </section>
     </div><!-- end panel1 -->
 
     <!-- STEP 2: COMPANY INFO FORM -->
