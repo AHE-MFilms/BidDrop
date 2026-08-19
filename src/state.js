@@ -66,7 +66,7 @@ const OWNER_EMAIL = 'john@mongoosefilms.com'; // Primary owner — cannot be del
 const DEFAULTS = {
   companyName:'Your Roofing Co', companyAddr:'123 Main St, Detroit MI 48000', companyPhone:'(313) 555-0100',
   costArchitectural:300, cost3Tab:220, costDesigner:420, costImpact:380, costMetal:680, costFlat:320, costTile:950,
-  pricingMode:'detailed', pricePerSquare:450,
+  pricingMode:'per_square', pricePerSquare:450,
   ppsArchitectural:450, ppsDesigner:580, ppsImpact:520, ppsMetal:950, ppsFlat:400, ppsTile:1400,
   costTearoff:75, costIceWater:42, costFelts:22, costDumpster:450,
   costSkylight:375, costChimney:295, costGutter:9,

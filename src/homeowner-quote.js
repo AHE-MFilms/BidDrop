@@ -407,20 +407,8 @@ async function initQuotePage(slug) {
   // Pricing engine (mirrors calcStructPrice from the app)
   function calcQuotePrice(sqft, cfg) {
     if (!sqft) return 0;
-    const pitchMult = 1.118; // default 6/12 pitch
-    const complexity = 1.12;
-    const stories = 1;
-    const sq = sqft / 100 * 1.10 * pitchMult;
-    const stMult = 1;
-    const matCost = parseFloat(cfg.costArchitectural) || 300;
-    const tearoff = (parseFloat(cfg.costTearoff) || 75) * sq;
-    const felts = (parseFloat(cfg.costFelts) || 22) * sq;
-    const dumpster = parseFloat(cfg.costDumpster) || 450;
-    const labor = matCost * sq * stMult * complexity;
-    const sub = labor + tearoff + felts + dumpster;
-    const ovh = sub * (parseFloat(cfg.overhead) || 15) / 100;
-    const mgn = (sub + ovh) * (parseFloat(cfg.margin) || 20) / 100;
-    return Math.round(sub + ovh + mgn);
+    const pricePerSquare = parseFloat(cfg.pricePerSquare) || parseFloat(cfg.ppsArchitectural) || 450;
+    return Math.round((sqft / 100 * 1.10) * pricePerSquare);
   }
 
   // Render the page
@@ -828,5 +816,4 @@ function spmConfirm(){
     openBlitzFromQueue(_spmQueueId);
   }
 }
-
 

@@ -31,23 +31,13 @@ function fmtDate(iso){if(!iso)return'';const d=new Date(iso);return d.toLocaleDa
 // ── Pricing ────────────────────────────────────────────────────────────────
 function computePrice(structures,matKey,acct){
   if(!structures||!structures.length)return 0;
-  const costMap={'1.0':acct.cost3Tab,'1.3':acct.costArchitectural,'1.8':acct.costDesigner,'2.5':acct.costMetal};
-  const matCost=parseFloat(costMap[matKey])||450;
-  const tearoff=parseFloat(acct.costTearoff)||75;
-  const iceWater=parseFloat(acct.costIceWater)||42;
-  const felts=parseFloat(acct.costFelts)||22;
-  const dumpster=parseFloat(acct.costDumpster)||450;
-  const overhead=(parseFloat(acct.overhead)||15)/100;
-  const margin=(parseFloat(acct.margin)||20)/100;
-  let subtotal=dumpster;
+  const pricePerSquare=parseFloat(acct.pricePerSquare||acct.ppsArchitectural)||450;
+  let total=0;
   structures.forEach(s=>{
     const sqft=parseFloat(s.sqft)||0;if(!sqft)return;
-    const pitchMult=parseFloat(s.pitch)||1.15;
-    const complexity=parseFloat(s.complexity)||1.12;
-    const sq=sqft/100*1.12*pitchMult;
-    subtotal+=sq*(matCost+tearoff+iceWater+felts)*complexity;
+    total+=sqft/100*1.10*pricePerSquare;
   });
-  return Math.round(subtotal*(1+overhead)*(1+margin));
+  return Math.round(total);
 }
 
 // ── Config ─────────────────────────────────────────────────────────────────

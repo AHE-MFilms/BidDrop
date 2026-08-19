@@ -52,74 +52,13 @@
               <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--mid);"><input type="checkbox" id="s-mat-tile"   style="accent-color:var(--accent);width:15px;height:15px;"> 🏛 Tile / Clay</label>
             </div>
           </div>
-          <div class="stab-section-hdr">Pricing Mode</div>
-          <div style="display:flex;gap:8px;margin-bottom:14px;">
-            <button id="s-mode-persq"    onclick="setPricingMode('per_square')" style="flex:1;padding:10px;border-radius:8px;border:2px solid var(--accent);background:var(--accent);color:#fff;font-weight:700;font-size:13px;cursor:pointer;">🔢 Price Per Square</button>
-            <button id="s-mode-detailed" onclick="setPricingMode('detailed')"   style="flex:1;padding:10px;border-radius:8px;border:2px solid var(--border);background:transparent;color:var(--mid);font-weight:700;font-size:13px;cursor:pointer;">📋 Detailed Line Items</button>
+          <div class="stab-section-hdr">Roof Price Per Square</div>
+          <input type="hidden" id="s-pricing-mode-val" value="per_square">
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:13px;color:var(--mid);margin-bottom:12px;">Set one all-in roof price. BidDrop uses: <strong>measured roof squares × your price per square</strong>, including the standard 10% waste allowance. Material, tear-off, accessories, overhead, and margin are not separate estimator inputs.</div>
+          <div class="frow" style="margin-bottom:14px;">
+            <div class="fg"><label class="fl" for="s-pps">All-In Roof Price ($/sq)</label><input type="number" class="fi" id="s-pps" placeholder="450" min="0" step="5"></div>
+            <div class="fg" style="display:flex;align-items:end;"><div style="font-size:12px;color:var(--muted);padding-bottom:10px;">One number. Every roof estimate uses it.</div></div>
           </div>
-          <input type="hidden" id="s-pricing-mode-val" value="detailed">
-          <!-- Per-Square Mode -->
-          <div id="s-persq-fields" style="display:none;margin-bottom:14px;">
-            <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:9px 13px;font-size:12px;color:var(--mid);margin-bottom:12px;">💡 Set your all-in $/sq for each material. Formula: Squares × $/sq = Total.</div>
-            <div class="frow">
-              <div class="fg"><label class="fl" for="s-pps-arch">Architectural ($/sq)</label><input type="number" class="fi" id="s-pps-arch"   placeholder="450"></div>
-              <div class="fg"><label class="fl" for="s-pps-des">Designer/Premium ($/sq)</label><input type="number" class="fi" id="s-pps-des"  placeholder="580"></div>
-            </div>
-            <div class="frow">
-              <div class="fg"><label class="fl" for="s-pps-impact">Impact-Resistant ($/sq)</label><input type="number" class="fi" id="s-pps-impact" placeholder="520"></div>
-              <div class="fg"><label class="fl" for="s-pps-metal">Metal Roofing ($/sq)</label><input type="number" class="fi" id="s-pps-metal"  placeholder="950"></div>
-            </div>
-            <div class="frow">
-              <div class="fg"><label class="fl" for="s-pps-flat">Flat/TPO/EPDM ($/sq)</label><input type="number" class="fi" id="s-pps-flat"  placeholder="400"></div>
-              <div class="fg"><label class="fl" for="s-pps-tile">Tile/Clay ($/sq)</label><input type="number" class="fi" id="s-pps-tile"  placeholder="1400"></div>
-            </div>
-          </div>
-          <!-- Detailed Mode -->
-          <div id="s-detailed-fields">
-            <div class="stab-section-hdr">Material Cost Per Square (Labor + Material)</div>
-            <div class="frow">
-              <div class="fg"><label class="fl" for="s-carch">Architectural ($/sq)</label><input type="number" class="fi" id="s-carch"   placeholder="300"></div>
-              <div class="fg"><label class="fl" for="s-cdes">Designer/Premium ($/sq)</label><input type="number" class="fi" id="s-cdes"  placeholder="420"></div>
-            </div>
-            <div class="frow">
-              <div class="fg"><label class="fl" for="s-cimpact">Impact-Resistant ($/sq)</label><input type="number" class="fi" id="s-cimpact" placeholder="380"></div>
-              <div class="fg"><label class="fl" for="s-cmetal">Metal Roofing ($/sq)</label><input type="number" class="fi" id="s-cmetal" placeholder="680"></div>
-            </div>
-            <div class="frow">
-              <div class="fg"><label class="fl" for="s-cflat">Flat/TPO/EPDM ($/sq)</label><input type="number" class="fi" id="s-cflat" placeholder="320"></div>
-              <div class="fg"><label class="fl" for="s-ctile">Tile/Clay ($/sq)</label><input type="number" class="fi" id="s-ctile" placeholder="950"></div>
-            </div>
-            <div class="stab-section-hdr" style="margin-top:16px;">Per-Square Line Items</div>
-            <div class="frow">
-              <div class="fg"><label class="fl" for="s-tear">Tear-off ($/sq)</label><input type="number" class="fi" id="s-tear" placeholder="75"></div>
-              <div class="fg"></div>
-            </div>
-            <div class="frow">
-              <div class="fg"><label class="fl" for="s-felt">Felt/Synthetic ($/sq)</label><input type="number" class="fi" id="s-felt" placeholder="22"></div>
-              <div class="fg"><label class="fl" for="s-dump">Dumpster (flat $)</label><input type="number" class="fi" id="s-dump" placeholder="450"></div>
-            </div>
-            <div class="stab-section-hdr" style="margin-top:16px;">Add-On Pricing</div>
-            <div class="frow">
-              <div class="fg"><label class="fl" for="s-sky">Skylight ($/each)</label><input type="number" class="fi" id="s-sky"  placeholder="375"></div>
-              <div class="fg"><label class="fl" for="s-chim">Chimney Flashing ($)</label><input type="number" class="fi" id="s-chim" placeholder="295"></div>
-            </div>
-            <div class="frow">
-              <div class="fg"><label class="fl" for="s-gut">Gutters ($/lf)</label><input type="number" class="fi" id="s-gut" placeholder="9"></div>
-              <div class="fg"><label class="fl" for="s-ice">Ice &amp; Water Shield ($/sq)</label><input type="number" class="fi" id="s-ice" placeholder="42"></div>
-            </div>
-            <div class="stab-section-hdr" style="margin-top:16px;">Overhead &amp; Margin</div>
-            <div class="frow">
-              <div class="fg"><label class="fl" for="s-ovh">Overhead %</label><input type="number" class="fi" id="s-ovh" placeholder="15"></div>
-              <div class="fg"><label class="fl" for="s-mgn">Profit Margin %</label><input type="number" class="fi" id="s-mgn" placeholder="20"></div>
-            </div>
-            <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;padding:10px 14px;font-size:13px;color:var(--mid);margin-top:4px;">
-              💡 Formula: (Material+Labor+Tearoff+Accessories) × (1 + Overhead%) × (1 + Margin%) + Tax = Estimate
-            </div>
-            <div class="frow" style="margin-top:10px;">
-              <div class="fg"><label class="fl" for="s-tax">Sales Tax % <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;">— added to proposal total (0 = no tax)</span></label><input type="number" class="fi" id="s-tax" placeholder="0" step="0.01" min="0" max="30"></div>
-              <div class="fg"></div>
-            </div>
-          </div><!-- /s-detailed-fields -->
 
           <!-- ══ GOOD / BETTER / BEST TIERS ══ -->
           <div class="stab-section-hdr" style="margin-top:20px;">🏆 Proposal Tiers — Good / Better / Best</div>

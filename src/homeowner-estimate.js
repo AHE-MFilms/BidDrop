@@ -152,29 +152,8 @@ async function initEstimatePage(estId) {
   // Pricing engine
   function calcStructPrice(s, cfg) {
     const sqft = parseFloat(s.sqft) || 0; if (!sqft) return 0;
-    const pitchMult = parseFloat(s.pitch) || 1.118;
-    const complexity = parseFloat(s.complexity) || 1.12;
-    const stories = parseFloat(s.stories) || 1;
-    const sq = sqft / 100 * 1.10 * pitchMult;
-    const stMult = stories <= 1 ? 1 : stories <= 1.5 ? 1.08 : stories <= 2 ? 1.16 : 1.25;
-    // Per-square mode — all-in rate, no pitch/stories/complexity upcharges
-    if ((cfg.pricingMode || 'detailed') === 'per_square') {
-      const ppsMap = { '1.3': cfg.ppsArchitectural||450, '1.8': cfg.ppsDesigner||580, '1.5': cfg.ppsImpact||520, '2.5': cfg.ppsMetal||950, '0.9': cfg.ppsFlat||400, '3.2': cfg.ppsTile||1400 };
-      const pps = ppsMap[String(s.mat)] || cfg.ppsArchitectural || 450;
-      const flatSq = sqft / 100 * 1.10; // footprint squares + 10% overage only
-      return Math.round(flatSq * pps);
-    }
-    // Detailed mode
-    const matCostMap = { '1.0': cfg.cost3Tab, '1.3': cfg.costArchitectural, '1.8': cfg.costDesigner, '1.5': cfg.costImpact, '2.5': cfg.costMetal, '0.9': cfg.costFlat, '3.2': cfg.costTile };
-    const matCost = matCostMap[String(s.mat)] || cfg.costArchitectural;
-    const tearoff = cfg.costTearoff * sq;
-    const felts = cfg.costFelts * sq;
-    const dumpster = cfg.costDumpster;
-    const labor = matCost * sq * stMult * complexity;
-    const sub = labor + tearoff + felts + dumpster;
-    const ovh = sub * cfg.overhead / 100;
-    const mgn = (sub + ovh) * cfg.margin / 100;
-    return Math.round(sub + ovh + mgn);
+    const pricePerSquare = parseFloat(cfg.pricePerSquare) || parseFloat(cfg.ppsArchitectural) || 450;
+    return Math.round((sqft / 100 * 1.10) * pricePerSquare);
   }
   function calcTotal(matKey, cfg) {
     const structs = (est.structures || []).map(s => ({ ...s, mat: matKey }));
@@ -182,7 +161,8 @@ async function initEstimatePage(estId) {
   }
 
   const cfg = {
-    pricingMode: acct.pricingMode || 'detailed',
+    pricingMode: 'per_square',
+    pricePerSquare: acct.pricePerSquare || acct.ppsArchitectural || 450,
     cost3Tab: acct.cost3Tab || 220,
     costArchitectural: acct.costArchitectural || 300,
     costDesigner: acct.costDesigner || 420,

@@ -113,29 +113,9 @@ function openSettings(){
   if(el('s-mat-metal'))  el('s-mat-metal').checked  = !!c.matMetal;
   if(el('s-mat-flat'))   el('s-mat-flat').checked   = !!c.matFlat;
   if(el('s-mat-tile'))   el('s-mat-tile').checked   = !!c.matTile;
-  // Pricing mode
-  setPricingMode(c.pricingMode||'detailed');
-  // Per-square rates
-  if(el('s-pps-arch')) el('s-pps-arch').value=c.ppsArchitectural||450;
-  if(el('s-pps-des'))  el('s-pps-des').value=c.ppsDesigner||580;
-  if(el('s-pps-impact')) el('s-pps-impact').value=c.ppsImpact||520;
-  if(el('s-pps-metal')) el('s-pps-metal').value=c.ppsMetal||950;
-  if(el('s-pps-flat')) el('s-pps-flat').value=c.ppsFlat||400;
-  if(el('s-pps-tile')) el('s-pps-tile').value=c.ppsTile||1400;
-  // Detailed material costs
-  el('s-carch').value=c.costArchitectural||300;
-  el('s-cdes').value=c.costDesigner||420;
-  if(el('s-cimpact')) el('s-cimpact').value=c.costImpact||380;
-  el('s-cmetal').value=c.costMetal||680;
-  if(el('s-cflat')) el('s-cflat').value=c.costFlat||320;
-  if(el('s-ctile')) el('s-ctile').value=c.costTile||950;
-  document.getElementById('s-tear').value=c.costTearoff||75;
-  document.getElementById('s-ice').value=c.costIceWater||42;
-  document.getElementById('s-felt').value=c.costFelts||22;
-  document.getElementById('s-dump').value=c.costDumpster||450;
-  document.getElementById('s-sky').value=c.costSkylight||375;
-  document.getElementById('s-chim').value=c.costChimney||295;
-  document.getElementById('s-gut').value=c.costGutter||9;
+  // Roof estimates are intentionally simplified to one all-in per-square price.
+  setPricingMode('per_square');
+  if(el('s-pps')) el('s-pps').value=c.pricePerSquare||c.ppsArchitectural||450;
   const solarPwEl=document.getElementById('s-solar-pw'); if(solarPwEl) solarPwEl.value=c.solarPricePerWatt||c.costSolarPerWatt||3.50;
   // ── Load Solar pricing fields ──
   const _sset=(id,val)=>{const e=document.getElementById(id);if(e)e.value=val;};
@@ -571,20 +551,15 @@ function setPricingMode(mode){
   const persqFields=document.getElementById('s-persq-fields');
   const detFields=document.getElementById('s-detailed-fields');
   if(!modeVal)return;
-  modeVal.value=mode;
-  if(mode==='per_square'){
+  modeVal.value='per_square';
+  {
     if(persqBtn){persqBtn.style.background='var(--accent)';persqBtn.style.color='#fff';persqBtn.style.borderColor='var(--accent)';}
     if(detBtn){detBtn.style.background='transparent';detBtn.style.color='var(--mid)';detBtn.style.borderColor='var(--border)';}
     if(persqFields)persqFields.style.display='block';
     if(detFields)detFields.style.display='none';
-  }else{
-    if(detBtn){detBtn.style.background='var(--accent)';detBtn.style.color='#fff';detBtn.style.borderColor='var(--accent)';}
-    if(persqBtn){persqBtn.style.background='transparent';persqBtn.style.color='var(--mid)';persqBtn.style.borderColor='var(--border)';}
-    if(persqFields)persqFields.style.display='none';
-    if(detFields)detFields.style.display='block';
   }
   // Update live cfg so estimate recalculates immediately
-  if(S.cfg)S.cfg.pricingMode=mode;
+  if(S.cfg)S.cfg.pricingMode='per_square';
   if(typeof calcP==='function')calcP();
 }
 
@@ -592,6 +567,8 @@ function saveSettings(){
   const v=id=>{const e=document.getElementById(id);return e?e.value:'';};
   const n=id=>parseFloat(v(id))||0;
   const ck=id=>{const e=document.getElementById(id);return e?e.checked:false;};
+  const previousConfig=S.cfg||{};
+  const roofPricePerSquare=n('s-pps')||previousConfig.pricePerSquare||previousConfig.ppsArchitectural||450;
   S.cfg={
     companyName:v('s-co')||'Your Roofing Co',
     companyAddr:v('s-addr'),
@@ -676,18 +653,19 @@ function saveSettings(){
     matArch:  ck('s-mat-arch'),  matDes:    ck('s-mat-des'),
     matImpact:ck('s-mat-impact'), matMetal:  ck('s-mat-metal'),
     matFlat:  ck('s-mat-flat'),   matTile:   ck('s-mat-tile'),
-    pricingMode:(document.getElementById('s-pricing-mode-val')||{value:'detailed'}).value||'detailed',
-    pricePerSquare:n('s-pps')||450,
-    ppsArchitectural:n('s-pps-arch')||450, ppsDesigner:n('s-pps-des')||580,
-    ppsImpact:n('s-pps-impact')||520, ppsMetal:n('s-pps-metal')||950,
-    ppsFlat:n('s-pps-flat')||400, ppsTile:n('s-pps-tile')||1400,
-    cost3Tab:220, costArchitectural:n('s-carch')||300,
-    costDesigner:n('s-cdes')||420, costImpact:n('s-cimpact')||380,
-    costMetal:n('s-cmetal')||680, costFlat:n('s-cflat')||320, costTile:n('s-ctile')||950,
-    costTearoff:n('s-tear')||75, costIceWater:n('s-ice')||42,
-    costFelts:n('s-felt')||22, costDumpster:n('s-dump')||450,
-    costSkylight:n('s-sky')||375, costChimney:n('s-chim')||295, costGutter:n('s-gut')||9,
-    overhead:n('s-ovh')||15, margin:n('s-mgn')||20, taxRate:n('s-tax')||0,
+    pricingMode:'per_square',
+    pricePerSquare:roofPricePerSquare,
+    ppsArchitectural:roofPricePerSquare, ppsDesigner:roofPricePerSquare,
+    ppsImpact:roofPricePerSquare, ppsMetal:roofPricePerSquare,
+    ppsFlat:roofPricePerSquare, ppsTile:roofPricePerSquare,
+    // Preserve legacy detailed values in saved configuration without exposing them as active controls.
+    cost3Tab:previousConfig.cost3Tab||220, costArchitectural:previousConfig.costArchitectural||300,
+    costDesigner:previousConfig.costDesigner||420, costImpact:previousConfig.costImpact||380,
+    costMetal:previousConfig.costMetal||680, costFlat:previousConfig.costFlat||320, costTile:previousConfig.costTile||950,
+    costTearoff:previousConfig.costTearoff||75, costIceWater:previousConfig.costIceWater||42,
+    costFelts:previousConfig.costFelts||22, costDumpster:previousConfig.costDumpster||450,
+    costSkylight:previousConfig.costSkylight||375, costChimney:previousConfig.costChimney||295, costGutter:previousConfig.costGutter||9,
+    overhead:previousConfig.overhead||15, margin:previousConfig.margin||20, taxRate:previousConfig.taxRate||0,
     // ── Solar pricing ──
     solarPricePerWatt:parseFloat(v('s-solar-pw'))||3.50,
     solarMinKw:parseFloat(v('s-solar-min-kw'))||4,
