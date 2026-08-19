@@ -222,6 +222,48 @@
     .plan-card.selected .select-btn,
     .plan-card:hover .select-btn { background: var(--orange); border-color: var(--orange); color: #fff; }
 
+    /* ---- SETUP CUSTOMIZATION PROTOTYPE ---- */
+    .setup-shell { max-width: 980px; margin: 0 auto; }
+    .setup-hero { text-align: center; max-width: 740px; margin: 0 auto 24px; }
+    .setup-hero h2 { margin: 0 0 8px; font-size: clamp(30px,4vw,42px); letter-spacing: -1.3px; }
+    .setup-hero p { margin: 0; color: var(--text-muted); font-size: 16px; }
+    .setup-plan-bar { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:16px 18px; margin-bottom:18px; background:rgba(249,115,22,.08); border:1px solid rgba(249,115,22,.34); border-radius:12px; }
+    .setup-plan-bar .eyebrow { color:#fdba74; font-size:10px; font-weight:900; letter-spacing:1.1px; text-transform:uppercase; }
+    .setup-plan-bar strong { display:block; margin-top:3px; font-size:18px; }
+    .setup-plan-bar span { display:block; color:#bbf7d0; font-size:13px; font-weight:700; margin-top:3px; }
+    .setup-grid { display:grid; grid-template-columns:1.35fr .85fr; gap:18px; align-items:start; }
+    .website-card, .setup-order { border:1px solid var(--border); border-radius:16px; background:var(--bg2); padding:26px; }
+    .website-card h3, .setup-order h3 { margin:0 0 7px; font-size:22px; letter-spacing:-.5px; }
+    .website-card > p { margin:0 0 18px; color:var(--text-muted); font-size:14px; line-height:1.55; }
+    .website-price { display:flex; align-items:baseline; gap:8px; margin:15px 0 18px; padding:13px 15px; background:rgba(249,115,22,.08); border:1px solid rgba(249,115,22,.28); border-radius:10px; }
+    .website-price strong { font-size:25px; color:#fff; letter-spacing:-.5px; }
+    .website-price span { color:#fdba74; font-size:12px; font-weight:800; letter-spacing:.5px; }
+    .website-features { display:grid; grid-template-columns:1fr 1fr; gap:7px 14px; margin:16px 0; color:#d9d9d9; font-size:13px; line-height:1.35; }
+    .website-features div::before { content:'✓'; color:#4ade80; margin-right:7px; font-weight:900; }
+    .website-guardrail { margin:15px 0 18px; padding:13px 14px; border-left:3px solid #f59e0b; background:rgba(245,158,11,.08); color:#d6d3d1; font-size:12px; line-height:1.55; }
+    .website-guardrail strong { color:#fcd34d; }
+    .website-upsell { margin:16px 0; padding:13px 14px; border:1px solid rgba(14,165,233,.34); border-radius:10px; background:rgba(14,165,233,.07); color:#cceeff; font-size:12px; line-height:1.55; }
+    .website-choices { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:17px; }
+    .website-choice { min-height:86px; padding:14px; text-align:left; border:1px solid var(--border); border-radius:10px; background:rgba(255,255,255,.025); color:#d4d4d4; cursor:pointer; }
+    .website-choice:hover, .website-choice.selected { border-color:var(--orange); background:rgba(249,115,22,.1); color:#fff; }
+    .website-choice strong { display:block; font-size:14px; margin-bottom:4px; }
+    .website-choice span { display:block; color:#a3a3a3; font-size:11px; line-height:1.4; }
+    .included-website { padding:17px; border:1px solid rgba(34,197,94,.42); border-radius:12px; background:linear-gradient(135deg,rgba(34,197,94,.12),rgba(34,197,94,.04)); }
+    .included-website .value-label { color:#86efac; font-size:11px; letter-spacing:.8px; font-weight:900; }
+    .included-website h4 { margin:5px 0 7px; font-size:20px; color:#fff; }
+    .included-website p { margin:0; color:#d1fae5; font-size:13px; line-height:1.5; }
+    .setup-order { position:sticky; top:20px; }
+    .setup-order h3 { font-size:18px; }
+    .setup-order-line { display:flex; justify-content:space-between; gap:12px; padding:13px 0; border-bottom:1px solid var(--border); font-size:13px; }
+    .setup-order-line span:first-child { color:var(--text-muted); }
+    .setup-order-line strong { color:#fff; text-align:right; }
+    .setup-order-line .included { color:#86efac; }
+    .setup-total { padding:16px 0 2px; }
+    .setup-total .due { display:flex; justify-content:space-between; font-size:18px; font-weight:900; }
+    .setup-total .then { margin-top:5px; color:#a3a3a3; font-size:12px; text-align:right; }
+    .prototype-note { margin-top:16px; padding:12px; color:#a3a3a3; background:rgba(255,255,255,.03); border-radius:9px; font-size:11px; line-height:1.5; }
+    .prototype-note strong { color:#fdba74; }
+
     /* ---- FORM ---- */
     .form-section {
       background: var(--bg2);
@@ -470,6 +512,10 @@
       .plan-category-header { display: block; margin-bottom: 16px; }
       .category-statement { text-align: left; margin-top: 8px; }
       .service-stack { grid-template-columns: 1fr; }
+      .setup-grid { grid-template-columns:1fr; }
+      .setup-plan-bar { align-items:flex-start; flex-direction:column; }
+      .website-features, .website-choices { grid-template-columns:1fr; }
+      .setup-order { position:static; }
       .nav { padding: 16px 20px; }
     }
   </style>
@@ -497,16 +543,21 @@
     <div class="step-line"></div>
     <div class="step" id="stepInd2">
       <div class="step-num">2</div>
-      <div class="step-label">Your Info</div>
+      <div class="step-label">Customize</div>
     </div>
     <div class="step-line"></div>
     <div class="step" id="stepInd3">
       <div class="step-num">3</div>
-      <div class="step-label">Brand &amp; Pricing</div>
+      <div class="step-label">Your Info</div>
     </div>
     <div class="step-line"></div>
     <div class="step" id="stepInd4">
       <div class="step-num">4</div>
+      <div class="step-label">Brand &amp; Pricing</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step" id="stepInd5">
+      <div class="step-num">5</div>
       <div class="step-label">Review &amp; Pay</div>
     </div>
   </div>
@@ -574,23 +625,24 @@
           <div>
             <div class="category-kicker">Done-For-You Marketing + BidDrop</div>
             <h3 class="category-title">We Do The Marketing For You</h3>
-            <div class="category-description"><strong>America's Home Experts</strong> handles the marketing while you run the business. BidDrop usage is included as part of the marketing relationship.</div>
+            <div class="category-description"><strong>America's Home Experts is our done-for-you marketing team built specifically for contractors and home-improvement companies.</strong> We handle your website, SEO, AI search, content, social media, lead systems and more — while you run the business. <a href="https://americashomeexperts.us/" target="_blank" rel="noopener" style="display:inline-block;color:#fdba74;font-weight:800;text-decoration:none;margin-top:7px;">Learn about America's Home Experts →</a></div>
           </div>
           <div class="category-statement">Website · local SEO · AI search · content<br>social media · lead systems · reputation</div>
         </div>
         <div class="plans-grid">
-          <div class="plan-card marketing-info digital-growth" data-plan-preview="digital-growth">
+          <div class="plan-card digital-growth" data-plan="digital_growth" data-price="2000" data-name="Digital Growth" onclick="selectPlan(this)">
             <div class="popular-badge" style="background:#0ea5e9;">DONE FOR YOU</div>
             <div class="plan-name">Digital Growth</div>
             <div class="plan-desc">We handle your digital marketing. You run your business.</div>
             <div class="plan-price"><span class="amount"><sup>$</sup>2,000</span><span class="period">/mo</span></div>
-            <div class="plan-credit-value"><div class="credit-amount">250 BIDDROP CREDITS INCLUDED</div><div class="credit-value">$1,000 VALUE EVERY MONTH</div></div>
+            <div class="plan-credit-value"><div class="credit-amount">250 BIDDROP CREDITS EVERY MONTH</div><div class="credit-value">$1,000 IN BIDDROP INCLUDED</div><div style="margin-top:8px;color:#d1fae5;font-size:11px;line-height:1.45;font-weight:700;">Use all 250? Add our complete done-for-you digital marketing system for just $1,000 more.</div></div>
             <div class="service-stack">
               <div class="service-group"><h4>WEBSITE + SEO</h4><p>Website management, local SEO, and Google Business Profile optimization.</p></div>
               <div class="service-group"><h4>AI SEARCH + CONTENT</h4><p>AEO / AI search optimization, SEO content, blogs, and search visibility.</p></div>
               <div class="service-group"><h4>SOCIAL MEDIA</h4><p>Content creation with managed and scheduled social posting.</p></div>
               <div class="service-group"><h4>LEAD SYSTEM</h4><p>CRM and lead capture, reputation tools, and directory presence.</p></div>
             </div>
+            <div class="website-guardrail" style="margin-top:15px;margin-bottom:0;"><strong>NEW WEBSITE INCLUDED IF NEEDED — $997 VALUE</strong><br>Included with the marketing engagement at no additional charge.</div>
             <div class="marketing-provider">Done-for-you marketing provided by <strong>America's Home Experts.</strong></div>
             <button class="select-btn marketing-cta" type="button">Grow My Business — $2,000/mo</button>
           </div>
@@ -598,9 +650,9 @@
           <div class="plan-card omnipresent-system" data-plan="omnipresent" data-price="3500" data-name="Omnipresent" onclick="selectPlan(this)">
             <div class="popular-badge" style="background:linear-gradient(90deg,#F97316,#FFB347);">FULL MARKETING SYSTEM</div>
             <div class="plan-name">Omnipresent</div>
-            <div class="plan-desc">Your complete digital marketing system + professional video production.</div>
+            <div class="plan-desc">Everything in Digital Growth + professional video production.</div>
             <div class="plan-price"><span class="amount"><sup>$</sup>3,500</span><span class="period">/mo</span></div>
-            <div class="plan-credit-value"><div class="credit-amount">500 BIDDROP CREDITS INCLUDED</div><div class="credit-value">$2,000 VALUE EVERY MONTH</div></div>
+            <div class="plan-credit-value"><div class="credit-amount">500 BIDDROP CREDITS EVERY MONTH</div><div class="credit-value">$2,000 IN BIDDROP INCLUDED</div><div style="margin-top:8px;color:#d1fae5;font-size:11px;line-height:1.45;font-weight:700;">Use all 500? You're getting the complete marketing system for just $1,500 more.</div></div>
             <div class="everything-plus">EVERYTHING IN DIGITAL GROWTH, PLUS:</div>
             <div class="service-group" style="min-height:auto;border-color:rgba(249,115,22,.28);"><h4 style="color:#fdba74;">PROFESSIONAL VIDEO PRODUCTION</h4><p>We come to your business and professionally film the content that makes your company impossible to ignore.</p></div>
             <div class="plan-features" style="margin-top:13px;">
@@ -610,6 +662,7 @@
               <div class="plan-feature included">✓ Ongoing strategy &amp; marketing management</div>
             </div>
             <div class="marketing-provider"><strong>Also included:</strong> website management, SEO, Local SEO, Google Business Profile, AEO / AI search, blogs and content, social media, CRM / lead systems, reputation and reviews, and America's Home Experts directory presence.</div>
+            <div class="website-guardrail" style="margin-top:14px;margin-bottom:0;"><strong>NEW WEBSITE INCLUDED IF NEEDED — $997 VALUE</strong><br>Included because Omnipresent includes everything in Digital Growth.</div>
             <div class="marketing-provider">Strategy call and marketing engagement discussion before enrollment.</div>
             <button class="select-btn marketing-cta">Get The Full System — $3,500/mo</button>
           </div>
@@ -617,11 +670,42 @@
       </section>
     </div><!-- end panel1 -->
 
-    <!-- STEP 2: COMPANY INFO FORM -->
+    <!-- STEP 2: CUSTOMIZE YOUR SETUP — APPROVAL-ONLY UI PROTOTYPE -->
     <div class="step-panel" id="panel2">
       <button class="btn-back" onclick="goToStep(1)">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Back to Plans
+      </button>
+      <div class="setup-shell">
+        <div class="setup-hero"><h2>Customize Your Setup</h2><p>A couple quick options before we get your account ready.</p></div>
+        <div class="setup-plan-bar"><div><div class="eyebrow">Your Plan</div><strong id="customPlanName">BidDrop Pro</strong><span id="customPlanPrice">$99/month</span></div><button class="change-plan" onclick="goToStep(1)">Change Plan</button></div>
+        <div class="setup-grid">
+          <section class="website-card">
+            <div id="standardWebsiteOption">
+              <h3>Need A New Website?</h3>
+              <p>Get a professionally built website designed for contractors and home-service companies.</p>
+              <div class="website-price"><strong>$997 ONE-TIME</strong><span>NEW CONTRACTOR WEBSITE</span></div>
+              <div class="website-features"><div>Up to 20 pages</div><div>Professional responsive design</div><div>Mobile optimized</div><div>Lead/contact forms</div><div>Click-to-call functionality</div><div>Service &amp; contact pages</div><div>Google Maps/contact integration</div><div>Basic analytics/tracking setup</div><div>SEO-ready technical foundation</div><div>SSL + 1 year hosting included</div></div>
+              <div class="website-guardrail"><strong>No ongoing SEO or marketing included.</strong><br>The build has a proper search-engine technical foundation, but ongoing SEO, AEO/AI search optimization, blogging, content, backlinks, Google Business Profile management, and marketing are not included in the $997 website build.</div>
+              <div class="website-upsell">Want us to handle SEO, AI search, content, social media, and ongoing marketing too? Choose <strong>Digital Growth</strong> or <strong>Omnipresent</strong>.</div>
+              <div class="website-choices"><button type="button" class="website-choice selected" data-website-choice="existing" onclick="selectWebsiteChoice('existing')"><strong>I Already Have A Website</strong><span>No website charge added.</span></button><button type="button" class="website-choice" data-website-choice="new" onclick="selectWebsiteChoice('new')"><strong>Build Me A New Website — $997</strong><span>One-time website build.</span></button></div>
+            </div>
+            <div id="includedWebsiteOption" style="display:none;">
+              <div class="included-website"><div class="value-label">$997 VALUE — INCLUDED WITH <span id="includedPlanLabel">DIGITAL GROWTH</span></div><h4>Your New Website Is Included</h4><p>Need a new website? We'll build it as part of your marketing setup at no additional charge.</p></div>
+              <div class="website-choices"><button type="button" class="website-choice selected" data-website-choice="existing" onclick="selectWebsiteChoice('existing')"><strong>Keep My Existing Website</strong><span>Price added: $0.</span></button><button type="button" class="website-choice" data-website-choice="new" onclick="selectWebsiteChoice('new')"><strong>Yes, I Need A New Website</strong><span>Price added: $0.</span></button></div>
+            </div>
+          </section>
+          <aside class="setup-order"><h3>Your Order</h3><div id="customOrderLines"></div><div class="setup-total"><div class="due"><span>Due Today</span><span id="customDueToday">$99</span></div><div class="then" id="customThen">Then: $99/month</div></div><div class="prototype-note"><strong>Website selection is confirmed at checkout.</strong> A new website is added only when you choose it on Pay As You Go or BidDrop Pro. It is included at no additional charge with Digital Growth and Omnipresent.</div></aside>
+        </div>
+        <button class="btn-primary" style="max-width:580px;display:block;margin:24px auto 0;" onclick="goToStep(3)">Continue to Your Info →</button>
+      </div>
+    </div><!-- end customization panel -->
+
+    <!-- STEP 3: COMPANY INFO FORM -->
+    <div class="step-panel" id="panel3">
+      <button class="btn-back" onclick="goToStep(2)">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back to Setup
       </button>
       <div class="form-section">
         <h2>Tell Us About Your Company</h2>
@@ -768,11 +852,11 @@
           <button class="btn-primary" onclick="submitForm()">Continue to Review →</button>
         </form>
       </div>
-    </div><!-- end panel2 -->
+    </div><!-- end panel3 -->
 
-    <!-- STEP 3: BRAND & PRICING -->
-    <div class="step-panel" id="panel3">
-      <button class="btn-back" onclick="goToStep(2)">
+    <!-- STEP 4: BRAND & PRICING -->
+    <div class="step-panel" id="panel4">
+      <button class="btn-back" onclick="goToStep(3)">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Back
       </button>
@@ -870,11 +954,11 @@
         <button class="btn-primary" style="margin-top:24px;" onclick="submitBrandStep()">Continue to Review →</button>
         <button style="background:none;border:none;color:#888;font-size:14px;cursor:pointer;margin-top:12px;width:100%;text-align:center;" onclick="skipBrandStep()">Skip this step →</button>
       </div>
-    </div><!-- end panel3 -->
+    </div><!-- end panel4 -->
 
-    <!-- STEP 4: REVIEW & PAY -->
-    <div class="step-panel" id="panel4">
-      <button class="btn-back" onclick="goToStep(3)">
+    <!-- STEP 5: REVIEW & PAY -->
+    <div class="step-panel" id="panel5">
+      <button class="btn-back" onclick="goToStep(4)">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Back
       </button>
@@ -931,7 +1015,7 @@
           Secured by Stripe — your card info never touches our servers
         </div>
       </div>
-    </div><!-- end panel3 -->
+    </div><!-- end panel5 -->
 
     <!-- SUCCESS -->
     <div class="step-panel" id="panelSuccess">
@@ -979,15 +1063,16 @@
 
   <script>
     // =============================================
-    // BIDDROP SIGNUP — Two-plan system
-    // Plans: monthly ($99/mo, 20 credits, GHL) vs payg ($0/mo, no credits, no GHL)
+    // BIDDROP SIGNUP — plan selection and setup customization UI
+    // Checkout and provisioning contracts remain unchanged pending approval.
     // =============================================
 
     let selectedPlan = null; // { plan, price, name }
     let formData = {};
     let brandData = {}; // logo, color, license, trade, pricing
+    let websiteSetup = { choice: 'existing' }; // Approval-only UI state; not sent to checkout.
     let currentStep = 1;
-    const TOTAL_STEPS = 4;
+    const TOTAL_STEPS = 5;
 
     // ---- PLAN SELECTION ----
     function selectPlan(card) {
@@ -1007,17 +1092,22 @@
       if (step === 1) document.getElementById('panel1').classList.add('active');
       else if (step === 2) {
         if (!selectedPlan) { goToStep(1); return; }
-        updatePlanSummary();
-        const aheInterestSection = document.getElementById('aheInterestSection');
-        if (aheInterestSection) aheInterestSection.style.display = selectedPlan.plan === 'omnipresent' ? 'none' : 'block';
+        updateSetupCustomization();
         document.getElementById('panel2').classList.add('active');
       }
       else if (step === 3) {
+        if (!selectedPlan) { goToStep(1); return; }
+        updatePlanSummary();
+        const aheInterestSection = document.getElementById('aheInterestSection');
+        if (aheInterestSection) aheInterestSection.style.display = ['omnipresent', 'digital_growth'].includes(selectedPlan.plan) ? 'none' : 'block';
         document.getElementById('panel3').classList.add('active');
       }
       else if (step === 4) {
-        updateReview();
         document.getElementById('panel4').classList.add('active');
+      }
+      else if (step === 5) {
+        updateReview();
+        document.getElementById('panel5').classList.add('active');
       }
       for (let i = 1; i <= TOTAL_STEPS; i++) {
         const ind = document.getElementById('stepInd' + i);
@@ -1035,6 +1125,8 @@
       document.getElementById('summaryPlanName').textContent = selectedPlan.name + ' Plan';
       if (selectedPlan.plan === 'monthly') {
         document.getElementById('summaryPlanPrice').textContent = '$99/mo — 20 credits included';
+      } else if (selectedPlan.plan === 'digital_growth') {
+        document.getElementById('summaryPlanPrice').textContent = '$2,000/mo — 250 BidDrop credits included ($1,000 value)';
       } else if (selectedPlan.plan === 'omnipresent') {
         document.getElementById('summaryPlanPrice').textContent = '$3,500/mo — 500 BidDrop credits included ($2,000 value)';
       } else {
@@ -1048,20 +1140,62 @@
       document.getElementById('reviewEmail').textContent = formData.email || '—';
 
       const isMonthly = selectedPlan.plan === 'monthly';
+      const isGrowth = selectedPlan.plan === 'digital_growth';
       const isOmnipresent = selectedPlan.plan === 'omnipresent';
-      const isPaid = isMonthly || isOmnipresent;
+      const isPaid = isMonthly || isGrowth || isOmnipresent;
       document.getElementById('reviewCreditsLine').style.display = isPaid ? 'flex' : 'none';
       document.getElementById('reviewGHLLine').style.display = isPaid ? 'flex' : 'none';
-      document.getElementById('reviewCredits').textContent = isOmnipresent ? '500 credits/month ($2,000 value)' : '20 credits/month';
+      document.getElementById('reviewCredits').textContent = isOmnipresent ? '500 credits/month ($2,000 value)' : (isGrowth ? '250 credits/month ($1,000 value)' : '20 credits/month');
       document.getElementById('reviewMonthlyBox').style.display = isPaid ? 'block' : 'none';
       document.getElementById('reviewMonthlyBox').innerHTML = isOmnipresent
         ? '<strong>Included every month: 500 BidDrop credits.</strong> Your AHE strategy call confirms your 6-month engagement and full-system setup.'
-        : '<strong>Billed monthly at $99.</strong> Your 20 included credits renew each billing cycle. Additional credits are $4 each. Cancel anytime.';
+        : (isGrowth
+          ? '<strong>Included every month: 250 BidDrop credits.</strong> Your AHE strategy call confirms your marketing setup.'
+          : '<strong>Billed monthly at $99.</strong> Your 20 included credits renew each billing cycle. Additional credits are $4 each. Cancel anytime.');
       document.getElementById('reviewPaygBox').style.display = isPaid ? 'none' : 'block';
-      document.getElementById('reviewTotal').textContent = isOmnipresent ? '$3,500' : (isMonthly ? '$99' : '$0 — Free');
+      const websiteCharge = (websiteSetup.choice === 'new' && !isGrowth && !isOmnipresent) ? 997 : 0;
+      const todayTotal = (isOmnipresent ? 3500 : (isGrowth ? 2000 : (isMonthly ? 99 : 0))) + websiteCharge;
+      document.getElementById('reviewTotal').textContent = todayTotal ? '$' + todayTotal.toLocaleString() : '$0 — Free';
       document.getElementById('checkoutBtn').textContent = isOmnipresent
         ? 'Start My Omnipresent System →'
-        : (isMonthly ? 'Start My Monthly Plan →' : 'Create Free Account →');
+        : (isGrowth ? 'Start My Digital Growth Plan →' : (isMonthly ? 'Start My Monthly Plan →' : 'Create Free Account →'));
+    }
+
+    function selectWebsiteChoice(choice) {
+      websiteSetup.choice = choice === 'new' ? 'new' : 'existing';
+      document.querySelectorAll('[data-website-choice]').forEach(btn => btn.classList.toggle('selected', btn.dataset.websiteChoice === websiteSetup.choice));
+      updateSetupOrder();
+    }
+
+    function updateSetupCustomization() {
+      if (!selectedPlan) return;
+      const isMarketingPlan = ['digital_growth', 'omnipresent'].includes(selectedPlan.plan);
+      const planLabel = selectedPlan.name;
+      document.getElementById('customPlanName').textContent = planLabel;
+      document.getElementById('customPlanPrice').textContent = '$' + Number(selectedPlan.price).toLocaleString() + '/month';
+      document.getElementById('standardWebsiteOption').style.display = isMarketingPlan ? 'none' : 'block';
+      document.getElementById('includedWebsiteOption').style.display = isMarketingPlan ? 'block' : 'none';
+      document.getElementById('includedPlanLabel').textContent = planLabel.toUpperCase();
+      if (isMarketingPlan && websiteSetup.choice !== 'new') websiteSetup.choice = 'existing';
+      document.querySelectorAll('[data-website-choice]').forEach(btn => btn.classList.toggle('selected', btn.dataset.websiteChoice === websiteSetup.choice));
+      updateSetupOrder();
+    }
+
+    function updateSetupOrder() {
+      if (!selectedPlan) return;
+      const isMarketingPlan = ['digital_growth', 'omnipresent'].includes(selectedPlan.plan);
+      const isNewWebsite = websiteSetup.choice === 'new';
+      const planPrice = Number(selectedPlan.price) || 0;
+      let lines = '<div class="setup-order-line"><span>' + selectedPlan.name + '</span><strong>$' + planPrice.toLocaleString() + (planPrice ? '/month' : '/month') + '</strong></div>';
+      if (selectedPlan.plan === 'digital_growth') lines += '<div class="setup-order-line"><span>250 BidDrop Credits Every Month</span><strong class="included">Included — $1,000 monthly value</strong></div>';
+      if (selectedPlan.plan === 'omnipresent') lines += '<div class="setup-order-line"><span>500 BidDrop Credits Every Month</span><strong class="included">Included — $2,000 monthly value</strong></div><div class="setup-order-line"><span>Professional Video Production</span><strong class="included">Included</strong></div>';
+      if (isMarketingPlan) lines += '<div class="setup-order-line"><span>New Website, If Needed</span><strong class="included">Included — $997 value</strong></div>';
+      else if (isNewWebsite) lines += '<div class="setup-order-line"><span>New Contractor Website</span><strong>$997 one-time</strong></div>';
+      else lines += '<div class="setup-order-line"><span>Website</span><strong>Existing website</strong></div>';
+      document.getElementById('customOrderLines').innerHTML = lines;
+      const dueToday = (isMarketingPlan ? planPrice : (planPrice + (isNewWebsite ? 997 : 0)));
+      document.getElementById('customDueToday').textContent = dueToday ? '$' + dueToday.toLocaleString() : (isNewWebsite ? '$997' : '$0');
+      document.getElementById('customThen').textContent = planPrice ? 'Then: $' + planPrice.toLocaleString() + '/month' : (isNewWebsite ? 'Then: no monthly BidDrop charge' : 'No monthly BidDrop charge');
     }
 
     // ---- FORM VALIDATION ----
@@ -1115,6 +1249,7 @@
         plan:          selectedPlan.plan,
         planName:      selectedPlan.name,
         planPrice:     selectedPlan.price,
+        websiteChoice: websiteSetup.choice,
         aheInterest:   Array.from(document.querySelectorAll('#aheInterestOptions input:checked')).map(function(input){ return input.value; }),
         agreedToTerms: true,
         agreedAt:      new Date().toISOString()
@@ -1122,7 +1257,7 @@
 
       // Email verification temporarily bypassed
       emailVerified = true;
-      goToStep(3);
+      goToStep(4);
     }
 
     function togglePasswordVisibility() {
@@ -1237,7 +1372,7 @@
         if (data.valid) {
           emailVerified = true;
           document.getElementById('verifyModal').style.display = 'none';
-          goToStep(3);
+          goToStep(4);
         } else {
           document.getElementById('verifyError').textContent = data.reason || 'Incorrect code. Please try again.';
           document.getElementById('verifyError').style.display = 'block';
@@ -1331,12 +1466,12 @@
       brandData.pricePerSquare = parseInt(document.getElementById('pricePerSquare').value) || null;
       brandData.costGutter     = parseInt(document.getElementById('costGutter').value) || null;
       brandData.offerGutters   = selectedTrades.includes('gutters');
-      goToStep(4);
+      goToStep(5);
     }
 
     function skipBrandStep() {
       brandData = {}; // clear any partial data
-      goToStep(4);
+      goToStep(5);
     }
 
     // ---- CHECKOUT ----

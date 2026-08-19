@@ -142,6 +142,9 @@ const PLAN_MONTHLY_CREDITS = {
   pro:        20,
   agency:     100,
   enterprise: 200,
+  monthly:    20,
+  digital_growth: 250,
+  omnipresent: 500,
 };
 
 async function getRawBody(req) {

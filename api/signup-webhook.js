@@ -97,6 +97,20 @@ const PLAN_CONFIG = {
     offer_multi_rep: true,
     offer_white_label: false,
   },
+  digital_growth: {
+    name: 'Digital Growth',
+    price: 2000,
+    mailer_credits: 250,
+    max_reps: 10,
+    max_pins_per_month: null,
+    offer_ghl: true,
+    offer_estimate_pages: true,
+    offer_analytics: true,
+    offer_solar: true,
+    offer_multi_rep: true,
+    offer_white_label: false,
+    offer_digital_growth: true,
+  },
   omnipresent: {
     name: 'The Omnipresent System',
     price: 3500,
@@ -167,8 +181,7 @@ async function sendWelcomeEmail({ email, firstName, companyName, planName, tempP
         </h1>
         <p style="font-size: 16px; color: #333333; line-height: 1.6; margin: 0 0 28px 0;">
           Your BidDrop account for <strong style="color: #111111;">${companyName}</strong> is ready to go.
-          You're on the <strong style="color: #F97316;">${planName} Plan</strong> with your first month free —
-          no charge until your trial ends.
+          You're on the <strong style="color: #F97316;">${planName} Plan</strong> and your account is ready to use.
         </p>
 
         <!-- Credentials Box -->
@@ -286,7 +299,7 @@ async function sendWelcomeEmail({ email, firstName, companyName, planName, tempP
 // Uses GHL API v2 with Private Integration token
 // Env vars: GHL_API_KEY, GHL_LOCATION_ID
 // ============================================================
-async function createGHLContact({ firstName, lastName, email, phone, companyName, planName, aheInterest }) {
+async function createGHLContact({ firstName, lastName, email, phone, companyName, planName, plan, aheInterest, websiteChoice, websiteIncluded, websitePaidAddOn }) {
   const GHL_API_KEY = process.env.GHL_API_KEY;
   const GHL_LOCATION_ID = process.env.GHL_LOCATION_ID;
   if (!GHL_API_KEY || !GHL_LOCATION_ID) {
@@ -294,6 +307,14 @@ async function createGHLContact({ firstName, lastName, email, phone, companyName
     return null;
   }
   try {
+    const planTag = `biddrop-${String(plan || planName || 'signup').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+    const tags = ['biddrop - signup', 'biddrop-signup', `plan-${String(planName || plan || 'signup').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`, planTag];
+    if (aheInterest) tags.push('ahe-growth-interest');
+    if (websiteChoice === 'new') tags.push('ahe-website-build');
+    if (websiteIncluded === '1') tags.push('ahe-website-included');
+    if (websitePaidAddOn === '1') tags.push('ahe-website-paid');
+    if (plan === 'digital_growth') tags.push('ahe-digital-growth');
+    if (plan === 'omnipresent') tags.push('ahe-omnipresent');
     const resp = await fetch('https://services.leadconnectorhq.com/contacts/', {
       method: 'POST',
       headers: {
@@ -308,7 +329,7 @@ async function createGHLContact({ firstName, lastName, email, phone, companyName
         phone: phone || '',
         companyName: companyName || '',
         locationId: GHL_LOCATION_ID,
-        tags: ['biddrop - signup', `plan-${planName.toLowerCase()}`, 'trial-30-day'].concat(aheInterest ? ['ahe-growth-interest'] : []),
+        tags,
         source: 'BidDrop Signup Page',
       }),
     });
@@ -423,6 +444,9 @@ export default async function handler(req, res) {
   const costGutter    = meta.cost_gutter    ? parseInt(meta.cost_gutter) : null;
   const offerGutters  = meta.offer_gutters  === '1';
   const aheInterest = meta.ahe_interest || '';
+  const websiteChoice = meta.website_choice === 'new' ? 'new' : 'existing';
+  const websiteIncluded = meta.website_included === '1' ? '1' : '0';
+  const websitePaidAddOn = meta.website_paid_add_on === '1' ? '1' : '0';
 
   // Fallback to customer email if metadata email missing
   const customerEmail = email || fullSession.customer_details?.email || fullSession.customer?.email;
@@ -548,7 +572,7 @@ export default async function handler(req, res) {
     const slug = generateSlug(companyName || `${firstName}-${lastName}`);
 
     // mailer_rate by plan (cost per mailer to the account)
-    const mailerRateByPlan = { starter: 2.50, pro: 2.50, agency: 2.50, enterprise: 2.50, monthly: 2.50, omnipresent: 2.50, payg: 2.50 };
+    const mailerRateByPlan = { starter: 2.50, pro: 2.50, agency: 2.50, enterprise: 2.50, monthly: 2.50, digital_growth: 2.50, omnipresent: 2.50, payg: 2.50 };
 
     const stripeCustomerId = fullSession.customer?.id || session.customer || null;
     const stripeSubscriptionId = fullSession.subscription?.id || fullSession.subscription || null;
@@ -565,8 +589,8 @@ export default async function handler(req, res) {
       slug: slug,
       stripe_customer_id: stripeCustomerId,
       stripe_subscription_id: stripeSubscriptionId,
-      trial_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      notes: `Signed up via BidDrop signup page. Plan: ${planConfig.name}. Stripe customer: ${stripeCustomerId}. Trial ends: ${new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}.${aheInterest ? ` AHE interest: ${aheInterest}.` : ''}`,
+      trial_ends_at: null,
+      notes: `Signed up via BidDrop signup page. Plan: ${planConfig.name}. Stripe customer: ${stripeCustomerId}. Website: ${websiteChoice === 'new' ? (websiteIncluded === '1' ? 'new website included' : 'new website add-on paid') : 'existing website'}.${aheInterest ? ` AHE interest: ${aheInterest}.` : ''}`,
       // Brand & Pricing from Step 3 (all optional — null if skipped)
       ...(brandColor    ? { brand_color: brandColor }              : {}),
       ...(licenseNum    ? { license_num: licenseNum }              : {}),
@@ -587,6 +611,45 @@ export default async function handler(req, res) {
     }
 
     console.log('[signup-webhook] Account created:', newAccount.id, customerEmail, plan);
+
+    // ---- 3b. Queue durable AHE fulfillment requests from the confirmed payment ----
+    const fulfillmentRequests = [];
+    const sharedDetails = {
+      company_name: companyName || '',
+      contact_name: `${firstName || ''} ${lastName || ''}`.trim(),
+      email: customerEmail,
+      phone: phone || '',
+      plan,
+      plan_name: planConfig.name,
+      website_choice: websiteChoice,
+      website_included: websiteIncluded === '1',
+      website_paid_add_on: websitePaidAddOn === '1',
+    };
+    if (websiteChoice === 'new') {
+      fulfillmentRequests.push({ request_type: 'website_build', details: sharedDetails });
+    }
+    if (plan === 'digital_growth') {
+      fulfillmentRequests.push({ request_type: 'digital_growth_kickoff', details: sharedDetails });
+    }
+    if (plan === 'omnipresent') {
+      fulfillmentRequests.push({ request_type: 'omnipresent_kickoff', details: sharedDetails });
+    }
+    for (const request of fulfillmentRequests) {
+      const { error: requestError } = await supabase
+        .from('account_onboarding_requests')
+        .upsert({
+          account_id: newAccount.id,
+          stripe_customer_id: stripeCustomerId,
+          stripe_checkout_session_id: session.id,
+          request_type: request.request_type,
+          status: 'pending',
+          details: request.details,
+        }, { onConflict: 'account_id,request_type' });
+      if (requestError) console.error('[signup-webhook] Fulfillment request insert failed:', request.request_type, requestError.message);
+    }
+    const fulfillmentSummary = fulfillmentRequests.length
+      ? fulfillmentRequests.map(request => request.request_type.replace(/_/g, ' ')).join(', ')
+      : 'No AHE fulfillment request';
 
     // ---- 4. Create user_profile record linking auth user to account ----
     // Use upsert so that if a soft-deleted profile row already exists for this
@@ -643,6 +706,8 @@ export default async function handler(req, res) {
             <p><strong>Email:</strong> ${customerEmail}</p>
             <p><strong>Phone:</strong> ${phone || '—'}</p>
             <p><strong>Plan:</strong> ${planConfig.name}</p>
+            <p><strong>Website:</strong> ${websiteChoice === 'new' ? (websiteIncluded === '1' ? 'New website included' : 'New website add-on paid') : 'Existing website'}</p>
+            <p><strong>AHE fulfillment:</strong> ${fulfillmentSummary}</p>
             ${aheInterest ? `<p><strong>AHE interest:</strong> ${aheInterest.replace(/ \| /g, ', ')}</p>` : ''}
             <p style="color:#6b7280;font-size:12px;">Account ID: ${newAccount?.id || '—'}</p>
           </div>`,
@@ -661,7 +726,11 @@ export default async function handler(req, res) {
       phone,
       companyName,
       planName: planConfig.name,
+      plan,
       aheInterest,
+      websiteChoice,
+      websiteIncluded,
+      websitePaidAddOn,
     });
 
     return res.status(200).json({ received: true, success: true, accountId: newAccount.id });

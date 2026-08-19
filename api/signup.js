@@ -11,14 +11,17 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 // Stripe Price IDs for each plan (monthly recurring).
 const PRICE_IDS = {
   monthly: process.env.STRIPE_PRICE_MONTHLY || 'price_1TuE9ZACMaED04opUcqpS98m',
+  digital_growth: process.env.STRIPE_PRICE_DIGITAL_GROWTH || 'price_1U5xCLACMaED04opexqQJBs9',
   omnipresent: process.env.STRIPE_PRICE_OMNIPRESENT || 'price_1U2ytFACMaED04opNATKiGUm',
+  website: process.env.STRIPE_PRICE_CONTRACTOR_WEBSITE || 'price_1U5xCMACMaED04opqgAJ5S8L',
   // payg has no Stripe price — no subscription, card on file only
 };
 
 // Monthly mailer credits per plan (given on signup as bonus)
 // Monthly accounts also receive their 20 included credits on first billing cycle via webhook.
 const PLAN_MAILER_CREDITS = {
-  monthly: 40,
+  monthly: 20,
+  digital_growth: 250,
   omnipresent: 500,
   payg: 0,
 };
@@ -29,6 +32,7 @@ const WELCOME_CREDITS = 2;
 // Max users per plan — must match PLAN_MAX_REPS_INV in admin-users.js
 const PLAN_MAX_REPS = {
   monthly: 10,
+  digital_growth: 10,
   omnipresent: 10,
   payg: 1,
 };
@@ -51,6 +55,7 @@ export default async function handler(req, res) {
     plan,
     planName,
     planPrice,
+    websiteChoice,
     // Brand & Pricing (Step 3 — all optional)
     brandColor,
     licenseNum,
@@ -85,9 +90,14 @@ export default async function handler(req, res) {
   }
 
   // Validate plan
-  if (!['monthly', 'payg', 'omnipresent'].includes(plan)) {
+  if (!['monthly', 'payg', 'digital_growth', 'omnipresent'].includes(plan)) {
     return res.status(400).json({ error: `Unknown plan: ${plan}. Please contact support.` });
   }
+
+  const normalizedWebsiteChoice = websiteChoice === 'new' ? 'new' : 'existing';
+  const marketingPlan = ['digital_growth', 'omnipresent'].includes(plan);
+  const websiteIsIncluded = marketingPlan && normalizedWebsiteChoice === 'new';
+  const websiteIsPaidAddOn = !marketingPlan && normalizedWebsiteChoice === 'new';
 
   const priceId = PRICE_IDS[plan]; // undefined for payg
 
@@ -136,6 +146,9 @@ export default async function handler(req, res) {
           price_per_square: pricePerSquare ? String(pricePerSquare) : '',
           cost_gutter: costGutter ? String(costGutter) : '',
           offer_gutters: offerGutters ? '1' : '0',
+          website_choice: normalizedWebsiteChoice,
+          website_included: websiteIsIncluded ? '1' : '0',
+          website_paid_add_on: websiteIsPaidAddOn ? '1' : '0',
         },
       });
     } else {
@@ -161,12 +174,15 @@ export default async function handler(req, res) {
           price_per_square: pricePerSquare ? String(pricePerSquare) : '',
           cost_gutter: costGutter ? String(costGutter) : '',
           offer_gutters: offerGutters ? '1' : '0',
+          website_choice: normalizedWebsiteChoice,
+          website_included: websiteIsIncluded ? '1' : '0',
+          website_paid_add_on: websiteIsPaidAddOn ? '1' : '0',
         },
       });
     }
 
-    // ── Pay-as-you-go: require card via Stripe SetupIntent ──
-    if (plan === 'payg') {
+    // ── Pay-as-you-go without a website: require card via Stripe SetupIntent ──
+    if (plan === 'payg' && !websiteIsPaidAddOn) {
 
       // ── Step 2: setupIntentId provided — card confirmed, create account ──
       if (setupIntentId) {
@@ -376,22 +392,16 @@ export default async function handler(req, res) {
       });
     }
 
-    // ── Monthly plan: create Stripe Checkout Session ──
-    // No trial — charge starts immediately at $99/mo.
-    // Monthly accounts get 2 welcome credits immediately via signup-webhook when
-    // the subscription is created; the 20 included credits replenish each billing cycle.
+    // ── Paid signup: create Stripe Checkout Session ──────────────────────────
+    // Subscription plans charge immediately. PAYG with a selected website uses a
+    // one-time Checkout Session so the website is paid before it is handed off.
     // IMPORTANT: When `customer` is set, `customer_email` must be completely omitted
     // (not just undefined) — Stripe rejects requests that include both.
     const sessionParams = {
-      mode: 'subscription',
+      mode: plan === 'payg' ? 'payment' : 'subscription',
       customer: customer.id,
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
-      subscription_data: {
+      line_items: [],
+      ...(plan !== 'payg' ? { subscription_data: {
         metadata: {
           company_name: companyName,
           first_name: firstName,
@@ -414,8 +424,11 @@ export default async function handler(req, res) {
           price_per_square: pricePerSquare ? String(pricePerSquare) : '',
           cost_gutter: costGutter ? String(costGutter) : '',
           offer_gutters: offerGutters ? '1' : '0',
+          website_choice: normalizedWebsiteChoice,
+          website_included: websiteIsIncluded ? '1' : '0',
+          website_paid_add_on: websiteIsPaidAddOn ? '1' : '0',
         },
-      },
+      }} : {}),
       success_url: `${(process.env.APP_URL || 'https://biddrop.us').trim()}/signup?success=1`,
       cancel_url: `${(process.env.APP_URL || 'https://biddrop.us').trim()}/signup`,
       allow_promotion_codes: true,
@@ -432,8 +445,14 @@ export default async function handler(req, res) {
         state,
         plan,
         ahe_interest: aheInterestText,
+        website_choice: normalizedWebsiteChoice,
+        website_included: websiteIsIncluded ? '1' : '0',
+        website_paid_add_on: websiteIsPaidAddOn ? '1' : '0',
       },
     };
+
+    if (plan !== 'payg') sessionParams.line_items.push({ price: priceId, quantity: 1 });
+    if (websiteIsPaidAddOn) sessionParams.line_items.push({ price: PRICE_IDS.website, quantity: 1 });
 
     // ── Save password to pending_signups so webhook can use it ──
     // The user typed their password on BidDrop's form. We store it temporarily
