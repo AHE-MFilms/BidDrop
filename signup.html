@@ -23,7 +23,7 @@
       --bg3: #1a1a1a;
       --border: #2a2a2a;
       --text: #ffffff;
-      --text-muted: #888888;
+      --text-muted: #ffffff;
       --green: #22c55e;
       --red: #ef4444;
     }
@@ -202,9 +202,12 @@
     .service-group h4 { margin: 0 0 4px; color: #fff; font-size: 11px; letter-spacing: .4px; }
     .service-group p { margin: 0; color: var(--text-muted); font-size: 11px; line-height: 1.45; }
     .everything-plus { margin: 17px 0 11px; padding: 11px 12px; border-left: 3px solid var(--orange); background: rgba(249,115,22,.10); color: #fff; font-size: 13px; font-weight: 900; letter-spacing: .2px; }
-    .marketing-provider { margin-top: 14px; color: rgba(255,255,255,.58); font-size: 11px; line-height: 1.5; }
+    .marketing-provider { margin-top: 14px; color: #ffffff; font-size: 11px; line-height: 1.5; }
     .marketing-provider strong { color: #fdba74; }
     .marketing-cta { background: linear-gradient(90deg,#F97316,#FFB347); border-color: transparent; color: #fff; }
+    .plan-commitment { margin: 10px 0 15px; padding: 9px 11px; border: 1px solid rgba(255,255,255,.28); border-radius: 8px; background: rgba(255,255,255,.07); color: #fff; font-size: 11px; font-weight: 900; letter-spacing: .45px; line-height: 1.45; text-transform: uppercase; }
+    .plan-desc, .category-description, .service-group p, .website-card > p, .setup-hero p, .website-upsell { color: #ffffff; }
+    [style*="color:#888"], [style*="color:#555"], [style*="color:#777"] { color: #ffffff !important; }
     .plan-divider { height: 1px; background: var(--border); margin: 16px 0; }
     .select-btn {
       width: 100%;
@@ -635,6 +638,7 @@
             <div class="plan-name">Digital Growth</div>
             <div class="plan-desc">We handle your digital marketing. You run your business.</div>
             <div class="plan-price"><span class="amount"><sup>$</sup>2,000</span><span class="period">/mo</span></div>
+            <div class="plan-commitment">6-month commitment · Deliverables planned and completed across the full 6-month program</div>
             <div class="plan-credit-value"><div class="credit-amount">250 BIDDROP CREDITS EVERY MONTH</div><div class="credit-value">$1,000 IN BIDDROP INCLUDED</div><div style="margin-top:8px;color:#d1fae5;font-size:11px;line-height:1.45;font-weight:700;">Use all 250? Add our complete done-for-you digital marketing system for just $1,000 more.</div></div>
             <div class="service-stack">
               <div class="service-group"><h4>WEBSITE + SEO</h4><p>Website management, local SEO, and Google Business Profile optimization.</p></div>
@@ -652,13 +656,14 @@
             <div class="plan-name">Omnipresent</div>
             <div class="plan-desc">Everything in Digital Growth + professional video production.</div>
             <div class="plan-price"><span class="amount"><sup>$</sup>3,500</span><span class="period">/mo</span></div>
+            <div class="plan-commitment">6-month commitment · Deliverables planned and completed across the full 6-month program</div>
             <div class="plan-credit-value"><div class="credit-amount">500 BIDDROP CREDITS EVERY MONTH</div><div class="credit-value">$2,000 IN BIDDROP INCLUDED</div><div style="margin-top:8px;color:#d1fae5;font-size:11px;line-height:1.45;font-weight:700;">Use all 500? You're getting the complete marketing system for just $1,500 more.</div></div>
             <div class="everything-plus">EVERYTHING IN DIGITAL GROWTH, PLUS:</div>
             <div class="service-group" style="min-height:auto;border-color:rgba(249,115,22,.28);"><h4 style="color:#fdba74;">PROFESSIONAL VIDEO PRODUCTION</h4><p>We come to your business and professionally film the content that makes your company impossible to ignore.</p></div>
             <div class="plan-features" style="margin-top:13px;">
-              <div class="plan-feature included">✓ 4 on-site professional video production sessions</div>
-              <div class="plan-feature included">✓ 48 short-form videos · 4 long-form videos</div>
-              <div class="plan-feature included">✓ 72 scheduled posts for Facebook, Instagram, YouTube &amp; TikTok</div>
+              <div class="plan-feature included">✓ 4 on-site professional video production sessions across 6 months</div>
+              <div class="plan-feature included">✓ 48 short-form videos · 4 long-form videos delivered across 6 months</div>
+              <div class="plan-feature included">✓ 72 scheduled posts across the 6-month program</div>
               <div class="plan-feature included">✓ Ongoing strategy &amp; marketing management</div>
             </div>
             <div class="marketing-provider"><strong>Also included:</strong> website management, SEO, Local SEO, Google Business Profile, AEO / AI search, blogs and content, social media, CRM / lead systems, reputation and reviews, and America's Home Experts directory presence.</div>
@@ -834,6 +839,7 @@
               I have read and agree to the BidDrop <a href="/terms" target="_blank">Terms of Service</a> and <a href="/privacy" target="_blank">Privacy Policy</a>. I understand that: (1) satellite measurements are estimates only and may not be used for insurance claims or permits; (2) any DNC status indicators shown in the Platform are provided as a convenience only and may be inaccurate or outdated — BidDrop is not liable for any TCPA or DNC violation arising from reliance on that data; (3) I am solely responsible for independently verifying DNC status and complying with all applicable telemarketing laws; and (4) BidDrop is not responsible for how I use any data obtained through the Platform.
             </label>
           </div>
+          <div id="marketingCommitmentNotice" style="display:none;margin:10px 0 0;padding:11px 13px;border:1px solid rgba(249,115,22,.5);border-radius:8px;background:rgba(249,115,22,.10);font-size:12px;line-height:1.5;color:#fff;"><strong>Six-month commitment:</strong> Digital Growth and Omnipresent are six-month marketing engagements. Services, content, and deliverables are scheduled and fulfilled throughout the full six-month program.</div>
           <div class="form-error terms-error" id="errTerms">You must agree to the Terms of Service to continue.</div>
 
           <section class="ahe-interest" id="aheInterestSection" aria-labelledby="aheInterestHeading">
@@ -1126,12 +1132,14 @@
       if (selectedPlan.plan === 'monthly') {
         document.getElementById('summaryPlanPrice').textContent = '$99/mo — 20 credits included';
       } else if (selectedPlan.plan === 'digital_growth') {
-        document.getElementById('summaryPlanPrice').textContent = '$2,000/mo — 250 BidDrop credits included ($1,000 value)';
+        document.getElementById('summaryPlanPrice').textContent = '$2,000/mo — 250 credits included ($1,000 value) · 6-month commitment';
       } else if (selectedPlan.plan === 'omnipresent') {
-        document.getElementById('summaryPlanPrice').textContent = '$3,500/mo — 500 BidDrop credits included ($2,000 value)';
+        document.getElementById('summaryPlanPrice').textContent = '$3,500/mo — 500 credits included ($2,000 value) · 6-month commitment';
       } else {
         document.getElementById('summaryPlanPrice').textContent = '$0/mo — credits at $4 each';
       }
+      const commitmentNotice = document.getElementById('marketingCommitmentNotice');
+      if (commitmentNotice) commitmentNotice.style.display = ['digital_growth', 'omnipresent'].includes(selectedPlan.plan) ? 'block' : 'none';
     }
 
     function updateReview() {
@@ -1150,7 +1158,7 @@
       document.getElementById('reviewMonthlyBox').innerHTML = isOmnipresent
         ? '<strong>Included every month: 500 BidDrop credits.</strong> Your AHE strategy call confirms your 6-month engagement and full-system setup.'
         : (isGrowth
-          ? '<strong>Included every month: 250 BidDrop credits.</strong> Your AHE strategy call confirms your marketing setup.'
+          ? '<strong>Included every month: 250 BidDrop credits.</strong> This is a six-month marketing commitment; services and deliverables are planned and fulfilled throughout the full program.'
           : '<strong>Billed monthly at $99.</strong> Your 20 included credits renew each billing cycle. Additional credits are $4 each. Cancel anytime.');
       document.getElementById('reviewPaygBox').style.display = isPaid ? 'none' : 'block';
       const websiteCharge = (websiteSetup.choice === 'new' && !isGrowth && !isOmnipresent) ? 997 : 0;
@@ -1172,7 +1180,7 @@
       const isMarketingPlan = ['digital_growth', 'omnipresent'].includes(selectedPlan.plan);
       const planLabel = selectedPlan.name;
       document.getElementById('customPlanName').textContent = planLabel;
-      document.getElementById('customPlanPrice').textContent = '$' + Number(selectedPlan.price).toLocaleString() + '/month';
+      document.getElementById('customPlanPrice').textContent = '$' + Number(selectedPlan.price).toLocaleString() + '/month' + (isMarketingPlan ? ' · 6-month commitment' : '');
       document.getElementById('standardWebsiteOption').style.display = isMarketingPlan ? 'none' : 'block';
       document.getElementById('includedWebsiteOption').style.display = isMarketingPlan ? 'block' : 'none';
       document.getElementById('includedPlanLabel').textContent = planLabel.toUpperCase();
@@ -1189,13 +1197,14 @@
       let lines = '<div class="setup-order-line"><span>' + selectedPlan.name + '</span><strong>$' + planPrice.toLocaleString() + (planPrice ? '/month' : '/month') + '</strong></div>';
       if (selectedPlan.plan === 'digital_growth') lines += '<div class="setup-order-line"><span>250 BidDrop Credits Every Month</span><strong class="included">Included — $1,000 monthly value</strong></div>';
       if (selectedPlan.plan === 'omnipresent') lines += '<div class="setup-order-line"><span>500 BidDrop Credits Every Month</span><strong class="included">Included — $2,000 monthly value</strong></div><div class="setup-order-line"><span>Professional Video Production</span><strong class="included">Included</strong></div>';
+      if (isMarketingPlan) lines += '<div class="setup-order-line"><span>Marketing Engagement</span><strong class="included">6-month commitment</strong></div><div class="setup-order-line"><span>Delivery Timeline</span><strong class="included">Across 6 months</strong></div>';
       if (isMarketingPlan) lines += '<div class="setup-order-line"><span>New Website, If Needed</span><strong class="included">Included — $997 value</strong></div>';
       else if (isNewWebsite) lines += '<div class="setup-order-line"><span>New Contractor Website</span><strong>$997 one-time</strong></div>';
       else lines += '<div class="setup-order-line"><span>Website</span><strong>Existing website</strong></div>';
       document.getElementById('customOrderLines').innerHTML = lines;
       const dueToday = (isMarketingPlan ? planPrice : (planPrice + (isNewWebsite ? 997 : 0)));
       document.getElementById('customDueToday').textContent = dueToday ? '$' + dueToday.toLocaleString() : (isNewWebsite ? '$997' : '$0');
-      document.getElementById('customThen').textContent = planPrice ? 'Then: $' + planPrice.toLocaleString() + '/month' : (isNewWebsite ? 'Then: no monthly BidDrop charge' : 'No monthly BidDrop charge');
+      document.getElementById('customThen').textContent = isMarketingPlan ? '6-month commitment · $' + planPrice.toLocaleString() + '/month' : (planPrice ? 'Then: $' + planPrice.toLocaleString() + '/month' : (isNewWebsite ? 'Then: no monthly BidDrop charge' : 'No monthly BidDrop charge'));
     }
 
     // ---- FORM VALIDATION ----
