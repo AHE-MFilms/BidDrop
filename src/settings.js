@@ -255,17 +255,19 @@ function openSettings(){
   const offSolarEl=document.getElementById('s-off-solar'); if(offSolarEl) offSolarEl.checked=!!c.offerSolar;
   // Show/hide solar add-on row in estimate builder
   const solarRow=document.getElementById('solar-addon-row'); if(solarRow) solarRow.style.display=c.offerSolar?'block':'none';
-  document.getElementById('s-ovh').value=c.overhead||15;
-  document.getElementById('s-mgn').value=c.margin||20;
-  const _stax=document.getElementById('s-tax'); if(_stax) _stax.value=c.taxRate||0;
-  document.getElementById('s-color').value=c.brandColor||'#F25C05';
-  document.getElementById('s-ghl-key').value=c.ghlApiKey||'';
+  // These legacy all-trade pricing controls are intentionally absent from the
+  // current per-square layout. Populate them only when a layout includes them.
+  _sset('s-ovh', c.overhead||15);
+  _sset('s-mgn', c.margin||20);
+  _sset('s-tax', c.taxRate||0);
+  _sset('s-color', c.brandColor||'#F25C05');
+  _sset('s-ghl-key', c.ghlApiKey||'');
   // Check GHL OAuth connection status
   setTimeout(ghlCheckOAuthStatus, 100);
-  document.getElementById('s-ghl-loc').value=c.ghlLocationId||'';
-  document.getElementById('s-ghl-pipe').value=c.ghlPipelineId||'';
-  document.getElementById('s-ghl-sms-tpl').value=c.ghlSmsTpl||DEFAULTS.ghlSmsTpl;
-  document.getElementById('s-ghl-email-tpl').value=c.ghlEmailTpl||DEFAULTS.ghlEmailTpl;
+  _sset('s-ghl-loc', c.ghlLocationId||'');
+  _sset('s-ghl-pipe', c.ghlPipelineId||'');
+  _sset('s-ghl-sms-tpl', c.ghlSmsTpl||DEFAULTS.ghlSmsTpl);
+  _sset('s-ghl-email-tpl', c.ghlEmailTpl||DEFAULTS.ghlEmailTpl);
   // JobNimbus settings
   const _jnKey=document.getElementById('s-jn-key'); if(_jnKey) _jnKey.value=c.jnApiKey||'';
   const _jnRt=document.getElementById('s-jn-record-type'); if(_jnRt) _jnRt.value=c.jnRecordType||'Customer';
@@ -329,12 +331,12 @@ function openSettings(){
     lp.innerHTML=c.logoData?'<img src="'+c.logoData+'" style="max-width:100%;max-height:100%;object-fit:contain;">':'No logo';
     if(c.logoData){lp.style.cursor='zoom-in';lp.onclick=()=>openBrandingLightbox(c.logoData,'Company Logo');}else{lp.style.cursor='';lp.onclick=null;}
   }
-  document.getElementById('s-reptitle').value=c.repTitle||'';
-  document.getElementById('s-hspos').value=c.headshotPos||'30';
-  document.getElementById('s-bookingurl').value=c.bookingUrl||'';
+  _sset('s-reptitle', c.repTitle||'');
+  _sset('s-hspos', c.headshotPos||'30');
+  _sset('s-bookingurl', c.bookingUrl||'');
   if(typeof loadCalendlyStatus==='function') loadCalendlyStatus();
   if(typeof loadSalesRabbitIntegration==='function') loadSalesRabbitIntegration();
-  document.getElementById('s-lead-alert-email').value=c.leadAlertEmail||'';
+  _sset('s-lead-alert-email', c.leadAlertEmail||'');
   const hp=document.getElementById('headshot-preview');
   if(hp){
     hp.innerHTML=c.headshot?'<img src="'+c.headshot+'" style="width:100%;height:100%;object-fit:cover;object-position:center '+((c.headshotPos||'30')+'%')+'">' :'No photo';
