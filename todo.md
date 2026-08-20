@@ -140,3 +140,11 @@
 - [x] Report the verified production-access and Stripe-signup status, including any remaining customer-facing blocker.
 - [ ] Diagnose and repair the live Team Members invitation error: `Cannot read properties of undefined (reading 'auth')`.
 - [ ] Deploy and safely verify the repaired team-invite flow without sending an unauthorized customer invitation.
+- [ ] Diagnose and repair the mobile Settings error caused by the removed `s-ovh` pricing field.
+- [ ] Deploy and verify that the Settings page loads without JavaScript errors on mobile.
+- [ ] Diagnose and repair stale mobile delivery of the Team Members invite handler after a production deploy.
+- [ ] Verify cache-safe live delivery of the repaired invite flow without sending an unauthorized invitation.
+- [ ] Perform a focused production reliability audit across authentication, Settings, invitations, signup, billing, and integrations.
+- [ ] Produce a prioritized next-feature roadmap based on customer impact, reliability, and implementation readiness.
+- [ ] Build plan-specific activation checklists for PAYG, Monthly, Digital Growth, and Omnipresent accounts.
+- [ ] Persist, test, and deploy activation progress without blocking normal BidDrop workflows.
