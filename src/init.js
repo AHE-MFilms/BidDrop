@@ -13,6 +13,16 @@ window.addEventListener('load', ()=>{
   if (_eId) { initEstimatePage(_eId); return; }
   // Initialize Supabase client
   sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // Compatibility alias for older in-page handlers. Keep it synchronized with
+  // the authoritative client so a stale handler cannot fail before its request.
+  window._sb = sb;
+  // The standalone PWA install path is retired. Remove any legacy worker that
+  // could preserve an old application shell on mobile Safari between releases.
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations()
+      .then(registrations => Promise.all(registrations.map(registration => registration.unregister())))
+      .catch(() => {});
+  }
   // Show login screen immediately (hidden by onSignedIn if session exists)
   showLoginScreen();
 
