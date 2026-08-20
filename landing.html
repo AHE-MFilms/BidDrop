@@ -1,673 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<!-- Meta Pixel Code -->
-<script>
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '1141930967762404');
-fbq('track', 'PageView');
-</script>
-<noscript><img height="1" width="1" style="display:none"
-src="https://www.facebook.com/tr?id=1141930967762404&ev=PageView&noscript=1"
-/></noscript>
-<!-- End Meta Pixel Code -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BidDrop — The Field Sales Platform for Exterior Contractors</title>
-<meta name="description" content="BidDrop is the field sales platform for exterior contractors. Pin a property, build a digital project preview, and connect with homeowners — all from your phone.">
-<link rel="icon" href="/favicon.ico" type="image/x-icon">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-/* ── RESET & TOKENS ── */
-*{margin:0;padding:0;box-sizing:border-box;}
-:root{
-  --bg:#0A0F1E;
-  --bg2:#0F1628;
-  --bg3:#111827;
-  --bg-card:#111827;
-  --border:rgba(255,255,255,0.08);
-  --border-orange:rgba(249,115,22,0.4);
-  --accent:#F97316;
-  --accent-hover:#EA6C0A;
-  --gold:#FFB347;
-  --text:#fff;
-  --mid:rgba(255,255,255,0.65);
-  --muted:rgba(255,255,255,0.38);
-  --font-h:'Montserrat',sans-serif;
-  --font-b:'Inter',sans-serif;
-  --green:#22c55e;
-}
-html{scroll-behavior:smooth;}
-body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:16px;line-height:1.6;}
-a{color:inherit;text-decoration:none;}
-img{max-width:100%;display:block;}
-.container{max-width:1100px;margin:0 auto;padding:0 24px;}
-
-/* ── BUTTONS ── */
-.btn-primary{display:inline-block;background:var(--accent);color:#fff;font-family:var(--font-h);font-size:15px;font-weight:700;padding:14px 28px;border-radius:10px;transition:background .15s,transform .12s;}
-.btn-primary:hover{background:var(--accent-hover);transform:translateY(-1px);}
-.btn-secondary{display:inline-block;border:1.5px solid rgba(255,255,255,0.22);color:#fff;font-family:var(--font-h);font-size:15px;font-weight:600;padding:14px 28px;border-radius:10px;transition:border-color .15s;}
-.btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
-
-/* ── ANNOUNCEMENT BAR ── */
-.ann-bar{background:var(--accent);color:#fff;text-align:center;font-family:var(--font-b);font-size:13px;font-weight:600;padding:9px 16px;line-height:1.4;}
-.ann-bar a{color:#fff;font-weight:800;text-decoration:underline;}
-
-/* ── NAV ── */
-.lp-nav{position:sticky;top:0;z-index:1000;background:rgba(10,15,30,0.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;}
-.lp-logo{font-family:var(--font-h);font-size:24px;font-weight:800;color:#fff;letter-spacing:.5px;}
-.lp-logo span{color:var(--accent);}
-.lp-nav-links{display:flex;align-items:center;gap:28px;}
-.lp-nav-links a{font-family:var(--font-b);font-size:14px;font-weight:500;color:var(--mid);transition:color .15s;}
-.lp-nav-links a:hover{color:#fff;}
-.lp-nav-right{display:flex;align-items:center;gap:12px;}
-.lp-nav-login{font-family:var(--font-b);font-size:14px;font-weight:500;color:var(--mid);transition:color .15s;}
-.lp-nav-login:hover{color:#fff;}
-.lp-nav-cta{background:var(--accent);color:#fff;font-family:var(--font-b);font-size:13px;font-weight:700;padding:8px 18px;border-radius:8px;transition:background .15s;}
-.lp-nav-cta:hover{background:var(--accent-hover);}
-@media(max-width:768px){.lp-nav-links{display:none;}.lp-nav{padding:0 16px;}}
-
-/* ── HERO ── */
-.hero{position:relative;min-height:100vh;display:flex;align-items:center;overflow:hidden;background:var(--bg);}
-.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 20% 50%, rgba(249,115,22,0.12) 0%, transparent 65%);pointer-events:none;}
-.hero-inner{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;padding:8rem 0 6rem;position:relative;z-index:1;}
-.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.28);border-radius:100px;padding:6px 16px 6px 12px;margin-bottom:1.5rem;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);}
-.hero h1{font-family:var(--font-h);font-size:clamp(2.5rem,5vw,4rem);font-weight:800;color:#fff;margin-bottom:1.5rem;line-height:1.05;}
-.hero h1 em{font-style:normal;background:linear-gradient(90deg,var(--accent),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.hero-sub{font-size:1.1rem;color:var(--mid);line-height:1.75;max-width:520px;margin-bottom:2.5rem;font-weight:400;}
-.hero-ctas{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:2rem;}
-.hero-note{font-size:12px;color:var(--muted);margin-bottom:1.5rem;}
-.hero-checks{display:flex;flex-wrap:wrap;gap:8px 20px;}
-.hero-checks span{font-size:13px;color:var(--mid);font-weight:500;}
-.hero-checks span::before{content:'✓ ';color:var(--green);}
-/* Phone mockup */
-.hero-phone-wrap{display:flex;justify-content:center;align-items:center;}
-.hero-phone-bg{background:linear-gradient(135deg,#141D35,#0F1628);border:1px solid var(--border);border-radius:24px;padding:28px;box-shadow:0 32px 80px rgba(0,0,0,0.6),0 0 0 1px rgba(255,255,255,0.07);position:relative;transform:perspective(1200px) rotateY(-8deg) rotateX(3deg);}
-.hero-phone-inner{background:#0A0F1E;border-radius:16px;padding:20px;min-width:260px;}
-.phone-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-.phone-logo{font-family:var(--font-h);font-size:16px;font-weight:800;color:#fff;}
-.phone-logo span{color:var(--accent);}
-.phone-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
-.phone-stat{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:10px 6px;text-align:center;}
-.phone-stat-num{font-family:var(--font-h);font-size:20px;font-weight:800;color:var(--accent);}
-.phone-stat-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
-.phone-map{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;height:100px;position:relative;overflow:hidden;margin-bottom:12px;}
-.phone-map-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:20px 20px;}
-.phone-pins{position:absolute;inset:0;}
-.phone-pin{position:absolute;width:10px;height:10px;background:var(--accent);border-radius:50% 50% 50% 0;transform:rotate(-45deg);}
-.phone-pin.big{width:14px;height:14px;background:var(--green);}
-.phone-pin:nth-child(1){top:20%;left:30%;}
-.phone-pin:nth-child(2){top:50%;left:55%;}
-.phone-pin:nth-child(3){top:65%;left:25%;}
-.phone-pin:nth-child(4){top:30%;left:70%;}
-.phone-pin:nth-child(5){top:75%;left:65%;}
-.phone-lead{display:flex;align-items:center;gap:10px;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.2);border-radius:8px;padding:10px 12px;}
-.phone-lead-icon{font-size:20px;}
-.phone-lead-title{font-size:12px;font-weight:700;color:#fff;}
-.phone-lead-sub{font-size:10px;color:var(--muted);}
-.hero-badge{position:absolute;bottom:-16px;right:-16px;background:var(--accent);border-radius:12px;padding:12px 16px;text-align:center;box-shadow:0 8px 24px rgba(249,115,22,0.4);}
-.hero-badge-num{font-family:var(--font-h);font-size:22px;font-weight:800;color:#fff;line-height:1;}
-.hero-badge-text{font-size:9px;color:rgba(255,255,255,0.85);text-transform:uppercase;letter-spacing:.5px;}
-@media(max-width:768px){.hero-inner{grid-template-columns:1fr;gap:2rem;padding:6rem 0 4rem;}.hero-phone-wrap{display:none;}}
-
-/* ── STATS BAR ── */
-.stats-bar{background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:32px 0;}
-.stats-inner{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;text-align:center;}
-.stat-num{font-family:var(--font-h);font-size:2rem;font-weight:800;color:var(--accent);margin-bottom:4px;}
-.stat-label{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
-@media(max-width:640px){.stats-inner{grid-template-columns:1fr 1fr;}}
-
-/* ── HOW IT WORKS ── */
-.how{padding:80px 0;background:var(--bg);}
-.section-label{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;}
-.section-title{font-family:var(--font-h);font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:800;color:#fff;margin-bottom:12px;line-height:1.1;}
-.section-sub{font-size:1rem;color:var(--mid);max-width:560px;line-height:1.7;}
-.how-header{text-align:center;margin-bottom:56px;}
-.how-header .section-sub{margin:0 auto;}
-.steps-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
-@media(max-width:900px){.steps-grid{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:560px){.steps-grid{grid-template-columns:1fr;}}
-.step-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:28px 22px;transition:border-color .2s;}
-.step-card:hover{border-color:rgba(249,115,22,0.3);}
-.step-card.accent-top{border-top:3px solid var(--accent);}
-.step-num{font-family:var(--font-h);font-size:32px;font-weight:800;color:rgba(249,115,22,0.25);margin-bottom:12px;}
-.step-card h3{font-family:var(--font-h);font-size:17px;font-weight:700;margin-bottom:8px;color:#fff;}
-.step-card p{font-size:14px;color:var(--mid);line-height:1.6;}
-
-/* ── FEATURES ── */
-.features{padding:80px 0;background:var(--bg2);}
-.features-header{text-align:center;margin-bottom:56px;}
-.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
-@media(max-width:900px){.features-grid{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:560px){.features-grid{grid-template-columns:1fr;}}
-.feat-item{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:26px 22px;transition:border-color .2s;}
-.feat-item:hover{border-color:rgba(249,115,22,0.3);}
-.feat-icon-wrap{width:44px;height:44px;background:rgba(249,115,22,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
-.feat-icon-svg{width:22px;height:22px;color:var(--accent);}
-.feat-badge{display:inline-block;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.25);color:var(--accent);font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;padding:2px 8px;border-radius:4px;margin-bottom:10px;}
-.feat-item h4{font-family:var(--font-h);font-size:17px;font-weight:700;margin-bottom:8px;color:#fff;}
-.feat-item p{font-size:14px;color:var(--mid);line-height:1.6;}
-
-/* ── PRICING ── */
-.pricing{padding:80px 0;background:var(--bg);}
-.pricing-header{text-align:center;margin-bottom:52px;}
-.pricing-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;max-width:840px;margin:0 auto;}
-@media(max-width:620px){.pricing-grid{grid-template-columns:1fr;}}
-.plan-card{background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:34px 30px;position:relative;}
-.plan-card.popular{border-color:rgba(249,115,22,0.45);background:#141D35;}
-.popular-badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:4px 14px;border-radius:100px;white-space:nowrap;}
-.plan-name{font-size:.95rem;font-weight:700;color:var(--muted);margin-bottom:8px;}
-.plan-price{font-family:var(--font-h);font-size:2.7rem;font-weight:900;color:#fff;line-height:1;margin-bottom:5px;}
-.plan-price sup{font-size:1.2rem;vertical-align:super;}
-.plan-price span{font-size:1rem;font-weight:500;color:var(--muted);}
-.plan-desc{font-size:.82rem;color:var(--muted);margin-bottom:22px;line-height:1.55;}
-.plan-divider{border:none;border-top:1px solid var(--border);margin:18px 0;}
-.plan-col-label{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.28);margin-bottom:12px;}
-.plan-features{list-style:none;display:flex;flex-direction:column;gap:9px;margin-bottom:26px;}
-.plan-features li{display:flex;align-items:flex-start;gap:9px;font-size:.85rem;color:var(--mid);line-height:1.45;}
-.plan-features li::before{content:'✓';color:var(--green);font-weight:800;flex-shrink:0;margin-top:1px;}
-.plan-btn{display:block;text-align:center;padding:13px;border-radius:9px;font-family:var(--font-h);font-size:.9rem;font-weight:700;transition:opacity .15s,transform .12s;}
-.plan-btn:hover{opacity:.87;transform:translateY(-1px);}
-.plan-btn-free{border:1.5px solid rgba(255,255,255,0.22);color:#fff;}
-.plan-btn-paid{background:var(--accent);color:#fff;}
-.pricing-note{text-align:center;margin-top:22px;font-size:.82rem;color:var(--muted);}
-.pricing-note a{color:var(--accent);}
-
-/* ── AHE ADD-ON ── */
-.ahe-section{padding:0 0 80px;}
-.ahe-header{margin-bottom:36px;}
-.ahe-card{background:var(--bg-card);border:1px solid var(--border);border-radius:20px;overflow:hidden;}
-.ahe-head{background:linear-gradient(135deg,#1a2540 0%,#111827 100%);border-bottom:1px solid var(--border);padding:30px 34px;display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;}
-.ahe-tag{display:inline-block;background:rgba(249,115,22,0.14);border:1px solid rgba(249,115,22,0.32);border-radius:6px;padding:4px 11px;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;}
-.ahe-name{font-family:var(--font-h);font-size:1.45rem;font-weight:900;color:#fff;line-height:1.15;margin-bottom:3px;}
-.ahe-tagline{font-size:.88rem;color:var(--mid);font-weight:500;}
-.ahe-price{text-align:right;flex-shrink:0;}
-.ahe-price-main{font-family:var(--font-h);font-size:2.3rem;font-weight:900;color:#fff;line-height:1;}
-.ahe-price-main sup{font-size:1rem;vertical-align:super;}
-.ahe-price-unit{font-size:.85rem;color:var(--mid);margin-top:4px;}
-.ahe-price-total{font-size:.76rem;color:var(--muted);margin-top:3px;}
-.ahe-value-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.28);border-radius:8px;padding:5px 12px;margin-top:9px;font-size:11.5px;font-weight:700;color:var(--green);white-space:nowrap;}
-.ahe-credits-banner{background:rgba(34,197,94,0.06);border-top:1px solid rgba(34,197,94,0.16);border-bottom:1px solid rgba(34,197,94,0.16);padding:16px 34px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
-.ahe-credits-left{display:flex;align-items:center;gap:12px;}
-.ahe-credits-icon{font-size:22px;flex-shrink:0;}
-.ahe-credits-text strong{font-size:13.5px;font-weight:800;color:#fff;display:block;margin-bottom:2px;}
-.ahe-credits-text span{font-size:11.5px;color:var(--mid);}
-.ahe-credits-right{text-align:right;flex-shrink:0;}
-.ahe-credits-right strong{font-size:1.1rem;font-weight:900;color:var(--green);}
-.ahe-credits-right s{display:block;font-size:11px;color:var(--muted);text-decoration:line-through;}
-.ahe-takeover{background:linear-gradient(90deg,rgba(249,115,22,0.14) 0%,rgba(249,115,22,0.03) 100%);border-bottom:1px solid rgba(249,115,22,0.14);padding:14px 34px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
-.ahe-to-items{display:flex;flex-wrap:wrap;gap:5px 16px;}
-.ahe-to-item{font-size:12px;font-weight:700;color:var(--mid);}
-.ahe-to-item::before{content:'✓ ';color:var(--accent);}
-.ahe-to-quote{width:100%;font-size:12.5px;font-style:italic;color:var(--accent);font-weight:600;margin-top:4px;}
-.ahe-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;}
-.ahe-col{padding:24px 26px;border-right:1px solid var(--border);}
-.ahe-col:last-child{border-right:none;}
-.ahe-col-title{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;padding-bottom:9px;border-bottom:1px solid var(--border);}
-.ahe-list{list-style:none;display:flex;flex-direction:column;gap:8px;}
-.ahe-list li{font-size:12px;font-weight:500;color:rgba(255,255,255,0.82);line-height:1.45;padding-left:13px;position:relative;}
-.ahe-list li::before{content:'→';position:absolute;left:0;color:var(--accent);font-size:10px;top:2px;}
-.ahe-list li strong{color:#fff;font-weight:700;}
-.ahe-foot{border-top:1px solid var(--border);padding:22px 34px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:rgba(0,0,0,0.1);}
-.ahe-foot-note{font-size:12.5px;color:var(--mid);line-height:1.55;max-width:440px;}
-.ahe-foot-note strong{color:var(--mid);}
-.ahe-cta{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#fff;font-family:var(--font-h);font-size:13.5px;font-weight:800;padding:13px 26px;border-radius:9px;transition:background .15s,transform .12s;flex-shrink:0;}
-.ahe-cta:hover{background:var(--accent-hover);}
-.ahe-trust{margin-top:22px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
-.ahe-trust-item{font-size:12px;font-weight:600;color:var(--mid);}
-.ahe-trust-item::before{content:'✓ ';color:var(--accent);}
-.ahe-powered{margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
-.ahe-powered a{color:rgba(255,255,255,0.6);}
-@media(max-width:840px){.ahe-grid{grid-template-columns:repeat(2,1fr);}.ahe-col:nth-child(2){border-right:none;}.ahe-col:nth-child(1),.ahe-col:nth-child(2){border-bottom:1px solid var(--border);}.ahe-head,.ahe-takeover,.ahe-col,.ahe-foot{padding-left:22px;padding-right:22px;}}
-@media(max-width:500px){.ahe-grid{grid-template-columns:1fr;}.ahe-col{border-right:none!important;border-bottom:1px solid var(--border);}.ahe-col:last-child{border-bottom:none;}.ahe-price{text-align:left;}.ahe-foot{flex-direction:column;align-items:flex-start;}.ahe-cta{width:100%;justify-content:center;}.ahe-trust{flex-direction:column;align-items:flex-start;gap:8px;}.ahe-powered{margin-left:0;}.ahe-credits-banner{flex-direction:column;align-items:flex-start;}.ahe-credits-right{text-align:left;}}
-
-/* ── FAQ ── */
-.faq{padding:80px 0;background:var(--bg2);}
-.faq-inner{max-width:760px;margin:0 auto;}
-.faq-header{text-align:center;margin-bottom:48px;}
-.faq-item{border-bottom:1px solid var(--border);padding:20px 0;}
-.faq-q{font-family:var(--font-h);font-size:17px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;color:#fff;}
-.faq-q::after{content:'+';font-size:22px;color:var(--accent);flex-shrink:0;transition:transform .2s;}
-.faq-item.open .faq-q::after{transform:rotate(45deg);}
-.faq-a{font-size:15px;color:var(--mid);line-height:1.7;max-height:0;overflow:hidden;transition:max-height .3s ease,padding .3s ease;}
-.faq-item.open .faq-a{max-height:300px;padding-top:12px;}
-
-/* ── BOOKING ── */
-.booking-section{padding:80px 0;background:var(--bg);}
-.booking-inner{max-width:860px;margin:0 auto;text-align:center;}
-.booking-sub{font-size:17px;color:var(--mid);max-width:600px;margin:0 auto 40px;line-height:1.6;}
-.booking-embed{background:var(--bg-card);border-radius:12px;border:1px solid var(--border);overflow:hidden;}
-
-/* ── FINAL CTA ── */
-.final-cta{padding:100px 32px;text-align:center;background:var(--bg2);position:relative;overflow:hidden;}
-.final-cta::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 50%, rgba(249,115,22,0.15) 0%, transparent 70%);pointer-events:none;}
-.final-cta h2{font-family:var(--font-h);font-size:clamp(36px,5.5vw,64px);font-weight:800;line-height:1.05;margin-bottom:20px;max-width:800px;margin-left:auto;margin-right:auto;color:#fff;}
-.final-cta h2 em{color:var(--accent);font-style:normal;}
-.final-cta p{font-size:18px;color:var(--mid);margin-bottom:40px;}
-.final-cta-note{font-size:14px;color:var(--muted);margin-top:16px;}
-.final-cta-note a{color:var(--accent);}
-
-/* ── FOOTER ── */
-.lp-footer{background:var(--bg);border-top:1px solid var(--border);padding:32px 24px;text-align:center;}
-.lp-footer-logo{font-family:var(--font-h);font-size:20px;font-weight:800;color:#fff;letter-spacing:.5px;margin-bottom:8px;}
-.lp-footer-logo span{color:var(--accent);}
-.lp-footer p{font-size:13px;color:var(--muted);}
-.lp-footer a{color:var(--accent);}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="BidDrop helps exterior contractors turn properties into measured, priced, followed-up opportunities. Choose software-only or a complete done-for-you marketing system.">
+  <title>BidDrop — Field Sales, Project Previews & Contractor Growth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--ink:#07101f;--ink-2:#0e1b30;--slate:#172740;--paper:#f7f4ef;--white:#fff;--orange:#ff6819;--orange-2:#ff9b42;--mint:#88efb7;--line:rgba(255,255,255,.14);--soft:rgba(255,255,255,.72);--quiet:rgba(255,255,255,.52);--heading:'Barlow Condensed',sans-serif;--body:'DM Sans',sans-serif}
+    *{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}body{background:var(--ink);color:var(--white);font-family:var(--body);line-height:1.5}a{text-decoration:none;color:inherit}img{display:block;max-width:100%}.shell{max-width:1220px;margin:0 auto;padding:0 28px}.eyebrow{display:flex;align-items:center;gap:9px;color:var(--orange-2);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}.eyebrow:before{content:'';display:block;width:24px;height:2px;background:var(--orange)}.display{font-family:var(--heading);font-weight:800;letter-spacing:-.025em;line-height:.93}.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;border-radius:7px;font-size:14px;font-weight:700;padding:14px 20px;transition:transform .15s ease,background .15s ease}.btn:hover{transform:translateY(-2px)}.btn-orange{background:var(--orange);color:#fff}.btn-orange:hover{background:#f0550d}.btn-ghost{border:1px solid rgba(255,255,255,.44);color:#fff}.btn-ghost:hover{border-color:#fff;background:rgba(255,255,255,.06)}
+    .topline{background:var(--orange);color:#fff;font-size:12px;font-weight:700;text-align:center;padding:9px 18px}.topline a{text-decoration:underline}.nav{height:76px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:24px;position:relative;z-index:5;background:rgba(7,16,31,.95);backdrop-filter:blur(12px)}.brand{font-family:var(--heading);font-size:32px;font-weight:800;letter-spacing:-.02em}.brand b{color:var(--orange)}.nav-links{display:flex;align-items:center;gap:26px;color:var(--soft);font-size:13px;font-weight:600}.nav-right{display:flex;align-items:center;gap:16px}.login{font-size:13px;font-weight:600;color:var(--soft)}.nav-join{font-size:12px;padding:10px 14px}
+    .hero{position:relative;overflow:hidden;background:linear-gradient(120deg,#07101f 5%,#0d1b32 70%,#30180c 125%)}.hero:after{content:'';position:absolute;width:700px;height:700px;right:-260px;bottom:-410px;background:radial-gradient(circle,rgba(255,104,25,.42),transparent 68%);pointer-events:none}.hero-grid{min-height:720px;display:grid;grid-template-columns:1.02fr .98fr;gap:55px;align-items:center;padding:84px 0 75px;position:relative;z-index:1}.hero-copy h1{font-size:clamp(56px,7vw,96px);max-width:700px;margin:18px 0 25px}.hero-copy h1 em{font-style:normal;color:var(--orange)}.hero-copy p{color:var(--soft);font-size:18px;line-height:1.7;max-width:600px;margin-bottom:30px}.hero-actions{display:flex;gap:12px;flex-wrap:wrap}.hero-proof{margin-top:32px;display:flex;gap:21px;flex-wrap:wrap}.proof{border-left:1px solid rgba(255,255,255,.28);padding-left:13px}.proof strong{display:block;font-family:var(--heading);font-size:25px;letter-spacing:.02em;color:#fff}.proof span{font-size:11px;color:var(--quiet);text-transform:uppercase;letter-spacing:.08em}.hero-art{min-height:470px;position:relative}.hero-photo{position:absolute;inset:12px 0 0 56px;width:calc(100% - 56px);height:440px;object-fit:cover;border-radius:18px;border:1px solid rgba(255,255,255,.18);filter:saturate(.92) contrast(1.03);box-shadow:0 35px 70px rgba(0,0,0,.38)}.app-shot{position:absolute;width:47%;bottom:-24px;left:0;border-radius:19px;border:7px solid #0b1424;box-shadow:0 26px 48px rgba(0,0,0,.45)}.hero-callout{position:absolute;right:-12px;bottom:27px;background:#f7f4ef;color:#0b1424;padding:15px 18px;border-radius:8px;max-width:182px;box-shadow:0 20px 35px rgba(0,0,0,.25)}.hero-callout strong{font-family:var(--heading);font-size:24px;line-height:.9;display:block}.hero-callout span{font-size:11px;line-height:1.35;display:block;margin-top:7px;color:#465267}
+    .ribbon{background:#e7e2d9;color:#0d1a2e;padding:19px 0}.ribbon-inner{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}.ribbon-item{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700}.ribbon-icon{width:31px;height:31px;border-radius:50%;display:grid;place-items:center;background:#fff2e9;color:var(--orange);font-family:var(--heading);font-size:18px}
+    .how{padding:105px 0;background:var(--paper);color:#11213a}.section-intro{max-width:650px}.section-intro h2{font-size:clamp(42px,5vw,67px);margin:14px 0 18px}.section-intro p{color:#5c6879;font-size:16px;line-height:1.7}.workflow{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #c9c1b5;border-bottom:1px solid #c9c1b5;margin-top:55px}.workflow-card{padding:30px 27px 31px;border-right:1px solid #c9c1b5;min-height:242px}.workflow-card:last-child{border:0}.workflow-no{font-family:var(--heading);font-size:42px;color:var(--orange);line-height:1}.workflow-card h3{font-family:var(--heading);font-size:25px;line-height:1;margin:16px 0 10px}.workflow-card p{font-size:13px;line-height:1.65;color:#627085}
+    .showcase{padding:112px 0;background:#0c192c}.showcase-head{display:flex;justify-content:space-between;align-items:end;gap:25px;margin-bottom:39px}.showcase-head h2{font-size:clamp(44px,5vw,72px);margin-top:14px;max-width:650px}.showcase-head p{max-width:320px;color:var(--soft);font-size:14px;line-height:1.7}.visual-grid{display:grid;grid-template-columns:1.14fr .86fr;gap:20px}.visual-main,.visual-small{position:relative;overflow:hidden;border-radius:14px;border:1px solid var(--line);background:#142540}.visual-main{min-height:530px}.visual-main img,.visual-small img{width:100%;height:100%;object-fit:cover}.visual-small{min-height:255px}.visual-stack{display:grid;grid-template-rows:1fr 1fr;gap:20px}.visual-copy{position:absolute;inset:auto 0 0;padding:50px 24px 23px;background:linear-gradient(transparent,rgba(5,12,24,.93))}.visual-copy .kicker{font-size:10px;letter-spacing:.13em;font-weight:700;color:var(--orange-2);text-transform:uppercase}.visual-copy h3{font-family:var(--heading);font-size:31px;line-height:1;margin:6px 0 8px}.visual-copy p{font-size:12px;line-height:1.55;color:var(--soft);max-width:430px}.visual-small .visual-copy{padding:35px 18px 17px}.visual-small .visual-copy h3{font-size:25px}
+    .plans{padding:112px 0;background:#f7f4ef;color:#102039}.plans-head{text-align:center;max-width:760px;margin:0 auto 55px}.plans-head h2{font-size:clamp(46px,5vw,72px);margin:13px 0}.plans-head p{color:#687589;font-size:16px}.plan-family{margin-bottom:55px}.family-label{display:flex;align-items:center;gap:12px;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#f05b17;margin-bottom:17px}.family-label:after{content:'';height:1px;background:#d6cec1;flex:1}.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}.offer{border:1px solid #d9d1c5;border-radius:13px;background:#fff;padding:29px;display:flex;flex-direction:column}.offer.featured{background:#102039;border-color:#102039;color:#fff}.offer.marketing{background:#201711;border-color:#4f301c;color:#fff}.offer-head{display:flex;align-items:start;justify-content:space-between;gap:15px}.offer-name{font-family:var(--heading);font-size:34px;line-height:.95}.offer-tag{font-size:10px;letter-spacing:.1em;font-weight:800;text-transform:uppercase;color:#f26722}.offer-price{font-family:var(--heading);font-size:52px;line-height:.86;margin:25px 0 5px}.offer-price span{font-family:var(--body);font-size:15px;font-weight:700}.offer-sub{font-size:12px;line-height:1.55;color:#687589;min-height:42px}.featured .offer-sub,.marketing .offer-sub{color:rgba(255,255,255,.7)}.credit-value{margin:20px 0;border:1px solid rgba(35,147,88,.44);background:rgba(35,147,88,.08);padding:13px 14px;border-radius:8px}.credit-value b{display:block;font-family:var(--heading);font-size:25px;line-height:1;color:#2a9d62}.credit-value span{font-size:11px;color:#4f7e68;font-weight:700}.marketing .credit-value{background:rgba(115,230,165,.1);border-color:rgba(115,230,165,.48)}.marketing .credit-value b{color:#9af1bd}.marketing .credit-value span{color:#d3f8df}.offer ul{list-style:none;margin:21px 0 28px;display:grid;gap:9px;flex:1}.offer li{font-size:13px;line-height:1.4;color:#4d5c70}.offer li:before{content:'✓';color:#ea631c;font-weight:900;margin-right:8px}.featured li,.marketing li{color:rgba(255,255,255,.84)}.offer .btn{width:100%;margin-top:auto}.offer .btn-outline{border:1px solid #cad1d8;color:#173047}.marketing .btn-outline,.featured .btn-outline{border-color:rgba(255,255,255,.42);color:#fff}.commitment{font-size:10px;color:#8a97a7;text-align:center;margin-top:11px}.marketing .commitment{color:rgba(255,255,255,.6)}.website-note{text-align:center;font-size:13px;color:#657387;margin-top:-24px}.website-note b{color:#173047}
+    .marketing-story{padding:110px 0;background:linear-gradient(135deg,#1c1009,#111a2b)}.marketing-grid{display:grid;grid-template-columns:.92fr 1.08fr;gap:65px;align-items:center}.marketing-grid .photo-wrap{position:relative}.marketing-grid img{border-radius:16px;border:1px solid rgba(255,255,255,.16);min-height:430px;width:100%;object-fit:cover}.orange-stamp{position:absolute;left:-22px;bottom:25px;background:var(--orange);padding:18px 20px;border-radius:8px;max-width:205px}.orange-stamp b{display:block;font-family:var(--heading);font-size:28px;line-height:.9}.orange-stamp span{font-size:11px;line-height:1.35;display:block;margin-top:8px}.marketing-copy h2{font-size:clamp(46px,5vw,73px);margin:16px 0 20px}.marketing-copy>p{color:var(--soft);line-height:1.75;font-size:16px;max-width:530px}.deliverables{margin-top:28px;display:grid;grid-template-columns:1fr 1fr;gap:11px}.deliverable{padding:14px;border-top:1px solid rgba(255,255,255,.25)}.deliverable b{font-family:var(--heading);font-size:22px;line-height:1;color:#fff;display:block}.deliverable span{font-size:11px;color:var(--quiet);line-height:1.45;display:block;margin-top:6px}
+    .faq{padding:100px 0;background:#0c192c}.faq-grid{display:grid;grid-template-columns:.72fr 1.28fr;gap:60px}.faq-grid h2{font-size:clamp(43px,5vw,65px);margin-top:15px}.q{border-top:1px solid var(--line);padding:20px 0}.q b{font-size:15px;display:block;margin-bottom:8px}.q p{font-size:13px;line-height:1.65;color:var(--soft)}
+    .final{padding:115px 0;text-align:center;background:var(--orange);color:#fff}.final h2{font-size:clamp(55px,7vw,98px);max-width:840px;margin:0 auto 20px}.final p{max-width:600px;margin:0 auto 30px;color:rgba(255,255,255,.88);font-size:17px}.final .btn{background:#0b172a;color:#fff;padding:16px 25px}.final small{display:block;margin-top:16px;color:rgba(255,255,255,.72);font-size:11px}.footer{padding:38px 0;text-align:center;color:var(--quiet);font-size:12px}.footer .brand{font-size:26px;margin-bottom:8px}.footer a{color:#fff;text-decoration:underline}
+    @media(max-width:900px){.hero-grid,.marketing-grid,.faq-grid{grid-template-columns:1fr;gap:40px}.hero{min-height:auto}.hero-grid{padding:70px 0}.hero-art{min-height:410px;max-width:610px;width:100%;margin:auto}.workflow{grid-template-columns:1fr 1fr}.workflow-card:nth-child(2){border-right:0}.workflow-card:nth-child(-n+2){border-bottom:1px solid #c9c1b5}.visual-grid{grid-template-columns:1fr}.visual-main{min-height:420px}.visual-stack{grid-template-columns:1fr 1fr;grid-template-rows:1fr}.visual-small{min-height:250px}.marketing-grid .photo-wrap{max-width:600px}.faq-grid{gap:30px}}
+    @media(max-width:620px){.shell{padding:0 18px}.topline{font-size:10px}.nav{height:63px}.brand{font-size:28px}.nav-links,.login{display:none}.nav-right{margin-left:auto}.hero-grid{padding:55px 0 46px}.hero-copy h1{font-size:57px}.hero-copy p{font-size:16px}.hero-art{min-height:335px}.hero-photo{height:315px;left:31px;width:calc(100% - 31px)}.app-shot{width:45%;border-width:5px}.hero-callout{right:0;bottom:0;max-width:152px;padding:11px}.hero-callout strong{font-size:21px}.ribbon-inner{grid-template-columns:1fr 1fr;gap:14px}.ribbon-item{font-size:11px}.how,.showcase,.plans,.marketing-story,.faq{padding:74px 0}.workflow{grid-template-columns:1fr}.workflow-card{border-right:0!important;border-bottom:1px solid #c9c1b5!important;min-height:0}.workflow-card:last-child{border-bottom:0!important}.showcase-head{display:block}.showcase-head p{margin-top:15px}.visual-main{min-height:345px}.visual-stack{grid-template-columns:1fr;grid-template-rows:auto}.visual-small{min-height:225px}.cards{grid-template-columns:1fr}.offer{padding:24px}.offer-price{font-size:48px}.marketing-grid{gap:38px}.marketing-grid img{min-height:330px}.orange-stamp{left:12px;bottom:14px}.deliverables{grid-template-columns:1fr 1fr}.final{padding:80px 0}.final h2{font-size:61px}.btn{padding:13px 17px}}
+  </style>
 </head>
 <body>
+  <div class="topline">BidDrop software or a full contractor growth system — <a href="#plans">see the four ways to get started</a>.</div>
+  <nav class="nav shell">
+    <a class="brand" href="/landing">Bid<b>Drop</b></a>
+    <div class="nav-links"><a href="#how">How it works</a><a href="#platform">The platform</a><a href="#plans">Plans</a><a href="#marketing">Marketing</a></div>
+    <div class="nav-right"><a class="login" href="/index.html">Log in</a><a class="btn btn-orange nav-join" href="/signup">Choose your plan</a></div>
+  </nav>
 
-<!-- ANNOUNCEMENT BAR -->
-<div class="ann-bar">Built for roofing contractors who work smarter &nbsp;·&nbsp; <a href="/signup?plan=monthly">GHL sub-account included free</a> on the Monthly plan &nbsp;·&nbsp; Tap a roof. Your estimate is ready.</div>
-
-<!-- NAV -->
-<nav class="lp-nav">
-  <div class="lp-logo">Bid<span>Drop</span></div>
-  <div class="lp-nav-links">
-    <a href="#how-it-works">How It Works</a>
-    <a href="#features">Features</a>
-    <a href="#pricing">Pricing</a>
-    <a href="#faq">FAQ</a>
-  </div>
-  <div class="lp-nav-right">
-    <a href="/index.html" class="lp-nav-login">Log In</a>
-    <a href="/signup" class="lp-nav-cta">Start Free Trial</a>
-  </div>
-</nav>
-
-<!-- HERO -->
-<section class="hero">
-  <div class="container">
-    <div class="hero-inner">
-      <div>
-        <div class="hero-eyebrow">🏠 Field Sales OS for Exterior Contractors</div>
-        <h1>Find It. Price It.<br><em>Follow Up. Win It.</em></h1>
-        <p class="hero-sub">BidDrop is the field sales platform for roofing, siding, windows, gutters, concrete, and fencing contractors. Pin a property, build a digital project preview, and keep every opportunity organized from first sighting to signed contract.</p>
-        <div class="hero-ctas">
-          <a href="/signup?plan=monthly" class="btn-primary">Start Free — First Month On Us</a>
-          <a href="#how-it-works" class="btn-secondary">See How It Works</a>
+  <main>
+    <section class="hero">
+      <div class="shell hero-grid">
+        <div class="hero-copy">
+          <div class="eyebrow">Built for exterior contractors</div>
+          <h1 class="display">A better next move for <em>every property</em> you pass.</h1>
+          <p>BidDrop gives field teams one place to spot a home, understand the opportunity, create a project preview, price the work, and move the homeowner into the next right conversation.</p>
+          <div class="hero-actions"><a class="btn btn-orange" href="/signup">See plans &amp; start</a><a class="btn btn-ghost" href="#platform">See the app in action</a></div>
+          <div class="hero-proof"><div class="proof"><strong>Pin</strong><span>Properties from the field</span></div><div class="proof"><strong>Measure</strong><span>Build the opportunity</span></div><div class="proof"><strong>Follow up</strong><span>Keep work moving</span></div></div>
         </div>
-        <p class="hero-note">Credit card required — not charged until month 2 &nbsp;·&nbsp; Cancel anytime</p>
-        <div class="hero-checks">
-          <span>Roofing, siding, windows, gutters &amp; more.</span>
-          <span>Digital project previews built in seconds.</span>
-          <span>Every opportunity tracked to close.</span>
+        <div class="hero-art">
+          <img class="hero-photo" src="landing-assets/field-roofer-tablet.jpg" alt="Roofing contractor using a tablet in a neighborhood">
+          <img class="app-shot" src="landing-assets/biddrop-app-map.jpg" alt="BidDrop-style property map app on a phone">
+          <div class="hero-callout"><strong>Field work, made visible.</strong><span>Turn a drive-by into an organized opportunity before the moment passes.</span></div>
         </div>
       </div>
-      <div class="hero-phone-wrap">
-        <div style="position:relative;">
-          <img src="https://biddrop.io/wp-content/uploads/2026/07/BidDrop_Header_close_more_roofs.jpg"
-               alt="BidDrop app on a phone showing pinned properties on a neighborhood map"
-               style="width:100%;max-width:480px;border-radius:16px;box-shadow:0 32px 80px rgba(0,0,0,0.5);display:block;" />
-          <div class="hero-badge">
-            <div class="hero-badge-num">$4</div>
-            <div class="hero-badge-text">Average cost<br>per lead</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+    </section>
 
-<!-- STATS BAR -->
-<div class="stats-bar">
-  <div class="container">
-    <div class="stats-inner">
-      <div class="stat-item"><div class="stat-num">$4</div><div class="stat-label">Average cost per lead</div></div>
-      <div class="stat-item"><div class="stat-num">1,200+</div><div class="stat-label">Active contractors</div></div>
-      <div class="stat-item"><div class="stat-num">50K+</div><div class="stat-label">Properties canvassed</div></div>
-      <div class="stat-item"><div class="stat-num">4.9★</div><div class="stat-label">Average rating</div></div>
-    </div>
-  </div>
-</div>
+    <section class="ribbon"><div class="shell ribbon-inner"><div class="ribbon-item"><span class="ribbon-icon">1</span>Pin the property</div><div class="ribbon-item"><span class="ribbon-icon">2</span>Build the project</div><div class="ribbon-item"><span class="ribbon-icon">3</span>Reach the homeowner</div><div class="ribbon-item"><span class="ribbon-icon">4</span>Track what happens next</div></div></section>
 
-<!-- HOW IT WORKS -->
-<section class="how" id="how-it-works">
-  <div class="container">
-    <div class="how-header">
-      <p class="section-label">How It Works</p>
-      <h2 class="section-title">From First Drive-By to Signed Contract</h2>
-      <p class="section-sub">BidDrop turns every neighborhood you drive through into a source of new business — in 7 steps that take less time than a cold call.</p>
-    </div>
-    <div class="steps-grid">
-      <div class="step-card accent-top">
-        <div class="step-num">01</div>
-        <h3>You Spot a Property</h3>
-        <p>Driving through a neighborhood, you notice a roof that needs work. You tap the address in BidDrop and drop a pin — takes 5 seconds.</p>
-      </div>
-      <div class="step-card accent-top">
-        <div class="step-num">02</div>
-        <h3>BidDrop Pulls the Data</h3>
-        <p>Satellite measurements, roof age, homeowner name, email, and phone — all pulled automatically. No manual research.</p>
-      </div>
-      <div class="step-card accent-top">
-        <div class="step-num">03</div>
-        <h3>You Build an Estimate</h3>
-        <p>Select your trade and materials. BidDrop calculates the estimate using real square footage from satellite data. Done in under 2 minutes.</p>
-      </div>
-      <div class="step-card accent-top">
-        <div class="step-num">04</div>
-        <h3>A Project Preview Is Built</h3>
-        <p>BidDrop creates a personalized project preview page for the homeowner — with their address, your estimate, your branding, and a QR code.</p>
-      </div>
-      <div class="step-card accent-top">
-        <div class="step-num">05</div>
-        <h3>A Postcard Goes in the Mail</h3>
-        <p>You queue a postcard from the field. It's printed and mailed via USPS within 24 hours. The homeowner gets it in 5–7 days.</p>
-      </div>
-      <div class="step-card accent-top">
-        <div class="step-num">06</div>
-        <h3>Follow-Up Runs Automatically</h3>
-        <p>BidDrop fires follow-up touchpoints on a schedule — 7, 14, 30 days out. You set it once. Every opportunity stays active without any manual work.</p>
-      </div>
-      <div class="step-card accent-top">
-        <div class="step-num">07</div>
-        <h3>You Show Up and Close</h3>
-        <p>By the time you knock, the homeowner has seen your project preview, scanned your QR code, and received your follow-up. You're not cold — <strong>you're expected.</strong></p>
-      </div>
-      <div class="step-card accent-top">
-        <div class="step-num">08</div>
-        <h3>Storm Leads Find You</h3>
-        <p>BidDrop monitors NOAA MRMS radar daily. When hail hits your territory, you get an alert with the swath on the map — ready to canvass.</p>
-      </div>
-    </div>
-  </div>
-</section>
+    <section class="how" id="how"><div class="shell"><div class="section-intro"><div class="eyebrow">The field workflow</div><h2 class="display">From the curb to a real opportunity.</h2><p>BidDrop is not a CRM replacement. It is the operating layer that helps a roofing or exterior sales team identify the right property, prepare the right project, and hand a qualified opportunity into the next step.</p></div><div class="workflow"><article class="workflow-card"><div class="workflow-no">01</div><h3>Spot it</h3><p>Tap a property in your territory and keep the lead connected to the rep who found it.</p></article><article class="workflow-card"><div class="workflow-no">02</div><h3>Build it</h3><p>Use measurement, project details, pricing, and homeowner context to frame the job.</p></article><article class="workflow-card"><div class="workflow-no">03</div><h3>Send it</h3><p>Create a project preview or mail piece that makes the next conversation more relevant.</p></article><article class="workflow-card"><div class="workflow-no">04</div><h3>Work it</h3><p>Move the qualified opportunity into your team process and CRM follow-up.</p></article></div></div></section>
 
-<!-- FEATURES -->
-<section class="features" id="features">
-  <div class="container">
-    <div class="features-header">
-      <p class="section-label">Platform Features</p>
-      <h2 class="section-title">One Platform. Every Step of the Sale.</h2>
-      <p class="section-sub" style="margin:0 auto;">From the first property you pin to the signed contract — BidDrop keeps your whole team organized, accountable, and moving.</p>
-    </div>
-    <div class="features-grid">
-      <div class="feat-item">
-        <div class="feat-icon-wrap"><svg class="feat-icon-svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg></div>
-        <h4>Territory Mapping</h4>
-        <p>Pin any property on the satellite map. Filter by lead status, date, or rep. Your whole territory — organized in one screen.</p>
-      </div>
-      <div class="feat-item">
-        <div class="feat-icon-wrap"><svg class="feat-icon-svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
-        <h4>Digital Project Previews</h4>
-        <p>Build a branded project preview page in seconds. QR scan tracking tells you the moment a homeowner is looking at their estimate.</p>
-      </div>
-      <div class="feat-item">
-        <div class="feat-icon-wrap"><svg class="feat-icon-svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></div>
-        <h4>Homeowner Outreach Tools</h4>
-        <p>Connect with homeowners via USPS mailers, QR codes, digital project pages, or printed leave-behinds. Queue and send straight from the field.</p>
-      </div>
-      <div class="feat-item">
-        <div class="feat-icon-wrap"><svg class="feat-icon-svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
-        <h4>Automated Follow-Up Sequences</h4>
-        <p>Set up follow-up touchpoints on a schedule. BidDrop fires them automatically — 7, 14, 30 days out. You set it once and every opportunity stays active.</p>
-      </div>
-      <div class="feat-item">
-        <div class="feat-icon-wrap"><svg class="feat-icon-svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg></div>
-        <h4>Storm Intelligence</h4>
-        <p>NOAA MRMS radar hail swaths, SPC spotter reports, NWS warnings, and NEXRAD storm playback. Storm alerts sent to your email when hail hits your territory.</p>
-      </div>
-      <div class="feat-item">
-        <div class="feat-badge">Monthly</div>
-        <div class="feat-icon-wrap"><svg class="feat-icon-svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg></div>
-        <h4>GoHighLevel Integration</h4>
-        <p>Every tapped roof becomes a GHL contact automatically — tagged, filed, and ready for your drip sequence. Zero manual entry.</p>
-      </div>
-    </div>
-  </div>
-</section>
+    <section class="showcase" id="platform"><div class="shell"><div class="showcase-head"><div><div class="eyebrow">The BidDrop platform</div><h2 class="display">See the work. Keep the context. Move faster.</h2></div><p>Every visual is built around the moments an exterior sales team actually encounters in the field—not another generic software dashboard.</p></div><div class="visual-grid"><article class="visual-main"><img src="landing-assets/storm-map-roofer.jpg" alt="Contractor using weather and storm intelligence on a tablet"><div class="visual-copy"><span class="kicker">Storm intelligence</span><h3>Find the right place to start.</h3><p>Use local storm context to help your team decide where field work belongs next, then build the property into a real opportunity.</p></div></article><div class="visual-stack"><article class="visual-small"><img src="landing-assets/postcard-project-preview.jpg" alt="Project preview postcard and phone"><div class="visual-copy"><span class="kicker">Project previews</span><h3>Give the homeowner a reason to engage.</h3></div></article><article class="visual-small"><img src="landing-assets/biddrop-app-map.jpg" alt="Phone showing a property pin map"><div class="visual-copy"><span class="kicker">Canvass map</span><h3>Your territory, connected to the next action.</h3></div></article></div></div></div></section>
 
-<!-- PRICING -->
-<section class="pricing" id="pricing">
-  <div class="container">
-    <div class="pricing-header">
-      <p class="section-label">Pricing</p>
-      <h2 class="section-title">Tap More Roofs. <em style="font-style:normal;color:var(--accent);">Pay Less to Do It.</em></h2>
-      <p class="section-sub" style="margin:0 auto;">Two simple plans. No hidden fees. Free property lookups and DNC screening on every plan.</p>
-    </div>
+    <section class="plans" id="plans"><div class="shell"><div class="plans-head"><div class="eyebrow" style="justify-content:center">Four ways to use BidDrop</div><h2 class="display">Start with software. Or build the full system.</h2><p>Choose the field-sales tools your team needs now—or combine BidDrop with a done-for-you growth program delivered by America’s Home Experts.</p></div>
+      <div class="plan-family"><div class="family-label">BidDrop Software — Do It Yourself</div><div class="cards"><article class="offer"><div class="offer-head"><div><div class="offer-tag">Start here</div><h3 class="offer-name">Pay As You Go</h3></div></div><div class="offer-price">$0<span>/month</span></div><p class="offer-sub">Use BidDrop when you need it. Pay for the credits you use.</p><ul><li>Unlimited property pins</li><li>Map, storm, and project tools</li><li>All-in price-per-square estimating</li><li>Pay only for credits used</li></ul><a class="btn btn-outline" href="/signup?plan=payg">Start with PAYG</a></article><article class="offer featured"><div class="offer-head"><div><div class="offer-tag">Most popular software plan</div><h3 class="offer-name">BidDrop Pro</h3></div></div><div class="offer-price">$99<span>/month</span></div><p class="offer-sub">The working platform for contractors who want a consistent field-sales workflow.</p><div class="credit-value"><b>20 monthly credits</b><span>$80 in BidDrop value included every month</span></div><ul><li>Everything in PAYG</li><li>GHL and CRM integrations</li><li>SalesRabbit import access</li><li>Team workflows and campaign tools</li></ul><a class="btn btn-orange" href="/signup?plan=monthly">Choose BidDrop Pro</a></article></div></div>
+      <div class="plan-family"><div class="family-label">Done-for-You Marketing + BidDrop</div><div class="cards"><article class="offer marketing"><div class="offer-head"><div><div class="offer-tag">Growth program</div><h3 class="offer-name">Digital Growth</h3></div></div><div class="offer-price">$2,000<span>/month</span></div><p class="offer-sub">A six-month contractor growth program delivered by America’s Home Experts.</p><div class="credit-value"><b>250 monthly credits</b><span>$1,000 in BidDrop value included every month</span></div><ul><li>New contractor website included if needed</li><li>Local SEO, Google profile, and content system</li><li>Social media and short-form video management</li><li>Strategy, reporting, and growth planning</li></ul><a class="btn btn-orange" href="/signup?plan=digital_growth">Choose Digital Growth</a><p class="commitment">6-month commitment · deliverables planned across the full program</p></article><article class="offer marketing"><div class="offer-head"><div><div class="offer-tag">Full marketing system</div><h3 class="offer-name">Omnipresent</h3></div></div><div class="offer-price">$3,500<span>/month</span></div><p class="offer-sub">Everything in Digital Growth, plus a more complete content and video production system.</p><div class="credit-value"><b>500 monthly credits</b><span>$2,000 in BidDrop value included every month</span></div><ul><li>Everything in Digital Growth</li><li>New contractor website included if needed</li><li>Professional on-site video production</li><li>Long-form video, short clips, and distribution</li></ul><a class="btn btn-orange" href="/signup?plan=omnipresent">Choose Omnipresent</a><p class="commitment">6-month commitment · services and video deliverables delivered across six months</p></article></div></div>
+      <p class="website-note"><b>Need a website without a growth plan?</b> Contractor Website is available as a $997 one-time add-on to PAYG and BidDrop Pro.</p>
+    </div></section>
 
-    <div class="pricing-grid">
-      <!-- Pay-As-You-Go -->
-      <div class="plan-card">
-        <div class="plan-name">Pay-As-You-Go</div>
-        <div class="plan-price">Free</div>
-        <p class="plan-desc">$0/month &nbsp;·&nbsp; $4 per credit &nbsp;·&nbsp; Card required at signup<br>💳 Credits are used for mailers, measurements, and homeowner lookups. Buy only what you need.</p>
-        <hr class="plan-divider"/>
-        <div class="plan-col-label">Core Canvassing</div>
-        <ul class="plan-features">
-          <li>Unlimited map pins &amp; property taps</li>
-          <li>AI satellite roof measurements</li>
-          <li>Homeowner name, email &amp; phone lookup</li>
-          <li>Instant estimate builder</li>
-          <li>Custom homeowner project website</li>
-          <li>Postcard &amp; letter mail queue</li>
-          <li>QR-coded postcards linking to homeowner site</li>
-          <li>Storm &amp; hail lead radar</li>
-          <li>Free property lookups &amp; DNC screening</li>
-        </ul>
-        <a href="/signup" class="plan-btn plan-btn-free">Start Free Trial</a>
-      </div>
+    <section class="marketing-story" id="marketing"><div class="shell marketing-grid"><div class="photo-wrap"><img src="landing-assets/marketing-video-roofer.jpg" alt="Roofing business owner being filmed at a job site"><div class="orange-stamp"><b>Real work.<br>Real visibility.</b><span>America’s Home Experts helps turn your actual jobs into the marketing system homeowners see.</span></div></div><div class="marketing-copy"><div class="eyebrow">Delivered with America’s Home Experts</div><h2 class="display">The work is already happening. The marketing should show it.</h2><p>Digital Growth and Omnipresent combine BidDrop with a team that helps contractors show up credibly where homeowners are looking: their website, Google, social channels, video, and local search.</p><div class="deliverables"><div class="deliverable"><b>Website</b><span>New contractor website included when needed.</span></div><div class="deliverable"><b>Content</b><span>Turn job-site expertise into consistent useful content.</span></div><div class="deliverable"><b>Visibility</b><span>Build local search and Google presence over time.</span></div><div class="deliverable"><b>Video</b><span>On-site production and distribution on Omnipresent.</span></div></div><div style="margin-top:29px"><a class="btn btn-orange" href="/signup">See marketing plans</a></div></div></div></section>
 
-      <!-- Monthly -->
-      <div class="plan-card popular">
-        <div class="popular-badge">★ Most Popular</div>
-        <div class="plan-name">Monthly</div>
-        <div class="plan-price"><sup>$</sup>99<span>/mo</span></div>
-        <p class="plan-desc">20 credits included ($80 value) &nbsp;·&nbsp; Cancel anytime<br>🔥 Best value — 20 credits/month covers your mailers, measurements &amp; lookups. Extra credits at $4 each.</p>
-        <hr class="plan-divider"/>
-        <div class="plan-col-label">Everything in Pay-As-You-Go, plus</div>
-        <ul class="plan-features">
-          <li>20 credits/month included ($80 value)</li>
-          <li>GoHighLevel (GHL) sub-account included</li>
-          <li>Automated email &amp; SMS drip campaigns</li>
-          <li>Website embed widget (homeowner self-measure)</li>
-          <li>CRM integration — connect your existing CRM</li>
-        </ul>
-        <hr class="plan-divider"/>
-        <div class="plan-col-label">Full Platform Access</div>
-        <ul class="plan-features">
-          <li>CRM pipeline &amp; contact management</li>
-          <li>Two-way SMS with homeowners</li>
-          <li>Analytics dashboard &amp; QR scan tracking</li>
-          <li>Multi-rep team management (up to 10 users)</li>
-          <li>Rep performance leaderboard</li>
-          <li>Custom postcard &amp; letter design</li>
-          <li>Priority support</li>
-        </ul>
-        <a href="/signup?plan=monthly" class="plan-btn plan-btn-paid">Start Monthly — $99/mo</a>
-      </div>
-    </div>
+    <section class="faq"><div class="shell faq-grid"><div><div class="eyebrow">Questions</div><h2 class="display">Clear on what happens next.</h2></div><div><article class="q"><b>Does BidDrop replace our CRM?</b><p>No. BidDrop helps the field team identify, prepare, and follow up on property opportunities. It can hand the qualified opportunity into your CRM workflow.</p></article><article class="q"><b>What are BidDrop credits used for?</b><p>Credits support paid property actions such as mail, measurements, and available homeowner-data workflows. The plan page shows exactly how many monthly credits are included where applicable.</p></article><article class="q"><b>Why are Digital Growth and Omnipresent six-month programs?</b><p>Web, content, search visibility, on-site filming, and strategy are planned and delivered across the full six-month engagement rather than treated like a one-time service.</p></article><article class="q"><b>Can I start with software and add marketing later?</b><p>Yes. Start with PAYG or BidDrop Pro, then choose a growth program when you are ready for a done-for-you marketing system.</p></article></div></div></section>
 
-    <p class="pricing-note">No contracts. Cancel anytime. &nbsp;·&nbsp; Questions? <a href="mailto:support@biddrop.io">support@biddrop.io</a></p>
-  </div>
-</section>
-
-<!-- AHE ADD-ON -->
-<section class="ahe-section">
-  <div class="container">
-    <div class="ahe-header">
-      <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.28);border-radius:100px;padding:6px 16px 6px 12px;margin-bottom:18px;">
-        <span style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);">🎯 Optional Add-On · Digital Marketing</span>
-      </div>
-      <h2 class="section-title">BidDrop Gets You the Lead.<br><em style="font-style:normal;color:var(--accent);">This Makes Sure They Already Trust You.</em></h2>
-      <p class="section-sub">Your postcard arrives with their real price on it. But the contractor who wins the job is the one the homeowner already recognizes from YouTube, Instagram, and Google. That's what this does.</p>
-    </div>
-
-    <div class="ahe-card">
-      <div class="ahe-head">
-        <div>
-          <div class="ahe-tag">🔥 Most Popular Add-On</div>
-          <div class="ahe-name">The Omnipresent System</div>
-          <div class="ahe-tagline">Full digital marketing takeover — content, SEO, social, CRM, and 500 BidDrop mailers every month.</div>
-        </div>
-        <div class="ahe-price">
-          <div class="ahe-price-main"><sup>$</sup>3,500</div>
-          <div class="ahe-price-unit">/month · 6-month engagement</div>
-          <div class="ahe-price-total">$21,000 total investment</div>
-          <div class="ahe-value-badge">✦ Includes $2,000 in BidDrop leads/mo</div>
-        </div>
-      </div>
-
-      <div class="ahe-takeover">
-        <span style="font-size:17px;flex-shrink:0;">🔥</span>
-        <div class="ahe-to-items">
-          <span class="ahe-to-item">We control your SEO</span>
-          <span class="ahe-to-item">We control your content</span>
-          <span class="ahe-to-item">We control your posting</span>
-          <span class="ahe-to-item">We control your visibility</span>
-        </div>
-        <div class="ahe-to-quote">"You don't think about marketing anymore. We run it."</div>
-      </div>
-
-      <div class="ahe-credits-banner">
-        <div class="ahe-credits-left">
-          <div class="ahe-credits-icon">📍</div>
-          <div class="ahe-credits-text">
-            <strong>500 BidDrop Credits Included Every Month</strong>
-            <span>That's 500 personalized postcards mailed to homeowners in your market — automatically, every month.</span>
-          </div>
-        </div>
-        <div class="ahe-credits-right">
-          <strong>$2,000 value</strong>
-          <s>$2,000/mo if purchased separately</s>
-        </div>
-      </div>
-
-      <div class="ahe-grid">
-        <div class="ahe-col">
-          <div class="ahe-col-title">📹 Video &amp; Content</div>
-          <ul class="ahe-list">
-            <li><strong>4 on-site sessions</strong> (4 hours each) at your job sites</li>
-            <li><strong>48 short-form clips</strong> — Reels, Shorts, TikTok</li>
-            <li><strong>4 long-form videos</strong> — fully edited</li>
-          </ul>
-        </div>
-        <div class="ahe-col">
-          <div class="ahe-col-title">📣 Social &amp; Posting</div>
-          <ul class="ahe-list">
-            <li><strong>72 posts</strong> — Facebook, Instagram, YouTube, TikTok</li>
-            <li>Fully managed — you never touch it</li>
-          </ul>
-        </div>
-        <div class="ahe-col">
-          <div class="ahe-col-title">🔍 SEO Takeover</div>
-          <ul class="ahe-list">
-            <li><strong>12 SEO blog posts</strong> written &amp; published</li>
-            <li><strong>15+ keywords</strong> tracked + Google Business managed</li>
-            <li>Local SEO optimization &amp; location strategy</li>
-          </ul>
-        </div>
-        <div class="ahe-col">
-          <div class="ahe-col-title">🏆 Branding, Web &amp; CRM</div>
-          <ul class="ahe-list">
-            <li>Brand refresh — logo, colors, visual identity</li>
-            <li>Website audit + content &amp; SEO updates</li>
-            <li>Full CRM + review system</li>
-            <li><strong>12 bi-weekly strategy calls</strong></li>
-            <li>AHE directory listing + backlink on AmericasHomeExperts.com</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="ahe-foot">
-        <p class="ahe-foot-note">Delivered by <strong>America's Home Experts</strong> — Michigan's contractor marketing agency. One job pays for three months. Average roofing job value: $8K–$15K.</p>
-        <a href="https://americashomeexperts.us/investment/" class="ahe-cta">Add This to My Plan →</a>
-      </div>
-    </div>
-
-    <div class="ahe-trust">
-      <span class="ahe-trust-item">6-month engagement · cancel after term</span>
-      <span class="ahe-trust-item">Real filming on your actual job sites</span>
-      <span class="ahe-trust-item">Michigan-based team</span>
-      <span class="ahe-powered">Powered by <a href="https://americashomeexperts.us" target="_blank" rel="noopener">AmericasHomeExperts.us</a></span>
-    </div>
-  </div>
-</section>
-
-<!-- FAQ -->
-<section class="faq" id="faq">
-  <div class="container">
-    <div class="faq-inner">
-      <div class="faq-header">
-        <p class="section-label">FAQ</p>
-        <h2 class="section-title">Common Questions</h2>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)">Do I need a credit card to start?</div>
-        <div class="faq-a">Yes — a credit card is required to start, but you won't be charged a single cent until your first month ends. Cancel anytime before then and you owe nothing.</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)">How does the postcard mailing work?</div>
-        <div class="faq-a">BidDrop connects to a professional print-and-mail service. When you queue a postcard it gets printed and mailed via USPS — typically arriving within 5–7 business days. Each postcard costs 1 credit ($4 value).</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)">What is Follow-Up Blitz?</div>
-        <div class="faq-a">Blitz is an automated postcard sequence. You set up 3–5 postcards with different messages, and BidDrop mails them on a schedule you define — 7 days, 14 days, 30 days after the initial knock. It runs automatically without any manual work.</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)">Does it work on mobile?</div>
-        <div class="faq-a">Yes. BidDrop is a Progressive Web App (PWA) — install it on your phone's home screen and it works like a native app, even in areas with spotty signal. The map, pin drops, and estimate builder all work on mobile.</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)">What is GHL integration?</div>
-        <div class="faq-a">GoHighLevel (GHL) is a popular CRM for contractors. BidDrop's Monthly plan includes a free GHL sub-account — every lead you create in BidDrop automatically appears as a contact in your GHL pipeline, with tags and custom fields. You can also connect your existing CRM.</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)">What is the website embed widget?</div>
-        <div class="faq-a">Monthly plan users get a widget they can embed on their own website. Homeowners can enter their address and get an instant estimate — without you having to knock the door. It's a 24/7 lead capture tool powered by BidDrop's satellite measurement engine.</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)">Can I upgrade or downgrade my plan?</div>
-        <div class="faq-a">Yes. You can change your plan at any time from the Plan &amp; Billing page inside the app. Changes take effect immediately through the Stripe Customer Portal.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- BOOKING CALENDAR -->
-<section class="booking-section" id="book-a-call">
-  <div class="container">
-    <div class="booking-inner">
-      <p class="section-label">Got Questions?</p>
-      <h2 class="section-title">Book a Free 1-on-1 Call</h2>
-      <p class="booking-sub">Talk directly with John or Steve. We'll walk you through the platform, answer any questions about pricing or features, and help you decide if BidDrop is right for your team. No pressure — just straight answers.</p>
-      <div class="booking-embed">
-        <iframe src="https://crm.mongoosefilms.com/widget/booking/xewTDAN4rykd5INvTMnN" style="width:100%;border:none;overflow:hidden;min-height:700px;" scrolling="no" id="xewTDAN4rykd5INvTMnN_1783524170302"></iframe>
-      </div>
-    </div>
-  </div>
-</section>
-<script src="https://crm.mongoosefilms.com/js/form_embed.js" type="text/javascript"></script>
-
-<!-- FINAL CTA -->
-<section class="final-cta">
-  <h2>Every drive is an opportunity.<br><em>Stop letting them pass.</em></h2>
-  <p>Pin a property. Build a project preview. Keep every opportunity organized from first sighting to signed contract. First month free — not charged until month 2.</p>
-  <a href="/signup?plan=monthly" class="btn-primary" style="font-size:1.05rem;padding:1rem 2.25rem;">Start Free — First Month On Us</a>
-  <p class="final-cta-note">Questions? Email us at <a href="mailto:support@biddrop.io">support@biddrop.io</a></p>
-</section>
-
-<!-- FOOTER -->
-<footer class="lp-footer">
-  <div class="lp-footer-logo">Bid<span>Drop</span></div>
-  <p>© 2026 BidDrop. All rights reserved. &nbsp;·&nbsp; <a href="mailto:support@biddrop.io">support@biddrop.io</a></p>
-</footer>
-
-<script>
-function toggleFaq(el){
-  const item = el.closest('.faq-item');
-  item.classList.toggle('open');
-}
-</script>
+    <section class="final"><div class="shell"><h2 class="display">Your next property could be your next job.</h2><p>Choose the BidDrop setup that matches how your team works today—and where you want the company to go next.</p><a class="btn" href="/signup">Choose your BidDrop plan</a><small>Already have an account? <a href="/index.html" style="text-decoration:underline">Log in to BidDrop.</a></small></div></section>
+  </main>
+  <footer class="footer"><div class="shell"><div class="brand">Bid<b>Drop</b></div><p>Field sales and project-preview tools for exterior contractors. <a href="/index.html">Log in</a> · <a href="/signup">Sign up</a> · <a href="mailto:support@biddrop.io">support@biddrop.io</a></p></div></footer>
 </body>
 </html>
