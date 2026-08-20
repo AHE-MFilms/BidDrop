@@ -18,8 +18,20 @@ async function handle(action, req, res, ctx) {
         const { email: invEmail, name: invName, role: invRole } = req.body;
         if (!invEmail || !invName) { res.status(400).json({ error: 'email and name required' }); return; }
         const repRole = ['rep', 'admin'].includes(invRole) ? invRole : 'rep';
-        // Check plan rep limit
-        const PLAN_MAX_REPS_INV = { starter: 1, pro: 10, agency: 100 };
+        // Check plan rep limit. Keep this aligned with api/signup.js and the
+        // subscription UI: current paid plans allow up to 10 team members.
+        const PLAN_MAX_REPS_INV = {
+          payg: 1,
+          starter: 1,
+          free: 1,
+          monthly: 10,
+          digital_growth: 10,
+          omnipresent: 10,
+          // Legacy paid plan names normalize to the current Monthly allowance.
+          pro: 10,
+          agency: 10,
+          enterprise: 10,
+        };
         const acctRespInv = await sbFetch(`accounts?id=eq.${effectiveAccountId}&select=plan,company_name`);
         const acctsInv = acctRespInv.ok ? await acctRespInv.json() : [];
         const acctInv = acctsInv[0] || {};
