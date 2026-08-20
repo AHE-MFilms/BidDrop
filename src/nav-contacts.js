@@ -1857,7 +1857,14 @@ async function submitInviteRep() {
   errEl.style.display = 'none';
 
   try {
-    const tok = (await window._sb.auth.getSession()).data.session?.access_token;
+    // The app-wide client is `sb`. The legacy window._sb alias is not initialized
+    // by the current boot sequence and prevented invites from reaching the API.
+    if (typeof sb === 'undefined' || !sb?.auth) {
+      throw new Error('Your sign-in session is not ready. Please close this window, wait a moment, and try again.');
+    }
+    const { data: { session } } = await sb.auth.getSession();
+    const tok = session?.access_token;
+    if (!tok) throw new Error('Your sign-in session has expired. Please refresh BidDrop and sign in again.');
     const res = await fetch('/api/admin?action=invite-rep', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` },

@@ -1,0 +1,142 @@
+# Production Performance Investigation — Supabase Disk IO
+
+- [x] Inventory high-frequency application workloads against Supabase tables.
+- [x] Confirm Supabase is active and healthy after the compute resize.
+- [x] Review available database size, table activity, and query-performance indicators.
+- [x] Identify safe indexing, query, retention, and schedule optimizations.
+- [x] Report findings and determine whether a Supabase compute upgrade is necessary.
+- [x] Replace the repeated 15-minute database scan with a watch-list-first real-time MRMS check.
+- [x] Reduce duplicate MRMS write work while preserving the existing 90-day storm-history retention.
+- [x] Validate public competitor alert-cadence claims and document BidDrop’s selected cadence.
+- [x] Remove verified redundant MRMS indexes after the safety review.
+- [x] Trace every billable API call in a homeowner lookup.
+- [x] Verify current provider rates and calculate the all-in per-property cost range.
+- [ ] Report the lookup cost range and pricing implications.
+- [x] Find every locked-pin display path that can render an owner name.
+- [x] Mask locked homeowner names in the client and prevent early API exposure.
+- [x] Build and deploy the one-credit name-lock enforcement.
+- [x] Trace the RentCast timeout and popup-loading state.
+- [x] Add safe retry and a clear property-data-unavailable state.
+- [x] Build and deploy the timeout recovery fix.
+- [x] Trace the Estimate lead lookup buttons and their state logic.
+- [x] Consolidate locked and unlocked lead actions into one clear flow.
+- [x] Build and deploy the Estimate interface cleanup.
+- [x] Trace the JavaScript error in the lead unlock response path.
+- [x] Repair the unlock response and prevent false success states.
+- [x] Build and deploy the corrected lead unlock flow.
+- [x] Trace why paid-lead rehydration can remain pending.
+- [x] Add a hard client timeout and explicit retry action for paid-lead retrieval.
+- [x] Build and deploy the stalled-retrieval fix.
+- [x] Compare the working pre-gate unlock flow against the current regression.
+- [x] Restore the proven contact lookup behavior while preserving the name display gate.
+- [x] Build and deploy the unlock-path restoration.
+- [x] Trace the original working client lookup functions and credential route.
+- [x] Reconnect the single unlock action to the proven name-to-contact lookup sequence.
+- [x] Build and deploy the restored single-button unlock workflow.
+- [x] Trace the CRM payload and its phone/email selection rules.
+- [x] Assess safe preservation of secondary phone numbers and email addresses.
+- [x] Report the current CRM sync behavior and recommended contact model.
+- [x] Verify GoHighLevel custom-field support and define all-contact-data payloads.
+- [x] Repair GHL sync argument mapping and preserve all phones/emails with DNC metadata.
+- [x] Build and deploy the complete contact-data CRM sync.
+- [x] Audit AHE Roofing’s existing BidDrop and GoHighLevel configuration.
+- [x] Verify the provided GHL token and identify the correct location, pipeline, and stages.
+- [ ] Save confirmed configuration and run a safe end-to-end sync test.
+- [ ] Report verified integration status and any remaining optional settings.
+- [ ] Trace the stage-fetch request’s use of saved versus entered credentials.
+- [ ] Repair credential persistence and stage retrieval in the GHL Settings interface.
+- [ ] Deploy the GHL settings workflow repair before completing the AHE test.
+- [x] Trace the stage-fetch request’s use of saved versus entered credentials.
+- [x] Repair credential persistence and stage retrieval in the GHL Settings interface.
+- [x] Deploy the GHL settings workflow repair before completing the AHE test.
+- [ ] Audit Texas Best Roofing’s saved GHL connection and the rejected contact payload.
+- [ ] Remove cross-account GHL fallback values and correct Texas Best Roofing sync configuration.
+- [x] Run a safe Texas Best Roofing CRM sync verification.
+- [x] Report the repaired Texas Best Roofing GHL integration status.
+- [x] Audit Texas Best Roofing’s saved GHL connection and the rejected contact payload.
+- [x] Remove cross-account GHL fallback values and correct Texas Best Roofing sync configuration.
+- [ ] Confirm the required Postcard Mailed stage model for the AHE Roofing pipeline.
+- [ ] Create and map the distinct Postcard Mailed GHL stage.
+- [ ] Save all confirmed AHE Roofing stage mappings and verify event updates.
+- [x] Run the labeled all-contact-data CRM test and report final status.
+- [x] Confirm the required Postcard Mailed stage model for the AHE Roofing pipeline.
+- [x] Repair GoHighLevel custom-field creation and population for all discovered phones, emails, and phone-compliance metadata.
+- [x] Re-run the Texas Best Roofing live CRM verification after the custom-field repair.
+- [ ] Verify all discovered phone numbers and email addresses are visibly accessible on the synced Texas Best Roofing GHL contact.
+- [ ] Correct any missing multi-contact-data mapping or GHL contact-layout visibility issue and re-test the existing lead.
+- [ ] Make every discovered homeowner email and phone workflow-accessible in Texas Best Roofing’s GoHighLevel automation without creating duplicate contacts.
+- [x] Investigate supported native additional-email creation and Conversations API emailTo delivery before creating any linked GHL contacts.
+- [x] Test controlled one-contact multi-email delivery and reply behavior before recommending an implementation.
+- [ ] If approved, design the one-contact campaign webhook and reply-suppression workflow before any production rollout.
+- [x] Read-only check whether GHL Workflow Send Email supports custom-field values in To, CC, or BCC before any production workflow change.
+- [ ] Define the MVP scope, architecture, and rollout recommendation for an optional BidDrop Tiny CRM for roofing teams.
+- [ ] Define the email-first Tiny CRM architecture, multi-recipient campaign behavior, and deliverability safeguards before any implementation.
+- [ ] Retain GHL as BidDrop’s CRM offering and resolve only the additional homeowner-email handoff/outreach limitation without building a BidDrop CRM.
+- [x] Diagnose and protect `/api/storm-proxy` against NOAA SPC timeout-induced 504 responses without losing available storm data.
+- [x] Verify live storm-proxy health and recent Vercel deployment/log stability after the NOAA timeout safeguard.
+- [x] Reconfirm the smallest GHL multiple-email workaround options while preserving GHL as BidDrop’s CRM.
+- [x] Send an internal email alert to john@americashomeexperts.com and steve@americashomeexperts.com for every confirmed BidDrop signup.
+- [x] Trace the homeowner email and phone data-provider path, primary selection, and source transparency for unlocked pins.
+- [x] Assess homeowner phone and email freshness, verification, and confidence signals before changing how unlocked contacts are presented.
+- [x] Preserve Tracerfy contact rank in GHL custom fields and prevent provider DNC data from incorrectly changing a usable GHL contact’s DND status.
+- [x] Assess an optional AHE digital-marketing package for BidDrop customers, including positioning, signup interest capture, and service handoff without changing the core BidDrop offering.
+- [x] Review signup add-ons and Omnipresent pricing presentation, verify per-home and per-mailer cost economics, and make contact ranks visibly clear before implementation.
+- [x] Verify and repair the active Lob production credential before any customer mail is sent.
+- [x] Make provider-ranked phone and email candidates visibly clear in the BidDrop estimator and pin popup.
+- [x] Revise the Omnipresent signup card around monthly $2,000 BidDrop credit value and add optional AHE marketing-interest capture without agency checkout.
+- [ ] Normalize duplicate Tracerfy provider ranks into an understandable display order while preserving source and DNC context.
+- [ ] Document and confirm the GHL native-versus-custom-field behavior for multiple homeowner phone numbers and email addresses on one contact.
+- [ ] Define a benefit-led AHE growth-service conversion path across BidDrop signup, in-app moments, and follow-up without weakening the core product offer.
+- [x] Diagnose and repair Texas Best Roofing’s reported BidDrop login problem without changing access for other customers.
+- [ ] Eliminate the recurring Tracey administrator-login failure through a targeted authentication and post-login bootstrap repair.
+- [x] Design per-canvasser postcard personalization with separate rep photo, contact details, and approved layout while preserving company-wide defaults.
+- [x] Build Phase 1 per-canvasser sender profiles, approved layout selection, sender snapshots, and postcard queue integration.
+- [x] Trace the inaccurate August 9 hail entry shown for the Marquez, Texas location to its stored event, lookup coordinates, and source request.
+- [x] Validate the relevant MRMS hail observation and independent weather evidence for the displayed date and area.
+- [x] Correct the underlying geographic/date/data-quality logic and add safeguards before storm intelligence is shown as an actionable hail event.
+- [x] Deploy and verify the hail-data accuracy correction in production.
+- [ ] Independently verify the five-mile circular hail filter at a second live Texas location.
+- [ ] Open the live Texas Best Roofing session and confirm the revised Local Storm Signals panel is visible and correctly worded.
+- [x] Define the complete contractor-facing checklist and take-home deliverable for the Free Visibility Audit.
+- [x] Review BidDrop screens and recommend the primary and secondary placements for the Get My Free Visibility Audit call-to-action.
+- [x] Add a visible AHE packages link and contractor contact path to the login page without changing the existing sign-in or signup flow.
+- [x] Replace the AHE login-page promotion with a prominent BidDrop-only signup CTA for prospective roofing contractors.
+- [x] Add a secondary See How BidDrop Works action linking to BidDrop.io beside the primary login-page signup CTA.
+- [x] Put See How BidDrop Works on the left and simplify the orange right-side login CTA label to Sign Up.
+- [x] Trace and validate the inaccurate roof measurement reported for 13570 Farm-to-Market Road 977, Marquez, TX 77865.
+- [x] Add a safe undo path for an accidental Signed status change and correct the affected Marquez record without deleting its history.
+- [x] Verify that every BidDrop lead status can be changed directly to any other valid status, including Signed back to Quoted, with CRM synchronization where mapped.
+- [x] Verify SalesRabbit’s current API, webhook, and export capabilities for importing pins or leads into BidDrop.
+- [x] Compare and recommend a safe SalesRabbit-to-BidDrop sync design that avoids duplicate property records.
+- [x] Verify and explain which customer, property, contact, and field-intelligence data SalesRabbit stores versus what BidDrop independently discovers.
+- [x] Build the automatic one-way SalesRabbit Lead Create webhook import, including account isolation, source-lead de-duplication, and safe no-action defaults.
+- [x] Add administrator-facing connection setup and test guidance for SalesRabbit webhooks.
+- [x] Restrict SalesRabbit automatic import to Monthly ($99) and higher plans in both the UI and server-side connection controls.
+- [x] Measure current storm-data storage and update all safe storm-history retention and display limits from 90 to 120 days.
+- [ ] Check current Supabase database storage and available Disk I/O telemetry after the 120-day storm-history retention update.
+- [x] Add an account-isolated BidDrop cancellation tag to GoHighLevel for contractor-initiated and administrator-initiated subscription cancellations.
+- [x] Reorganize Admin Panel client accounts into Active, Inactive / Cancelled, and All Accounts tabs without removing existing account controls.
+- [ ] Return to the deferred GHL cancellation webhook, win-back text campaign, and paid-plan upgrade automation design discussion after the Admin Panel cleanup.
+- [x] Redesign the signup plan-selection UI into four plans grouped as BidDrop Software and Done-for-You Marketing + BidDrop, without changing checkout or account-provisioning logic.
+- [x] Publish the approved four-plan signup layout while preserving all existing checkout and account-provisioning behavior.
+- [x] Build an approval-only Step 2 Customize Your Setup prototype with conditional website options and order-summary UI for all four signup plans, without changing live Stripe or provisioning logic.
+- [x] Prioritize additional signup and onboarding upgrades by contractor value, conversion impact, operational complexity, and billing risk.
+- [x] Publish the approved Step 2 customization UI only after confirming whether the visible prototype notice should remain until Stripe and provisioning support website selections.
+- [x] Publish the approved Step 2 customization UI with customer-facing language that does not imply a $997 website charge before checkout support is live.
+- [x] Audit and prepare Stripe-backed $997 website, $2,000 Digital Growth, and $3,500 Omnipresent flows, including account provisioning, AHE handoff, and GHL automation, before any new live charge is activated.
+- [x] Simplify all active estimator pricing controls to a single per-square price while preserving existing estimate records and totals.
+- [x] Add a clear six-month commitment and six-month delivery-period disclosure to Digital Growth and Omnipresent, and make low-contrast signup text white/readable on mobile.
+- [x] Audit Admin Panel activity, pin, mailer, revenue, and last-activity metrics against production records; correct any misleading usage presentation.
+- [x] Build a clear Admin Panel usage dashboard showing logins, pins, estimates, campaigns, credit usage, recent activity, adoption state, and accounts needing outreach.
+- [ ] Diagnose the reported live signup outage across page load, form flow, and Stripe checkout initiation; repair and verify every plan path.
+- [ ] Diagnose and restore the password-reset request and Resend delivery path as part of the urgent customer-access recovery.
+- [ ] Capture and fix the actual live signup-page JavaScript exceptions indicated by the customer’s browser console before revalidating signup.
+- [ ] Repair the confirmed production `supabaseUrl is not defined` initialization failure that blocks login and password reset, then verify customer access and Stripe signup.
+- [ ] Send one authorized password-reset delivery test to steve@mongoosefilms.com and verify the recovery-link path without changing the account password.
+- [ ] Run no-charge Stripe checkout-session health checks for the active Monthly, Digital Growth, Omnipresent, and website-add-on signup paths.
+- [x] Redesign biddrop.us/landing around the four current offers with authentic product imagery, field-use visuals, and clear marketing-package storytelling.
+- [x] Run a current no-charge end-to-end production check of authentication, password recovery, and every active Stripe signup path.
+- [x] Verify provisional Stripe sessions and setup intents are cleaned up with no accounts, subscriptions, charges, or customer data left behind.
+- [x] Report the verified production-access and Stripe-signup status, including any remaining customer-facing blocker.
+- [ ] Diagnose and repair the live Team Members invitation error: `Cannot read properties of undefined (reading 'auth')`.
+- [ ] Deploy and safely verify the repaired team-invite flow without sending an unauthorized customer invitation.
