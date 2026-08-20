@@ -2,10 +2,11 @@
     <!-- Top KPI bar -->
     <div class="stats-row" id="agency-kpi-row" style="margin-bottom:4px;flex-shrink:0;">
       <div class="stat-card"><div class="stat-icon">🏢</div><div class="stat-lbl">Active Clients</div><div class="stat-val" id="ag-clients">—</div><div class="stat-sub">Accounts</div></div>
-      <div class="stat-card"><div class="stat-icon">📬</div><div class="stat-lbl">Mailers This Month</div><div class="stat-val" id="ag-mailers-mo">—</div><div class="stat-sub">All clients</div></div>
-      <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-lbl">Revenue This Month</div><div class="stat-val" id="ag-rev-mo">—</div><div class="stat-sub">Mailer billing</div></div>
-      <div class="stat-card"><div class="stat-icon">📍</div><div class="stat-lbl">Total Pins</div><div class="stat-val" id="ag-pins">—</div><div class="stat-sub">All accounts</div></div>
+      <div class="stat-card"><div class="stat-icon">⚡</div><div class="stat-lbl">Working This Week</div><div class="stat-val" id="ag-working-7d">—</div><div class="stat-sub">Real work activity in 7 days</div></div>
+      <div class="stat-card"><div class="stat-icon">📐</div><div class="stat-lbl">Estimates This Month</div><div class="stat-val" id="ag-estimates-mo">—</div><div class="stat-sub">Across all clients</div></div>
+      <div class="stat-card"><div class="stat-icon">🚩</div><div class="stat-lbl">Needs Outreach</div><div class="stat-val" id="ag-needs-outreach">—</div><div class="stat-sub">Active accounts needing help</div></div>
     </div>
+    <div id="agency-usage-dashboard" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin:12px 0 18px;"></div>
     <!-- Client Accounts Table -->
     <div style="flex-shrink:0;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
@@ -46,12 +47,11 @@
                 <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">PLAN</th>
                 <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">STATUS</th>
                 <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">PINS</th>
-                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">CONVERTED</th>
-                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">MAILERS MO.</th>
-                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">TOTAL MAIL</th>
-                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">REVENUE</th>
-                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">CREDITS</th>
-                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">LAST ACTIVITY</th>
+                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">ADOPTION</th>
+                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">PINS (30D)</th>
+                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">ESTIMATES (30D)</th>
+                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">MAIL / QUEUED</th>
+                <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">LAST WORK</th>
                 <th style="padding:10px 14px;text-align:center;font-family:var(--font-h);font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;">ACTIONS</th>
               </tr>
             </thead>

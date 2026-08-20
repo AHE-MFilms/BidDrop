@@ -361,16 +361,18 @@ async function handle(action, req, res, ctx) {
       // ── Agency view bulk fetch (super_admin only) ─────────────────────────
       case 'agency-data': {
         if (!isSuperAdmin) { res.status(403).json({ error: 'Super admin only' }); return; }
-        const [acctRes, profRes, pinsRes, logRes] = await Promise.all([
+        const [acctRes, profRes, pinsRes, logRes, estRes, queueRes] = await Promise.all([
           sbFetch('accounts?select=id,name,company_name,company_phone,company_addr,notes,plan,active,mailer_rate,mailer_credits,created_at,enable_postcard,enable_letter,slug,ghl_api_key,ghl_location_id,ghl_pipeline_id,enabled_trades,tracerfy_enabled&order=created_at.asc'),
-          sbFetch('user_profiles?select=id,account_id,name,email,role'),
-          sbFetch('pins?select=id,account_id,status,created_at,rep_name'),
-          sbFetch('mailer_log?select=*&order=sent_at.desc&limit=500')
+          sbFetch('user_profiles?select=id,account_id,name,email,role,last_seen_at'),
+          sbFetch('pins?select=id,account_id,status,created_at,updated_at,rep_name&limit=2000'),
+          sbFetch('mailer_log?select=*&order=sent_at.desc&limit=2000'),
+          sbFetch('estimates?select=id,account_id,created_at,saved_at,updated_at&limit=2000'),
+          sbFetch('queue?select=id,account_id,status,created_at&limit=2000')
         ]);
-        const [accounts, profiles, pins, mailerLog] = await Promise.all([
-          acctRes.json(), profRes.json(), pinsRes.json(), logRes.json()
+        const [accounts, profiles, pins, mailerLog, estimates, queue] = await Promise.all([
+          acctRes.json(), profRes.json(), pinsRes.json(), logRes.json(), estRes.json(), queueRes.json()
         ]);
-        res.status(200).json({ accounts, profiles, pins, mailerLog });
+        res.status(200).json({ accounts, profiles, pins, mailerLog, estimates, queue });
         break;
       }
 

@@ -63,6 +63,11 @@ async function onSignedIn(user){
       window._mustChangePwUserId = currentUser.id;
       return;
     }
+    // Login is a meaningful activity signal for the Agency usage dashboard.
+    // This is account-scoped and does not expose individual user history to other clients.
+    sb.from('user_profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', currentUser.id).then(({error})=>{
+      if(error) console.warn('[Usage] Could not update last seen:', error.message);
+    });
     // Hide login, show app
     hideLoginScreen();
     // Only apply localStorage cache if no account was loaded from DB.

@@ -7,7 +7,7 @@
 if(typeof escHtml==='undefined'){var escHtml=function(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');};}
 if(typeof escJs==='undefined'){var escJs=function(s){return(s||'').replace(/\\/g,'\\\\').replace(/'/g,'\\x27').replace(/"/g,'\\x22');};}
 
-let _agencyData = null; // cached {accounts, profiles, pins, mailerLog}
+let _agencyData = null; // cached {accounts, profiles, pins, estimates, queue, mailerLog}
 
 async function renderAgencyView(){
   if(!isSuperAdmin()) return;
@@ -19,12 +19,19 @@ async function renderAgencyView(){
 
   try {
     // Fetch all data via secure server-side API
-    const { accounts: allAccounts, profiles, pins, mailerLog } = await adminAPI('agency-data');
+    const { accounts: allAccounts, profiles, pins, estimates, queue, mailerLog } = await adminAPI('agency-data');
 
     // Filter out AHE agency account from client list
     const clientAccounts = (allAccounts||[]).filter(a=>a.id!==AGENCY_ACCOUNT_ID);
 
-    _agencyData = { accounts: clientAccounts, profiles: profiles||[], pins: pins||[], mailerLog: mailerLog||[] };
+    _agencyData = {
+      accounts: clientAccounts,
+      profiles: Array.isArray(profiles) ? profiles : [],
+      pins: Array.isArray(pins) ? pins : [],
+      estimates: Array.isArray(estimates) ? estimates : [],
+      queue: Array.isArray(queue) ? queue : [],
+      mailerLog: Array.isArray(mailerLog) ? mailerLog : []
+    };
 
     // Populate filter dropdown
     const filterSel = document.getElementById('ag-log-filter');
@@ -34,6 +41,7 @@ async function renderAgencyView(){
     }
 
     renderAgencyKPIs();
+    renderAgencyUsageDashboard();
     renderAgencyAccounts();
     renderAgencyMailerLog();
   } catch(e){
@@ -45,27 +53,73 @@ async function renderAgencyView(){
 
 function renderAgencyKPIs(){
   if(!_agencyData) return;
-  const {accounts, pins, mailerLog} = _agencyData;
+  const {accounts, estimates} = _agencyData;
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-
   const activeClients = accounts.filter(a=>a.active!==false).length;
-  const mailersThisMonth = mailerLog.filter(m=>m.sent_at>=monthStart).length;
-
-  // Revenue = sum of (mailer_rate * count) per account this month
-  let revThisMonth = 0;
-  accounts.forEach(a=>{
-    const rate = parseFloat(a.mailer_rate)||2.50;
-    const count = mailerLog.filter(m=>m.account_id===a.id && m.sent_at>=monthStart).length;
-    revThisMonth += rate * count;
-  });
-
-  const totalPins = pins.length;
-
   document.getElementById('ag-clients').textContent = activeClients;
-  document.getElementById('ag-mailers-mo').textContent = mailersThisMonth.toLocaleString();
-  document.getElementById('ag-rev-mo').textContent = '$'+revThisMonth.toFixed(2);
-  document.getElementById('ag-pins').textContent = totalPins.toLocaleString();
+  document.getElementById('ag-working-7d').textContent = accounts.filter(a=>a.active!==false && agencyUsage(a).work7d).length;
+  document.getElementById('ag-estimates-mo').textContent = estimates.filter(e=>new Date(e.saved_at||e.created_at)>=new Date(monthStart)).length.toLocaleString();
+  document.getElementById('ag-needs-outreach').textContent = accounts.filter(a=>a.active!==false && agencyUsage(a).needsOutreach).length;
+}
+
+function agencyUsage(account){
+  if(!_agencyData) return {};
+  const now = Date.now();
+  const day = 86400000;
+  const threshold7 = now - 7*day;
+  const threshold30 = now - 30*day;
+  const byAccount = rows => rows.filter(r=>r.account_id===account.id);
+  const pins = byAccount(_agencyData.pins);
+  const estimates = byAccount(_agencyData.estimates);
+  const queue = byAccount(_agencyData.queue);
+  const mailers = byAccount(_agencyData.mailerLog);
+  const profiles = byAccount(_agencyData.profiles);
+  const pinStamp = p => new Date(p.updated_at||p.created_at||0).getTime();
+  const estimateStamp = e => new Date(e.updated_at||e.saved_at||e.created_at||0).getTime();
+  const queueStamp = q => new Date(q.created_at||0).getTime();
+  const mailStamp = m => new Date(m.sent_at||0).getTime();
+  const seenStamp = p => new Date(p.last_seen_at||0).getTime();
+  const allStamps = [...pins.map(pinStamp),...estimates.map(estimateStamp),...queue.map(queueStamp),...mailers.map(mailStamp),...profiles.map(seenStamp)].filter(Number.isFinite);
+  const last = allStamps.length ? Math.max(...allStamps) : 0;
+  const pins30 = pins.filter(p=>pinStamp(p)>=threshold30).length;
+  const estimates30 = estimates.filter(e=>estimateStamp(e)>=threshold30).length;
+  const queue30 = queue.filter(q=>queueStamp(q)>=threshold30).length;
+  const mail30 = mailers.filter(m=>mailStamp(m)>=threshold30).length;
+  const work7d = [...pins.map(pinStamp),...estimates.map(estimateStamp),...queue.map(queueStamp),...mailers.map(mailStamp)].some(t=>t>=threshold7);
+  const login7d = profiles.some(p=>seenStamp(p)>=threshold7);
+  const ageDays = last ? Math.floor((now-last)/day) : null;
+  let stage = 'No first pin', stageColor = '#f59e0b';
+  if(pins.length && !estimates.length) { stage='Prospecting'; stageColor='#60a5fa'; }
+  if(estimates.length && !queue.length && !mailers.length) { stage='Estimating'; stageColor='#a78bfa'; }
+  if(queue.length || mailers.length) { stage='Campaigning'; stageColor='#22c55e'; }
+  return {pins, estimates, queue, mailers, profiles, pins30, estimates30, queue30, mail30, last, ageDays, work7d, login7d, stage, stageColor, needsOutreach: !pins.length || (ageDays!==null && ageDays>30)};
+}
+
+function agAgo(timestamp){
+  if(!timestamp) return 'No tracked work';
+  const days = Math.floor((Date.now()-timestamp)/86400000);
+  if(days<=0) return 'Today';
+  if(days===1) return 'Yesterday';
+  if(days<30) return days+' days ago';
+  return new Date(timestamp).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'});
+}
+
+function renderAgencyUsageDashboard(){
+  const el = document.getElementById('agency-usage-dashboard');
+  if(!el || !_agencyData) return;
+  const active = _agencyData.accounts.filter(a=>a.active!==false);
+  const recent = active.filter(a=>agencyUsage(a).work7d).sort((a,b)=>agencyUsage(b).last-agencyUsage(a).last);
+  const onboarding = active.filter(a=>!agencyUsage(a).pins.length);
+  const stale = active.filter(a=>agencyUsage(a).ageDays!==null && agencyUsage(a).ageDays>30);
+  const renderList = (rows, empty, tone) => rows.length ? rows.slice(0,5).map(a=>{
+    const u=agencyUsage(a);
+    return '<button onclick="switchAccount(\''+a.id+'\');goTab(\'map\')" style="display:flex;justify-content:space-between;gap:8px;width:100%;background:none;border:none;border-bottom:1px solid var(--border);padding:8px 0;color:var(--text);font-size:11px;text-align:left;cursor:pointer;"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;">'+escHtml(a.company_name||a.name||'')+'</span><span style="color:'+tone+';white-space:nowrap;font-weight:700;">'+(u.stage||agAgo(u.last))+'</span></button>';
+  }).join('') : '<div style="font-size:11px;color:var(--muted);padding:8px 0;">'+empty+'</div>';
+  el.innerHTML =
+    '<section style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.28);border-radius:10px;padding:13px;"><div style="font-size:10px;font-weight:900;letter-spacing:.6px;color:#4ade80;text-transform:uppercase;">Working now · last 7 days</div><div style="font-size:21px;font-weight:900;color:#fff;margin:4px 0 8px;">'+recent.length+' active account'+(recent.length===1?'':'s')+'</div>'+renderList(recent,'No client work in the last 7 days.','#4ade80')+'</section>'+
+    '<section style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.28);border-radius:10px;padding:13px;"><div style="font-size:10px;font-weight:900;letter-spacing:.6px;color:#fbbf24;text-transform:uppercase;">Needs first action</div><div style="font-size:21px;font-weight:900;color:#fff;margin:4px 0 8px;">'+onboarding.length+' account'+(onboarding.length===1?'':'s')+'</div>'+renderList(onboarding,'Every active account has at least one pin.','#fbbf24')+'</section>'+
+    '<section style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.28);border-radius:10px;padding:13px;"><div style="font-size:10px;font-weight:900;letter-spacing:.6px;color:#f87171;text-transform:uppercase;">Needs re-engagement</div><div style="font-size:21px;font-weight:900;color:#fff;margin:4px 0 8px;">'+stale.length+' active account'+(stale.length===1?'':'s')+'</div>'+renderList(stale,'No active accounts are stale beyond 30 days.','#f87171')+'</section>';
 }
 
 function filterAgencyAccounts(){
@@ -74,9 +128,7 @@ function filterAgencyAccounts(){
   const sort   = document.getElementById('ag-sort')?.value || 'name_asc';
   const plan   = document.getElementById('ag-filter-plan')?.value || 'all';
   const status = document.getElementById('ag-filter-status')?.value || 'all';
-  const {accounts, profiles, pins, mailerLog} = _agencyData;
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  const {accounts, pins, mailerLog} = _agencyData;
 
   let filtered = accounts.filter(a=>{
     const name = (a.company_name||a.name||'').toLowerCase();
@@ -102,15 +154,7 @@ function filterAgencyAccounts(){
       return pB - pA;
     }
     if(sort==='activity'){
-      const lastA = Math.max(
-        ...pins.filter(p=>p.account_id===a.id).map(p=>new Date(p.created_at).getTime()), 0,
-        ...mailerLog.filter(m=>m.account_id===a.id).map(m=>new Date(m.sent_at).getTime()), 0
-      );
-      const lastB = Math.max(
-        ...pins.filter(p=>p.account_id===b.id).map(p=>new Date(p.created_at).getTime()), 0,
-        ...mailerLog.filter(m=>m.account_id===b.id).map(m=>new Date(m.sent_at).getTime()), 0
-      );
-      return lastB - lastA;
+      return agencyUsage(b).last - agencyUsage(a).last;
     }
     if(sort==='created') return new Date(a.created_at) - new Date(b.created_at);
     if(sort==='mailers_desc'){
@@ -135,39 +179,19 @@ function renderAgencyAccounts(){
 
 function _renderAgencyAccountCards(accounts){
   if(!_agencyData) return;
-  const {profiles, pins, mailerLog} = _agencyData;
+  const {profiles} = _agencyData;
   const el = document.getElementById('agency-accounts-grid');
   if(!el) return;
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
   if(!accounts.length){
-    el.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">No accounts match your search.</td></tr>';
+    el.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">No accounts match your search.</td></tr>';
     return;
   }
   el.innerHTML = accounts.map((a,i)=>{
     const users = profiles.filter(p=>p.account_id===a.id);
-    const acctPins = pins.filter(p=>p.account_id===a.id);
-    const acctMailers = mailerLog.filter(m=>m.account_id===a.id);
-    const mailersThisMonth = acctMailers.filter(m=>m.sent_at>=monthStart).length;
-    const mailersAllTime = acctMailers.length;
-    const rate = parseFloat(a.mailer_rate)||2.50;
-    const revAllTime = (rate * mailersAllTime).toFixed(2);
-    const converted = acctPins.filter(p=>p.status==='converted').length;
+    const usage = agencyUsage(a);
     const planColor = {starter:'#3B82F6',pro:'#8B5CF6',agency:'#F25C05',enterprise:'#D97706'}[a.plan]||'#6688A8';
     const activeColor = a.active!==false ? '#22C55E' : '#EF4444';
     const activeLabel = a.active!==false ? 'Active' : 'Inactive';
-    const paidCredits = a.mailer_credits||0;
-    const planFreeMapA = {starter:0,pro:0,agency:0,enterprise:0};
-    const freeLimit = planFreeMapA[(a.plan||'starter').toLowerCase()] || 0;
-    const freeLeft = Math.max(0, freeLimit - (a.free_mailer_credits_used||0));
-    // Last activity
-    const allDates = [
-      ...acctPins.map(p=>p.created_at),
-      ...acctMailers.map(m=>m.sent_at)
-    ].filter(Boolean).sort().reverse();
-    const lastDate = allDates.length
-      ? new Date(allDates[0]).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'})
-      : 'No activity';
     const rowBg = i%2===0 ? 'var(--card)' : 'var(--card2)';
     const td = 'padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:middle;';
     const tdC = td+'text-align:center;';
@@ -182,19 +206,11 @@ function _renderAgencyAccountCards(accounts){
       '<td style="'+tdC+'">' +
         '<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:'+activeColor+'22;color:'+activeColor+';border:1px solid '+activeColor+'44;">'+activeLabel+'</span>' +
       '</td>' +
-      '<td style="'+tdC+';font-size:13px;font-weight:700;color:var(--text);">'+acctPins.length+'</td>' +
-      '<td style="'+tdC+';font-size:13px;font-weight:700;color:#22C55E;">'+converted+'</td>' +
-      '<td style="'+tdC+';font-size:13px;font-weight:700;color:var(--text);">'+mailersThisMonth+'</td>' +
-      '<td style="'+tdC+';font-size:13px;font-weight:700;color:var(--text);">'+mailersAllTime+'</td>' +
-      '<td style="'+tdC+';font-size:13px;font-weight:700;color:#4ade80;">$'+revAllTime+'</td>' +
-      '<td style="'+tdC+'">' +
-        '<span style="font-size:12px;font-weight:700;color:#4ade80;">'+paidCredits+'</span>' +
-        '<span style="font-size:10px;color:var(--muted);"> paid</span>' +
-        '<span style="font-size:10px;color:var(--muted);"> | </span>' +
-        '<span style="font-size:12px;font-weight:700;color:var(--accent);">'+freeLeft+'</span>' +
-        '<span style="font-size:10px;color:var(--muted);">/'+freeLimit+' free</span>' +
-      '</td>' +
-      '<td style="'+tdC+';font-size:11px;color:var(--muted);">'+lastDate+'</td>' +
+      '<td style="'+tdC+'"><div style="font-size:11px;font-weight:800;color:'+usage.stageColor+';">'+usage.stage+'</div><div style="font-size:9px;color:var(--muted);margin-top:3px;">'+(usage.login7d?'Logged in ≤7d':'No recent login')+'</div></td>' +
+      '<td style="'+tdC+'"><div style="font-size:14px;font-weight:800;color:#fff;">'+usage.pins30+'</div><div style="font-size:9px;color:var(--muted);">'+usage.pins.length+' all time</div></td>' +
+      '<td style="'+tdC+'"><div style="font-size:14px;font-weight:800;color:#c4b5fd;">'+usage.estimates30+'</div><div style="font-size:9px;color:var(--muted);">'+usage.estimates.length+' all time</div></td>' +
+      '<td style="'+tdC+'"><div style="font-size:12px;font-weight:800;color:#4ade80;">'+usage.mail30+' mailed</div><div style="font-size:10px;color:#fbbf24;margin-top:3px;">'+usage.queue30+' queued</div></td>' +
+      '<td style="'+tdC+';font-size:11px;"><div style="color:'+(usage.ageDays!==null && usage.ageDays>30?'#f87171':'var(--mid)')+';font-weight:700;">'+agAgo(usage.last)+'</div><div style="font-size:9px;color:var(--muted);margin-top:3px;">work activity</div></td>' +
       '<td style="'+tdC+';white-space:nowrap;">' +
         '<button onclick="editClientAccount(\''+a.id+'\')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 9px;color:var(--mid);font-size:10px;font-weight:700;cursor:pointer;margin:1px;" title="Edit account">Edit</button>' +
         '<button onclick="openManageTeam(\''+a.id+'\')" style="background:none;border:1px solid #3B82F6;border-radius:6px;padding:4px 9px;color:#3B82F6;font-size:10px;font-weight:700;cursor:pointer;margin:1px;" title="Manage team">Team</button>' +
