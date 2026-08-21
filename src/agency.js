@@ -126,6 +126,21 @@ function agLastLogin(timestamp){
   return date.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+' · '+time;
 }
 
+function agSignedUp(timestamp){
+  if(!timestamp) return 'Date unavailable';
+  return new Date(timestamp).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+
+function agAccountAge(timestamp){
+  if(!timestamp) return '';
+  const days = Math.max(0,Math.floor((Date.now()-new Date(timestamp).getTime())/86400000));
+  if(days===0) return 'today';
+  if(days===1) return '1 day ago';
+  if(days<30) return days+' days ago';
+  const months = Math.floor(days/30);
+  return months===1 ? '1 month ago' : months+' months ago';
+}
+
 function agLoginColor(usage){
   if(!usage.lastLogin || usage.loginAgeDays>14) return '#f87171';
   if(usage.loginAgeDays>7) return '#fbbf24';
@@ -193,6 +208,7 @@ function filterAgencyAccounts(){
       return loginA-loginB;
     }
     if(sort==='created') return new Date(a.created_at) - new Date(b.created_at);
+    if(sort==='created_desc') return new Date(b.created_at) - new Date(a.created_at);
     if(sort==='mailers_desc'){
       const mA = mailerLog.filter(m=>m.account_id===a.id).length;
       const mB = mailerLog.filter(m=>m.account_id===b.id).length;
@@ -219,7 +235,7 @@ function _renderAgencyAccountCards(accounts){
   const el = document.getElementById('agency-accounts-grid');
   if(!el) return;
   if(!accounts.length){
-    el.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">No accounts match your search.</td></tr>';
+    el.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">No accounts match your search.</td></tr>';
     return;
   }
   el.innerHTML = accounts.map((a,i)=>{
@@ -244,6 +260,7 @@ function _renderAgencyAccountCards(accounts){
       '</td>' +
       '<td style="'+tdC+'"><div style="font-size:11px;font-weight:800;color:'+usage.stageColor+';">'+usage.stage+'</div><div style="font-size:9px;color:var(--muted);margin-top:3px;">'+(usage.pins.length?'activated':'needs first pin')+'</div></td>' +
       '<td style="'+tdC+'" title="'+escHtml(usage.lastLoginUser ? 'Last active: '+usage.lastLoginUser : 'No login has been recorded for this account')+'"><div style="font-size:10px;color:'+agLoginColor(usage)+';font-weight:800;white-space:nowrap;">'+escHtml(agLastLogin(usage.lastLogin))+'</div>'+((usage.lastLoginUser)?'<div style="font-size:9px;color:var(--muted);margin-top:3px;max-width:118px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escHtml(usage.lastLoginUser)+'</div>':'<div style="font-size:9px;color:#f87171;margin-top:3px;">Reach out</div>')+'</td>' +
+      '<td style="'+tdC+'"><div style="font-size:10px;color:var(--text);font-weight:800;white-space:nowrap;">'+escHtml(agSignedUp(a.created_at))+'</div><div style="font-size:9px;color:var(--muted);margin-top:3px;">'+escHtml(agAccountAge(a.created_at))+'</div></td>' +
       '<td style="'+tdC+'"><div style="font-size:14px;font-weight:800;color:#fff;">'+usage.pins30+'</div><div style="font-size:9px;color:var(--muted);">'+usage.pins.length+' all time</div></td>' +
       '<td style="'+tdC+'"><div style="font-size:14px;font-weight:800;color:#c4b5fd;">'+usage.estimates30+'</div><div style="font-size:9px;color:var(--muted);">'+usage.estimates.length+' all time</div></td>' +
       '<td style="'+tdC+'"><div style="font-size:12px;font-weight:800;color:#4ade80;">'+usage.mail30+' mailed</div><div style="font-size:10px;color:#fbbf24;margin-top:3px;">'+usage.queue30+' queued</div></td>' +

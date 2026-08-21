@@ -152,3 +152,4 @@
 - [ ] Configure the GoHighLevel workflow, tags, and routing for BidDrop Meta form leads with optional AHE-service interest.
 - [ ] Draft and review the consent-based SMS and email follow-up sequence for those leads.
 - [ ] Add exact last-login timestamps and outreach-priority cues to the agency usage dashboard.
+- [ ] Add client signup dates and account-age sorting to the agency dashboard for onboarding and outreach prioritization.
