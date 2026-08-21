@@ -148,3 +148,7 @@
 - [ ] Produce a prioritized next-feature roadmap based on customer impact, reliability, and implementation readiness.
 - [ ] Build plan-specific activation checklists for PAYG, Monthly, Digital Growth, and Omnipresent accounts.
 - [ ] Persist, test, and deploy activation progress without blocking normal BidDrop workflows.
+- [ ] Create and deliver a branded BidDrop social image for the neighborhood-to-opportunity post.
+- [ ] Configure the GoHighLevel workflow, tags, and routing for BidDrop Meta form leads with optional AHE-service interest.
+- [ ] Draft and review the consent-based SMS and email follow-up sequence for those leads.
+- [ ] Add exact last-login timestamps and outreach-priority cues to the agency usage dashboard.
